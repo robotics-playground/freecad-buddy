@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skills": {
+    "load-docs": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/load-docs/SKILL.md",
+      "computedHash": "b788eedefc89f2dcecf395d605098d9c7f2ab34199737dbdc0b70accf5a27df5"
+    },
+    "manual-testing": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/manual-testing/SKILL.md",
+      "computedHash": "0f452bce005308c12a2651d9afebdc59f0eb42cb34351241c252f1d341f0fd4f"
+    },
+    "release-please": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/release-please/SKILL.md",
+      "computedHash": "d3ab08b8a02ca41da5f92c004b81c69fb3ddb384977846f28792c77db1e492e3"
+    },
+    "software-research": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/software-research/SKILL.md",
+      "computedHash": "387b53ceaa116cbb34bcf1e2b3e0160bb58d2e7459b5ae9c4f48e2e16c80b54e"
+    },
+    "typescript-clean-code": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/typescript-clean-code/SKILL.md",
+      "computedHash": "32dd11d590211d7098dfefe206e10acf929d6fcea28151a3994a1823b04df239"
+    },
+    "typescript-e2e-testing": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/typescript-e2e-testing/SKILL.md",
+      "computedHash": "bfddd43517751607b6f1554994de562912286046848e76b194861cabdcf225a1"
+    },
+    "typescript-unit-testing": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/typescript-unit-testing/SKILL.md",
+      "computedHash": "e1c9f96fe0e0823ff3b4c4a077583737bf6fd8061daf67ee65bc9543b39b9624"
+    },
+    "ultrathink-protocol": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ultrathink-protocol/SKILL.md",
+      "computedHash": "5f40786e4233e12489cb201315e445eddf6b456306999583b85d062951e205ff"
+    }
+  }
+}
