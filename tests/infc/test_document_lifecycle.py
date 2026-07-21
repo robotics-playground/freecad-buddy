@@ -135,7 +135,7 @@ class CapabilityProbeTest(unittest.TestCase):
         self.assertTrue(envelope["structured_content"]["exec_enabled"])
 
     def test_shim_probes_never_raise(self):
-        # AD-11: probes must resolve on the live build without version-string branching.
+        # probes must resolve on the live build without version-string branching.
         self.assertIsInstance(shim.element_map_available(), bool)
         self.assertIsInstance(shim.export_binary_available(), bool)
         self.assertIsInstance(shim.serializer_tag(), str)

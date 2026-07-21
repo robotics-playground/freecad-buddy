@@ -1,4 +1,4 @@
-"""Job status (design §6). Phase-4 job API shape, bound now (AD-17).
+"""Job status: the job API result shape.
 
 ``JobState`` is imported from ``status.py`` and never redefined here.
 """

@@ -1,7 +1,7 @@
-"""JSON-RPC wire contract (design §11, AD-2/AD-3). Types only — framing lands in 1.8.
+"""JSON-RPC wire contract types.
 
-Both the external MCP process and the in-FreeCAD listener import this module; neither
-invents framing. Channel error codes and the channel→status mapping note live here.
+Both the external MCP process and the in-FreeCAD listener import this module. Channel
+error codes and the channel-to-status mapping live here.
 """
 
 from __future__ import annotations
@@ -12,14 +12,14 @@ from freecad_buddy.contracts.envelope import ResultEnvelope
 
 SCHEMA_TAG = "fcb.result-envelope/1"
 
-# Channel-level JSON-RPC error codes (§11). Reserved for the CALL itself — tool-level
+# Channel-level JSON-RPC error codes. Reserved for the CALL itself; tool-level
 # failures always arrive as a `result` ResultEnvelope with a non-OK status.
 RPC_ERROR_WORKER_CRASHED = -32000  # listener/marshal crash or dropped connection
 RPC_ERROR_NO_HANDSHAKE = -32002  # first frame was not rpc_hello
 RPC_ERROR_VERSION_MISMATCH = -32004  # contract_version mismatch
 
-# Channel error code → closed-status mapping (§11, normative). Callers embed
-# {status, detail} in `error.data` so one decoder serves both paths.
+# Channel error code to closed-status mapping. Callers embed {status, detail} in
+# `error.data` so one decoder serves both paths.
 CHANNEL_ERROR_STATUS: dict[int, str] = {
     RPC_ERROR_WORKER_CRASHED: "WORKER_CRASHED",
     RPC_ERROR_NO_HANDSHAKE: "INVALID_INPUT",

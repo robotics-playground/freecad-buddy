@@ -1,6 +1,6 @@
-"""Result envelope (design §4). Every tool/RPC/job/harness result returns this shape.
+"""Result envelope: the shape every tool/RPC/job/harness result returns.
 
-``mirror_text`` is the single generator of the §12.3 human-readable text mirror so
+``mirror_text`` is the single generator of the human-readable text mirror so
 ``ResultEnvelope.text`` can never diverge from ``structured_content``.
 """
 
@@ -31,9 +31,9 @@ class ResultEnvelope(TypedDict, total=False):
 
 
 def mirror_text(structured_content: dict) -> str:
-    """Deterministic human-readable mirror of ``structured_content`` (§12.3).
+    """Deterministic human-readable mirror of ``structured_content``.
 
-    Sole producer of ``ResultEnvelope.text``; the round-trip test regenerates and
-    compares. Sorted keys keep the mirror stable across dict insertion order.
+    Sole producer of ``ResultEnvelope.text``. Sorted keys keep the mirror stable
+    across dict insertion order.
     """
     return json.dumps(structured_content, sort_keys=True, indent=2, ensure_ascii=False)

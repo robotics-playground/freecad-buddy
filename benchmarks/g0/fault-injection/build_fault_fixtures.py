@@ -3,7 +3,7 @@
 Run under FreeCADCmd (``FreeCADCmd build_fault_fixtures.py``). Each fixture carries a REAL
 geometric defect (open shell, planar lamina, invalid self-intersecting solid, overlapping
 compound, degenerate face, wrong measurements). The paired ``case.yaml`` asserts the value a
-CORRECT reference shape yields for the targeted property, so a Story-1.6 validator detects
+CORRECT reference shape yields for the targeted property, so a validator detects
 the defect by the fixture DEVIATING from that reference — the assertion is never hand-set to
 the defective value.
 

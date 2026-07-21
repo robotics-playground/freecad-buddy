@@ -1,4 +1,4 @@
-"""Status-vocabulary enforcer (§12.1, AC#1). No `Literal` status/verdict/state member
+"""Status-vocabulary enforcer. No `Literal` status/verdict/state member
 set outside `contracts/status.py`.
 
 AST-scan ``src/freecad_buddy/**/*.py``. Any ``Literal[...]`` whose string members
@@ -9,13 +9,12 @@ violation.
 The status set is derived at runtime from ``contracts.status`` (never hand-copied), so
 the enforcer cannot drift from the single source. ``JobState`` is a Union
 (``Literal["QUEUED","RUNNING"] | TerminalStatus``); the derivation flattens nested
-Literals so all 9 members (7 terminal + QUEUED + RUNNING) are in scope (§12.1 scopes
-"state" types).
+Literals so all 9 members (7 terminal + QUEUED + RUNNING) are in scope.
 
 ``Literal`` is resolved by BOTH its ``from typing import Literal [as L]`` bound local
 name(s) AND its attribute form (``import typing; typing.Literal[...]``) so aliased or
 attribute-qualified redefinitions are still detected. Non-``Literal`` duplications (str
-Enum, tuple, frozenset) are out of §12.1's Literal-only scope — not flagged here.
+Enum, tuple, frozenset) are out of the Literal-only scope — not flagged here.
 
 On violation: print ``relpath:line -- rule`` and exit 1; clean = exit 0.
 """
@@ -145,7 +144,7 @@ def _check_file(path: Path, relpath: str, vocab: frozenset[str]) -> list[Violati
                     relpath,
                     node.lineno,
                     "Literal status/verdict/state member set defined outside "
-                    "contracts/status.py (§12.1)",
+                    "contracts/status.py",
                 )
             )
     return violations

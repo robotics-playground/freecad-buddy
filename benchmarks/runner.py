@@ -1,4 +1,4 @@
-"""G0 gate runner (external uv process, FreeCAD-free, contracts-only — AD-12/AD-17/AD-19).
+"""G0 gate runner (FreeCAD-free, contracts-only).
 
 Loads the declarative ``gate.yaml``, runs every criterion against a ``StubBridge`` (every tool
 -> "not implemented"), builds one contracts ``ValidationReport`` per criterion via
@@ -9,7 +9,7 @@ Exit codes (honest-fail, NON-defeasible):
   1  at least one criterion failed (the expected --stub result)
   2  usage / loader error — unknown gate, malformed / non-mapping / empty-criteria gate,
      criterion missing ``id``, ``--criterion`` matching nothing. NEVER exit 0 on zero
-     criteria (that would defeat AD-19), NEVER a traceback.
+     criteria (that would let an empty gate report green), NEVER a traceback.
 
 Invoked by file path (``python benchmarks/runner.py --gate G0 --stub``) and importable as
 ``benchmarks.runner`` from ``tests/external``.
@@ -147,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.case is not None:
             raise UsageError("--case is not supported in stub mode")
-        # --stub is the only mode this story ships (no live bridge until Story 1.4/1.6).
+        # --stub is the only mode shipped so far (no live bridge yet).
         # Require it explicitly so the flag is meaningful, not a silent no-op.
         if not args.stub:
             raise UsageError("only --stub mode is supported (no live bridge yet); pass --stub")

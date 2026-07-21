@@ -1,4 +1,4 @@
-"""Architecture-ring + Qt-whitelist import enforcer (AD-1/AD-12).
+"""Architecture-ring + Qt-whitelist import enforcer.
 
 Static AST analysis over ``src/freecad_buddy/**/*.py``. Runs with NO FreeCAD installed.
 

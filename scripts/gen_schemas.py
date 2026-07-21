@@ -2,15 +2,14 @@
 
 Emits one ``*.schema.json`` per top-level wire type into
 ``src/freecad_buddy/contracts/jsonschema/``. Stdlib only; runs FreeCAD-free in the uv
-external env (AC#2).
+external env.
 
 Determinism: ``json.dumps(sort_keys=True, indent=2)`` + a single trailing newline;
 stable ``$defs`` ordering; no timestamps/paths in output.
 
 Required fields: the contract TypedDicts are all ``total=False`` (additive evolution),
 so ``__required_keys__`` is empty. The prose-required fields are carried in an explicit
-``REQUIRED_FIELDS`` manifest, transcribed verbatim from the design's ``# required``
-annotations (§2/§3/§4/§5/§6/§7/§8/§9/§10/§12.2/§12.7), and emitted as the schema
+``REQUIRED_FIELDS`` manifest and emitted as the schema
 ``required`` array. A wire root or ``$def`` that validates ``{}`` for a required field
 is a defect.
 
@@ -48,8 +47,8 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("fingerprint", FingerprintRecord),
 ]
 
-# Required-field manifest (type name -> required field names), transcribed from the
-# design's "# required" prose. Covers every wire root AND every emitted embedded $def.
+# Required-field manifest (type name -> required field names).
+# Covers every wire root AND every emitted embedded $def.
 REQUIRED_FIELDS: dict[str, list[str]] = {
     # roots
     "ResultEnvelope": ["schema", "status", "structured_content", "text"],

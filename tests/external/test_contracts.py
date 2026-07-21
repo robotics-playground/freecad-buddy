@@ -1,4 +1,4 @@
-"""Contract invariant tests (§12 + I/O matrix). Non-tautological: schemas are validated
+"""Contract invariant tests. Non-tautological: schemas are validated
 with the ``jsonschema`` dev dep, not just inspected for key presence."""
 
 import json
@@ -38,7 +38,7 @@ def _def_validator(stem: str, def_name: str) -> Draft202012Validator:
 
 
 # --------------------------------------------------------------------------- #
-# §12.6 byte-identical regeneration + drift/orphan failure path
+# byte-identical regeneration + drift/orphan failure path
 # --------------------------------------------------------------------------- #
 
 
@@ -71,7 +71,7 @@ def test_gen_schemas_check_detects_orphan(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# §12.2 / §12.7 required-field enforcement — root + embedded $def {}-rejection
+# required-field enforcement — root + embedded $def {}-rejection
 # --------------------------------------------------------------------------- #
 
 
@@ -149,7 +149,7 @@ def test_report_banner_def_rejects_empty():
 
 
 def test_check_def_rejects_empty():
-    """iter-3: Check.passed is design-required; the $def must reject {}."""
+    """Check.passed is design-required; the $def must reject {}."""
     ck = _load("validation-report")["$defs"]["Check"]
     assert "passed" in ck["required"]
     v = _def_validator("validation-report", "Check")
@@ -158,7 +158,7 @@ def test_check_def_rejects_empty():
 
 
 # --------------------------------------------------------------------------- #
-# iter-3 manifest-completeness audit: expected-required table == emitted required
+# manifest-completeness audit: expected-required table == emitted required
 # --------------------------------------------------------------------------- #
 
 EXPECTED_REQUIRED = {
@@ -222,7 +222,7 @@ def test_generator_guard_raises_on_bogus_required(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# §12.1 status vocabulary enforcement
+# status vocabulary enforcement
 # --------------------------------------------------------------------------- #
 
 
@@ -298,7 +298,7 @@ def test_status_vocab_owner_exempt_only_by_relative_path(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# §12.3 text-mirror round-trip
+# text-mirror round-trip
 # --------------------------------------------------------------------------- #
 
 
@@ -310,7 +310,7 @@ def test_text_mirror_round_trip():
 
 
 # --------------------------------------------------------------------------- #
-# §12.4 diff/audit vocabulary identity
+# diff/audit vocabulary identity
 # --------------------------------------------------------------------------- #
 
 
@@ -327,7 +327,7 @@ def test_diff_audit_vocabulary_identity():
 
 
 # --------------------------------------------------------------------------- #
-# §12.5 fingerprints_equal
+# fingerprints_equal
 # --------------------------------------------------------------------------- #
 
 
@@ -363,7 +363,7 @@ def test_fingerprints_equal_missing_digest_both_none_raises():
 
 
 # --------------------------------------------------------------------------- #
-# §5 derive_verdict
+# derive_verdict
 # --------------------------------------------------------------------------- #
 
 

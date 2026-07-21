@@ -1,7 +1,7 @@
-"""Audit record (design §7) — append-only JSON-lines. Exists from Phase 0 (AD-17).
+"""Audit record: an append-only JSON-lines entry.
 
 Reuses the shared vocabulary (``fingerprint_before/after``, ``params_digest``, and the
-diff's ``touched/new/deleted`` naming, §8) — no synonyms (§12.4).
+diff's ``touched/new/deleted`` naming) rather than introducing synonyms.
 """
 
 from __future__ import annotations

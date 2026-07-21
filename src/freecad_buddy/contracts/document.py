@@ -1,7 +1,7 @@
-"""Document handle & sub-element selectors (design §9, AD-20).
+"""Document handle and sub-element selector types.
 
 Every tool call carries an explicit ``DocHandle``; ``ActiveDocument`` is never an
-implicit target. Selectors are a tagged union — geometric query or TNP mapped name.
+implicit target. Selectors are a tagged union: geometric query or TNP mapped name.
 """
 
 from __future__ import annotations

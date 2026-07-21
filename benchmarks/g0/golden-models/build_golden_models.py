@@ -1,4 +1,4 @@
-"""Deterministic FreeCADCmd generator for the 5 G0 golden reference models (AD-13).
+"""Deterministic FreeCADCmd generator for the 5 golden reference models.
 
 Run under FreeCADCmd (``FreeCADCmd build_golden_models.py``); the ``tests/infc`` self-check
 imports ``MODELS``/``build_model`` and re-measures both the committed ``.FCStd`` and a fresh
@@ -7,7 +7,7 @@ rebuild against the independently hand-computed ``expected.yaml``.
 Each model uses fixed object ``Name``s and placements so the shapes are reproducible. The
 scored fields are volume/bbox/solid-count (measured by the self-check); ``expected.yaml``
 also carries a documentary ``serializer: exportBinary`` marker noting the serializer the
-Story-1.6 ``fingerprint()`` oracle will hash with — this generator commits no fingerprint
+``fingerprint()`` oracle will hash with — this generator commits no fingerprint
 hash (a ``saveAs`` zip is not byte-reproducible, so a committed hash would be unverifiable).
 """
 

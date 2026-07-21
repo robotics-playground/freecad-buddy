@@ -1,7 +1,7 @@
-"""Validation report (design §5) + the normative ``derive_verdict`` rule (§5, AD-8/AD-7).
+"""Validation report shape and the ``derive_verdict`` rule.
 
-``derive_verdict`` is the one behavior-bearing helper here; harness and verify tools
-call it, never re-implement the derivation.
+``derive_verdict`` is the one behavior-bearing helper here: it derives the terminal
+verdict from a report's checks.
 """
 
 from __future__ import annotations
@@ -53,7 +53,7 @@ _PRECEDENCE: dict[TerminalStatus, int] = {
 
 
 def _classify(check: dict) -> TerminalStatus:
-    """Map a failed check to its failure class by ``detail.code`` (§5 normative)."""
+    """Map a failed check to its failure class by ``detail.code``."""
     detail = check.get("detail")
     code = detail.get("code") if isinstance(detail, dict) else None
     if not isinstance(code, str):
@@ -66,7 +66,7 @@ def _classify(check: dict) -> TerminalStatus:
 
 
 def derive_verdict(report: dict) -> TerminalStatus:
-    """Derive the terminal verdict from a ValidationReport (§5).
+    """Derive the terminal verdict from a ValidationReport.
 
     ``OK`` iff every check passed. Otherwise scan ALL failed checks and keep the
     highest-precedence failure class (``RECOMPUTE_ERROR`` > ``INVALID_INPUT`` >

@@ -1,11 +1,11 @@
-"""Provenance gate (AD-16): every ``benchmarks/**`` artifact has a valid manifest.
+"""Provenance gate: every ``benchmarks/**`` artifact has a valid manifest.
 
 Recursively walks ``benchmarks/**`` for artifact files (``*.FCStd``), excluding ``heldout/``
 (sealed), ``_registry/provenance/`` itself, and ``__pycache__``. For each artifact:
 
   - a provenance manifest under ``_registry/provenance/`` must declare its ``artifact`` id
     (path relative to ``benchmarks/`` without the ``.FCStd`` suffix);
-  - the manifest ``source.kind`` must be in the AD-16 closed set.
+  - the manifest ``source.kind`` must be in the closed set.
 
 Additionally flags:
   - a fault case dir with a ``case.yaml`` but no ``fixture.FCStd``;

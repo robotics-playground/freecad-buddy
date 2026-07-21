@@ -1,7 +1,6 @@
-"""Contracts ring: stdlib-only data contracts (AD-1). No third-party, no FreeCAD imports.
+"""Data contracts package: the shared wire vocabulary.
 
-Single import surface for the wire vocabulary (AD-17): every downstream story consumes
-these types and helpers, none invents its own variant.
+Single import surface for the data contract types and helpers.
 """
 
 from freecad_buddy.contracts.assertions import AnchorFrame

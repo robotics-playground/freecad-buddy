@@ -1,6 +1,6 @@
 """Single builder of the contracts ``ValidationReport`` from a criterion + stub outcome.
 
-No report shape is invented here — the shape and verdict rule are Story-1.2's (AD-17). The
+No report shape is invented here — the shape and verdict rule come from the contracts. The
 stub outcome maps to a ``Check`` with ``detail.code = "invalid_input.not_implemented"``, which
 ``derive_verdict`` classifies as ``INVALID_INPUT`` — the honest "this criterion cannot be
 evaluated: no bridge/tool exists yet" class (NOT ``RECOMPUTE_ERROR``: no recompute was
@@ -16,8 +16,8 @@ from freecad_buddy.contracts.report import (
     derive_verdict,
 )
 
-# Phase-0 honest "cannot evaluate" code. `invalid_input.` prefix -> INVALID_INPUT via
-# derive_verdict (verified against contracts/report.py::_classify).
+# Honest "cannot evaluate" code. `invalid_input.` prefix -> INVALID_INPUT via
+# derive_verdict.
 STUB_NOT_IMPLEMENTED_CODE = "invalid_input.not_implemented"
 
 
@@ -41,7 +41,7 @@ def build_report(criterion: dict, outcome: dict) -> ValidationReport:
         "measured": None,
         "expected": criterion.get("pass_rule"),
         # `is True` (not bool()): only a genuine boolean True flips this to passed — a stub
-        # returning a truthy non-bool must never silently turn an honest fail green (AD-19).
+        # returning a truthy non-bool must not turn an honest fail green.
         "passed": outcome.get("implemented") is True,
         "detail": {
             "code": outcome.get("code", STUB_NOT_IMPLEMENTED_CODE),

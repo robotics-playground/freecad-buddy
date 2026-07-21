@@ -1,9 +1,8 @@
-"""Fingerprint record (design §10, AD-6). Contracts owns only the record SHAPE.
+"""Fingerprint record shape and comparison helper.
 
 ``fingerprints_equal`` raises on incomparable records (serializer-tag mismatch or a
-missing serializer/digest on either side) — cross-tag comparison is a programming
-error, never a "changed" verdict, and an absent digest must never compare equal by
-omission.
+missing serializer/digest on either side) so cross-tag comparison never yields a
+"changed" verdict and an absent digest never compares equal by omission.
 """
 
 from __future__ import annotations

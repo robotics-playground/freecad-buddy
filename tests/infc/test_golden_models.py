@@ -1,9 +1,8 @@
 """In-FreeCAD golden-model self-check (stdlib unittest, discovered by tests/run_tests.py).
 
 Validates the COMMITTED .FCStd fixtures against the independently hand-computed
-``expected.yaml`` (independent-oracle self-check, AD-13). Opens documents via raw
-``App.openDocument`` — the AD-20 ``document_*`` usecases do not exist yet (Story 1.4), so a
-raw open in a TEST is acceptable here; every opened doc is closed.
+``expected.yaml`` (independent-oracle self-check). Opens documents via raw
+``App.openDocument`` (a raw open in a test is acceptable here); every opened doc is closed.
 """
 
 import sys

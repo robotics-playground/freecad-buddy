@@ -1,7 +1,7 @@
-"""Geometry diff (design §8) — preview payload (AD-10) + G4.2 revision-diff shape.
+"""Geometry diff: the preview and revision-diff payload shape.
 
-Field names ``touched/new/deleted/fingerprint_before`` MUST match the audit
-identifiers (§12.4) — no synonyms.
+Field names ``touched/new/deleted/fingerprint_before`` match the audit identifiers
+rather than introducing synonyms.
 """
 
 from __future__ import annotations

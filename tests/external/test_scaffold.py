@@ -1,4 +1,4 @@
-"""Scaffold structure assertions (AC#1): ring dirs + key files exist, empty inits are
+"""Scaffold structure assertions: ring dirs + key files exist, empty inits are
 byte-empty, and check_imports passes clean on the real tree."""
 
 import sys
@@ -36,7 +36,6 @@ def test_key_files_exist():
 
 def test_decision_notes_exist():
     notes = sorted((REPO_ROOT / "docs" / "decisions").glob("00*.md"))
-    # Story 1.1 landed 001-006; Story 1.3 adds 007 (G0.E reuse survey).
     assert len(notes) >= 7, f"expected >=7 decision notes, found {len(notes)}"
     stems = {p.name.split("-")[0] for p in notes}
     assert {"001", "002", "003", "004", "005", "006", "007"} <= stems
