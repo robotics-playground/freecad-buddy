@@ -11,6 +11,10 @@ jobs:
       - run: uv sync --all-extras
       - name: Ring / Qt import enforcement
         run: uv run python scripts/check_imports.py
+      - name: Status vocabulary enforcement
+        run: uv run python scripts/check_status_vocab.py
+      - name: Schema drift check
+        run: uv run python scripts/gen_schemas.py --check
       - name: Ruff (T201 print-ban honored)
         run: uv run ruff check .
       - name: External suite

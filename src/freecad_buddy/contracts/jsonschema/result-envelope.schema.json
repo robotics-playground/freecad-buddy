@@ -1,0 +1,110 @@
+{
+  "$defs": {
+    "ErrorDetail": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "constraint_ids": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "data": {
+          "type": "object"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "ImageRef": {
+      "properties": {
+        "audience": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "data_b64": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "resource_link",
+            "inline"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "fcb.result-envelope/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "detail": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ErrorDetail"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "images": {
+      "items": {
+        "$ref": "#/$defs/ImageRef"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "fcb.result-envelope/1"
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "SPEC_FAILED",
+        "RECOMPUTE_ERROR",
+        "TIMEOUT",
+        "OOM_KILLED",
+        "WORKER_CRASHED",
+        "INVALID_INPUT"
+      ]
+    },
+    "structured_content": {
+      "type": "object"
+    },
+    "text": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "structured_content",
+    "text"
+  ],
+  "title": "ResultEnvelope",
+  "type": "object"
+}

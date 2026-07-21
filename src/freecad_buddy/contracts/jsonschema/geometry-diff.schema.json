@@ -1,0 +1,86 @@
+{
+  "$defs": {
+    "DocHandle": {
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transient": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.geometry-diff/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "counts": {
+      "type": "object"
+    },
+    "deleted": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "deltas": {
+      "type": "object"
+    },
+    "doc": {
+      "$ref": "#/$defs/DocHandle"
+    },
+    "fingerprint_before": {
+      "type": "string"
+    },
+    "new": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "op": {
+      "type": "object"
+    },
+    "render": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "fcb.geometry-diff/1"
+    },
+    "tnp_precheck": {
+      "type": "object"
+    },
+    "touched": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "validity": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "deltas",
+    "counts",
+    "validity",
+    "tnp_precheck"
+  ],
+  "title": "GeometryDiff",
+  "type": "object"
+}

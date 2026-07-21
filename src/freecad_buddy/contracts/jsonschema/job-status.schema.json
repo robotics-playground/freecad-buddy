@@ -1,0 +1,209 @@
+{
+  "$defs": {
+    "ErrorDetail": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "constraint_ids": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "data": {
+          "type": "object"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "ImageRef": {
+      "properties": {
+        "audience": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "data_b64": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "resource_link",
+            "inline"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ResultEnvelope": {
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorDetail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "images": {
+          "items": {
+            "$ref": "#/$defs/ImageRef"
+          },
+          "type": "array"
+        },
+        "schema": {
+          "const": "fcb.result-envelope/1"
+        },
+        "status": {
+          "enum": [
+            "OK",
+            "SPEC_FAILED",
+            "RECOMPUTE_ERROR",
+            "TIMEOUT",
+            "OOM_KILLED",
+            "WORKER_CRASHED",
+            "INVALID_INPUT"
+          ]
+        },
+        "structured_content": {
+          "type": "object"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "status",
+        "structured_content",
+        "text"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.job-status/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "artifacts": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "detail": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ErrorDetail"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "progress": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "result": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResultEnvelope"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "fcb.job-status/1"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "state": {
+      "anyOf": [
+        {
+          "enum": [
+            "QUEUED",
+            "RUNNING"
+          ]
+        },
+        {
+          "enum": [
+            "OK",
+            "SPEC_FAILED",
+            "RECOMPUTE_ERROR",
+            "TIMEOUT",
+            "OOM_KILLED",
+            "WORKER_CRASHED",
+            "INVALID_INPUT"
+          ]
+        }
+      ]
+    },
+    "submitted_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "state"
+  ],
+  "title": "JobStatus",
+  "type": "object"
+}

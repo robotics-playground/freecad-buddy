@@ -1,0 +1,211 @@
+{
+  "$defs": {
+    "Check": {
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorDetail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "measured": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "passed"
+      ],
+      "type": "object"
+    },
+    "ErrorDetail": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "constraint_ids": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "data": {
+          "type": "object"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "ReportBanner": {
+      "properties": {
+        "element_map_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freecad_version": {
+          "type": "string"
+        },
+        "validator_sensitivity": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wilson_ci": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WilsonCI"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "freecad_version",
+        "element_map_version"
+      ],
+      "type": "object"
+    },
+    "WilsonCI": {
+      "properties": {
+        "high": {
+          "type": "number"
+        },
+        "low": {
+          "type": "number"
+        },
+        "n": {
+          "type": "integer"
+        },
+        "r": {
+          "type": "integer"
+        },
+        "rate": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "fcb.validation-report/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "banner": {
+      "$ref": "#/$defs/ReportBanner"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/Check"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "fcb.validation-report/1"
+    },
+    "subject": {
+      "type": "object"
+    },
+    "verdict": {
+      "enum": [
+        "OK",
+        "SPEC_FAILED",
+        "RECOMPUTE_ERROR",
+        "TIMEOUT",
+        "OOM_KILLED",
+        "WORKER_CRASHED",
+        "INVALID_INPUT"
+      ]
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/$defs/Check"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "banner",
+    "checks",
+    "verdict"
+  ],
+  "title": "ValidationReport",
+  "type": "object"
+}

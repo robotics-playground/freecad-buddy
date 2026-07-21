@@ -1,0 +1,128 @@
+{
+  "$defs": {
+    "DocHandle": {
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transient": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.audit-record/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "actor": {
+      "type": "string"
+    },
+    "approval": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "doc": {
+      "$ref": "#/$defs/DocHandle"
+    },
+    "event": {
+      "enum": [
+        "mutation",
+        "exec",
+        "preview",
+        "approval",
+        "rollback"
+      ]
+    },
+    "fingerprint_after": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fingerprint_before": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "params_digest": {
+      "type": "string"
+    },
+    "rollback": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "fcb.audit-record/1"
+    },
+    "tool": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string"
+    },
+    "verify_report_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verify_verdict": {
+      "anyOf": [
+        {
+          "enum": [
+            "OK",
+            "SPEC_FAILED",
+            "RECOMPUTE_ERROR",
+            "TIMEOUT",
+            "OOM_KILLED",
+            "WORKER_CRASHED",
+            "INVALID_INPUT"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "ts",
+    "actor",
+    "event"
+  ],
+  "title": "AuditRecord",
+  "type": "object"
+}

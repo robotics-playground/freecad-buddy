@@ -1,0 +1,93 @@
+{
+  "$defs": {
+    "MassProps": {
+      "properties": {
+        "area": {
+          "type": "number"
+        },
+        "bbox": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "com": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "principal_moments": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "quantum": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "volume",
+        "area",
+        "bbox",
+        "com",
+        "principal_moments",
+        "quantum"
+      ],
+      "type": "object"
+    },
+    "ObjectFingerprint": {
+      "properties": {
+        "brep_sha256": {
+          "type": "string"
+        },
+        "massprops": {
+          "$ref": "#/$defs/MassProps"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "brep_sha256",
+        "massprops"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.fingerprint/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "digest": {
+      "type": "string"
+    },
+    "objects": {
+      "items": {
+        "$ref": "#/$defs/ObjectFingerprint"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "fcb.fingerprint/1"
+    },
+    "serializer": {
+      "enum": [
+        "exportBinary",
+        "exportBrep"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "serializer",
+    "objects",
+    "digest"
+  ],
+  "title": "FingerprintRecord",
+  "type": "object"
+}
