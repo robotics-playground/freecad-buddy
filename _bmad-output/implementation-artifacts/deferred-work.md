@@ -96,3 +96,19 @@ source_spec: `spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
 status: open
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
+  summary: `query_sketch_info` reads a geometry element's `construction` flag via `getattr(geo, "Construction", False)`; on FreeCAD builds that migrate the flag onto the `GeometryFacade`/`Sketch.getConstruction(index)` the raw geometry object may not carry `Construction`, so every element would silently report `construction: false`.
+  evidence: On the local FreeCAD 1.1 build the raw geometry still exposes `Construction` (the story's infc test passes), so no regression today; the risk is version-forward. Prefer `obj.getConstruction(index)` with a fallback to the geometry attribute if/when a build drops the raw flag.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
+  summary: `query_dependencies` whole-document mode emits an uncapped `edges` array (every object's OutList), unlike `query_tree_summary` which caps at `max_nodes`; a very large assembly yields an unbounded response.
+  evidence: The design (mcp-tools §2) specifies no cap for `query_dependencies`, and Phase-0 documents are small, so this is not a story-1.5 defect; add a bound/pagination if the dependency response size becomes a context concern for large models (Phase 1 assistant surface).
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
+  summary: `query_object`'s `_json_safe` recurses through list/tuple/dict property values with no depth limit and no cycle detection, so a self-referential or very deeply nested property value would either serialize to an unbounded payload or raise `RecursionError` (mapped to `RECOMPUTE_ERROR`).
+  evidence: FreeCAD's standard scalar/vector/list property values are shallow, so no live object triggers it in Phase 0 (the infc suite passes); the risk is a scripted/`PropertyPythonObject` value holding a cyclic or huge structure. Bound the recursion depth and total element count (stringify/truncate on overflow) when a query surface must tolerate hostile or scripted-object property content.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
+  summary: `query_mass_properties` guards only a null `Shape`; a non-null non-solid shape (shell/wire/face) reports `volume: 0` and a `CenterOfMass` computed over area/length as if it were volumetric mass, and for some degenerate compounds the OCC `CenterOfMass`/`Volume` call can raise and surface as `RECOMPUTE_ERROR` rather than a fail-closed `INVALID_INPUT`.
+  evidence: The story's mass-props test exercises only a clean solid box, so the non-solid branch is unverified; the design treats "no queryable geometry" as `INVALID_INPUT` but does not specify non-solid handling. Gate `volume`/`com` behind `len(shape.Solids) > 0` (or emit nulls) and wrap the OCC reads to map a degenerate shape to `INVALID_INPUT` when a caller needs mass properties on non-solid geometry.

@@ -152,6 +152,93 @@ def build_registry(
             mutating=False,
         )
     )
+    methods.register(
+        RpcMethod(
+            name="query_tree_summary",
+            handler=marshaled(lambda **p: queries.query_tree_summary(registry, **p), 30.0),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "doc": _DOC_SCHEMA,
+                    "max_nodes": {"type": "integer", "default": 100, "minimum": 0},
+                },
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            description="Bounded feature-tree summary; caps nodes and flags truncation.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="query_object",
+            handler=marshaled(lambda **p: queries.query_object(registry, **p), 30.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA, "object": {"type": "string"}},
+                "required": ["doc", "object"],
+                "additionalProperties": False,
+            },
+            description="Report an object's name, label, type, property values, and error state.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="query_mass_properties",
+            handler=marshaled(lambda **p: queries.query_mass_properties(registry, **p), 30.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA, "object": {"type": "string"}},
+                "required": ["doc", "object"],
+                "additionalProperties": False,
+            },
+            description="Volume, area, bbox, centre of mass, and topology counts of a shape.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="query_dependencies",
+            handler=marshaled(lambda **p: queries.query_dependencies(registry, **p), 30.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA, "object": {"type": "string"}},
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            description="Dependency links by Name: in/out lists for an object, or whole-doc edges.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="query_sketch_info",
+            handler=marshaled(lambda **p: queries.query_sketch_info(registry, **p), 30.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA, "sketch": {"type": "string"}},
+                "required": ["doc", "sketch"],
+                "additionalProperties": False,
+            },
+            description="List a sketch's geometry and constraints with driving flags.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="query_placement",
+            handler=marshaled(lambda **p: queries.query_placement(registry, **p), 30.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA, "object": {"type": "string"}},
+                "required": ["doc", "object"],
+                "additionalProperties": False,
+            },
+            description="Report an object's local and global placement (position, axis, angle).",
+            mutating=False,
+        )
+    )
 
     # Gate the exec path at registration: when disabled the handler never enters the registry,
     # so no dispatch path can reach it. The tools/list and call-tool guards are defense in depth.

@@ -36,6 +36,15 @@ EXPECTED_DOCUMENT_TOOLS = {
     "document_recompute",
 }
 
+EXPECTED_QUERY_TOOLS = {
+    "query_tree_summary",
+    "query_object",
+    "query_mass_properties",
+    "query_dependencies",
+    "query_sketch_info",
+    "query_placement",
+}
+
 
 def _load_schema(name: str) -> dict:
     return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
@@ -47,15 +56,36 @@ def _registry(caps: Capabilities) -> MethodRegistry:
     return build_registry(DocumentRegistry(), caps, Marshal(InlineExecutor()))
 
 
-def test_tools_list_exec_off_lists_six_document_plus_query():
+def test_tools_list_exec_off_lists_document_and_query_tools():
     caps = Capabilities(allow_exec=False)
     tools = registered_tools(_registry(caps), caps)
     names = {t.name for t in tools}
 
     assert EXPECTED_DOCUMENT_TOOLS <= names
+    assert EXPECTED_QUERY_TOOLS <= names
     assert "query_capabilities" in names
     assert "debug_exec" not in names
-    assert names == EXPECTED_DOCUMENT_TOOLS | {"query_capabilities"}
+    assert names == EXPECTED_DOCUMENT_TOOLS | EXPECTED_QUERY_TOOLS | {"query_capabilities"}
+
+
+def test_query_tools_require_doc_and_reject_unknown_keys():
+    caps = Capabilities(allow_exec=False)
+    tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
+    for name in EXPECTED_QUERY_TOOLS:
+        schema = tools[name].inputSchema
+        assert schema["additionalProperties"] is False, f"{name} allows extra keys"
+        if name == "query_dependencies":
+            assert schema["required"] == ["doc"]
+            assert "object" in schema["properties"]
+        else:
+            assert "doc" in schema["required"], f"{name} does not require doc"
+
+
+def test_dispatch_query_with_unknown_handle_is_invalid_input():
+    caps = Capabilities(allow_exec=False)
+    registry = _registry(caps)
+    envelope = registry.dispatch("query_object", {"doc": "fcb-doc:missing", "object": "Box"})
+    assert envelope["status"] == "INVALID_INPUT"
 
 
 def test_every_tool_has_input_output_schema_and_docstring():
