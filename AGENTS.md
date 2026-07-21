@@ -36,6 +36,10 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
+**Artifacts hold latest state, not history.** Architecture, PRD, design docs, and source files record what the system *is* — never progress notes, status updates, "Auto Run Result" sections, change logs, or decision narration. History lives in git and the sprint/ledger tooling, not in the artifact body.
+
+**Comments and docstrings are pure code documentation.** Describe only what the class/function does and its params, returns, and raised errors. No design rationale, no "because AD-x", no provenance ("for the external suite / static analysis"), no requirement-traceability tags — AD/NFR/story ids, spec-section citations (`§1.1`, `mcp-tools §2`), cross-doc pointers (`project-context FreeCAD API Traps`), or ring tags (`Ring: usecases/ (AD-1/AD-12)`). A code-to-AD/NFR/story relationship is not code documentation and is useless to a developer reading the code; if a decision needs explaining, put it in a decision note, not inline.
+
 ## 4. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
@@ -155,6 +159,7 @@ Boundaries: code/commits/PRs written normal.
 - For branch, commit, push, sync, or submodule work, load and follow gitflow.
 - Before any Git write, check current branch in workspace and every affected service repository.
 - Never commit, merge, rebase, reset, or push directly to `main`, `master`, `develop`, `dev`, `stage`, `staging`, `release`, `test`, `uat`, `prod`, or `production` without explicit confirmation naming that branch and operation.
+- **bmad-loop exception:** when a spawned `bmad-dev-auto` dev/review session finalizes a story, its per-story commit to the current branch (`main` expected) is pre-approved — do not halt to ask. Scoped to that per-story commit only: no push, no force, no history rewrite, and it does not relax the rule for ordinary interactive sessions.
 - Commit messages and pull requests contain no AI attribution or `Co-Authored-By` trailer.
 - Use Conventional Commits.
 ### User Story Creation

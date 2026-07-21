@@ -46,14 +46,17 @@ jobs:
             channels:
               - conda-forge
           cache-environment: true
-      # Install the package WITHOUT runtime deps so this blocking leg is not coupled to the
-      # unpinned `mcp` (decision 005) or to third-party wheels building against FreeCAD's
-      # bundled interpreter. The Phase-0 suites need only pytest.
-      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install pytest jsonschema pyyaml
+      # Install the package WITHOUT runtime deps (no third-party wheels built against
+      # FreeCAD's bundled interpreter for the in-FreeCAD suite). The external suite needs
+      # `mcp` (pin CLOSED in decision 005) because the MCP-surface tests import the H1 host
+      # wiring; add it alongside the test tools. H1 is a single process (FreeCAD + mcp in one
+      # interpreter), so `mcp` living in this conda env is also what makes `--mode inline`
+      # servable on this leg.
+      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install "mcp>=1.28,<2" pytest jsonschema pyyaml
       - name: In-FreeCAD suite (stdlib unittest, one process)
         timeout-minutes: 15
         run: micromamba run -n fc FreeCADCmd tests/run_tests.py
-      - name: External suite
+      - name: External suite (MCP surface, dispatch, audit)
         timeout-minutes: 15
         run: micromamba run -n fc pytest tests/external
 

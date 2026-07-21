@@ -257,7 +257,7 @@ requires-dist = [
     { name = "admesh", marker = "sys_platform == 'linux' and extra == 'stl-oracle'" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4" },
     { name = "lib3mf", specifier = "==2.*" },
-    { name = "mcp" },
+    { name = "mcp", specifier = ">=1.28,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "pyyaml", marker = "extra == 'dev'", specifier = ">=6" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },

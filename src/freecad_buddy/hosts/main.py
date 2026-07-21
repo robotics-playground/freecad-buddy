@@ -1,8 +1,10 @@
 """Headless CLI entry (console-script ``freecad-buddy``).
 
-Phase-0 stub: parses a ``serve`` subcommand and returns. No print() (ruff T201);
-diagnostics go to stderr. Transport/mode wiring lands in story 1.4.
+``serve --transport stdio --mode inline`` runs the headless host. ``--mode rpc`` is not yet
+available and returns a clear error with a non-zero exit. Diagnostics go to stderr.
 """
+
+from __future__ import annotations
 
 import argparse
 import sys
@@ -19,10 +21,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "serve":
-        sys.stderr.write(
-            f"serve stub: transport={args.transport} mode={args.mode} (not implemented yet)\n"
-        )
-        return 0
+        if args.mode == "rpc":
+            sys.stderr.write("RPC transport is not available yet; use --mode inline.\n")
+            return 2
+        if args.transport != "stdio":
+            sys.stderr.write(
+                f"transport '{args.transport}' is not available yet; use --transport stdio.\n"
+            )
+            return 2
+        from freecad_buddy.hosts.headless.entry import run
+
+        return run()
 
     return 0
 

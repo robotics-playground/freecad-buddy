@@ -53,3 +53,46 @@ source_spec: `spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
 status: open
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `document_recompute` returns an `OK` envelope even when it collects per-object `errors`; whether a recompute-with-errors should map to `RECOMPUTE_ERROR` (AD-17) or stay `OK`-with-error-data is an unresolved spine-owner ruling.
+  evidence: mcp-tools §2 says recompute "report per-object error states" (data), a defensible OK reading; but AD-17's status set includes `RECOMPUTE_ERROR`. The code silently chose OK. Verification core (story 1.6) owns the recompute-clean sweep and should encode the ruling then.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `query_capabilities` capability-banner payload crosses the wire but has no `contracts/`-owned TypedDict/schema, unlike every other wire type (AD-17 "contracts-owned").
+  evidence: `shim.capability_banner() -> dict` and `queries.query_capabilities` assemble a loose dict. Read-only query payloads are formalized in story 1.5 (query_ surface); the banner shape should be defined in contracts then.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `shim.element_map_available()` requires a NON-empty element map on a probe box, which is behavioral (did this shape populate a map) rather than pure capability (is the API exposed) — a lazily-populating build could yield a false negative (AD-11 wants a capability probe).
+  evidence: probe uses `Part.makeBox(...)` then checks map non-emptiness. Passes on real FreeCAD 1.1 today, but the TNP guard (story 1.6/1.7) depends on this signal; revisit the probe form when the TNP audit lands.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `debug_exec` audit records the `params_digest` (sha256 of `{doc, code}`) but does NOT persist the executed source; the highest-risk path leaves an audit line that proves a hash but cannot reproduce what ran.
+  evidence: `audit_log._record` stores only `params_digest`. security-and-service §1 frames exec auditing as evidentiary; digest-only vs code-retention is a privacy-vs-forensics posture call for the security owner. Fingerprints are also `None` (deferred to story 1.6 fingerprint()).
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `document_open` on a path already open in the session mints a SECOND handle for the same underlying FreeCAD doc; closing one handle closes the doc, stranding the other on a dead object.
+  evidence: `document_open` unconditionally `FreeCAD.openDocument(path)` + mints a fresh handle with no already-open dedupe. Rarely hit in Phase-0 single-file bring-up; worth an already-open check (return the existing handle) when multi-doc query/verify stories exercise open heavily.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: The `shim.varset_backend()` capability probe creates and closes a throwaway `FCB_TMP_varset_probe` FreeCAD document OUTSIDE the `DocumentRegistry` single-writer lock (invoked once, lru_cache'd, via `query_capabilities`), so its doc-set churn is not serialized against registry mutations (AD-20).
+  evidence: `varset_backend` calls `FreeCAD.newDocument`/`closeDocument` directly; `query_capabilities` is non-mutating and the probe runs at most once per process under the single-threaded `InlineExecutor`, so no race is reachable in Phase-0 H1. Becomes relevant when a concurrent (GUI/RPC) executor lands and probes could interleave with registry ops; serialize the probe under the writer lock (or run all capability probes once at startup before serving) then.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `debug_exec` runs its `exec(code)` body inline (single-process `InlineExecutor`), so the marshal `timeout_s` never fires; an infinite or long-running operator body hangs the whole headless server with no `TIMEOUT` and no interrupt.
+  evidence: `Marshal.call` with `InlineExecutor` runs `fn()` synchronously and `done.wait()` returns immediately after completion, so the timeout path is dead on the inline host. Operator-only + Phase-0 bring-up makes this low-risk now; a real bounded/interruptible exec needs an out-of-thread execution mechanism, which arrives with the GUI/RPC threaded marshal (story 1.8).
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: `document_recompute` reports per-object errors only when `"Invalid"` is present in `obj.State`; an object left `"Touched"` / not-recomputed after a recompute (silent skip) is reported as clean, so the per-object error set can under-report.
+  evidence: The error comprehension filters on `if "Invalid" in state` only. No in-FreeCAD test creates an object that fails or is skipped during recompute, so the branch's completeness is unverified. Revisit the recompute-clean vocabulary (which States count as failure) together with the recompute-clean sweep in verification core (story 1.6).
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+  summary: Both audit lines for a mutation/exec carry `fingerprint_before`/`fingerprint_after` hard-coded to `None`, and the `after` line repeats the pre-execution `params` rather than the result, so an audit pair records almost no evidence of what actually changed.
+  evidence: `AuditSink.before`/`after` set the fingerprint fields to `None`; `mcp_server._call_tool` passes the same `args` to both. `fingerprint()` lands in story 1.6, so real before/after hashes are not computable yet; wire them (and a result-bearing `after` payload) into the audit sink when `fingerprint()` exists.
+
+### DW-2: Follow-up review still recommended for 1-4-document-lifecycle-headless-host-mcp-surface after the damping cap was spent
+origin: review-budget-followup
+source_spec: `spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
+severity: low
+reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
+status: open

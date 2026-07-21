@@ -1,0 +1,199 @@
+"""Document lifecycle operations and the opaque-handle registry.
+
+Mints an opaque ``fcb-doc:<token>`` handle per document and targets every operation by that
+handle. A call that omits a required handle, or names a stale or unknown handle, raises
+``ValidationError``. A single process-wide lock serializes mutating operations.
+"""
+
+from __future__ import annotations
+
+import secrets
+import threading
+from typing import Callable, TypeVar
+
+from freecad_buddy.contracts import ResultEnvelope, mirror_text
+
+T = TypeVar("T")
+
+
+class ValidationError(Exception):
+    """Caller-facing input validation failure for a document operation."""
+
+
+def _ok_envelope(structured: dict) -> ResultEnvelope:
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": structured,
+        "text": mirror_text(structured),
+    }
+
+
+class DocumentRegistry:
+    """Maps opaque session handles to live FreeCAD ``App.Document`` objects.
+
+    The handle is a session token, never the FreeCAD ``Name``. A single lock serializes every
+    mutating operation.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._by_handle: dict[str, object] = {}
+        self._transient: dict[str, bool] = {}
+
+    # -- handle helpers -----------------------------------------------------------------
+
+    def _mint_handle(self) -> str:
+        return f"fcb-doc:{secrets.token_urlsafe(16)}"
+
+    def _resolve(self, doc: str | None) -> tuple[str, object]:
+        """Return ``(handle, App.Document)`` for a caller-supplied handle, or raise.
+
+        A missing handle or a stale/unknown handle both raise ``ValidationError``.
+        """
+        if not doc:
+            raise ValidationError("missing required 'doc' handle")
+        document = self._by_handle.get(doc)
+        if document is None:
+            raise ValidationError(f"unknown or stale document handle: {doc}")
+        return doc, document
+
+    def with_document(self, doc: str | None, fn: Callable[[str, object], T]) -> T:
+        """Resolve ``doc`` and run ``fn(handle, document)`` while holding the registry lock."""
+        with self._lock:
+            handle, document = self._resolve(doc)
+            return fn(handle, document)
+
+    def _handle_for(self, document: object) -> str | None:
+        """Return an existing handle already bound to ``document``, or ``None``."""
+        for handle, existing in self._by_handle.items():
+            if existing is document:
+                return handle
+        return None
+
+    # -- lifecycle ops (each returns a ResultEnvelope) ----------------------------------
+
+    def document_create(self, label: str, path: str | None = None) -> ResultEnvelope:
+        """Create a new document, mint and return its handle."""
+        import FreeCAD
+
+        if not label:
+            raise ValidationError("document_create requires a non-empty 'label'")
+        with self._lock:
+            try:
+                document = FreeCAD.newDocument(label)
+            except Exception as exc:
+                raise ValidationError(f"document_create failed for label {label!r}: {exc}") from exc
+            try:
+                document.Label = label
+                if path:
+                    document.saveAs(path)
+                handle = self._mint_handle()
+                self._by_handle[handle] = document
+                self._transient[handle] = path is None
+            except Exception:
+                # Never leave a created document untracked if post-create bookkeeping fails.
+                FreeCAD.closeDocument(document.Name)
+                raise
+            structured = {
+                "doc": handle,
+                "name": document.Name,
+                "label": document.Label,
+            }
+            return _ok_envelope(structured)
+
+    def document_open(self, path: str) -> ResultEnvelope:
+        """Open an ``.FCStd`` file and return its handle.
+
+        Opening a path whose document is already tracked reuses the existing handle rather
+        than minting a second handle for the same document.
+        """
+        import FreeCAD
+
+        if not path:
+            raise ValidationError("document_open requires a 'path'")
+        with self._lock:
+            try:
+                document = FreeCAD.openDocument(path)
+            except Exception as exc:
+                raise ValidationError(f"document_open failed for {path!r}: {exc}") from exc
+            existing = self._handle_for(document)
+            if existing is not None:
+                handle = existing
+            else:
+                handle = self._mint_handle()
+                self._by_handle[handle] = document
+                self._transient[handle] = False
+            structured = {
+                "doc": handle,
+                "name": document.Name,
+                "label": document.Label,
+                "path": path,
+            }
+            return _ok_envelope(structured)
+
+    def document_save(self, doc: str | None = None, path: str | None = None) -> ResultEnvelope:
+        """Save (or save-as) the document named by ``doc``."""
+        with self._lock:
+            handle, document = self._resolve(doc)
+            if path:
+                document.saveAs(path)
+                self._transient[handle] = False
+            else:
+                if self._transient.get(handle, False):
+                    raise ValidationError(
+                        "document has no save target; call document_save with a 'path' first"
+                    )
+                document.save()
+            structured = {"doc": handle, "name": document.Name, "saved": True}
+            return _ok_envelope(structured)
+
+    def document_close(self, doc: str | None = None) -> ResultEnvelope:
+        """Close the document named by ``doc`` and release every handle bound to it."""
+        import FreeCAD
+
+        with self._lock:
+            handle, document = self._resolve(doc)
+            name = document.Name
+            FreeCAD.closeDocument(name)
+            for alias in [h for h, d in self._by_handle.items() if d is document]:
+                del self._by_handle[alias]
+                self._transient.pop(alias, None)
+            structured = {"doc": handle, "name": name, "closed": True}
+            return _ok_envelope(structured)
+
+    def document_recompute(self, doc: str | None = None) -> ResultEnvelope:
+        """Full recompute; report the touched-object count and per-object error states."""
+        with self._lock:
+            handle, document = self._resolve(doc)
+            touched = document.recompute()
+            # FreeCAD flags an errored object with "Invalid" in obj.State; "Error" is not emitted.
+            errors = [
+                {"name": obj.Name, "error": list(state)}
+                for obj in document.Objects
+                for state in [list(getattr(obj, "State", None) or [])]
+                if "Invalid" in state
+            ]
+            structured = {
+                "doc": handle,
+                "name": document.Name,
+                "touched": int(touched) if touched is not None else 0,
+                "errors": errors,
+            }
+            return _ok_envelope(structured)
+
+    def document_list(self) -> ResultEnvelope:
+        """List open documents with handle, name, label, and transient flag."""
+        with self._lock:
+            documents = [
+                {
+                    "doc": handle,
+                    "name": document.Name,
+                    "label": document.Label,
+                    "transient": self._transient.get(handle, False),
+                }
+                for handle, document in self._by_handle.items()
+            ]
+            structured = {"documents": documents}
+            return _ok_envelope(structured)

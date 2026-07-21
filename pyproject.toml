@@ -3,9 +3,12 @@ name = "freecad-buddy"
 version = "0.0.1"
 requires-python = ">=3.11"
 dependencies = [
-    # mcp pin is an OPEN Phase-0 gate decision — see docs/decisions/005-mcp-sdk-pin.md.
-    # Do NOT hard-pin a fabricated version; leave unpinned until SDK v2 stabilizes.
-    "mcp",           # official MCP python-sdk (NOT PrefectHQ fastmcp); pin deferred (decision 005)
+    # mcp pin CLOSED at the Phase-0 gate (Story 1.4) — see docs/decisions/005-mcp-sdk-pin.md.
+    # Official MCP python-sdk still on the v1 line (no FastMCP->MCPServer v2 rename yet); the
+    # low-level `mcp.server.lowlevel.Server` is the confirmed stdio-serve + tools/list surface
+    # with explicit inputSchema/outputSchema. Floor >=1.28 (installed 1.28.1), cap below the
+    # eventual v2 rename so an unattended upgrade cannot silently break the import surface.
+    "mcp>=1.28,<2",  # official MCP python-sdk (NOT PrefectHQ fastmcp)
     "trimesh==4.*",  # export oracle (AD-9)
     "lib3mf==2.*",   # 3MF oracle (AD-9)
 ]
