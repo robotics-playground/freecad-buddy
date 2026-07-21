@@ -17,6 +17,8 @@ companions: []
 
 ## Design Paradigm
 
+> Detailed design: [Component Design](design/component-design.md) (ring inventory, interfaces, flows) · [Project Structure Design](design/project-structure.md) (repo tree, packaging).
+
 **Clean Architecture.** Dependencies point inward only. FreeCAD's App-layer Python API is treated as the domain kernel; `FreeCADGui`/Qt are outer-ring drivers.
 
 | Ring | Directory | Contains | May import |
@@ -44,11 +46,15 @@ graph LR
 
 ### AD-2 — Process topology & main-thread marshaling [ADOPTED]
 
+> Detailed design: [Integration Design — MCP ↔ FreeCAD](design/integration-mcp-freecad.md).
+
 - **Binds:** adapters, hosts
 - **Prevents:** background-thread FreeCAD/Qt calls (the documented crash mode); in-process asyncio-in-Qt fragility
 - **Rule:** GUI mode = external MCP server process + thin in-FreeCAD RPC listener; the listener accepts off-thread and marshals every FreeCAD call to the Qt main thread (Mod/Web `postEvent` pattern); addon start is deferred until `FreeCAD.GuiUp` via `QTimer.singleShot`. Headless mode = single process, tool core called inline (no Qt loop exists); where the external interpreter cannot `import FreeCAD`, the documented fallback is the GUI topology minus Qt — `FreeCADCmd`-hosted RPC listener with inline dispatch. Same use-case implementations in all modes. The RPC wire contract (stdlib-encodable JSON-RPC frames + versioned handshake) is defined in `contracts/` — both sides import it; neither invents framing. *Deliberate amendment of intent.md Phase 0 wording ("MCP server starts inside FreeCAD"): the addon starts the RPC listener; the MCP protocol server is external.*
 
 ### AD-3 — Transport policy [ADOPTED]
+
+> Detailed design: [Integration Design — MCP ↔ FreeCAD](design/integration-mcp-freecad.md) (RPC wire, bind/token) · [MCP Client Integration Design](design/integration-mcp-clients.md) (per-client transport).
 
 - **Binds:** adapters
 - **Prevents:** transport lock-in; deprecated-SSE adoption; stdout protocol corruption
@@ -56,11 +62,15 @@ graph LR
 
 ### AD-4 — Typed tools are the only AI mutation path [ADOPTED]
 
+> Detailed design: [Security and Phase 4 Service Design](design/security-and-service-design.md) (§1 `debug_exec` gating) · [MCP Tool Catalog Design](design/mcp-tools-design.md) (§5 registration rules).
+
 - **Binds:** all
 - **Prevents:** LLM free-form `exec` becoming the mutation path (host RCE + unverifiable ops)
 - **Rule:** AI-visible mutations exist only as typed `sketch_*`/`feature_*`/`document_*` tools. `debug_exec` is operator-only: disabled by default, enabled by human-set env flag, unregistered from the MCP tool list when off, append-only audit-logged, disabled permanently in the Phase 4 service. In-process Python restriction (RestrictedPython, audit hooks, blacklists) is never called a security boundary; isolation is OS-level (AD-18).
 
 ### AD-5 — Uniform mutation transaction protocol [ADOPTED]
+
+> Detailed design: [Verification Subsystem Design](design/verification-design.md) (§1 `run_mutation` wrapper).
 
 - **Binds:** every mutation tool
 - **Prevents:** per-tool divergent safety handling; trusting undo (FreeCAD bug #6031); silent partial rollback
@@ -68,11 +78,15 @@ graph LR
 
 ### AD-6 — Geometry fingerprint definition [ADOPTED]
 
+> Detailed design: [Verification Subsystem Design](design/verification-design.md) (§2 `fingerprint()`) · [Data Contracts Design](design/data-contracts-design.md) (§10 `FingerprintRecord`).
+
 - **Binds:** mutation protocol, undo verification, revision diffs
 - **Prevents:** two incompatible "geometry hash" implementations; nondeterministic oracles
 - **Rule:** Document fingerprint = SHA-256 over per-object shape bytes, objects sorted by immutable `Name`, plus a quantized mass-property tuple (volume, area, bbox, COM, principal moments @1e-6) as independent cross-oracle. Exactly one `fingerprint()` implementation exists (usecases); the serializer is shim-probed (`exportBinary`, else `exportBrep` stream) and every hash is tagged with its serializer id — comparing hashes across serializer tags is banned. Document-XML/FCStd hashing and tessellation hashing are banned as identity oracles.
 
 ### AD-7 — TNP reference audit [ADOPTED]
+
+> Detailed design: [Verification Subsystem Design](design/verification-design.md) (§3 TNP guard, layers 0–2).
 
 - **Binds:** every mutation tool; verification reports
 - **Prevents:** silent reference re-point/drop passing as success; false-clean verdicts on unsupported versions
@@ -80,11 +94,15 @@ graph LR
 
 ### AD-8 — Sketch pass signal [ADOPTED]
 
+> Detailed design: [Verification Subsystem Design](design/verification-design.md) (§4 `verify_sketch`).
+
 - **Binds:** verify tools, benchmark graders, repair loops
 - **Prevents:** grader and verifier disagreeing on "fully constrained"; inferring DoF from `solve() == 0`
 - **Rule:** PASS ⇔ `sketch.FullyConstrained == True`, read after `doc.recompute()`. Hard fail on conflicting/malformed/over-/under-constrained or degenerate geometry; redundant constraints warn, never fail. `solve()` return codes are logging only.
 
 ### AD-9 — Export/verify pairing [ADOPTED]
+
+> Detailed design: [Verification Subsystem Design](design/verification-design.md) (§6 `verify_export_*`).
 
 - **Binds:** all export tools
 - **Prevents:** "bytes were written" counted as success; STL/3MF silently diverging; format-specific writer bugs shipping
@@ -92,11 +110,15 @@ graph LR
 
 ### AD-10 — Preview/confirmation channel [ADOPTED]
 
+> Detailed design: [MCP Client Integration Design](design/integration-mcp-clients.md) (§4 confirmation matrix, §5 image rules) · [Data Contracts Design](design/data-contracts-design.md) (§8 `GeometryDiff`).
+
 - **Binds:** Phase 2+ mutation UX, all three client contexts (GUI panel, MCP client, headless)
 - **Prevents:** preview design that assumes a GUI; confirmation gated on pixels; image token blow-ups
 - **Rule:** `preview_dry_run` executes on a `copyObject` TempDoc and returns a structured diff (Δvolume/area/bbox/COM, face/edge/solid counts, touched/new/deleted nodes, validity, TNP pre-check) validated by its `outputSchema` — the mandatory payload. Renders are optional and capability-gated (GUI `saveImage` / offscreen-Xvfb / omit), ≤1024 px, `audience:["user"]`, `resource_link` preferred over inline base64. Confirmation: MCP elicitation (`accept`/`decline`/`cancel`) with client-confirm fallback; headless is fail-closed unless an explicit `autoApprove` flag, and every auto-approval is audit-logged. Apply re-runs the op on the live document under AD-5.
 
 ### AD-11 — Version matrix & shim [ADOPTED]
+
+> Detailed design: [Integration Design — MCP ↔ FreeCAD](design/integration-mcp-freecad.md) (§5 `shim.py`) · [Project Structure Design](design/project-structure.md) (§3 version legs).
 
 - **Binds:** all FreeCAD-touching code; CI
 - **Prevents:** version-sensitive calls scattered through use cases; incomparable TNP metrics across legs
@@ -104,11 +126,15 @@ graph LR
 
 ### AD-12 — In-FreeCAD code is dependency-free [ADOPTED]
 
+> Detailed design: [Project Structure Design](design/project-structure.md) (§2.3 one package, two runtimes).
+
 - **Binds:** usecases, RPC listener, GUI addon
 - **Prevents:** bundled-Python dependency hell; broken Addon Manager installs
 - **Rule:** Code that runs inside the FreeCAD process imports stdlib + FreeCAD API only. All third-party dependencies (mcp/FastMCP, trimesh, admesh, lib3mf, pytest…) live in the external MCP/harness process, uv-managed.
 
 ### AD-13 — Harness independence & assertion style [ADOPTED]
+
+> Detailed design: [Validation & Benchmark Harness Design](design/validation-harness-design.md) (independence, fault-injection, grader) · [Verification Subsystem Design](design/verification-design.md) (§7 assertion vocabulary).
 
 - **Binds:** benchmarks, graders, Phase 3 spec assertions
 - **Prevents:** actor grading itself; feature-tree reading validating intent instead of artifact; TNP-fragile selectors
@@ -116,11 +142,15 @@ graph LR
 
 ### AD-14 — Benchmark statistics rules [ADOPTED]
 
+> Detailed design: [Validation & Benchmark Harness Design](design/validation-harness-design.md) (§4 stats module).
+
 - **Binds:** every phase gate and ablation claim
 - **Prevents:** noise reported as wins; the +15pp-at-n=20 undecidable criterion
 - **Rule:** "Measurable margin" = exact McNemar two-sided p<0.05 **and** 95 % Wilson CI on the paired difference excluding 0. Repeats: R=5 default, R=3 Phase 1 answer eval, R≥10 for sealed held-out runs and any pp-threshold claim; a case scores pass on **majority-of-R**, and the per-repeat distribution is reported alongside the rate. Every reported pass rate carries its Wilson 95 % CI. Any specific pp-threshold claim (e.g. `design-decomposition` +15pp) runs on a dedicated n≥40 paired set. Below-detection effects are reported as "below detection at this n", not as failures. A dev/held-out gap >15pp = overfitting — the phase does not exit.
 
 ### AD-15 — Skills loading architecture [ADOPTED]
+
+> Detailed design: [Skills Library Structure Design](design/skills-structure-design.md) (store, loader, routing, budgets).
 
 - **Binds:** skills library, agent harnesses, ablation runner
 - **Prevents:** context-rot from all-12 resident loading; nondeterministic ablation A/Bs; cross-skill coupling polluting deltas
@@ -128,11 +158,15 @@ graph LR
 
 ### AD-16 — Benchmark provenance policy [ADOPTED]
 
+> Detailed design: [Validation & Benchmark Harness Design](design/validation-harness-design.md) (§1.2 provenance manifest).
+
 - **Binds:** all shipped benchmark/golden-model artifacts
 - **Prevents:** Onshape-lineage copyright and non-commercial terms contaminating the repo
 - **Rule:** Shipped artifacts come only from commercial-clean sources: FreeCAD Parts Library (CC-BY, attribution retained), FreeCAD wiki tutorials, hand-authored specs, verified-permissive HF datasets. Hand-authored specs must derive from documented real-world parts or user requests — never reverse-engineered to fit what the agent already does well. DeepCAD/ABC/Text2CAD lineage and Fusion 360 Gallery are methodology references and import-only geometry oracles — never shipped. Every benchmark documents provenance; community models are license-checked per item.
 
 ### AD-17 — Job status & report integrity [ADOPTED]
+
+> Detailed design: [Data Contracts Design](design/data-contracts-design.md) (envelope, status, report, job, audit) · [Security and Phase 4 Service Design](design/security-and-service-design.md) (§6.4 supervisor re-checks).
 
 - **Binds:** all tool results, validation reports, Phase 4 job API (schema binds from Phase 0)
 - **Prevents:** "HTTP 200 for a bad part"; silent failures; schema rework at Phase 4
@@ -140,11 +174,15 @@ graph LR
 
 ### AD-18 — Service isolation posture [ADOPTED]
 
+> Detailed design: [Security and Phase 4 Service Design](design/security-and-service-design.md) (§5–§6 service architecture, sandbox).
+
 - **Binds:** Phase 4 service; constrains earlier phases only via AD-17 schemas
 - **Prevents:** in-process "sandboxing" theater; leak-accumulating long-lived workers
 - **Rule:** The unit of memory reclamation and crash containment is the worker **process** (supervisor never imports FreeCAD; `spawn` start method; recycle default `maxtasksperchild=1`; whole-tree kill via Job Object / process-group). Security boundary is OS-level (Linux: nsjail/bubblewrap or hardened `--network none` container; Windows: WSL2-hosted Linux stack preferred, else AppContainer + Job Object); workers are network-free (egress deny-by-default) and GPU-none. Concrete profiles are set at the Phase 4 gate.
 
 ### AD-19 — Validation Design Gate ordering
+
+> Detailed design: [Validation & Benchmark Harness Design](design/validation-harness-design.md) (gate runner, §6 fault-injection, §7 human tokens).
 
 - **Binds:** every phase; benchmarks, validators, phase implementation code
 - **Prevents:** phase code written before its validators exist; flattering self-graded metrics; overfit exits
@@ -152,17 +190,23 @@ graph LR
 
 ### AD-20 — Document lifecycle & targeting
 
+> Detailed design: [MCP Tool Catalog Design](design/mcp-tools-design.md) (§1.1 handles, `document_*` tools) · [Data Contracts Design](design/data-contracts-design.md) (§9 `DocHandle`, selectors).
+
 - **Binds:** all tool callers (AI, harness, supervisor, preview)
 - **Prevents:** implicit-`ActiveDocument` ambiguity; interleaved mutations mid-transaction; TempDoc leaks and cross-cleanup
 - **Rule:** Documents are opened/closed only through the `document_*` use cases — the harness and supervisor included, never raw `App.openDocument` alongside the bridge. Every tool call carries an explicit document handle; `ActiveDocument` is never an implicit target. Mutations on one document are serialized (single writer; AD-5 transactions never interleave). Preview TempDocs use a reserved name prefix, are flagged transient, and are cleaned by their creator — nothing else touches them.
 
 ### AD-21 — Visual verification leg (dual-channel done)
 
+> Detailed design: [Verification Subsystem Design](design/verification-design.md) (§7a `verify_visual`) · [Validation & Benchmark Harness Design](design/validation-harness-design.md) (§8 visual judge wiring).
+
 - **Binds:** Phase 3 loop convergence, gates G3/G4, Phase 4 job delivery
 - **Prevents:** geometrically-passing but visually/semantically wrong parts shipping; the actor grading its own renders
 - **Rule:** A generated **part** is done only when both channels pass: (a) all geometry assertions (AD-13) and (b) an **independent visual judge** — a vision-capable model that is never the acting agent (separate model id or separate context, same separation rule as the Phase 1 grader) — judging the standard visual set against the spec via a structured checklist, temperature 0, structured verdict. Standard visual set: 3D iso render + focus views **+ dimensioned TechDraw projections (front/top/right)** auto-generated from the part's driving parameters on a TempDoc copy (part document never polluted). The judge is conjunctive, never overriding: it cannot pass a part that geometry failed. Judge findings feed the repair loop as diagnostics. Capability-gated fail-closed: render or judge unavailable → part is NOT done; an explicit operator waiver (audit-logged) is the only bypass. The judge is itself a validator under AD-13/AD-19: fault-injected (planted visually-wrong parts) to sensitivity ≥95 % / false-alarm ≤5 % before its verdicts are citable. Per-operation verification (AD-5) stays geometry-only — the visual leg runs per part, not per mutation.
 
 ## Consistency Conventions
+
+> Detailed design: [MCP Tool Catalog Design](design/mcp-tools-design.md) (tool names, envelopes, selectors) · [Data Contracts Design](design/data-contracts-design.md) (wire types, versioning).
 
 | Concern | Convention |
 | --- | --- |
@@ -193,6 +237,8 @@ graph LR
 | GitHub Actions + micromamba | CI, cached conda env per pinned FreeCAD version |
 
 ## Structural Seed
+
+> Detailed design: [Project Structure Design](design/project-structure.md) (repo tree, packaging, CI) · [Component Design](design/component-design.md) (per-ring components).
 
 ```mermaid
 graph TB
