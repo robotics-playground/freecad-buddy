@@ -1,0 +1,11 @@
+# Per-validator fault-suite binding (validation-harness-design.md §6).
+#
+# Story 1.3 lands and BINDS the suite; it does NOT score it. `verify_shape` does not exist
+# until Story 1.6, so the sensitivity/false-alarm run is pending: validator_sha and last_run
+# are null. A citable score (sensitivity ≥95% / false-alarm ≤5%) is produced only by
+# `gate faults` in Story 1.6, once the validator source exists to hash.
+
+verify_shape:
+  suite: g0/fault-injection/
+  validator_sha: null      # no validator source yet (Story 1.6)
+  last_run: null           # sensitivity scored in Story 1.6

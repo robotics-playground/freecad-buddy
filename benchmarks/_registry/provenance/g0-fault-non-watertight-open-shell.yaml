@@ -1,0 +1,7 @@
+artifact: g0/fault-injection/non-watertight-open-shell/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Planted non-watertight open-shell defect"
+license_checked: {by: TanNT, date: 2026-07-21}

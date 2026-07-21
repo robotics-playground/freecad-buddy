@@ -1,0 +1,42 @@
+# G0 golden-model reference values — INDEPENDENTLY HAND-COMPUTED (AD-13), never captured
+# from a verify tool. The infc self-check (tests/infc/test_golden_models.py) re-measures the
+# committed .FCStd and asserts each field within `tolerance` of these numbers.
+#
+# Derivations (analytic):
+#   box-10-20-30      : 10*20*30                         = 6000
+#   cylinder-r5-h20   : pi*5^2*20                         = 1570.7963...
+#   sphere-r10        : (4/3)*pi*10^3                      = 4188.7902...
+#   box40-hole-r5     : 40*40*10 - pi*5^2*10               = 15214.6018...
+#   two-box-compound  : 2 disjoint 10^3 boxes              = 2000  (solids 2)
+#
+# bbox is [XLength, YLength, ZLength] in mm. NO golden_fingerprint.sha256 is committed: the
+# .FCStd is a non-byte-reproducible zip, so a committed hash would be unverifiable. The real
+# fingerprint oracle is Story 1.6; the serializer marker below is documentary only.
+
+tolerance:
+  rel: 0.001
+
+expected_meta:
+  serializer: exportBinary  # Story-1.6 fingerprint() will hash the shape with this serializer
+
+models:
+  box-10-20-30:
+    volume: 6000
+    bbox: [10, 20, 30]
+    solids: 1
+  cylinder-r5-h20:
+    volume: 1570.7963
+    bbox: [10, 10, 20]
+    solids: 1
+  sphere-r10:
+    volume: 4188.7902
+    bbox: [20, 20, 20]
+    solids: 1
+  box40-hole-r5:
+    volume: 15214.6018
+    bbox: [40, 40, 10]
+    solids: 1
+  two-box-compound:
+    volume: 2000
+    bbox: [30, 10, 10]
+    solids: 2

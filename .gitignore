@@ -20,3 +20,7 @@ venv/
 # Test / tooling caches
 .pytest_cache/
 .ruff_cache/
+
+# FreeCAD save-over artifacts (golden/fault generators write these; only the .FCStd is a fixture)
+*.FCBak
+*.FCStd.*

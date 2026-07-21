@@ -1,0 +1,14 @@
+id: g0-fault-non-manifold
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: >-
+    three faces sharing one vertical edge (edge adjacency 3 > 2) -> genuinely non-manifold
+    open shell (verified under FreeCAD 1.1); a manifold reference solid is watertight.
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_watertight, expect: true}
+provenance: ../../_registry/provenance/g0-fault-non-manifold.yaml

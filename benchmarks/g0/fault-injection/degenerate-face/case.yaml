@@ -1,0 +1,12 @@
+id: g0-fault-degenerate-face
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "collinear-polygon face -> zero area, isValid()==False; the reference is valid"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_valid, expect: true}               # detection is validity, not solid count
+provenance: ../../_registry/provenance/g0-fault-degenerate-face.yaml

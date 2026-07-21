@@ -1,0 +1,7 @@
+artifact: g0/golden-models/box40-hole-r5
+kind: golden-model
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Plate-with-through-hole mechanical part pattern"
+license_checked: {by: TanNT, date: 2026-07-21}

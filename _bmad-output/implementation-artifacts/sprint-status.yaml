@@ -60,7 +60,7 @@ development_status:
   epic-1: backlog
   1-1-repo-scaffold-ci-matrix-phase-0-spikes: done
   1-2-data-contracts-package: done
-  1-3-entry-gate-g0e-golden-models-fault-suite: backlog
+  1-3-entry-gate-g0e-golden-models-fault-suite: done
   1-4-document-lifecycle-headless-host-mcp-surface: backlog
   1-5-read-only-query-tools: backlog
   1-6-verification-core: backlog

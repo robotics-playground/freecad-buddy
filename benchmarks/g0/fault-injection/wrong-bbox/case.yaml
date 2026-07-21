@@ -1,0 +1,12 @@
+id: g0-fault-wrong-bbox
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "box with Z stretched to 60 where the reference bbox is [10,20,30]"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_bbox, expect: [10, 20, 30], tol: {rel: 0.001}}
+provenance: ../../_registry/provenance/g0-fault-wrong-bbox.yaml

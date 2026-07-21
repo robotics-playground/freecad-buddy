@@ -1,0 +1,13 @@
+id: g0-fault-non-watertight-open-shell
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "single-face open shell (0 solids); the correct reference solid IS watertight"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_watertight, expect: true}          # primary: watertightness is the named defect
+    - {fn: expect_solid_count, expect: 1}            # secondary diagnostic only
+provenance: ../../_registry/provenance/g0-fault-non-watertight-open-shell.yaml

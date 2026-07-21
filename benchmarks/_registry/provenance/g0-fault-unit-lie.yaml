@@ -1,0 +1,7 @@
+artifact: g0/fault-injection/unit-lie/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Planted unit-scale (cm-as-mm) lie over a rectangular block"
+license_checked: {by: TanNT, date: 2026-07-21}

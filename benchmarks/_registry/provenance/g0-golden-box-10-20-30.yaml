@@ -1,0 +1,7 @@
+artifact: g0/golden-models/box-10-20-30
+kind: golden-model
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Canonical rectangular block primitive (mechanical stock)"
+license_checked: {by: TanNT, date: 2026-07-21}

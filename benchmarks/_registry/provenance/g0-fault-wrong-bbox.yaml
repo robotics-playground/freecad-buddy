@@ -1,0 +1,7 @@
+artifact: g0/fault-injection/wrong-bbox/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Planted wrong-bbox defect over a rectangular block"
+license_checked: {by: TanNT, date: 2026-07-21}

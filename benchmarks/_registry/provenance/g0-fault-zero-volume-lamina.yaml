@@ -1,0 +1,7 @@
+artifact: g0/fault-injection/zero-volume-lamina/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Planted zero-volume lamina (sheet mistaken for solid)"
+license_checked: {by: TanNT, date: 2026-07-21}

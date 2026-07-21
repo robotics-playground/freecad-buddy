@@ -39,6 +39,14 @@ Append-only; the orchestrator owns status/resolution of each entry.
   summary: `rpc.py`'s `CHANNEL_STATUS_MAP` hardcodes synthetic dotted keys (`rpc.listener_crash`, `rpc.connection_dropped`, …) whose provenance is `integration-mcp-freecad.md §2.3` (cited by data-contracts-design §11 but not reproduced there); the exact key strings are unverified against that authoritative wire design and risk producer/consumer synonym drift.
   evidence: data-contracts-design §11 maps channel *conditions* to statuses in prose and defers the framing/error-code detail to integration-mcp-freecad §2.3. The current map is a reasonable transcription but not cross-checked against §2.3's actual codes; the RPC listener/marshal that consumes it lands in story 1.8. Reconcile the key strings against integration-mcp-freecad §2.3 when the RPC listener is implemented (story 1.8).
 
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-3-entry-gate-g0e-golden-models-fault-suite.md`
+  summary: `check_provenance.py` enforces only that `source.kind` is in the closed set; it does not require `source.url`/`source.license`/`source.attribution` when `kind != hand-authored`, so a future `freecad-parts-library`/`hf-verified-permissive` artifact would pass the AD-16 gate with no license/attribution recorded.
+  evidence: Every G0 artifact in this story is `hand-authored` (AD-16 requires only a `real_world_basis` for that kind, which is enforced), so nothing regresses now; the url/license/attribution enforcement is only needed once a non-hand-authored artifact ships (design §1.2 warns DeepCAD/ABC/Fusion lineage is never shipped and library imports carry attribution). Add the conditional license-fields check to `check_provenance.py` when the first non-`hand-authored` benchmark artifact lands.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-3-entry-gate-g0e-golden-models-fault-suite.md`
+  summary: `check_provenance.py` flags an artifact with no manifest, but does NOT flag an ORPHAN manifest (a `_registry/provenance/*.yaml` whose declared `artifact` no longer has a matching `.FCStd`, e.g. after a fixture rename/delete).
+  evidence: The checker walks `.FCStd` artifacts and requires each to have a manifest; the reverse direction (every manifest maps to a live artifact) is unchecked. No orphan exists in this story (all 17 manifests match a committed fixture), so nothing regresses; add manifest→artifact reverse-coverage when the benchmark set first churns (fixtures renamed/removed across gates).
+
 ### DW-1: Follow-up review still recommended for 1-1-repo-scaffold-ci-matrix-phase-0-spikes after the damping cap was spent
 origin: review-budget-followup
 source_spec: `spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md`

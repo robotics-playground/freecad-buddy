@@ -1,0 +1,14 @@
+id: g0-fault-clean-control
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: clean_control
+  description: "exact box-10-20-30 rebuild; passes every reference assertion (measures false alarms)"
+  expectation: PASS_CLEAN
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_volume, expect: 6000, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [10, 20, 30], tol: {rel: 0.001}}
+    - {fn: expect_solid_count, expect: 1}
+provenance: ../../_registry/provenance/g0-fault-clean-control.yaml

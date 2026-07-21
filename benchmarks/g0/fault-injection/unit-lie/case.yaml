@@ -1,0 +1,13 @@
+id: g0-fault-unit-lie
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "1/10-scale box (1x2x3, vol 6) sold as the mm reference (10x20x30, vol 6000)"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_volume, expect: 6000, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [10, 20, 30], tol: {rel: 0.001}}
+provenance: ../../_registry/provenance/g0-fault-unit-lie.yaml

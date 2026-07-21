@@ -1,0 +1,7 @@
+artifact: g0/golden-models/two-box-compound
+kind: golden-model
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Two-part disjoint assembly (multi-solid compound pattern)"
+license_checked: {by: TanNT, date: 2026-07-21}

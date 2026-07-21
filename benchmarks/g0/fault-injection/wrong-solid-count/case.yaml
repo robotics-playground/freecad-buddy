@@ -1,0 +1,12 @@
+id: g0-fault-wrong-solid-count
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "three disjoint boxes where the reference compound has 2 solids"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_solid_count, expect: 2}
+provenance: ../../_registry/provenance/g0-fault-wrong-solid-count.yaml

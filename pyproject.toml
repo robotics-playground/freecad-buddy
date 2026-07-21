@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4"]
+dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4", "pyyaml>=6"]  # pyyaml: external harness only (AD-12)
 stl-oracle = ["admesh ; sys_platform == 'linux'"]  # optional 2nd oracle; fallback chosen at Phase 0 gate (AD-9)
 
 [project.scripts]
@@ -27,7 +27,7 @@ packages = ["src/freecad_buddy"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-src = ["src", "scripts", "tests"]
+src = ["src", "scripts", "tests", "benchmarks"]
 # Non-project tooling / references / planning artifacts — not linted by CI's `ruff check .`.
 extend-exclude = [
     ".agents",
@@ -42,6 +42,7 @@ extend-exclude = [
 select = ["E", "F", "T201"]  # T201 = flake8-print: ban print() in src/
 
 [tool.ruff.lint.per-file-ignores]
-# T201 print-ban applies to src/ only; scripts/ and tests/ are tooling and may print.
+# T201 print-ban applies to src/ only; scripts/, tests/, and benchmarks/ are tooling and may print.
 "scripts/**" = ["T201"]
 "tests/**" = ["T201"]
+"benchmarks/**" = ["T201"]

@@ -1,0 +1,13 @@
+id: g0-fault-zero-volume-lamina
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "planar 10x10 lamina (volume 0); a solid of that footprint (10x10x1) is 100"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_volume, expect: 100, tol: {rel: 0.001}}   # positive reference the lamina fails
+    - {fn: expect_solid_count, expect: 1}                    # secondary: lamina has 0 solids
+provenance: ../../_registry/provenance/g0-fault-zero-volume-lamina.yaml

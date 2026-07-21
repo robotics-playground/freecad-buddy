@@ -1,0 +1,15 @@
+id: g0-fault-invalid-self-intersecting-solid
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: >-
+    bowtie (figure-8) profile extruded into one solid that OCCT flags isValid()==False.
+    Re-targets the version-fragile signed-volume "negative-volume" case to a robust validity
+    signal (verified under FreeCAD 1.1); the correct reference solid is valid.
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_valid, expect: true}
+provenance: ../../_registry/provenance/g0-fault-invalid-self-intersecting-solid.yaml

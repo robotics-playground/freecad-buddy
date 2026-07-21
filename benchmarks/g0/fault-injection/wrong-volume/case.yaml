@@ -1,0 +1,12 @@
+id: g0-fault-wrong-volume
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "box 12x20x30 (volume 7200) where the box-10-20-30 reference is 6000"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:                       # reference (correct-shape) values; fixture deviates
+  checks:
+    - {fn: expect_volume, expect: 6000, tol: {rel: 0.001}}
+provenance: ../../_registry/provenance/g0-fault-wrong-volume.yaml

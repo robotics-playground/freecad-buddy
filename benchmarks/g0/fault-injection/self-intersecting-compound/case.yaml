@@ -1,0 +1,14 @@
+id: g0-fault-self-intersecting-compound
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: >-
+    two overlapping boxes left as a 2-solid compound; a correct boolean union of two
+    overlapping boxes is ONE solid, so the fixture should have been fused to 1 solid.
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_solid_count, expect: 1}            # union of two overlapping boxes is 1 solid
+provenance: ../../_registry/provenance/g0-fault-self-intersecting-compound.yaml

@@ -1,0 +1,30 @@
+# Declarative mirror of the G0 exit-criteria table (spec-freecad-buddy/phase-gates.md).
+# The gate runner READS this — it never hardcodes the criteria. In --stub mode every
+# criterion FAILS honestly (INVALID_INPUT: no bridge/tool exists yet, AD-19).
+#
+# Phase-0 forward-declared reserved assertion vocabulary (bound by verify_shape in Story 1.6;
+# the runner does NOT resolve these yet): expect_volume, expect_bbox, expect_solid_count,
+# expect_valid, expect_watertight.
+
+gate: G0
+criteria:
+  - id: G0.1
+    text: "MCP server reachable in both hosts (headless stdio + GUI streamable HTTP)"
+    pass_rule: "Both transports list + call successfully; GUI leg carries the human smoke token"
+    cited_validators: []
+  - id: G0.2
+    text: "≥15 tools across query_/document_/export_ with JSON schema + docstring"
+    pass_rule: "count ≥15 ∧ 100% schema-valid"
+    cited_validators: []
+  - id: G0.3
+    text: "verify_shape correct on the 5 golden models (known volume/bbox/counts)"
+    pass_rule: "All fields within ±0.1% on all 5"
+    cited_validators: [verify_shape]
+  - id: G0.4
+    text: "Headless CI green on the matrix (1.0.x + 1.1.x)"
+    pass_rule: "≥30 tests, all green, both blocking legs"
+    cited_validators: []
+  - id: G0.5
+    text: "STEP round-trip fidelity (create → export → re-import → compare)"
+    pass_rule: "Volume ±0.1%, isValid, topology counts equal"
+    cited_validators: [verify_shape]

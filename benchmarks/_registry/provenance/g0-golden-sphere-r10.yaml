@@ -1,0 +1,7 @@
+artifact: g0/golden-models/sphere-r10
+kind: golden-model
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Canonical spherical primitive (ball / dome pattern)"
+license_checked: {by: TanNT, date: 2026-07-21}

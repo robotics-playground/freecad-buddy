@@ -1,0 +1,12 @@
+id: g0-fault-dropped-solid
+gate: g0
+targets_validator: verify_shape
+fault:
+  kind: planted_defect
+  description: "single box where the two-box compound reference has 2 solids"
+  expectation: DETECT
+fixture: fixture.FCStd
+assertions:
+  checks:
+    - {fn: expect_solid_count, expect: 2}
+provenance: ../../_registry/provenance/g0-fault-dropped-solid.yaml
