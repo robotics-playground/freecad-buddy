@@ -25,10 +25,12 @@ from freecad_buddy.adapters.mcp_server import (
     exec_registered,
     serve_stdio,
 )
+from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
-from freecad_buddy.usecases import queries, verify
+from freecad_buddy.usecases import exports, queries, verify
 from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.exports import ExportRegistry
 
 logger = logging.getLogger("freecad_buddy.hosts.headless")
 
@@ -49,11 +51,54 @@ def verify_freecad_importable() -> None:
         ) from exc
 
 
+def _mesh_verify_handler(marshal, registry, export_registry, fmt):
+    """Return a handler merging the marshaled FreeCAD self-read leg with the oracle legs.
+
+    The self-read usecase runs on the FreeCAD thread and returns facet/vertex/bbox facts plus
+    the banner and the deflection-derived volume band. The third-party oracle wrappers then read
+    the same written file directly (no FreeCAD), and ``assemble_export_verdict`` merges the legs
+    into one envelope, forcing FAIL on any leg failure or cross-oracle disagreement.
+    """
+    self_read_uc = {
+        "stl": exports.export_self_read_stl,
+        "3mf": exports.export_self_read_3mf,
+    }[fmt]
+
+    def handler(**params):
+        self_read = marshal.call(lambda: self_read_uc(registry, export_registry, **params), 120.0)
+        facts = self_read["structured_content"]
+        source = facts["source"]
+        band = facts["volume_band"]
+        path = facts["path"]
+        if fmt == "stl":
+            oracle_legs = [
+                export_oracle.safe_oracle(
+                    "trimesh_stl", lambda: export_oracle.stl_oracle(path, source["volume"], band)
+                ),
+                export_oracle.safe_oracle(
+                    "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+                ),
+            ]
+        else:
+            oracle_legs = [
+                export_oracle.safe_oracle(
+                    "lib3mf",
+                    lambda: export_oracle.mesh3mf_oracle(
+                        path, source["is_mm"], source["volume"], band
+                    ),
+                ),
+            ]
+        return export_verdict.assemble_export_verdict(oracle_legs, facts, facts["banner"])
+
+    return handler
+
+
 def build_registry(
     registry: DocumentRegistry, caps: Capabilities, marshal: Marshal
 ) -> MethodRegistry:
     """Register the tool surface, each handler marshaled onto the FreeCAD thread."""
     methods = MethodRegistry()
+    export_registry = ExportRegistry()
 
     def marshaled(fn, timeout_s):
         def handler(**params):
@@ -283,6 +328,104 @@ def build_registry(
                 "additionalProperties": False,
             },
             description="Recompute and report failing objects with their status strings.",
+            mutating=False,
+        )
+    )
+
+    export_input_schema = {
+        "type": "object",
+        "properties": {
+            "doc": _DOC_SCHEMA,
+            "path": {"type": "string"},
+            "objects": {"type": "array", "items": {"type": "string"}},
+        },
+        "required": ["doc", "path"],
+        "additionalProperties": False,
+    }
+    mesh_export_input_schema = {
+        "type": "object",
+        "properties": {
+            "doc": _DOC_SCHEMA,
+            "path": {"type": "string"},
+            "objects": {"type": "array", "items": {"type": "string"}},
+            "linear": {"type": "number"},
+            "angular": {"type": "number"},
+        },
+        "required": ["doc", "path"],
+        "additionalProperties": False,
+    }
+    verify_export_input_schema = {
+        "type": "object",
+        "properties": {"doc": _DOC_SCHEMA, "export_id": {"type": "string"}},
+        "required": ["doc", "export_id"],
+        "additionalProperties": False,
+    }
+
+    methods.register(
+        RpcMethod(
+            name="export_step",
+            handler=marshaled(
+                lambda **p: exports.export_step(registry, export_registry, **p), 120.0
+            ),
+            input_schema={
+                **export_input_schema,
+                "properties": {
+                    **export_input_schema["properties"],
+                    "ap": {"enum": ["AP214", "AP242"], "default": "AP242"},
+                },
+            },
+            description="Write a shape to STEP (unit=MM, AP pinned); result verified:false.",
+            mutating=True,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="export_stl",
+            handler=marshaled(
+                lambda **p: exports.export_stl(registry, export_registry, **p), 120.0
+            ),
+            input_schema=mesh_export_input_schema,
+            description="Write a shape to binary STL from one tessellation; result verified:false.",
+            mutating=True,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="export_3mf",
+            handler=marshaled(
+                lambda **p: exports.export_3mf(registry, export_registry, **p), 120.0
+            ),
+            input_schema=mesh_export_input_schema,
+            description="Write a shape to 3MF from one tessellation; result verified:false.",
+            mutating=True,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="verify_export_step",
+            handler=marshaled(
+                lambda **p: exports.verify_export_step(registry, export_registry, **p), 120.0
+            ),
+            input_schema=verify_export_input_schema,
+            description="Re-import a written STEP and grade volume/isValid/counts against source.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="verify_export_stl",
+            handler=_mesh_verify_handler(marshal, registry, export_registry, "stl"),
+            input_schema=verify_export_input_schema,
+            description="Verify a written STL: trimesh + second oracle + FreeCAD self-read merged.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="verify_export_3mf",
+            handler=_mesh_verify_handler(marshal, registry, export_registry, "3mf"),
+            input_schema=verify_export_input_schema,
+            description="Verify a written 3MF: lib3mf + trimesh + FreeCAD self-read merged.",
             mutating=False,
         )
     )

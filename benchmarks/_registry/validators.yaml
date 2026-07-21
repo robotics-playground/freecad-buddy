@@ -16,3 +16,48 @@ verify_shape:
       high: 1.0
       n: 11
       r: 11
+
+verify_export_stl:
+  suite: g0/export-fault-injection/
+  validator_sha: "ebf453b16a2dd055d6150fd78276ef3f8ae48ff0d16ed94232ab4f79004a1723"
+  last_run:
+    run_id: er-2026-07-22-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-07-22
+    wilson_ci:
+      rate: 1.0
+      low: 0.4385
+      high: 1.0
+      n: 3
+      r: 3
+
+verify_export_3mf:
+  suite: g0/export-fault-injection/
+  validator_sha: "ebf453b16a2dd055d6150fd78276ef3f8ae48ff0d16ed94232ab4f79004a1723"
+  last_run:
+    run_id: er-2026-07-22-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-07-22
+    wilson_ci:
+      rate: 1.0
+      low: 0.4385
+      high: 1.0
+      n: 3
+      r: 3
+
+verify_export_step:
+  suite: g0/export-fault-injection/
+  validator_sha: "ebf453b16a2dd055d6150fd78276ef3f8ae48ff0d16ed94232ab4f79004a1723"
+  last_run:
+    run_id: er-2026-07-22-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-07-22
+    wilson_ci:
+      rate: 1.0
+      low: 0.3424
+      high: 1.0
+      n: 2
+      r: 2

@@ -10,6 +10,9 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+_STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
+_STEP_SCHEMES = frozenset({"AP203", "AP214", "AP242"})
+
 
 @lru_cache(maxsize=1)
 def export_binary_available() -> bool:
@@ -124,6 +127,30 @@ def freecad_version() -> str:
         return "unknown"
     version = FreeCAD.Version()
     return ".".join(str(part) for part in version[:3])
+
+
+def pin_step_config(ap: str) -> None:
+    """Pin the STEP write unit to millimetres and the schema to ``ap`` for the next export.
+
+    ``ap`` is the STEP application protocol (``"AP242"`` or ``"AP214"``). The unit is set
+    through ``Part.setStaticValue("write.step.unit", "MM")``. The schema is set through the
+    ``Mod/Part/STEP`` ``Scheme`` preference string, because ``setStaticValue`` raises on
+    ``write.step.schema`` on the 1.0/1.1 builds. Raises ``ValueError`` for an unknown ``ap``.
+    """
+    if ap not in _STEP_SCHEMES:
+        raise ValueError(f"unknown STEP application protocol: {ap!r}")
+    import FreeCAD
+    import Part
+
+    Part.setStaticValue("write.step.unit", "MM")
+    FreeCAD.ParamGet(_STEP_PARAM_PATH).SetString("Scheme", ap)
+
+
+def step_schema() -> str:
+    """Return the STEP schema currently pinned in the ``Mod/Part/STEP`` ``Scheme`` preference."""
+    import FreeCAD
+
+    return FreeCAD.ParamGet(_STEP_PARAM_PATH).GetString("Scheme")
 
 
 def capability_banner() -> dict:

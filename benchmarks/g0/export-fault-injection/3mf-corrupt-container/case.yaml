@@ -1,0 +1,16 @@
+id: g0-export-3mf-corrupt-container
+gate: g0
+targets_validator: verify_export_3mf
+format: 3mf
+expectation: DETECT
+export_file: export.3mf
+source:
+  volume: 6000.0
+  faces: 6
+  edges: 12
+  solids: 1
+  bbox: [10.0, 20.0, 30.0]
+  is_mm: true
+tess:
+  linear: 0.1
+  angular: 0.5

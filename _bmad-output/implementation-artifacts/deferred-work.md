@@ -132,3 +132,46 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
   summary: `fingerprint._serialize` aborts the whole fingerprint if `exportBinary` raises on a specific shape — there is no per-shape fallback to `exportBrep`.
   evidence: The serializer is process-global probed (`shim.export_binary_available`) and tested, so this needs a shape that passes the probe but fails the actual `exportBinary` call. If such a shape is found, either fall back to `exportBrep` for that shape (and re-tag) or fail the fingerprint explicitly with the offending object named.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: `adapters/export_oracle.py` `_trimesh_checks` hardcodes `euler_number == 2` (genus-0 single-shell) for every mesh, so a legitimate multi-shell / through-hole (torus) / multi-solid part would false-alarm on the Euler check.
+  evidence: Not reachable in Phase-0 (the golden models are single convex solids). Real forward gap for Phase 3+ real geometry — derive the expected Euler characteristic from the source topology (or drop the Euler assertion in favour of the watertight/winding/volume checks) before the export verifiers grade multi-shell parts.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: The export fault suites are small — `verify_export_step` n=2, `verify_export_stl`/`verify_export_3mf` n=3 — so the ≥95 %/≤5 % gate passes but the Wilson lower bound (0.34–0.44) gives weak statistical confidence in the sensitivity claim.
+  evidence: NFR2 cites ≥10 cases per validator. Add planted cases toward that target: more STEP faults (scaled shape, degenerate face); STL duplicated-shell, coordinate-truncation; 3MF missing-`3dmodel.model`, malformed transform matrix. Fixtures build under FreeCADCmd via `build_export_fault_fixtures.py`; the scorer already merges `validators.yaml`.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: `adapters/export_oracle.py` `_read_ascii_stl_facets` silently drops a facet whose `endfacet` block has ≠3 vertices (a truncated ASCII facet) — a fail-open in the stdlib STL parser.
+  evidence: Not reachable via this story's writers (FreeCAD emits BINARY STL, and the binary path is the default), so low Phase-0 consequence. If an ASCII-STL input path is ever accepted, raise on a malformed facet block instead of dropping it so a truncated file surfaces as a defect rather than a silently-normalised mesh.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: Story-1.6 `benchmarks/g0/fault-injection/score_verify_shape.py` still full-clobbers `validators.yaml` from a fixed template; the Story-1.7 export scorer added its own `merge_validators_yaml` read-merge-write, so the two writers are inconsistent.
+  evidence: Running the 1.6 scorer's `main()` after the 1.7 scorer would drop the `verify_export_*` blocks. Both scorers should share one merge-writer helper. Verified today: the `run_tests.py` suite calls `score()` (no file write), so no clobber occurs during CI test runs; only explicit `main()` invocations write. Refactor both onto a shared writer.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: `benchmarks/g0/export-fault-injection/score_export_verify.py` `_score_mesh_case` calls the oracle legs raw inside its own `try/except` that returns `True` (DETECT) on any exception, instead of routing through `export_oracle.safe_oracle` like the production `_mesh_verify_handler`; a clean-control case that raised for an unrelated reason would be scored DETECTED and mask a false-alarm-class failure.
+  evidence: Production path is correct (the host handler wraps every oracle call in `safe_oracle`, turning a read failure into a failed leg → FAIL verdict); only the benchmark scorer diverges. No committed control currently throws (both controls score PASS_CLEAN, FA 0.000), so nothing regresses today. Route `_score_mesh_case` through `safe_oracle` (or the same leg-assembly the handler uses) for scorer/production parity.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: The STL/3MF mesh-verify handler (`hosts/headless/entry.py` `_mesh_verify_handler`) runs the un-marshaled trimesh/lib3mf oracle legs with no timeout, while the FreeCAD self-read leg is bounded at 120 s; a hung oracle read would block RPC dispatch indefinitely.
+  evidence: Phase-0 exports are small single-solid meshes that read in milliseconds, so no hang is reachable now. When large-mesh inputs land, bound the oracle phase (thread + timeout, or a subprocess) so a pathological file cannot wedge the server.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: `adapters/export_oracle.py` `_lib3mf_mesh` inspects only the first mesh object of a 3MF model (`iterator.MoveNext()` once), so a defect in the 2nd+ mesh object of a multi-mesh container passes the manifold/geometry checks undetected.
+  evidence: This story's writer emits a single mesh per 3MF (one `MeshPart.meshFromShape` → one `Mesh` write), so a multi-mesh container is not producible here. Iterate all mesh objects (fail if any is non-manifold) if a multi-mesh 3MF input path is ever accepted.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: `adapters/export_oracle.py` `mesh3mf_oracle`'s trimesh geometry leg is built from the lib3mf-parsed vertex/triangle arrays (`_trimesh_from_lib3mf`), so the lib3mf and trimesh "oracles" share lib3mf's geometry parse; the 3MF independence is weaker than the STL path (where trimesh loads the file itself).
+  evidence: A lib3mf parse bug would propagate into both 3MF legs, and the flattened single-leg design means there is no true cross-oracle geometry check for 3MF. By-design for Phase-0 (the container/unit/manifold lies are what §6.4 targets and are caught 3/3), but a later story wanting genuine 3MF geometry independence should add a second independent 3MF geometry reader (or an independent container parse).
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
+  summary: The `step-unit-lie` fault fixture writes a genuinely smaller solid (`makeBox(1,2,3)`, vol 6) mislabeled against the full box (vol 6000), so `verify_export_step` detects it via a gross shape/volume mismatch rather than via a mislabeled `write.step.unit`; the per-call unit-pinning path (`shim.pin_step_config` / `write.step.unit=MM`) has no fault-suite case exercising a true same-geometry 1000× unit scale.
+  evidence: The verifier's volume check WOULD catch a real unit-lie (a mm box written as `unit=M` re-imports 1000× larger, a gross volume mismatch), so this is a coverage gap, not a product defect — the unit-pinning invariant is functionally guarded but not directly exercised by its own fault case. Add a fixture that writes the clean box with `write.step.unit` set to `M`/`CM` and references the mm facts, so detection depends on the unit knob rather than on swapping in a different shape.
+
+### DW-3: Follow-up review still recommended for 1-7-exports-paired-verification after the damping cap was spent
+origin: review-budget-followup
+source_spec: `spec-1-7-exports-paired-verification.md`
+severity: low
+reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
+status: open

@@ -80,15 +80,37 @@ def _iter_artifacts(benchmarks_root: Path):
         yield fcstd
 
 
+def _declared_export_file(case_yaml: Path) -> str | None:
+    """Return the ``export_file`` a case declares, or ``None`` for a geometry-fixture case."""
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return None
+    if isinstance(data, dict):
+        value = data.get("export_file")
+        if isinstance(value, str) and value:
+            return value
+    return None
+
+
 def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
-    """A case dir with a case.yaml must carry its declared fixture.FCStd."""
+    """A case dir with a case.yaml must carry its declared fixture.
+
+    A geometry-fixture case must carry ``fixture.FCStd``; an export-fault case that declares an
+    ``export_file`` must carry that exported file instead (a written ``.stl``/``.3mf``/``.step``
+    is the fixture, there is no ``.FCStd``).
+    """
     violations: list[str] = []
     for case_yaml in sorted(benchmarks_root.rglob("case.yaml")):
         parts = case_yaml.relative_to(benchmarks_root).parts
         if any(part in _EXCLUDED_DIRS for part in parts):
             continue
-        if not (case_yaml.parent / "fixture.FCStd").is_file():
-            rel = case_yaml.parent.relative_to(benchmarks_root).as_posix()
+        rel = case_yaml.parent.relative_to(benchmarks_root).as_posix()
+        export_file = _declared_export_file(case_yaml)
+        if export_file is not None:
+            if not (case_yaml.parent / export_file).is_file():
+                violations.append(f"{rel} -- case.yaml present but {export_file} missing")
+        elif not (case_yaml.parent / "fixture.FCStd").is_file():
             violations.append(f"{rel} -- case.yaml present but fixture.FCStd missing")
     return violations
 
