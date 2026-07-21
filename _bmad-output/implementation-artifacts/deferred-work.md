@@ -112,3 +112,23 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
   summary: `query_mass_properties` guards only a null `Shape`; a non-null non-solid shape (shell/wire/face) reports `volume: 0` and a `CenterOfMass` computed over area/length as if it were volumetric mass, and for some degenerate compounds the OCC `CenterOfMass`/`Volume` call can raise and surface as `RECOMPUTE_ERROR` rather than a fail-closed `INVALID_INPUT`.
   evidence: The story's mass-props test exercises only a clean solid box, so the non-solid branch is unverified; the design treats "no queryable geometry" as `INVALID_INPUT` but does not specify non-solid handling. Gate `volume`/`com` behind `len(shape.Solids) > 0` (or emit nulls) and wrap the OCC reads to map a degenerate shape to `INVALID_INPUT` when a caller needs mass properties on non-solid geometry.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
+  summary: `verify_sketch` gates `evaluateConstraints()` behind `bool(MalformedConstraints)`, but AD-8 / verification-design §4 list `evaluateConstraints()` as an independent hard-fail trigger.
+  evidence: On FreeCAD 1.1 `evaluateConstraints()` returns `True` for a healthy fully-constrained sketch (build divergence, documented inline in `usecases/verify.py`), so it cannot be used unconditionally; but a genuinely malformed sketch whose `MalformedConstraints` property is empty would slip past the hard-fail. Not demonstrated reachable on 1.0/1.1 (bad-index constraints raise at `addConstraint`). Revisit if a build populates `evaluateConstraints()` reliably or a malformed-but-empty-property case is found; add a planted malformed-constraint fault case to the sketch validator suite.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
+  summary: The fault scorer (`benchmarks/g0/fault-injection/score_verify_shape.py`) rewrites `validators.yaml` from a fixed single-validator template, so a second validator block would be dropped on the next run.
+  evidence: `_render_yaml` emits only the `verify_shape` block and `write_text` replaces the whole file; only `verify_shape` exists in `validators.yaml` today. When a second validator (e.g. `verify_sketch`, later `verify_export_*`) registers a fault suite, switch the scorer to a read-merge-write that preserves other validator blocks.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
+  summary: The scorer's hand-rolled `case.yaml` parser is brittle — a greedy `_CHECK_RE` and a blind `.replace('rel'/'abs')` before `ast.literal_eval` — and can mis-parse checks with those substrings in values or multi-line flow mappings.
+  evidence: pyyaml is external-process only (AD-12) so the in-FreeCAD scorer parses the fixed flow shape itself; it works on the committed fixtures. If fixtures grow richer check shapes, replace the regex/replace hack with a small proper flow-mapping tokenizer (or move scoring to the external process and pass results in via RPC).
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
+  summary: `verify.py` `_is_watertight` and `_shape_floor` swallow any exception (return "not watertight" / floor `0.0`); a solid whose `getTolerance()` genuinely raises would silently disable the tolerance-floor clamp so a comparison could assert tighter than the B-rep tolerance.
+  evidence: Not a Phase-0 path (the golden/fault solids all report a tolerance); the swallow is defensive. If a real shape is found that raises on `getTolerance()`/`isClosed()`, distinguish "cannot measure" (report an INVALID_INPUT / unavailable) from a false "not watertight"/zero-floor.
+
+- source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
+  summary: `fingerprint._serialize` aborts the whole fingerprint if `exportBinary` raises on a specific shape — there is no per-shape fallback to `exportBrep`.
+  evidence: The serializer is process-global probed (`shim.export_binary_available`) and tested, so this needs a shape that passes the probe but fails the actual `exportBinary` call. If such a shape is found, either fall back to `exportBrep` for that shape (and re-tag) or fail the fingerprint explicitly with the offending object named.

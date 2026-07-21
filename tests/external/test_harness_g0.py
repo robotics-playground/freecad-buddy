@@ -103,7 +103,11 @@ def test_fault_inventory_counts_and_binding():
         (BENCHMARKS / "_registry" / "validators.yaml").read_text(encoding="utf-8")
     )
     assert "verify_shape" in validators
-    assert validators["verify_shape"]["last_run"] is None  # not scored yet
+    last_run = validators["verify_shape"]["last_run"]
+    assert last_run is not None  # scored by score_verify_shape.py (Story 1.6)
+    assert last_run["sensitivity"] >= 0.95
+    assert last_run["false_alarm"] <= 0.05
+    assert validators["verify_shape"]["validator_sha"] is not None
 
     defects = [c for c in cases if c["fault"]["kind"] == "planted_defect"]
     controls = [c for c in cases if c["fault"]["kind"] == "clean_control"]

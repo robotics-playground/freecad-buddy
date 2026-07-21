@@ -93,6 +93,29 @@ def element_map_available() -> bool:
 
 
 @lru_cache(maxsize=1)
+def element_map_version() -> int | None:
+    """The topological element-map version as an int, or ``None`` when unexposed.
+
+    Probes ``TopoShape.ElementMapVersion`` on a box; returns the integer version where the
+    build cleanly exposes one, else ``None``. This is the report-banner value; the coarser
+    availability bool stays in ``element_map_available``.
+    """
+    try:
+        import Part
+
+        shape = Part.makeBox(1, 1, 1)
+    except Exception:  # noqa: BLE001 - a probe that cannot run means the feature is unavailable
+        return None
+    raw = getattr(shape, "ElementMapVersion", None)
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+@lru_cache(maxsize=1)
 def freecad_version() -> str:
     """The running FreeCAD version as ``major.minor.patch``, or ``unknown`` when absent."""
     try:

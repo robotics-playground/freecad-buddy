@@ -27,7 +27,7 @@ from freecad_buddy.adapters.mcp_server import (
 )
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
-from freecad_buddy.usecases import queries
+from freecad_buddy.usecases import queries, verify
 from freecad_buddy.usecases.documents import DocumentRegistry
 
 logger = logging.getLogger("freecad_buddy.hosts.headless")
@@ -236,6 +236,53 @@ def build_registry(
                 "additionalProperties": False,
             },
             description="Report an object's local and global placement (position, axis, angle).",
+            mutating=False,
+        )
+    )
+
+    methods.register(
+        RpcMethod(
+            name="verify_shape",
+            handler=marshaled(lambda **p: verify.verify_shape(registry, **p), 60.0),
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "doc": _DOC_SCHEMA,
+                    "object": {"type": "string"},
+                    "checks": {"type": "array", "items": {"type": "object"}},
+                },
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            description="Measure a shape against expect_volume/bbox/solid_count/valid/watertight.",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="verify_sketch",
+            handler=marshaled(lambda **p: verify.verify_sketch(registry, **p), 60.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA, "sketch": {"type": "string"}},
+                "required": ["doc", "sketch"],
+                "additionalProperties": False,
+            },
+            description="Grade a sketch: PASS iff FullyConstrained after recompute (AD-8).",
+            mutating=False,
+        )
+    )
+    methods.register(
+        RpcMethod(
+            name="verify_recompute",
+            handler=marshaled(lambda **p: verify.verify_recompute(registry, **p), 120.0),
+            input_schema={
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA},
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            description="Recompute and report failing objects with their status strings.",
             mutating=False,
         )
     )

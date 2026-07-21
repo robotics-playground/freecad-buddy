@@ -28,5 +28,19 @@ def main() -> int:
     return 0 if result.wasSuccessful() else 1
 
 
-if __name__ == "__main__":
+def _is_top_level_script() -> bool:
+    """Whether this file is the script the interpreter was launched with.
+
+    FreeCADCmd runs a script with ``__name__`` set to the file stem rather than ``"__main__"``
+    on some platforms, so the standard guard alone would silently skip discovery; this also
+    matches ``__file__`` against the launched ``sys.argv[1]``.
+    """
+    if __name__ == "__main__":
+        return True
+    if len(sys.argv) > 1:
+        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
+    return False
+
+
+if _is_top_level_script():
     sys.exit(main())
