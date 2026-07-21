@@ -119,10 +119,27 @@ FreeCAD comes from the host (GUI install or conda env), never from pyproject. In
 Rules above are distilled; full contracts live in:
 
 - Architecture spine (21 ADs): `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/ARCHITECTURE-SPINE.md`
-- Design docs (10): same folder, `design/`
+- Design docs (10): same folder, `design/` — indexed below
 - Spec + phase gates: `_bmad-output/specs/spec-freecad-buddy/`
 - Epics & stories: `_bmad-output/planning-artifacts/epics.md`
 - Research reports (18): `_bmad-output/planning-artifacts/research/`
+
+### Design Document Index
+
+All paths relative to the architecture folder above (`.../architecture-freecad-buddy-2026-07-21/`). Open the doc whose scope matches the work; the spine AD is the binding contract, the design doc is the implementation-ready expansion.
+
+| Design doc (`design/…`) | Covers | ADs | Open it when |
+| --- | --- | --- | --- |
+| `project-structure.md` | Repo tree (Phase 0 file level), dual packaging (uv external + FreeCAD addon), Python/FreeCAD version legs, environments, CI workflow layout | AD-1, AD-11, AD-12 | Scaffolding, adding a module/dir, touching `pyproject.toml`/`ci.yml`/`canary.yml`, packaging the addon |
+| `component-design.md` | Per-ring component inventory, public interfaces, interaction flows (headless/GUI call paths, mutation sequence), phase-availability table | AD-1, AD-2 | Placing a new component in a ring, wiring a usecase↔adapter↔host, checking what ships in which phase |
+| `data-contracts-design.md` | `contracts/` types: `ResultEnvelope`, `ValidationReport`, `JobStatus`, `AuditRecord`, `GeometryDiff`, `DocHandle`/selectors, `FingerprintRecord`, RPC frames; versioning/evolution rules; cross-contract invariants | AD-6, AD-17, AD-20 | Adding/changing any wire type, an `outputSchema`, a status/enum, the audit record, or a selector shape |
+| `mcp-tools-design.md` | Phase 0–2 tool catalog (49 tools), per-tool input/`outputSchema` fragments, selector + confirm `$defs`, tool counts (G0.2), `debug_exec` registration rules | AD-4, AD-20 | Adding/editing a tool, its schema, name, or the confirm/preview gate; checking the tool inventory |
+| `integration-mcp-freecad.md` | Process topology (GUI/H1/H2), RPC wire contract + handshake + error codes + timeouts, main-thread marshal, version shim (`shim.py`) surface, screenshot/render integration, failure modes | AD-2, AD-3, AD-11 | Touching `rpc_listener`/`rpc_client`/`marshal`/`shim.py`, the RPC framing, capability probes, or the render path |
+| `integration-mcp-clients.md` | Per-client wiring (Claude Code/Desktop, llama.cpp local, ReAct fallback), transport + elicitation, confirmation matrix, image/render delivery rules, backend capability matrix, latency budget | AD-3, AD-10, AD-15 | Wiring a new MCP client/backend, the confirmation UX per client, or image-delivery decisions |
+| `verification-design.md` | Mutation protocol (`run_mutation`), `fingerprint()`, TNP guard (layers 0–2), `verify_sketch`/`verify_shape`/`verify_export_*`, Phase 3 assertion vocabulary, `verify_visual`, tolerance policy | AD-5, AD-6, AD-7, AD-8, AD-9, AD-13, AD-21 | Implementing/editing any `verify_*`, the transaction wrapper, fingerprint, TNP audit, an assertion primitive, or a tolerance |
+| `validation-harness-design.md` | Gate runner CLI + execution flow, `benchmarks/` layout, held-out sealing, provenance manifest, stats module (Wilson/McNemar/majority-of-R), fault-injection framework, human-token mechanism, independent grader + visual judge wiring | AD-13, AD-14, AD-16, AD-19 | Working on a gate, benchmark case, fault suite, stats, grader/judge, sealing, or provenance |
+| `skills-structure-design.md` | Skill store layout, `SKILL.md` template (4 sections, ≤1,500 words), two-mode loader (router + forced-subset), routing table, CI shape check, token budgets | AD-15 | Authoring/editing a skill, the loader, routing rules, or the skill CI check |
+| `security-and-service-design.md` | `debug_exec` gating, RPC bind/token posture, stderr-only enforcement, per-phase threat model, Phase 4 supervisor + per-job sandbox + data plane + re-executed checks, rejected-mechanism table | AD-4, AD-17, AD-18 | Security-sensitive work, `debug_exec`, the audit log, or any Phase 4 supervisor/worker/sandbox code |
 
 ---
 

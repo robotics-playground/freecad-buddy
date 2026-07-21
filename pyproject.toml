@@ -1,0 +1,47 @@
+[project]
+name = "freecad-buddy"
+version = "0.0.1"
+requires-python = ">=3.11"
+dependencies = [
+    # mcp pin is an OPEN Phase-0 gate decision — see docs/decisions/005-mcp-sdk-pin.md.
+    # Do NOT hard-pin a fabricated version; leave unpinned until SDK v2 stabilizes.
+    "mcp",           # official MCP python-sdk (NOT PrefectHQ fastmcp); pin deferred (decision 005)
+    "trimesh==4.*",  # export oracle (AD-9)
+    "lib3mf==2.*",   # 3MF oracle (AD-9)
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4"]
+stl-oracle = ["admesh ; sys_platform == 'linux'"]  # optional 2nd oracle; fallback chosen at Phase 0 gate (AD-9)
+
+[project.scripts]
+freecad-buddy = "freecad_buddy.hosts.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/freecad_buddy"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "scripts", "tests"]
+# Non-project tooling / references / planning artifacts — not linted by CI's `ruff check .`.
+extend-exclude = [
+    ".agents",
+    ".claude",
+    ".bmad-loop",
+    "_bmad",
+    "_bmad-output",
+    "docs/references",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "T201"]  # T201 = flake8-print: ban print() in src/
+
+[tool.ruff.lint.per-file-ignores]
+# T201 print-ban applies to src/ only; scripts/ and tests/ are tooling and may print.
+"scripts/**" = ["T201"]
+"tests/**" = ["T201"]

@@ -1,0 +1,34 @@
+name: canary
+
+# Weekly allowed-to-fail leg tracking FreeCAD 1.2-dev (AD-11). Never blocks.
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Mondays 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  canary-1_2-dev:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      # Resolve FreeCAD 1.2-dev from the conda-forge dev label if published.
+      # AppImage fallback: if the dev package is absent on conda-forge, download the
+      # latest weekly AppImage and `--appimage-extract` instead (wired at first use).
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: fc
+          create-args: >-
+            freecad=1.2
+          condarc: |
+            channels:
+              - conda-forge/label/freecad_dev
+              - conda-forge
+          cache-environment: false
+      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install pytest
+      - name: In-FreeCAD suite
+        timeout-minutes: 15
+        run: micromamba run -n fc FreeCADCmd tests/run_tests.py
+      - name: External suite
+        timeout-minutes: 15
+        run: micromamba run -n fc pytest tests/external
