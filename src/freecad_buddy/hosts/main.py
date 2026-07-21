@@ -1,7 +1,8 @@
 """Headless CLI entry (console-script ``freecad-buddy``).
 
-``serve --transport stdio --mode inline`` runs the headless host. ``--mode rpc`` is not yet
-available and returns a clear error with a non-zero exit. Diagnostics go to stderr.
+``serve --transport stdio --mode inline`` runs the headless host. ``serve --transport http
+--mode rpc`` runs the GUI-external server that proxies tool calls to the in-FreeCAD listener.
+``--mode rpc`` without ``--transport http`` is an error. Diagnostics go to stderr.
 """
 
 from __future__ import annotations
@@ -22,8 +23,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "serve":
         if args.mode == "rpc":
-            sys.stderr.write("RPC transport is not available yet; use --mode inline.\n")
-            return 2
+            if args.transport != "http":
+                sys.stderr.write("--mode rpc requires --transport http.\n")
+                return 2
+            from freecad_buddy.hosts.gui_external.entry import run as run_rpc
+
+            return run_rpc()
         if args.transport != "stdio":
             sys.stderr.write(
                 f"transport '{args.transport}' is not available yet; use --transport stdio.\n"

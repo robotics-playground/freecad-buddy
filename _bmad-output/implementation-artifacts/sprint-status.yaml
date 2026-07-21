@@ -65,7 +65,7 @@ development_status:
   1-5-read-only-query-tools: done
   1-6-verification-core: done
   1-7-exports-paired-verification: done
-  1-8-gui-host-addon-rpc-marshal: backlog
+  1-8-gui-host-addon-rpc-marshal: done
   1-9-view-controlled-screenshots: backlog
   1-10-gate-g0-exit: backlog
   epic-1-retrospective: optional

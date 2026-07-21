@@ -175,3 +175,7 @@ source_spec: `spec-1-7-exports-paired-verification.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
 status: open
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-8-gui-host-addon-rpc-marshal.md`
+  summary: In GUI/RPC mode the mesh-verify tools (`verify_export_stl`/`verify_export_3mf`) run their third-party oracle legs (trimesh/lib3mf/stdlib STL parse) inside the listener's single `marshal.call`, i.e. on the Qt main thread, freezing the FreeCAD GUI for the whole mesh parse; only the `_self_read` leg needs the main thread.
+  evidence: `hosts/tool_catalog.py` `_mesh_verify_handler` runs oracle legs in the same handler the listener wraps in `marshal.call` (`adapters/rpc_listener.py`). Confirmed by both pass-2 reviewers. A clean fix needs a partial-marshal mechanism (marshal only the self-read leg, run oracles on the listener thread) — a small design task beyond this story's scope. Impact bounded: two verify tools, GUI mode only, and export/verify are already documented as accepted op-duration freezes (integration-mcp-freecad.md §3.3).
