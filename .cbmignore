@@ -1,0 +1,6 @@
+.agents/skills/
+.claude/skills/
+**/.agents/skills/
+**/.claude/skills/
+skills-lock.json
+**/skills-lock.json

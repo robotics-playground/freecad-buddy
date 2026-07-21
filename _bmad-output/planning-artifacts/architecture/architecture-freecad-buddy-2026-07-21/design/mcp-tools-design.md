@@ -1,0 +1,489 @@
+---
+title: MCP Tool Catalog Design — Phases 0–2
+status: draft
+date: '2026-07-21'
+ad-refs: [AD-1, AD-2, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-17, AD-20]
+sources:
+  - ../ARCHITECTURE-SPINE.md
+  - ../../../../specs/spec-freecad-buddy/phase-gates.md
+  - ../../../research/technical-freecad-features-and-functionalities-research-2026-07-21.md
+  - ../../../research/technical-sketch-dof-programmatic-query-research-2026-07-20.md
+  - ../../../research/technical-geometry-to-spec-assertions-research-2026-07-20.md
+  - ../../../research/technical-headless-preview-diff-channel-research-2026-07-20.md
+  - ../../../research/technical-python-execution-sandbox-policy-research-2026-07-20.md
+---
+
+# MCP Tool Catalog Design — Phases 0–2
+
+Implementation-ready catalog of the FreeCAD Buddy MCP tool surface for Phases 0–2. Tool names use the wire convention: underscore + namespace prefix (`query_`, `document_`, `export_`, `verify_`, `sketch_`, `feature_`, `preview_`, `debug_`); dot forms in older docs are shorthand only (spine Consistency Conventions). All tool implementations live in `usecases/`, schemas and envelopes in `contracts/` (AD-1); identical implementations serve GUI (via RPC listener) and headless hosts (AD-2).
+
+## 1. Cross-Cutting Contracts
+
+### 1.1 Document handles (AD-20)
+
+- Every tool input carries an explicit `doc` handle (opaque string, e.g. `"fcb-doc:7f3a…"`). `ActiveDocument` is never an implicit target.
+- Only `document_create`, `document_open`, and `document_list` omit `doc` (they mint or enumerate handles).
+- Documents open/close only through `document_*` tools — harness and supervisor included.
+- Preview TempDocs use reserved prefix `FCB_TMP_`, are flagged transient, and are cleaned only by `preview_dry_run` (their creator).
+
+### 1.2 Sub-element selectors (spine convention; AD-7, AD-13)
+
+Model-level sub-elements (faces/edges) are addressed by selector objects — never stored bare indexed names:
+
+```json
+{ "$defs": {
+  "Selector": { "oneOf": [
+    { "type": "object", "properties": {
+        "by": { "const": "mapped_name" },
+        "object": { "type": "string", "description": "immutable object Name" },
+        "element": { "type": "string", "description": "TNP mapped element name" } },
+      "required": ["by", "object", "element"] },
+    { "type": "object", "properties": {
+        "by": { "const": "geo_query" },
+        "object": { "type": "string" },
+        "query": { "type": "object", "description": "geometric predicate: surface_type, radius{value,tol}, axis_dir, nearest_point…" } },
+      "required": ["by", "object", "query"] }
+  ]},
+  "Quantity": { "type": "object",
+    "properties": { "value": { "type": "number" }, "unit": { "type": "string", "description": "explicit, e.g. mm, deg" } },
+    "required": ["value", "unit"] }
+}}
+```
+
+A caller-supplied bare `Face6` is resolved to a mapped name at call time and never persisted. Inside a sketch, geometry is addressed by sketch-local `geo_id` (returned by `sketch_add_geometry`) — sketch geo ids are solver-stable and not TNP-exposed.
+
+### 1.3 Result envelope & error surface (AD-17)
+
+Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` mirror in `content` (spine convention "Tool results"). No namespace defines a variant envelope.
+
+The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contracts-design.md §4) — this catalog consumes it, never redefines it:
+
+```json
+{ "$defs": { "ResultEnvelope": {
+  "type": "object",
+  "properties": {
+    "schema": { "const": "fcb.result-envelope/1" },
+    "status": { "enum": ["OK", "SPEC_FAILED", "RECOMPUTE_ERROR", "TIMEOUT", "OOM_KILLED", "WORKER_CRASHED", "INVALID_INPUT"] },
+    "detail": { "type": ["object", "null"], "description": "ErrorDetail — machine code + required human message on non-OK; constraint diagnostics as {solver_id (1-based), name} per Constraints[id-1]" },
+    "structured_content": { "type": "object", "description": "tool-specific payload, per-tool schema below (called `result` in §3 fragments); echoes the doc handle (AD-20)" },
+    "text": { "type": "string", "description": "human mirror, server-derived from structured_content" },
+    "images": { "type": "array", "description": "ImageRef[], capability-gated (AD-10)" }
+  },
+  "required": ["status", "structured_content", "text"]
+}}}
+```
+
+- The status set is closed (AD-17); Phase 0–2 use-case outcomes emit `OK | SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`; the transport layer additionally emits `TIMEOUT` (marshal timeout) and `WORKER_CRASHED` (RPC listener unreachable) from Phase 0 — see integration-mcp-freecad.md §7; `OOM_KILLED` is Phase 4 supervisor-only. The schema binds from Phase 0.
+- Verification payloads reuse the contracts `ValidationReport` shape with its banner (FreeCAD version, `ElementMapVersion`, validator sensitivity where citable).
+- Renders follow AD-10 budgets: ≤1024 px, `audience:["user"]`, `resource_link` preferred over inline base64.
+
+### 1.4 Mutation protocol fields (AD-5, AD-6, AD-7)
+
+Every mutation tool (column **Mut** = yes below) executes the AD-5 bracket (geohash snapshot → `openTransaction` → typed op → `recompute()` → post-verify → commit; on failure abort + re-hash-proven rollback) and returns a common `mutation` block inside `result`:
+
+```json
+{ "mutation": {
+  "transaction_id": "string",
+  "fingerprint_before": { "hash": "sha256…", "serializer": "exportBinary|exportBrep", "mass_props": {} },
+  "fingerprint_after":  { "hash": "…", "serializer": "…", "mass_props": {} },
+  "post_verify": { "recompute_clean": true, "is_valid": true,
+                   "fully_constrained": true,
+                   "tnp_audit": { "status": "CLEAN|FLAGGED|UNSUPPORTED", "element_map_version": "string", "findings": [] } },
+  "rolled_back": false, "rollback_proven": null
+}}
+```
+
+Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). `tnp_audit` reports `UNSUPPORTED`, never clean, when the element map probe fails (AD-7, AD-11). From Phase 2, mutation tools additionally accept an optional `confirm` object (§4.8) tying execution to a `preview_dry_run` + elicitation acceptance (AD-10); headless without confirmation is fail-closed unless `autoApprove` is set, and every auto-approval is audit-logged.
+
+**Lifecycle ops** (`document_save`, `document_close`, `document_recompute`, `document_undo`) change document state but carry no new geometric intent: they are audit-logged and serialized with the single-writer rule (AD-20) but are exempt from the preview/confirm gate. `document_undo` is verified by fingerprint comparison (AD-6; gate G2.3).
+
+## 2. Tool Inventory
+
+**Mut** = mutates the target document (drives AD-5 protocol + Phase 2 confirm gate). *(L)* = lifecycle op, confirm-exempt per §1.4.
+
+### `document_` — lifecycle & targeting (AD-20)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `document_create` | 0 | Create a new document; mint and return its handle | yes *(L)* |
+| `document_open` | 0 | Open an `.FCStd` file; return handle | yes *(L)* |
+| `document_save` | 0 | Save / save-as by handle | yes *(L)* |
+| `document_close` | 0 | Close by handle; releases handle | yes *(L)* |
+| `document_list` | 0 | List open documents with handles, labels, transient flags | no |
+| `document_recompute` | 0 | Full recompute; report touched objects + per-object error states | yes *(L)* |
+| `document_undo` | 2 | Bridge-owned undo of the last committed transaction; fingerprint-verified (G2.3) | yes *(L)* |
+| `document_object_delete` | 2 | Delete an object (and report orphaned dependents) under AD-5 | yes |
+
+### `query_` — read-only introspection (zero mutation; Phase 1 assistant surface, G1.6)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `query_tree_summary` | 0 | Bounded, summarized feature-tree overview (G1.3 large-tree safe) | no |
+| `query_object` | 0 | One object: type, label, properties, error state + `getStatusString()` | no |
+| `query_mass_properties` | 0 | Volume/area/bbox/COM/inertia + topology counts for an object | no |
+| `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc | no |
+| `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
+| `query_placement` | 0 | Local + global placement of an object | no |
+| `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `debug_exec` state | no |
+| `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1024 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport. Reports unavailable when no GL — never fails hard | no |
+| `query_tree_children` | 1 | Paged expansion of one tree node (drill-down after `query_tree_summary`) | no |
+| `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) | no |
+
+### `export_` — artifact output (AD-9: each pairs with its `verify_export_*`)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `export_step` | 0 | Write STEP AP214/AP242, `write.step.unit=MM` pinned per call | no |
+| `export_stl` | 0 | Write STL via `MeshPart.meshFromShape` (linear + angular deflection) | no |
+| `export_3mf` | 0 | Write 3MF from the same single tessellation source as STL | no |
+
+### `verify_` — deterministic verification (read-only; AD-13: never the producing agent)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `verify_shape` | 0 | Measure volume/bbox/counts/validity vs. expected bands (G0.3 golden models) | no |
+| `verify_recompute` | 0 | Assert no object left in error state after recompute | no |
+| `verify_sketch` | 0 | AD-8 pass signal: `FullyConstrained` + DoF + solver diagnostics (used by G2.5) | no |
+| `verify_fingerprint` | 0 | Compute/compare AD-6 document fingerprint (undo proof, G2.3) | no |
+| `verify_export_step` | 0 | Re-import STEP; volume ±0.1 %, `isValid`, topology counts equal (G0.5) | no |
+| `verify_export_stl` | 0 | trimesh + second oracle (admesh or Phase 0 fallback); disagreement = fail | no |
+| `verify_export_3mf` | 0 | lib3mf + trimesh + FreeCAD self-read (self-read leg via RPC) | no |
+| `verify_references` | 2 | Standalone TNP reference audit (AD-7 Layers 0–2) between mutations | no |
+| `verify_visual` | 3 | AD-21 visual leg: standard visual set — iso render + focus views + **dimensioned TechDraw front/top/right projections** (auto-generated from driving params on a TempDoc via internal `techdraw_for_judge`; part doc never polluted) → **independent** VLM judge (never the actor) vs spec checklist; conjunctive with geometry assertions for part-done; fail-closed when render/drawing/judge unavailable. *(Phase 3 — outside the P0–P2 count table.)* | no |
+
+### `sketch_` — sketch mutations (Phase 2; AI mutation path per AD-4)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `sketch_create` | 2 | New sketch on base plane / datum / planar-face selector | yes |
+| `sketch_add_geometry` | 2 | Add typed geometry (line/arc/circle/point…); returns `geo_id`s | yes |
+| `sketch_remove_geometry` | 2 | Remove geometry by `geo_id` | yes |
+| `sketch_add_constraint` | 2 | Add typed constraints; returns 1-based ids + post-solve state | yes |
+| `sketch_remove_constraint` | 2 | Remove constraint by id/name | yes |
+| `sketch_set_datum` | 2 | Change a dimensional constraint value | yes |
+| `sketch_toggle_construction` | 2 | Toggle construction mode on geometry | yes |
+| `sketch_add_external_geometry` | 2 | Project model edge into sketch (selector-addressed; TNP-audited) | yes |
+
+### `feature_` — solid features (Phase 2; intent-bearing names per spine convention)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `feature_pad` | 2 | Pad a sketch profile | yes |
+| `feature_pocket` | 2 | Pocket from a sketch profile | yes |
+| `feature_revolve` | 2 | Revolution from profile + axis | yes |
+| `feature_hole` | 2 | PartDesign Hole (thread metadata is hint-only for verification) | yes |
+| `feature_fillet` | 2 | Fillet selected edges (selector objects) | yes |
+| `feature_chamfer` | 2 | Chamfer selected edges | yes |
+| `feature_pattern` | 2 | Linear/polar pattern of features | yes |
+| `feature_mirror` | 2 | Mirror features across plane/datum | yes |
+| `feature_datum` | 2 | Create datum plane/axis/point/CS (TNP-defensive referencing) | yes |
+| `feature_set_parameters` | 2 | Edit feature properties / driving dimensions (G3.3 editability path) | yes |
+
+### `preview_` — dry-run channel (AD-10)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `preview_dry_run` | 2 | Execute proposed op on `FCB_TMP_` copy-doc; return structured diff + optional render; no live-doc mutation | no |
+
+### `debug_` — operator-only (AD-4; never an AI surface)
+
+| Tool | Phase | Purpose | Mut |
+| --- | --- | --- | --- |
+| `debug_exec` | 0 | Trusted-operator Python exec for bring-up/CI-authored scripts; see §5 | yes |
+
+### Counts & G0.2
+
+| Namespace | P0 | P1 | P2 | Total |
+| --- | --- | --- | --- | --- |
+| `document_` | 6 | — | 2 | 8 |
+| `query_` | 8 | 2 | — | 10 |
+| `export_` | 3 | — | — | 3 |
+| `verify_` | 7 | — | 1 | 8 |
+| `sketch_` | — | — | 8 | 8 |
+| `feature_` | — | — | 10 | 10 |
+| `preview_` | — | — | 1 | 1 |
+| `debug_` | 1 | — | — | 1 |
+| **Total** | **25** | **2** | **22** | **49** |
+
+**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24** including `verify_` (excluding operator-only `debug_exec`, which is unregistered by default and does not count toward the AI-visible registry). Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule).
+
+## 3. Load-Bearing Tool Schemas
+
+Fragments show `result` payloads; each is wrapped in the `ResultEnvelope` (§1.3). `$defs` from §1.2 apply.
+
+### 3.1 `document_create`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "label": { "type": "string" },
+    "path": { "type": "string", "description": "optional .FCStd save target" }
+  }, "required": ["label"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "doc": { "type": "string", "description": "opaque handle — required by every subsequent call (AD-20)" },
+    "name": { "type": "string", "description": "immutable FreeCAD document Name" },
+    "label": { "type": "string" },
+    "fingerprint": { "$ref": "#/$defs/Fingerprint", "description": "empty-doc baseline (AD-6)" }
+  }, "required": ["doc", "name"] } }
+```
+
+### 3.2 `query_tree_summary`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "max_depth": { "type": "integer", "default": 2 },
+    "max_nodes": { "type": "integer", "default": 100, "description": "hard cap — G1.3 context-overflow guard" }
+  }, "required": ["doc"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "nodes": { "type": "array", "items": { "type": "object", "properties": {
+      "name": { "type": "string" }, "label": { "type": "string" },
+      "type": { "type": "string", "description": "e.g. PartDesign::Pad" },
+      "children_count": { "type": "integer" },
+      "error": { "type": ["string", "null"], "description": "getStatusString() when in error state" }
+    }, "required": ["name", "type"] } },
+    "total_objects": { "type": "integer" },
+    "truncated": { "type": "boolean", "description": "true → drill down with query_tree_children" }
+  }, "required": ["nodes", "total_objects", "truncated"] } }
+```
+
+### 3.3 `verify_shape`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "object": { "type": "string", "description": "immutable Name; omit = whole-document Tip solids" },
+    "expect": { "type": "object", "properties": {
+      "volume": { "type": "object", "properties": { "quantity": { "$ref": "#/$defs/Quantity" }, "rel_tol": { "type": "number", "default": 0.001 } } },
+      "bbox": { "type": "object", "properties": { "x": {}, "y": {}, "z": {}, "tol": {} }, "description": "Quantity triplet + band" },
+      "counts": { "type": "object", "properties": { "faces": { "type": "integer" }, "edges": { "type": "integer" }, "solids": { "type": "integer" } } }
+    }, "description": "omit expect → measurement-only report" }
+  }, "required": ["doc"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "is_valid": { "type": "boolean" }, "watertight": { "type": "boolean" },
+    "measured": { "type": "object", "description": "volume/area/bbox/com/counts, explicit units" },
+    "assertions": { "type": "array", "items": { "type": "object", "properties": {
+      "field": { "type": "string" }, "expected": {}, "measured": {}, "tolerance": {}, "pass": { "type": "boolean" } } } },
+    "verdict": { "enum": ["PASS", "FAIL"] },
+    "banner": { "type": "object", "description": "ValidationReport banner (AD-17)" }
+  }, "required": ["is_valid", "measured", "verdict"] } }
+```
+
+Failure of any assertion → envelope `status: "SPEC_FAILED"`. Tolerances are never tighter than `Shape.getTolerance` (spine numeric-tolerance convention).
+
+### 3.4 `verify_sketch` (shape per DoF research §5; AD-8)
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" }, "sketch": { "type": "string", "description": "sketch object Name" }
+  }, "required": ["doc", "sketch"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "dof": { "type": "integer" },
+    "fully_constrained": { "type": "boolean", "description": "PASS ⇔ true, read after recompute (AD-8)" },
+    "geometry_count": { "type": "integer" }, "constraint_count": { "type": "integer" },
+    "conflicting": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" } },
+    "redundant": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" }, "description": "WARN only, never FAIL (AD-8)" },
+    "partially_redundant": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" } },
+    "malformed": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" } },
+    "degenerate_geometry_count": { "type": "integer" },
+    "open_vertices": { "type": "integer" },
+    "under_constrained_elements": { "type": "array", "description": "(geo_id, pos_id) pairs from getGeometryWithDependentParameters — repair-loop input" },
+    "solver_status_code": { "type": "integer", "description": "logging only — never a pass signal (AD-8)" },
+    "verdict": { "enum": ["PASS", "FAIL", "WARN"] }
+  }, "required": ["dof", "fully_constrained", "verdict"] } }
+```
+
+`ConstraintRef` = `{ "id": 1-based solver id, "name": Constraints[id-1].Name, "type": constraint type }` (spine error convention). Tool recomputes before reading; never infers DoF from `solve() == 0`.
+
+### 3.5 `export_step` + `verify_export_step` (AD-9 pair)
+
+```json
+{ "export_step.inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "objects": { "type": "array", "items": { "type": "string" }, "description": "object Names; omit = all visible solids" },
+    "path": { "type": "string" },
+    "ap": { "enum": ["AP214", "AP242"], "default": "AP242" },
+    "unit": { "const": "MM", "description": "pinned per call — ambient defaults never trusted (AD-9)" }
+  }, "required": ["doc", "path"] },
+  "export_step.outputSchema-result": { "type": "object", "properties": {
+    "export_id": { "type": "string" }, "path": { "type": "string" }, "bytes": { "type": "integer" },
+    "verified": { "const": false, "description": "export completes ONLY via verify_export_step (AD-9)" }
+  }, "required": ["export_id", "path", "verified"] } }
+```
+
+```json
+{ "verify_export_step.inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string", "description": "source document (AD-20)" },
+    "export_id": { "type": "string", "description": "from export_step; binds the pair" }
+  }, "required": ["doc", "export_id"] },
+  "verify_export_step.outputSchema-result": { "type": "object", "properties": {
+    "reimport": { "type": "object", "properties": {
+      "volume_rel_error": { "type": "number", "description": "pass ≤ 0.001 (±0.1 %)" },
+      "is_valid": { "type": "boolean" },
+      "topology_counts_equal": { "type": "boolean" } } },
+    "verdict": { "enum": ["PASS", "FAIL"] },
+    "banner": { "type": "object" }
+  }, "required": ["reimport", "verdict"] } }
+```
+
+`verify_export_stl`/`verify_export_3mf` share this pair shape; their oracle blocks list per-oracle results (trimesh + second oracle; lib3mf + trimesh + FreeCAD self-read) and any independent-oracle disagreement forces `verdict: "FAIL"`; mesh volume tolerance derives from the deflection used at tessellation, never ±0.1 % (AD-9). Oracles run in the external process; the FreeCAD self-read leg runs in-FreeCAD via RPC (AD-9, AD-12).
+
+### 3.6 `sketch_add_constraint`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" }, "sketch": { "type": "string" },
+    "constraints": { "type": "array", "items": { "type": "object", "properties": {
+      "type": { "enum": ["Coincident", "Horizontal", "Vertical", "Parallel", "Perpendicular", "Tangent", "Equal", "Symmetric", "PointOnObject", "Block", "Distance", "DistanceX", "DistanceY", "Radius", "Diameter", "Angle"] },
+      "first": { "type": "integer", "description": "sketch geo_id (from sketch_add_geometry)" },
+      "first_pos": { "type": "integer", "description": "PointPos: 0 none, 1 start, 2 end, 3 mid" },
+      "second": { "type": "integer" }, "second_pos": { "type": "integer" },
+      "third": { "type": "integer" }, "third_pos": { "type": "integer" },
+      "value": { "$ref": "#/$defs/Quantity", "description": "dimensional constraints only" },
+      "name": { "type": "string", "description": "intent-bearing constraint name" },
+      "driving": { "type": "boolean", "default": true }
+    }, "required": ["type", "first"] } },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "sketch", "constraints"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "constraint_ids": { "type": "array", "items": { "type": "integer" }, "description": "1-based" },
+    "sketch_state": { "type": "object", "description": "embedded verify_sketch summary post-op (dof, fully_constrained, diagnostics)" },
+    "mutation": { "$ref": "#/$defs/MutationBlock" }
+  }, "required": ["constraint_ids", "sketch_state", "mutation"] } }
+```
+
+If the added constraints produce conflicting/malformed state, AD-5 post-verify fails → automatic proven rollback, envelope `status: "SPEC_FAILED"` with the solver diagnostics in `detail`.
+
+### 3.7 `feature_pad`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "body": { "type": "string", "description": "target PartDesign Body Name" },
+    "profile": { "type": "string", "description": "sketch Name" },
+    "length": { "$ref": "#/$defs/Quantity" },
+    "second_length": { "$ref": "#/$defs/Quantity" },
+    "reversed": { "type": "boolean", "default": false },
+    "midplane": { "type": "boolean", "default": false },
+    "up_to": { "enum": ["Length", "UpToFace", "ThroughAll"], "default": "Length" },
+    "up_to_face": { "$ref": "#/$defs/Selector" },
+    "name": { "type": "string", "description": "intent-bearing feature name (tree reads like a build plan)" },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "body", "profile", "name"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "feature": { "type": "string", "description": "created feature Name" },
+    "shape_summary": { "type": "object", "description": "post-op volume/bbox/counts" },
+    "mutation": { "$ref": "#/$defs/MutationBlock" }
+  }, "required": ["feature", "mutation"] } }
+```
+
+All `feature_*` tools follow this shape: selectors for sub-element references, `Quantity` for every dimension, mandatory intent-bearing `name`, common `mutation` block.
+
+### 3.8 `preview_dry_run` (AD-10)
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string", "description": "live document (never mutated by this tool)" },
+    "operation": { "type": "object", "properties": {
+      "tool": { "type": "string", "description": "any registered sketch_/feature_/document_object_delete mutation tool" },
+      "args": { "type": "object", "description": "that tool's input, minus doc/confirm" }
+    }, "required": ["tool", "args"] },
+    "render": { "enum": ["auto", "off"], "default": "auto", "description": "capability-gated (GUI saveImage / Xvfb / omit)" }
+  }, "required": ["doc", "operation"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "preview_id": { "type": "string", "description": "pass back as confirm.preview_id on apply" },
+    "diff": { "type": "object", "properties": {
+      "volume_delta": { "$ref": "#/$defs/Quantity" }, "area_delta": { "$ref": "#/$defs/Quantity" },
+      "bbox_before": {}, "bbox_after": {}, "com_shift": { "$ref": "#/$defs/Quantity" },
+      "counts_delta": { "type": "object", "properties": { "faces": {}, "edges": {}, "solids": {} } },
+      "nodes": { "type": "object", "properties": { "touched": { "type": "array" }, "new": { "type": "array" }, "deleted": { "type": "array" } } },
+      "validity": { "type": "object", "properties": { "is_valid": { "type": "boolean" }, "recompute_clean": { "type": "boolean" }, "recompute_log": { "type": "array" } } },
+      "tnp_precheck": { "type": "object", "description": "AD-7-style re-resolve check on the copy" }
+    }, "required": ["volume_delta", "bbox_after", "counts_delta", "nodes", "validity", "tnp_precheck"],
+       "description": "mandatory payload — confirmation never waits on pixels (AD-10)" },
+    "renders": { "type": "array", "items": { "type": "object", "properties": {
+      "kind": { "enum": ["before", "after"] },
+      "resource_link": { "type": "string", "description": "preferred; ≤1024 px, audience:[user]" } } },
+      "description": "optional, capability-gated" },
+    "expires_at": { "type": "string", "description": "TempDoc + preview_id lifetime; TempDoc prefix FCB_TMP_, cleaned by this tool (AD-20)" }
+  }, "required": ["preview_id", "diff"] } }
+```
+
+Field list of `diff` is the Phase 2 UX-locked schema (spine Deferred) — it must reuse the contracts-owned audit-record vocabulary; the fragment above is the design baseline for that lock. `preview_dry_run` also accepts an optional `view` object (§3.9) passed through to its before/after renders — e.g. focus the camera on the edge being filleted.
+
+### 3.9 `query_screenshot` — view-controlled render
+
+The agent (or the human it serves) reduces visual noise by **composing the scene**, not by mutating the model: the render path builds its own Coin scene graph per call (integration-mcp-freecad.md §6), so nothing here touches `Visibility` properties, the document, or the user's live viewport. Non-mutating by construction; registered in the Phase 1 read-only profile.
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "view": { "type": "object", "properties": {
+      "include": { "type": "array", "items": { "type": "string" },
+                   "description": "object Names to render; omit = all visible objects" },
+      "exclude": { "type": "array", "items": { "type": "string" },
+                   "description": "object Names dropped from the scene (hide = not added)" },
+      "styles": { "type": "array", "items": { "type": "object", "properties": {
+        "object": { "type": "string" },
+        "transparency": { "type": "integer", "minimum": 0, "maximum": 100,
+                          "description": "material override on this object's subgraph" },
+        "color": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }, "required": ["object"] },
+        "description": "de-emphasize context parts (e.g. transparency 80) so the subject reads clearly" },
+      "focus": { "$ref": "#/$defs/Selector",
+                 "description": "camera frames this sub-element's bbox (+margin) instead of the whole scene; falls back to whole-object when the selector names an object only" },
+      "highlight": { "$ref": "#/$defs/Selector",
+                     "description": "accent-color the target element (distinct override material)" },
+      "camera": { "enum": ["iso", "front", "top", "right", "left", "back", "bottom", "custom"], "default": "iso" },
+      "custom_orientation": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4,
+                              "description": "quaternion; required when camera == custom" },
+      "width": { "type": "integer", "default": 800, "maximum": 1024 },
+      "height": { "type": "integer", "default": 600, "maximum": 1024 }
+    } }
+  }, "required": ["doc"] },
+  "outputSchema-result": { "type": "object", "properties": {
+    "render": { "type": "object", "properties": {
+      "resource_link": { "type": "string" },
+      "available": { "type": "boolean" },
+      "reason": { "type": ["string", "null"], "description": "why unavailable (no GL / no FreeCADGui)" }
+    }, "required": ["available"] },
+    "scene": { "type": "object", "properties": {
+      "rendered_objects": { "type": "array", "items": { "type": "string" } },
+      "focused_on": { "type": ["object", "null"], "description": "resolved focus selector echo" }
+    } }
+  }, "required": ["render"] } }
+```
+
+Typical agent patterns: *isolate* (`include: [Body]`), *context-ghost* (`styles: [{object: BasePlate, transparency: 85}]` while inspecting the flange), *element zoom* (`focus: {by: geo_query, object: Body, query: {surface_type: Cylinder, radius: {value: 2.5, tol: 0.2}}}` to frame one hole), *before/after fillet check* (`preview_dry_run` with `view.focus` on the target edge). AD-10 budgets and `audience:["user"]` annotation apply unchanged.
+
+## 4. Confirmation Flow (AD-10) — `$defs.Confirm`
+
+```json
+{ "Confirm": { "type": "object", "properties": {
+    "preview_id": { "type": "string", "description": "from preview_dry_run" },
+    "elicitation_action": { "enum": ["accept"], "description": "recorded outcome; decline/cancel never reach the mutation tool" },
+    "autoApprove": { "type": "boolean", "description": "headless only; explicit operator flag; every use audit-logged" }
+} } }
+```
+
+Phase 2 policy: mutation tool called without valid `confirm` in a confirm-required context → `INVALID_INPUT`, no execution. GUI panel and MCP elicitation produce the `accept`; headless is fail-closed unless `autoApprove`. Apply re-runs the operation on the live document under AD-5 — the preview result is never "promoted" to the live doc.
+
+## 5. `debug_exec` Registration Rules (AD-4)
+
+1. **Off by default.** Registered into the MCP tool list only when the human operator sets `FREECAD_BUDDY_ALLOW_EXEC=1` at server start. When off it is *unregistered* — absent from `tools/list`, not merely erroring.
+2. **Never an AI mutation path.** Excluded from `preview_dry_run.operation.tool`, from the confirm flow, and from every benchmark/harness agent toolset. G1.6/registry introspection must show zero mutation tools *and* no `debug_exec` in AI-facing registries.
+3. **Audited.** Every call appended to the append-only audit log (code, timestamp, caller, doc handle, resulting fingerprint) — from Phase 0 (AD-17).
+4. **Not a sandbox.** Namespace reduction (FreeCAD API globals only) is blast-radius hygiene, never described as a security boundary; isolation is OS-level (AD-18, exec-sandbox research Finding 1).
+5. **Phase 4: permanently disabled** in the service; flag is ignored there.
+6. Input `{ "doc": handle, "code": string }`; result `{ "stdout", "value_repr", "fingerprint_after" }`. It still requires an explicit doc handle (AD-20) and its mutations are audit-logged, though it bypasses AD-5 typing by definition — which is exactly why it is operator-only.
+
+## 6. Registration & Phasing Rules
+
+- The tool registry is phase-profiled: the Phase 1 assistant profile registers `query_` + `verify_` + `document_list`/`document_open`(read-intent) only — zero mutation tools (G1.6). Phase 2 profile adds `sketch_`/`feature_`/`preview_`/remaining `document_` tools behind the confirm gate.
+- One FastMCP server object serves both transports (stdio headless, streamable HTTP in-GUI; SSE never) per AD-3; stderr-only logging on the server path.
+- All schemas live in `contracts/` (stdlib-only, AD-1/AD-12); use-case implementations are host-agnostic (AD-2).
+
+## 7. Conflicts & Design Decisions
+
+- **No AD conflicts identified.** Two deliberate interpretations, recorded per spine instructions:
+  1. **Lifecycle-op exemption (§1.4):** `document_save/close/recompute/undo` are mutations for serialization/audit purposes but exempt from the AD-5 snapshot bracket and Phase 2 preview gate (no new geometric intent; `undo` is itself the AD-5 rollback mechanism, proven by AD-6 fingerprints per G2.3). AD-5's "every mutation" is read as "every geometry-intent mutation"; flagged for spine-owner confirmation.
+  2. **G0.2 counting:** the gate text counts `query_`/`document_`/`export_`; this catalog meets ≥15 (16) within those namespaces alone, so the stricter reading holds; with Phase 0 `verify_` the AI-visible count is 23.

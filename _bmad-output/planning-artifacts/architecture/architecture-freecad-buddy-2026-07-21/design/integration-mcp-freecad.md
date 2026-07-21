@@ -1,0 +1,337 @@
+---
+title: 'Integration Design — MCP <-> FreeCAD Bridge'
+status: draft
+date: '2026-07-21'
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20]
+sources:
+  - _bmad-output/planning-artifacts/research/technical-mcp-embedding-freecad-gui-process-research-2026-07-20.md
+  - _bmad-output/planning-artifacts/research/technical-offscreen-screenshot-freecadcmd-research-2026-07-20.md
+  - _bmad-output/planning-artifacts/research/technical-freecad-version-matrix-research-2026-07-20.md
+  - _bmad-output/planning-artifacts/research/technical-headless-freecad-ci-research-2026-07-20.md
+---
+
+# Integration Design: MCP <-> FreeCAD
+
+How the external FastMCP server reaches FreeCAD in both run modes, per **AD-2** (topology + main-thread marshaling), **AD-3** (transport + auth), **AD-11** (version shim), **AD-12** (stdlib-only in-FreeCAD). Governing rule (research, high confidence): *I/O may live on any thread; every call that reads or mutates FreeCAD state executes on the Qt main thread under the GIL.*
+
+## 1. Topology
+
+| Mode | Processes | FreeCAD call path |
+| --- | --- | --- |
+| **GUI** | External FastMCP process + FreeCAD GUI process (addon-hosted RPC listener) | RPC → listener accept thread → marshal → Qt main thread |
+| **Headless H1** (canonical, AD-2) | Single process: FastMCP + usecases + `import FreeCAD` as module (conda env) | Direct in-proc call, inline |
+| **Headless H2** (fallback host) | External FastMCP + `FreeCADCmd run_server.py` (same listener, inline dispatch) | RPC → single-threaded serve loop, main thread |
+
+H2 exists for environments where the MCP process's interpreter cannot `import FreeCAD` (AppImage, interpreter mismatch). It is the GUI topology minus Qt — no marshal needed because `FreeCADCmd` has no Qt loop and the serve loop *is* the main thread. It does not contradict AD-2's "headless = single process" intent (which prevents asyncio-in-Qt fragility and off-thread FreeCAD calls); H2 has neither. Same use-case implementations in all three (AD-2).
+
+Per **AD-12**, everything that runs inside the FreeCAD process — `contracts/rpc_wire.py`, `adapters/rpc_listener.py`, `adapters/marshal.py`, `usecases/*`, `hosts/gui_addon/*`, `hosts/headless/run_server.py` — imports **stdlib + FreeCAD API only** (Qt via FreeCAD's bundled PySide, confined to `hosts/` per AD-1). FastMCP, trimesh, etc. exist only in the external uv-managed process.
+
+## 2. RPC Wire Contract (`contracts/rpc_wire.py`, per AD-2)
+
+Both sides import this module; neither invents framing. Stdlib-encodable throughout (`json`, `dataclasses`).
+
+### 2.1 Framing
+
+- **NDJSON over TCP, localhost**: one JSON-RPC 2.0 object per line, UTF-8, `\n`-terminated. `json.dumps` emits no raw newlines, so framing is unambiguous. Max frame 16 MiB (guards against runaway base64; render payloads use file paths / `resource_link` instead, AD-10 spirit).
+- Requests are processed **strictly sequentially per server** (single in-flight call globally). This implements AD-20 single-writer serialization at the transport layer for Phase 0; per-document queues are a later optimization behind the same contract.
+
+### 2.2 Handshake (versioned, per AD-2; token, per AD-3)
+
+First frame on every connection MUST be `rpc_hello`; anything else → error `-32002`, connection closed.
+
+```json
+// client → server
+{"jsonrpc":"2.0","id":0,"method":"rpc_hello",
+ "params":{"contract_version":"1","token":"<per-session token>"}}
+// server → client
+{"jsonrpc":"2.0","id":0,"result":{
+  "contract_version":"1","server":"freecad-buddy-listener",
+  "freecad_version":"1.1.1","python_version":"3.12.4",
+  "capabilities":{"gui":true,"qt_loop":true,"render":"gui_constructed",
+                   "element_map":true,"varset":true,"exec_enabled":false}}}
+```
+
+- Token: `secrets.token_urlsafe(32)`, generated once per listener start (session = host lifetime), compared with `hmac.compare_digest`. Mismatch → `-32000`, close. (AD-3)
+- `contract_version` mismatch → `-32004` with server's supported versions in `error.data`; client refuses to proceed. Bump the version on any frame/field semantic change.
+- `capabilities` drive tool registration on the MCP side: e.g. `render:"none"` → screenshot tools report unavailable rather than failing at call time; `element_map:false` → TNP audit returns `UNSUPPORTED` (AD-7 via AD-11 probe); `exec_enabled` reflects the AD-4 operator flag (`debug_exec` is unregistered when false).
+
+### 2.3 Requests, responses, errors
+
+- **Method names mirror the use-case surface** (spine naming convention): `query_*`, `document_*`, `sketch_*`, `feature_*`, `export_*`, `preview_*`, `verify_*` (in-FreeCAD legs only, e.g. the AD-9 self-read), `debug_exec` (gated), plus `rpc_hello`, `rpc_ping`, `rpc_capabilities`.
+- `params` is the tool's parameter object; every document-touching method carries an explicit document handle (**AD-20** — no implicit `ActiveDocument`).
+- **`result` is always a `ResultEnvelope`** (contracts-owned, AD-17 closed status set). Domain failures — recompute errors, invalid input, verify failures, marshal timeout — are envelopes, never JSON-RPC errors.
+- **JSON-RPC `error` is protocol-layer only:**
+
+| Code | Meaning |
+| --- | --- |
+| -32700 / -32600 / -32601 / -32602 | parse / invalid request / method not found / invalid params |
+| -32000 | auth failed (bad/missing token) |
+| -32002 | handshake required (first frame not `rpc_hello`) |
+| -32003 | server shutting down |
+| -32004 | contract version unsupported |
+
+### 2.4 Timeouts (single source: method registry)
+
+| Budget | Default | Notes |
+| --- | --- | --- |
+| TCP connect | 2 s | client side |
+| `rpc_hello` | 5 s | |
+| Call (read) timeout, client | method `timeout_s` + 5 s margin | |
+| Marshal timeout, server | method `timeout_s` (default 30 s; mutation/recompute methods 120 s; render 60 s) | per-`RpcMethod` override |
+
+Marshal timeout returns an envelope `status:"TIMEOUT"` with `detail:{"marshal_timeout":true,"maybe_still_running":true}` — see §7.
+
+### 2.5 Method registry (`adapters/rpc_dispatch.py`)
+
+```python
+@dataclass(frozen=True)
+class RpcMethod:
+    name: str                                  # "feature_pad"
+    handler: Callable[..., ResultEnvelope]     # usecase entry
+    timeout_s: float = 30.0
+    needs_main_thread: bool = True             # False only for pure listener-side ops (rpc_ping)
+
+class MethodRegistry:
+    def register(self, method: RpcMethod) -> None: ...
+    def dispatch(self, name: str, params: dict) -> ResultEnvelope: ...
+```
+
+`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `debug_exec` is registered only when `FREECAD_BUDDY_ALLOW_EXEC` is set by the operator (AD-4) and every invocation is appended to the audit log (AD-17).
+
+### 2.6 Discovery (connection file)
+
+The listener writes `<FreeCAD user app data>/freecad-buddy/rpc-<pid>.json` (mode `0600`):
+
+```json
+{"schema":1,"pid":12345,"host":"127.0.0.1","port":43717,
+ "token":"...","freecad_version":"1.1.1","started":"2026-07-21T09:00:00Z"}
+```
+
+Port: `FREECAD_BUDDY_RPC_PORT` env if set, else ephemeral (`bind(0)`, actual port written to the file). Bind is `127.0.0.1` only; remote bind is explicit operator opt-in (AD-3). External server discovers by reading the newest file whose `pid` is alive; stale files are deleted by the listener on clean shutdown and skipped by clients on liveness failure.
+
+## 3. GUI Mode
+
+### 3.1 Addon lifecycle (`hosts/gui_addon/InitGui.py`)
+
+Race documented in research §4.4 (community addon crash: bridge started before `FreeCAD.GuiUp`): start is **deferred and gated**.
+
+```python
+# InitGui.py — executed by FreeCAD at GUI startup
+class FreeCADBuddyWorkbench(Gui.Workbench):
+    MenuText = "FreeCAD Buddy"
+    def Initialize(self):  # commands/panel registration only; no listener work here
+        ...
+Gui.addWorkbench(FreeCADBuddyWorkbench())
+
+def _deferred_start():
+    if not FreeCAD.GuiUp:
+        QtCore.QTimer.singleShot(500, _deferred_start)   # re-poll until GUI is up
+        return
+    from freecad_buddy.hosts.gui_addon.bootstrap import start_bridge
+    start_bridge()                                        # builds pump, marshal, registry, listener
+
+QtCore.QTimer.singleShot(0, _deferred_start)
+```
+
+`start_bridge()` (idempotent): create `QtMainThreadExecutor` (§3.3) on the main thread → build `MethodRegistry` from usecases → generate session token → start `RpcListener` accept thread → write connection file. Shutdown hook (workbench deactivate / app quit): stop listener, delete connection file.
+
+### 3.2 RPC listener (`adapters/rpc_listener.py`, stdlib only)
+
+`socket` + `threading`; no Qt imports (AD-1/AD-12 — Qt lives in the host-provided executor).
+
+```python
+class RpcListener:
+    def __init__(self, registry: MethodRegistry, marshal: Marshal,
+                 token: str, host: str = "127.0.0.1", port: int = 0): ...
+    def start_threaded(self) -> tuple[str, int]:
+        """GUI mode: accept loop on a daemon thread; returns (host, bound_port)."""
+    def serve_forever_inline(self) -> None:
+        """Headless H2: blocking single-threaded serve loop on the calling (main) thread."""
+    def stop(self) -> None: ...
+```
+
+Per connection: enforce handshake → read NDJSON frames → for each request, `marshal.call(lambda: registry.dispatch(name, params), timeout_s)` → write response frame. One request in flight at a time (§2.1).
+
+### 3.3 Main-thread marshal (`adapters/marshal.py` + host pump)
+
+Split so the queue/blocking logic stays stdlib (adapters) and Qt stays in `hosts/` (AD-1). Pattern mirrors FreeCAD's own `Mod/Web` server (`QTcpServer` + `postEvent` → `customEvent` on main thread) and `MainThreadSignalConfig::invoke` — we reuse the proven mechanism, not invent one.
+
+```python
+# adapters/marshal.py — stdlib only
+class Executor(Protocol):
+    def submit(self, fn: Callable[[], None]) -> None:
+        """Schedule fn on the FreeCAD execution thread. Thread-safe."""
+
+class InlineExecutor:
+    def submit(self, fn): fn()          # headless: no Qt loop, already on main thread
+
+class MarshalTimeout(Exception): ...
+
+class Marshal:
+    def __init__(self, executor: Executor): ...
+    def call(self, fn: Callable[[], T], timeout_s: float) -> T:
+        """Wrap fn to capture result/exception + set a threading.Event; executor.submit;
+        wait(timeout_s). On timeout raise MarshalTimeout — fn MAY still execute later;
+        the wrapper marks the session 'document-suspect' when it eventually runs."""
+```
+
+```python
+# hosts/gui_addon/pump.py — Qt allowed here (AD-1)
+_CALL = QtCore.QEvent.Type(QtCore.QEvent.registerEventType())
+
+class _CallEvent(QtCore.QEvent):
+    def __init__(self, fn): super().__init__(_CALL); self.fn = fn
+
+class QtMainThreadExecutor(QtCore.QObject):     # constructed ON the main thread
+    def submit(self, fn):                        # called from listener thread
+        QtCore.QCoreApplication.postEvent(self, _CallEvent(fn))  # thread-safe
+    def customEvent(self, ev):                   # runs on Qt main thread
+        ev.fn()
+```
+
+**Blocking semantics & GIL.** The listener thread blocks on the event; the marshaled callable runs on the Qt main thread where the GIL is implicitly held for pure-Python use-case code (no explicit `PyGILState` needed on this path — that is a C++-side concern). Consequences, accepted and documented:
+
+- While a call runs, the Qt event loop is blocked → the GUI freezes for the op's duration. Tools must stay atomic/short; long recomputes are an accepted freeze (research §3), surfaced to the user by the addon panel.
+- Use cases must **never** call `QApplication.processEvents()` (re-entrancy: a second RPC frame could interleave mid-transaction, violating AD-5/AD-20).
+- v26.3-dev async-recompute worker threads change nothing here: all tools default to main-thread execution; worker-side reads are out of scope until a `canRecomputeOnWorker()` capability probe justifies them.
+
+### 3.4 GUI call path
+
+```mermaid
+sequenceDiagram
+    participant C as MCP client
+    participant F as FastMCP server (external proc)
+    participant L as RPC listener (accept thread)
+    participant Q as Qt main thread (FreeCAD GUI)
+    C->>F: tools/call feature_pad
+    F->>L: NDJSON {method:"feature_pad", params:{doc,...}}  (token session)
+    L->>Q: marshal.call → postEvent(_CallEvent)
+    activate Q
+    Note over Q: customEvent → registry.dispatch<br/>usecase runs AD-5 transaction<br/>GIL held, GUI frozen for duration
+    Q-->>L: result / exception → ResultEnvelope, Event.set()
+    deactivate Q
+    L-->>F: NDJSON {result: ResultEnvelope}
+    F-->>C: structuredContent + text mirror
+```
+
+### 3.5 Error propagation
+
+Three layers, strictly separated: (1) use-case/domain outcome → `ResultEnvelope` status + detail (AD-17), produced at the `dispatch` boundary on the main thread, serialized back verbatim; (2) marshal timeout → envelope `TIMEOUT` built listener-side; (3) transport/protocol → JSON-RPC error codes (§2.3). The external FastMCP server maps envelopes 1:1 into MCP tool results — it never re-interprets or upgrades a status.
+
+## 4. Headless Mode
+
+### 4.1 H1 — single process (canonical, AD-2)
+
+The external process's interpreter is the conda-env Python matching the FreeCAD leg; `hosts/headless/entry.py` does path setup (`freecad` conda package; verify `import FreeCAD` — the feedstock `PYTHONPATH`/`.pth` wrinkle is a Phase 0 spike item) then wires `MethodRegistry` → FastMCP tools **directly**, no RPC, no listener, no token. `Marshal` is constructed with `InlineExecutor` so use cases are mode-agnostic. Transport to the MCP client: stdio (AD-3), stderr-only logging.
+
+### 4.2 H2 — `FreeCADCmd` hosting (`hosts/headless/run_server.py`)
+
+```
+FreeCADCmd run_server.py            # or: xvfb-run -a FreeCADCmd run_server.py (render leg)
+```
+
+`run_server.py` (stdlib + FreeCAD only, AD-12): build registry → `Marshal(InlineExecutor())` → `RpcListener(...).serve_forever_inline()` — a blocking single-threaded loop on the process main thread. No Qt loop exists in `FreeCADCmd` (research §4.1), so inline dispatch on the accept loop *is* main-thread execution; `MainThreadSignalConfig::isMainThread()` is trivially true. The external FastMCP process connects exactly as in GUI mode (connection file, token, handshake). Capability flags report `gui:false, qt_loop:false`.
+
+### 4.3 Capability flags (handshake `capabilities`, also `rpc_capabilities` method)
+
+| Flag | Probe (never version strings — AD-11) |
+| --- | --- |
+| `gui` | `FreeCAD.GuiUp` |
+| `qt_loop` | `QCoreApplication.instance() is not None` (probed by host, reported to listener) |
+| `render` | detection ladder result §6: `"gui_constructed" \| "offscreen" \| "none"` |
+| `element_map` | `shim.element_map_available()` |
+| `varset` | `shim` VarSet probe (façade reports `varset` vs `spreadsheet` backend) |
+| `exec_enabled` | `FREECAD_BUDDY_ALLOW_EXEC` env (AD-4) |
+
+## 5. Version Shim (`usecases/shim.py`, AD-11)
+
+One module owns every version-sensitive call; capability probes cached per process (`functools.lru_cache`). All version-matrix findings (1.0.x floor / 1.1.x primary; `Support`→`AttachmentSupport` rename PR #12714; VarSet limited exposure issue #12531) reduce to:
+
+```python
+def get_attachment(obj) -> list:
+    """Read attachment refs; probes hasattr(obj, 'AttachmentSupport') (1.x), falls back
+    to 'Support' (legacy leg only). Raises ShimUnsupported if neither exists."""
+
+def set_attachment(obj, refs: list, map_mode: str = "FlatFace") -> None: ...
+
+@lru_cache(maxsize=1)
+def element_map_available() -> bool:
+    """True iff Part.TopoShape has getElementHistory AND a probe shape yields a
+    non-empty ElementMap. Hard-gates the TNP audit (AD-7): False → UNSUPPORTED,
+    never a clean verdict."""
+
+def element_map_version(shape) -> str | None:
+    """shape.ElementMapVersion if present; recorded in every report banner."""
+
+def type_string(kind: str) -> str:
+    """Closed table: 'pad' → 'PartDesign::Pad', 'sketch' → 'Sketcher::SketchObject',
+    'varset' → 'App::VarSet', 'lcs' → 'App::LocalCoordinateSystem', ...
+    KeyError = programming error, not a runtime probe."""
+
+def driving_dimensions(doc, name: str) -> DrivingDims:
+    """Façade over App::VarSet (preferred; probed by attempting addObject) with
+    Spreadsheet fallback. DrivingDims: .set(name, value, unit) / .get(name) /
+    .names() / .backend -> 'varset' | 'spreadsheet'."""
+
+def capability_banner() -> dict:
+    """{'freecad_version', 'element_map', 'element_map_version', 'varset_backend', ...}
+    — embedded in every ValidationReport banner (spine conventions)."""
+```
+
+## 6. Screenshot / Render Integration
+
+Render code runs where FreeCAD lives. The **capability probe** sits in `adapters/render.py` (the AD-1 carve-out); the two implementations live in `hosts/` behind a `RenderPort` protocol injected into the registry at host startup, keeping `usecases/` free of Gui imports.
+
+**Detection ladder** (run once per process, result cached → `render` capability flag):
+
+1. `FreeCAD.GuiUp` → **`gui_constructed`**: the constructed-scene renderer (below) runs on the main thread using the GUI process's existing GL context. Whole-viewport `saveImage` remains available as a `mode:"viewport"` variant (captures exactly what the user sees), but the constructed scene is the default — it honors view control without touching the user's viewport.
+2. Else lazy `import FreeCADGui` succeeds → **immediately** call `FreeCADGui.setupWithoutGUI()` (mandatory ordering; issue #16407 class of crashes) → ensure `QtGui.QGuiApplication` exists (needed for the GL context) → attempt an 8×8 probe render of a `coin.SoSeparator`. Success → **`offscreen`** (same constructed-scene renderer).
+3. Import failure, no GL context, or probe render failure → **`none`**: screenshot tools report unavailable; `preview_dry_run` omits its optional image (AD-10 structured diff remains the mandatory payload).
+
+**Constructed-scene view control** (serves `query_screenshot.view` — mcp-tools-design §3.9). The scene is assembled per call, so include/exclude/transparency/focus never mutate document state, `Visibility` properties, or the live viewport:
+
+- **Include/exclude:** only listed (or all-visible-minus-excluded) objects get `subgraphFromObject(obj)` — hiding is simply not adding the subgraph.
+- **Style overrides:** each styled object's subgraph is wrapped in its own `SoSeparator` with a prepended `coin.SoMaterial` (transparency 0–1, optional diffuse color); highlight = a distinct accent material on the resolved target's subgraph.
+- **Focus framing:** resolve the focus selector to a sub-shape (same selector resolution as tool inputs), take its `BoundBox` grown by ~20 % margin, and aim the camera with `camera.pointAt`/orientation preset then `viewAll` against a proxy bbox cube — instead of `viewAll` on the whole scene root.
+- **Camera presets:** iso/front/top/… map to fixed `SbRotation`s (iso = the `make_snapshot.py` axonometric quaternion); `custom` takes a quaternion.
+- GUI mode runs this on the main thread via the marshal (Coin is GUI-thread-affine); headless runs it inline.
+
+**Offscreen path** (`hosts/headless/offscreen_render.py`, adapted from FreeCAD's first-party `src/Tools/make_snapshot.py`):
+
+```python
+def render_offscreen(doc, out_path: str, width: int = 1024, height: int = 768,
+                     orientation: str = "iso") -> RenderResult:
+    # FreeCADGui.setupWithoutGUI() already done by probe
+    root = coin.SoSeparator()
+    root.addChild(camera); root.addChild(coin.SoDirectionalLight())
+    for obj in visible_objects(doc):
+        root.addChild(FreeCADGui.subgraphFromObject(obj))   # transient view provider
+    camera.viewAll(root, coin.SbViewportRegion(width, height))
+    off = FreeCADGui.SoQtOffscreenRenderer(width, height)    # NEVER raw pivy SoOffscreenRenderer (#13356)
+    off.render(root); off.writeToImage(out_path)             # QImage saver → PNG
+```
+
+CI render leg: `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1` + `MESA_LOADER_DRIVER_OVERRIDE=llvmpipe` (FreeCAD's own CI recipe); isolated, non-blocking (spine environments). One `SoQtOffscreenRenderer` + one `QGuiApplication` reused per process (leaking-singleton note in `SoFCOffscreenRenderer.h`). `QT_QPA_PLATFORM=offscreen` is secondary, validated per-image — historically no usable GL context.
+
+## 7. Failure Modes
+
+| Failure | Detection | Behavior |
+| --- | --- | --- |
+| Listener down / not started | TCP connect refused, or connection file absent/stale (`pid` dead) | MCP tool returns envelope `WORKER_CRASHED` + detail `{"rpc":"unreachable"}`; client guidance: start/restart the addon. No auto-retry beyond one reconnect attempt. |
+| Stale connection file | `pid` liveness check fails | Skip file; report as listener-down. Listener deletes own file on clean stop. |
+| Auth token mismatch | `rpc_hello` compare fails | JSON-RPC `-32000`, connection closed, attempt logged to stderr. |
+| Contract version mismatch | handshake check | `-32004` + supported list; external server refuses session, surfaces upgrade instruction. |
+| FreeCAD busy (long recompute / modal dialog / prior call running) | serialized dispatch: new frames queue behind in-flight call | Call waits its turn; if total wait exceeds method `timeout_s` → `TIMEOUT` envelope. No preemption. |
+| Marshal timeout | `Event.wait(timeout_s)` expires | Envelope `TIMEOUT`, `maybe_still_running:true`; session marked **document-suspect** — next mutation on that document is refused until a `query_*` fingerprint check (AD-6) confirms state. Never blind-retry a mutation. |
+| Use-case exception | dispatch boundary | Mapped to AD-17 closed set + traceback detail; AD-5 transaction protocol has already aborted + verified rollback before the envelope is built. |
+| `GuiUp` never true / addon start race | `_deferred_start` re-poll loop | Listener simply never starts before GUI is up; poll continues (bounded: give up + stderr warning after 60 s). |
+| Version probe fails (`element_map_available()` false) | shim probe at startup | Capability `element_map:false`; TNP audit reports `UNSUPPORTED`, never clean (AD-7/AD-11); mutation tools still function. |
+| Render unavailable (no `FreeCADGui` import / no GL) | detection ladder §6 | Capability `render:"none"`; screenshot tool unregistered/unavailable-reporting; previews ship structured diff only (AD-10). |
+| stdout pollution (stdio transport) | CI lint: no `print()` in server code | All logging stderr-only (AD-3). |
+
+## 8. Open Items (Phase 0 spikes, aligned with spine Deferred table)
+
+- Conda `FreeCADCmd` / `import FreeCAD` path edge (feedstock issue #21) — decides H1 vs H2 default on CI.
+- VarSet runtime exposure on the 1.1 leg (issue #12531) — decides `driving_dimensions` default backend.
+- `QT_QPA_PLATFORM=offscreen` GL viability per CI image vs Xvfb — ladder step 2 probe validates empirically.
+- NDJSON-over-TCP vs `QLocalServer`/UDS benchmark (research §7, low priority) — contract shape is transport-agnostic; only the discovery file changes.
