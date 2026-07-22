@@ -24,6 +24,7 @@ from freecad_buddy.adapters.mcp_server import (
     configure_stderr_logging,
     serve_stdio,
 )
+from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
 from freecad_buddy.usecases.documents import DocumentRegistry
@@ -50,7 +51,7 @@ def build_registry(
     registry: DocumentRegistry, caps: Capabilities, marshal: Marshal
 ) -> MethodRegistry:
     """Register the tool surface, each handler marshaled onto the FreeCAD thread."""
-    return build_inline_handlers(registry, ExportRegistry(), caps, marshal)
+    return build_inline_handlers(registry, ExportRegistry(), caps, marshal, OffscreenRenderPort())
 
 
 def _default_audit_path() -> Path:

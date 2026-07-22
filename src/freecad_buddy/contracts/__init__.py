@@ -20,6 +20,13 @@ from freecad_buddy.contracts.fingerprint import (
     fingerprints_equal,
 )
 from freecad_buddy.contracts.job import JobStatus
+from freecad_buddy.contracts.render import (
+    FocusSpec,
+    RenderPort,
+    RenderResult,
+    SceneSpec,
+    StyleSpec,
+)
 from freecad_buddy.contracts.report import (
     Check,
     ReportBanner,
@@ -48,6 +55,7 @@ __all__ = [
     "DocHandle",
     "ErrorDetail",
     "FingerprintRecord",
+    "FocusSpec",
     "GeometricSelector",
     "GeometryDiff",
     "ImageRef",
@@ -56,6 +64,8 @@ __all__ = [
     "MappedNameSelector",
     "MassProps",
     "ObjectFingerprint",
+    "RenderPort",
+    "RenderResult",
     "ReportBanner",
     "ResultEnvelope",
     "RpcError",
@@ -68,7 +78,9 @@ __all__ = [
     "RpcRequest",
     "RpcSuccess",
     "ScalarDelta",
+    "SceneSpec",
     "Selector",
+    "StyleSpec",
     "TerminalStatus",
     "ValidationReport",
     "WilsonCI",

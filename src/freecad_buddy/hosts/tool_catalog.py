@@ -19,18 +19,22 @@ from typing import Callable
 from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.mcp_server import Capabilities, exec_registered
+from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
+from freecad_buddy.contracts import RenderPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
-from freecad_buddy.usecases import exports, queries, verify
+from freecad_buddy.usecases import exports, queries, screenshot, verify
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
 
 _DOC_SCHEMA = {"type": "string", "description": "opaque fcb-doc handle"}
 
-# HandlerFactory returns the raw, un-marshaled handler for a tool given the use-case
-# registries and capabilities. ``build_inline_handlers`` optionally wraps its result in
-# ``marshal.call``.
-HandlerFactory = Callable[[DocumentRegistry, ExportRegistry, Capabilities], Callable[..., dict]]
+# HandlerFactory returns the raw, un-marshaled handler for a tool given the use-case registries,
+# capabilities, and the host-injected ``RenderPort``. ``build_inline_handlers`` optionally wraps
+# its result in ``marshal.call``.
+HandlerFactory = Callable[
+    [DocumentRegistry, ExportRegistry, Capabilities, RenderPort], Callable[..., dict]
+]
 
 
 @dataclass(frozen=True)
@@ -126,11 +130,71 @@ _EXPORT_STEP_INPUT_SCHEMA = {
     },
 }
 
+_SELECTOR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "object": {"type": "string"},
+        "element_type": {"enum": ["face", "edge", "vertex"]},
+        "index": {"type": "integer", "minimum": 0},
+        "mapped_name": {"type": "string"},
+    },
+    "required": ["object"],
+    "additionalProperties": False,
+}
+_SCREENSHOT_INPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "doc": _DOC_SCHEMA,
+        "view": {
+            "type": "object",
+            "properties": {
+                "include": {"type": "array", "items": {"type": "string"}},
+                "exclude": {"type": "array", "items": {"type": "string"}},
+                "styles": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "object": {"type": "string"},
+                            "transparency": {"type": "integer", "minimum": 0, "maximum": 100},
+                            "color": {
+                                "type": "array",
+                                "items": {"type": "number"},
+                                "minItems": 3,
+                                "maxItems": 3,
+                            },
+                        },
+                        "required": ["object"],
+                        "additionalProperties": False,
+                    },
+                },
+                "focus": _SELECTOR_SCHEMA,
+                "highlight": _SELECTOR_SCHEMA,
+                "camera": {
+                    "enum": ["iso", "front", "top", "right", "left", "back", "bottom", "custom"],
+                    "default": "iso",
+                },
+                "custom_orientation": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "minItems": 4,
+                    "maxItems": 4,
+                },
+                "width": {"type": "integer", "default": 800, "maximum": 1024},
+                "height": {"type": "integer", "default": 600, "maximum": 1024},
+            },
+            "additionalProperties": False,
+        },
+    },
+    "required": ["doc"],
+    "additionalProperties": False,
+}
+
 
 def _doc_method(attr, timeout, schema, description, *, mutating):
     """A ``ToolSpec`` whose handler forwards straight to a ``DocumentRegistry`` method."""
 
-    def make(doc_registry, export_registry, caps):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
         return getattr(doc_registry, attr)
 
     return ToolSpec(
@@ -146,7 +210,7 @@ def _doc_method(attr, timeout, schema, description, *, mutating):
 def _query_method(name, fn, timeout, schema, description):
     """A ``ToolSpec`` for a read-only query use case taking the doc registry."""
 
-    def make(doc_registry, export_registry, caps):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
         return lambda **p: fn(doc_registry, **p)
 
     return ToolSpec(
@@ -162,7 +226,7 @@ def _query_method(name, fn, timeout, schema, description):
 def _export_method(name, fn, timeout, schema, description, *, mutating):
     """A ``ToolSpec`` for an export use case taking both registries."""
 
-    def make(doc_registry, export_registry, caps):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
         return lambda **p: fn(doc_registry, export_registry, **p)
 
     return ToolSpec(
@@ -176,7 +240,7 @@ def _export_method(name, fn, timeout, schema, description, *, mutating):
 
 
 def _mesh_verify_spec(name, fmt, description):
-    def make(doc_registry, export_registry, caps):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
         return _mesh_verify_handler(doc_registry, export_registry, None, fmt)
 
     return ToolSpec(
@@ -190,8 +254,10 @@ def _mesh_verify_spec(name, fmt, description):
 
 
 def _capabilities_spec():
-    def make(doc_registry, export_registry, caps):  # noqa: ARG001
-        return lambda: queries.query_capabilities(exec_enabled=exec_registered(caps))
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+        return lambda: queries.query_capabilities(
+            exec_enabled=exec_registered(caps), render=render_capability_flag()
+        )
 
     return ToolSpec(
         name="query_capabilities",
@@ -204,9 +270,24 @@ def _capabilities_spec():
     )
 
 
+def _screenshot_spec():
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+        return lambda **p: screenshot.query_screenshot(doc_registry, render_port, **p)
+
+    return ToolSpec(
+        name="query_screenshot",
+        make_handler=make,
+        input_schema=_SCREENSHOT_INPUT_SCHEMA,
+        description="Read-only view-controlled render: constructed scene (include/exclude/"
+        "styles/focus/highlight/camera) to a PNG resource_link; never mutates the document.",
+        timeout_s=60.0,
+        mutating=False,
+    )
+
+
 DEBUG_EXEC_SPEC = ToolSpec(
     name="debug_exec",
-    make_handler=lambda doc_registry, export_registry, caps: (
+    make_handler=lambda doc_registry, export_registry, caps, render_port: (
         lambda **params: debug_exec_uc.debug_exec(
             doc_registry, params.get("doc"), params.get("code", "")
         )
@@ -296,6 +377,7 @@ def tool_specs() -> list[ToolSpec]:
             mutating=False,
         ),
         _capabilities_spec(),
+        _screenshot_spec(),
         _query_method(
             "query_tree_summary",
             queries.query_tree_summary,
@@ -461,13 +543,16 @@ def build_inline_handlers(
     export_registry: ExportRegistry,
     caps: Capabilities,
     marshal: Marshal | None,
+    render_port: RenderPort | None = None,
 ) -> MethodRegistry:
     """Build a ``MethodRegistry`` from the shared catalog.
 
     ``marshal`` given → each handler is wrapped in ``marshal.call`` (headless inline host).
     ``marshal`` is ``None`` → handlers call the use case directly (the listener owns the single
-    ``marshal.call`` and a second layer would deadlock the Qt main thread).
+    ``marshal.call`` and a second layer would deadlock the Qt main thread). ``render_port``
+    defaults to a fresh ``OffscreenRenderPort`` (the one render capability serves every host).
     """
+    port = render_port if render_port is not None else OffscreenRenderPort()
     methods = MethodRegistry()
 
     def wrap(raw, timeout_s):
@@ -484,7 +569,7 @@ def build_inline_handlers(
         specs.append(DEBUG_EXEC_SPEC)
 
     for spec in specs:
-        raw = spec.make_handler(doc_registry, export_registry, caps)
+        raw = spec.make_handler(doc_registry, export_registry, caps, port)
         methods.register(
             RpcMethod(
                 name=spec.name,

@@ -81,13 +81,14 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
     assert EXPECTED_VERIFY_TOOLS <= names
     assert EXPECTED_EXPORT_TOOLS <= names
     assert "query_capabilities" in names
+    assert "query_screenshot" in names
     assert "debug_exec" not in names
     assert names == (
         EXPECTED_DOCUMENT_TOOLS
         | EXPECTED_QUERY_TOOLS
         | EXPECTED_VERIFY_TOOLS
         | EXPECTED_EXPORT_TOOLS
-        | {"query_capabilities"}
+        | {"query_capabilities", "query_screenshot"}
     )
 
 
@@ -102,6 +103,25 @@ def test_query_tools_require_doc_and_reject_unknown_keys():
             assert "object" in schema["properties"]
         else:
             assert "doc" in schema["required"], f"{name} does not require doc"
+
+
+def test_screenshot_schema_is_tightened_on_view_and_selectors():
+    caps = Capabilities(allow_exec=False)
+    tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
+    schema = tools["query_screenshot"].inputSchema
+    assert schema["additionalProperties"] is False
+    assert schema["required"] == ["doc"]
+    view = schema["properties"]["view"]
+    assert view["additionalProperties"] is False
+    for selector in ("focus", "highlight"):
+        sel = view["properties"][selector]
+        assert sel["additionalProperties"] is False
+        assert sel["properties"]["element_type"]["enum"] == ["face", "edge", "vertex"]
+        assert "index" in sel["properties"]
+        assert "mapped_name" in sel["properties"]
+        assert sel["required"] == ["object"]
+    assert view["properties"]["width"]["maximum"] == 1024
+    assert view["properties"]["height"]["maximum"] == 1024
 
 
 def test_dispatch_query_with_unknown_handle_is_invalid_input():

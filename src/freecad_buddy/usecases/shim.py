@@ -61,14 +61,13 @@ def varset_available() -> bool:
     return varset_backend() == "varset"
 
 
-@lru_cache(maxsize=1)
-def render_available() -> bool:
-    """Whether an offscreen GL render context is usable on the running FreeCAD build.
+def render_available(render: str = "none") -> bool:
+    """Whether a render context is usable, given the host-probed ladder mode ``render``.
 
-    The headless surface has no render context, so this returns False until the render ladder
-    lands with the screenshot story.
+    The ladder itself lives in ``adapters/render_probe.py`` (the Gui carve-out); the resolved
+    mode (``gui_constructed`` / ``offscreen`` / ``none``) is threaded in so this stays Gui-free.
     """
-    return False
+    return render != "none"
 
 
 @lru_cache(maxsize=1)
@@ -153,15 +152,16 @@ def step_schema() -> str:
     return FreeCAD.ParamGet(_STEP_PARAM_PATH).GetString("Scheme")
 
 
-def capability_banner() -> dict:
+def capability_banner(render: str = "none") -> dict:
     """Runtime capability payload for the report banner and ``query_capabilities``.
 
-    All fields are live probes. ``render`` is ``"none"`` for the headless surface.
+    Every field is a live probe except ``render``, whose ladder mode is host-probed in
+    ``adapters/render_probe.py`` and threaded in (keeping the shim Gui-free).
     """
     return {
         "freecad_version": freecad_version(),
         "element_map_available": element_map_available(),
         "serializer": serializer_tag(),
         "varset_backend": varset_backend(),
-        "render": "none",
+        "render": render,
     }

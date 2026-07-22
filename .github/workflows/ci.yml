@@ -74,10 +74,11 @@ jobs:
             channels:
               - conda-forge
           cache-environment: true
-      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install pytest
-      - name: Render leg (isolated; no render tests yet)
+      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install pytest jsonschema pyyaml
+      - name: Render leg (in-FreeCAD suite under xvfb; software GL)
         env:
           LIBGL_ALWAYS_SOFTWARE: 1
+          MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
         run: |
           xvfb-run -a -s "-screen 0 1024x768x24" \
-            micromamba run -n fc python -c "import sys; sys.stderr.write('render leg placeholder: no render tests yet\n')"
+            micromamba run -n fc FreeCADCmd tests/run_tests.py

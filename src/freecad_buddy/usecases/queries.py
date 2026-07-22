@@ -26,13 +26,13 @@ def _ok_envelope(structured: dict) -> ResultEnvelope:
     }
 
 
-def query_capabilities(exec_enabled: bool = False) -> ResultEnvelope:
+def query_capabilities(exec_enabled: bool = False, render: str = "none") -> ResultEnvelope:
     """Report runtime capabilities: FreeCAD version, element-map, serializer, VarSet, render, exec.
 
-    Every field is a live probe. ``render`` is ``"none"`` on the headless surface and
+    Every field is a live probe. ``render`` is the host-probed render-ladder mode and
     ``exec_enabled`` reflects whether the exec tool is reachable.
     """
-    structured = dict(shim.capability_banner())
+    structured = dict(shim.capability_banner(render))
     structured["exec_enabled"] = exec_enabled
     return _ok_envelope(structured)
 

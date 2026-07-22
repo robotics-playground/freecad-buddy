@@ -16,6 +16,7 @@ import secrets
 from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.mcp_server import Capabilities, exec_registered
+from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_listener import RpcListener
 from freecad_buddy.hosts.gui_addon.pump import QtMainThreadExecutor
 from freecad_buddy.hosts.headless.entry import _default_audit_path
@@ -47,7 +48,9 @@ def start_bridge() -> RpcListener:
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)
     doc_registry = DocumentRegistry()
-    registry = build_inline_handlers(doc_registry, ExportRegistry(), caps, None)
+    registry = build_inline_handlers(
+        doc_registry, ExportRegistry(), caps, None, OffscreenRenderPort()
+    )
     token = secrets.token_urlsafe(32)
     audit = AuditSink(_default_audit_path())
     capabilities = {
