@@ -268,3 +268,31 @@ def test_main_returns_2_on_empty_criteria(tmp_path, monkeypatch):
     copy = _patched_gate(tmp_path, "gate: G0\ncriteria: []\n")
     monkeypatch.setattr(runner, "BENCHMARKS_ROOT", copy)
     assert runner.main(["--gate", "G0", "--stub"]) == 2
+
+
+# --------------------------------------------------------------------------- #
+# (e) run -> verdict wiring over a tmp run dir (stub path stays untouched above)
+# --------------------------------------------------------------------------- #
+
+
+def test_run_writes_reports_then_verdict_reads_them(tmp_path, monkeypatch):
+    """`run G0 --run t` writes reports/<id>.json; `verdict` reads only those files."""
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    monkeypatch.setattr(runner, "BENCHMARKS_ROOT", copy)
+
+    assert runner.main(["run", "G0", "--run", "t"]) == 1  # honest FAIL: no evidence collected
+    reports_dir = copy / "gate-artifacts" / "g0" / "t" / "reports"
+    written = {p.stem for p in reports_dir.glob("*.json")}
+    gate = yaml.safe_load((copy / "g0" / "gate.yaml").read_text(encoding="utf-8"))
+    assert written == {c["id"] for c in gate["criteria"]}
+
+    # verdict reads the same stored files and reports a FAIL (no token, evidence absent).
+    assert runner.main(["verdict", "G0", "--run", "t"]) == 1
+
+
+def test_verdict_missing_run_dir_exits_2(tmp_path, monkeypatch):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    monkeypatch.setattr(runner, "BENCHMARKS_ROOT", copy)
+    assert runner.main(["verdict", "G0", "--run", "nope"]) == 2

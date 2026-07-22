@@ -7,6 +7,14 @@
 # expect_valid, expect_watertight.
 
 gate: G0
+# Gate-level required human tokens (validation-harness-design.md §7: G0 -> gui_smoke). This is
+# the ONLY leg-d source; there is no per-criterion gui_smoke marker (G0.1's leg-a is its own
+# transport-probe evidence report, not the token).
+required_tokens: [gui_smoke]
+# leg-c (held-out gap, AD-14) is inert for G0: a deterministic-tool gate has no actor/held-out
+# split, so there is nothing to unseal.
+verdict:
+  heldout: inert
 criteria:
   - id: G0.1
     text: "MCP server reachable in both hosts (headless stdio + GUI streamable HTTP)"

@@ -215,3 +215,14 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-9-view-controlled-screenshots.md`
   summary: `scripts/check_imports.py` has no rule banning `FreeCAD.ActiveDocument` as an operation target (AD-20), so the loop-2 fix (render the explicit handle, never `ActiveDocument`) is enforced only by manual review, not by the CI ring gate.
   evidence: `check_imports.py` enforces Qt/third-party import placement per ring but not the `ActiveDocument`-banned-target rule; the loop-1 regression (renderer reading `ActiveDocument`) passed `check_imports` + ruff clean. Add an AST rule flagging `FreeCAD.ActiveDocument` / `App.ActiveDocument` reads outside the sanctioned document-lifecycle usecases, so this class of AD-20 violation is caught mechanically across all stories.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-10-gate-g0-exit.md`
+  summary: The `gui_smoke` human token has no cryptographic signature — its `binds_reports_sha256` is a public SHA-256, so anyone who can write the run's `human/` dir can forge a valid PASS token.
+  evidence: validation-harness-design §7 models tokens as artifacts the runner checks for presence + binding (never performs), so this is a design-level posture; a real signature/secret would need a spine amendment, not a story fix.
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-10-gate-g0-exit.md`
+  summary: A `<criterion>.json.tmp` file can linger in `reports/` if the process crashes between the atomic write's `write_text` and `replace`.
+  evidence: `_write_report_atomic` has no try/finally cleanup; harmless to a clean verdict (verdict reads `<criterion>.json`, not `.tmp`), but tmp files accumulate across crashes.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-1-10-gate-g0-exit.md`
+  summary: `benchmarks/g0/gate.yaml` cites `verify_shape` as G0.5's validator, but G0.5 is a STEP export round-trip whose validator is `verify_export_step` (already registered in validators.yaml).
+  evidence: leg-b currency for G0.5 hashes the wrong validator source; the correct citation is `verify_export_step`. Pre-existing in the loop-0 verbatim-preserved criteria, not introduced by story 1.10; changing a cited_validator touches the criteria block the story preserved intact.

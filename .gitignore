@@ -24,3 +24,6 @@ venv/
 # FreeCAD save-over artifacts (golden/fault generators write these; only the .FCStd is a fixture)
 *.FCBak
 *.FCStd.*
+
+# Gate run evidence store: per-run reports + human tokens, produced by `runner.py run/attest`
+benchmarks/gate-artifacts/

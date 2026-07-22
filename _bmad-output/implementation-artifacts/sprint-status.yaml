@@ -67,7 +67,7 @@ development_status:
   1-7-exports-paired-verification: done
   1-8-gui-host-addon-rpc-marshal: done
   1-9-view-controlled-screenshots: done
-  1-10-gate-g0-exit: backlog
+  1-10-gate-g0-exit: done
   epic-1-retrospective: optional
   epic-2: backlog
   2-1-entry-gate-g1e-eval-rubric-grader: backlog

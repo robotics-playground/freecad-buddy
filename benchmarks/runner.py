@@ -18,6 +18,10 @@ Invoked by file path (``python benchmarks/runner.py --gate G0 --stub``) and impo
 from __future__ import annotations
 
 import argparse
+import datetime
+import hashlib
+import json
+import os
 import sys
 from pathlib import Path
 
@@ -32,7 +36,19 @@ _REPO_ROOT = BENCHMARKS_ROOT.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from benchmarks.harness.report_build import build_report, stub_outcome  # noqa: E402
+from benchmarks.harness.evidence import collect_g0_2, ingest_report  # noqa: E402
+from benchmarks.harness.report_build import (  # noqa: E402
+    build_report,
+    evidence_report,
+    not_collected_report,
+    stub_outcome,
+)
+from benchmarks.harness.verdict import (  # noqa: E402
+    ArtifactError,
+    bind_hash,
+    compute_verdict,
+)
+from freecad_buddy.contracts.report import Check  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
 KNOWN_GATES = {"G0": "g0"}
@@ -40,6 +56,26 @@ KNOWN_GATES = {"G0": "g0"}
 _EXIT_USAGE = 2
 _EXIT_FAIL = 1
 _EXIT_OK = 0
+
+_REGISTRY_YAML = BENCHMARKS_ROOT / "_registry" / "validators.yaml"
+_SUBCOMMANDS = {"run", "verdict", "attest"}
+
+# Criteria whose evidence is dropped by an external in-FreeCAD/CI collector into evidence/.
+_INGESTED_CRITERIA = {"G0.1", "G0.3", "G0.5"}
+# The G0.4 matrix legs that BOTH must be present + green: a single present green leg is never
+# enough (both blocking legs must be proven).
+_REQUIRED_G0_4_LEGS = ("1.0.x", "1.1.x")
+_G0_4_MIN_TESTS = 30
+
+# Validator source sets, hashed the SAME way the fault scorers hash them (concatenated
+# read_bytes over the same source files) so a clean working tree is CURRENT, not stale.
+_SRC = _REPO_ROOT / "src" / "freecad_buddy"
+_VALIDATOR_SOURCES = {
+    "verify_shape": (
+        _SRC / "usecases" / "verify.py",
+        _SRC / "usecases" / "fingerprint.py",
+    ),
+}
 
 
 class UsageError(Exception):
@@ -85,6 +121,223 @@ def _load_gate(gate: str) -> list[dict]:
             raise UsageError(f"criterion missing 'id' in {gate_file}")
 
     return criteria
+
+
+def _load_gate_def(gate: str) -> dict:
+    """Load ``gate.yaml`` ONCE and return the full validated mapping (for run/verdict/attest).
+
+    Reuses ``_load_gate``'s validated criteria (no raw re-read of the file), then validates
+    gate-level fields: ``required_tokens``, if present, MUST be a list (a scalar string would
+    otherwise be iterated char-by-char in leg-d) — a scalar raises ``UsageError`` (exit-2). Any
+    YAML/loader error already surfaces from ``_load_gate`` as ``UsageError``, never a traceback.
+    """
+    criteria = _load_gate(gate)
+    gate_file = BENCHMARKS_ROOT / KNOWN_GATES[gate] / "gate.yaml"
+    try:
+        data = yaml.safe_load(gate_file.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise UsageError(f"unreadable gate.yaml ({gate_file}): {exc.__class__.__name__}") from exc
+    if not isinstance(data, dict):
+        raise UsageError(f"gate.yaml must be a mapping: {gate_file}")
+    data["criteria"] = criteria
+
+    required_tokens = data.get("required_tokens")
+    if required_tokens is not None and not isinstance(required_tokens, list):
+        raise UsageError(
+            f"gate.yaml 'required_tokens' must be a list, got "
+            f"{type(required_tokens).__name__}: {gate_file}"
+        )
+    return data
+
+
+def _validator_src_hasher(name: str) -> str:
+    """SHA-256 over a validator's concatenated source files (matches the fault scorers).
+
+    An unknown validator or an unreadable source file returns ``""`` — a hash that matches no
+    real ``validator_sha``, so leg-b reports the validator stale rather than escaping an
+    ``OSError`` as a traceback (the runner contract forbids tracebacks).
+    """
+    sources = _VALIDATOR_SOURCES.get(name)
+    if sources is None:
+        return ""
+    hasher = hashlib.sha256()
+    for path in sources:
+        try:
+            hasher.update(path.read_bytes())
+        except OSError:
+            return ""
+    return hasher.hexdigest()
+
+
+def _run_dir(gate: str, run_id: str) -> Path:
+    return BENCHMARKS_ROOT / "gate-artifacts" / KNOWN_GATES[gate] / run_id
+
+
+def _atomic_write_json(path: Path, data: dict) -> None:
+    """Write ``data`` as pretty JSON atomically (tmp + os.replace)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def _ingest_g0_4(run_dir: Path) -> dict:
+    """Combine the pinned G0.4 matrix-leg evidence into ONE report — both legs required.
+
+    Emits one check per required leg (``_REQUIRED_G0_4_LEGS``): a leg whose
+    ``evidence/G0.4.<leg>.json`` is ABSENT (or malformed, or not green, or below the test bar)
+    is a failing ``INVALID_INPUT`` check. A single present green leg can NEVER green G0.4.
+    """
+    evidence_dir = run_dir / "evidence"
+    checks: list[Check] = []
+    for leg in _REQUIRED_G0_4_LEGS:
+        path = evidence_dir / f"G0.4.{leg}.json"
+        checks.append(_g0_4_leg_check(leg, path))
+    return evidence_report("G0.4", checks)
+
+
+def _g0_4_leg_check(leg: str, path: Path) -> Check:
+    """Build one G0.4 leg check: present ∧ green ∧ >=30 tests, else a failing INVALID_INPUT."""
+    if not path.is_file():
+        return {
+            "id": f"G0.4.{leg}",
+            "measured": None,
+            "expected": "green ∧ >=30 tests",
+            "passed": False,
+            "detail": {
+                "code": "invalid_input.g0_4_leg_absent",
+                "message": f"G0.4 leg {leg} evidence absent: {path.name}",
+            },
+        }
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {
+            "id": f"G0.4.{leg}",
+            "measured": None,
+            "expected": "green ∧ >=30 tests",
+            "passed": False,
+            "detail": {
+                "code": "invalid_input.g0_4_leg_malformed",
+                "message": f"G0.4 leg {leg} malformed ({exc.__class__.__name__})",
+            },
+        }
+    green = isinstance(data, dict) and data.get("green") is True
+    test_count = data.get("test_count") if isinstance(data, dict) else None
+    enough = isinstance(test_count, int) and test_count >= _G0_4_MIN_TESTS
+    passed = green and enough
+    return {
+        "id": f"G0.4.{leg}",
+        "measured": {"green": green, "test_count": test_count},
+        "expected": {"green": True, "test_count": f">={_G0_4_MIN_TESTS}"},
+        "passed": passed,
+        "detail": {
+            "code": "ok" if passed else "invalid_input.g0_4_leg_not_green",
+            "message": (f"G0.4 leg {leg}: green={green} test_count={test_count}"),
+        },
+    }
+
+
+def _collect_report(criterion: dict, run_dir: Path):
+    """Collect one criterion's ``ValidationReport`` for the ``run`` command."""
+    criterion_id = criterion["id"]
+    if criterion_id == "G0.2":
+        from freecad_buddy.hosts.tool_catalog import tool_specs
+
+        return collect_g0_2(list(tool_specs()))
+    if criterion_id == "G0.4":
+        return _ingest_g0_4(run_dir)
+    if criterion_id in _INGESTED_CRITERIA:
+        return ingest_report(criterion_id, run_dir / "evidence" / f"{criterion_id}.json")
+    return not_collected_report(criterion_id, f"no collector for {criterion_id}")
+
+
+def run_command(gate: str, run_id: str) -> int:
+    """Collect + write one report per criterion into the run dir; exit on re-derived verdicts."""
+    gate_def = _load_gate_def(gate)
+    run_dir = _run_dir(gate, run_id)
+    reports_dir = run_dir / "reports"
+    reports: list[dict] = []
+    for criterion in gate_def["criteria"]:
+        report = _collect_report(criterion, run_dir)
+        _atomic_write_json(reports_dir / f"{criterion['id']}.json", report)
+        reports.append(report)
+
+    all_ok = all(report["verdict"] == "OK" for report in reports)
+    _print_run_summary(gate, reports)
+    return _EXIT_OK if all_ok else _EXIT_FAIL
+
+
+def _print_run_summary(gate: str, reports: list[dict]) -> None:
+    print(f"run {gate}: wrote {len(reports)} reports")
+    for report in reports:
+        criterion_id = report["subject"]["criterion"]
+        verdict = report["verdict"]
+        status = "PASS" if verdict == "OK" else "FAIL"
+        print(f"  {criterion_id}: {status} (verdict={verdict})")
+
+
+def verdict_command(gate: str, run_id: str) -> int:
+    """Compute the pure four-leg verdict over the stored run dir; exit 0 (PASS) / 1 (FAIL)."""
+    gate_def = _load_gate_def(gate)
+    run_dir = _run_dir(gate, run_id)
+    if not run_dir.is_dir():
+        raise UsageError(f"run '{run_id}' not found: {run_dir}")
+
+    validators = _load_validators()
+    try:
+        result = compute_verdict(run_dir, gate_def, validators, _validator_src_hasher)
+    except ArtifactError as exc:
+        raise UsageError(str(exc)) from exc
+
+    print(f"verdict {gate} --run {run_id}:")
+    for criterion_id in sorted(result.per_criterion):
+        print(f"  {criterion_id}: {result.per_criterion[criterion_id]}")
+    for failure in result.failures:
+        print(f"  FAILURE {failure}")
+    print(f"gate {gate}: {'PASS' if result.passed else 'FAIL'}")
+    return _EXIT_OK if result.passed else _EXIT_FAIL
+
+
+def _load_validators() -> dict:
+    try:
+        data = yaml.safe_load(_REGISTRY_YAML.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise UsageError(
+            f"unreadable validators.yaml ({_REGISTRY_YAML}): {exc.__class__.__name__}"
+        ) from exc
+    return data if isinstance(data, dict) else {}
+
+
+def attest_command(gate: str, run_id: str, token_type: str, outcome: str) -> int:
+    """Write a run-bound human token whose ``binds_reports_sha256`` covers the stored reports."""
+    gate_def = _load_gate_def(gate)
+    run_dir = _run_dir(gate, run_id)
+    if not run_dir.is_dir():
+        raise UsageError(f"run '{run_id}' not found: {run_dir}")
+
+    expected_ids = [c["id"] for c in gate_def["criteria"] if "id" in c]
+    from benchmarks.harness.verdict import load_reports
+
+    try:
+        reports = load_reports(run_dir, expected_ids)
+    except ArtifactError as exc:
+        raise UsageError(str(exc)) from exc
+
+    date = datetime.date.today().isoformat()
+    token = {
+        "token_type": token_type,
+        "gate": gate,
+        "run_id": run_id,
+        "binds_reports_sha256": bind_hash(reports),
+        "outcome": outcome,
+        "signed_by": os.environ.get("USER") or os.environ.get("USERNAME") or "operator",
+        "date": date,
+    }
+    token_path = run_dir / "human" / f"{token_type}_{date}.json"
+    _atomic_write_json(token_path, token)
+    print(f"attest {gate} --run {run_id}: wrote {token_path.name} (outcome={outcome})")
+    return _EXIT_OK
 
 
 def _filter_criteria(criteria: list[dict], criterion_id: str | None) -> list[dict]:
@@ -136,8 +389,45 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="runner.py", description="G0 gate runner.")
+    sub = parser.add_subparsers(dest="command", required=True)
+    for name in ("run", "verdict"):
+        sp = sub.add_parser(name)
+        sp.add_argument("gate", help="gate id, e.g. G0")
+        sp.add_argument("--run", dest="run_id", required=True, help="run id")
+    attest = sub.add_parser("attest")
+    attest.add_argument("gate", help="gate id, e.g. G0")
+    attest.add_argument("--run", dest="run_id", required=True, help="run id")
+    attest.add_argument("--type", dest="token_type", required=True, help="token type")
+    attest.add_argument("--outcome", default="PASS", help="token outcome (PASS/FAIL)")
+    return parser.parse_args(argv)
+
+
+def _run_subcommand(argv: list[str]) -> int:
+    try:
+        args = _parse_subcommand(argv)
+    except SystemExit:
+        return _EXIT_USAGE
+    try:
+        if args.command == "run":
+            return run_command(args.gate, args.run_id)
+        if args.command == "verdict":
+            return verdict_command(args.gate, args.run_id)
+        return attest_command(args.gate, args.run_id, args.token_type, args.outcome)
+    except UsageError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return _EXIT_USAGE
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+
+    # A leading run|verdict|attest token routes to the file-driven subcommands; a bare
+    # --gate/--stub invocation stays on the untouched stub path (back-compat).
+    if argv and argv[0] in _SUBCOMMANDS:
+        return _run_subcommand(argv)
+
     try:
         args = _parse_args(argv)
     except SystemExit:

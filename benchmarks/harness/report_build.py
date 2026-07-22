@@ -20,6 +20,9 @@ from freecad_buddy.contracts.report import (
 # derive_verdict.
 STUB_NOT_IMPLEMENTED_CODE = "invalid_input.not_implemented"
 
+# Honest "evidence absent" code for a criterion whose external evidence file never landed.
+NOT_COLLECTED_CODE = "invalid_input.evidence_not_collected"
+
 
 def stub_outcome() -> dict:
     """The structured "not implemented" a StubBridge returns for every tool call."""
@@ -60,3 +63,41 @@ def build_report(criterion: dict, outcome: dict) -> ValidationReport:
     }
     report["verdict"] = derive_verdict(report)
     return report
+
+
+def evidence_report(criterion: str, checks: list, banner: dict | None = None) -> ValidationReport:
+    """Assemble a ``ValidationReport`` for ``criterion`` from real measured ``checks``.
+
+    The verdict is DERIVED from ``checks`` via ``derive_verdict`` — any incoming ``verdict``
+    on a source artifact is ignored, so an evidence file can never self-grade. ``banner``
+    defaults to a headless stub banner when the caller has no measured banner.
+    """
+    report_banner: ReportBanner = (
+        dict(banner)
+        if banner
+        else {
+            "freecad_version": "headless",
+            "element_map_version": None,
+        }
+    )
+    report_banner.setdefault("element_map_version", None)
+    report: ValidationReport = {
+        "schema": "fcb.validation-report/1",
+        "banner": report_banner,
+        "subject": {"criterion": criterion, "gate": "G0"},
+        "checks": list(checks),
+    }
+    report["verdict"] = derive_verdict(report)
+    return report
+
+
+def not_collected_report(criterion: str, reason: str) -> ValidationReport:
+    """A failing ``INVALID_INPUT`` report for a criterion whose evidence never landed."""
+    check: Check = {
+        "id": criterion,
+        "measured": None,
+        "expected": None,
+        "passed": False,
+        "detail": {"code": NOT_COLLECTED_CODE, "message": reason},
+    }
+    return evidence_report(criterion, [check])
