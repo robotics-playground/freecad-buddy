@@ -5,7 +5,11 @@
 # gate-exit flag, and only a manually-dispatched gate-exit workflow (added at Gate G1 exit,
 # Story 2.4) may pass that flag. Do NOT add a CI glob that sweeps this path.
 #
-# Full heldout.tar.age / SEAL.json sealing ceremony is exercised at Gate G1 exit (Story 2.4),
-# NOT here — no age encryption or SEAL machinery ships in this story.
+# The sealing machinery lands in Story 2.4. The ONLY content that may land here is the sealed
+# pair — `heldout.tar.enc` (key-bound, SHA-verified archive) + `SEAL.json` (the manifest) — plus
+# this `.gitkeep`. A raw live case file (`case.yaml`, `fixture.FCStd`, an eval question) must NEVER
+# land here unsealed; `gate run G1 --exit` is the only path that unseals, always into a temp dir it
+# deletes afterward.
 #
-# Future contents: sha256 MANIFEST + a SEALED marker file.
+# No live held-out cases exist yet — the split is authored by a human ceremony (`gate seal G1`
+# after cases are staged), so the committed seal may be a `case_count: 0` placeholder.

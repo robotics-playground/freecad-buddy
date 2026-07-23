@@ -42,6 +42,10 @@ jobs:
           }
       - name: G1 ReAct adapter + backend actor-run (offline, no key/secret/network/GGUF)
         run: uv run pytest tests/external/test_react_adapter.py tests/external/test_react_backend_actor_run.py -q
+      - name: G1 gate-exit machinery (seal/unseal/burn + leg-c, offline, no key/secret)
+        run: uv run pytest tests/external/test_gate_g1_exit.py -q
+      - name: G1 held-out holds only the sealed pair (no unsealed live case leaked)
+        run: uv run pytest tests/external/test_harness_g1.py::test_g1_heldout_contains_only_placeholder -q
       - name: Ruff (T201 print-ban honored)
         run: uv run ruff check .
       - name: External suite

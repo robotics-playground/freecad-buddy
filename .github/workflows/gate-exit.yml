@@ -1,0 +1,28 @@
+name: gate-exit
+
+# Manually-dispatched Gate G1 exit surface (design §1.1, Story 2.4). This workflow proves the
+# exit MACHINERY offline — the seal -> unseal -> burn ceremony, the leg-c R>=10 + gap math, and
+# the --exit refusal without the key. It does NOT assert the live pass-rate and holds NO unseal
+# key: the real exit is an operator ceremony run locally with the human-held FREECAD_BUDDY_UNSEAL_KEY
+# and a live backend at R>=10 (decisions 010/011). No key/secret/GGUF/network step is present.
+on:
+  workflow_dispatch:
+
+jobs:
+  machinery-self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-extras
+      - name: Seal/exit machinery self-test (seal->unseal->burn, leg-c math)
+        run: uv run pytest tests/external/test_gate_g1_exit.py -q
+      - name: --exit refuses without the operator key (exit-2, no traceback)
+        env:
+          FREECAD_BUDDY_UNSEAL_KEY: ""
+        run: |
+          if uv run python benchmarks/runner.py run G1 --exit --run gate-exit-ci; then
+            echo "run G1 --exit unexpectedly succeeded without the operator key"; exit 1;
+          fi
+      - name: Held-out holds only the sealed pair (no unsealed live case)
+        run: uv run pytest tests/external/test_harness_g1.py::test_g1_heldout_contains_only_placeholder -q

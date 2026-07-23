@@ -59,7 +59,15 @@ _EXIT_FAIL = 1
 _EXIT_OK = 0
 
 _REGISTRY_YAML = BENCHMARKS_ROOT / "_registry" / "validators.yaml"
-_SUBCOMMANDS = {"run", "verdict", "attest", "faults"}
+_SUBCOMMANDS = {"run", "verdict", "attest", "faults", "seal"}
+
+# The unseal key is read ONLY from this env var — never committed, never a CI secret. `seal` and
+# `run --exit` refuse (exit-2) without it; neither ever falls back to an offline default.
+_UNSEAL_KEY_ENV = "FREECAD_BUDDY_UNSEAL_KEY"
+
+# The minimum repeats a genuine exit eval runs at (R>=10 majority-of-R, decision 010). Offline this
+# drives a clearly-labelled machinery dry-run over the scripted double, never the operator number.
+_EXIT_REPEATS = 10
 
 # Per-gate fault scorer routed by `faults <gate>` (relative to the repo root).
 _FAULT_SCORERS = {
@@ -311,6 +319,9 @@ def verdict_command(gate: str, run_id: str) -> int:
     if not run_dir.is_dir():
         raise UsageError(f"run '{run_id}' not found: {run_dir}")
 
+    if (run_dir / "dev_rate.json").is_file():
+        return _exit_verdict_command(gate, run_id, gate_def, run_dir)
+
     validators = _load_validators()
     try:
         result = compute_verdict(run_dir, gate_def, validators, _validator_src_hasher)
@@ -324,6 +335,24 @@ def verdict_command(gate: str, run_id: str) -> int:
         print(f"  FAILURE {failure}")
     print(f"gate {gate}: {'PASS' if result.passed else 'FAIL'}")
     return _EXIT_OK if result.passed else _EXIT_FAIL
+
+
+def _exit_verdict_command(gate: str, run_id: str, gate_def: dict, run_dir: Path) -> int:
+    """Re-derive the exit verdict (leg-a per case + leg-c) from the stored exit reports.
+
+    An exit run stores per-case reports keyed by case id (not the G1.1-G1.6 criteria the standard
+    loader expects), so it is verdicted over the stored reports directly — pure over stored files,
+    re-runnable by an auditor.
+    """
+    reports = _load_exit_reports(run_dir)
+    if not reports:
+        raise UsageError(f"exit run '{run_id}' has no stored reports: {run_dir / 'reports'}")
+    failures = _exit_verdict_failures(gate_def, run_dir, reports)
+    print(f"verdict {gate} --run {run_id} (exit):")
+    for failure in failures:
+        print(f"  FAILURE {failure}")
+    print(f"gate {gate} exit: {'PASS' if not failures else 'FAIL'}")
+    return _EXIT_OK if not failures else _EXIT_FAIL
 
 
 def _load_validators() -> dict:
@@ -343,13 +372,18 @@ def attest_command(gate: str, run_id: str, token_type: str, outcome: str) -> int
     if not run_dir.is_dir():
         raise UsageError(f"run '{run_id}' not found: {run_dir}")
 
-    expected_ids = [c["id"] for c in gate_def["criteria"] if "id" in c]
-    from benchmarks.harness.verdict import load_reports
+    if (run_dir / "dev_rate.json").is_file():
+        reports = _load_exit_reports(run_dir)
+        if not reports:
+            raise UsageError(f"exit run '{run_id}' has no stored reports: {run_dir / 'reports'}")
+    else:
+        expected_ids = [c["id"] for c in gate_def["criteria"] if "id" in c]
+        from benchmarks.harness.verdict import load_reports
 
-    try:
-        reports = load_reports(run_dir, expected_ids)
-    except ArtifactError as exc:
-        raise UsageError(str(exc)) from exc
+        try:
+            reports = load_reports(run_dir, expected_ids)
+        except ArtifactError as exc:
+            raise UsageError(str(exc)) from exc
 
     date = datetime.date.today().isoformat()
     token = {
@@ -387,6 +421,264 @@ def faults_command(gate: str) -> int:
     _preflight_actor_grader(gate)
     completed = subprocess.run([sys.executable, str(scorer_path)])
     return completed.returncode
+
+
+def _heldout_dir(gate: str) -> Path:
+    return BENCHMARKS_ROOT / KNOWN_GATES[gate] / "heldout"
+
+
+def _require_unseal_key() -> str:
+    key = os.environ.get(_UNSEAL_KEY_ENV)
+    if not key:
+        raise UsageError(
+            f"{_UNSEAL_KEY_ENV} is not set — the held-out set is operator-key-gated; "
+            f"set {_UNSEAL_KEY_ENV} to seal or run --exit (no offline fallback)"
+        )
+    return key
+
+
+def _git_sha() -> str:
+    """The current commit sha for the unseal event, or ``"unknown"`` if git is unavailable."""
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(_REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "unknown"
+    sha = completed.stdout.strip()
+    return sha if completed.returncode == 0 and sha else "unknown"
+
+
+def seal_command(gate: str) -> int:
+    """Seal ``gate``'s held-out split into ``SEAL.json`` + ``heldout.tar.enc`` (key-gated)."""
+    if gate != "G1":
+        raise UsageError(f"seal is only defined for gate G1, got {gate!r}")
+    _load_gate(gate)
+    key = _require_unseal_key()
+    from benchmarks.harness import seal
+
+    manifest = seal.seal_heldout(
+        _heldout_dir(gate),
+        sealed_by=os.environ.get("USER") or os.environ.get("USERNAME") or "operator",
+        sealed_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        key=key,
+    )
+    print(
+        f"seal {gate}: wrote {seal.MANIFEST_NAME} + {seal.ARCHIVE_NAME} "
+        f"(case_count={manifest['case_count']}, archive_sha256={manifest['archive_sha256']})"
+    )
+    return _EXIT_OK
+
+
+def _exit_case_reports(result, tier) -> list[dict]:
+    """One stored report PER CASE carrying the case's majority-of-R verdict + the tier Wilson CI.
+
+    Emits exactly one report per graded case (not one per repeat): its ``checks`` are a repeat whose
+    derived verdict matches the case's majority outcome, so leg-a re-derives the majority-of-R
+    verdict from stored files (not an arbitrary single repeat), and the majority tally
+    (``passes``/``repeats``) is recorded in the check detail. The banner ``wilson_ci`` is the tier
+    CI the exit is measured on, so leg-c reads the R>=10 evidence off each report. A same-cased set
+    of repeat reports would otherwise collapse to one arbitrary survivor on disk.
+    """
+    stamped: list[dict] = []
+    for case in tier.cases:
+        representative = _majority_report(case)
+        report = json.loads(json.dumps(representative))
+        report["banner"]["wilson_ci"] = tier.wilson_ci
+        passes = sum(1 for p in case.repeat_passes if p)
+        for check in report["checks"]:
+            check.setdefault("detail", {})
+            check["detail"]["majority"] = {"passes": passes, "repeats": len(case.repeat_passes)}
+        stamped.append(report)
+    return stamped
+
+
+def _majority_report(case) -> dict:
+    """The repeat report whose derived verdict matches the case's majority (``case.passed``).
+
+    Falls back to the first repeat report if none matches (cannot happen for a well-formed case,
+    but keeps the exit a labelled dry-run rather than an ``IndexError`` on a degenerate empty set).
+    """
+    from freecad_buddy.contracts.report import derive_verdict
+
+    want_ok = case.passed
+    for report in case.reports:
+        if (derive_verdict(report) == "OK") == want_ok:
+            return report
+    return case.reports[0]
+
+
+def run_exit_command(gate: str, run_id: str) -> int:
+    """Unseal the held-out set, run the R>=10 eval, verdict it (leg-c), burn on FAIL.
+
+    Key-gated (exit-2 without ``FREECAD_BUDDY_UNSEAL_KEY``). Verifies ``archive_sha256`` before
+    extracting to a temp dir, runs the actor eval at R>=10 over the unsealed set, writes per-case
+    reports + ``dev_rate.json``, computes the verdict (including leg-c), burns the set on FAIL, and
+    always deletes the temp extraction. Offline this is a labelled machinery dry-run over the
+    scripted double, NOT the operator pass-rate (decision 010).
+    """
+    if gate != "G1":
+        raise UsageError(f"--exit is only defined for gate G1, got {gate!r}")
+    gate_def = _load_gate_def(gate)
+    _preflight_actor_grader(gate)
+    key = _require_unseal_key()
+
+    import shutil
+
+    from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
+    from benchmarks.harness import seal
+    from benchmarks.harness.actor import Actor
+    from benchmarks.harness.react_backend import ReactBackend, ScriptedChat
+
+    try:
+        extract_dir = seal.unseal_heldout(
+            _heldout_dir(gate),
+            key=key,
+            run_id=run_id,
+            timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            git_sha=_git_sha(),
+        )
+    except seal.SealError as exc:
+        raise UsageError(str(exc)) from exc
+
+    try:
+        print(
+            f"run {gate} --exit: unsealed held-out set (machinery dry-run over the scripted "
+            f"double at R={_EXIT_REPEATS}; NOT the operator pass-rate — decisions 010/011)"
+        )
+        scripts = {case["id"]: _scripted_react_turns_for(case) for case in _load_broken_cases()}
+        backend = ReactBackend(ScriptedChat(scripts).for_case)
+        actor = Actor(_offline_profile_registry())
+        result = run_actor_eval(actor, backend, repeats=_EXIT_REPEATS)
+        tier = result.n30 if result.escalated else result.n10
+
+        run_dir = _run_dir(gate, run_id)
+        reports = _exit_case_reports(result, tier)
+        for report in reports:
+            case_id = report["subject"].get("case", report["subject"]["criterion"])
+            _atomic_write_json(run_dir / "reports" / f"{case_id}.json", report)
+        dev_rate = result.n10.passed_count / len(result.n10.cases)
+        _atomic_write_json(run_dir / "dev_rate.json", {"dev_rate": dev_rate})
+
+        from freecad_buddy.contracts.report import derive_verdict
+
+        exit_reports = _load_exit_reports(run_dir)
+        if not exit_reports:
+            raise UsageError(f"exit run '{run_id}' produced no case reports: {run_dir / 'reports'}")
+        heldout_rate = sum(1 for r in exit_reports if derive_verdict(r) == "OK") / len(exit_reports)
+        # The `--exit` run's own verdict + burn key off the substantive eval legs (a/c) only; the
+        # human tokens (leg-d) and validator currency (leg-b) are attested/re-checked at the later
+        # `verdict --run` step, so a not-yet-attested token must not burn the set (spec I/O matrix).
+        failures = _exit_eval_failures(gate_def, run_dir, exit_reports)
+        passed = not failures
+        _print_exit_summary(gate, run_id, tier, dev_rate, heldout_rate, failures)
+        if not passed:
+            seal.burn_seal(
+                _heldout_dir(gate),
+                run_id=run_id,
+                reason="; ".join(failures)[:200],
+            )
+        return _EXIT_OK if passed else _EXIT_FAIL
+    finally:
+        shutil.rmtree(extract_dir, ignore_errors=True)
+
+
+def _load_exit_reports(run_dir: Path) -> list[dict]:
+    """Read every stored exit report as a mapping; a parse/shape error is an exit-2 UsageError.
+
+    Mirrors ``load_reports``' contract: a malformed, non-mapping, or empty/non-list-``checks``
+    stored report is a clean loader error, never a raw traceback and never vacuous-OK on the
+    auditor ``verdict --run`` path (``derive_verdict`` returns ``OK`` for a non-list ``checks``,
+    so an unvalidated report with its ``checks`` stripped would launder a FAIL into a PASS).
+    """
+    reports: list[dict] = []
+    for path in sorted((run_dir / "reports").glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise UsageError(
+                f"malformed exit report reports/{path.name} ({exc.__class__.__name__})"
+            ) from exc
+        if not isinstance(data, dict):
+            raise UsageError(f"malformed exit report reports/{path.name}: not a mapping")
+        checks = data.get("checks")
+        if not isinstance(checks, list) or not checks:
+            raise UsageError(f"malformed exit report reports/{path.name}: empty/non-list checks")
+        reports.append(data)
+    return reports
+
+
+def _case_of(report: dict) -> str:
+    subject = report.get("subject")
+    return subject.get("case", "?") if isinstance(subject, dict) else "?"
+
+
+def _exit_verdict_failures(gate_def: dict, run_dir: Path, reports: list[dict]) -> list[str]:
+    """Legs a/b/c/d for the exit run (per-case re-derived leg-a, not the criteria-keyed loader).
+
+    Leg-a RE-DERIVES each case verdict via ``derive_verdict`` (the stored ``verdict`` field is
+    never trusted — AD-13); leg-b re-checks cited-validator currency; leg-c enforces the R>=10
+    banners + dev/held-out gap; leg-d requires the gate's human tokens bound to this exit run.
+    """
+    from freecad_buddy.contracts.report import derive_verdict
+
+    from benchmarks.harness.verdict import (
+        check_exit_run,
+        check_token,
+        check_validator_currency,
+    )
+
+    failures: list[str] = []
+    for report in reports:
+        verdict = derive_verdict(report)
+        if verdict != "OK":
+            failures.append(f"leg-a: {_case_of(report)} verdict {verdict}")
+    for name in check_validator_currency(gate_def, _load_validators(), _validator_src_hasher):
+        failures.append(f"leg-b: validator {name}")
+    for failure in check_exit_run(run_dir, gate_def, reports):
+        failures.append(f"leg-c: {failure}")
+    required_tokens = gate_def.get("required_tokens", []) or []
+    for failure in check_token(run_dir, reports, required_tokens):
+        failures.append(f"leg-d: {failure}")
+    return failures
+
+
+def _exit_eval_failures(gate_def: dict, run_dir: Path, reports: list[dict]) -> list[str]:
+    """The substantive held-out failures (leg-a per-case + leg-c) that a `--exit` run burns on.
+
+    Per the spec I/O matrix the burn trigger is "exit reports fail a rule OR gap >15pp" — the
+    eval's own verdict. The human tokens (leg-d) and validator currency (leg-b) are attested and
+    re-checked at the later `verdict --run` step, so a not-yet-attested token must NOT burn the
+    set before the operator can bind it.
+    """
+    from freecad_buddy.contracts.report import derive_verdict
+
+    from benchmarks.harness.verdict import check_exit_run
+
+    failures: list[str] = []
+    for report in reports:
+        verdict = derive_verdict(report)
+        if verdict != "OK":
+            failures.append(f"leg-a: {_case_of(report)} verdict {verdict}")
+    for failure in check_exit_run(run_dir, gate_def, reports):
+        failures.append(f"leg-c: {failure}")
+    return failures
+
+
+def _print_exit_summary(
+    gate: str, run_id: str, tier, dev_rate: float, heldout_rate: float, failures: list[str]
+) -> None:
+    print(
+        f"run {gate} --exit {run_id}: held-out {heldout_rate:.3f} vs dev {dev_rate:.3f} "
+        f"(tier r={tier.wilson_ci['r']}/n={tier.wilson_ci['n']})"
+    )
+    for failure in failures:
+        print(f"  FAILURE {failure}")
+    print(f"gate {gate} exit: {'PASS' if not failures else 'FAIL (set burned)'}")
 
 
 def _offline_profile_registry():
@@ -625,10 +917,18 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="runner.py", description="G0 gate runner.")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("run", "verdict"):
-        sp = sub.add_parser(name)
-        sp.add_argument("gate", help="gate id, e.g. G0")
-        sp.add_argument("--run", dest="run_id", required=True, help="run id")
+    run_parser = sub.add_parser("run")
+    run_parser.add_argument("gate", help="gate id, e.g. G0")
+    run_parser.add_argument("--run", dest="run_id", required=True, help="run id")
+    run_parser.add_argument(
+        "--exit",
+        dest="is_exit",
+        action="store_true",
+        help="G1 gate exit: unseal the held-out set, run the R>=10 eval, burn on FAIL",
+    )
+    verdict_parser = sub.add_parser("verdict")
+    verdict_parser.add_argument("gate", help="gate id, e.g. G0")
+    verdict_parser.add_argument("--run", dest="run_id", required=True, help="run id")
     attest = sub.add_parser("attest")
     attest.add_argument("gate", help="gate id, e.g. G0")
     attest.add_argument("--run", dest="run_id", required=True, help="run id")
@@ -636,6 +936,8 @@ def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
     attest.add_argument("--outcome", default="PASS", help="token outcome (PASS/FAIL)")
     faults = sub.add_parser("faults")
     faults.add_argument("gate", help="gate id, e.g. G1")
+    seal_parser = sub.add_parser("seal")
+    seal_parser.add_argument("gate", help="gate id, e.g. G1")
     return parser.parse_args(argv)
 
 
@@ -646,11 +948,15 @@ def _run_subcommand(argv: list[str]) -> int:
         return _EXIT_USAGE
     try:
         if args.command == "run":
+            if args.is_exit:
+                return run_exit_command(args.gate, args.run_id)
             return run_command(args.gate, args.run_id)
         if args.command == "verdict":
             return verdict_command(args.gate, args.run_id)
         if args.command == "faults":
             return faults_command(args.gate)
+        if args.command == "seal":
+            return seal_command(args.gate)
         return attest_command(args.gate, args.run_id, args.token_type, args.outcome)
     except UsageError as exc:
         print(f"error: {exc}", file=sys.stderr)

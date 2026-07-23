@@ -393,12 +393,13 @@ def test_score_grader_rejects_degenerate_suite(tmp_path, monkeypatch):
 
 
 def test_g1_heldout_contains_only_placeholder():
-    # Design §1.1: heldout holds only the sealed marker — no live case ever lands here (this
-    # story ships no age/SEAL machinery, but the negative guard must hold from now on).
+    # Design §1.1 / Story 2.4: heldout holds only the sealed pair (heldout.tar.enc + SEAL.json)
+    # plus .gitkeep — no unsealed live case file ever lands here.
     heldout = G1 / "heldout"
+    allowed = {".gitkeep", "heldout.tar.enc", "SEAL.json"}
     live = [
         p
         for p in heldout.rglob("*")
-        if p.is_file() and p.name != ".gitkeep" and "__pycache__" not in p.parts
+        if p.is_file() and p.name not in allowed and "__pycache__" not in p.parts
     ]
-    assert live == [], f"g1/heldout must contain only the placeholder; found live files: {live}"
+    assert live == [], f"g1/heldout must contain only the sealed pair; found live files: {live}"

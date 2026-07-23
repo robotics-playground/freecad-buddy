@@ -1,10 +1,13 @@
 """The pure four-leg gate verdict function (FreeCAD-free, network-free, contracts-only).
 
 ``compute_verdict`` reads ONLY stored files (``reports/<id>.json`` + ``human/*.json`` +
-the passed ``validators`` mapping) and computes the global-protocol legs:
+the passed ``validators`` mapping + the exit run's ``dev_rate.json``) and computes the
+global-protocol legs:
   (a) every expected criterion's stored report re-derives to ``OK``;
   (b) every cited validator's fault run is current (source-hash match) at >=95% / <=5%;
-  (c) exit/held-out legs — inert for G0's non-actor gate;
+  (c) held-out exit leg — for a ``verdict.heldout: sealed`` gate every stored exit report banner
+      carries ``wilson_ci.r >= 10`` (R>=10 majority-of-R evidence) AND ``dev_rate.json`` is
+      present with a dev/held-out pass-rate gap <=15pp; inert for a ``heldout: inert`` gate;
   (d) every required human token is present and run-bound (``hmac.compare_digest``) + PASS.
 
 No stored ``verdict`` field is ever trusted: leg-a re-derives from ``checks`` via
@@ -16,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -23,6 +27,8 @@ from freecad_buddy.contracts.report import derive_verdict
 
 _SENSITIVITY_BAR = 0.95
 _FALSE_ALARM_BAR = 0.05
+_MIN_EXIT_R = 10
+_MAX_HELDOUT_GAP = 0.15
 
 
 class ArtifactError(Exception):
@@ -54,6 +60,17 @@ def _criterion_of(report: dict) -> str:
         if isinstance(criterion, str):
             return criterion
     return ""
+
+
+def _subject_label(report: dict) -> str:
+    """Human-readable id for a report: the ``case`` key exit reports use, else the criterion."""
+    subject = report.get("subject")
+    if isinstance(subject, dict):
+        for key in ("case", "criterion"):
+            value = subject.get(key)
+            if isinstance(value, str):
+                return value
+    return "?"
 
 
 def load_reports(run_dir: Path, expected_ids: list[str]) -> list[dict]:
@@ -173,6 +190,62 @@ def _token_bound(token: dict, expected_hash: str) -> bool:
     return hmac.compare_digest(stored, expected_hash)
 
 
+def _heldout_rate(reports: list[dict]) -> float:
+    passed = sum(1 for r in reports if derive_verdict(r) == "OK")
+    return passed / len(reports) if reports else 0.0
+
+
+def check_exit_run(run_dir: Path, gate_def: dict, reports: list[dict]) -> list[str]:
+    """Return the leg-c failures for a sealed-gate exit run (empty for an inert gate).
+
+    Inert unless the gate declares ``verdict.heldout == "sealed"``. For a sealed gate:
+      - every stored exit report banner must carry ``wilson_ci.r >= 10`` (R>=10 majority-of-R
+        evidence); a report missing the banner rate is a failure, never vacuous-OK;
+      - ``dev_rate.json`` must exist beside ``reports/`` carrying a numeric ``dev_rate``, and the
+        gap between it and the held-out pass rate derived from the same reports must be <=15pp.
+    Pure over stored files: the held-out rate is re-derived from the reports, never trusted.
+    """
+    if gate_def.get("verdict", {}).get("heldout") != "sealed":
+        return []
+
+    failures: list[str] = []
+    for report in reports:
+        criterion = _subject_label(report)
+        banner = report.get("banner")
+        wilson = banner.get("wilson_ci") if isinstance(banner, dict) else None
+        r = wilson.get("r") if isinstance(wilson, dict) else None
+        if not isinstance(r, int) or isinstance(r, bool):
+            failures.append(f"{criterion} report banner missing wilson_ci.r (R>=10 evidence)")
+        elif r < _MIN_EXIT_R:
+            failures.append(f"{criterion} report banner wilson_ci.r {r} < {_MIN_EXIT_R}")
+
+    dev_rate_path = run_dir / "dev_rate.json"
+    if not dev_rate_path.is_file():
+        failures.append("dev_rate.json absent (dev/held-out gap unmeasurable)")
+        return failures
+    try:
+        dev_data = json.loads(dev_rate_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        failures.append(f"dev_rate.json malformed ({exc.__class__.__name__})")
+        return failures
+    dev_rate = dev_data.get("dev_rate") if isinstance(dev_data, dict) else None
+    if not (type(dev_rate) is int or type(dev_rate) is float):
+        failures.append(f"dev_rate.json invalid dev_rate: {dev_rate!r}")
+        return failures
+    # A non-finite (NaN/Infinity, which stdlib json parses) or out-of-[0,1] dev_rate makes the gap
+    # comparison meaningless — `NaN > 0.15` is False, laundering a PASS. Reject it as a leg-c FAIL.
+    if not math.isfinite(dev_rate) or not (0.0 <= dev_rate <= 1.0):
+        failures.append(f"dev_rate.json out-of-range dev_rate: {dev_rate!r}")
+        return failures
+
+    # Round to permille so an exact-boundary gap (e.g. 0.95 - 0.80, which floats to
+    # 0.15000000000000002) is not spuriously failed — the bound is "<= 15pp".
+    gap = round(abs(dev_rate - _heldout_rate(reports)), 3)
+    if gap > _MAX_HELDOUT_GAP:
+        failures.append(f"dev/held-out gap {gap:.3f} > {_MAX_HELDOUT_GAP}")
+    return failures
+
+
 def compute_verdict(run_dir: Path, gate_def: dict, validators: dict, hasher) -> VerdictResult:
     """Compose legs a/b/d (c inert for G0) into a ``VerdictResult`` — pure over stored files.
 
@@ -205,6 +278,9 @@ def compute_verdict(run_dir: Path, gate_def: dict, validators: dict, hasher) -> 
     stale = check_validator_currency(gate_def, validators, hasher)
     for name in stale:
         result.failures.append(f"leg-b: validator {name}")
+
+    for failure in check_exit_run(run_dir, gate_def, reports):
+        result.failures.append(f"leg-c: {failure}")
 
     required_tokens = gate_def.get("required_tokens", []) or []
     token_failures = check_token(run_dir, reports, required_tokens)
