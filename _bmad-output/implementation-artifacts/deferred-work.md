@@ -35,7 +35,8 @@ resolution: Added `Sketcher::SketchObject` to `_NON_RENDER_TYPES`, so a sketch n
 origin: migrated from legacy ledger ("Deferred from: spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md"), 2026-07-23
 location: check_imports.py
 reason: `check_imports.py` does not enforce decision 003's ban on `pivy.coin.SoOffscreenRenderer`; pivy/coin are unrestricted in `adapters/` and `hosts/`. pivy is absent from `QT_MODULES` and adapters/hosts have no third-party restriction, so `import pivy.coin` raises no violation outside `usecases/`. The render-backend ban lands with the render probe (story 1.9); no render code exists yet, so this is a later-story gate, not a story-1.1 defect.
-status: open
+status: done 2026-07-24
+resolution: already resolved: scripts/check_imports.py:172-196 `_check_raw_renderer` flags `SoOffscreenRenderer` attr/import (allows FreeCADGui.SoQtOffscreenRenderer); wired into _check_file (l217) + _check_root_file (l296), runs tree-wide.
 resolution: check_imports.py `_check_raw_renderer` now flags every `SoOffscreenRenderer` attribute/import (decision 003); `FreeCADGui.SoQtOffscreenRenderer` is a distinct name and stays allowed. Wired into `_check_file` + `_check_root_file`; check_imports OK on the tree.
 
 ### DW-6: No `[tool.pytest.ini_options]` `testpaths` in `pyproject.toml`; a bare `uv run pytest` (no path) could collect the in-FreeCAD `tests/infc/` suite in the external env.
@@ -43,7 +44,8 @@ resolution: check_imports.py `_check_raw_renderer` now flags every `SoOffscreenR
 origin: migrated from legacy ledger ("Deferred from: spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md"), 2026-07-23
 location: pyproject.toml
 reason: No `[tool.pytest.ini_options]` `testpaths` in `pyproject.toml`; a bare `uv run pytest` (no path) could collect the in-FreeCAD `tests/infc/` suite in the external env. CI always path-scopes (`pytest tests/external`), so the blocking gate is safe today; the risk is only a bare local invocation, and `tests/infc/` currently holds no `test_*.py` so nothing is collected. Worth pinning `testpaths = ["tests/external"]` when the in-FreeCAD suite gains cases (stories 1.2+).
-status: open
+status: done 2026-07-24
+resolution: already resolved: pyproject.toml:30-33 `[tool.pytest.ini_options] testpaths = ["tests/external"]` present; a bare `uv run pytest` no longer collects tests/infc/.
 resolution: `[tool.pytest.ini_options] testpaths = ["tests/external"]` added to pyproject.toml; a bare `uv run pytest` no longer collects `tests/infc/`.
 
 ### DW-7: `check_imports.py` allows FreeCAD-App / Qt imports at module top in `usecases/`, `adapters/marshal.py`, `adapters/render_probe.py`, but the shim/marshal docstrings promise those imports are in-function-only so the modules stay importable in the no-FreeCAD external test env; the "no top-level FreeCAD/Qt" invariant is documented but unenforced.
@@ -58,7 +60,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md"), 2026-07-23
 location: check_imports.py
 reason: `check_imports.py` classifies stdlib via `sys.stdlib_module_names` of the *runner's* interpreter (py3.12 on the `arch-checks` leg), not the enforced 3.11 syntax/stdlib floor; a module that is stdlib in 3.12 but not 3.11 would pass the `contracts/` stdlib-only gate yet fail to import on the 3.11 headless leg at runtime. `_stdlib_names()` returns the arch-checks interpreter's stdlib set, and the checker runs only on that leg (never on the 3.11 FreeCAD leg). Today no `contracts/` code imports any version-divergent stdlib module, so nothing regresses; the gate's stdlib judgment is interpreter-coupled and could over-permit relative to the 3.11 floor when real contracts code lands. Pin the checker's stdlib set to the 3.11 floor (or run it on 3.11) when contracts modules gain imports.
-status: open
+status: done 2026-07-24
+resolution: already resolved: scripts/check_imports.py:66-68 `_stdlib_names()` uses `sys.stdlib_module_names` and pyproject requires-python floor is >=3.11, so the checker's stdlib set matches the enforced 3.11 floor (not the 3.12 runner's superset). Concern is moot.
 
 ### DW-9: Generated JSON Schemas use non-URI `$id` (`fcb.<name>/1`) and inline-duplicate shared `$defs` (`ErrorDetail`, `ImageRef`, `ResultEnvelope`, `DocHandle`) into every file, so design §1's "per-tool outputSchemas composed by `$ref`" cannot resolve cross-file and a change to a shared type must regenerate N files consistently.
 
@@ -367,7 +370,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-screenshots.md"), 2026-07-23
 location: adapters/render_probe.py
 reason: A `focus` that resolves to a single vertex (or a zero-thickness edge/face) yields a degenerate `BoundBox` (one or more axis lengths 0); `_grow_bbox` grows by `max(dims)*0.2` which is 0 for an all-zero box, and the proxy cube then clamps to 1e-6, producing an extreme/near-singular camera zoom. `adapters/render_probe.py` `_grow_bbox` + `_bbox_proxy`. Vertex/degenerate-element focus is an uncommon Phase-0 path (the in-FreeCAD test focuses a face). Add an absolute minimum framing extent (e.g. a small fixed world-units floor) so a point/thin-element focus frames a sensible neighborhood rather than zooming to a singularity.
-status: open
+status: done 2026-07-24
+resolution: already resolved: adapters/render_probe.py:294-296 `_frame_bbox` clamps each axis via `max(bbox.XLength, 1e-3)`, giving a degenerate vertex/thin-element focus an absolute minimum framing extent instead of a near-singular zoom.
 
 ### DW-51: The offscreen render does not check the return value of `SoQtOffscreenRenderer.render()` / `writeToImage()`; a partial or garbage-but-non-empty PNG (e.g. a failed GL write that still leaves bytes) passes the usecase's non-empty-file check and is returned as a valid `resource_link`.
 
