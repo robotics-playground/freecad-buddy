@@ -20,6 +20,14 @@ _PROBE_SIZE = 8
 
 _ACCENT_COLOR = (1.0, 0.55, 0.0)
 
+# FreeCAD stores the 3D-view anti-aliasing choice as the ``AntiAliasing`` enum value under this
+# preference group/key (Gui/Multisample.h). The enum is NOT sequential — MSAA6x=5 and MSAA8x=4 —
+# so map each stored value to its true multisample count, matching the live viewport instead of a
+# hard-coded value.
+_AA_PREF_GROUP = "User parameter:BaseApp/Preferences/View"
+_AA_PREF_KEY = "AntiAliasing"
+_AA_ENUM_TO_SAMPLES = {0: 0, 1: 1, 2: 2, 3: 4, 4: 8, 5: 6}
+
 
 class RenderError(RuntimeError):
     """Raised when the offscreen render pipeline fails to produce an image."""
@@ -62,6 +70,47 @@ def render_capability() -> tuple[str, str | None]:
 def render_capability_flag() -> str:
     """The render capability mode alone (``gui_constructed`` / ``offscreen`` / ``none``)."""
     return render_capability()[0]
+
+
+def _add_lighting(coin, root, orientation) -> None:
+    """Add a camera-aligned headlight plus ambient fill so no face renders black.
+
+    FreeCAD's live viewport lights the scene with a headlight that follows the camera (it lights
+    whatever the camera sees). A single fixed ``SoDirectionalLight`` leaves every face angled away
+    from its world-space direction near-black — the divergence a viewport comparison exposes. This
+    aims the light along the camera's view direction (the orientation quaternion applied to the
+    camera's default -Z look axis) and adds a modest ambient term via ``SoEnvironment`` so grazing
+    faces keep some tone, matching the viewport's softer shading.
+    """
+    view_dir = coin.SbRotation(*orientation).multVec(coin.SbVec3f(0.0, 0.0, -1.0))
+    headlight = coin.SoDirectionalLight()
+    headlight.direction.setValue(view_dir)
+    environment = coin.SoEnvironment()
+    # 0.7 matches FreeCAD's live viewport tone: measured against a PrintWindow capture, a lit face
+    # reads RGB ~(158,165,169), which this ambient reproduces (~159,164,169). A lower value renders
+    # the model visibly darker than the viewport while keeping the headlight's angular gradient.
+    environment.ambientIntensity.setValue(0.7)
+    root.addChild(environment)
+    root.addChild(headlight)
+
+
+def _configured_msaa_samples() -> int:
+    """Return the multisample count from FreeCAD's 3D-view anti-aliasing preference (0 if unset)."""
+    import FreeCAD
+
+    group = FreeCAD.ParamGet(_AA_PREF_GROUP)
+    enum_value = int(group.GetInt(_AA_PREF_KEY, 0))
+    return _AA_ENUM_TO_SAMPLES.get(enum_value, 0)
+
+
+def _apply_configured_msaa(renderer: object) -> None:
+    """Set the renderer's multisample count from FreeCAD's preference, when the build supports it."""
+    setter = getattr(renderer, "setNumPasses", None)
+    if setter is None:
+        return
+    samples = _configured_msaa_samples()
+    if samples > 1:
+        setter(samples)
 
 
 def _ensure_qgui_application() -> None:
@@ -107,7 +156,7 @@ class OffscreenRenderPort:
         camera = coin.SoOrthographicCamera()
         camera.orientation.setValue(coin.SbRotation(*scene.orientation))
         root.addChild(camera)
-        root.addChild(coin.SoDirectionalLight())
+        _add_lighting(coin, root, scene.orientation)
 
         rendered: list[str] = []
         subgraphs: dict[str, object] = {}
@@ -128,6 +177,7 @@ class OffscreenRenderPort:
 
         renderer = FreeCADGui.SoQtOffscreenRenderer(scene.width, scene.height)
         renderer.setBackgroundColor(1.0, 1.0, 1.0)
+        _apply_configured_msaa(renderer)
         renderer.render(root)
         # writeToImage returns None on success on some builds (it does not return a bool), so the
         # written file is the success signal: a non-empty PNG on disk means the render succeeded.

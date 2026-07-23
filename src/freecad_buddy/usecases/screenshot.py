@@ -37,6 +37,22 @@ _DEFAULT_HEIGHT = 600
 
 _ELEMENT_TYPES = frozenset({"face", "edge", "vertex"})
 
+# Types skipped by a default (no ``include``) render. Datum/origin features are construction
+# geometry, not model shape; a ``PartDesign::Body`` is a container whose Coin subgraph aggregates
+# its children through view-provider machinery that faults in a headless (no-GUI) renderer and
+# leaves the Coin library unusable for every later object. An explicit ``include`` still renders
+# them — the skip only shapes the automatic set.
+_NON_RENDER_TYPE_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Point")
+_NON_RENDER_TYPES = frozenset({"PartDesign::Body"})
+
+
+def _is_default_renderable(obj: object) -> bool:
+    """Whether ``obj`` belongs in the automatic render set: has a shape and is not datum/container."""
+    type_id = str(getattr(obj, "TypeId", ""))
+    if type_id in _NON_RENDER_TYPES or type_id.startswith(_NON_RENDER_TYPE_PREFIXES):
+        return False
+    return _has_shape(obj)
+
 # Fixed camera orientations (x, y, z, w quaternions). ``iso`` is FreeCAD's axonometric preset.
 _CAMERA_QUATS: dict[str, tuple[float, float, float, float]] = {
     "iso": (0.424708, 0.17591, 0.339851, 0.820473),
@@ -164,7 +180,11 @@ def _object_list(document: object, options: dict) -> list[str]:
     if include is not None:
         return [_require_object(document, name).Name for name in include]
     excluded = {_require_object(document, name).Name for name in exclude}
-    return [obj.Name for obj in document.Objects if _has_shape(obj) and obj.Name not in excluded]
+    return [
+        obj.Name
+        for obj in document.Objects
+        if _is_default_renderable(obj) and obj.Name not in excluded
+    ]
 
 
 def _has_shape(obj: object) -> bool:
