@@ -459,13 +459,13 @@ A FreeCAD user can ask questions about their open model — tree explanation, er
 
 ### Story 2.1: Entry Gate G1.E — Eval Set, Rubric & Grader Validation
 
-> **As** a project owner, **I want** the 50-question eval, 10 broken-document cases, human-authored rubric, and a fault-tested independent grader before assistant code exists, **so that** answer quality is decided by a validated grader, never the assistant (AD-19, NFR1).
+> **As** a project owner, **I want** the 50-question eval, a 30-case broken-document fixture set (gate grades n=10 first, escalates to n=30 on 10/10), human-authored rubric, and a fault-tested independent grader before assistant code exists, **so that** answer quality is decided by a validated grader, never the assistant (AD-19, NFR1).
 
 **Acceptance Criteria:**
 
 1. **Given** `benchmarks/g1/`  
    **When** inspected  
-   **Then** 50 questions + expected findings, 10 broken-recompute documents with *the* failing object/cause named, `rubric.md` with worked pass/fail examples, and dev/held-out split sealed per AR7 exist — all provenance-manifested
+   **Then** 50 questions + expected findings, a 30-case broken-recompute fixture set with *the* failing object/cause named (gate grades n=10 first, escalates to n=30 only on 10/10 — see phase-gates G1.2), `rubric.md` with worked pass/fail examples, and dev/held-out split sealed per AR7 exist — all provenance-manifested
 
 2. **Given** planted confident-wrong answers  
    **When** `gate faults g1` runs the grader over them  
@@ -483,7 +483,7 @@ A FreeCAD user can ask questions about their open model — tree explanation, er
 
 2. **Given** a document with a broken recompute  
    **When** asked "what's wrong?"  
-   **Then** the assistant names the failing object and cause via `verify_recompute` + `getStatusString` diagnostics (G1.2 target 8/10)
+   **Then** the assistant names the failing object and cause via `verify_recompute` + `getStatusString` diagnostics (G1.2 target: n=10 ≥8/10, escalate to n=30 on 10/10)
 
 ### Story 2.3: Local Backend + ReAct Fallback Adapter
 
@@ -759,7 +759,7 @@ Any LLM harness gains measurable CAD judgment from 12 curated skills — each pr
 
 - `freecad-fundamentals` + `freecad-troubleshooting` authored per the SKILL.md template (shape-check green), loadable via native activation AND forced injection
 - Consumed by Epic 2's eval runs (G1.5)
-- Troubleshooting re-run on G1.2 cases targets ≥9/10 (GS.4, CI attached).
+- Troubleshooting re-run on G1.2 tiered cases targets n=10 ≥9/10, escalating to n=30 on 10/10 (GS.4, CI attached).
 
 ### Story 6.3: Remaining Track A Skills
 

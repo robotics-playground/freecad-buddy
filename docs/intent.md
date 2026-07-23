@@ -128,7 +128,7 @@ A skill earns its place by moving a number, not by sounding wise. The standing t
 - [ ] Ablation harness exists: any benchmark can run with a declared skill subset, and reports per-skill deltas.
 - [ ] ≥ 8 of 12 skills demonstrate a measurable benchmark improvement (pass-rate or named sub-metric) in ablation on Phase 2 or Phase 3 benchmarks; the rest are revised or removed.
 - [ ] `design-decomposition` specifically: Phase 3 benchmark first-plan success rate (plan needs no structural rework) improves by ≥ 15 percentage points with the skill loaded vs without.
-- [ ] `freecad-troubleshooting` specifically: Phase 1 error-diagnosis cases pass rate with skill ≥ 9/10 (vs the baseline 8/10 criterion).
+- [ ] `freecad-troubleshooting` specifically: Phase 1 error-diagnosis cases pass rate with skill ≥ 9/10 at n=10 (vs the baseline 8/10 criterion), escalating to the full n=30 run on a 10/10 result (Wilson CI reported).
 - [ ] Each skill has an owner-reviewed accuracy pass against current FreeCAD documentation (version-pinned, same versions as CI matrix).
 
 **Achievable.** Source material exists (FreeCAD wiki/manual, community best practices, own benchmark failures — every Phase 2/3 failure analysis feeds a skill). Ablation reuses the existing benchmark harness.
@@ -214,7 +214,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 **Measurable — exit criteria:**
 - [ ] Assistant answers correctly on a curated evaluation set of 50 questions (model-tree comprehension, error diagnosis, "how do I…" guidance) with ≥ 80% pass rate, graded against written expected answers.
-- [ ] Given a document with a deliberately broken recompute (e.g. dangling sketch reference), assistant identifies the failing object and the cause in ≥ 8 of 10 test cases.
+- [ ] Given a document with a deliberately broken recompute (e.g. dangling sketch reference), assistant identifies the failing object and the cause. Tiered eval: a 30-case fixture set is authored, the gate grades the first n=10 (pass ≥ 8/10), and only a 10/10 result escalates to the full n=30 run (Wilson CI reported); below 10/10 the gate concludes at n=10, low-confidence flagged.
 - [ ] Feature-tree explanation works on documents with ≥ 50 features without exceeding context limits (uses summarized tree queries, not raw dumps).
 - [ ] Response latency ≤ 15 s median on the evaluation set.
 - [ ] Runs against at least 2 LLM backends (e.g. Claude API + one local model) to prove the bridge is model-agnostic.

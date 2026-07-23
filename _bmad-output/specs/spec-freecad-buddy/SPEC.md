@@ -22,7 +22,7 @@ A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable 
   - **success:** Gate **G0** passes (phase-gates.md), incl. ≥15 schema'd tools, 5 golden models verified ±0.1 %, ≥30 CI tests green on the 1.0/1.1 matrix.
 - **CAP-2** — Assistant (Phase 1)
   - **intent:** A user can ask about the open document — feature tree, selected objects, recompute errors, next-tool guidance — and get correct answers from read-only tools.
-  - **success:** Gate **G1** passes: ≥80 % on the 50-question eval graded by an independent grader against a written rubric; error diagnosis ≥8/10; two LLM backends.
+  - **success:** Gate **G1** passes: ≥80 % on the 50-question eval graded by an independent grader against a written rubric; error diagnosis ≥8/10 at n=10 (30-case set, escalates to n=30 on 10/10); two LLM backends.
 - **CAP-3** — Copilot (Phase 2)
   - **intent:** A user can issue one natural-language modeling command; the system previews a structured diff, executes on confirmation, auto-verifies, and rolls back provably on failure.
   - **success:** Gate **G2** passes: ≥85 % on the 40-command benchmark, 100 % auto-verify with rollback, undo hash-exact, TNP guard 5/5, sketches `FullyConstrained` ≥90 %.
@@ -67,4 +67,8 @@ An external MCP-client agent completes a full submit-spec → receive validated 
 
 ## Open Questions
 
-- Should intent.md's n=10 criteria (G1.2 error diagnosis 8/10; GS.4 troubleshooting 9/10) be enlarged to n≈20–30 for statistical confidence, or kept as soft targets with CI reported? Gates currently keep them flagged low-confidence per AD-14.
+_(none open)_
+
+## Resolved Questions
+
+- **G1.2 / GS.4 eval size — tiered n=10→n=30 (resolved 2026-07-24).** Author a full 30-case fixture set, but gate on a two-tier run: the gate first grades **n=10**; only when the n=10 result is **100% (10/10)** does it escalate to the full **n=30** run, reporting the Wilson CI on the n=30 result. If n=10 is below 10/10 the gate concludes at n=10 (no n=30 escalation) with the n=10 Wilson CI flagged low-confidence per AD-14. This keeps the cheap path cheap and spends the extra 20 cases only when the assistant has earned statistical scrutiny.

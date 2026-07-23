@@ -36,12 +36,12 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 
 **Goal:** LLM answers questions about the open document correctly using read-only tools; zero mutation tools exposed.
 
-**Entry gate G1.E:** 50-question eval set + written grading rubric with worked pass/fail examples (human-authored, independent-grader-executable) land; 10 broken-document cases built; planted wrong-but-confident answer cases prove the grader flags them (sensitivity run); eval runs against a stub assistant and fails honestly.
+**Entry gate G1.E:** 50-question eval set + written grading rubric with worked pass/fail examples (human-authored, independent-grader-executable) land; a 30-case broken-document fixture set is built (gate grades n=10 first, escalates to n=30 on 10/10 — G1.2); planted wrong-but-confident answer cases prove the grader flags them (sensitivity run); eval runs against a stub assistant and fails honestly.
 
 | ID | Criterion | Agent-executable check | Pass rule |
 | --- | --- | --- | --- |
 | G1.1 | Answer quality | Run 50-question eval, R=3; independent grader model scores per rubric [stats] | pass rate ≥80 % |
-| G1.2 | Error diagnosis | Run 10 broken-recompute cases; grader checks *the* failing object + cause named | ≥8/10 — low-confidence flag (n=10), Wilson CI attached |
+| G1.2 | Error diagnosis | 30-case fixture set; grade first n=10 (grader checks *the* failing object + cause named); escalate to full n=30 only when n=10 is 10/10 | n=10 ≥8/10 to pass; 10/10 escalates to n=30 with Wilson CI; below 10/10 concludes at n=10 (low-confidence flag, Wilson CI attached) |
 | G1.3 | Large-tree handling | Run tree-explanation on 50+-feature docs; measure context + latency | No context overflow; summarized queries used; median latency ≤15 s over eval set |
 | G1.4 | Model-agnostic bridge | Re-run G1.1 sample on second backend (local model, same tools) | Both backends complete the eval through identical tool surface |
 | G1.5 | Skills drafted + loaded | Check `skills/` for `freecad-fundamentals`, `freecad-troubleshooting` (4-section shape, AD-15); eval logs show them loaded | Present, CI shape-check green, load recorded in run logs |
@@ -119,7 +119,7 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 | GS.1 | 12 skills authored, dual-harness | Shape-check all 12; load each via native activation AND forced injection; run one benchmark case per path | All 12 pass shape check and load on both paths |
 | GS.2 | Ablation harness operational | Run any benchmark with `--skills <subset>`; verify complement excluded from context | Declared subset in, complement out, per-skill paired deltas reported in AD-14 format |
 | GS.3 | Measurable lift | Run per-skill ablations on Phase 2/3 benchmarks | ≥8/12 skills significant per AD-14 (McNemar p<0.05 ∧ CI excludes 0); rest revised or cut; sub-detection effects reported as such |
-| GS.4 | `freecad-troubleshooting` | Re-run G1.2 cases with skill loaded, R≥10 | ≥9/10 — low-confidence flag (n=10), CI attached |
+| GS.4 | `freecad-troubleshooting` | Re-run G1.2 tiered cases with skill loaded, R≥10; grade n=10 first, escalate to n=30 only when n=10 is 10/10 | n=10 ≥9/10 to pass; 10/10 escalates to n=30 with Wilson CI; below 10/10 concludes at n=10 (low-confidence flag, CI attached) |
 | GS.5 | Accuracy review | Check for recorded owner review vs version-pinned FreeCAD docs | Human sign-off token present for all 12 |
 | GS.6 | `design-decomposition` | Run dedicated ≥40-spec paired ablation, R≥10 | ≥+15pp first-plan success, McNemar p<0.05, CI excludes 0 |
 
