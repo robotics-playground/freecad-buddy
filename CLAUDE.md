@@ -7,6 +7,7 @@ Before implementing:
 - If multiple interpretations exist, present them - don't pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
+- **Any FreeCAD enum value, preference key, parameter name, or API semantic MUST be confirmed against the source under `docs/references/FreeCAD/` before you write code — never assume ordering/naming/values from memory.** FreeCAD enums are often non-sequential (e.g. `AntiAliasing::MSAA8x = 4`, `MSAA6x = 5`). See [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md).
 
 ## 2. Simplicity First
 
@@ -199,6 +200,8 @@ Every story MUST include this as the **last task**:
 ## 12. Authoritative References
 
 - [Development standards](.knowledge-base/technical/standards/index.md)
+- [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md)
+- [FreeCAD automation & verification](.knowledge-base/technical/standards/testing/freecad-automation-verification.md)
 - [System design](.knowledge-base/technical/application-design/index.md)
 - [Planning artifacts](.ai-artifacts/planning-artifacts/)
 - [FreeCAD Source Code](docs/references/FreeCAD/)

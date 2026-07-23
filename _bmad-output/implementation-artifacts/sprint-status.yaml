@@ -68,7 +68,7 @@ development_status:
   1-8-gui-host-addon-rpc-marshal: done
   1-9-view-controlled-screenshots: done
   1-10-gate-g0-exit: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
   epic-2: backlog
   2-1-entry-gate-g1e-eval-rubric-grader: backlog
   2-2-assistant-claude-backend: backlog
@@ -109,3 +109,29 @@ development_status:
   6-5-production-router: backlog
   6-6-ablation-campaign-gate-gs-exit: backlog
   epic-6-retrospective: optional
+
+action_items:
+  - epic: 1
+    action: "Decide session-timeout posture for long stories (keep rollback_on_failure=false + manual finalize, or raise session_timeout_min / split large gate stories)"
+    owner: "TanNT"
+    status: open
+  - epic: 1
+    action: "Close 3 CI-gate enforcement gaps: ban pivy.coin.SoOffscreenRenderer, ActiveDocument-as-target (AST rule), top-level FreeCAD/Qt in usecases/marshal"
+    owner: "dev-loop"
+    status: open
+  - epic: 1
+    action: "Grow export validator fault suites toward NFR2 >=10 + add same-geometry STEP unit-lie fixture"
+    owner: "dev-loop"
+    status: open
+  - epic: 1
+    action: "Unify the two validators.yaml writers (1-6 clobber vs 1-7 read-merge-write) onto one shared merge-writer"
+    owner: "dev-loop"
+    status: open
+  - epic: 1
+    action: "Resolve the 3 follow-up-review debts (DW-1 1-1, DW-2 1-4, DW-3 1-7) with a deliberate review or explicit close"
+    owner: "TanNT"
+    status: open
+  - epic: 1
+    action: "Fix gate.yaml G0.5 validator citation (verify_shape -> verify_export_step)"
+    owner: "dev-loop"
+    status: open

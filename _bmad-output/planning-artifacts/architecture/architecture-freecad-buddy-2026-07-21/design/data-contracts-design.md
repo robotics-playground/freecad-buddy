@@ -283,6 +283,8 @@ class FingerprintRecord(TypedDict):
 
 Comparison rule (normative, AD-6): two records are comparable **iff `serializer` tags are equal**; a helper `fingerprints_equal(a, b)` raises on tag mismatch rather than returning False — cross-tag comparison is a programming error, never a "changed" verdict. Equality = `digest` equality; on mismatch, `massprops` provides the human-diffable cross-oracle. Document-XML/FCStd and tessellation hashes are banned as identity oracles and have no contract type.
 
+**Read-only-after-render verdict (normative):** a check that a read-only operation (a render/screenshot) did not mutate the document compares `massprops_equal(before, after)` — the geometric invariants — **not** the `digest`. OCCT re-lays-out a freshly loaded shape's BRep bytes the first time a render touches it, so the digest legitimately shifts while the geometry is unchanged; a digest comparison here yields a false "changed" verdict. The invariants compared are `volume`, `area`, `com`, and `principal_moments`; `bbox` is excluded because `Shape.BoundBox` is tessellation-derived and shifts when a render/export refines the mesh. A genuine mutation still changes the mass-properties.
+
 ## 11. RPC wire contract (`rpc.py`) — AD-2/AD-3
 
 Frames between the external MCP process and the in-FreeCAD RPC listener. Both sides import this module; neither invents framing. Transport: newline-delimited JSON-RPC 2.0 frames over localhost TCP; stdlib-encodable only (both ends must run without third-party deps — AD-12 on the listener side).

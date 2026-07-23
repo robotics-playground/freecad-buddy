@@ -249,7 +249,7 @@ Export pins config **per call**: `write.step.schema = AP214` (or AP242) and `wri
 
 ### 6.3 `verify_export_stl` — dual independent mesh oracles
 
-- **trimesh (primary):** `is_watertight`, `is_winding_consistent`, `is_volume`, `mesh.volume` within the deflection-derived band (§8 — never ±0.1 %), sane `euler_number` / expected genus.
+- **trimesh (primary):** `is_watertight`, `is_winding_consistent`, `is_volume`, `mesh.volume` within the deflection-derived band (§8 — never ±0.1 %), and an **even** `euler_number`. A closed orientable surface has even Euler characteristic (Σ 2−2g over its bodies), so an odd value signals a non-closed/non-manifold mesh; a *specific* genus is NOT required — a through-hole part (χ=0) and a multi-body compound (χ=4) are valid exports, and flipped-normals detection comes from `is_volume`, not Euler.
 - **Second oracle:** admesh where available (check-only mode: unconnected facets, bad normals, degenerate facets, holes; auto-repair is a separate remediation tool, never silently applied inside a pass). admesh is dormant upstream and Linux-leaning; the fallback second oracle is chosen at the Phase 0 gate (AD-9). The verifier interface takes an abstract `SecondStlOracle` so the pin is a config swap.
 - trimesh/second-oracle disagreement → FAIL.
 
@@ -331,7 +331,7 @@ Defaults below are starting points; **exact values are calibrated by each phase'
 | Angle (perpendicularity, `angle_between`) | ±0.1° | via normal dot-product |
 | STEP round-trip volume | ±0.1 % | AD-9 fixed |
 | STEP bbox diagonal / CoM | ±0.1 % / ±0.05 mm | calibrate |
-| Mesh (STL/3MF) volume band | derived from tessellation deflection (linear + angular), **never ±0.1 %** | AD-9 fixed rule; band computed per export call from the deflection actually used |
+| Mesh (STL/3MF) volume band | `(2/3) · linear_deflection · surface_area` (chordal-sag bound), **never ±0.1 %** and never bbox-relative | AD-9 fixed rule; chordal facets sit ≤ `linear` below a curved surface (avg sag `(2/3)·linear`), so the volume deficit is bounded by that × area — a bbox-relative band under-bounds doubly-curved surfaces (spheres) ~3× |
 | Mesh counts (self-read leg) | exact match on facet/vertex counts vs written mesh | same tessellation source |
 | Coaxial grouping | axis angle ≤ 0.1°, center-line offset ≤ 0.01 mm | calibrate |
 | Degenerate sketch geometry | `detectDegeneratedGeometries` default tol | kernel default; calibrate |

@@ -27,3 +27,11 @@ venv/
 
 # Gate run evidence store: per-run reports + human tokens, produced by `runner.py run/attest`
 benchmarks/gate-artifacts/
+
+# Automation harness run output: exports, renders, logs, reports (transient per-run artifacts)
+_automation/
+
+# Audit log written to repo root when FREECAD_BUDDY_AUDIT_LOG is unset
+freecad-buddy-audit.jsonl
+
+.mcp.json

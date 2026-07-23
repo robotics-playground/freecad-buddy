@@ -290,7 +290,7 @@ Render code runs where FreeCAD lives. The **capability probe** sits in `adapters
 
 **Constructed-scene view control** (serves `query_screenshot.view` — mcp-tools-design §3.9). The scene is assembled per call, so include/exclude/transparency/focus never mutate document state, `Visibility` properties, or the live viewport:
 
-- **Include/exclude:** only listed (or all-visible-minus-excluded) objects get `subgraphFromObject(obj)` — hiding is simply not adding the subgraph.
+- **Include/exclude:** only listed (or all-visible-minus-excluded) objects get `subgraphFromObject(obj)` — hiding is simply not adding the subgraph. The default (no `include`) set additionally excludes container and datum types — `PartDesign::Body`, `App::Origin`/`App::Line`/`App::Plane`/`App::Point` — whose view-provider subgraph faults in a headless renderer (an Access violation that also corrupts the Coin library for every later object, so it cannot be caught and recovered); the default renders the shape-bearing leaf features instead. An explicit `include` naming such an object overrides the skip.
 - **Style overrides:** each styled object's subgraph is wrapped in its own `SoSeparator` with a prepended `coin.SoMaterial` (transparency 0–1, optional diffuse color); highlight = a distinct accent material on the resolved target's subgraph.
 - **Focus framing:** resolve the focus selector to a sub-shape (same selector resolution as tool inputs), take its `BoundBox` grown by ~20 % margin, and aim the camera with `camera.pointAt`/orientation preset then `viewAll` against a proxy bbox cube — instead of `viewAll` on the whole scene root.
 - **Camera presets:** iso/front/top/… map to fixed `SbRotation`s (iso = the `make_snapshot.py` axonometric quaternion); `custom` takes a quaternion.
@@ -304,12 +304,15 @@ def render_offscreen(doc, out_path: str, width: int = 1024, height: int = 768,
     # FreeCADGui.setupWithoutGUI() already done by probe
     root = coin.SoSeparator()
     root.addChild(camera); root.addChild(coin.SoDirectionalLight())
-    for obj in visible_objects(doc):
+    for obj in visible_objects(doc):                        # leaf shapes only — never a Body/datum
         root.addChild(FreeCADGui.subgraphFromObject(obj))   # transient view provider
     camera.viewAll(root, coin.SbViewportRegion(width, height))
     off = FreeCADGui.SoQtOffscreenRenderer(width, height)    # NEVER raw pivy SoOffscreenRenderer (#13356)
+    off.setNumPasses(configured_msaa_samples())              # anti-aliasing from FreeCAD's own pref
     off.render(root); off.writeToImage(out_path)             # QImage saver → PNG
 ```
+
+**Anti-aliasing (config-driven, not hard-coded):** the offscreen render uses the same multisample count the user configured for the live 3D viewport, read from FreeCAD's own preference — group `User parameter:BaseApp/Preferences/View`, key `AntiAliasing` — and applied via `SoQtOffscreenRenderer.setNumPasses` (which sets the FBO and GL-context sample count, `Gui/SoFCOffscreenRenderer.cpp`). The stored value is the `Gui::AntiAliasing` **enum value, which is NOT sequential** — from `Gui/Multisample.h`: `None=0, MSAA1x=1, MSAA2x=2, MSAA4x=3, MSAA6x=5, MSAA8x=4` — so it maps to samples `{0:0, 1:1, 2:2, 3:4, 4:8, 5:6}`, never by array index. A build without `setNumPasses`, or an enum value of 0/1, falls back to a single sample. This mapping was confirmed against the FreeCAD source under `docs/references/FreeCAD`, not assumed — see the source-verify standard.
 
 CI render leg: `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1` + `MESA_LOADER_DRIVER_OVERRIDE=llvmpipe` (FreeCAD's own CI recipe); isolated, non-blocking (spine environments). One `SoQtOffscreenRenderer` + one `QGuiApplication` reused per process (leaking-singleton note in `SoFCOffscreenRenderer.h`). `QT_QPA_PLATFORM=offscreen` is secondary, validated per-image — historically no usable GL context.
 
