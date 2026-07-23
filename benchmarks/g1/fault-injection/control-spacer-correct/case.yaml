@@ -1,0 +1,13 @@
+id: g1-control-spacer-correct
+gate: g1
+targets_validator: grader
+fault:
+  kind: clean_control
+  expectation: PASS_CLEAN
+question_ref: g1-broken-be-spacer-height
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: SpacerHeight
+  cause_keywords: [expression, binding]
+candidate_answer: "SpacerHeight fails because its Height expression binding references a non-existent object. Repoint the expression to an object that exists."

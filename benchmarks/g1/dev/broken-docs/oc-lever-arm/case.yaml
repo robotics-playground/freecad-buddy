@@ -1,0 +1,13 @@
+id: g1-broken-oc-lever-arm
+gate: g1
+criterion: G1.2
+tier: n30
+# Genuinely-broken recompute fixture: object LeverArm is in error after recompute.
+# expected.object is *the* failing object (G1.2 requires *the*, not *an*);
+# cause_keywords are the rubric-keyed terms the deterministic grader matches.
+expected:
+  object: LeverArm
+  cause: "sketch has conflicting (over-constrained) constraints"
+  cause_keywords: [conflicting, over-constrained, overconstrained, redundant constraint]
+fixture: fixture.FCStd
+provenance: ../../../_registry/provenance/g1-broken-oc-lever-arm.yaml

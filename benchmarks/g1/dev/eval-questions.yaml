@@ -1,0 +1,380 @@
+# G1 eval set: 50 hand-authored questions with independent expected findings (FR7).
+# Categories: tree-explanation, error-diagnosis, next-tool-guidance. expected_findings
+# are independently hand-authored references, NEVER captured from a running assistant.
+# error-diagnosis questions reference the broken-doc fixtures under dev/broken-docs/.
+
+questions:
+  - id: g1-eval-01
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/oc-bracket-plate/fixture.FCStd
+    expected_findings:
+      object: BracketPlate
+      cause: "conflicting over-constrained sketch constraints"
+  - id: g1-eval-02
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/oc-mount-slot/fixture.FCStd
+    expected_findings:
+      object: MountSlot
+      cause: "conflicting over-constrained sketch constraints"
+  - id: g1-eval-03
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/oc-rib-profile/fixture.FCStd
+    expected_findings:
+      object: RibProfile
+      cause: "conflicting over-constrained sketch constraints"
+  - id: g1-eval-04
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/oc-flange-outline/fixture.FCStd
+    expected_findings:
+      object: FlangeOutline
+      cause: "conflicting over-constrained sketch constraints"
+  - id: g1-eval-05
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/oc-lever-arm/fixture.FCStd
+    expected_findings:
+      object: LeverArm
+      cause: "conflicting over-constrained sketch constraints"
+  - id: g1-eval-06
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/be-spacer-height/fixture.FCStd
+    expected_findings:
+      object: SpacerHeight
+      cause: "dangling expression binding to a missing object"
+  - id: g1-eval-07
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/be-standoff/fixture.FCStd
+    expected_findings:
+      object: Standoff
+      cause: "dangling expression binding to a missing object"
+  - id: g1-eval-08
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/be-boss-post/fixture.FCStd
+    expected_findings:
+      object: BossPost
+      cause: "dangling expression binding to a missing object"
+  - id: g1-eval-09
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/be-riser-block/fixture.FCStd
+    expected_findings:
+      object: RiserBlock
+      cause: "dangling expression binding to a missing object"
+  - id: g1-eval-10
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/be-pillar/fixture.FCStd
+    expected_findings:
+      object: Pillar
+      cause: "dangling expression binding to a missing object"
+  - id: g1-eval-11
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/pd-panel-pad/fixture.FCStd
+    expected_findings:
+      object: PanelPad
+      cause: "PartDesign pad orphaned from its deleted profile sketch"
+  - id: g1-eval-12
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/pd-web-pad/fixture.FCStd
+    expected_findings:
+      object: WebPad
+      cause: "PartDesign pad orphaned from its deleted profile sketch"
+  - id: g1-eval-13
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/pd-boss-pad/fixture.FCStd
+    expected_findings:
+      object: BossPad
+      cause: "PartDesign pad orphaned from its deleted profile sketch"
+  - id: g1-eval-14
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/pd-rib-pad/fixture.FCStd
+    expected_findings:
+      object: RibPad
+      cause: "PartDesign pad orphaned from its deleted profile sketch"
+  - id: g1-eval-15
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/cut-housing-bore/fixture.FCStd
+    expected_findings:
+      object: HousingBore
+      cause: "boolean cut whose tool operand was removed"
+  - id: g1-eval-16
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/cut-bracket-slot/fixture.FCStd
+    expected_findings:
+      object: BracketSlot
+      cause: "boolean cut whose tool operand was removed"
+  - id: g1-eval-17
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/cut-plate-pocket/fixture.FCStd
+    expected_findings:
+      object: PlatePocket
+      cause: "boolean cut whose tool operand was removed"
+  - id: g1-eval-18
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/cut-block-hole/fixture.FCStd
+    expected_findings:
+      object: BlockHole
+      cause: "boolean cut whose tool operand was removed"
+  - id: g1-eval-19
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/cut-body-recess/fixture.FCStd
+    expected_findings:
+      object: BodyRecess
+      cause: "boolean cut whose tool operand was removed"
+  - id: g1-eval-20
+    category: error-diagnosis
+    criterion: G1.2
+    question: "The document fails to recompute. Which object is in error and why?"
+    doc_fixture: dev/broken-docs/cut-cap-notch/fixture.FCStd
+    expected_findings:
+      object: CapNotch
+      cause: "boolean cut whose tool operand was removed"
+  - id: g1-eval-21
+    category: tree-explanation
+    criterion: G1.1
+    question: "Summarize the top-level document tree structure."
+    expected_findings:
+      - "lists each top-level object by Label"
+      - "groups features under their parent Body"
+      - "notes object count"
+  - id: g1-eval-22
+    category: tree-explanation
+    criterion: G1.1
+    question: "Which object is the tip feature of the active PartDesign Body?"
+    expected_findings:
+      - "identifies the last solid feature in the Body"
+      - "reports the tip by Name"
+      - "distinguishes tip from base"
+  - id: g1-eval-23
+    category: tree-explanation
+    criterion: G1.1
+    question: "Explain the parent-child relationships between the sketch and the pad."
+    expected_findings:
+      - "sketch is the pad profile"
+      - "pad depends on the sketch"
+      - "sketch is a child in the pad dependency graph"
+  - id: g1-eval-24
+    category: tree-explanation
+    criterion: G1.1
+    question: "How many solids does the current document contain?"
+    expected_findings:
+      - "counts Part Feature solids"
+      - "excludes datum and sketch objects from the solid count"
+  - id: g1-eval-25
+    category: tree-explanation
+    criterion: G1.1
+    question: "Describe what the fillet feature is applied to."
+    expected_findings:
+      - "fillet references edges of its base feature"
+      - "names the base feature"
+      - "reports the fillet radius"
+  - id: g1-eval-26
+    category: tree-explanation
+    criterion: G1.1
+    question: "Summarize the feature history of the main body in build order."
+    expected_findings:
+      - "lists features in creation order"
+      - "each feature names its immediate predecessor"
+  - id: g1-eval-27
+    category: tree-explanation
+    criterion: G1.1
+    question: "Which sketches are consumed by downstream features vs standalone?"
+    expected_findings:
+      - "separates consumed sketches from standalone"
+      - "names the consuming feature for each"
+  - id: g1-eval-28
+    category: tree-explanation
+    criterion: G1.1
+    question: "What datum planes exist and what references them?"
+    expected_findings:
+      - "lists datum planes by Name"
+      - "reports which features attach to each datum"
+  - id: g1-eval-29
+    category: tree-explanation
+    criterion: G1.1
+    question: "Explain the dependency chain from the base sketch to the final solid."
+    expected_findings:
+      - "orders base sketch then pad then subsequent features"
+      - "names each link in the chain"
+  - id: g1-eval-30
+    category: tree-explanation
+    criterion: G1.1
+    question: "Describe the compound structure of the assembly object."
+    expected_findings:
+      - "lists the child shapes of the compound"
+      - "reports the child count"
+  - id: g1-eval-31
+    category: tree-explanation
+    criterion: G1.1
+    question: "Which objects have expressions driving their parameters?"
+    expected_findings:
+      - "lists objects with bound expressions"
+      - "names the driven property per object"
+  - id: g1-eval-32
+    category: tree-explanation
+    criterion: G1.1
+    question: "Summarize the visible vs hidden objects in the tree."
+    expected_findings:
+      - "separates visible from hidden by Visibility"
+      - "reports counts of each"
+  - id: g1-eval-33
+    category: tree-explanation
+    criterion: G1.1
+    question: "What is the recompute order of the current document?"
+    expected_findings:
+      - "reports topological recompute order"
+      - "notes objects with no dependencies first"
+  - id: g1-eval-34
+    category: tree-explanation
+    criterion: G1.1
+    question: "Explain how the mirror feature relates to its source."
+    expected_findings:
+      - "mirror references the source feature"
+      - "reports the mirror plane"
+  - id: g1-eval-35
+    category: tree-explanation
+    criterion: G1.1
+    question: "Describe the group and folder organization of the tree."
+    expected_findings:
+      - "lists DocumentObjectGroup folders"
+      - "reports membership per group"
+  - id: g1-eval-36
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "The user asks to measure the volume of a solid. Which read-only tool should be used?"
+    expected_findings:
+      - "query_shape or verify_shape read-only measurement"
+      - "reads Volume from the shape"
+  - id: g1-eval-37
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To list all objects in the open document, which tool is appropriate?"
+    expected_findings:
+      - "query_document_tree or equivalent tree listing tool"
+      - "read-only enumeration"
+  - id: g1-eval-38
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To inspect a single object properties, which tool?"
+    expected_findings:
+      - "query_object properties tool"
+      - "reads properties by object Name"
+  - id: g1-eval-39
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "The user wants a screenshot of the current view. Which tool?"
+    expected_findings:
+      - "screenshot or render tool"
+      - "constructed scene not the user viewport"
+  - id: g1-eval-40
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To check whether a sketch is fully constrained, which tool and property?"
+    expected_findings:
+      - "verify_sketch reads FullyConstrained after recompute"
+      - "not solve equals zero"
+  - id: g1-eval-41
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To find which edges a fillet uses, which read-only query?"
+    expected_findings:
+      - "query the fillet feature edge references"
+      - "sub-element selectors"
+  - id: g1-eval-42
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "The user asks why a feature is greyed out. Which tool inspects error state?"
+    expected_findings:
+      - "query object status via getStatusString"
+      - "reports the recompute error"
+  - id: g1-eval-43
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To export the current solid to STEP, which tool and what verifies it?"
+    expected_findings:
+      - "export_step tool"
+      - "paired verify_export_step re-imports to confirm"
+  - id: g1-eval-44
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To get the bounding box of the whole document, which tool?"
+    expected_findings:
+      - "query_shape bounding box"
+      - "aggregate bbox over solids"
+  - id: g1-eval-45
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To list the available tools to the assistant, which introspection call?"
+    expected_findings:
+      - "tools list introspection"
+      - "reports the read-only tool surface"
+  - id: g1-eval-46
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "The user wants the mass properties of a part. Which read-only tool?"
+    expected_findings:
+      - "query mass properties tool"
+      - "reads density and volume-derived mass"
+  - id: g1-eval-47
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To diagnose a failing recompute, which tool reports the failing object?"
+    expected_findings:
+      - "query object status via getStatusString per object"
+      - "names the object in error"
+  - id: g1-eval-48
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To compare two documents geometry, which read-only tool?"
+    expected_findings:
+      - "geometry diff query tool"
+      - "structured GeometryDiff"
+  - id: g1-eval-49
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "To read a fingerprint of the current shape, which tool?"
+    expected_findings:
+      - "fingerprint tool"
+      - "serializer-tagged hash"
+  - id: g1-eval-50
+    category: next-tool-guidance
+    criterion: G1.1
+    question: "The user wants to know feature count for context budgeting. Which tool?"
+    expected_findings:
+      - "query_document_tree with summarized counts"
+      - "avoids full-tree overflow"

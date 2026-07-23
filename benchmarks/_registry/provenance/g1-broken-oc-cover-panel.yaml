@@ -1,0 +1,7 @@
+artifact: g1/dev/broken-docs/oc-cover-panel/fixture
+kind: broken-doc-fixture
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Over-constrained sketch is the most common recompute failure in parametric CAD"
+license_checked: {by: TanNT, date: 2026-07-24}

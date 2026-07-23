@@ -73,8 +73,8 @@ development_status:
   1-9-view-controlled-screenshots: done
   1-10-gate-g0-exit: done
   epic-1-retrospective: done
-  epic-2: backlog
-  2-1-entry-gate-g1e-eval-rubric-grader: backlog
+  epic-2: in-progress
+  2-1-entry-gate-g1e-eval-rubric-grader: done
   2-2-assistant-claude-backend: backlog
   2-3-local-backend-react-adapter: backlog
   2-4-gate-g1-exit: backlog

@@ -1,0 +1,16 @@
+id: g1-control-bracket-altkeyword
+gate: g1
+targets_validator: grader
+fault:
+  kind: clean_control
+  expectation: PASS_CLEAN
+question_ref: g1-broken-oc-bracket-plate
+# Alternate-keyword control (F11): a CORRECT answer that names the right object and phrases the
+# cause with a NON-primary keyword from the broken-doc's broader set ("redundant constraint" /
+# "overconstrained"), not the primary "conflicting". Proves the grader accepts the full keyword
+# set it faces in production grading, so a regression narrowing the keywords would drop this
+# control to a false alarm.
+expected_findings:
+  object: BracketPlate
+  cause_keywords: [conflicting, over-constrained, overconstrained, redundant constraint]
+candidate_answer: "BracketPlate is overconstrained: the sketch has a redundant constraint. Delete the redundant constraint so it is no longer overconstrained."

@@ -1,0 +1,13 @@
+id: g1-fault-wrong-cause-shim
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-oc-shim-plate
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: ShimPlate
+  cause_keywords: [conflicting, redundant constraint]
+candidate_answer: "ShimPlate fails because the sketch plane was detached from its support datum."

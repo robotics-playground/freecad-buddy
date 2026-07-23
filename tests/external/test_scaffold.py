@@ -36,9 +36,9 @@ def test_key_files_exist():
 
 def test_decision_notes_exist():
     notes = sorted((REPO_ROOT / "docs" / "decisions").glob("00*.md"))
-    assert len(notes) >= 7, f"expected >=7 decision notes, found {len(notes)}"
+    assert len(notes) >= 9, f"expected >=9 decision notes, found {len(notes)}"
     stems = {p.name.split("-")[0] for p in notes}
-    assert {"001", "002", "003", "004", "005", "006", "007"} <= stems
+    assert {"001", "002", "003", "004", "005", "006", "007", "008", "009"} <= stems
 
 
 def test_empty_inits_are_byte_empty():

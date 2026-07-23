@@ -22,6 +22,13 @@ jobs:
           if uv run python benchmarks/runner.py --gate G0 --stub; then
             echo "runner unexpectedly green (should fail honestly against the stub)"; exit 1;
           fi
+      - name: Entry gate G1 fails honestly against the stub (AD-19)
+        run: |
+          if uv run python benchmarks/runner.py --gate G1 --stub; then
+            echo "G1 runner unexpectedly green (should fail honestly against the stub)"; exit 1;
+          fi
+      - name: G1 grader clears sensitivity/FA bars (deterministic, no network)
+        run: uv run python benchmarks/g1/fault-injection/score_grader.py --check
       - name: Ruff (T201 print-ban honored)
         run: uv run ruff check .
       - name: External suite

@@ -1,0 +1,17 @@
+id: g1-fault-and-discriminator-boss
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-be-boss-post
+# AND-discriminator (validates the grader's conjunction, not just each leg separately):
+# the answer names the RIGHT object (BossPost) AND mentions a cause keyword — but a keyword
+# from a DIFFERENT diagnosis (over-constrained sketch), NOT this case's own cause (expression
+# binding). An object-only grader PASSes it (object present) and MISSes the defect; an
+# OR(object, any-cause) grader also PASSes it; only the AND grader keyed to THIS case's own
+# cause_keywords correctly FAILs it (own cause absent). So sensitivity=1.0 here proves the AND.
+expected_findings:
+  object: BossPost
+  cause_keywords: [expression, binding, reference, not found]
+candidate_answer: "BossPost fails because its sketch is over-constrained with conflicting constraints; remove the redundant constraint."

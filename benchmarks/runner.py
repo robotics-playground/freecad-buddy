@@ -22,6 +22,7 @@ import datetime
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -51,14 +52,19 @@ from benchmarks.harness.verdict import (  # noqa: E402
 from freecad_buddy.contracts.report import Check  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
-KNOWN_GATES = {"G0": "g0"}
+KNOWN_GATES = {"G0": "g0", "G1": "g1"}
 
 _EXIT_USAGE = 2
 _EXIT_FAIL = 1
 _EXIT_OK = 0
 
 _REGISTRY_YAML = BENCHMARKS_ROOT / "_registry" / "validators.yaml"
-_SUBCOMMANDS = {"run", "verdict", "attest"}
+_SUBCOMMANDS = {"run", "verdict", "attest", "faults"}
+
+# Per-gate fault scorer routed by `faults <gate>` (relative to the repo root).
+_FAULT_SCORERS = {
+    "G1": Path("benchmarks") / "g1" / "fault-injection" / "score_grader.py",
+}
 
 # Criteria whose evidence is dropped by an external in-FreeCAD/CI collector into evidence/.
 _INGESTED_CRITERIA = {"G0.1", "G0.3", "G0.5"}
@@ -74,6 +80,13 @@ _VALIDATOR_SOURCES = {
     "verify_shape": (
         _SRC / "usecases" / "verify.py",
         _SRC / "usecases" / "fingerprint.py",
+    ),
+    # The G1 grader's currency depends on BOTH the grader source and the rubric it encodes; a
+    # rubric edit changes the pass rule and must stale the score. Order matches score_grader.py's
+    # hash (grader.py then rubric.md) so a clean tree is CURRENT, not stale.
+    "grader": (
+        _REPO_ROOT / "benchmarks" / "g1" / "grader.py",
+        _REPO_ROOT / "benchmarks" / "g1" / "rubric.md",
     ),
 }
 
@@ -348,6 +361,28 @@ def attest_command(gate: str, run_id: str, token_type: str, outcome: str) -> int
     return _EXIT_OK
 
 
+def faults_command(gate: str) -> int:
+    """Route ``faults <gate>`` to the gate's fault scorer as a subprocess; forward its exit code.
+
+    The scorer (``score_grader.py`` for G1) grades the planted suite with the independent
+    validator, computes sensitivity/FA + Wilson CI, and merge-writes the validator block. An
+    unknown gate or a gate with no scorer is a clean usage error (exit 2), never a traceback.
+    """
+    if gate not in KNOWN_GATES:
+        raise UsageError(f"unknown gate '{gate}' (known: {', '.join(sorted(KNOWN_GATES))})")
+    scorer = _FAULT_SCORERS.get(gate)
+    if scorer is None:
+        raise UsageError(f"no fault scorer wired for gate '{gate}'")
+    scorer_path = _REPO_ROOT / scorer
+    if not scorer_path.is_file():
+        raise UsageError(f"fault scorer not found: {scorer_path}")
+    # NFR1: never score the grader while it collides with the actor — the identity guard applies
+    # to the fault-scoring path too, not only the stub run.
+    _preflight_actor_grader(gate)
+    completed = subprocess.run([sys.executable, str(scorer_path)])
+    return completed.returncode
+
+
 def _filter_criteria(criteria: list[dict], criterion_id: str | None) -> list[dict]:
     if criterion_id is None:
         return criteria
@@ -357,15 +392,52 @@ def _filter_criteria(criteria: list[dict], criterion_id: str | None) -> list[dic
     return selected
 
 
+def _preflight_actor_grader(gate: str) -> None:
+    """Hard-fail INVALID_INPUT if a gate's ``actor:`` and ``grader:`` resolve to the same model.
+
+    NFR1 / harness §8: the actor never grades itself. A gate declaring an ``actor:`` and a
+    ``grader:`` block whose ``model`` AND ``context`` both collide is an identity collision — the
+    grader would grade the actor's own output. Raises ``UsageError`` (exit-2, clean message,
+    never a traceback). Gates without both blocks (e.g. G0's deterministic-tool gate) are inert.
+    """
+    gate_file = BENCHMARKS_ROOT / KNOWN_GATES[gate] / "gate.yaml"
+    try:
+        data = yaml.safe_load(gate_file.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise UsageError(f"unreadable gate.yaml ({gate_file}): {exc.__class__.__name__}") from exc
+    if not isinstance(data, dict):
+        return
+    actor = data.get("actor")
+    grader = data.get("grader")
+    if not isinstance(actor, dict) or not isinstance(grader, dict):
+        return
+    # NFR1: the actor must never grade itself. Same model id is the collision — a different
+    # `context` string does NOT make the same underlying model an independent grader (it would
+    # still grade its own output family), so the guard fires on model identity regardless of
+    # context. (harness §8 phrases it "same model + same context"; this is the stronger reading.)
+    if actor.get("model") == grader.get("model"):
+        raise UsageError(
+            f"actor==grader identity collision in {gate_file}: both resolve to model "
+            f"{actor.get('model')!r} (NFR1: the actor must never grade itself — the grader must "
+            f"be a different model)"
+        )
+
+
 def run_gate(gate: str, criterion_id: str | None = None) -> tuple[list[dict], int]:
     """Run ``gate`` against the stub; return (reports, exit_code). Never raises UsageError:
     it is converted to an exit-2 signal by ``main`` — but here we let it propagate so callers
     (tests) can assert on it. The stub run itself never raises."""
-    criteria = _filter_criteria(_load_gate(gate), criterion_id)
+    # Validate the gate (known id + parseable gate.yaml) first, then run the actor==grader
+    # identity preflight BEFORE the --criterion filter so a non-matching --criterion cannot skip
+    # the NFR1 identity check.
+    all_criteria = _load_gate(gate)
+    _preflight_actor_grader(gate)
+    criteria = _filter_criteria(all_criteria, criterion_id)
     bridge = StubBridge()
     reports: list[dict] = []
     for criterion in criteria:
         outcome = bridge.call(f"criterion:{criterion['id']}")
+        criterion = {**criterion, "gate": criterion.get("gate", gate)}
         reports.append(build_report(criterion, outcome))
 
     all_passed = all(r["verdict"] == "OK" for r in reports)
@@ -409,6 +481,8 @@ def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
     attest.add_argument("--run", dest="run_id", required=True, help="run id")
     attest.add_argument("--type", dest="token_type", required=True, help="token type")
     attest.add_argument("--outcome", default="PASS", help="token outcome (PASS/FAIL)")
+    faults = sub.add_parser("faults")
+    faults.add_argument("gate", help="gate id, e.g. G1")
     return parser.parse_args(argv)
 
 
@@ -422,6 +496,8 @@ def _run_subcommand(argv: list[str]) -> int:
             return run_command(args.gate, args.run_id)
         if args.command == "verdict":
             return verdict_command(args.gate, args.run_id)
+        if args.command == "faults":
+            return faults_command(args.gate)
         return attest_command(args.gate, args.run_id, args.token_type, args.outcome)
     except UsageError as exc:
         print(f"error: {exc}", file=sys.stderr)

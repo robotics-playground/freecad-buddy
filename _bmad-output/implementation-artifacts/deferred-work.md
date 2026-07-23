@@ -426,3 +426,43 @@ location: n/a
 reason: FIXED — the offscreen render used a single fixed `SoDirectionalLight`, so faces angled away from its world-space direction rendered near-black, diverging from FreeCAD's viewport (which uses a camera-following headlight). Found by the TC-06 visual-fidelity comparison (MCP render vs. a `PrintWindow` capture of the live FreeCAD window). `render_probe._add_lighting` now aims the headlight along the camera view direction (`SbRotation.multVec` of the orientation quaternion on -Z) and adds `SoEnvironment.ambientIntensity=0.7` (empirically fit to the viewport tone: a lit face reads RGB ~(158,165,169), the ambient reproduces ~(159,164,169)); confirmed against `docs/references/FreeCAD/src/Gui/View3DInventorViewer.cpp` headlight setup. Verified in H1: side faces render shaded grey matching the viewport, not black. No open action — recorded so the visual-fidelity check and its capture method (Win32 `PrintWindow` flag `2 = PW_RENDERFULLCONTENT`) are discoverable. ### DW-4: query_screenshot default render set includes Sketcher::SketchObject (sketch leaks into the scene) origin: TC-06 render-visual-fidelity manual test, 2026-07-23 location: src/freecad_buddy/usecases/screenshot.py (`_is_default_renderable` / `_NON_RENDER_TYPES`) severity: low reason: A sketch has a non-null `Shape` (edges/wires), so `_is_default_renderable` passes it; the skip-list catches only `PartDesign::Body` + `App::Origin/Line/Plane/Point`. Rendering the live Pad returned `scene.rendered_objects = ["Sketch001", "Pad"]` where the viewport shows only the Pad solid (Sketch hidden). Benign in that case (the sketch is coplanar with a pad face, invisible), but the default set is meant to be the shape-bearing leaf solids (integration-mcp-freecad §6). Same default-view-contract call as the earlier spec-1-9 `Visibility`-honoring entry — resolve together (add `Sketcher::SketchObject` to the skip-list, gate on `len(Shape.Solids) > 0`, or honor live `Visibility`), Phase-1 assistant surface.
 status: done 2026-07-23
 resolution: Added `Sketcher::SketchObject` to `_NON_RENDER_TYPES`, so a sketch no longer leaks into the default (no-`include`) render set — an explicit `include` still renders it. The separate "honor live `Visibility`" question (a Phase-1 default-view-contract UX decision) stays open under the spec-1-9 Visibility entry above.
+
+### DW-5: G1 broken-doc break kinds unverified on the FreeCAD 1.0.x leg
+origin: review-edge-case-hunter, spec-2-1-entry-gate-g1e-eval-rubric-grader
+source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
+severity: low
+location: benchmarks/g1/dev/broken-docs/build_broken_docs.py (_overconstrained / _cut_missing_tool / _pad_missing_sketch / _broken_expression)
+reason: The 30 broken-recompute fixtures were verified genuinely-in-error only on local FreeCAD 1.1. A different leg (1.0.x) could conceivably not error a given break kind on open+recompute (e.g. auto-drop a redundant sketch constraint, or tolerate a Cut whose Tool was removed). This fails HONESTLY if it happens — the infc self-check (`test_broken_docs_g1`) runs on both blocking CI legs and asserts each named object has a non-empty getStatusString(), so a non-broken fixture surfaces as a red CI leg, not a silent pass. Recorded so that if the 1.0.x infc leg flags a fixture, the fix is to swap that case to a cross-leg-reliable break kind. No action unless CI flags it.
+status: open
+
+### DW-6: build_broken_docs import side-effect guard is argv-based
+origin: review-edge-case-hunter, spec-2-1-entry-gate-g1e-eval-rubric-grader
+source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
+severity: low
+location: benchmarks/g1/dev/broken-docs/build_broken_docs.py (`_is_top_level_script`)
+reason: FreeCADCmd sets `__name__` to the file stem (not `__main__`), so the generator guards top-level execution by matching `sys.argv[1]` against `__file__`. The infc self-check imports the module (for `gen.CASES`) under a run where `argv[1]` is `tests/run_tests.py`, so `build_all()` does not fire — verified green. The residual edge: a hypothetical discovery runner that passed the generator's own path as argv[1] would re-trigger a rebuild-on-import, overwriting the 30 committed fixtures. Low risk (no such runner exists); recorded in case the generator is ever imported by a path-passing harness.
+status: open
+
+### DW-7: merge_validators_yaml block-preservation is untested from a verify-only tree
+origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader
+source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
+severity: low
+location: benchmarks/g0/export-fault-injection/score_export_verify.py (`merge_validators_yaml`), consumed by benchmarks/g1/fault-injection/score_grader.py
+reason: The shared `merge_validators_yaml` read-merge-write is the mechanism every fault scorer uses so none clobbers another's blocks (grader appended while the four `verify_*` blocks survive verbatim). It is only ever exercised against the already-populated committed `validators.yaml`, so a regression in `_split_blocks`/merge that dropped a sibling block on a *fresh* write (starting from a verify-only YAML) would go uncaught by the G1 tests — and the G0 export scorer shares the same untested seam. Pre-existing shared-plumbing gap surfaced by the 2.1 review, not caused by this story's core change. Fix: a unit test feeding a verify-only YAML through `merge_validators_yaml({"grader": ...})` asserting all five top-level keys survive.
+status: open
+
+### DW-8: grader AND-conjunction is discriminator-tested for only one break kind
+origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader (follow-up review 2026-07-24)
+source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
+severity: low
+location: benchmarks/g1/fault-injection/ (`fault-and-discriminator-boss` is the only right-object+wrong-cause case)
+reason: The grader PASSes iff object AND cause both match. Only `fault-and-discriminator-boss` (broken-expression `be` kind) proves the grader is AND not OR — a case with the RIGHT object plus a DIFFERENT diagnosis's cause (own cause absent), which an OR grader would wrongly PASS. The other three break kinds (over-constrained `oc`, pad-missing-sketch `pd`, cut-missing-tool `cut`) have no AND-discriminator: a regression turning the grader into OR-of(object,cause) for those kinds would not be caught, because their wrong-object and wrong-cause cases each still fail an OR grader on one leg. Coverage gap, not a shipped defect (the grader is AND today). Fix: add one right-object+foreign-cause discriminator case per remaining break kind.
+status: open
+
+### DW-9: committed grader validator_sha does not cover the fault-case files, so a score-preserving suite edit slips --check
+origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader (follow-up review 2026-07-24)
+source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
+severity: low
+location: benchmarks/g1/fault-injection/score_grader.py (`_validator_sha` hashes only grader.py + rubric.md)
+reason: `validator_sha` = sha256(grader.py + rubric.md); the fault `case.yaml` files (candidate_answers, cause_keywords, expectations) are NOT in the hash. `--check` recomputes the live score and compares committed sensitivity/false_alarm to the fresh run, so any edit that CHANGES the score is still caught. The residual gap: an edit that leaves the aggregate rate unchanged (swap one detected planted answer for another equally-detected one; add a planted case that is also detected) mutates what the sensitivity number measures while keeping validator_sha and the numbers identical, so `--check` reports "committed score matches" over a changed suite. Low consequence (a score-changing edit is caught; the ≥10-planted+≥1-control degenerate guard still holds). Fix: fold a hash of the sorted fault `case.yaml` set into `validator_sha` so any suite mutation stales the committed score.
+status: open

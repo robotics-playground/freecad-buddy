@@ -1,0 +1,13 @@
+id: g1-fault-wrong-cause-spacer
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-be-spacer-height
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: SpacerHeight
+  cause_keywords: [expression, binding]
+candidate_answer: "SpacerHeight fails because its material property is set to an unsupported value."

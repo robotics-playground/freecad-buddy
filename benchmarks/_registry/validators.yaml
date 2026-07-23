@@ -61,3 +61,18 @@ verify_export_step:
       high: 1.0
       n: 2
       r: 2
+
+grader:
+  suite: g1/fault-injection/
+  validator_sha: "137c6fbfbeefc6bbaa2d870e73ebfd9f7a9fed30f7b06a5ca5fd0a11236feb17"
+  last_run:
+    run_id: gr-2026-07-24-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-07-24
+    wilson_ci:
+      rate: 1.0
+      low: 0.7719
+      high: 1.0
+      n: 13
+      r: 13

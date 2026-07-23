@@ -1,0 +1,13 @@
+id: g1-fault-wrong-object-webpad
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-pd-web-pad
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: WebPad
+  cause_keywords: [missing sketch, profile, no object linked]
+candidate_answer: "The RibPad feature failed because its profile sketch was deleted from the body."

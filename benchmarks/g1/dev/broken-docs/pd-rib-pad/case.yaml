@@ -1,0 +1,13 @@
+id: g1-broken-pd-rib-pad
+gate: g1
+criterion: G1.2
+tier: n30
+# Genuinely-broken recompute fixture: object RibPad is in error after recompute.
+# expected.object is *the* failing object (G1.2 requires *the*, not *an*);
+# cause_keywords are the rubric-keyed terms the deterministic grader matches.
+expected:
+  object: RibPad
+  cause: "PartDesign pad lost its profile sketch (base sketch deleted)"
+  cause_keywords: [missing sketch, no object linked, deleted profile, profile, base sketch]
+fixture: fixture.FCStd
+provenance: ../../../_registry/provenance/g1-broken-pd-rib-pad.yaml

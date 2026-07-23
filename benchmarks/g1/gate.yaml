@@ -1,0 +1,69 @@
+# Declarative mirror of the G1 exit-criteria table (spec-freecad-buddy/phase-gates.md).
+# The gate runner READS this — it never hardcodes the criteria. In --stub mode every
+# criterion FAILS honestly (INVALID_INPUT: no assistant exists yet, AD-19).
+#
+# G1 is forward-declared: the read-only assistant lands in Story 2.2/2.3. This story lands the
+# eval set + broken-doc fixtures + grader + fault suite so the machinery fails honestly against
+# a stub first, and the deterministic grader's sensitivity is scored NOW (gate faults g1).
+#
+# Tiered n10 -> n30 rule (decision 008): the 30 broken-doc fixtures under dev/broken-docs/ carry
+# a `tier: n10` (10, spanning all 4 break kinds) / `tier: n30` (20) tag. Story 2.2's actor run
+# grades n=10 first and escalates to the full n=30 only on a perfect 10/10; this story only lands
+# + tiers the set.
+#
+# Grader-verdict schema (harness §8): GraderVerdict = {pass, matched_expected, rationale}. The
+# fault scorer maps each verdict into a contracts ValidationReport and computes sensitivity/FA +
+# Wilson CI; DETECT (planted-wrong) is "detected" when pass == False, a clean control is a false
+# alarm when pass == False.
+
+gate: G1
+
+# Actor and grader MUST resolve to DIFFERENT model ids (NFR1, harness §8): the actor never
+# grades itself. The runner's G1 preflight hard-fails INVALID_INPUT (exit 2) if they collide.
+# Both are placeholder pins — the LIVE actor/grader backends land in Story 2.2/2.3; the shipped
+# grader now is the FreeCAD-free deterministic expected-findings matcher (grader.py), scored by
+# gate faults g1. The `grader` block names the deterministic grader + declares the seam a
+# model-backed grader plugs into later.
+actor:
+  model: placeholder-actor-model
+  context: assistant-under-test
+grader:
+  model: deterministic-expected-findings
+  context: independent-grader
+  implementation: benchmarks/g1/grader.py
+
+# Gate-level required human tokens (validation-harness-design.md §7): the rubric review and the
+# >=20% spot-audit of passing results (checked for PRESENCE at exit, Story 2.4; not performed
+# here).
+required_tokens: [rubric_review, spot_audit]
+
+# The sealed held-out split is unsealed only at Gate G1 exit (Story 2.4); dev iteration touches
+# dev/ only. The runner must never sweep g1/heldout/.
+verdict:
+  heldout: sealed
+
+criteria:
+  - id: G1.1
+    text: "Answer quality on the 50-question eval (R=3, independent grader per rubric)"
+    pass_rule: "pass rate >=80%"
+    cited_validators: [grader]
+  - id: G1.2
+    text: "Error diagnosis: 30-case fixture set; grade n=10 first, escalate to n=30 on 10/10"
+    pass_rule: "n=10 >=8/10 to pass; 10/10 escalates to n=30 with Wilson CI (decision 008)"
+    cited_validators: [grader]
+  - id: G1.3
+    text: "Large-tree handling on 50+-feature docs (context + latency)"
+    pass_rule: "No context overflow; summarized queries used; median latency <=15s"
+    cited_validators: []
+  - id: G1.4
+    text: "Model-agnostic bridge: re-run the G1.1 sample on a second backend"
+    pass_rule: "Both backends complete the eval through the identical tool surface"
+    cited_validators: []
+  - id: G1.5
+    text: "Skills drafted + loaded (freecad-fundamentals, freecad-troubleshooting)"
+    pass_rule: "Present, CI shape-check green, load recorded in run logs"
+    cited_validators: []
+  - id: G1.6
+    text: "Read-only guarantee: zero mutation tools registered for the assistant"
+    pass_rule: "Zero mutation tools registered"
+    cited_validators: []

@@ -1,0 +1,13 @@
+id: g1-fault-wrong-cause-pillar
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-be-pillar
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: Pillar
+  cause_keywords: [expression, binding, reference]
+candidate_answer: "Pillar is broken because its placement angle exceeds the allowed rotation limit."

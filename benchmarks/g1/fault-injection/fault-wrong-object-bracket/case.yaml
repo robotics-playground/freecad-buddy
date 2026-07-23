@@ -1,0 +1,13 @@
+id: g1-fault-wrong-object-bracket
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-oc-bracket-plate
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: BracketPlate
+  cause_keywords: [conflicting]
+candidate_answer: "The recompute fails because MountSlot has conflicting constraints that over-constrain the sketch."

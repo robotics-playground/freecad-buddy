@@ -1,0 +1,7 @@
+artifact: g1/dev/broken-docs/cut-frame-cutout/fixture
+kind: broken-doc-fixture
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: "Boolean operation orphaned when a linked operand is deleted"
+license_checked: {by: TanNT, date: 2026-07-24}

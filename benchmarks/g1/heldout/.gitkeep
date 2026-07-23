@@ -1,0 +1,11 @@
+# SEALED G1 heldout split (AD-13).
+#
+# This directory holds the sealed G1 evaluation set. It is NEVER consumed by any routine CI
+# job in ci.yml or canary.yml. The benchmark runner refuses to touch it without an explicit
+# gate-exit flag, and only a manually-dispatched gate-exit workflow (added at Gate G1 exit,
+# Story 2.4) may pass that flag. Do NOT add a CI glob that sweeps this path.
+#
+# Full heldout.tar.age / SEAL.json sealing ceremony is exercised at Gate G1 exit (Story 2.4),
+# NOT here — no age encryption or SEAL machinery ships in this story.
+#
+# Future contents: sha256 MANIFEST + a SEALED marker file.

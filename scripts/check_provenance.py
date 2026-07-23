@@ -93,17 +93,40 @@ def _declared_export_file(case_yaml: Path) -> str | None:
     return None
 
 
+def _is_text_case(case_yaml: Path) -> bool:
+    """Whether a case is a text case (a planted answer the grader judges), carrying no fixture.
+
+    A G1 grader fault case declares a ``candidate_answer`` and no geometry — there is no
+    ``.FCStd``/exported file to carry, so it is exempt from the fixture-presence rule. The
+    exemption is scoped to a case that declares NEITHER a geometry ``fixture`` NOR an
+    ``export_file`` NOR an ``expected`` geometry block: a case that declares a fixture is never
+    exempted even if a stray ``candidate_answer`` key is also present (a mis-authored geometry
+    case must still be flagged for its missing fixture).
+    """
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return False
+    if not isinstance(data, dict) or "candidate_answer" not in data:
+        return False
+    declares_geometry = ("fixture" in data) or ("export_file" in data) or ("expected" in data)
+    return not declares_geometry
+
+
 def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
     """A case dir with a case.yaml must carry its declared fixture.
 
     A geometry-fixture case must carry ``fixture.FCStd``; an export-fault case that declares an
     ``export_file`` must carry that exported file instead (a written ``.stl``/``.3mf``/``.step``
-    is the fixture, there is no ``.FCStd``).
+    is the fixture, there is no ``.FCStd``). A text case (one carrying a ``candidate_answer`` the
+    grader judges) has no geometry and is exempt.
     """
     violations: list[str] = []
     for case_yaml in sorted(benchmarks_root.rglob("case.yaml")):
         parts = case_yaml.relative_to(benchmarks_root).parts
         if any(part in _EXCLUDED_DIRS for part in parts):
+            continue
+        if _is_text_case(case_yaml):
             continue
         rel = case_yaml.parent.relative_to(benchmarks_root).as_posix()
         export_file = _declared_export_file(case_yaml)

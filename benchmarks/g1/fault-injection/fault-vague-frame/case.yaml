@@ -1,0 +1,13 @@
+id: g1-fault-vague-frame
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-cut-frame-cutout
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: FrameCutout
+  cause_keywords: [missing tool, boolean]
+candidate_answer: "Recompute error. The model needs to be rebuilt from scratch to fix the problem."

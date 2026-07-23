@@ -1,0 +1,13 @@
+id: g1-fault-vague-bracketslot
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-cut-bracket-slot
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: BracketSlot
+  cause_keywords: [missing tool, linked object]
+candidate_answer: "The part is invalid. There must be a bad feature in the tree causing the failure."

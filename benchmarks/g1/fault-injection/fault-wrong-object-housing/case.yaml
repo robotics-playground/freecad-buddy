@@ -1,0 +1,13 @@
+id: g1-fault-wrong-object-housing
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-cut-housing-bore
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: HousingBore
+  cause_keywords: [missing tool, linked object]
+candidate_answer: "The BlockHole cut is broken because its tool object was removed from the boolean."

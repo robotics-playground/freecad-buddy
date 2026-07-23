@@ -1,0 +1,13 @@
+id: g1-fault-wrong-object-lug
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-be-lug
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: Lug
+  cause_keywords: [expression, binding, not found]
+candidate_answer: "The Tab object has a broken expression binding to a missing reference object."

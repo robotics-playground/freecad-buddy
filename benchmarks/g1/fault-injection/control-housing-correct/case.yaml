@@ -1,0 +1,13 @@
+id: g1-control-housing-correct
+gate: g1
+targets_validator: grader
+fault:
+  kind: clean_control
+  expectation: PASS_CLEAN
+question_ref: g1-broken-cut-housing-bore
+# Text case (no .FCStd): the grader judges candidate_answer against expected_findings.
+# expected_findings is the TRUE correct diagnosis; a DETECT candidate deviates from it.
+expected_findings:
+  object: HousingBore
+  cause_keywords: [missing tool, linked object]
+candidate_answer: "HousingBore is a boolean cut whose tool object was removed, so the linked object is missing. Restore the tool operand to fix the cut."
