@@ -234,3 +234,11 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-9-view-controlled-screenshots.md`
   summary: FIXED — the offscreen render used a single fixed `SoDirectionalLight`, so faces angled away from its world-space direction rendered near-black, diverging from FreeCAD's viewport (which uses a camera-following headlight). Found by the TC-06 visual-fidelity comparison (MCP render vs. a `PrintWindow` capture of the live FreeCAD window).
   evidence: `render_probe._add_lighting` now aims the headlight along the camera view direction (`SbRotation.multVec` of the orientation quaternion on -Z) and adds `SoEnvironment.ambientIntensity=0.3`; confirmed against `docs/references/FreeCAD/src/Gui/View3DInventorViewer.cpp` headlight setup. Verified in H1 (`_automation/tc06_render_lit.png`): side faces now render shaded grey matching the viewport, not black. No open action — recorded so the visual-fidelity check and its capture method (Win32 `PrintWindow` flag `2 = PW_RENDERFULLCONTENT`) are discoverable.
+
+### DW-4: query_screenshot default render set includes Sketcher::SketchObject (sketch leaks into the scene)
+
+origin: TC-06 render-visual-fidelity manual test, 2026-07-23
+location: src/freecad_buddy/usecases/screenshot.py (`_is_default_renderable` / `_NON_RENDER_TYPES`)
+severity: low
+reason: A sketch has a non-null `Shape` (edges/wires), so `_is_default_renderable` passes it; the skip-list catches only `PartDesign::Body` + `App::Origin/Line/Plane/Point`. Rendering the live Pad returned `scene.rendered_objects = ["Sketch001", "Pad"]` where the viewport shows only the Pad solid (Sketch hidden). Benign in that case (the sketch is coplanar with a pad face, invisible), but the default set is meant to be the shape-bearing leaf solids (integration-mcp-freecad §6). Same default-view-contract call as the earlier spec-1-9 `Visibility`-honoring entry — resolve together (add `Sketcher::SketchObject` to the skip-list, gate on `len(Shape.Solids) > 0`, or honor live `Visibility`), Phase-1 assistant surface.
+status: open
