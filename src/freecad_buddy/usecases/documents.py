@@ -30,6 +30,32 @@ def _ok_envelope(structured: dict) -> ResultEnvelope:
     }
 
 
+# FreeCAD marks a failed object with "Invalid"/"Error" in obj.State; an object still "Touched"
+# after a full recompute was silently skipped (its dependencies never resolved) — also an error.
+_RECOMPUTE_ERROR_STATES = frozenset({"Invalid", "Error", "Touched"})
+
+
+def _recompute_error_state(state: list) -> bool:
+    """Whether an object's post-recompute ``State`` list indicates it did not compute cleanly."""
+    return any(token in _RECOMPUTE_ERROR_STATES for token in state)
+
+
+def _recompute_error_envelope(structured: dict, errors: list) -> ResultEnvelope:
+    """A ``RECOMPUTE_ERROR`` envelope naming every object left in an error state."""
+    names = [entry["name"] for entry in errors]
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "RECOMPUTE_ERROR",
+        "detail": {
+            "code": "recompute.failed_objects",
+            "message": "; ".join(f"{e['name']}: {e['error']}" for e in errors),
+            "objects": names,
+        },
+        "structured_content": structured,
+        "text": mirror_text(structured),
+    }
+
+
 class DocumentRegistry:
     """Maps opaque session handles to live FreeCAD ``App.Document`` objects.
 
@@ -164,16 +190,20 @@ class DocumentRegistry:
             return _ok_envelope(structured)
 
     def document_recompute(self, doc: str | None = None) -> ResultEnvelope:
-        """Full recompute; report the touched-object count and per-object error states."""
+        """Full recompute; report per-object error states and fail on any error.
+
+        An object left in an error state ("Invalid"/"Error" in ``State``, or still "Touched"
+        after the recompute — a silent skip) is reported. When any error is present the envelope
+        status is ``RECOMPUTE_ERROR``; a clean recompute is ``OK``.
+        """
         with self._lock:
             handle, document = self._resolve(doc)
             touched = document.recompute()
-            # FreeCAD flags an errored object with "Invalid" in obj.State; "Error" is not emitted.
             errors = [
-                {"name": obj.Name, "error": list(state)}
+                {"name": obj.Name, "error": state}
                 for obj in document.Objects
                 for state in [list(getattr(obj, "State", None) or [])]
-                if "Invalid" in state
+                if _recompute_error_state(state)
             ]
             structured = {
                 "doc": handle,
@@ -181,6 +211,8 @@ class DocumentRegistry:
                 "touched": int(touched) if touched is not None else 0,
                 "errors": errors,
             }
+            if errors:
+                return _recompute_error_envelope(structured, errors)
             return _ok_envelope(structured)
 
     def document_list(self) -> ResultEnvelope:

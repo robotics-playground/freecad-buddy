@@ -9,6 +9,9 @@ Rules enforced (dependencies point inward only):
   adapters/ ...... may import contracts/usecases + third-party; NOT hosts.
   hosts/ ......... top ring; may import anything inward.
   Qt / FreeCADGui / PySide* allowed ONLY in hosts/**, adapters/marshal.py, adapters/render_probe.py.
+  Raw pivy renderer . no ``pivy.coin.SoOffscreenRenderer`` anywhere (decision 003): the
+                   offscreen render path must use ``FreeCADGui.SoQtOffscreenRenderer`` (#13356),
+                   never the raw pivy renderer, which lacks FreeCAD's GL-context setup.
   ActiveDocument . no ``FreeCAD.ActiveDocument`` / ``App.ActiveDocument`` /
                    ``setActiveDocument`` anywhere: every tool operates on an explicit doc handle,
                    never the process-global active document (a screenshot/query keying on it
@@ -37,6 +40,10 @@ FREECAD_APP_WHITELIST = frozenset(
 # Module names FreeCAD is bound to; ``<name>.ActiveDocument`` on any of these is the banned form.
 FREECAD_MODULE_ALIASES = frozenset({"FreeCAD", "App"})
 ACTIVE_DOCUMENT_ATTRS = frozenset({"ActiveDocument", "setActiveDocument"})
+
+# Raw pivy renderer ban (decision 003): the offscreen path must go through
+# ``FreeCADGui.SoQtOffscreenRenderer``, never the raw pivy ``SoOffscreenRenderer``.
+_RAW_RENDERER_ATTR = "SoOffscreenRenderer"
 
 QT_MODULES = frozenset(
     {"FreeCADGui", "PySide", "PySide2", "PySide6", "PyQt5", "PyQt6", "shiboken2", "shiboken6"}
@@ -162,6 +169,33 @@ def _check_active_document(tree: ast.Module, relpath: str) -> list[Violation]:
     return violations
 
 
+def _check_raw_renderer(tree: ast.Module, relpath: str) -> list[Violation]:
+    """Flag every ``SoOffscreenRenderer`` attribute access (the raw pivy renderer, decision 003).
+
+    ``FreeCADGui.SoQtOffscreenRenderer`` is a distinct attribute name and is unaffected; only the
+    raw pivy ``coin.SoOffscreenRenderer`` (or a ``from pivy.coin import SoOffscreenRenderer`` use)
+    is banned — it lacks FreeCAD's GL-context setup (#13356).
+    """
+    violations: list[Violation] = []
+    for node in ast.walk(tree):
+        hit = False
+        if isinstance(node, ast.Attribute) and node.attr == _RAW_RENDERER_ATTR:
+            hit = True
+        elif isinstance(node, ast.ImportFrom) and any(
+            a.name == _RAW_RENDERER_ATTR for a in node.names
+        ):
+            hit = True
+        if hit:
+            violations.append(
+                Violation(
+                    relpath, node.lineno,
+                    f"raw pivy '{_RAW_RENDERER_ATTR}' is banned (decision 003); use "
+                    f"FreeCADGui.SoQtOffscreenRenderer",
+                )
+            )
+    return violations
+
+
 def _check_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[Violation]:
     relparts = tuple(Path(relpath).parts)
     ring = _ring_of(relparts)
@@ -180,6 +214,7 @@ def _check_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[Violat
         return [Violation(relpath, getattr(exc, "lineno", 0) or 0, f"unparseable file: {exc}")]
 
     violations.extend(_check_active_document(tree, relpath))
+    violations.extend(_check_raw_renderer(tree, relpath))
 
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -258,6 +293,7 @@ def _check_root_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[V
         return [Violation(relpath, getattr(exc, "lineno", 0) or 0, f"unparseable file: {exc}")]
 
     violations.extend(_check_active_document(tree, relpath))
+    violations.extend(_check_raw_renderer(tree, relpath))
 
     relparts = tuple(Path(relpath).parts)
     for node in ast.walk(tree):

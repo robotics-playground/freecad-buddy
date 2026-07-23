@@ -76,14 +76,24 @@ def _resolve_object(document: object, name: str | None):
     return obj
 
 
-def _json_safe(value: object) -> object:
-    """Return a JSON-safe view of a property value, stringifying anything unsupported."""
+_JSON_MAX_DEPTH = 8
+
+
+def _json_safe(value: object, _depth: int = 0) -> object:
+    """Return a JSON-safe view of a property value, stringifying anything unsupported.
+
+    Recursion is bounded at ``_JSON_MAX_DEPTH`` so a deeply-nested or self-referential property
+    value (a scripted ``PropertyPythonObject`` holding a cycle) is stringified at the depth cap
+    rather than overflowing the stack.
+    """
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
+    if _depth >= _JSON_MAX_DEPTH:
+        return str(value)
     if isinstance(value, (list, tuple)):
-        return [_json_safe(item) for item in value]
+        return [_json_safe(item, _depth + 1) for item in value]
     if isinstance(value, dict):
-        return {str(key): _json_safe(item) for key, item in value.items()}
+        return {str(key): _json_safe(item, _depth + 1) for key, item in value.items()}
     return str(value)
 
 
@@ -190,7 +200,10 @@ def query_mass_properties(
     """Report volume, area, bounding box, centre of mass, and topology counts of an object's shape.
 
     Reads the currently-stored ``obj.Shape``. Dimensional fields carry explicit units
-    (``mm``/``mm^2``/``mm^3``). An object with no ``Shape`` raises ``ValidationError``.
+    (``mm``/``mm^2``/``mm^3``). A ``solid`` flag records whether the shape encloses volume; for a
+    non-solid (shell/wire/face/compound-of-open) ``volume`` and ``com`` are reported ``null`` so
+    an area/length-based centroid is never presented as volumetric mass. An object with no
+    ``Shape`` raises ``ValidationError``.
     """
 
     def read(_handle: str, document: object) -> ResultEnvelope:
@@ -200,12 +213,15 @@ def query_mass_properties(
         if shape is None or (is_null is not None and is_null()):
             raise ValidationError(f"object has no queryable shape: {object}")
         bbox = shape.BoundBox
-        # CenterOfMass is unavailable on some shape types (e.g. Part.Compound); report null com
-        # rather than failing the whole query — volume/area/bbox/counts remain valid.
-        com = getattr(shape, "CenterOfMass", None)
+        is_solid = len(shape.Solids) > 0
+        # CenterOfMass is meaningful only for a volumetric solid (and is unavailable on some shape
+        # types, e.g. Part.Compound). Report null volume/com for a non-solid so an area/length
+        # centroid is never presented as volumetric mass; bbox/area/counts stay valid.
+        com = getattr(shape, "CenterOfMass", None) if is_solid else None
         structured = {
             "name": obj.Name,
-            "volume": _quantity(shape.Volume, "mm^3"),
+            "solid": is_solid,
+            "volume": _quantity(shape.Volume, "mm^3") if is_solid else None,
             "area": _quantity(shape.Area, "mm^2"),
             "bbox": {
                 "xmin": _quantity(bbox.XMin, "mm"),
@@ -261,6 +277,22 @@ def query_dependencies(
     return registry.with_document(doc, read)
 
 
+def _construction_flag(sketch_obj: object, geo: object, index: int) -> bool:
+    """Whether the sketch geometry at ``index`` is construction geometry.
+
+    Prefers ``SketchObject.getConstruction(index)`` (authoritative on builds that migrate the
+    flag off the raw geometry onto the ``GeometryFacade``); falls back to the raw geometry's
+    ``Construction`` attribute when the method is unavailable.
+    """
+    getter = getattr(sketch_obj, "getConstruction", None)
+    if callable(getter):
+        try:
+            return bool(getter(index))
+        except Exception:  # noqa: BLE001 - fall back to the raw attribute if the call is unusable
+            pass
+    return bool(getattr(geo, "Construction", False))
+
+
 def query_sketch_info(
     registry: DocumentRegistry, doc: str | None = None, sketch: str | None = None
 ) -> ResultEnvelope:
@@ -279,7 +311,7 @@ def query_sketch_info(
             {
                 "index": index,
                 "type": type(geo).__name__,
-                "construction": bool(getattr(geo, "Construction", False)),
+                "construction": _construction_flag(obj, geo, index),
             }
             for index, geo in enumerate(obj.Geometry)
         ]

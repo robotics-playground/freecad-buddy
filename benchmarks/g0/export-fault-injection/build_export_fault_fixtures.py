@@ -163,7 +163,13 @@ def _step_dropped_solid(case_dir: Path) -> Path:
 
 
 def _step_unit_lie(case_dir: Path) -> Path:
-    """STEP of a 1/10-scale box mislabelled as the full-scale mm reference."""
+    """STEP of a 1/10-scale box mislabelled as the full-scale mm reference.
+
+    A ``write.step.unit=M`` "unit lie" is NOT usable as a volume fault: the STEP unit is a
+    file-unit annotation, so a mm box written in metres re-imports back to the same mm volume
+    (round-trip-neutral, verified empirically). The detectable unit fault is therefore a genuine
+    geometry-scale mismatch — a 1/10-scale box referenced against the full-scale facts.
+    """
     Part.setStaticValue("write.step.unit", "MM")
     target = case_dir / "export.step"
     Part.makeBox(1, 2, 3).exportStep(str(target))

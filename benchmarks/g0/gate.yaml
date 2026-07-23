@@ -35,4 +35,4 @@ criteria:
   - id: G0.5
     text: "STEP round-trip fidelity (create → export → re-import → compare)"
     pass_rule: "Volume ±0.1%, isValid, topology counts equal"
-    cited_validators: [verify_shape]
+    cited_validators: [verify_export_step]

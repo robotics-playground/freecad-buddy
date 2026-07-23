@@ -20,6 +20,7 @@ class AuditRecord(TypedDict, total=False):
     tool: str
     doc: DocHandle
     params_digest: str
+    code: str  # exec source (security-and-service §1): the executed code, for the exec event only
     fingerprint_before: str | None
     fingerprint_after: str | None
     verify_verdict: TerminalStatus | None

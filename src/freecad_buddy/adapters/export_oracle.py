@@ -39,7 +39,12 @@ def _read_binary_stl_facets(data: bytes) -> list[tuple]:
 
 
 def _read_ascii_stl_facets(text: str) -> list[tuple]:
-    """Parse an ASCII STL into a list of triangles ``(normal, v0, v1, v2)``."""
+    """Parse an ASCII STL into a list of triangles ``(normal, v0, v1, v2)``.
+
+    A facet block whose vertex count is not exactly three is a malformed (truncated) file, not a
+    facet to silently drop: raise ``ValueError`` so the corruption surfaces as a verification FAIL
+    rather than a silently-normalised mesh.
+    """
     facets: list[tuple] = []
     normal = (0.0, 0.0, 0.0)
     verts: list[tuple] = []
@@ -53,8 +58,11 @@ def _read_ascii_stl_facets(text: str) -> list[tuple]:
         elif line[0] == "vertex" and len(line) >= 4:
             verts.append(tuple(float(x) for x in line[1:4]))
         elif line[0] == "endfacet":
-            if len(verts) == 3:
-                facets.append((normal, verts[0], verts[1], verts[2]))
+            if len(verts) != 3:
+                raise ValueError(
+                    f"malformed ASCII STL facet: expected 3 vertices, got {len(verts)}"
+                )
+            facets.append((normal, verts[0], verts[1], verts[2]))
     return facets
 
 
@@ -205,12 +213,13 @@ def _trimesh_checks(mesh, expected_volume: float, volume_band: float, oracle: st
     return {"oracle": oracle, "checks": checks, "ok": all(c["passed"] for c in checks)}
 
 
-def _lib3mf_mesh(model):
-    """Return the first mesh object in a lib3mf model, or ``None`` when there is none."""
+def _lib3mf_meshes(model) -> list:
+    """Return every mesh object in a lib3mf model (a multi-mesh container yields more than one)."""
+    meshes = []
     iterator = model.GetMeshObjects()
-    if iterator.MoveNext():
-        return iterator.GetCurrentMeshObject()
-    return None
+    while iterator.MoveNext():
+        meshes.append(iterator.GetCurrentMeshObject())
+    return meshes
 
 
 def _trimesh_from_lib3mf(mesh_obj):
@@ -233,11 +242,12 @@ def mesh3mf_oracle(
     """Run the lib3mf container layer and a trimesh geometry layer over a 3MF file.
 
     lib3mf asserts: the file parses, the declared unit is millimetre AND the source document was
-    mm (unit-lie guard), and ``IsManifoldAndOriented()`` holds (an open surface written as a model
-    object fails). The metadata count is reported as a non-verdict fact — missing metadata is not
-    a declared 3MF fault, so it never drives FAIL. trimesh asserts the same geometry checks as
-    the STL oracle, built from the lib3mf mesh arrays. Returns ``{oracle, checks, ok}`` with both
-    layers combined; a parse failure or missing mesh yields a single failed check.
+    mm (unit-lie guard), and ``IsManifoldAndOriented()`` holds for EVERY mesh object in the
+    container (an open surface written as a model object, or a defect in any 2nd+ mesh, fails).
+    The metadata count is reported as a non-verdict fact — missing metadata is not a declared 3MF
+    fault, so it never drives FAIL. trimesh asserts the same geometry checks as the STL oracle,
+    built from the first lib3mf mesh's arrays. Returns ``{oracle, checks, ok}`` with both layers
+    combined; a parse failure or missing mesh yields a single failed check.
     """
     import lib3mf
 
@@ -256,8 +266,8 @@ def mesh3mf_oracle(
     unit = int(model.GetUnit())
     unit_ok = unit == int(lib3mf.ModelUnit.MilliMeter) and bool(source_is_mm)
 
-    mesh_obj = _lib3mf_mesh(model)
-    if mesh_obj is None:
+    meshes = _lib3mf_meshes(model)
+    if not meshes:
         return {
             "oracle": "lib3mf",
             "checks": [
@@ -267,7 +277,10 @@ def mesh3mf_oracle(
             "ok": False,
         }
 
-    manifold = bool(mesh_obj.IsManifoldAndOriented())
+    # Manifold-check EVERY mesh object: a defect in the 2nd+ mesh of a multi-mesh container must
+    # fail, not pass on the first mesh's soundness alone.
+    non_manifold = sum(1 for mesh_obj in meshes if not bool(mesh_obj.IsManifoldAndOriented()))
+    manifold = non_manifold == 0
     metadata_count = int(model.GetMetaDataGroup().GetMetaDataCount())
 
     checks = [
@@ -277,12 +290,16 @@ def mesh3mf_oracle(
             "measured": {"unit": unit, "source_is_mm": bool(source_is_mm)},
             "passed": unit_ok,
         },
-        {"id": "lib3mf.manifold_and_oriented", "measured": manifold, "passed": manifold},
+        {
+            "id": "lib3mf.manifold_and_oriented",
+            "measured": {"meshes": len(meshes), "non_manifold": non_manifold},
+            "passed": manifold,
+        },
         {"id": "lib3mf.metadata_present", "measured": metadata_count, "passed": True},
     ]
 
     trimesh_leg = _trimesh_checks(
-        _trimesh_from_lib3mf(mesh_obj), expected_volume, volume_band, oracle="trimesh_3mf"
+        _trimesh_from_lib3mf(meshes[0]), expected_volume, volume_band, oracle="trimesh_3mf"
     )
     checks.extend(trimesh_leg["checks"])
     return {"oracle": "lib3mf", "checks": checks, "ok": all(c["passed"] for c in checks)}

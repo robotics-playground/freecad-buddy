@@ -56,6 +56,12 @@ class AuditSink:
         }
         if doc:
             record["doc"] = {"handle": doc}
+        # The exec path is the highest-risk one: persist the executed source, not only its digest,
+        # so an audit line can reproduce what ran (security-and-service §1).
+        if event == "exec":
+            code = params.get("code")
+            if isinstance(code, str):
+                record["code"] = code
         return record
 
     def before(self, event: str, tool: str, doc: str | None, params: dict) -> None:

@@ -5,9 +5,10 @@ with the case's reference ``assertions.checks`` against the fixture's object, an
 DETECT / PASS_CLEAN outcome. A planted ``DETECT`` case is detected when the verdict is
 non-OK; a ``clean_control`` is a false alarm when the verdict is non-OK. Computes
 ``sensitivity``/``false_alarm`` + a Wilson CI, hashes the validator source
-(``usecases/verify.py`` + ``usecases/fingerprint.py``) into ``validator_sha``, rewrites the
-``verify_shape`` block of ``_registry/validators.yaml`` with ``validator_sha`` + ``last_run``,
-prints a per-case detection table to stderr, and exits non-zero when the bars are not met.
+(``usecases/verify.py`` + ``usecases/fingerprint.py``) into ``validator_sha``, and rewrites ONLY
+the ``verify_shape`` block of ``_registry/validators.yaml`` via the shared
+``merge_validators_yaml`` read-merge-write (preserving the ``verify_export_*`` blocks and the file
+header). Prints a per-case detection table to stderr and exits non-zero when the bars are not met.
 
 pyyaml is an external-process dependency (AD-12); this scorer runs inside FreeCADCmd and so
 parses the small fixed ``case.yaml`` shape itself.
@@ -27,9 +28,15 @@ REPO_ROOT = HERE.parents[2]
 SRC = REPO_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+# The export scorer owns the shared read-merge-write for validators.yaml; import it by path so
+# both scorers write through one merge-writer and neither full-clobbers the other's blocks.
+_EXPORT_SCORER_DIR = REPO_ROOT / "benchmarks" / "g0" / "export-fault-injection"
+if str(_EXPORT_SCORER_DIR) not in sys.path:
+    sys.path.insert(0, str(_EXPORT_SCORER_DIR))
 
 from freecad_buddy.usecases import verify  # noqa: E402
 from freecad_buddy.usecases.documents import DocumentRegistry  # noqa: E402
+from score_export_verify import merge_validators_yaml  # noqa: E402
 
 VALIDATORS_YAML = REPO_ROOT / "benchmarks" / "_registry" / "validators.yaml"
 VALIDATOR_SOURCES = (
@@ -41,6 +48,14 @@ SENSITIVITY_BAR = 0.95
 FALSE_ALARM_BAR = 0.05
 
 _CHECK_RE = re.compile(r"\{(fn:.*)\}")
+
+# Seed header used only when validators.yaml does not yet exist; merge_validators_yaml preserves
+# an existing file's header verbatim.
+_HEADER = (
+    "# Per-validator fault-suite binding (validation-harness-design.md §6).\n"
+    "# A score is citable only while validator_sha matches the working tree "
+    "(edit the validator to stale it).\n"
+)
 
 
 def _parse_scalar(text: str):
@@ -132,14 +147,10 @@ def _score_case(registry: DocumentRegistry, case: dict) -> tuple[bool, str]:
         registry.document_close(handle)
 
 
-def _render_yaml(sha: str, run: dict) -> str:
-    """Render the ``verify_shape`` validators.yaml block, preserving the ``suite`` field."""
+def _render_block(sha: str, run: dict) -> str:
+    """Render the ``verify_shape`` validators.yaml block (merged via ``merge_validators_yaml``)."""
     wilson = run["wilson_ci"]
     return (
-        "# Per-validator fault-suite binding (validation-harness-design.md §6).\n"
-        "# Written by benchmarks/g0/fault-injection/score_verify_shape.py; a score is citable\n"
-        "# only while validator_sha matches the working tree (edit the validator to stale it).\n"
-        "\n"
         "verify_shape:\n"
         "  suite: g0/fault-injection/\n"
         f'  validator_sha: "{sha}"\n'
@@ -234,7 +245,9 @@ def main() -> int:
             "r": wilson["r"],
         },
     }
-    VALIDATORS_YAML.write_text(_render_yaml(_validator_sha(), run), encoding="utf-8")
+    existing = VALIDATORS_YAML.read_text(encoding="utf-8") if VALIDATORS_YAML.exists() else _HEADER
+    merged = merge_validators_yaml(existing, {"verify_shape": _render_block(_validator_sha(), run)})
+    VALIDATORS_YAML.write_text(merged, encoding="utf-8")
     sys.stderr.write(f"  wrote {VALIDATORS_YAML}\n")
 
     if sensitivity < SENSITIVITY_BAR or false_alarm > FALSE_ALARM_BAR:

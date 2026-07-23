@@ -23,6 +23,10 @@ logger = logging.getLogger("freecad_buddy.dispatch")
 
 _TRACEBACK_LIMIT = 4000
 
+# Client-error classes: expected traffic (bad handle/object/path/param). These log a single line,
+# not a traceback — only unexpected faults spill a full stack to stderr/addon.log.
+_EXPECTED_CLIENT_STATUSES = frozenset({"INVALID_INPUT", "TIMEOUT"})
+
 
 @dataclass(frozen=True)
 class RpcMethod:
@@ -40,7 +44,13 @@ class RpcMethod:
 
 def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False) -> ResultEnvelope:
     tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-    sys.stderr.write(tb)
+    # A client error (INVALID_INPUT — unknown handle/object/path, bad param) is expected traffic,
+    # not a fault: log it as one scannable line, and reserve the full traceback (stderr + addon.log)
+    # for the RECOMPUTE_ERROR/WORKER_CRASHED class so the error channel stays readable.
+    if unexpected or status not in _EXPECTED_CLIENT_STATUSES:
+        sys.stderr.write(tb)
+    else:
+        logger.info("%s: %s", status, str(exc) or type(exc).__name__)
     data: dict = {"exception": type(exc).__name__, "traceback": tb[:_TRACEBACK_LIMIT]}
     if unexpected:
         data["unexpected"] = True

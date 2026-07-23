@@ -6,10 +6,14 @@ Append-only; the orchestrator owns status/resolution of each entry.
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md`
   summary: `check_imports.py` does not enforce decision 003's ban on `pivy.coin.SoOffscreenRenderer`; pivy/coin are unrestricted in `adapters/` and `hosts/`.
   evidence: pivy is absent from `QT_MODULES` and adapters/hosts have no third-party restriction, so `import pivy.coin` raises no violation outside `usecases/`. The render-backend ban lands with the render probe (story 1.9); no render code exists yet, so this is a later-story gate, not a story-1.1 defect.
+  status: done 2026-07-23
+  resolution: check_imports.py `_check_raw_renderer` now flags every `SoOffscreenRenderer` attribute/import (decision 003); `FreeCADGui.SoQtOffscreenRenderer` is a distinct name and stays allowed. Wired into `_check_file` + `_check_root_file`; check_imports OK on the tree.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md`
   summary: No `[tool.pytest.ini_options]` `testpaths` in `pyproject.toml`; a bare `uv run pytest` (no path) could collect the in-FreeCAD `tests/infc/` suite in the external env.
   evidence: CI always path-scopes (`pytest tests/external`), so the blocking gate is safe today; the risk is only a bare local invocation, and `tests/infc/` currently holds no `test_*.py` so nothing is collected. Worth pinning `testpaths = ["tests/external"]` when the in-FreeCAD suite gains cases (stories 1.2+).
+  status: done 2026-07-23
+  resolution: `[tool.pytest.ini_options] testpaths = ["tests/external"]` added to pyproject.toml; a bare `uv run pytest` no longer collects `tests/infc/`.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md`
   summary: `check_imports.py` allows FreeCAD-App / Qt imports at module top in `usecases/`, `adapters/marshal.py`, `adapters/render_probe.py`, but the shim/marshal docstrings promise those imports are in-function-only so the modules stay importable in the no-FreeCAD external test env; the "no top-level FreeCAD/Qt" invariant is documented but unenforced.
@@ -57,6 +61,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: `document_recompute` returns an `OK` envelope even when it collects per-object `errors`; whether a recompute-with-errors should map to `RECOMPUTE_ERROR` (AD-17) or stay `OK`-with-error-data is an unresolved spine-owner ruling.
   evidence: mcp-tools §2 says recompute "report per-object error states" (data), a defensible OK reading; but AD-17's status set includes `RECOMPUTE_ERROR`. The code silently chose OK. Verification core (story 1.6) owns the recompute-clean sweep and should encode the ruling then.
+  status: done 2026-07-23
+  resolution: `document_recompute` now returns `RECOMPUTE_ERROR` (code `recompute.failed_objects`, naming the objects) when any object is left in an error state; a clean recompute stays `OK`. Aligns with the AD-5 recompute-clean sweep in `verify_recompute`.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: `query_capabilities` capability-banner payload crosses the wire but has no `contracts/`-owned TypedDict/schema, unlike every other wire type (AD-17 "contracts-owned").
@@ -69,10 +75,14 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: `debug_exec` audit records the `params_digest` (sha256 of `{doc, code}`) but does NOT persist the executed source; the highest-risk path leaves an audit line that proves a hash but cannot reproduce what ran.
   evidence: `audit_log._record` stores only `params_digest`. security-and-service §1 frames exec auditing as evidentiary; digest-only vs code-retention is a privacy-vs-forensics posture call for the security owner. Fingerprints are also `None` (deferred to story 1.6 fingerprint()).
+  status: done 2026-07-23
+  resolution: `AuditRecord` gained an optional `code` field (schema-additive, regenerated); `AuditSink._record` persists the executed source on every `event:"exec"` line per security-and-service §1, so an exec audit line now reproduces what ran, not only its digest. fingerprint_before/after wiring stays open (see keep-open note below — needs the DocumentRegistry threaded into the tool-call audit boundary).
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: `document_open` on a path already open in the session mints a SECOND handle for the same underlying FreeCAD doc; closing one handle closes the doc, stranding the other on a dead object.
   evidence: `document_open` unconditionally `FreeCAD.openDocument(path)` + mints a fresh handle with no already-open dedupe. Rarely hit in Phase-0 single-file bring-up; worth an already-open check (return the existing handle) when multi-doc query/verify stories exercise open heavily.
+  status: done 2026-07-23
+  resolution: Already resolved in current source — `document_open` calls `_handle_for(document)` and reuses the existing handle when the document is already tracked (documents.py:121-127). No fix needed; entry closed on verification.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: The `shim.varset_backend()` capability probe creates and closes a throwaway `FCB_TMP_varset_probe` FreeCAD document OUTSIDE the `DocumentRegistry` single-writer lock (invoked once, lru_cache'd, via `query_capabilities`), so its doc-set churn is not serialized against registry mutations (AD-20).
@@ -85,10 +95,14 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: `document_recompute` reports per-object errors only when `"Invalid"` is present in `obj.State`; an object left `"Touched"` / not-recomputed after a recompute (silent skip) is reported as clean, so the per-object error set can under-report.
   evidence: The error comprehension filters on `if "Invalid" in state` only. No in-FreeCAD test creates an object that fails or is skipped during recompute, so the branch's completeness is unverified. Revisit the recompute-clean vocabulary (which States count as failure) together with the recompute-clean sweep in verification core (story 1.6).
+  status: done 2026-07-23
+  resolution: Both `document_recompute` and `verify_recompute` now use a shared `_recompute_error_state` recognizing `{"Invalid", "Error", "Touched"}` — an object still "Touched" after a full recompute (silent skip) is flagged. Detection vocabulary unified across the two recompute paths.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: Both audit lines for a mutation/exec carry `fingerprint_before`/`fingerprint_after` hard-coded to `None`, and the `after` line repeats the pre-execution `params` rather than the result, so an audit pair records almost no evidence of what actually changed.
   evidence: `AuditSink.before`/`after` set the fingerprint fields to `None`; `mcp_server._call_tool` passes the same `args` to both. `fingerprint()` lands in story 1.6, so real before/after hashes are not computable yet; wire them (and a result-bearing `after` payload) into the audit sink when `fingerprint()` exists.
+  status: open
+  decision: 2026-07-23 keep-open — fingerprint wiring blocked. `fingerprint()` now exists, but the audit boundary (`mcp_server._call_tool`) holds only the `MethodRegistry` + doc-handle string, not the `DocumentRegistry`, so it cannot resolve the live doc to compute before/after hashes without threading `DocumentRegistry` through the tool-call boundary — an architectural change with real ripple. The forensic gap is already narrowed by the `code`-persistence fix above; fingerprint_before/after belongs with the AD-5 mutation-protocol runtime (story 3.2), which owns fingerprinting around a mutation.
 
 ### DW-2: Follow-up review still recommended for 1-4-document-lifecycle-headless-host-mcp-surface after the damping cap was spent
 origin: review-budget-followup
@@ -100,6 +114,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
   summary: `query_sketch_info` reads a geometry element's `construction` flag via `getattr(geo, "Construction", False)`; on FreeCAD builds that migrate the flag onto the `GeometryFacade`/`Sketch.getConstruction(index)` the raw geometry object may not carry `Construction`, so every element would silently report `construction: false`.
   evidence: On the local FreeCAD 1.1 build the raw geometry still exposes `Construction` (the story's infc test passes), so no regression today; the risk is version-forward. Prefer `obj.getConstruction(index)` with a fallback to the geometry attribute if/when a build drops the raw flag.
+  status: done 2026-07-23
+  resolution: `query_sketch_info` now reads construction via `_construction_flag`, which prefers `SketchObject.getConstruction(index)` and falls back to the raw geometry's `Construction` attribute — version-forward safe.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
   summary: `query_dependencies` whole-document mode emits an uncapped `edges` array (every object's OutList), unlike `query_tree_summary` which caps at `max_nodes`; a very large assembly yields an unbounded response.
@@ -108,10 +124,14 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
   summary: `query_object`'s `_json_safe` recurses through list/tuple/dict property values with no depth limit and no cycle detection, so a self-referential or very deeply nested property value would either serialize to an unbounded payload or raise `RecursionError` (mapped to `RECOMPUTE_ERROR`).
   evidence: FreeCAD's standard scalar/vector/list property values are shallow, so no live object triggers it in Phase 0 (the infc suite passes); the risk is a scripted/`PropertyPythonObject` value holding a cyclic or huge structure. Bound the recursion depth and total element count (stringify/truncate on overflow) when a query surface must tolerate hostile or scripted-object property content.
+  status: done 2026-07-23
+  resolution: `_json_safe` now bounds recursion at `_JSON_MAX_DEPTH=8`, stringifying anything deeper — a self-referential or deeply-nested property value is truncated at the cap instead of overflowing the stack.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-5-read-only-query-tools.md`
   summary: `query_mass_properties` guards only a null `Shape`; a non-null non-solid shape (shell/wire/face) reports `volume: 0` and a `CenterOfMass` computed over area/length as if it were volumetric mass, and for some degenerate compounds the OCC `CenterOfMass`/`Volume` call can raise and surface as `RECOMPUTE_ERROR` rather than a fail-closed `INVALID_INPUT`.
   evidence: The story's mass-props test exercises only a clean solid box, so the non-solid branch is unverified; the design treats "no queryable geometry" as `INVALID_INPUT` but does not specify non-solid handling. Gate `volume`/`com` behind `len(shape.Solids) > 0` (or emit nulls) and wrap the OCC reads to map a degenerate shape to `INVALID_INPUT` when a caller needs mass properties on non-solid geometry.
+  status: done 2026-07-23
+  resolution: `query_mass_properties` now reports a `solid` flag and emits `null` `volume`/`com` for a non-solid (shell/wire/face) shape, so an area/length centroid is never presented as volumetric mass; area/bbox/counts stay valid for all shapes.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
   summary: `verify_sketch` gates `evaluateConstraints()` behind `bool(MalformedConstraints)`, but AD-8 / verification-design §4 list `evaluateConstraints()` as an independent hard-fail trigger.
@@ -120,6 +140,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
   summary: The fault scorer (`benchmarks/g0/fault-injection/score_verify_shape.py`) rewrites `validators.yaml` from a fixed single-validator template, so a second validator block would be dropped on the next run.
   evidence: `_render_yaml` emits only the `verify_shape` block and `write_text` replaces the whole file; only `verify_shape` exists in `validators.yaml` today. When a second validator (e.g. `verify_sketch`, later `verify_export_*`) registers a fault suite, switch the scorer to a read-merge-write that preserves other validator blocks.
+  status: done 2026-07-23
+  resolution: `score_verify_shape.py` now imports and uses the export scorer's shared `merge_validators_yaml` read-merge-write, rendering only the `verify_shape` block; the `verify_export_*` blocks and file header are preserved. Resolves the two-inconsistent-writers gap (also filed under spec-1-7).
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-6-verification-core.md`
   summary: The scorer's hand-rolled `case.yaml` parser is brittle — a greedy `_CHECK_RE` and a blind `.replace('rel'/'abs')` before `ast.literal_eval` — and can mis-parse checks with those substrings in values or multi-line flow mappings.
@@ -136,6 +158,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: `adapters/export_oracle.py` `_trimesh_checks` hardcodes `euler_number == 2` (genus-0 single-shell) for every mesh, so a legitimate multi-shell / through-hole (torus) / multi-solid part would false-alarm on the Euler check.
   evidence: Not reachable in Phase-0 (the golden models are single convex solids). Real forward gap for Phase 3+ real geometry — derive the expected Euler characteristic from the source topology (or drop the Euler assertion in favour of the watertight/winding/volume checks) before the export verifiers grade multi-shell parts.
+  status: done 2026-07-23
+  resolution: Already resolved — `_trimesh_checks` now asserts `euler % 2 == 0` (even characteristic), not `== 2`; a through-hole (chi 0) or multi-body compound (chi 4) is accepted. Fixed in a prior session (render/verify sweep); confirmed on verification, entry closed.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: The export fault suites are small — `verify_export_step` n=2, `verify_export_stl`/`verify_export_3mf` n=3 — so the ≥95 %/≤5 % gate passes but the Wilson lower bound (0.34–0.44) gives weak statistical confidence in the sensitivity claim.
@@ -144,14 +168,20 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: `adapters/export_oracle.py` `_read_ascii_stl_facets` silently drops a facet whose `endfacet` block has ≠3 vertices (a truncated ASCII facet) — a fail-open in the stdlib STL parser.
   evidence: Not reachable via this story's writers (FreeCAD emits BINARY STL, and the binary path is the default), so low Phase-0 consequence. If an ASCII-STL input path is ever accepted, raise on a malformed facet block instead of dropping it so a truncated file surfaces as a defect rather than a silently-normalised mesh.
+  status: done 2026-07-23
+  resolution: `_read_ascii_stl_facets` now raises `ValueError` on any facet block whose vertex count is not exactly three (routed through `safe_oracle` → failed leg → FAIL), so a truncated ASCII STL surfaces as a defect instead of a silently-normalised mesh.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: Story-1.6 `benchmarks/g0/fault-injection/score_verify_shape.py` still full-clobbers `validators.yaml` from a fixed template; the Story-1.7 export scorer added its own `merge_validators_yaml` read-merge-write, so the two writers are inconsistent.
   evidence: Running the 1.6 scorer's `main()` after the 1.7 scorer would drop the `verify_export_*` blocks. Both scorers should share one merge-writer helper. Verified today: the `run_tests.py` suite calls `score()` (no file write), so no clobber occurs during CI test runs; only explicit `main()` invocations write. Refactor both onto a shared writer.
+  status: done 2026-07-23
+  resolution: `score_verify_shape.main()` now writes through the export scorer's `merge_validators_yaml`; both scorers share one read-merge-write helper, so running either `main()` preserves the other's validator blocks.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: `benchmarks/g0/export-fault-injection/score_export_verify.py` `_score_mesh_case` calls the oracle legs raw inside its own `try/except` that returns `True` (DETECT) on any exception, instead of routing through `export_oracle.safe_oracle` like the production `_mesh_verify_handler`; a clean-control case that raised for an unrelated reason would be scored DETECTED and mask a false-alarm-class failure.
   evidence: Production path is correct (the host handler wraps every oracle call in `safe_oracle`, turning a read failure into a failed leg → FAIL verdict); only the benchmark scorer diverges. No committed control currently throws (both controls score PASS_CLEAN, FA 0.000), so nothing regresses today. Route `_score_mesh_case` through `safe_oracle` (or the same leg-assembly the handler uses) for scorer/production parity.
+  status: done 2026-07-23
+  resolution: `_score_mesh_case` now wraps every oracle leg in `export_oracle.safe_oracle` exactly like the production `_mesh_verify_handler`; a leg that raises becomes a failed leg (→ FAIL), so a clean control that raises for an unrelated reason surfaces as a false alarm rather than being masked as DETECT.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: The STL/3MF mesh-verify handler (`hosts/headless/entry.py` `_mesh_verify_handler`) runs the un-marshaled trimesh/lib3mf oracle legs with no timeout, while the FreeCAD self-read leg is bounded at 120 s; a hung oracle read would block RPC dispatch indefinitely.
@@ -160,6 +190,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: `adapters/export_oracle.py` `_lib3mf_mesh` inspects only the first mesh object of a 3MF model (`iterator.MoveNext()` once), so a defect in the 2nd+ mesh object of a multi-mesh container passes the manifold/geometry checks undetected.
   evidence: This story's writer emits a single mesh per 3MF (one `MeshPart.meshFromShape` → one `Mesh` write), so a multi-mesh container is not producible here. Iterate all mesh objects (fail if any is non-manifold) if a multi-mesh 3MF input path is ever accepted.
+  status: done 2026-07-23
+  resolution: `_lib3mf_mesh` → `_lib3mf_meshes` (iterates the whole `GetMeshObjects` iterator); `mesh3mf_oracle` now manifold-checks EVERY mesh object and fails if any is non-manifold (the `lib3mf.manifold_and_oriented` check reports `{meshes, non_manifold}`). The trimesh geometry leg still runs on the first mesh.
 
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: `adapters/export_oracle.py` `mesh3mf_oracle`'s trimesh geometry leg is built from the lib3mf-parsed vertex/triangle arrays (`_trimesh_from_lib3mf`), so the lib3mf and trimesh "oracles" share lib3mf's geometry parse; the 3MF independence is weaker than the STL path (where trimesh loads the file itself).
@@ -168,6 +200,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-7-exports-paired-verification.md`
   summary: The `step-unit-lie` fault fixture writes a genuinely smaller solid (`makeBox(1,2,3)`, vol 6) mislabeled against the full box (vol 6000), so `verify_export_step` detects it via a gross shape/volume mismatch rather than via a mislabeled `write.step.unit`; the per-call unit-pinning path (`shim.pin_step_config` / `write.step.unit=MM`) has no fault-suite case exercising a true same-geometry 1000× unit scale.
   evidence: The verifier's volume check WOULD catch a real unit-lie (a mm box written as `unit=M` re-imports 1000× larger, a gross volume mismatch), so this is a coverage gap, not a product defect — the unit-pinning invariant is functionally guarded but not directly exercised by its own fault case. Add a fixture that writes the clean box with `write.step.unit` set to `M`/`CM` and references the mm facts, so detection depends on the unit knob rather than on swapping in a different shape.
+  status: done 2026-07-23
+  resolution: Investigated, premise disproven, closed as not-actionable-as-stated. A `step-unit-scale-lie` fixture (clean box written with `write.step.unit=M`, referencing mm facts) was built and scored under FreeCAD — it was MISSED, not detected. Empirical finding: the STEP unit is a file-unit annotation, so a mm box written in metres re-imports back to the SAME mm volume (round-trip-neutral). A `write.step.unit` value therefore cannot be exercised as a volume fault; the existing `step-unit-lie` (a genuine 1/10-scale geometry mismatch) is the only detectable form. The `write.step.unit=MM` per-call pinning invariant is a functional guard, not a re-import volume fault — the coverage gap is real but unclosable by a fault case, so no fixture is added. Fixture builder docstring updated to record this; the ledger's original "re-imports 1000x larger" assumption was incorrect.
 
 ### DW-3: Follow-up review still recommended for 1-7-exports-paired-verification after the damping cap was spent
 origin: review-budget-followup
@@ -215,6 +249,8 @@ status: open
 - source_spec: `{project-root}/_bmad-output/implementation-artifacts/spec-1-9-view-controlled-screenshots.md`
   summary: `scripts/check_imports.py` has no rule banning `FreeCAD.ActiveDocument` as an operation target (AD-20), so the loop-2 fix (render the explicit handle, never `ActiveDocument`) is enforced only by manual review, not by the CI ring gate.
   evidence: `check_imports.py` enforces Qt/third-party import placement per ring but not the `ActiveDocument`-banned-target rule; the loop-1 regression (renderer reading `ActiveDocument`) passed `check_imports` + ruff clean. Add an AST rule flagging `FreeCAD.ActiveDocument` / `App.ActiveDocument` reads outside the sanctioned document-lifecycle usecases, so this class of AD-20 violation is caught mechanically across all stories.
+  status: done 2026-07-23
+  resolution: Already resolved — `check_imports._check_active_document` bans `FreeCAD./App.ActiveDocument` and `setActiveDocument` tree-wide (wired into both `_check_file` and `_check_root_file`). Added in a prior session; confirmed on verification, entry closed.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-10-gate-g0-exit.md`
   summary: The `gui_smoke` human token has no cryptographic signature — its `binds_reports_sha256` is a public SHA-256, so anyone who can write the run's `human/` dir can forge a valid PASS token.
@@ -222,18 +258,24 @@ status: open
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-10-gate-g0-exit.md`
   summary: A `<criterion>.json.tmp` file can linger in `reports/` if the process crashes between the atomic write's `write_text` and `replace`.
   evidence: `_write_report_atomic` has no try/finally cleanup; harmless to a clean verdict (verdict reads `<criterion>.json`, not `.tmp`), but tmp files accumulate across crashes.
+  status: done 2026-07-23
+  resolution: `runner._atomic_write_json` now removes the `.tmp` file (`unlink(missing_ok=True)`) on any failure between the tmp write and the `os.replace`, so a crash mid-write leaves no stray `<criterion>.json.tmp`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-10-gate-g0-exit.md`
   summary: `benchmarks/g0/gate.yaml` cites `verify_shape` as G0.5's validator, but G0.5 is a STEP export round-trip whose validator is `verify_export_step` (already registered in validators.yaml).
   evidence: leg-b currency for G0.5 hashes the wrong validator source; the correct citation is `verify_export_step`. Pre-existing in the loop-0 verbatim-preserved criteria, not introduced by story 1.10; changing a cited_validator touches the criteria block the story preserved intact.
+  status: done 2026-07-23
+  resolution: `benchmarks/g0/gate.yaml` G0.5 `cited_validators` changed `[verify_shape]` → `[verify_export_step]` — leg-b currency now hashes the correct validator source for the STEP round-trip criterion.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
   summary: Every `INVALID_INPUT` outcome (an ordinary client error — unknown handle, unknown object, bad path, stale/mismatched export_id, missing param) emits a full Python traceback to the server's stderr and to the GUI-mode `addon.log`, because the marshal re-raises the `ValidationError` and the log handler renders it with `exc_info`.
   evidence: The Epic-1 edge-case MCP sweep (`scripts/automation/run_mcp_edge_cases.py`, 13/13 pass) produced 199 stderr lines for 13 deliberate error cases — one traceback per client error, zero genuine crashes. A client typo should not spill a stack trace into the error-capture channel; tracebacks should be reserved for unexpected/`RECOMPUTE_ERROR`/`WORKER_CRASHED`. Behavior is correct at the contract layer (right closed status, no crash), so this is log-hygiene, not a functional defect — downgrade `INVALID_INPUT`-class logging below traceback level (or log the message without `exc_info`) so the stderr/addon.log channel stays scannable for real faults.
+  status: done 2026-07-23
+  resolution: `rpc_dispatch._error_envelope` now emits a full stderr traceback only for the unexpected/`RECOMPUTE_ERROR`/`WORKER_CRASHED` class; expected client errors (`INVALID_INPUT`, `TIMEOUT`) log one `logger.info` line instead. The truncated traceback is still retained in the envelope's machine `detail.data` for debugging — only the stderr/addon.log channel is de-noised.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-1-9-view-controlled-screenshots.md`
   summary: FIXED — the offscreen render used a single fixed `SoDirectionalLight`, so faces angled away from its world-space direction rendered near-black, diverging from FreeCAD's viewport (which uses a camera-following headlight). Found by the TC-06 visual-fidelity comparison (MCP render vs. a `PrintWindow` capture of the live FreeCAD window).
-  evidence: `render_probe._add_lighting` now aims the headlight along the camera view direction (`SbRotation.multVec` of the orientation quaternion on -Z) and adds `SoEnvironment.ambientIntensity=0.3`; confirmed against `docs/references/FreeCAD/src/Gui/View3DInventorViewer.cpp` headlight setup. Verified in H1 (`_automation/tc06_render_lit.png`): side faces now render shaded grey matching the viewport, not black. No open action — recorded so the visual-fidelity check and its capture method (Win32 `PrintWindow` flag `2 = PW_RENDERFULLCONTENT`) are discoverable.
+  evidence: `render_probe._add_lighting` now aims the headlight along the camera view direction (`SbRotation.multVec` of the orientation quaternion on -Z) and adds `SoEnvironment.ambientIntensity=0.7` (empirically fit to the viewport tone: a lit face reads RGB ~(158,165,169), the ambient reproduces ~(159,164,169)); confirmed against `docs/references/FreeCAD/src/Gui/View3DInventorViewer.cpp` headlight setup. Verified in H1: side faces render shaded grey matching the viewport, not black. No open action — recorded so the visual-fidelity check and its capture method (Win32 `PrintWindow` flag `2 = PW_RENDERFULLCONTENT`) are discoverable.
 
 ### DW-4: query_screenshot default render set includes Sketcher::SketchObject (sketch leaks into the scene)
 
@@ -241,4 +283,5 @@ origin: TC-06 render-visual-fidelity manual test, 2026-07-23
 location: src/freecad_buddy/usecases/screenshot.py (`_is_default_renderable` / `_NON_RENDER_TYPES`)
 severity: low
 reason: A sketch has a non-null `Shape` (edges/wires), so `_is_default_renderable` passes it; the skip-list catches only `PartDesign::Body` + `App::Origin/Line/Plane/Point`. Rendering the live Pad returned `scene.rendered_objects = ["Sketch001", "Pad"]` where the viewport shows only the Pad solid (Sketch hidden). Benign in that case (the sketch is coplanar with a pad face, invisible), but the default set is meant to be the shape-bearing leaf solids (integration-mcp-freecad §6). Same default-view-contract call as the earlier spec-1-9 `Visibility`-honoring entry — resolve together (add `Sketcher::SketchObject` to the skip-list, gate on `len(Shape.Solids) > 0`, or honor live `Visibility`), Phase-1 assistant surface.
-status: open
+status: done 2026-07-23
+resolution: Added `Sketcher::SketchObject` to `_NON_RENDER_TYPES`, so a sketch no longer leaks into the default (no-`include`) render set — an explicit `include` still renders it. The separate "honor live `Visibility`" question (a Phase-1 default-view-contract UX decision) stays open under the spec-1-9 Visibility entry above.

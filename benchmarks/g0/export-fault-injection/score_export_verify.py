@@ -116,19 +116,27 @@ def _score_mesh_case(case: dict) -> bool:
         "volume_band": band,
         "tess": case["tess"],
     }
-    try:
-        if case["format"] == "stl":
-            legs = [
-                export_oracle.stl_oracle(path, source["volume"], band),
-                export_oracle.StdlibStlOracle().check(path),
-            ]
-        else:
-            legs = [
-                export_oracle.mesh3mf_oracle(path, source["is_mm"], source["volume"], band),
-            ]
-    except Exception as exc:  # noqa: BLE001 - an oracle that cannot read the file is a detection
-        sys.stderr.write(f"  oracle error on {case['id']}: {exc}\n")
-        return True
+    # Route every oracle leg through safe_oracle exactly as the production host handler does, so a
+    # leg that raises becomes a failed leg (→ FAIL) rather than being blanket-scored DETECT — a
+    # clean control that raised for an unrelated reason must surface as a false alarm, not masked.
+    if case["format"] == "stl":
+        legs = [
+            export_oracle.safe_oracle(
+                "trimesh_stl", lambda: export_oracle.stl_oracle(path, source["volume"], band)
+            ),
+            export_oracle.safe_oracle(
+                "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+            ),
+        ]
+    else:
+        legs = [
+            export_oracle.safe_oracle(
+                "lib3mf",
+                lambda: export_oracle.mesh3mf_oracle(
+                    path, source["is_mm"], source["volume"], band
+                ),
+            ),
+        ]
     envelope = export_verdict.assemble_export_verdict(legs, facts, banner={})
     return envelope["status"] != "OK"
 

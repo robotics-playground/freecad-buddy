@@ -8,7 +8,7 @@ viewport, so visual fidelity must be checked by direct image comparison, every t
 ## Prerequisites
 
 - [ ] A FreeCAD instance (GUI) is open with the target document, reachable via the bridge
-- [ ] The GUI-external MCP proxy is running (verify: `netstat -ano | grep :8765` shows LISTENING)
+- [ ] The MCP proxy is serving `:8765` — the addon **auto-spawns it on FreeCAD start**, so simply opening FreeCAD is enough (verify: `netstat -ano | grep :8765` shows LISTENING). No manual `serve` command; if it is absent, restart FreeCAD or check the addon log. Starting `serve --mode rpc` by hand is a debug fallback only.
 
 ---
 

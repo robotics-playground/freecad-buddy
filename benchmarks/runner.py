@@ -174,11 +174,19 @@ def _run_dir(gate: str, run_id: str) -> Path:
 
 
 def _atomic_write_json(path: Path, data: dict) -> None:
-    """Write ``data`` as pretty JSON atomically (tmp + os.replace)."""
+    """Write ``data`` as pretty JSON atomically (tmp + os.replace).
+
+    On any failure between the tmp write and the replace, the tmp file is removed so a crash mid
+    write does not leave a stray ``<criterion>.json.tmp`` accumulating in ``reports/``.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
+    try:
+        tmp.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
 
 
 def _ingest_g0_4(run_dir: Path) -> dict:

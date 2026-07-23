@@ -19,6 +19,15 @@ from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 _DEFAULT_VOLUME_REL = 0.01
 _DEFAULT_LINEAR_ABS = 0.05
 
+# FreeCAD marks a failed object with "Invalid"/"Error" in obj.State; an object still "Touched"
+# after a full recompute was silently skipped (dependencies unresolved) — also an error state.
+_RECOMPUTE_ERROR_STATES = frozenset({"Invalid", "Error", "Touched"})
+
+
+def _recompute_error_state(state: list) -> bool:
+    """Whether an object's post-recompute ``State`` indicates it did not compute cleanly."""
+    return any(token in _RECOMPUTE_ERROR_STATES for token in state)
+
 
 def _banner() -> dict:
     """Return the report banner: FreeCAD version and element-map version (int or None)."""
@@ -388,10 +397,10 @@ def verify_sketch(
 def verify_recompute(registry: DocumentRegistry, doc: str | None = None) -> ResultEnvelope:
     """Recompute the document and report every object left in an error state, read-only.
 
-    Calls ``doc.recompute()`` (a read-refresh) then collects every object whose ``State`` is
-    ``Invalid``, reporting its ``Name`` and ``getStatusString()`` in a failed check tagged
-    ``recompute.*`` so the verdict classes as ``RECOMPUTE_ERROR``. A clean document yields a
-    single passed check.
+    Calls ``doc.recompute()`` (a read-refresh) then collects every object left in an error state
+    ("Invalid"/"Error", or still "Touched" — a silent skip), reporting its ``Name`` and
+    ``getStatusString()`` in a failed check tagged ``recompute.*`` so the verdict classes as
+    ``RECOMPUTE_ERROR``. A clean document yields a single passed check.
     """
 
     def read(_handle: str, document: object) -> ResultEnvelope:
@@ -400,7 +409,7 @@ def verify_recompute(registry: DocumentRegistry, doc: str | None = None) -> Resu
         failing = [
             {"name": obj.Name, "status": _status_string(obj)}
             for obj in document.Objects
-            if "Invalid" in list(getattr(obj, "State", None) or [])
+            if _recompute_error_state(list(getattr(obj, "State", None) or []))
         ]
 
         if failing:

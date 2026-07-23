@@ -83,4 +83,5 @@ each `case.yaml`.
 ## 8. Known Limitations
 - Render leg requires a GL context; screenshot checks skip when the render ladder reports `none`.
 - A running FreeCAD caches imported modules — a render-code change needs a FreeCAD restart in GUI mode.
-- `INVALID_INPUT` currently logs a full traceback (deferred-work ledger) — expected noise, not a crash.
+- Client errors (`INVALID_INPUT`/`TIMEOUT`) log a single INFO line, not a traceback; the full traceback is retained only in the envelope's machine `detail.data`. Unhandled faults (`RECOMPUTE_ERROR`/`WORKER_CRASHED`) still spill a stderr traceback.
+- The MCP default render composes its own scene from every shape-bearing leaf object and does NOT honor an object's live `Visibility` flag, so a `Visibility=false` object still appears in the render while the FreeCAD viewport hides it (open ledger item — Phase-1 default-view-contract decision).

@@ -38,16 +38,18 @@ _DEFAULT_HEIGHT = 600
 _ELEMENT_TYPES = frozenset({"face", "edge", "vertex"})
 
 # Types skipped by a default (no ``include``) render. Datum/origin features are construction
-# geometry, not model shape; a ``PartDesign::Body`` is a container whose Coin subgraph aggregates
-# its children through view-provider machinery that faults in a headless (no-GUI) renderer and
-# leaves the Coin library unusable for every later object. An explicit ``include`` still renders
-# them — the skip only shapes the automatic set.
+# geometry, not model shape; a ``Sketcher::SketchObject`` has a non-null wire Shape but is a
+# profile, not model shape, so it leaks into the scene otherwise; a ``PartDesign::Body`` is a
+# container whose Coin subgraph aggregates its children through view-provider machinery that
+# faults in a headless (no-GUI) renderer and leaves the Coin library unusable for every later
+# object. An explicit ``include`` still renders any of them — the skip only shapes the automatic
+# set to the shape-bearing leaf features.
 _NON_RENDER_TYPE_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Point")
-_NON_RENDER_TYPES = frozenset({"PartDesign::Body"})
+_NON_RENDER_TYPES = frozenset({"PartDesign::Body", "Sketcher::SketchObject"})
 
 
 def _is_default_renderable(obj: object) -> bool:
-    """Whether ``obj`` belongs in the automatic render set: has a shape and is not datum/container."""
+    """Whether ``obj`` is in the automatic render set: has a shape, not a datum/container."""
     type_id = str(getattr(obj, "TypeId", ""))
     if type_id in _NON_RENDER_TYPES or type_id.startswith(_NON_RENDER_TYPE_PREFIXES):
         return False

@@ -104,7 +104,7 @@ def _configured_msaa_samples() -> int:
 
 
 def _apply_configured_msaa(renderer: object) -> None:
-    """Set the renderer's multisample count from FreeCAD's preference, when the build supports it."""
+    """Set the renderer's multisample count from FreeCAD's preference, if the build supports it."""
     setter = getattr(renderer, "setNumPasses", None)
     if setter is None:
         return
