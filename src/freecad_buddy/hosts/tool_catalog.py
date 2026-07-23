@@ -18,12 +18,12 @@ from typing import Callable
 
 from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.marshal import Marshal
-from freecad_buddy.adapters.mcp_server import Capabilities, exec_registered
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import RenderPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
 from freecad_buddy.usecases import exports, queries, screenshot, verify
+from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
 
@@ -579,6 +579,26 @@ def build_inline_handlers(
                 timeout_s=spec.timeout_s,
                 mutating=spec.mutating,
                 audit_event=spec.audit_event,
+            )
+        )
+
+    # The FreeCAD self-read legs of the mesh verifiers are exposed as RPC methods (not MCP tools)
+    # so the external proxy can run the third-party oracle legs on its own side (AD-9/AD-12: the
+    # oracles must not run inside FreeCAD) and RPC only this FreeCAD-side leg here.
+    for leg_name, leg_fn in (
+        ("export_self_read_stl", exports.export_self_read_stl),
+        ("export_self_read_3mf", exports.export_self_read_3mf),
+    ):
+        raw = (lambda fn: lambda **p: fn(doc_registry, export_registry, **p))(leg_fn)
+        methods.register(
+            RpcMethod(
+                name=leg_name,
+                handler=wrap(raw, 120.0),
+                input_schema=_VERIFY_EXPORT_INPUT_SCHEMA,
+                description="FreeCAD self-read leg for mesh export verification (internal).",
+                timeout_s=120.0,
+                mutating=False,
+                internal=True,
             )
         )
     return methods

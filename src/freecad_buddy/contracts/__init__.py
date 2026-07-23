@@ -18,6 +18,7 @@ from freecad_buddy.contracts.fingerprint import (
     MassProps,
     ObjectFingerprint,
     fingerprints_equal,
+    massprops_equal,
 )
 from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.render import (
@@ -86,5 +87,6 @@ __all__ = [
     "WilsonCI",
     "derive_verdict",
     "fingerprints_equal",
+    "massprops_equal",
     "mirror_text",
 ]

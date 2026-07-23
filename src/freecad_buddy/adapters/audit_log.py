@@ -10,11 +10,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
 from freecad_buddy.contracts import AuditRecord
+
+
+def default_audit_path() -> Path:
+    """The audit-log path from ``FREECAD_BUDDY_AUDIT_LOG``, or a cwd-relative default."""
+    return Path(os.environ.get("FREECAD_BUDDY_AUDIT_LOG", "freecad-buddy-audit.jsonl"))
 
 
 def _digest(params: dict) -> str:

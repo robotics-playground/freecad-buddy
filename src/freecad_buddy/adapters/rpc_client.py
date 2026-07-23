@@ -27,10 +27,28 @@ _MAX_FRAME_BYTES = 16 * 1024 * 1024
 
 
 def _appdata_dir() -> Path:
+    # The listener writes its discovery file under FreeCAD.getUserAppDataDir(), which on Windows
+    # is the versioned ...\FreeCAD\v1-1\ dir — not the bare %APPDATA%. The external client cannot
+    # import FreeCAD to resolve that, so FREECAD_BUDDY_RPC_DIR overrides the base directory that
+    # holds the "freecad-buddy/" discovery folder; otherwise the known FreeCAD-versioned appdata
+    # layout is probed before the bare %APPDATA% fallback.
+    override = os.environ.get("FREECAD_BUDDY_RPC_DIR")
+    if override:
+        return Path(override)
     base = os.environ.get("APPDATA") or os.environ.get("XDG_DATA_HOME")
-    if base:
-        return Path(base)
-    return Path.home() / ".local" / "share"
+    if not base:
+        return Path.home() / ".local" / "share"
+    base_path = Path(base)
+    freecad_root = base_path / "FreeCAD"
+    if freecad_root.is_dir():
+        # Newest versioned dir (e.g. v1-1) whose freecad-buddy/ discovery folder exists.
+        versioned = sorted(
+            (d for d in freecad_root.glob("v*") if (d / "freecad-buddy").is_dir()),
+            reverse=True,
+        )
+        if versioned:
+            return versioned[0]
+    return base_path
 
 
 def _pid_alive(pid: int) -> bool:

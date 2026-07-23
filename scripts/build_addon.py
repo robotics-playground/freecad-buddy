@@ -25,10 +25,24 @@ import os
 import sys
 from pathlib import Path
 
-_here = Path(__file__).resolve().parent
+# FreeCAD exec()s this file without a module __file__, so resolve the addon dir defensively:
+# an explicit dev-source override, else this file's dir when __file__ exists, else FreeCAD's
+# user Mod/<addon> path. FreeCAD already adds the addon dir to sys.path before running InitGui,
+# so the import resolves even if none of these yield a path.
 _src = os.environ.get("FREECAD_BUDDY_SRC")
-_pkg_parent = Path(_src) if _src else _here
-if str(_pkg_parent) not in sys.path:
+if _src:
+    _pkg_parent = Path(_src)
+elif "__file__" in globals():
+    _pkg_parent = Path(__file__).resolve().parent
+else:
+    try:
+        import FreeCAD
+
+        _pkg_parent = Path(FreeCAD.getUserAppDataDir()) / "Mod" / "FreeCADBuddy"
+    except Exception:  # noqa: BLE001 - fall back to FreeCAD's own sys.path entry
+        _pkg_parent = None
+
+if _pkg_parent is not None and str(_pkg_parent) not in sys.path:
     sys.path.insert(0, str(_pkg_parent))
 
 import freecad_buddy.hosts.gui_addon.InitGui  # noqa: E402,F401

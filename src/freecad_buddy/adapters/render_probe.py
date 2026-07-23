@@ -11,6 +11,7 @@ without a GUI stack; this is the only ring outside ``hosts/`` allowed those impo
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from freecad_buddy.contracts.render import FocusSpec, RenderResult, SceneSpec
@@ -126,9 +127,13 @@ class OffscreenRenderPort:
         focused = _aim_camera(coin, camera, document, scene.focus, rendered, root, viewport)
 
         renderer = FreeCADGui.SoQtOffscreenRenderer(scene.width, scene.height)
+        renderer.setBackgroundColor(1.0, 1.0, 1.0)
         renderer.render(root)
-        if not renderer.writeToImage(out_path):
-            raise RenderError(f"writeToImage returned false for {out_path}")
+        # writeToImage returns None on success on some builds (it does not return a bool), so the
+        # written file is the success signal: a non-empty PNG on disk means the render succeeded.
+        renderer.writeToImage(out_path)
+        if not os.path.isfile(out_path) or os.path.getsize(out_path) == 0:
+            raise RenderError(f"offscreen render produced no image at {out_path}")
         return RenderResult(rendered_objects=rendered, focused=focused)
 
 

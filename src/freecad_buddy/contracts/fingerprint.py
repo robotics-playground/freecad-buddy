@@ -56,3 +56,18 @@ def fingerprints_equal(a: dict, b: dict) -> bool:
         )
 
     return dig_a == dig_b
+
+
+def massprops_equal(a: dict, b: dict) -> bool:
+    """Compare two FingerprintRecords by geometry alone: per-object name + mass-property tuple.
+
+    Unlike ``fingerprints_equal`` (which compares the ``digest`` over raw BRep bytes), this
+    ignores the serialized shape bytes. OCCT re-lays-out a shape's BRep bytes the first time a
+    freshly-loaded document's shape is touched (e.g. by a render), so the digests differ while
+    the geometry is unchanged; the quantized mass-properties (volume, area, bbox, COM, principal
+    moments) stay identical. Use this for a read-only check where a render must not alter the
+    geometry but may perturb the serialization.
+    """
+    objs_a = {e["name"]: e.get("massprops") for e in a.get("objects", [])}
+    objs_b = {e["name"]: e.get("massprops") for e in b.get("objects", [])}
+    return objs_a == objs_b

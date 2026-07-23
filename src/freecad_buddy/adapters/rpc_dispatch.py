@@ -35,6 +35,7 @@ class RpcMethod:
     timeout_s: float = 30.0
     mutating: bool = False
     audit_event: str = "mutation"
+    internal: bool = False
 
 
 def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False) -> ResultEnvelope:

@@ -324,15 +324,21 @@ def test_i_post_render_fingerprint_raise_removes_temp_and_surfaces_error(monkeyp
     document = _doc(_FakeObject("Body", _FakeShape()))
     port = _FakeRenderPort()
 
-    # before uses exportBrep; after uses exportBinary → fingerprints_equal raises ValueError.
+    # The post-render fingerprint() itself raising must remove the temp PNG and surface an error.
     calls = {"n": 0}
 
-    def _flip(document_arg):
+    def _raise_on_after(document_arg):
         calls["n"] += 1
-        tag = "exportBrep" if calls["n"] == 1 else "exportBinary"
-        return {"schema": "fcb.fingerprint/1", "serializer": tag, "objects": [], "digest": "d"}
+        if calls["n"] == 1:
+            return {
+                "schema": "fcb.fingerprint/1",
+                "serializer": "exportBrep",
+                "objects": [],
+                "digest": "d",
+            }
+        raise RuntimeError("fingerprint failed post-render")
 
-    monkeypatch.setattr(screenshot, "fingerprint", _flip)
+    monkeypatch.setattr(screenshot, "fingerprint", _raise_on_after)
     envelope, port = _run(document, port=port)
     assert envelope["status"] != "OK"
     assert not os.path.exists(port.last_out_path)
@@ -353,7 +359,7 @@ def test_j_non_string_mapped_name_is_invalid_input():
     assert envelope["status"] == "INVALID_INPUT"
 
 
-def test_mutation_detected_removes_temp_and_is_not_ok(monkeypatch):
+def test_geometry_mutation_detected_removes_temp_and_is_not_ok(monkeypatch):
     document = _doc(_FakeObject("Body", _FakeShape()))
     port = _FakeRenderPort()
 
@@ -364,7 +370,8 @@ def test_mutation_detected_removes_temp_and_is_not_ok(monkeypatch):
         return {
             "schema": "fcb.fingerprint/1",
             "serializer": "exportBrep",
-            "objects": [],
+            # mass-props change between the before/after snapshots = a real geometry mutation.
+            "objects": [{"name": "Body", "brep_sha256": "b", "massprops": {"volume": calls["n"]}}],
             "digest": f"digest-{calls['n']}",
         }
 
@@ -372,6 +379,31 @@ def test_mutation_detected_removes_temp_and_is_not_ok(monkeypatch):
     envelope, port = _run(document, port=port)
     assert envelope["status"] != "OK"
     assert not os.path.exists(port.last_out_path)
+
+
+def test_brep_bytes_change_without_geometry_change_is_ok(monkeypatch):
+    """A render that shifts BRep serialization but not mass-props is read-only, not a mutation."""
+    document = _doc(_FakeObject("Body", _FakeShape()))
+    port = _FakeRenderPort()
+
+    calls = {"n": 0}
+
+    def _byte_only_change(document_arg):
+        calls["n"] += 1
+        return {
+            "schema": "fcb.fingerprint/1",
+            "serializer": "exportBrep",
+            # same mass-props, different brep bytes + digest — the freshly-loaded-shape case.
+            "objects": [
+                {"name": "Body", "brep_sha256": f"bytes-{calls['n']}", "massprops": {"volume": 1.0}}
+            ],
+            "digest": f"digest-{calls['n']}",
+        }
+
+    monkeypatch.setattr(screenshot, "fingerprint", _byte_only_change)
+    envelope, port = _run(document, {"include": ["Body"]}, port=port)
+    assert envelope["status"] == "OK"
+    os.remove(port.last_out_path)
 
 
 def test_successful_render_returns_image_ref_and_cleans_side_state():

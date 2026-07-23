@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from mcp import types
@@ -20,6 +19,9 @@ from mcp.server.lowlevel import Server
 
 from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
+from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
+
+__all__ = ["Capabilities", "exec_registered", "build_server", "configure_stderr_logging"]
 
 logger = logging.getLogger("freecad_buddy.mcp_server")
 
@@ -32,22 +34,6 @@ except (OSError, ValueError) as exc:
     raise RuntimeError(
         f"result-envelope output schema is missing or malformed at {_ENVELOPE_SCHEMA_FILE}"
     ) from exc
-
-
-@dataclass(frozen=True)
-class Capabilities:
-    """Immutable startup capability record; ``allow_exec`` is read once from the env flag."""
-
-    allow_exec: bool
-    service_mode: bool = False
-
-    @classmethod
-    def from_env(cls, environ: dict[str, str], *, service_mode: bool = False) -> Capabilities:
-        """Read ``FREECAD_BUDDY_ALLOW_EXEC``; exactly ``"1"`` enables, anything else disables."""
-        return cls(
-            allow_exec=environ.get("FREECAD_BUDDY_ALLOW_EXEC") == "1",
-            service_mode=service_mode,
-        )
 
 
 def configure_stderr_logging(level: int = logging.INFO) -> None:
@@ -73,15 +59,12 @@ def registered_tools(registry: MethodRegistry, caps: Capabilities) -> list[types
     """Tools surfaced by ``tools/list``; ``debug_exec`` is present only when enabled."""
     tools: list[types.Tool] = []
     for method in registry.methods():
+        if method.internal:
+            continue
         if method.name == "debug_exec" and not exec_registered(caps):
             continue
         tools.append(_tool_for(method))
     return tools
-
-
-def exec_registered(caps: Capabilities) -> bool:
-    """Whether ``debug_exec`` is reachable: the exec flag is set and not in service mode."""
-    return caps.allow_exec and not caps.service_mode
 
 
 def _to_call_result(envelope: dict) -> types.CallToolResult:

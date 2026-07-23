@@ -25,7 +25,7 @@ from freecad_buddy.contracts import (
     ResultEnvelope,
     SceneSpec,
     StyleSpec,
-    fingerprints_equal,
+    massprops_equal,
     mirror_text,
 )
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
@@ -104,8 +104,11 @@ def _render_with_lifecycle(render_port, document, scene, before):
     try:
         result = render_port.render(document, scene, out_path)
         after = fingerprint(document)
-        if not fingerprints_equal(before, after):
-            raise ValidationError("screenshot mutated the document (fingerprint changed)")
+        # Compare geometry (mass-properties), not raw BRep bytes: OCCT re-lays-out a freshly
+        # loaded shape's serialization the first time a render touches it, so the byte digest
+        # changes while the geometry is identical. A real mutation still changes the mass-props.
+        if not massprops_equal(before, after):
+            raise ValidationError("screenshot mutated the document (geometry changed)")
         if not os.path.exists(out_path) or os.path.getsize(out_path) <= 0:
             raise _RenderProduceError("render produced an empty or missing PNG")
     except BaseException:

@@ -184,8 +184,21 @@ class DocumentRegistry:
             return _ok_envelope(structured)
 
     def document_list(self) -> ResultEnvelope:
-        """List open documents with handle, name, label, and transient flag."""
+        """List every open FreeCAD document with handle, name, label, and transient flag.
+
+        Documents opened directly in the GUI (not through the bridge) are adopted here: each is
+        given a handle on first sight so it is addressable by later tool calls, while documents
+        the bridge already tracks keep their existing handle.
+        """
+        import FreeCAD
+
         with self._lock:
+            self._prune_closed()
+            for document in FreeCAD.listDocuments().values():
+                if self._handle_for(document) is None:
+                    handle = self._mint_handle()
+                    self._by_handle[handle] = document
+                    self._transient[handle] = False
             documents = [
                 {
                     "doc": handle,
@@ -197,3 +210,12 @@ class DocumentRegistry:
             ]
             structured = {"documents": documents}
             return _ok_envelope(structured)
+
+    def _prune_closed(self) -> None:
+        """Drop handles whose FreeCAD document has been closed (best-effort; lock held)."""
+        import FreeCAD
+
+        live = set(FreeCAD.listDocuments().values())
+        for handle in [h for h, d in self._by_handle.items() if d not in live]:
+            self._by_handle.pop(handle, None)
+            self._transient.pop(handle, None)

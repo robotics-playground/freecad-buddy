@@ -16,7 +16,7 @@ import os
 import sys
 from pathlib import Path
 
-from freecad_buddy.adapters.audit_log import AuditSink
+from freecad_buddy.adapters.audit_log import AuditSink, default_audit_path
 from freecad_buddy.adapters.marshal import InlineExecutor, Marshal
 from freecad_buddy.adapters.mcp_server import (
     Capabilities,
@@ -55,7 +55,7 @@ def build_registry(
 
 
 def _default_audit_path() -> Path:
-    return Path(os.environ.get("FREECAD_BUDDY_AUDIT_LOG", "freecad-buddy-audit.jsonl"))
+    return default_audit_path()
 
 
 def run(argv: list[str] | None = None) -> int:  # noqa: ARG001 - reserved for future flags
