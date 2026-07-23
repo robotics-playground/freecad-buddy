@@ -30,6 +30,16 @@ actor:
   context: assistant-under-test
   transport: mcp
   profile: read-only
+# The second (local/ReAct) backend descriptor (Story 2.3, G1.4): the ReAct text-parse adapter
+# driving an OpenAI-compatible endpoint (pinned local stack: llama.cpp + Qwen3-30B-A3B) over the
+# identical read-only profile. Its model id MUST differ from the grader (NFR1 preflight collision-
+# checks EVERY actor descriptor). The live local eval is operator-gated + CI-skipped; CI drives the
+# ReAct backend against a scripted chat double (see decision 011).
+actor_local:
+  model: llama-qwen3-30b-a3b
+  context: assistant-under-test
+  transport: react
+  profile: read-only
 grader:
   model: deterministic-expected-findings
   context: independent-grader

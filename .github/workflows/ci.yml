@@ -40,6 +40,8 @@ jobs:
           echo "$out" | grep -q "live eval skipped" || {
             echo "live eval must be skipped in CI (no operator backend)"; exit 1;
           }
+      - name: G1 ReAct adapter + backend actor-run (offline, no key/secret/network/GGUF)
+        run: uv run pytest tests/external/test_react_adapter.py tests/external/test_react_backend_actor_run.py -q
       - name: Ruff (T201 print-ban honored)
         run: uv run ruff check .
       - name: External suite

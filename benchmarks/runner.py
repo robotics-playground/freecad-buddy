@@ -417,29 +417,34 @@ def _offline_profile_registry():
     return registry
 
 
-def _scripted_answer_for(case: dict) -> dict:
-    """A correct scripted answer for one broken-doc case: names the object + a matching keyword.
+def _scripted_react_turns_for(case: dict) -> list[str]:
+    """The recorded assistant turns a scripted model emits for one broken-doc case.
 
-    The offline scripted backend replays this so the deterministic grader PASSES every case — the
-    offline run exercises escalation + report build + Wilson CI end-to-end, not model quality (the
-    ≥80% figure is a measured operator run, never asserted by this deterministic double).
+    Two tool-call turns (``query_tree_summary`` then ``verify_recompute``, both on the read-only
+    surface) followed by a final-answer turn naming the expected object + a matching cause keyword,
+    so the deterministic grader PASSES every case. The offline run exercises the ReAct loop +
+    escalation + report build + Wilson CI end-to-end, not model quality (the ≥80% figure is a
+    measured operator run, never asserted by this deterministic double).
     """
     expected = case.get("expected", {})
     obj = expected.get("object", "")
     keywords = expected.get("cause_keywords") or []
     keyword = keywords[0] if keywords else ""
-    answer = f"{obj} is in error: {keyword}."
-    return {"answer": answer, "tools": ["query_tree_summary", "verify_recompute"]}
+    return [
+        '```json\n{"tool": "query_tree_summary", "args": {"doc": "d"}}\n```',
+        '```json\n{"tool": "verify_recompute", "args": {"doc": "d"}}\n```',
+        f"{obj} is in error: {keyword}.",
+    ]
 
 
 def actor_run_command(gate: str) -> int:
-    """Run the G1 actor-run over the read-only profile; grade + escalate + emit reports.
+    """Run the G1 actor-run over the read-only profile via the ReAct backend; grade + escalate.
 
-    Offline (no operator backend): builds the scripted backend + stub profile registry, runs the
-    tiered n10->n30 escalation via ``actor_run.run_actor_eval``, prints the per-tier summary +
-    Wilson CI, and exits 0 when the scripted answers pass. A live backend
-    (``FREECAD_BUDDY_G1_ACTOR_BACKEND=live``) is operator-only and NOT wired here — it is skipped in
-    CI so no key/secret ever enters the pipeline.
+    Offline (no operator backend): builds the ReAct backend over a scripted chat double + the stub
+    profile registry, runs the tiered n10->n30 escalation via ``actor_run.run_actor_eval``, prints
+    the per-tier summary + Wilson CI, and exits 0 when the scripted answers pass. A live backend
+    (any ``FREECAD_BUDDY_G1_ACTOR_BACKEND`` value other than ``offline``) is operator-only and NOT
+    wired here — it is skipped in CI so no key/secret ever enters the pipeline.
     """
     if gate != "G1":
         raise UsageError(f"--actor-run is only defined for gate G1, got {gate!r}")
@@ -453,19 +458,21 @@ def actor_run_command(gate: str) -> int:
         # wired in CI, so it hard-fails rather than silently running the offline scripted double.
         raise UsageError(
             f"actor-run backend {backend_choice!r} is operator-gated and not wired in this "
-            "harness; unset the env var for the offline run, or run the live eval via an MCP "
-            "client (Claude Code/Desktop) per docs/decisions/010"
+            "harness; unset the env var for the offline run, or run the live eval via an "
+            "OpenAI-compatible endpoint (llama.cpp/Qwen) per docs/decisions/011"
         )
 
     from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
-    from benchmarks.harness.actor import Actor, ScriptedBackend
+    from benchmarks.harness.actor import Actor
+    from benchmarks.harness.react_backend import ReactBackend, ScriptedChat
 
     print(
-        f"actor-run {gate}: no operator backend; running offline scripted backend "
-        f"(live eval skipped)"
+        f"actor-run {gate}: no operator backend; running offline ReAct backend over a scripted "
+        f"chat double (live eval skipped)"
     )
-    script = {case["id"]: _scripted_answer_for(case) for case in _load_broken_cases()}
-    backend = ScriptedBackend(script)
+    scripts = {case["id"]: _scripted_react_turns_for(case) for case in _load_broken_cases()}
+    chat = ScriptedChat(scripts)
+    backend = ReactBackend(chat.for_case)
     actor = Actor(_offline_profile_registry())
     result = run_actor_eval(actor, backend, repeats=3)
 
@@ -508,13 +515,38 @@ def _filter_criteria(criteria: list[dict], criterion_id: str | None) -> list[dic
     return selected
 
 
-def _preflight_actor_grader(gate: str) -> None:
-    """Hard-fail INVALID_INPUT if a gate's ``actor:`` and ``grader:`` resolve to the same model.
+def _actor_descriptors(data: dict) -> list[tuple[str, dict]]:
+    """Every actor descriptor in a gate mapping: each ``actor*`` key + each ``actors:`` list entry.
 
-    NFR1 / harness §8: the actor never grades itself. A gate declaring an ``actor:`` and a
-    ``grader:`` block whose ``model`` AND ``context`` both collide is an identity collision — the
-    grader would grade the actor's own output. Raises ``UsageError`` (exit-2, clean message,
-    never a traceback). Gates without both blocks (e.g. G0's deterministic-tool gate) are inert.
+    A gate may declare a single ``actor:`` block, additional ``actor_local:`` (and any other
+    ``actor*``) blocks for extra backends, and/or an ``actors:`` list of blocks. All are collected
+    so the NFR1 preflight checks the grader against every backend, not just ``actor:``.
+    """
+    descriptors: list[tuple[str, dict]] = []
+    for key, value in data.items():
+        if key == "actors":
+            if not isinstance(value, list):
+                raise UsageError(f"gate.yaml 'actors' must be a list, got {type(value).__name__}")
+            for i, entry in enumerate(value):
+                if not isinstance(entry, dict):
+                    raise UsageError(f"gate.yaml actors[{i}] must be a mapping, not a scalar")
+                descriptors.append((f"actors[{i}]", entry))
+        elif isinstance(key, str) and key.startswith("actor"):
+            if not isinstance(value, dict):
+                raise UsageError(f"gate.yaml '{key}' must be a mapping, not a scalar")
+            descriptors.append((key, value))
+    return descriptors
+
+
+def _preflight_actor_grader(gate: str) -> None:
+    """Hard-fail INVALID_INPUT if any actor descriptor and the ``grader:`` resolve to one model.
+
+    NFR1 / harness §8: the actor never grades itself. The check spans EVERY actor descriptor — the
+    ``actor:`` key, any additional ``actor*`` key (e.g. ``actor_local:``), and any ``actors:`` list
+    entry — so a second backend cannot slip an actor==grader collision past the guard. Same model
+    id is the collision; a different ``context`` string does not make the same underlying model an
+    independent grader. Raises ``UsageError`` (exit-2, clean message, never a traceback). Gates
+    without a grader block or without any actor block (e.g. G0's deterministic-tool gate) are inert.
     """
     gate_file = BENCHMARKS_ROOT / KNOWN_GATES[gate] / "gate.yaml"
     try:
@@ -523,20 +555,19 @@ def _preflight_actor_grader(gate: str) -> None:
         raise UsageError(f"unreadable gate.yaml ({gate_file}): {exc.__class__.__name__}") from exc
     if not isinstance(data, dict):
         return
-    actor = data.get("actor")
     grader = data.get("grader")
-    if not isinstance(actor, dict) or not isinstance(grader, dict):
+    if not isinstance(grader, dict):
         return
-    # NFR1: the actor must never grade itself. Same model id is the collision — a different
-    # `context` string does NOT make the same underlying model an independent grader (it would
-    # still grade its own output family), so the guard fires on model identity regardless of
-    # context. (harness §8 phrases it "same model + same context"; this is the stronger reading.)
-    if actor.get("model") == grader.get("model"):
-        raise UsageError(
-            f"actor==grader identity collision in {gate_file}: both resolve to model "
-            f"{actor.get('model')!r} (NFR1: the actor must never grade itself — the grader must "
-            f"be a different model)"
-        )
+    grader_model = grader.get("model")
+    if grader_model is None:
+        return
+    for key, actor in _actor_descriptors(data):
+        if actor.get("model") == grader_model:
+            raise UsageError(
+                f"{key}==grader identity collision in {gate_file}: both resolve to model "
+                f"{grader_model!r} (NFR1: the actor must never grade itself — the grader must "
+                f"be a different model)"
+            )
 
 
 def run_gate(gate: str, criterion_id: str | None = None) -> tuple[list[dict], int]:

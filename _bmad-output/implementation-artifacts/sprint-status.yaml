@@ -76,7 +76,7 @@ development_status:
   epic-2: in-progress
   2-1-entry-gate-g1e-eval-rubric-grader: done
   2-2-assistant-claude-backend: done
-  2-3-local-backend-react-adapter: backlog
+  2-3-local-backend-react-adapter: done
   2-4-gate-g1-exit: backlog
   epic-2-retrospective: optional
   epic-3: backlog
