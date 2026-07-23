@@ -51,7 +51,7 @@ stdio discipline: stdout carries protocol frames only; all logging to stderr (AD
 
 ### 2.2 Streamable HTTP (GUI-attached)
 
-The FreeCAD addon starts the RPC listener; the operator starts the external server with `--transport http`. It serves long-lived on localhost and relays to the in-GUI RPC listener (AD-2, AD-3).
+The FreeCAD addon starts the RPC listener AND **auto-spawns the external MCP HTTP server** as a child process — opening FreeCAD is the whole setup. It serves long-lived on `http://127.0.0.1:8765/mcp` and relays to the in-GUI RPC listener (AD-2, AD-3). The client config below is a plain HTTP entry with no `command`/`serve`/`rpc` in it; the operator never launches the server by hand (that CLI is a debug-only fallback).
 
 ```json
 {

@@ -197,7 +197,21 @@ Every story MUST include this as the **last task**:
   - [ ] Run `npm run typecheck` - Ensure type safety
 ```
 
-## 12. Authoritative References
+## 12. Running the MCP Bridge (GUI mode)
+
+**Opening FreeCAD is the only step — the addon starts everything.**
+
+- On FreeCAD GUI start the addon (`gui_addon/bootstrap.start_bridge`) starts the in-FreeCAD **RPC listener** (stdlib, ephemeral localhost port) AND auto-spawns the **external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp` as a child process. Both are torn down on FreeCAD quit.
+- **Do NOT run `freecad-buddy serve --mode rpc` by hand** to talk to the live GUI, and do not hand-roll RPC sockets — just open FreeCAD, then use the connected `mcp__freecad-buddy__*` tools. The proxy is spawned for you.
+- `.mcp.json` is a plain HTTP entry — no `serve`/`rpc`/`command` in it:
+  ```json
+  { "mcpServers": { "freecad-buddy": { "type": "http", "url": "http://127.0.0.1:8765/mcp" } } }
+  ```
+- **Why the proxy is a separate process (AD-2/AD-12):** the MCP/FastMCP libs are third-party and may not be imported inside FreeCAD's bundled Python. The addon spawns the proxy in the **external project venv interpreter** (which has `mcp`); it never imports `mcp` itself.
+- **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
+- Headless automation (CI, the `run_mcp_*` sweeps) is unaffected: it uses the single-process H1 stdio host, not this proxy.
+
+## 13. Authoritative References
 
 - [Development standards](.knowledge-base/technical/standards/index.md)
 - [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md)

@@ -12,6 +12,9 @@ import atexit
 import logging
 import os
 import secrets
+import shutil
+import socket
+import subprocess
 from pathlib import Path
 
 from freecad_buddy.adapters.audit_log import AuditSink, default_audit_path
@@ -26,7 +29,11 @@ from freecad_buddy.usecases.exports import ExportRegistry
 
 logger = logging.getLogger("freecad_buddy.hosts.gui_addon.bootstrap")
 
+_MCP_HOST = "127.0.0.1"
+_MCP_PORT = 8765
+
 _listener: RpcListener | None = None
+_mcp_proxy: subprocess.Popen | None = None
 
 
 def _log_file_path() -> Path:
@@ -111,12 +118,162 @@ def start_bridge() -> RpcListener:
     logger.info("freecad-buddy RPC listener started on %s:%s", host, bound_port)
     _listener = listener
     _register_shutdown()
+    _start_mcp_proxy()
     return listener
 
 
+def _port_open(host: str, port: int) -> bool:
+    """Whether something already accepts a TCP connection at ``host:port``."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.settimeout(0.3)
+        return probe.connect_ex((host, port)) == 0
+
+
+_SERVE_ARGS = ["-m", "freecad_buddy.hosts.main", "serve", "--mode", "rpc", "--transport", "http"]
+
+
+def _discover_external_python() -> Path | None:
+    """Find the external interpreter that can run the MCP proxy, from the addon's own location.
+
+    The proxy imports ``mcp``/FastMCP, which AD-12 forbids inside FreeCAD's bundled Python, so it
+    must run in a DIFFERENT interpreter. That interpreter is discovered — not configured — by
+    walking from this package's install path to the repo root and probing the standard venv the
+    project ships (``.venv``/``venv``). Zero env vars: install the addon (a junction/copy of the
+    package under the repo), open FreeCAD, and the sibling ``.venv`` is found automatically.
+
+    Returns the venv python whose ``freecad_buddy`` + ``mcp`` are importable, or ``None``.
+    """
+    # bootstrap.py is <root>/src/freecad_buddy/hosts/gui_addon/bootstrap.py — parents[4] is the
+    # repo root when installed as an editable src junction; a vendored copy resolves the same way
+    # (<Mod>/FreeCADBuddy/freecad_buddy/... → the addon root), so also probe two levels up.
+    here = Path(__file__).resolve()
+    roots: list[Path] = []
+    for up in (4, 2):
+        if up < len(here.parents):
+            roots.append(here.parents[up])
+    for override in (os.environ.get("FREECAD_BUDDY_REPO"), os.environ.get("FREECAD_BUDDY_SRC")):
+        if override:
+            base = Path(override)
+            roots.append(base.parent.parent if base.name == "freecad_buddy" else base)
+
+    # On Windows prefer pythonw.exe (the GUI/windowless interpreter): the console python re-execs
+    # through a launcher that opens its own console window even under CREATE_NO_WINDOW, so
+    # pythonw.exe is what actually keeps the background proxy silent. Fall back to python.exe.
+    if os.name == "nt":
+        subdir, names = "Scripts", ("pythonw.exe", "python.exe")
+    else:
+        subdir, names = "bin", ("python",)
+    seen: set[Path] = set()
+    for root in roots:
+        for venv in (".venv", "venv"):
+            for name in names:
+                candidate = root / venv / subdir / name
+                if candidate in seen:
+                    continue
+                seen.add(candidate)
+                if candidate.is_file():
+                    return candidate
+    return None
+
+
+def _mcp_proxy_command() -> list[str] | None:
+    """Resolve the external MCP-proxy launch command, or ``None`` when it cannot be determined.
+
+    Resolution order:
+      1. ``FREECAD_BUDDY_MCP_CMD`` — explicit space-separated command, used verbatim (override).
+      2. **Auto-discovered venv python** next to the installed addon → run the serve module
+         directly (no env vars, no ``uv`` needed). This is the default so opening FreeCAD is the
+         only step.
+      3. ``FREECAD_BUDDY_REPO``/``FREECAD_BUDDY_SRC`` + ``uv`` on PATH → ``uv run`` fallback.
+    None of these resolve → ``None`` (the listener still runs; start the proxy manually to debug).
+    """
+    explicit = os.environ.get("FREECAD_BUDDY_MCP_CMD")
+    if explicit:
+        return explicit.split()
+
+    python = _discover_external_python()
+    if python is not None:
+        return [str(python), *_SERVE_ARGS]
+
+    repo = os.environ.get("FREECAD_BUDDY_REPO") or os.environ.get("FREECAD_BUDDY_SRC")
+    uv = shutil.which("uv")
+    if repo and uv:
+        repo_root = Path(repo)
+        if repo_root.name == "freecad_buddy":
+            repo_root = repo_root.parent.parent
+        return [uv, "run", "--project", str(repo_root), "freecad-buddy",
+                "serve", "--mode", "rpc", "--transport", "http"]
+    return None
+
+
+def _start_mcp_proxy() -> None:
+    """Spawn the external MCP HTTP proxy so opening FreeCAD is the only step to reach the bridge.
+
+    Skips when ``FREECAD_BUDDY_NO_AUTO_MCP`` is set, when port 8765 is already served, or when the
+    launch command cannot be resolved. The child inherits the operator's env (so the exec flag and
+    ``FREECAD_BUDDY_RPC_DIR`` carry through) and is terminated in ``stop_bridge``.
+    """
+    global _mcp_proxy
+    if os.environ.get("FREECAD_BUDDY_NO_AUTO_MCP"):
+        logger.info("FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy")
+        return
+    if _port_open(_MCP_HOST, _MCP_PORT):
+        logger.info("MCP proxy already on http://%s:%s/mcp; not spawning", _MCP_HOST, _MCP_PORT)
+        return
+    command = _mcp_proxy_command()
+    if command is None:
+        logger.info(
+            "MCP proxy not auto-started: no .venv/venv interpreter found next to the addon and no "
+            "FREECAD_BUDDY_MCP_CMD override. Create the project venv (uv sync) so the addon can "
+            "find it, or set FREECAD_BUDDY_MCP_CMD. The RPC listener is up; start the proxy "
+            "manually (serve --mode rpc) to reach it over MCP in the meantime."
+        )
+        return
+    try:
+        proxy_log = _log_file_path().parent / "mcp-proxy.log"
+        logfile = open(proxy_log, "w", encoding="utf-8")  # noqa: SIM115 - child owns it for its life
+        _mcp_proxy = subprocess.Popen(  # noqa: S603 - operator-configured launch command
+            command, **_no_window_kwargs(logfile)
+        )
+        logger.info(
+            "spawned MCP proxy (pid %s) -> http://%s:%s/mcp; proxy log: %s",
+            _mcp_proxy.pid, _MCP_HOST, _MCP_PORT, proxy_log,
+        )
+    except Exception:  # noqa: BLE001 - a failed proxy spawn must not break the listener/GUI start
+        logger.exception("failed to spawn the MCP proxy; the RPC listener is still up")
+        _mcp_proxy = None
+
+
+def _no_window_kwargs(logfile) -> dict:
+    """Popen kwargs that spawn the proxy silently in the background (no console window).
+
+    On Windows a bare console-app child pops a cmd window; ``CREATE_NO_WINDOW`` suppresses it and
+    ``DETACHED_PROCESS`` gives the child its own process group so it is not tied to FreeCAD's
+    console. The child's stdout/stderr go to ``logfile`` (the proxy's own diagnostics), not a
+    window. On POSIX, ``start_new_session`` detaches it.
+    """
+    kwargs: dict = {"stdin": subprocess.DEVNULL, "stdout": logfile, "stderr": logfile}
+    if os.name == "nt":
+        # 0x08000000 CREATE_NO_WINDOW | 0x00000008 DETACHED_PROCESS
+        kwargs["creationflags"] = 0x08000000 | 0x00000008
+    else:
+        kwargs["start_new_session"] = True
+    return kwargs
+
+
 def stop_bridge() -> None:
-    """Stop the listener and clear the singleton."""
-    global _listener
+    """Stop the MCP proxy (if we spawned it) and the listener, and clear the singletons."""
+    global _listener, _mcp_proxy
+    if _mcp_proxy is not None:
+        try:
+            _mcp_proxy.terminate()
+            _mcp_proxy.wait(timeout=5)
+        except Exception:  # noqa: BLE001 - best-effort child teardown
+            try:
+                _mcp_proxy.kill()
+            except Exception:  # noqa: BLE001
+                logger.debug("could not kill the MCP proxy child", exc_info=True)
+        _mcp_proxy = None
     if _listener is None:
         return
     _listener.stop()

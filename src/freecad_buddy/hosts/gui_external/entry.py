@@ -158,10 +158,20 @@ def build_app(server: Server) -> Starlette:
 
 
 def run(host: str = _HOST, port: int = _PORT) -> int:
-    """Serve the proxy MCP surface over streamable HTTP at ``host:port/mcp``."""
-    from freecad_buddy.adapters.mcp_server import configure_stderr_logging
+    """Serve the proxy MCP surface over streamable HTTP at ``host:port/mcp``.
 
-    configure_stderr_logging()
+    Windowless-safe: when launched under ``pythonw.exe`` (the addon spawns it that way so no
+    console window appears) ``sys.stdout``/``sys.stderr`` are ``None``. A stream-logging config
+    would then crash at startup, so logging is only wired to stderr when it exists, and uvicorn's
+    default stdout logging config is disabled (``log_config=None``).
+    """
+    import sys
+
+    if sys.stderr is not None:
+        from freecad_buddy.adapters.mcp_server import configure_stderr_logging
+
+        configure_stderr_logging()
+
     caps = Capabilities.from_env(dict(os.environ))
     client = RpcClient()
     registry = build_proxy_registry(client, caps)
@@ -169,6 +179,6 @@ def run(host: str = _HOST, port: int = _PORT) -> int:
     app = build_app(server)
 
     logger.info("freecad-buddy GUI-external MCP server on http://%s:%s/mcp", host, port)
-    config = uvicorn.Config(app, host=host, port=port, log_level="warning")
+    config = uvicorn.Config(app, host=host, port=port, log_level="warning", log_config=None)
     uvicorn.Server(config).run()
     return 0

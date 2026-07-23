@@ -194,8 +194,8 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 1. Install FreeCAD 1.1.x GUI (official installer).
 2. `uv sync --all-extras` in repo root.
 3. `python scripts/install_addon_dev.py` — copies `package.xml` + `InitGui.py` into `<FreeCAD user dir>/Mod/FreeCADBuddy/` and writes a `buddy_dev.pth`-style pointer: `InitGui.py` checks env var `FREECAD_BUDDY_SRC`; when set (dev), it `sys.path.insert(0, $FREECAD_BUDDY_SRC)` so the live repo `src/` is used — no re-copy per edit. Unset = vendored copy (release behavior).
-4. Start FreeCAD → addon starts RPC listener on localhost with per-session token (AD-2/3).
-5. `uv run freecad-buddy serve --mode rpc --transport http` → external MCP server bridging to the listener (AD-3: HTTP for long-lived GUI serving).
+4. Start FreeCAD → the addon starts the RPC listener on localhost with a per-session token AND **auto-spawns the external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp`. The proxy interpreter is the project `.venv`/`venv` python, **auto-discovered from the addon's install path** — no env var to set (the addon never imports `mcp`; AD-2/3, AD-12). So the whole setup is: install the addon, `uv sync`, open FreeCAD; the MCP client connects straight to `:8765`.
+5. **(debug/troubleshoot only)** If the auto-spawned proxy is unavailable, start it by hand: `uv run freecad-buddy serve --mode rpc --transport http`. The `--mode rpc` CLI is a fallback for when auto-start is disabled (`FREECAD_BUDDY_NO_AUTO_MCP`) or no venv is discoverable — never the normal path.
 
 ### 4.2 CI (ubuntu-latest, micromamba conda-forge)
 

@@ -35,7 +35,7 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR3** — A client can capture view-controlled screenshots — include/exclude objects, per-object transparency/color, focus-on-element camera framing, highlight, camera presets — via constructed-scene render that never mutates the document or user viewport.
 - **FR4** — A client can export STEP, STL, and 3MF; every export completes only through its paired re-import verify tool with independent oracles. *(AD-9)*
 - **FR5** — A client can verify geometry deterministically: shape validity/watertightness/volume/bbox/counts, sketch DoF + `FullyConstrained` pass signal, recompute-clean sweep, document fingerprint compute/compare, TNP reference audit. *(AD-6/7/8)*
-- **FR6** — The same tool implementations serve three hosts: FreeCAD GUI (addon + RPC listener + main-thread marshal), single-process headless, and FreeCADCmd-hosted RPC fallback. *(AD-2)*
+- **FR6** — The same tool implementations serve three hosts: FreeCAD GUI (addon + RPC listener + main-thread marshal + auto-spawned external MCP proxy so opening FreeCAD is the only startup step), single-process headless, and FreeCADCmd-hosted RPC fallback. *(AD-2)*
 
 #### Assistant — CAP-2
 
@@ -386,6 +386,10 @@ A developer or MCP client can programmatically drive FreeCAD — documents, quer
 4. **Given** the RPC listener module  
    **When** `check_imports.py` runs  
    **Then** listener = stdlib-only, marshal = QtCore-only (AD-12, AD-1 exemptions)
+
+5. **Given** FreeCAD GUI starts with the addon installed  
+   **When** the bridge boots  
+   **Then** after the listener is up the addon **auto-spawns the external MCP proxy** (`serve --mode rpc --transport http`, `:8765`) as a child process, using the project venv python **auto-discovered from the addon's own install path** (no env vars required; the addon never imports `mcp`); it is skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set or `:8765` is already served, and terminated on FreeCAD quit — so an MCP client reaches the live session with no manual `serve` command and no configuration. The manual `serve --mode rpc` CLI is a debug/troubleshoot fallback only.
 
 **References:** integration-mcp-freecad.md §2–4, integration-mcp-clients.md §2; mcp-embedding, mcp-servers-survey research.
 
