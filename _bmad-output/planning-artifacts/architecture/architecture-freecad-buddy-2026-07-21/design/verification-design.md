@@ -350,5 +350,6 @@ The validators themselves are validated before their scores are citable:
 - **Sketch:** planted unconstrained line, duplicate dimension, over-definition, bad-index constraint, zero-length edge — each maps to a distinct property signal.
 - **Export:** planted dropped solid, unit lie, hole in mesh, flipped normals, non-manifold edge, `type="model"` on open surface, corrupt container.
 - **Assertions:** planted missing hole, wrong diameter, mirrored pattern, 0.5 mm spacing error.
+- **Robot-description export (Phase 5, AD-22):** planted wrong-frame axis, cyclic kinematic tree, second root, negative/implausible inertia, unresolved mesh, mm-as-m unit lie — each must be caught by the `verify_export_urdf`/`verify_export_sdf` re-parse leg (schema + single-root-acyclic tree + normalized joint axes + positive inertials + mesh-resolve). Designed and fault-tested at the G5-robot entry gate.
 
 Each suite must show sensitivity ≥ 95 % / false-alarm ≤ 5 % before phase implementation begins (AD-19); reports carry the spine banner (FreeCAD version, `ElementMapVersion`, validator sensitivity).

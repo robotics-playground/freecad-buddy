@@ -154,7 +154,7 @@ graph LR
 
 - **Binds:** skills library, agent harnesses, ablation runner
 - **Prevents:** context-rot from all-12 resident loading; nondeterministic ablation A/Bs; cross-skill coupling polluting deltas
-- **Rule:** One skill store (`SKILL.md` body ≤1,500 words, CI-enforced; long tail in `references/`; no Level-2 cross-skill dependencies). Every skill body carries the same four sections: scope statement, decision rules, worked examples, anti-patterns. Two loader modes over the store: production = metadata-first router (12 descriptions resident, 2–5 bodies routed per task, ≤~10K token skill budget, routed subset logged); ablation = forced explicit-subset injection with auto-activation disabled. The injection path is the portable second-harness mechanism.
+- **Rule:** One skill store (`SKILL.md` body ≤1,500 words, CI-enforced; long tail in `references/`; no runtime code-level cross-skill dependency — a body never imports or `references/`-links into another skill's directory). Every skill body carries the same four sections: scope statement, decision rules, worked examples, anti-patterns. A body **may name a sibling skill in prose** to route the reader (all 12 skills are installed together), so long as the two skills' scopes stay disjoint; such a mention is a routing pointer, not a content dependency. *(Amended: the earlier "no Level-2 cross-skill dependencies" wording forbade any sibling mention in a body to keep ablation deltas perfectly attributable; the all-installed runtime makes in-body routing pointers worth their cost. Trade-off accepted: a body that leans on a sibling's content is not cleanly ablatable in isolation — such coupling is minimized and noted so the ablation campaign accounts for it.)* Two loader modes over the store: production = metadata-first router (descriptions resident, 2–5 bodies routed per task, ≤~10K token skill budget, routed subset logged); ablation = forced explicit-subset injection with auto-activation disabled. The injection path is the portable second-harness mechanism. *(Catalog: the 12 Track A+B parametric-CAD skills, plus a Phase-5 robot-description/sourcing group — `urdf-export`, `sdf-export`, `part-sourcing` — added when Phase-5 lands, AD-22/AD-23. New skills join the same store and shape contract; the resident-description count grows with the catalog.)*
 
 ### AD-16 — Benchmark provenance policy [ADOPTED]
 
@@ -204,6 +204,22 @@ graph LR
 - **Prevents:** geometrically-passing but visually/semantically wrong parts shipping; the actor grading its own renders
 - **Rule:** A generated **part** is done only when both channels pass: (a) all geometry assertions (AD-13) and (b) an **independent visual judge** — a vision-capable model that is never the acting agent (separate model id or separate context, same separation rule as the Phase 1 grader) — judging the standard visual set against the spec via a structured checklist, temperature 0, structured verdict. Standard visual set: 3D iso render + focus views **+ dimensioned TechDraw projections (front/top/right)** auto-generated from the part's driving parameters on a TempDoc copy (part document never polluted). The judge is conjunctive, never overriding: it cannot pass a part that geometry failed. Judge findings feed the repair loop as diagnostics. Capability-gated fail-closed: render or judge unavailable → part is NOT done; an explicit operator waiver (audit-logged) is the only bypass. The judge is itself a validator under AD-13/AD-19: fault-injected (planted visually-wrong parts) to sensitivity ≥95 % / false-alarm ≤5 % before its verdicts are citable. Per-operation verification (AD-5) stays geometry-only — the visual leg runs per part, not per mutation.
 
+### AD-22 — Robot-description export (URDF/SDF)
+
+> Scope: Phase 5 capability (Epic 7). Detailed design: [Robot-Description Export & Part Sourcing Design](design/robot-description-and-sourcing-design.md). Empirically-gated items land at the G5-robot gate.
+
+- **Binds:** Phase-5 URDF/SDF export tools and their skills
+- **Prevents:** an unverified XML dump counted as success; silent unit/frame errors crossing the CAD→robot boundary
+- **Rule:** URDF/SDF are **emitted by our code** from the native Assembly kinematic tree (`AssemblyObject`/`AssemblyLink`/joints) + native solid inertials (`TopoShapeSolidPy` mass-property surface) + mesh export — the in-tree FreeCAD `Robot` workbench is a trajectory/simulation tool, not a URDF exporter, so nothing exports these for us; the external **CROSS** addon is evaluated first per the reuse rule and wrapped, not forked, if it fits. Every `export_urdf`/`export_sdf` completes **only** through its paired `verify_export_*` (re-parse the written file, schema-valid, single-root **acyclic** kinematic tree, joint axes finite and normalized in the joint frame, inertials positive and physically plausible, every mesh reference resolves) — mirroring AD-9's export/verify pairing; "bytes were written" is never success. The internal-mm/deg → **URDF/SDF-native metre/kg/radian** conversion is an explicit, pinned boundary, never an ambient default. Every link, joint, and inertial origin records the reference frame it is expressed in (frame-semantics rigor). Reuses AD-9 (pairing), AD-17 (envelopes/status), AD-20 (document lifecycle), AD-11 (shim owns version-sensitive Assembly/inertial calls), AD-12 (in-FreeCAD code stays stdlib + FreeCAD; XML emit and any schema libs live external).
+
+### AD-23 — Off-the-shelf part sourcing & import
+
+> Scope: Phase 5 capability (Epic 7). Detailed design: [Robot-Description Export & Part Sourcing Design](design/robot-description-and-sourcing-design.md). Empirically-gated items land at the G5-robot gate.
+
+- **Binds:** Phase-5 part-sourcing/import tools and their skill
+- **Prevents:** raw imports bypassing the bridge; trusting an imported part's origin/orientation; unlicensed shipped fixtures
+- **Rule:** Off-the-shelf parts enter a document **only** through the `document_*`/import use cases (native STEP import via `ImportOCAF`/`ReaderStep`), never a raw `App.open` alongside the bridge (AD-20). Catalog **search** is an external concern; **placement** is standard bridge flow. An imported part's geometry is **measured** (`query_mass_properties`/`query_placement`) before its mating frames are trusted — its origin and orientation are never assumed. Any shipped catalog fixture records provenance and license per AD-16.
+
 ## Consistency Conventions
 
 > Detailed design: [MCP Tool Catalog Design](design/mcp-tools-design.md) (tool names, envelopes, selectors) · [Data Contracts Design](design/data-contracts-design.md) (wire types, versioning).
@@ -235,6 +251,9 @@ graph LR
 | pytest | current — harness runner (external process only) |
 | uv | dependency management, external process only |
 | GitHub Actions + micromamba | CI, cached conda env per pinned FreeCAD version |
+| FreeCAD Assembly workbench | native (1.0+); supplies the kinematic link/joint tree for AD-22 — Phase 5 |
+| CROSS addon | optional URDF/SDF export addon — evaluate-first reuse candidate for AD-22 (else emit XML ourselves); version pinned at the Phase-5 gate |
+| URDF/SDF schema/parse lib | external-process only, for the AD-22 verify leg (re-parse + schema-valid); pinned at the Phase-5 gate |
 
 ## Structural Seed
 
@@ -274,7 +293,7 @@ freecad-buddy/
     usecases/      # tool impls, mutation protocol, TNP guard, fingerprint, shim.py
     adapters/      # mcp_server, rpc_listener, marshal, skills_loader, harness glue
     hosts/         # InitGui.py (addon), headless entry, phase4 supervisor
-  skills/          # Track A/B skill dirs: SKILL.md + references/
+  skills/          # Track A/B (+ Phase-5 robot-description/sourcing) skill dirs: SKILL.md + references/
   benchmarks/      # specs + assertions; dev/ and heldout/ splits; fault-injection/
   tests/           # unit + golden-model suites (run via FreeCADCmd in CI)
   .github/workflows/  # ci.yml: matrix {1.0.x, 1.1.x} blocking + 1.2-dev canary
@@ -293,6 +312,8 @@ freecad-buddy/
 | Phase 3 designer loop | plan/execute over Phase 2 tools | AD-5, AD-13, AD-14, AD-21 |
 | Phase 4 service | hosts/phase4 supervisor | AD-17, AD-18, AD-21 |
 | Phase 4 DFM / design-rule checks | verify tools (rule layer) + slicer CLI oracle | AD-9, AD-13; deferred detail |
+| Phase 5 robot-description export (URDF/SDF) | Phase-5 export tools over the Assembly tree + inertials | AD-22, AD-9, AD-17, AD-20; deferred detail |
+| Phase 5 off-the-shelf part sourcing/import | document_*/import + measurement | AD-23, AD-20, AD-16; deferred detail |
 | Skills track | skills/ + ablation runner | AD-14, AD-15 |
 | Benchmarks/golden models | benchmarks/ | AD-13, AD-14, AD-16 |
 
@@ -308,6 +329,10 @@ freecad-buddy/
 | Slicer-acceptance CI job for 3MF; lib3mf as fallback writer | Phase 4 realism gate; triggered by slicer rejects |
 | DFM/design-rule layer (min wall, hole-edge distance; slicer CLI mapping) | Phase 4 gate; composes existing verify primitives |
 | Phase 1 doc-citation channel (skills `references/` vs doc-retrieval tooling over local wiki clone) | Phase 1 gate; read-only capability, no schema impact |
-| Assembly `JointObject.py` wrapper design | Phase 5; FreeCAD scripting gap flagged |
+| Assembly `JointObject.py` wrapper design | Phase 5; native Assembly WB exists (1.0+), Python-exposure of joints is the gap — prerequisite for AD-22 URDF/SDF export |
+| URDF/SDF export detail (CROSS-addon-vs-hand-rolled-XML; the verify leg's schema/parse lib; URDF vs SDF tool split) | Phase-5 gate; posture fixed by AD-22, empirical CROSS-fit + Assembly-Python-exposure spikes decide the build path |
+| Part-sourcing catalog integration (which catalog/API; search surface) | Phase-5 gate; posture fixed by AD-23 (import path + measured frames); search is external and swappable |
+| SRDF (MoveIt planning semantics) | Deferred — no native FreeCAD path; derives from an exported URDF + external MoveIt Setup Assistant. Revisit after URDF (AD-22) lands and a MoveIt integration is wanted |
+| Implicit CAD — **rejected, not deferred** | OCCT B-rep vs F-rep/SDF kernel mismatch; the verify stack (AD-6 fingerprint, AD-9 pairing) assumes B-rep solids. Recorded so it is not re-litigated |
 | Exact tolerance defaults per assertion | Fault-injection calibration during each phase's Validation Design Gate |
 | Phase 0 spike items: `exportBinary` Python exposure (fallback `exportBrep`), `renderToImage` w/o GUI-document vs Xvfb, VarSet exposure on 1.1 runtime, conda `FreeCADCmd` path edge | Empirical checks, first week of Phase 0 |

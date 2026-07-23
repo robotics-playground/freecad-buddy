@@ -487,3 +487,14 @@ Phase 2 policy: mutation tool called without valid `confirm` in a confirm-requir
 - **No AD conflicts identified.** Two deliberate interpretations, recorded per spine instructions:
   1. **Lifecycle-op exemption (§1.4):** `document_save/close/recompute/undo` are mutations for serialization/audit purposes but exempt from the AD-5 snapshot bracket and Phase 2 preview gate (no new geometric intent; `undo` is itself the AD-5 rollback mechanism, proven by AD-6 fingerprints per G2.3). AD-5's "every mutation" is read as "every geometry-intent mutation"; flagged for spine-owner confirmation.
   2. **G0.2 counting:** the gate text counts `query_`/`document_`/`export_`; this catalog meets ≥15 (16) within those namespaces alone, so the stricter reading holds; with Phase 0 `verify_` the AI-visible count is 23.
+
+## 8. Phase-5 tools (forward pointer — designed at the G5-robot gate)
+
+Robot-description export and part sourcing (AD-22/AD-23) add, at Phase 5, to the same
+`export_`/`verify_` conventions: `export_urdf`, `export_sdf` (each carrying `verified: false`
+until its pair passes) and `verify_export_urdf`, `verify_export_sdf` (re-parse + schema-valid +
+kinematic-tree sanity + inertials + mesh-resolve, orchestrated external-side like the AD-9 mesh
+oracles, with the in-FreeCAD assembly/inertial reads via RPC); plus part sourcing/import tools on
+the `document_`/import path (AD-20). Full schemas live in
+[Robot-Description Export & Part Sourcing Design](robot-description-and-sourcing-design.md) §5;
+empirically-gated items (CROSS-vs-XML build path, catalog choice) land at the G5-robot entry gate.

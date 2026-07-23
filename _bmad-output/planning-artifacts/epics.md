@@ -72,6 +72,12 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR19** — `debug_exec` exists as operator-only capability: env-flag gated, unregistered when off, permanently off in service mode, every call audit-logged. *(AD-4)*
 - **FR20** — An append-only audit log records every mutation, exec, preview, approval, and rollback from Phase 0 using the contracts-owned record type. *(AD-17)*
 
+#### Robot-description & sourcing — CAP-8 *(Phase 5)*
+
+- **FR21** — A parametric assembly exports to URDF — links, joints, limits, inertials (from native mass properties), and collision/visual meshes — completing only through a paired re-parse + schema + kinematic-tree-sanity verify; the mm/deg→m/kg/rad conversion is explicit and every origin records its frame. *(AD-22)*
+- **FR22** — The same assembly exports to SDF (model-level) through its own paired verify, sharing the tessellation source with URDF. *(AD-22)*
+- **FR23** — Off-the-shelf STEP parts are sourced (external search) and imported/placed only through the bridge's document/import path, with mating frames measured from geometry, never assumed, and provenance recorded for shipped fixtures. *(AD-23)*
+
 ### NonFunctional Requirements
 
 | ID | Requirement | Source |
@@ -145,9 +151,10 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | FR8–FR11 | Epic 3 | Typed mutations + transaction protocol; preview/confirm; verified undo; TNP guard |
 | FR12–FR14 | Epic 4 | Designer loop (geometry ∧ visual convergence); visual judge; named parameters |
 | FR15 | Epic 5 | Headless job API, revisions, agent-to-agent cycle |
-| FR16 | Epic 6 | 12-skill library + two-mode loader + ablation |
+| FR16 | Epic 6 | 12-skill library + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.7–6.9) |
+| FR21–FR23 | Epic 7 | URDF/SDF export with paired verify; off-the-shelf part sourcing/import *(Phase 5)* |
 
-All 20 FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks.
+All 23 FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks. FR21–FR23 are post-MVP (Phase 5) and additive; the MVP (Phases 0–4) is unaffected.
 
 ---
 
@@ -187,9 +194,15 @@ Any agent or human submits specs to a headless job API and gets validated models
 
 Any LLM harness gains measurable CAD judgment from 12 curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–4; needs Epic 1's harness.
 
-**FRs covered:** FR16
+**FRs covered:** FR16 (+ FR21–FR23 skill support in stories 6.7–6.9, Phase 5)
 
-**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1.
+### Epic 7: Robot-Description Export & Part Sourcing (Phase 5 · gate G5-robot)
+
+A parametric assembly exports to validated URDF and SDF, and off-the-shelf STEP parts are sourced and placed under the bridge. Post-MVP; sits on a Phase-5 Assemblies capability.
+
+**FRs covered:** FR21, FR22, FR23
+
+**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7.
 
 ---
 
@@ -780,3 +793,74 @@ Any LLM harness gains measurable CAD judgment from 12 curated skills — each pr
 - `design-decomposition` ≥+15pp on its dedicated n≥40 set at R≥10 (GS.6)
 - `skills_accuracy` tokens ×12 + `spot_audit` bound
 - Gate verdict green.
+
+### Story 6.7: URDF-Export Skill *(Phase 5 · with Epic 7)*
+
+**Acceptance Criteria:**
+
+- `urdf-export` skill authored per the SKILL.md template (shape-check green), teaching how to drive an assembly → URDF through the bridge's Phase-5 export tools (`export_urdf`/`verify_export_urdf`), frame-semantics discipline, unit conversion, and the verify-first done rule (AD-22)
+- Ablated once GS infra + Epic-7 tools exist.
+
+### Story 6.8: SDF-Export Skill *(Phase 5 · with Epic 7)*
+
+**Acceptance Criteria:**
+
+- `sdf-export` skill authored (shape-check green), teaching assembly → SDF export, model-vs-world scope, and the paired verify (AD-22)
+- Ablated once GS infra + Epic-7 tools exist.
+
+### Story 6.9: Part-Sourcing Skill *(Phase 5 · with Epic 7)*
+
+**Acceptance Criteria:**
+
+- `part-sourcing` skill authored (shape-check green), teaching off-the-shelf STEP part search → import → placement under the bridge, measured (not assumed) mating frames, and provenance (AD-23)
+- Ablated once GS infra + Epic-7 tools exist.
+
+---
+
+## Epic 7: Robot-Description Export & Part Sourcing (Phase 5 · gate G5-robot)
+
+A parametric assembly exports to validated URDF and SDF — links, joints, inertials, and meshes — and off-the-shelf STEP parts are sourced, imported, and placed under the bridge. Post-MVP; sits on top of a Phase-5 Assemblies capability. *(Committed skeleton — expand at the G5-robot entry gate before create-story, per AD-19.)*
+
+**FRs covered:** FR21, FR22, FR23
+
+> **Prerequisite:** a Phase-5 **Assemblies** capability (native Assembly workbench Python-exposure; the `JointObject` gap in intent.md). URDF/SDF export consumes the kinematic link/joint tree that capability produces — Epic 7 cannot complete before it. Recommend scoping Assemblies as the first Phase-5 epic and Epic 7 after it.
+
+### Story 7.1: Entry Gate G5-robot.E — Fixtures, Verify Legs & Build-Path Spikes
+
+**Acceptance Criteria:**
+
+- Golden robot-description fixtures (a simple 2–3 link arm) with known link/joint/inertial expected values, provenance-manifested (AD-16)
+- Fault suite: planted wrong-axis, cyclic tree, negative inertia, missing mesh, wrong-unit cases; verify-leg sensitivity ≥95 % / FA ≤5 %
+- Spikes resolved and recorded: CROSS-addon-vs-hand-rolled-XML decision, Assembly-workbench Python-exposure of the joint tree, the URDF/SDF schema/parse library for the verify leg
+- Benchmark runs against a stub and fails honestly.
+
+### Story 7.2: URDF Export & Paired Verify
+
+**Acceptance Criteria:**
+
+- `export_urdf` emits URDF from the assembly tree + native inertials + mesh export (via CROSS or our XML per the spike); mm/deg → m/kg/rad conversion pinned and explicit
+- `verify_export_urdf` re-parses the file: schema-valid, single-root acyclic kinematic tree, joint axes finite/normalized in joint frame, inertials positive/plausible, mesh refs resolve — export is done only when this passes (AD-22)
+- Every link/joint/inertial origin records its reference frame.
+
+### Story 7.3: SDF Export & Paired Verify
+
+**Acceptance Criteria:**
+
+- `export_sdf` emits model-level SDF from the same assembly source; `verify_export_sdf` mirrors the URDF verify leg
+- Shared tessellation/mesh source with URDF so the two cannot silently diverge.
+
+### Story 7.4: Part Sourcing, Import & Placement
+
+**Acceptance Criteria:**
+
+- Off-the-shelf STEP parts enter only through the `document_*`/import path (AD-20, AD-23); catalog search is external and swappable
+- An imported part's mating frames are derived from measured geometry (`query_mass_properties`/`query_placement`), never assumed
+- Any shipped fixture records provenance + license (AD-16).
+
+### Story 7.5: Gate G5-robot Exit
+
+**Acceptance Criteria:**
+
+- A parametric assembly round-trips: export URDF/SDF → verify legs green on the golden fixtures → re-parse clean
+- Fault suite caught ≥95 %; `spot_audit` token bound
+- Gate verdict green from stored reports.

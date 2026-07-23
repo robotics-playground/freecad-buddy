@@ -197,6 +197,7 @@ sequenceDiagram
 | P2 (G2) | sketches, features, preview, verify_sketch, render_probe, elicitation/confirm glue; tnp_guard Layers 1–2 + 5-scenario fault suite |
 | P3 (G3) | assertion compiler + spec-benchmark runner extensions in harness (designer loop is agent-side plan/execute over P2 tools — no new ring component) |
 | P4 (G4) | phase4/supervisor, phase4/worker, job API surface (schemas unchanged — owned by contracts since P0 per AD-17) |
+| P5 (G5-robot) | robot-description export use cases (`export_urdf`/`export_sdf` + paired `verify_export_*`) over the Assembly kinematic tree + native inertials; part sourcing/import use cases; external-side URDF/SDF schema/parse oracle (mirrors export_oracles); skills `urdf-export`, `sdf-export`, `part-sourcing`. Depends on a Phase-5 Assemblies capability (AD-22/AD-23; detail at the G5-robot gate) |
 
 ## 8. Conflicts
 

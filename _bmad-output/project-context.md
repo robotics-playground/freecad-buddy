@@ -119,7 +119,7 @@ FreeCAD comes from the host (GUI install or conda env), never from pyproject. In
 Rules above are distilled; full contracts live in:
 
 - Architecture spine (21 ADs): `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/ARCHITECTURE-SPINE.md`
-- Design docs (10): same folder, `design/` — indexed below
+- Design docs (11): same folder, `design/` — indexed below
 - Spec + phase gates: `_bmad-output/specs/spec-freecad-buddy/`
 - Epics & stories: `_bmad-output/planning-artifacts/epics.md`
 - Research reports (18): `_bmad-output/planning-artifacts/research/`
@@ -140,6 +140,7 @@ All paths relative to the architecture folder above (`.../architecture-freecad-b
 | `validation-harness-design.md` | Gate runner CLI + execution flow, `benchmarks/` layout, held-out sealing, provenance manifest, stats module (Wilson/McNemar/majority-of-R), fault-injection framework, human-token mechanism, independent grader + visual judge wiring | AD-13, AD-14, AD-16, AD-19 | Working on a gate, benchmark case, fault suite, stats, grader/judge, sealing, or provenance |
 | `skills-structure-design.md` | Skill store layout, `SKILL.md` template (4 sections, ≤1,500 words), two-mode loader (router + forced-subset), routing table, CI shape check, token budgets | AD-15 | Authoring/editing a skill, the loader, routing rules, or the skill CI check |
 | `security-and-service-design.md` | `debug_exec` gating, RPC bind/token posture, stderr-only enforcement, per-phase threat model, Phase 4 supervisor + per-job sandbox + data plane + re-executed checks, rejected-mechanism table | AD-4, AD-17, AD-18 | Security-sensitive work, `debug_exec`, the audit log, or any Phase 4 supervisor/worker/sandbox code |
+| `robot-description-and-sourcing-design.md` | *(Phase 5)* URDF/SDF export from an assembly: ring placement, unit/frame boundary, assembly→link/joint mapping, inertials from native mass properties, `export_urdf`/`export_sdf` + paired verify schemas, verify orchestration, part sourcing/import, fault suite | AD-22, AD-23, AD-9, AD-20 | Phase-5 robot-description export or off-the-shelf part sourcing/import work |
 
 ---
 

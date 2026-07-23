@@ -33,12 +33,16 @@ skills/
   design-intent/               SKILL.md  references/
   parametric-patterns/         SKILL.md  references/
   verification-thinking/       SKILL.md  references/
+  # Track R — robot-description & sourcing (Phase 5, AD-22/AD-23)
+  urdf-export/                 SKILL.md  references/
+  sdf-export/                  SKILL.md  references/
+  part-sourcing/               SKILL.md  references/
 ```
 
 Rules:
 
-- Directory name == frontmatter `name` (CI-checked). Track C skills (Phase 4/5) join the same layout later; nothing here assumes N=12 except the budget table.
-- `references/` files are per-operation and transient: a body may point to its **own** `references/` files by relative path, never to another skill's directory (AD-15: no Level-2 cross-skill dependencies; the check in §6 also forbids cross-skill reference paths, which is the same coupling one level down).
+- Directory name == frontmatter `name` (CI-checked). The Phase-5 Track R skills (robot-description/sourcing, AD-22/AD-23) join the same layout; a later Track C (domain judgment, Phase 4/5) would too. The catalog is the 12 Track A+B plus these — the router's resident-description count and the budget table grow with it.
+- `references/` files are per-operation and transient: a body may point to its **own** `references/` files by relative path, never to another skill's directory (AD-15: no cross-skill *path* dependency; the §6 check forbids any `references/` link escaping the skill's own dir). A body may still name a sibling skill in prose as a routing pointer (AD-15 amended) — that is not a path dependency.
 - No scripts, no assets: skills are pure knowledge documents (agent-agnostic per intent.md); executable behavior belongs in tools, not skills (AD-4 posture).
 - The store is consumed by the external-process loader only (AD-15 binds skills library + agent harnesses); nothing under `skills/` is imported by in-FreeCAD code (AD-12 untouched).
 
@@ -94,7 +98,7 @@ Frontmatter fields:
 | Field | Req. | Rule |
 | --- | --- | --- |
 | `name` | yes | == directory name; kebab-case |
-| `track` | yes | `A` \| `B` (later `C`) |
+| `track` | yes | `A` \| `B` \| `R` (robot-description/sourcing, Phase 5); a later `C` (domain judgment) reserved |
 | `description` | yes | <1,024 chars; routing metadata per §3 |
 | `version` | yes | semver; bumped on any body change (ablation results cite skill versions — a delta measured on 0.1.0 is not evidence for 0.2.0) |
 | `freecad-versions` | yes | versions the content was accuracy-reviewed against (GS.5 owner review is version-pinned; matches CI matrix, AD-11) |
@@ -106,7 +110,7 @@ Section-order and heading names are exact (`Scope`, `Decision Rules`, `Worked Ex
 Descriptions are the router's only input in production Level-1 state and drive native Claude activation. A vague description silently breaks selective loading — treat these rules as part of the skill's correctness, reviewed at GS.5.
 
 1. **Lead with "Use when …" in task terms** the agent will actually see in a spec or command: operation names, error text, artifact types ("diagnosing a recompute error", "adding a fillet", "DoF > 0"). Not topic labels ("about sketching").
-2. **State the negative boundary** with a pointer: "Do NOT use for X (see other-skill)". This is the only permitted cross-skill mention anywhere — it lives in Level-1 metadata, not the body, so it cannot pollute ablation deltas (AD-15).
+2. **State the negative boundary** with a pointer: "Do NOT use for X (see other-skill)". The description is the *primary* home for cross-skill routing (Level-1 metadata, so it never pollutes ablation deltas). A body **may also** name a sibling skill in prose as a routing pointer (AD-15, amended — all 12 skills ship together); keep such in-body pointers minimal and to disjoint-scope siblings so the coupling stays negligible.
 3. **Enumerate 3–6 concrete trigger phrases**, chosen to be disjoint across the 12 skills where possible; overlap is allowed only where co-loading is intended (e.g. `freecad-sketcher` + `sketch-strategy`).
 4. **No claims of quality or importance** ("essential", "comprehensive") — routers don't read marketing, and every wasted character crowds out a trigger term (<1,024-char hard cap).
 5. Description edits are version bumps: routing behavior is measurable behavior.
@@ -166,7 +170,7 @@ One script (external process, runs in the existing CI workflow), blocking on bot
 | Frontmatter | All §2 fields present; `name` == dir name; `description` <1,024 chars | format hard cap |
 | Body word count | ≤1,500 words (frontmatter excluded) | AD-15, CI-enforced |
 | Four sections | Exactly the four H2s of §2, in order, each non-empty | AD-15 |
-| No cross-skill Level-2 deps | Body contains no other skill's name and no path into another skill's directory (`references/` links resolve within own dir). Whitelist: description-field pointers (§3.2) are exempt — they are Level-1. | AD-15 |
+| No cross-skill code deps | Body contains no path into another skill's directory (`references/` links resolve within own dir). A body **may** name a sibling skill in prose (AD-15 amended — routing pointer, not a dependency); the check does NOT flag sibling names. It still flags any `references/` link or file path that escapes the skill's own dir. | AD-15 |
 | Description shape | Contains "Use when" (case-insensitive) | §3.1, lint-level warn→error at GS.1 |
 
 Failure output names the file, the rule, and the measured value (word count, offending link). The check is pure text analysis — no FreeCAD, no LLM — so it runs in seconds on every push.

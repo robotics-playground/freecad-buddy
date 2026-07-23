@@ -69,6 +69,9 @@ Standing inventory of existing software, libraries, datasets, and skills that ca
 | FreeCAD knowledge source | FreeCAD wiki/manual, forum, existing community tutorials; context7/doc-query tooling for retrieval | Distillation into skills is our work; raw knowledge is not |
 | Printability / DFM checks (Phase 4+) | Slicer CLIs (e.g. PrusaSlicer console mode) for overhang/thickness analysis; FreeCAD FEM workbench + CalculiX/gmsh for stress checks | Only the rule layer mapping analysis output to pass/fail design rules |
 | TNP mitigation | FreeCAD 1.x built-in TNP mitigation; datum-based modeling practice (documented community pattern) | Our re-resolve guard tooling on top — the *automated post-mutation reference audit* appears not to exist |
+| Robot-description export (URDF/SDF) — Phase 5 | CROSS addon (Common Robotic-Oriented Sensor System — authors URDF/SDF from FreeCAD assemblies); FreeCAD native Assembly workbench (kinematic tree) + native solid inertials (`TopoShapeSolidPy` mass properties) | Only the verify-first export layer (paired re-parse + schema + kinematic-tree sanity) if CROSS is adopted; the whole XML emit if it isn't. Note: the in-tree FreeCAD `Robot` workbench is a 6-axis trajectory tool, **not** a URDF exporter |
+| Off-the-shelf part sourcing — Phase 5 | FreeCAD native STEP import (`ImportOCAF`/`ReaderStep`); external part catalogs (step.parts and similar) for search | Never for the import/placement (native); the catalog search adapter only, if a catalog is integrated |
+| Implicit / SDF-kernel modeling | — | **Not adopted** — FreeCAD is OCCT B-rep; F-rep/implicit is a different kernel and out of scope (recorded to avoid re-litigation) |
 
 Explicitly identified as **genuine inventions** (survey expected to come up empty, budget spent here): the verify-first tool taxonomy, machine-checkable spec-assertion benchmarks, the fault-injection validator harness, the post-mutation TNP audit, and the design-thinking skills (Track B).
 
@@ -294,7 +297,9 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 Candidate directions — each will get its own SMART goal when selected:
 
-- **Assemblies:** multi-part designs with mating constraints (Assembly workbench), interference detection across parts.
+- **Assemblies:** multi-part designs with mating constraints (Assembly workbench), interference detection across parts. *(Prerequisite for robot-description export below — it supplies the kinematic link/joint tree.)*
+- **Robot-description export (URDF/SDF):** export a parametric assembly to URDF and SDF — links, joints, limits, inertials (from FreeCAD's native mass properties), and collision/visual meshes — validated by re-parse, schema check, and kinematic-tree sanity, not by "the file was written." Export is our code emitting XML from the assembly tree (the CROSS addon is evaluated first as reuse); the mm/deg→metre/kg/radian conversion is an explicit boundary. *(SRDF — MoveIt planning semantics — is deferred: no native FreeCAD path; it derives from an exported URDF plus external MoveIt. Implicit CAD is rejected: FreeCAD is OCCT B-rep, implicit needs an F-rep/SDF kernel the verify stack can't validate.)*
+- **Off-the-shelf part sourcing:** find and import common purchasable STEP parts (fasteners, bearings, motors, connectors) and place them under the bridge — catalog search is external, import and placement are standard FreeCAD, and an imported part's mating frames are measured, never assumed.
 - **Drawings:** auto-generated TechDraw sheets with dimensions from the driving parameters.
 - **Optimization loops:** FEM-in-the-loop (mass minimization under stress constraints), topology suggestions.
 - **Vision feedback:** using rendered views / screenshots as a verification channel (does it *look* like the sketch/reference image).

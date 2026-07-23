@@ -48,6 +48,10 @@
 # - Epics are gate-sequential (AD-19): epic N+1 must not start before epic N's gate-exit
 #   story is done. Epic 6 is the parallel exception (after Epic 1).
 # - Spec open question (n=10 sets for G1.2/GS.4) must be answered before story 2-1.
+# - A4 (scope expansion 2026-07-23): Epic 7 (URDF/SDF export + part sourcing, Phase 5) added
+#   per sprint-change-proposal-robot-description-2026-07-23.md (ADs 22/23). Epic 7 depends on a
+#   Phase-5 Assemblies capability (not yet an epic) — scope Assemblies first. Skills 6-7..6-9 pair
+#   with Epic 7 (authored now as ablation-ready drafts; ablated when GS infra + Epic-7 tools exist).
 
 generated: 2026-07-21
 last_updated: 2026-07-21
@@ -108,7 +112,17 @@ development_status:
   6-4-track-b-skills: backlog
   6-5-production-router: backlog
   6-6-ablation-campaign-gate-gs-exit: backlog
+  6-7-urdf-export-skill: backlog
+  6-8-sdf-export-skill: backlog
+  6-9-part-sourcing-skill: backlog
   epic-6-retrospective: optional
+  epic-7: backlog
+  7-1-entry-gate-g5robot-fixtures-verify-spikes: backlog
+  7-2-urdf-export-paired-verify: backlog
+  7-3-sdf-export-paired-verify: backlog
+  7-4-part-sourcing-import-placement: backlog
+  7-5-gate-g5robot-exit: backlog
+  epic-7-retrospective: optional
 
 action_items:
   - epic: 1
@@ -134,4 +148,8 @@ action_items:
   - epic: 1
     action: "Fix gate.yaml G0.5 validator citation (verify_shape -> verify_export_step)"
     owner: "dev-loop"
+    status: open
+  - epic: 7
+    action: "Scope a Phase-5 Assemblies capability as an epic BEFORE Epic 7 — URDF/SDF export consumes its kinematic joint tree (native Assembly WB exists; Python-exposure of joints is the gap). Also decide CROSS-addon-vs-hand-rolled-XML at the G5-robot entry gate."
+    owner: "TanNT"
     status: open
