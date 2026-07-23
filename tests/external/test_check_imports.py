@@ -265,3 +265,40 @@ def test_non_ring_subpackage_relative_overclimb_flagged(tmp_path):
     v = check_imports.check_tree(root)
     assert v, "over-climbing relative import in a non-ring subpackage must be flagged"
     assert "climbs above the package root" in _rules(v)
+
+
+def test_active_document_access_flagged_in_usecases(tmp_path):
+    root = _make_tree(tmp_path, {
+        "usecases/bad.py": "import FreeCAD\nd = FreeCAD.ActiveDocument\n",
+    })
+    v = check_imports.check_tree(root)
+    assert v, "FreeCAD.ActiveDocument must be flagged"
+    assert "ActiveDocument" in _rules(v)
+    assert "banned" in _rules(v)
+
+
+def test_set_active_document_flagged_via_app_alias(tmp_path):
+    root = _make_tree(tmp_path, {
+        "adapters/bad.py": "import FreeCAD as App\nApp.setActiveDocument('n')\n",
+    })
+    v = check_imports.check_tree(root)
+    assert v, "App.setActiveDocument must be flagged"
+    assert "setActiveDocument" in _rules(v)
+
+
+def test_active_document_flagged_in_hosts_too(tmp_path):
+    # The ban is process-wide; even the outer host ring must use explicit handles.
+    root = _make_tree(tmp_path, {
+        "hosts/bad.py": "import FreeCAD\nx = FreeCAD.ActiveDocument\n",
+    })
+    v = check_imports.check_tree(root)
+    assert v, "ActiveDocument in hosts must still be flagged"
+    assert "ActiveDocument" in _rules(v)
+
+
+def test_active_document_attr_on_other_object_not_flagged(tmp_path):
+    # ``registry.ActiveDocument`` (not a FreeCAD module binding) is not the banned form.
+    root = _make_tree(tmp_path, {
+        "usecases/ok.py": "import FreeCAD\nd = FreeCAD.getDocument('h')\nx = registry.ActiveDocument\n",
+    })
+    assert check_imports.check_tree(root) == []

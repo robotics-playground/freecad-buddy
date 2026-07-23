@@ -12,6 +12,7 @@ import atexit
 import logging
 import os
 import secrets
+from pathlib import Path
 
 from freecad_buddy.adapters.audit_log import AuditSink, default_audit_path
 from freecad_buddy.adapters.marshal import Marshal
@@ -26,6 +27,38 @@ from freecad_buddy.usecases.exports import ExportRegistry
 logger = logging.getLogger("freecad_buddy.hosts.gui_addon.bootstrap")
 
 _listener: RpcListener | None = None
+
+
+def _log_file_path() -> Path:
+    """The addon log path from ``FREECAD_BUDDY_LOG_FILE``, else FreeCAD user appdata.
+
+    GUI-mode addon logs otherwise reach only FreeCAD's Report View. A file handler mirrors them
+    to disk so they can be read without the GUI. The default sits under the user's FreeCAD data
+    dir alongside the RPC discovery file.
+    """
+    override = os.environ.get("FREECAD_BUDDY_LOG_FILE")
+    if override:
+        return Path(override)
+    try:
+        import FreeCAD
+
+        base = Path(FreeCAD.getUserAppDataDir()) / "freecad-buddy"
+    except Exception:  # noqa: BLE001 - no FreeCAD data dir: fall back to cwd
+        base = Path("freecad-buddy")
+    return base / "addon.log"
+
+
+def _configure_file_logging() -> None:
+    """Attach a file handler to the ``freecad_buddy`` logger so addon errors land on disk."""
+    path = _log_file_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handler = logging.FileHandler(path, encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    root = logging.getLogger("freecad_buddy")
+    if not any(isinstance(h, logging.FileHandler) for h in root.handlers):
+        root.addHandler(handler)
+    if root.level == logging.NOTSET or root.level > logging.INFO:
+        root.setLevel(logging.INFO)
 
 
 def _freecad_version() -> str:
@@ -43,6 +76,7 @@ def start_bridge() -> RpcListener:
     if _listener is not None:
         return _listener
 
+    _configure_file_logging()
     caps = Capabilities.from_env(dict(os.environ))
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)

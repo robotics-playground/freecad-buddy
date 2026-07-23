@@ -9,6 +9,10 @@ Rules enforced (dependencies point inward only):
   adapters/ ...... may import contracts/usecases + third-party; NOT hosts.
   hosts/ ......... top ring; may import anything inward.
   Qt / FreeCADGui / PySide* allowed ONLY in hosts/**, adapters/marshal.py, adapters/render_probe.py.
+  ActiveDocument . no ``FreeCAD.ActiveDocument`` / ``App.ActiveDocument`` /
+                   ``setActiveDocument`` anywhere: every tool operates on an explicit doc handle,
+                   never the process-global active document (a screenshot/query keying on it
+                   would silently target the wrong document).
 
 On any violation: print ``relpath:line -- <rule>`` to stdout and exit 1.
 Clean tree: exit 0 (prints "check_imports OK").
@@ -29,6 +33,10 @@ FIRSTPARTY = "freecad_buddy"
 FREECAD_APP_WHITELIST = frozenset(
     {"FreeCAD", "Part", "Sketcher", "PartDesign", "Mesh", "MeshPart"}
 )
+
+# Module names FreeCAD is bound to; ``<name>.ActiveDocument`` on any of these is the banned form.
+FREECAD_MODULE_ALIASES = frozenset({"FreeCAD", "App"})
+ACTIVE_DOCUMENT_ATTRS = frozenset({"ActiveDocument", "setActiveDocument"})
 
 QT_MODULES = frozenset(
     {"FreeCADGui", "PySide", "PySide2", "PySide6", "PyQt5", "PyQt6", "shiboken2", "shiboken6"}
@@ -131,6 +139,29 @@ def _resolve_relative_rings(relparts: tuple[str, ...], node: ast.ImportFrom) -> 
     return rings
 
 
+def _check_active_document(tree: ast.Module, relpath: str) -> list[Violation]:
+    """Flag every ``FreeCAD.ActiveDocument`` / ``App.setActiveDocument`` access in ``tree``.
+
+    Matches ``<alias>.<attr>`` where ``<alias>`` is a FreeCAD module binding and ``<attr>`` is
+    ``ActiveDocument`` or ``setActiveDocument``. Tools must key on the explicit doc handle passed
+    to them, never the process-global active document.
+    """
+    violations: list[Violation] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute) or node.attr not in ACTIVE_DOCUMENT_ATTRS:
+            continue
+        base = node.value
+        if isinstance(base, ast.Name) and base.id in FREECAD_MODULE_ALIASES:
+            violations.append(
+                Violation(
+                    relpath, node.lineno,
+                    f"'{base.id}.{node.attr}' is banned; operate on the explicit doc handle, "
+                    f"never the process-global active document",
+                )
+            )
+    return violations
+
+
 def _check_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[Violation]:
     relparts = tuple(Path(relpath).parts)
     ring = _ring_of(relparts)
@@ -147,6 +178,8 @@ def _check_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[Violat
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (SyntaxError, UnicodeDecodeError) as exc:
         return [Violation(relpath, getattr(exc, "lineno", 0) or 0, f"unparseable file: {exc}")]
+
+    violations.extend(_check_active_document(tree, relpath))
 
     for node in ast.walk(tree):
         if not isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -223,6 +256,8 @@ def _check_root_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[V
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (SyntaxError, UnicodeDecodeError) as exc:
         return [Violation(relpath, getattr(exc, "lineno", 0) or 0, f"unparseable file: {exc}")]
+
+    violations.extend(_check_active_document(tree, relpath))
 
     relparts = tuple(Path(relpath).parts)
     for node in ast.walk(tree):
