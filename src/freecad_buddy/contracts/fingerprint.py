@@ -58,16 +58,29 @@ def fingerprints_equal(a: dict, b: dict) -> bool:
     return dig_a == dig_b
 
 
+# Mass-property keys that are true geometric invariants — stable across a render. ``bbox`` is
+# excluded: FreeCAD's ``Shape.BoundBox`` is computed from the current tessellation, so refining
+# the mesh (which a render or export does) shifts the approximate bounds while the exact geometry
+# (volume, area, centre of mass, principal moments) is unchanged.
+_INVARIANT_MASSPROP_KEYS = ("volume", "area", "com", "principal_moments")
+
+
 def massprops_equal(a: dict, b: dict) -> bool:
-    """Compare two FingerprintRecords by geometry alone: per-object name + mass-property tuple.
+    """Compare two FingerprintRecords by exact geometry: per-object volume/area/COM/moments.
 
     Unlike ``fingerprints_equal`` (which compares the ``digest`` over raw BRep bytes), this
-    ignores the serialized shape bytes. OCCT re-lays-out a shape's BRep bytes the first time a
-    freshly-loaded document's shape is touched (e.g. by a render), so the digests differ while
-    the geometry is unchanged; the quantized mass-properties (volume, area, bbox, COM, principal
-    moments) stay identical. Use this for a read-only check where a render must not alter the
-    geometry but may perturb the serialization.
+    ignores both the serialized shape bytes and the tessellation-derived bounding box. OCCT
+    re-lays-out a shape's BRep bytes the first time a freshly-loaded shape is touched (e.g. by a
+    render), and a render/export refines the tessellation so ``bbox`` shifts — yet the exact
+    geometric invariants stay identical. Use this for a read-only check where a render must not
+    alter the geometry but may perturb the serialization or the tessellation.
     """
-    objs_a = {e["name"]: e.get("massprops") for e in a.get("objects", [])}
-    objs_b = {e["name"]: e.get("massprops") for e in b.get("objects", [])}
-    return objs_a == objs_b
+
+    def _invariants(record: dict) -> dict:
+        result = {}
+        for entry in record.get("objects", []):
+            mp = entry.get("massprops") or {}
+            result[entry["name"]] = {k: mp.get(k) for k in _INVARIANT_MASSPROP_KEYS}
+        return result
+
+    return _invariants(a) == _invariants(b)

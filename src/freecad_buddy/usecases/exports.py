@@ -106,6 +106,7 @@ def _source_facts(shape: object, is_mm: bool) -> dict:
     bb = shape.BoundBox
     return {
         "volume": float(shape.Volume),
+        "area": float(shape.Area),
         "faces": len(shape.Faces),
         "edges": len(shape.Edges),
         "solids": len(shape.Solids),
@@ -265,17 +266,17 @@ def export_3mf(
     return _mesh_export(registry, export_registry, "3mf", doc, path, objects, linear, angular)
 
 
-def mesh_volume_band(expected_volume: float, linear: float, bbox: list) -> float:
+def mesh_volume_band(linear: float, area: float) -> float:
     """Return the absolute mesh-volume tolerance derived from the tessellation deflection.
 
-    Tessellation replaces curved faces with flat facets, so the mesh volume deviates from the
-    solid volume by roughly the deflection over a characteristic length. The relative band is
-    ``linear / char_size`` (char size = the largest bbox extent), applied to the expected
-    volume, with a small absolute floor. Never the STEP ±0.1 %.
+    Chordal tessellation replaces curved faces with flat facets that sit at most ``linear`` below
+    the true surface; averaged over a chord the sag is ``(2/3) * linear``, so the volume the
+    facets enclose falls short of the solid by at most ``(2/3) * linear * area``. This bounds the
+    deficit for doubly-curved surfaces (spheres) that a bbox-relative band underestimates, while
+    staying far tighter than the STEP ±0.1 %. A small absolute floor keeps a zero-area edge case
+    non-degenerate.
     """
-    char = max([abs(float(v)) for v in bbox] + [1.0])
-    rel = float(linear) / char
-    return max(abs(float(expected_volume)) * rel, _MESH_BAND_ABS_FLOOR)
+    return max((2.0 / 3.0) * abs(float(linear)) * abs(float(area)), _MESH_BAND_ABS_FLOOR)
 
 
 def verify_export_step(
@@ -374,7 +375,7 @@ def _self_read(
         if entry["format"] != fmt:
             raise ValidationError(f"export_id {export_id} is not a {fmt} export")
         source = entry["source"]
-        band = mesh_volume_band(source["volume"], entry["tess"]["linear"], source["bbox"])
+        band = mesh_volume_band(entry["tess"]["linear"], source["area"])
         try:
             mesh = Mesh.Mesh(entry["path"])
         except Exception as exc:  # noqa: BLE001 - a missing/corrupt export file is a FAIL, not a crash

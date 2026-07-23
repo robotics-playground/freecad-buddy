@@ -166,7 +166,7 @@ def stl_oracle(path: str, expected_volume: float, volume_band: float) -> dict:
     """Run trimesh over an STL file; return ``{oracle, checks, ok}``.
 
     Checks ``is_watertight``, ``is_winding_consistent``, ``is_volume``, ``mesh.volume`` within
-    the deflection-derived ``volume_band`` (never ±0.1 %), and a sane Euler characteristic.
+    the deflection-derived ``volume_band`` (never ±0.1 %), and an even Euler characteristic.
     """
     import trimesh
 
@@ -184,7 +184,10 @@ def _trimesh_checks(mesh, expected_volume: float, volume_band: float, oracle: st
     volume = abs(float(mesh.volume))
     volume_ok = abs(volume - abs(float(expected_volume))) <= float(volume_band)
     euler = int(mesh.euler_number)
-    euler_ok = euler == 2  # genus-0 closed surface
+    # A closed orientable surface has even Euler characteristic (sum of 2-2g over its bodies), so
+    # an odd value signals a non-closed/non-manifold mesh. A specific value is NOT required: a
+    # through-hole part (genus 1, chi 0) and a two-body compound (chi 4) are both valid exports.
+    euler_ok = euler % 2 == 0
 
     checks = [
         {"id": f"{oracle}.watertight", "measured": watertight, "passed": watertight},

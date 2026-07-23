@@ -94,9 +94,12 @@ def _load_case(case_yaml: Path) -> dict:
 def _mesh_band(case: dict) -> float:
     from freecad_buddy.usecases import exports
 
-    return exports.mesh_volume_band(
-        case["source"]["volume"], case["tess"]["linear"], case["source"]["bbox"]
-    )
+    source = case["source"]
+    area = source.get("area")
+    if area is None:
+        lx, ly, lz = source["bbox"]
+        area = 2.0 * (lx * ly + lx * lz + ly * lz)
+    return exports.mesh_volume_band(case["tess"]["linear"], area)
 
 
 def _score_mesh_case(case: dict) -> bool:

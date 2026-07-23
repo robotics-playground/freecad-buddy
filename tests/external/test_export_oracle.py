@@ -19,7 +19,8 @@ SUITE = REPO_ROOT / "benchmarks" / "g0" / "export-fault-injection"
 
 BOX_VOLUME = 6000.0
 BOX_BBOX = [10.0, 20.0, 30.0]
-BAND = exports.mesh_volume_band(BOX_VOLUME, 0.1, BOX_BBOX)
+BOX_AREA = 2200.0
+BAND = exports.mesh_volume_band(0.1, BOX_AREA)
 
 
 def _stl(case: str) -> str:
@@ -102,7 +103,7 @@ def test_assemble_verdict_fails_on_cross_oracle_disagreement():
 
 
 def test_mesh_volume_band_is_not_step_tolerance():
-    band = exports.mesh_volume_band(BOX_VOLUME, 0.1, BOX_BBOX)
+    band = exports.mesh_volume_band(0.1, BOX_AREA)
     step_band = BOX_VOLUME * 0.001
     assert band != step_band
     assert band > 0

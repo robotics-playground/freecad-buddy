@@ -142,7 +142,8 @@ class ExportMeshTest(_ExportFixture):
         self.assertGreater(content["self_read"]["facets"], 0)
 
     def test_mesh_volume_band_is_not_step_tolerance(self):
-        band = exports.mesh_volume_band(ANALYTIC_VOLUME, 0.1, [BOX_L, BOX_W, BOX_H])
+        box_area = 2.0 * (BOX_L * BOX_W + BOX_L * BOX_H + BOX_W * BOX_H)
+        band = exports.mesh_volume_band(0.1, box_area)
         self.assertNotEqual(band, ANALYTIC_VOLUME * 0.001)
         self.assertGreater(band, 0)
 

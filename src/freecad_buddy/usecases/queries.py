@@ -200,7 +200,9 @@ def query_mass_properties(
         if shape is None or (is_null is not None and is_null()):
             raise ValidationError(f"object has no queryable shape: {object}")
         bbox = shape.BoundBox
-        com = shape.CenterOfMass
+        # CenterOfMass is unavailable on some shape types (e.g. Part.Compound); report null com
+        # rather than failing the whole query — volume/area/bbox/counts remain valid.
+        com = getattr(shape, "CenterOfMass", None)
         structured = {
             "name": obj.Name,
             "volume": _quantity(shape.Volume, "mm^3"),
@@ -213,7 +215,9 @@ def query_mass_properties(
                 "zmin": _quantity(bbox.ZMin, "mm"),
                 "zmax": _quantity(bbox.ZMax, "mm"),
             },
-            "com": {
+            "com": None
+            if com is None
+            else {
                 "x": _quantity(com.x, "mm"),
                 "y": _quantity(com.y, "mm"),
                 "z": _quantity(com.z, "mm"),
