@@ -29,6 +29,17 @@ jobs:
           fi
       - name: G1 grader clears sensitivity/FA bars (deterministic, no network)
         run: uv run python benchmarks/g1/fault-injection/score_grader.py --check
+      - name: G1 read-only profile guarantee (G1.6, offline)
+        run: uv run pytest tests/external/test_assistant_readonly_profile.py -q
+      - name: G1 actor-run (offline scripted backend; live eval skipped, no secrets)
+        run: |
+          out=$(uv run python benchmarks/runner.py --gate G1 --actor-run) || {
+            echo "$out"; echo "offline actor-run should exit 0"; exit 1;
+          }
+          echo "$out"
+          echo "$out" | grep -q "live eval skipped" || {
+            echo "live eval must be skipped in CI (no operator backend)"; exit 1;
+          }
       - name: Ruff (T201 print-ban honored)
         run: uv run ruff check .
       - name: External suite

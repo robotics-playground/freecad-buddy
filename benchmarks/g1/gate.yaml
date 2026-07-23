@@ -20,13 +20,16 @@ gate: G1
 
 # Actor and grader MUST resolve to DIFFERENT model ids (NFR1, harness §8): the actor never
 # grades itself. The runner's G1 preflight hard-fails INVALID_INPUT (exit 2) if they collide.
-# Both are placeholder pins — the LIVE actor/grader backends land in Story 2.2/2.3; the shipped
-# grader now is the FreeCAD-free deterministic expected-findings matcher (grader.py), scored by
-# gate faults g1. The `grader` block names the deterministic grader + declares the seam a
-# model-backed grader plugs into later.
+# The actor is the Claude backend: Claude Code / Claude Desktop driving the read-only profile over
+# MCP (the "Claude backend" is the MCP client, not a bespoke SDK actor — see decision 010). The
+# live eval is operator-gated + CI-skipped; the shipped grader is the FreeCAD-free deterministic
+# expected-findings matcher (grader.py), scored by gate faults g1. The `grader` block names the
+# deterministic grader + declares the seam a model-backed grader plugs into later.
 actor:
-  model: placeholder-actor-model
+  model: claude-mcp-client
   context: assistant-under-test
+  transport: mcp
+  profile: read-only
 grader:
   model: deterministic-expected-findings
   context: independent-grader

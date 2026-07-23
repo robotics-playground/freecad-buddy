@@ -255,7 +255,7 @@ def test_score_grader_meets_bars_exit_0():
 
 def _collide_actor_grader(text: str) -> str:
     return text.replace(
-        "model: deterministic-expected-findings", "model: placeholder-actor-model"
+        "model: deterministic-expected-findings", "model: claude-mcp-client"
     ).replace("context: independent-grader", "context: assistant-under-test")
 
 

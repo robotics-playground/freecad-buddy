@@ -102,6 +102,12 @@ class StubBridge:
         return stub_outcome()
 
 
+# The offline actor-run backend is gated behind this env var: only ``live`` wires an operator's
+# real MCP backend (never in unattended CI). Any other value (or unset) runs the deterministic
+# scripted double.
+_ACTOR_BACKEND_ENV = "FREECAD_BUDDY_G1_ACTOR_BACKEND"
+
+
 def _load_gate(gate: str) -> list[dict]:
     """Load and validate ``gate.yaml`` for ``gate``; return its non-empty criteria list.
 
@@ -383,6 +389,116 @@ def faults_command(gate: str) -> int:
     return completed.returncode
 
 
+def _offline_profile_registry():
+    """Build the read-only profile registry for the offline actor-run (no FreeCAD).
+
+    The offline run never opens a real document, so each read-only tool is a stub handler; the
+    registry's tool NAMES are the true read-only allow-list, so the actor drives the identical
+    surface and its recorded calls are asserted against it. A live actor-run (operator-gated) would
+    instead build the real profile via ``build_readonly_profile`` over a live document registry.
+    """
+    from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
+    from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE
+
+    registry = MethodRegistry()
+    for name in sorted(READ_ONLY_PROFILE):
+        registry.register(
+            RpcMethod(
+                name=name,
+                handler=lambda **_kwargs: {
+                    "schema": "fcb.result-envelope/1",
+                    "status": "INVALID_INPUT",
+                    "detail": {"code": "invalid_input.offline_actor_run", "message": "offline"},
+                    "structured_content": {},
+                    "text": "",
+                },
+            )
+        )
+    return registry
+
+
+def _scripted_answer_for(case: dict) -> dict:
+    """A correct scripted answer for one broken-doc case: names the object + a matching keyword.
+
+    The offline scripted backend replays this so the deterministic grader PASSES every case — the
+    offline run exercises escalation + report build + Wilson CI end-to-end, not model quality (the
+    ≥80% figure is a measured operator run, never asserted by this deterministic double).
+    """
+    expected = case.get("expected", {})
+    obj = expected.get("object", "")
+    keywords = expected.get("cause_keywords") or []
+    keyword = keywords[0] if keywords else ""
+    answer = f"{obj} is in error: {keyword}."
+    return {"answer": answer, "tools": ["query_tree_summary", "verify_recompute"]}
+
+
+def actor_run_command(gate: str) -> int:
+    """Run the G1 actor-run over the read-only profile; grade + escalate + emit reports.
+
+    Offline (no operator backend): builds the scripted backend + stub profile registry, runs the
+    tiered n10->n30 escalation via ``actor_run.run_actor_eval``, prints the per-tier summary +
+    Wilson CI, and exits 0 when the scripted answers pass. A live backend
+    (``FREECAD_BUDDY_G1_ACTOR_BACKEND=live``) is operator-only and NOT wired here — it is skipped in
+    CI so no key/secret ever enters the pipeline.
+    """
+    if gate != "G1":
+        raise UsageError(f"--actor-run is only defined for gate G1, got {gate!r}")
+    _load_gate(gate)
+    _preflight_actor_grader(gate)
+
+    backend_choice = (os.environ.get(_ACTOR_BACKEND_ENV) or "").strip().lower()
+    if backend_choice and backend_choice != "offline":
+        # Any non-empty value that is not the explicit "offline" opt-in is treated as a live
+        # request (including "live", "1", "true"): the live backend is operator-gated and never
+        # wired in CI, so it hard-fails rather than silently running the offline scripted double.
+        raise UsageError(
+            f"actor-run backend {backend_choice!r} is operator-gated and not wired in this "
+            "harness; unset the env var for the offline run, or run the live eval via an MCP "
+            "client (Claude Code/Desktop) per docs/decisions/010"
+        )
+
+    from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
+    from benchmarks.harness.actor import Actor, ScriptedBackend
+
+    print(
+        f"actor-run {gate}: no operator backend; running offline scripted backend "
+        f"(live eval skipped)"
+    )
+    script = {case["id"]: _scripted_answer_for(case) for case in _load_broken_cases()}
+    backend = ScriptedBackend(script)
+    actor = Actor(_offline_profile_registry())
+    result = run_actor_eval(actor, backend, repeats=3)
+
+    _print_actor_run_summary(gate, result)
+    # The run PASSES on the tier verdict (decision 008): the escalated n=30 tier when it escalated,
+    # else the n=10 tier (>=8/10). A per-report all-OK check would report an honest 8/10 tier pass
+    # as a failure — the exit code follows the tier threshold, not every individual case.
+    tier = result.n30 if result.escalated else result.n10
+    return _EXIT_OK if tier.passed else _EXIT_FAIL
+
+
+def _print_actor_run_summary(gate: str, result) -> None:
+    n10 = result.n10
+    ci = n10.wilson_ci
+    print(
+        f"actor-run {gate}: n10 {n10.passed_count}/{len(n10.cases)} passed "
+        f"(Wilson CI [{ci['low']:.3f}, {ci['high']:.3f}])"
+    )
+    n10_verdict = "PASS" if n10.passed else "FAIL"
+    print(f"actor-run {gate}: n10 tier {n10_verdict} (>=8/10)")
+    if result.escalated:
+        n30 = result.n30
+        ci30 = n30.wilson_ci
+        n30_verdict = "PASS" if n30.passed else "FAIL"
+        print(
+            f"actor-run {gate}: 10/10 -> escalated to n=30: {n30.passed_count}/{len(n30.cases)} "
+            f"passed {n30_verdict} (>=80%) (Wilson CI [{ci30['low']:.3f}, {ci30['high']:.3f}])"
+        )
+    else:
+        print(f"actor-run {gate}: n10 below 10/10 -> no escalation (decision 008)")
+    print(f"actor-run {gate}: emitted {len(result.reports)} case reports")
+
+
 def _filter_criteria(criteria: list[dict], criterion_id: str | None) -> list[dict]:
     if criterion_id is None:
         return criteria
@@ -463,6 +579,12 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--stub", action="store_true", help="run against the stub bridge (required)"
     )
+    parser.add_argument(
+        "--actor-run",
+        dest="actor_run",
+        action="store_true",
+        help="run the G1 actor-run (offline scripted backend; live eval operator-gated)",
+    )
     parser.add_argument("--criterion", help="run a single criterion id, e.g. G0.3")
     # --case was accepted-but-ignored previously; reject it explicitly in stub mode.
     parser.add_argument("--case", help=argparse.SUPPRESS)
@@ -521,10 +643,14 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.case is not None:
             raise UsageError("--case is not supported in stub mode")
-        # --stub is the only mode shipped so far (no live bridge yet).
-        # Require it explicitly so the flag is meaningful, not a silent no-op.
+        if args.actor_run:
+            if args.stub:
+                raise UsageError("--actor-run and --stub are mutually exclusive")
+            return actor_run_command(args.gate)
+        # --stub is the stub-bridge mode; --actor-run is the live/scripted actor path.
+        # Require one explicitly so the flag is meaningful, not a silent no-op.
         if not args.stub:
-            raise UsageError("only --stub mode is supported (no live bridge yet); pass --stub")
+            raise UsageError("pass --stub (stub bridge) or --actor-run (G1 actor-run)")
         reports, exit_code = run_gate(args.gate, args.criterion)
     except UsageError as exc:
         print(f"error: {exc}", file=sys.stderr)

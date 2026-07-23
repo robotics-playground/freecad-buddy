@@ -285,6 +285,36 @@ def _screenshot_spec():
     )
 
 
+# The read-only assistant profile (G1.6): an explicit allow-list of tool names the Phase-1
+# assistant may register. It is NOT a `mutating=False` negation — `document_open`/`close`
+# carry `mutating=True` (they open/close documents) yet perform no geometry mutation and the
+# assistant needs `document_open` to load the fixture it answers about. The allow-list names the
+# seven read-only queries, the three read-only verifiers, and the three non-geometry
+# document-lifecycle tools; every geometry-mutation tool (`sketch_*`/`feature_*`/`preview_*`/
+# `document_create`/`document_save`/`debug_exec`) is absent by construction.
+# Four read-only (`mutating=False`) tools are also deliberately excluded: `verify_export_step`/
+# `_stl`/`_3mf` require an `export_id` from a prior export (a mutation the read-only assistant
+# cannot perform, so they are inert here), and `query_screenshot` is a render the text-QA
+# assistant does not need under the G1.3 latency budget.
+READ_ONLY_PROFILE = frozenset(
+    {
+        "query_capabilities",
+        "query_tree_summary",
+        "query_object",
+        "query_mass_properties",
+        "query_dependencies",
+        "query_sketch_info",
+        "query_placement",
+        "verify_shape",
+        "verify_sketch",
+        "verify_recompute",
+        "document_open",
+        "document_close",
+        "document_list",
+    }
+)
+
+
 DEBUG_EXEC_SPEC = ToolSpec(
     name="debug_exec",
     make_handler=lambda doc_registry, export_registry, caps, render_port: (
@@ -604,9 +634,34 @@ def build_inline_handlers(
     return methods
 
 
+def build_readonly_profile(
+    doc_registry: DocumentRegistry,
+    export_registry: ExportRegistry,
+    caps: Capabilities,
+    marshal: Marshal | None,
+    render_port: RenderPort | None = None,
+) -> MethodRegistry:
+    """Build the read-only assistant ``MethodRegistry`` from the ``READ_ONLY_PROFILE`` allow-list.
+
+    Builds the full catalog registry via ``build_inline_handlers`` (so each tool is wired exactly
+    as the production server wires it), then re-registers only the methods whose name is in the
+    allow-list. Every geometry-mutation tool is absent because it is not in the allow-list —
+    ``debug_exec`` is excluded even when exec is enabled. The returned registry is the same shape
+    the MCP server consumes, so the assistant drives the identical tool surface (no private path).
+    """
+    full = build_inline_handlers(doc_registry, export_registry, caps, marshal, render_port)
+    profile = MethodRegistry()
+    for method in full.methods():
+        if method.name in READ_ONLY_PROFILE:
+            profile.register(method)
+    return profile
+
+
 __all__ = [
     "DEBUG_EXEC_SPEC",
+    "READ_ONLY_PROFILE",
     "ToolSpec",
     "build_inline_handlers",
+    "build_readonly_profile",
     "tool_specs",
 ]
