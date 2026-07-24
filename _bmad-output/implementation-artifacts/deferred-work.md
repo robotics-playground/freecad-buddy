@@ -202,7 +202,8 @@ resolution: `query_sketch_info` now reads construction via `_construction_flag`,
 origin: migrated from legacy ledger ("Deferred from: spec-1-5-read-only-query-tools.md"), 2026-07-23
 location: n/a
 reason: `query_dependencies` whole-document mode emits an uncapped `edges` array (every object's OutList), unlike `query_tree_summary` which caps at `max_nodes`; a very large assembly yields an unbounded response. The design (mcp-tools §2) specifies no cap for `query_dependencies`, and Phase-0 documents are small, so this is not a story-1.5 defect; add a bound/pagination if the dependency response size becomes a context concern for large models (Phase 1 assistant surface).
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-query-dependencies-response-cap
 
 ### DW-27: `query_object`'s `_json_safe` recurses through list/tuple/dict property values with no depth limit and no cycle detection, so a self-referential or very deeply nested property value would either serialize to an unbounded payload or raise `RecursionError` (mapped to `RECOMPUTE_ERROR`).
 

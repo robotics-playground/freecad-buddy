@@ -65,9 +65,15 @@ def summarize_placement(sc: dict) -> str:
 
 
 def summarize_dependencies(sc: dict) -> str:
-    """One-line dependency summary: edge count or per-object in/out counts."""
+    """One-line dependency summary: edge count or per-object in/out counts.
+
+    The whole-doc branch appends a truncation note when ``truncated`` is set.
+    """
     if "edges" in sc:
-        return f"{len(sc['edges'])} dependency edge(s)."
+        returned = sc.get("returned_edges", len(sc["edges"]))
+        if sc.get("truncated"):
+            return f"{returned} dependency edge(s) (truncated from {sc.get('total_edges', '?')})."
+        return f"{returned} dependency edge(s)."
     in_list = sc.get("in_list") or []
     out_list = sc.get("out_list") or []
     return f"{sc.get('object', '?')}: {len(in_list)} upstream, {len(out_list)} downstream."
@@ -238,7 +244,6 @@ def _read_property(obj: object, prop: str) -> object:
     return _json_safe(raw)
 
 
-
 _ANGLE_CONSTRAINT_TYPES = {"Angle", "AngleViaPoint"}
 _DIMENSIONAL_LENGTH_TYPES = {"Distance", "DistanceX", "DistanceY", "Radius", "Diameter"}
 
@@ -296,9 +301,7 @@ def query_tree_summary(
                 children = [
                     build(c, remaining - 1) for c in child_objs if _node_passes(c, effective)
                 ]
-                links = [
-                    build(c, remaining - 1) for c in link_objs if _node_passes(c, effective)
-                ]
+                links = [build(c, remaining - 1) for c in link_objs if _node_passes(c, effective)]
             counter["n"] += 1
             return _sparse_node(obj, children, links, len(child_objs), len(link_objs))
 
@@ -409,13 +412,24 @@ def query_mass_properties(
 
 
 def query_dependencies(
-    registry: DocumentRegistry, doc: str | None = None, object: str | None = None
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    object: str | None = None,
+    max_edges: int = 2000,
 ) -> ResultEnvelope:
     """Report dependency links by immutable ``Name``.
 
     With ``object`` → ``{object, in_list, out_list}`` from ``InList``/``OutList``. Without
-    ``object`` → ``{edges:[{from,to}]}`` over every object's ``OutList``.
+    ``object`` → the whole-doc ``{edges:[{from,to}], total_edges, returned_edges, truncated}``
+    over every object's ``OutList``, capped at ``max_edges``: the first ``max_edges`` edges in
+    document/``OutList`` order are kept and ``truncated`` is set when the full count exceeds it.
+
+    Raises ``ValidationError`` when ``max_edges`` is not an integer or is below ``1``.
     """
+    if not isinstance(max_edges, int) or isinstance(max_edges, bool):
+        raise ValidationError(f"max_edges must be an integer: {max_edges!r}")
+    if max_edges < 1:
+        raise ValidationError(f"max_edges must be >= 1: {max_edges}")
 
     def read(_handle: str, document: object) -> ResultEnvelope:
         if object:
@@ -431,7 +445,13 @@ def query_dependencies(
             for obj in document.Objects
             for dep in getattr(obj, "OutList", []) or []
         ]
-        structured = {"edges": edges}
+        total_edges = len(edges)
+        structured = {
+            "edges": edges[:max_edges],
+            "total_edges": total_edges,
+            "returned_edges": min(total_edges, max_edges),
+            "truncated": total_edges > max_edges,
+        }
         return _ok_envelope(structured, summarize_dependencies(structured))
 
     return registry.with_document(doc, read)

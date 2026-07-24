@@ -121,7 +121,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_tree_summary` | 0 | Bounded, summarized feature-tree overview (G1.3 large-tree safe) | no |
 | `query_object` | 0 | One object: type, label, properties, error state + `getStatusString()` | no |
 | `query_mass_properties` | 0 | Volume/area/bbox/COM/inertia + topology counts for an object | no |
-| `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc | no |
+| `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc (whole-doc `edges` capped at `max_edges`, truncation flagged) | no |
 | `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
 | `query_placement` | 0 | Local + global placement of an object | no |
 | `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `debug_exec` state | no |
@@ -258,6 +258,31 @@ Depth-bounded, filterable, nested tree walk (G1.3 context-overflow guard by expl
       "links": { "type": "array", "description": "App::Link instances; present only when expanded and non-empty" }
     }, "required": ["name", "label", "type", "visibility"] } }
   }, "required": ["doc", "total_objects", "returned_nodes", "depth", "tree"] } }
+```
+
+### 3.2.1 `query_dependencies`
+
+Dependency links by immutable `Name`. With `object` → `{object, in_list, out_list}` from `InList`/`OutList` (unbounded; per-object edge sets are small). Without `object` → the whole-doc `edges` array over every object's `OutList`, kept in document/`OutList` order and capped at `max_edges`: the first `max_edges` edges are returned, `total_edges` is the full count, `returned_edges` is `min(total_edges, max_edges)`, and `truncated` is set when the full count exceeds the cap. A consumer that hits the cap scopes down via per-object mode (this is a forward cap, not an offset/limit cursor — `query_tree_children` owns paging). `max_edges < 1` → `INVALID_INPUT`.
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "object": { "type": "string", "description": "immutable Name; omit = whole-document edges" },
+    "max_edges": { "type": "integer", "minimum": 1, "default": 2000, "description": "whole-doc edge cap; ignored in per-object mode" }
+  }, "required": ["doc"] },
+  "outputSchema-per-object": { "type": "object", "properties": {
+    "object": { "type": "string" },
+    "in_list": { "type": "array", "items": { "type": "string" } },
+    "out_list": { "type": "array", "items": { "type": "string" } }
+  }, "required": ["object", "in_list", "out_list"] },
+  "outputSchema-whole-doc": { "type": "object", "properties": {
+    "edges": { "type": "array", "items": { "type": "object", "properties": {
+      "from": { "type": "string" }, "to": { "type": "string" } }, "required": ["from", "to"] },
+      "description": "first max_edges OutList edges in document order" },
+    "total_edges": { "type": "integer", "description": "full OutList edge count before the cap" },
+    "returned_edges": { "type": "integer", "description": "min(total_edges, max_edges)" },
+    "truncated": { "type": "boolean", "description": "true when total_edges > max_edges" }
+  }, "required": ["edges", "total_edges", "returned_edges", "truncated"] } }
 ```
 
 ### 3.3 `verify_shape`

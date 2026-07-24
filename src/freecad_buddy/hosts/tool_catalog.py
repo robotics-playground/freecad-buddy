@@ -465,11 +465,16 @@ def tool_specs() -> list[ToolSpec]:
             30.0,
             {
                 "type": "object",
-                "properties": {"doc": _DOC_SCHEMA, "object": {"type": "string"}},
+                "properties": {
+                    "doc": _DOC_SCHEMA,
+                    "object": {"type": "string"},
+                    "max_edges": {"type": "integer", "minimum": 1, "default": 2000},
+                },
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Dependency links by Name: in/out lists for an object, or whole-doc edges.",
+            "Dependency links by Name: in/out lists for an object, or whole-doc edges "
+            "capped at max_edges (truncation flagged).",
         ),
         _query_method(
             "query_sketch_info",

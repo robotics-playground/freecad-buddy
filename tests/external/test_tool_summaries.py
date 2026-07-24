@@ -322,3 +322,14 @@ def test_summarize_dependencies_single_object():
     sc = {"object": "Pad", "in_list": ["Sketch"], "out_list": []}
     out = summarize_dependencies(sc)
     assert "Pad" in out
+
+
+def test_summarize_dependencies_truncated():
+    sc = {
+        "edges": [{"from": "A", "to": "B"}],
+        "total_edges": 5,
+        "returned_edges": 1,
+        "truncated": True,
+    }
+    out = summarize_dependencies(sc)
+    assert out == "1 dependency edge(s) (truncated from 5)."

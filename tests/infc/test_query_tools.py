@@ -15,7 +15,7 @@ import Sketcher
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.usecases import queries
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 BOX_L = 10.0
 BOX_W = 20.0
@@ -101,6 +101,11 @@ class QueryToolsTest(unittest.TestCase):
         self.assertEqual(content["counts"]["solids"], 1)
 
     def test_query_dependencies_object_and_whole_doc(self):
+        group = self.document.addObject("App::DocumentObjectGroup", "Group")
+        group.addObject(self.box)
+        group.addObject(self.sketch)
+        self.document.recompute()
+
         scoped = queries.query_dependencies(self.registry, doc=self.handle, object="Box")[
             "structured_content"
         ]
@@ -113,6 +118,31 @@ class QueryToolsTest(unittest.TestCase):
         for edge in whole["edges"]:
             self.assertIn("from", edge)
             self.assertIn("to", edge)
+        self.assertGreater(whole["total_edges"], 1)
+        self.assertFalse(whole["truncated"])
+        self.assertEqual(whole["total_edges"], whole["returned_edges"])
+        self.assertEqual(whole["returned_edges"], len(whole["edges"]))
+
+        capped = queries.query_dependencies(self.registry, doc=self.handle, max_edges=1)[
+            "structured_content"
+        ]
+        self.assertTrue(capped["truncated"])
+        self.assertEqual(capped["returned_edges"], 1)
+        self.assertEqual(len(capped["edges"]), 1)
+        self.assertEqual(capped["total_edges"], whole["total_edges"])
+        self.assertEqual(capped["edges"], whole["edges"][:1])
+
+        two = queries.query_dependencies(self.registry, doc=self.handle, max_edges=2)[
+            "structured_content"
+        ]
+        self.assertEqual(two["edges"], whole["edges"][:2])
+
+        with self.assertRaises(ValidationError):
+            queries.query_dependencies(self.registry, doc=self.handle, max_edges=0)
+        with self.assertRaises(ValidationError):
+            queries.query_dependencies(self.registry, doc=self.handle, max_edges=1.5)
+        with self.assertRaises(ValidationError):
+            queries.query_dependencies(self.registry, doc=self.handle, max_edges=True)
 
     def test_query_sketch_info_lists_geometry_and_constraints(self):
         content = queries.query_sketch_info(self.registry, doc=self.handle, sketch="Sketch")[
