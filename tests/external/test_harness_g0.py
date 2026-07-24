@@ -158,6 +158,15 @@ def test_check_provenance_flags_duplicate_artifact_id(tmp_path):
     assert any("duplicate artifact id" in p for p in problems), problems
 
 
+def test_check_provenance_flags_orphan_manifest(tmp_path):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    fixture = copy / "g0" / "golden-models" / "box-10-20-30.FCStd"
+    fixture.unlink()
+    problems = check_provenance.check_tree(copy)
+    assert any("orphan manifest" in p and "box-10-20-30" in p for p in problems), problems
+
+
 def test_check_provenance_flags_case_missing_fixture(tmp_path):
     copy = tmp_path / "benchmarks"
     shutil.copytree(BENCHMARKS, copy)

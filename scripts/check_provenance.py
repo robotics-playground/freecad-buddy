@@ -9,7 +9,8 @@ Recursively walks ``benchmarks/**`` for artifact files (``*.FCStd``), excluding 
 
 Additionally flags:
   - a fault case dir with a ``case.yaml`` but no ``fixture.FCStd``;
-  - duplicate ``artifact`` ids across manifests (a duplicate must not silently overwrite).
+  - duplicate ``artifact`` ids across manifests (a duplicate must not silently overwrite);
+  - an orphan manifest whose ``artifact`` id has no matching ``.FCStd`` on disk.
 
 On any violation: print ``path -- rule`` and exit 1. Clean tree: exit 0.
 
@@ -42,13 +43,16 @@ def _artifact_id(fcstd: Path, benchmarks_root: Path) -> str:
     return rel[: -len(".FCStd")]
 
 
-def _load_manifests(benchmarks_root: Path) -> tuple[dict[str, dict], list[str]]:
-    """Return ({artifact_id: manifest}, [violations]) — duplicate ids are flagged."""
+def _load_manifests(
+    benchmarks_root: Path,
+) -> tuple[dict[str, dict], dict[str, Path], list[str]]:
+    """Return ({artifact_id: manifest}, {artifact_id: manifest_path}, [violations])."""
     provenance_dir = benchmarks_root.joinpath(*_PROVENANCE_REL)
     manifests: dict[str, dict] = {}
+    manifest_paths: dict[str, Path] = {}
     violations: list[str] = []
     if not provenance_dir.is_dir():
-        return manifests, violations
+        return manifests, manifest_paths, violations
 
     for manifest_path in sorted(provenance_dir.rglob("*.yaml")):
         try:
@@ -65,8 +69,9 @@ def _load_manifests(benchmarks_root: Path) -> tuple[dict[str, dict], list[str]]:
             violations.append(f"{manifest_path} -- duplicate artifact id '{artifact_id}'")
             continue
         manifests[artifact_id] = data
+        manifest_paths[artifact_id] = manifest_path
 
-    return manifests, violations
+    return manifests, manifest_paths, violations
 
 
 def _iter_artifacts(benchmarks_root: Path):
@@ -139,7 +144,7 @@ def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
 
 
 def check_tree(benchmarks_root: Path) -> list[str]:
-    manifests, violations = _load_manifests(benchmarks_root)
+    manifests, manifest_paths, violations = _load_manifests(benchmarks_root)
     violations.extend(_check_missing_fixtures(benchmarks_root))
 
     for fcstd in _iter_artifacts(benchmarks_root):
@@ -155,6 +160,16 @@ def check_tree(benchmarks_root: Path) -> list[str]:
             violations.append(
                 f"{rel} -- source.kind '{kind}' not in closed set "
                 f"({', '.join(sorted(CLOSED_SOURCE_KINDS))})"
+            )
+
+    for artifact_id, manifest_path in sorted(manifest_paths.items()):
+        if any(part in _EXCLUDED_DIRS for part in Path(artifact_id).parts):
+            continue
+        if not (benchmarks_root / (artifact_id + ".FCStd")).is_file():
+            manifest_rel = manifest_path.relative_to(benchmarks_root).as_posix()
+            violations.append(
+                f"{manifest_rel} -- orphan manifest "
+                f"(artifact '{artifact_id}' has no matching .FCStd)"
             )
 
     return violations

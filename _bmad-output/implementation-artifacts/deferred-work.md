@@ -118,7 +118,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-3-entry-gate-g0e-golden-models-fault-suite.md"), 2026-07-23
 location: check_provenance.py
 reason: `check_provenance.py` flags an artifact with no manifest, but does NOT flag an ORPHAN manifest (a `_registry/provenance/*.yaml` whose declared `artifact` no longer has a matching `.FCStd`, e.g. after a fixture rename/delete). The checker walks `.FCStd` artifacts and requires each to have a manifest; the reverse direction (every manifest maps to a live artifact) is unchecked. No orphan exists in this story (all 17 manifests match a committed fixture), so nothing regresses; add manifest→artifact reverse-coverage when the benchmark set first churns (fixtures renamed/removed across gates). ### DW-1: Follow-up review still recommended for 1-1-repo-scaffold-ci-matrix-phase-0-spikes after the damping cap was spent origin: review-budget-followup
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-provenance-orphan-manifest-check
 
 ### DW-16: `document_recompute` returns an `OK` envelope even when it collects per-object `errors`; whether a recompute-with-errors should map to `RECOMPUTE_ERROR` (AD-17) or stay `OK`-with-error-data is an unresolved spine-owner ruling.
 
@@ -526,3 +527,7 @@ severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260724-004118-3961; this entry preserves the lingering recommendation for a deliberate later review.
 resolution: accepted cap-driven closure 2026-07-24 (TanNT) — story is done with green verify; the damping cap intentionally bounds review spend and the recommendation is advisory. No follow-up review will be run.
 status: done 2026-07-24
+
+- source_spec: `spec-dw-15-provenance-orphan-manifest-check.md`
+  summary: The new orphan-manifest reverse pass in `check_provenance.check_tree` assumes every provenance manifest maps to a `<artifact_id>.FCStd`; a legitimately-authored manifest for a non-`.FCStd` fixture (export-fault `.stl`/`.3mf`/`.step`, or a text case carrying only `candidate_answer`) would be falsely flagged as an orphan.
+  evidence: The reverse pass checks only `(benchmarks_root / (artifact_id + ".FCStd")).is_file()`. All 47 current manifests declare an id that maps to a live `.FCStd`, so nothing false-fires today; but `_iter_artifacts`/`_check_missing_fixtures` already handle non-`.FCStd` export-fault fixtures and text cases, and the reverse pass has no matching exemption. Fix when the first non-`.FCStd` provenance manifest is authored: extend the reverse check to accept the fixture's real extension (`.stl`/`.3mf`/`.step`) or exempt text-case manifests, mirroring the forward-direction handling.
