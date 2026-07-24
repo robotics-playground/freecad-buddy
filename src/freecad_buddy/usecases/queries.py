@@ -10,6 +10,7 @@ write, no viewport touch.
 from __future__ import annotations
 
 import math
+import re
 
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import shim
@@ -61,6 +62,78 @@ def _status_string(obj: object) -> str | None:
         return None
     status = getter()
     return None if status in _CLEAN_STATUS else status
+
+
+_DATUM_EXCLUDE_DEFAULT = ("App::Plane", "App::Line", "App::Point", "App::Origin")
+
+# A shape-bearing leaf the offscreen renderer draws — mirrors the render skip-set: datum/origin
+# features and the two container types (Body/Sketch has a Shape but is not a drawable leaf).
+_RENDER_SKIP_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Point")
+_RENDER_SKIP_TYPES = frozenset({"PartDesign::Body", "Sketcher::SketchObject"})
+
+
+def _is_renderable(obj: object) -> bool:
+    """Whether ``obj`` is a shape-bearing leaf the default render would draw (not datum/container)."""  # noqa: E501
+    type_id = str(getattr(obj, "TypeId", ""))
+    if type_id in _RENDER_SKIP_TYPES or type_id.startswith(_RENDER_SKIP_PREFIXES):
+        return False
+    shape = getattr(obj, "Shape", None)
+    is_null = getattr(shape, "isNull", None)
+    return shape is not None and not (is_null is not None and is_null())
+
+
+def _node_passes(obj: object, filters: dict) -> bool:
+    """Whether ``obj`` survives every provided filter (AND-stacked)."""
+    type_id = str(getattr(obj, "TypeId", ""))
+    types = filters.get("types")
+    if types is not None and type_id not in types:
+        return False
+    exclude = filters.get("exclude_types")
+    if exclude is not None and type_id in exclude:
+        return False
+    if filters.get("renderable_only") and not _is_renderable(obj):
+        return False
+    if filters.get("visible_only") and not bool(getattr(obj, "Visibility", False)):
+        return False
+    pattern = filters.get("name_pattern")
+    if pattern is not None:
+        haystack = f"{getattr(obj, 'Name', '')} {getattr(obj, 'Label', '')}"
+        if not re.search(pattern, haystack):
+            return False
+    return True
+
+
+def _sparse_node(
+    obj: object,
+    children: list,
+    links: list,
+    children_count: int,
+    links_count: int,
+) -> dict:
+    """Assemble a tree node, omitting any field that carries no value.
+
+    Always emits name/label/type/visibility. Emits ``error`` only for a genuine error status,
+    ``children``/``links`` only when a non-empty expanded array is supplied, and
+    ``children_count``/``links_count`` only when non-zero.
+    """
+    node = {
+        "name": obj.Name,
+        "label": obj.Label,
+        "type": obj.TypeId,
+        "visibility": bool(getattr(obj, "Visibility", False)),
+    }
+    error = _status_string(obj)
+    if error is not None:
+        node["error"] = error
+    if children_count:
+        node["children_count"] = children_count
+    if links_count:
+        node["links_count"] = links_count
+    if children:
+        node["children"] = children
+    if links:
+        node["links"] = links
+    return node
 
 
 def _resolve_object(document: object, name: str | None):
