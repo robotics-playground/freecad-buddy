@@ -80,7 +80,8 @@ origin: migrated from legacy ledger ("Deferred from: spec-1-2-data-contracts-pac
 location: gen_schemas.py
 reason: `gen_schemas.py` type-form coverage is limited to the forms the current contracts use (TypedDict, `Literal`, `X | Y | None` unions, `list[T]`, nested TypedDicts); `Annotated[...]`, `Any`, parameterized `dict[K,V]`, and `tuple`/`set` would crash generation with an opaque `TypeError` rather than a clear message, and `include_extras=True` makes `Annotated` reachable. No contract field uses those forms today, so nothing regresses; the generator correctly `raise`s on the unknown form (fails closed, never mis-emits). Harden the converter with explicit `Annotated`-stripping and `dict[K,V]`/`Any` mappings if/when a contract field adopts one of these type shapes.
 validation 2026-07-24: title/description partly stale — current `_schema_for` now handles `Any` (→ `{}`) and parameterized/bare `dict` (→ `{"type":"object"}`), and `get_type_hints(include_extras=False)` strips `Annotated` before it reaches the converter. Residual gap: `tuple`/`set` fall through to `return {}` (a SILENT over-permissive empty schema, NOT the "opaque TypeError crash" the title claims). Real gap = silent empty schema for tuple/set, not a crash. Still-open.
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-gen-schemas-tuple-set-hardening
 
 ### DW-11: §12.2's second clause ("`wilson_ci` present whenever any check `measured` is a rate") is not enforced by the schema, `derive_verdict`, or the tests — there is no conditional (`if/then`) schema or runtime check tying a rate-valued `measured` to a present `wilson_ci`.
 

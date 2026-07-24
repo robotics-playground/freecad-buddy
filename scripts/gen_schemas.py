@@ -121,6 +121,34 @@ def _schema_for(tp: Any, defs: dict[str, dict]) -> dict:
     if tp is list:
         return {"type": "array"}
 
+    if tp in (tuple, typing.Tuple):  # noqa: UP006 - runtime identity check
+        return {"type": "array"}
+    if origin is tuple:
+        args = get_args(tp)
+        if args == ():
+            return {"type": "array", "maxItems": 0}
+        if args[-1] is Ellipsis:
+            if len(args) != 2 or Ellipsis in args[:-1]:
+                raise ValueError(f"unsupported Ellipsis placement in {tp!r}")
+            return {"type": "array", "items": _schema_for(args[0], defs)}
+        if Ellipsis in args:
+            raise ValueError(f"unsupported Ellipsis placement in {tp!r}")
+        return {
+            "type": "array",
+            "prefixItems": [_schema_for(a, defs) for a in args],
+            "minItems": len(args),
+            "maxItems": len(args),
+        }
+
+    if tp in (set, frozenset, typing.Set, typing.FrozenSet):  # noqa: UP006 - runtime identity check
+        return {"type": "array", "uniqueItems": True}
+    if origin in (set, frozenset):
+        return {
+            "type": "array",
+            "uniqueItems": True,
+            "items": _schema_for(get_args(tp)[0], defs),
+        }
+
     scalar = {
         str: {"type": "string"},
         int: {"type": "integer"},

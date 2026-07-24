@@ -3,6 +3,7 @@ with the ``jsonschema`` dev dep, not just inspected for key presence."""
 
 import json
 import sys
+import typing
 from pathlib import Path
 
 import pytest
@@ -68,6 +69,104 @@ def test_gen_schemas_check_detects_orphan(tmp_path):
     (tmp_path / "stale-removed.schema.json").write_text("{}\n", encoding="utf-8")
     problems = gen_schemas.check(tmp_path)
     assert any("orphan" in p for p in problems), problems
+
+
+# --------------------------------------------------------------------------- #
+# _schema_for tuple/set array projections
+# --------------------------------------------------------------------------- #
+
+
+def test_schema_for_variadic_tuple():
+    assert gen_schemas._schema_for(tuple[float, ...], {}) == {
+        "type": "array",
+        "items": {"type": "number"},
+    }
+
+
+def test_schema_for_fixed_tuple():
+    assert gen_schemas._schema_for(tuple[float, float, float], {}) == {
+        "type": "array",
+        "prefixItems": [{"type": "number"}, {"type": "number"}, {"type": "number"}],
+        "minItems": 3,
+        "maxItems": 3,
+    }
+
+
+def test_schema_for_bare_tuple():
+    assert gen_schemas._schema_for(tuple, {}) == {"type": "array"}
+
+
+def test_schema_for_empty_tuple():
+    assert gen_schemas._schema_for(tuple[()], {}) == {"type": "array", "maxItems": 0}
+
+
+def test_schema_for_parameterized_set():
+    assert gen_schemas._schema_for(set[str], {}) == {
+        "type": "array",
+        "uniqueItems": True,
+        "items": {"type": "string"},
+    }
+
+
+def test_schema_for_bare_set():
+    assert gen_schemas._schema_for(set, {}) == {"type": "array", "uniqueItems": True}
+
+
+def test_schema_for_single_element_tuple():
+    assert gen_schemas._schema_for(tuple[float], {}) == {
+        "type": "array",
+        "prefixItems": [{"type": "number"}],
+        "minItems": 1,
+        "maxItems": 1,
+    }
+
+
+def test_schema_for_heterogeneous_fixed_tuple():
+    assert gen_schemas._schema_for(tuple[str, int, bool], {}) == {
+        "type": "array",
+        "prefixItems": [
+            {"type": "string"},
+            {"type": "integer"},
+            {"type": "boolean"},
+        ],
+        "minItems": 3,
+        "maxItems": 3,
+    }
+
+
+def test_schema_for_parameterized_frozenset():
+    assert gen_schemas._schema_for(frozenset[int], {}) == {
+        "type": "array",
+        "uniqueItems": True,
+        "items": {"type": "integer"},
+    }
+
+
+def test_schema_for_bare_frozenset():
+    assert gen_schemas._schema_for(frozenset, {}) == {"type": "array", "uniqueItems": True}
+
+
+def test_schema_for_typing_alias_containers():
+    assert gen_schemas._schema_for(typing.Tuple, {}) == {"type": "array"}
+    assert gen_schemas._schema_for(typing.Set, {}) == {"type": "array", "uniqueItems": True}
+    assert gen_schemas._schema_for(typing.FrozenSet, {}) == {
+        "type": "array",
+        "uniqueItems": True,
+    }
+
+
+def test_schema_for_misplaced_ellipsis_raises():
+    with pytest.raises(ValueError, match="Ellipsis"):
+        gen_schemas._schema_for(tuple[int, ..., str], {})
+
+
+def test_schema_for_nested_typeddict_in_tuple_registers_def():
+    from freecad_buddy.contracts.report import Check
+
+    defs: dict = {}
+    schema = gen_schemas._schema_for(tuple[Check, ...], defs)
+    assert schema["items"] == {"$ref": "#/$defs/Check"}
+    assert "Check" in defs
 
 
 # --------------------------------------------------------------------------- #
