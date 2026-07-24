@@ -92,6 +92,11 @@ class TreeSummaryTest(unittest.TestCase):
         return sum(1 + self._count(n.get("children", [])) + self._count(n.get("links", []))
                    for n in nodes)
 
+    def test_text_is_summary_not_json_dump(self):
+        env = queries.query_tree_summary(self.registry, doc=self.handle, depth=1)
+        self.assertNotIn("{", env["text"])  # no JSON braces — it's prose
+        self.assertIn("objects", env["text"])
+
 
 if __name__ == "__main__":
     unittest.main()

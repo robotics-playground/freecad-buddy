@@ -12,19 +12,51 @@ from __future__ import annotations
 import math
 import re
 
-from freecad_buddy.contracts import ResultEnvelope, mirror_text
+from freecad_buddy.contracts import ResultEnvelope, summary_text
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 
-def _ok_envelope(structured: dict) -> ResultEnvelope:
+def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope:
     return {
         "schema": "fcb.result-envelope/1",
         "status": "OK",
         "detail": None,
         "structured_content": structured,
-        "text": mirror_text(structured),
+        "text": summary if summary is not None else summary_text(structured),
     }
+
+
+def summarize_tree(sc: dict) -> str:
+    """One-line tree summary: object counts + any errored nodes."""
+    errors = _collect_errors(sc.get("tree", []))
+    head = f"{sc.get('total_objects', '?')} objects, {sc.get('returned_nodes', '?')} shown"
+    if errors:
+        return f"{head}. Errors: " + "; ".join(errors)
+    return head + "."
+
+
+def _collect_errors(nodes: list) -> list:
+    out = []
+    for n in nodes:
+        if "error" in n:
+            out.append(f"{n['name']}: {n['error']}")
+        out += _collect_errors(n.get("children", []))
+        out += _collect_errors(n.get("links", []))
+    return out
+
+
+def summarize_mass_properties(sc: dict) -> str:
+    """One-line mass-properties summary: volume headline + topology counts."""
+    vol = sc.get("volume") or {}
+    counts = sc.get("counts") or {}
+    kind = "solid" if sc.get("solid") else "non-solid"
+    v = vol.get("value") if isinstance(vol, dict) else None
+    v_txt = f"{v} {vol.get('unit', '')}" if v is not None else "n/a"
+    return (
+        f"{sc.get('name', '?')}: volume {v_txt} ({kind}), "
+        f"{counts.get('faces', '?')} faces, {counts.get('edges', '?')} edges."
+    )
 
 
 def query_capabilities(exec_enabled: bool = False, render: str = "none") -> ResultEnvelope:
@@ -252,7 +284,7 @@ def query_tree_summary(
             "filters_applied": effective,
             "tree": tree,
         }
-        return _ok_envelope(structured)
+        return _ok_envelope(structured, summarize_tree(structured))
 
     return registry.with_document(doc, read)
 
@@ -344,7 +376,7 @@ def query_mass_properties(
                 "solids": len(shape.Solids),
             },
         }
-        return _ok_envelope(structured)
+        return _ok_envelope(structured, summarize_mass_properties(structured))
 
     return registry.with_document(doc, read)
 

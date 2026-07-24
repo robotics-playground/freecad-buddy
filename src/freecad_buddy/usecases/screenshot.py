@@ -117,7 +117,7 @@ def query_screenshot(
                 "focused_on": _focused_on(focus_echo, result.focused),
             },
         }
-        return _ok_envelope(structured, image)
+        return _ok_envelope(structured, image, summarize_screenshot(structured))
 
     return registry.with_document(doc, read)
 
@@ -377,13 +377,24 @@ def _focused_on(focus: FocusSpec | None, sub_framed: bool) -> dict | None:
     return echo
 
 
-def _ok_envelope(structured: dict, image: ImageRef) -> ResultEnvelope:
+def summarize_screenshot(sc: dict) -> str:
+    """One-line screenshot summary: render count + dirty flag."""
+    render = sc.get("render", {})
+    scene = sc.get("scene", {})
+    n = len(scene.get("rendered_objects", []))
+    if not render.get("available", False):
+        return f"Render unavailable: {render.get('reason')}."
+    dirty = " Document dirty (pending/broken recompute)." if render.get("dirty_document") else ""
+    return f"Rendered {n} objects.{dirty}"
+
+
+def _ok_envelope(structured: dict, image: ImageRef, summary: str | None = None) -> ResultEnvelope:
     return {
         "schema": "fcb.result-envelope/1",
         "status": "OK",
         "detail": None,
         "structured_content": structured,
-        "text": mirror_text(structured),
+        "text": summary if summary is not None else mirror_text(structured),
         "images": [image],
     }
 

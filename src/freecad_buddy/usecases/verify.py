@@ -12,7 +12,7 @@ so the dispatch boundary maps it to ``INVALID_INPUT``.
 
 from __future__ import annotations
 
-from freecad_buddy.contracts import ResultEnvelope, derive_verdict, mirror_text
+from freecad_buddy.contracts import ResultEnvelope, derive_verdict, summary_text
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
@@ -54,7 +54,29 @@ def _failure_detail(report: dict) -> dict:
     }
 
 
-def _report_envelope(report: dict) -> ResultEnvelope:
+def summarize_recompute(report: dict) -> str:
+    """One-line recompute summary: clean or failing object names."""
+    failing = report.get("subject", {}).get("failing_objects", [])
+    if not failing:
+        return "Recompute clean: no errors."
+    n = len(failing)
+    names = ", ".join(failing[:3])
+    suffix = f" (+{n - 3} more)" if n > 3 else ""
+    return f"Recompute: {n} error(s): {names}{suffix}."
+
+
+def summarize_shape(report: dict) -> str:
+    """One-line shape summary: verdict + first failing check."""
+    verdict = report.get("verdict", "?")
+    obj = report.get("subject", {}).get("object", "?")
+    failed = [c for c in report.get("checks", []) if not c.get("passed")]
+    if not failed:
+        return f"{obj}: shape checks passed ({verdict})."
+    first = failed[0]
+    return f"{obj}: {first['id']} failed ({verdict})."
+
+
+def _report_envelope(report: dict, summary: str | None = None) -> ResultEnvelope:
     """Wrap a ValidationReport as a ResultEnvelope whose status mirrors the derived verdict.
 
     A non-``OK`` verdict carries a non-null ``detail`` per the envelope contract; an ``OK``
@@ -66,16 +88,16 @@ def _report_envelope(report: dict) -> ResultEnvelope:
         "status": verdict,
         "detail": None if verdict == "OK" else _failure_detail(report),
         "structured_content": report,
-        "text": mirror_text(report),
+        "text": summary if summary is not None else summary_text(report),
     }
 
 
-def _finish(report: dict) -> ResultEnvelope:
+def _finish(report: dict, summary: str | None = None) -> ResultEnvelope:
     """Attach schema/banner, derive the verdict, and wrap the report in an envelope."""
     report["schema"] = "fcb.validation-report/1"
     report["banner"] = _banner()
     report["verdict"] = derive_verdict(report)
-    return _report_envelope(report)
+    return _report_envelope(report, summary)
 
 
 def _resolve_object(document: object, name: str | None):
@@ -284,7 +306,10 @@ def verify_shape(
         report: dict = {"subject": {"object": obj.Name}}
         if not checks:
             report["checks"] = _measured_facts(shape)
-            return _finish(report)
+            report["schema"] = "fcb.validation-report/1"
+            report["banner"] = _banner()
+            report["verdict"] = derive_verdict(report)
+            return _report_envelope(report, summarize_shape(report))
 
         built = []
         for check in checks:
@@ -296,7 +321,10 @@ def verify_shape(
                 raise ValidationError(f"unknown assertion fn: {fn!r}")
             built.append(builder(shape, check.get("expect"), check.get("tol"), floor))
         report["checks"] = built
-        return _finish(report)
+        report["schema"] = "fcb.validation-report/1"
+        report["banner"] = _banner()
+        report["verdict"] = derive_verdict(report)
+        return _report_envelope(report, summarize_shape(report))
 
     return registry.with_document(doc, read)
 
@@ -442,7 +470,10 @@ def verify_recompute(registry: DocumentRegistry, doc: str | None = None) -> Resu
             "subject": {"failing_objects": [entry["name"] for entry in failing]},
             "checks": checks,
         }
-        return _finish(report)
+        report["schema"] = "fcb.validation-report/1"
+        report["banner"] = _banner()
+        report["verdict"] = derive_verdict(report)
+        return _report_envelope(report, summarize_recompute(report))
 
     return registry.with_document(doc, read)
 
