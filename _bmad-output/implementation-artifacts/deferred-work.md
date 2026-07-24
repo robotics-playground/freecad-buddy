@@ -321,7 +321,9 @@ resolution: `_lib3mf_mesh` → `_lib3mf_meshes` (iterates the whole `GetMeshObje
 origin: migrated from legacy ledger ("Deferred from: spec-1-7-exports-paired-verification.md"), 2026-07-23
 location: adapters/export_oracle.py
 reason: `adapters/export_oracle.py` `mesh3mf_oracle`'s trimesh geometry leg is built from the lib3mf-parsed vertex/triangle arrays (`_trimesh_from_lib3mf`), so the lib3mf and trimesh "oracles" share lib3mf's geometry parse; the 3MF independence is weaker than the STL path (where trimesh loads the file itself). A lib3mf parse bug would propagate into both 3MF legs, and the flattened single-leg design means there is no true cross-oracle geometry check for 3MF. By-design for Phase-0 (the container/unit/manifold lies are what §6.4 targets and are caught 3/3), but a later story wanting genuine 3MF geometry independence should add a second independent 3MF geometry reader (or an independent container parse).
-status: open
+status: done 2026-07-24
+resolution: closed by human decision: The container/unit/manifold lies §6.4 targets are caught 3/3 and no multi-mesh geometry defect is producible by the Phase-0 writer; accept the shared lib3mf parse as an explicit, documented Phase-0 posture.
+decision: 2026-07-24 Accept shared-parse design — The container/unit/manifold lies §6.4 targets are caught 3/3 and no multi-mesh geometry defect is producible by the Phase-0 writer; accept the shared lib3mf parse as an explicit, documented Phase-0 posture.
 
 ### DW-42: The `step-unit-lie` fault fixture writes a genuinely smaller solid (`makeBox(1,2,3)`, vol 6) mislabeled against the full box (vol 6000), so `verify_export_step` detects it via a gross shape/volume mismatch rather than via a mislabeled `write.step.unit`; the per-call unit-pinning path (`shim.pin_step_config` / `write.step.unit=MM`) has no fault-suite case exercising a true same-geometry 1000× unit scale.
 
