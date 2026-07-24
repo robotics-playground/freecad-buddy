@@ -73,7 +73,7 @@ def summarize_shape(report: dict) -> str:
     if not failed:
         return f"{obj}: shape checks passed ({verdict})."
     first = failed[0]
-    return f"{obj}: {first['id']} failed ({verdict})."
+    return f"{obj}: {first.get('id', 'check')} failed ({verdict})."
 
 
 def _report_envelope(report: dict, summary: str | None = None) -> ResultEnvelope:
