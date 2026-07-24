@@ -157,13 +157,20 @@ def _bbox_extents(shape: object) -> list[float]:
 
 
 def _is_watertight(shape: object) -> bool:
-    """Whether ``shape`` is a single closed solid: exactly one solid and ``isClosed()``."""
+    """Whether ``shape`` is a single closed solid: exactly one solid and ``isClosed()``.
+
+    A shape whose ``isClosed`` is absent or raises cannot report closure and surfaces as
+    ``ValidationError`` rather than a false ``not watertight``.
+    """
     if len(shape.Solids) != 1:
         return False
+    is_closed = getattr(shape, "isClosed", None)
+    if is_closed is None:
+        raise ValidationError("shape does not support closure measurement")
     try:
-        return bool(shape.isClosed())
-    except Exception:  # noqa: BLE001 - a shape that cannot report closure is not watertight
-        return False
+        return bool(is_closed())
+    except Exception as exc:  # noqa: BLE001
+        raise ValidationError(f"cannot measure shape closure: {exc}") from exc
 
 
 def _has_band(tol) -> bool:
@@ -256,14 +263,18 @@ _ASSERTIONS = {
 
 
 def _shape_floor(shape: object) -> float:
-    """Return the shape's own tolerance floor, defaulting to ``0.0`` when unavailable."""
+    """Return the shape's own tolerance floor, ``0.0`` when the shape has no tolerance concept.
+
+    A shape whose ``getTolerance`` is absent floors at ``0.0``; one whose ``getTolerance(1)``
+    call raises surfaces as ``ValidationError`` rather than a false ``0.0`` floor.
+    """
     getter = getattr(shape, "getTolerance", None)
     if getter is None:
         return 0.0
     try:
         return float(getter(1))
-    except Exception:  # noqa: BLE001 - a shape that cannot report a tolerance floors at 0
-        return 0.0
+    except Exception as exc:  # noqa: BLE001
+        raise ValidationError(f"cannot measure shape tolerance: {exc}") from exc
 
 
 def _measured_facts(shape: object) -> list[dict]:
@@ -301,7 +312,6 @@ def verify_shape(
                 raise ValidationError("document has no objects to verify")
             obj = objects[0]
         shape = _require_shape(obj, obj.Name)
-        floor = _shape_floor(shape)
 
         report: dict = {"subject": {"object": obj.Name}}
         if not checks:
@@ -311,6 +321,7 @@ def verify_shape(
             report["verdict"] = derive_verdict(report)
             return _report_envelope(report, summarize_shape(report))
 
+        floor = _shape_floor(shape)
         built = []
         for check in checks:
             if not isinstance(check, dict):

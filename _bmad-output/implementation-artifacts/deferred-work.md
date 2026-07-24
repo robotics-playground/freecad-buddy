@@ -249,7 +249,8 @@ resolution: resolved by sweep bundle dw-fault-scorer-yaml-parser
 origin: migrated from legacy ledger ("Deferred from: spec-1-6-verification-core.md"), 2026-07-23
 location: verify.py
 reason: `verify.py` `_is_watertight` and `_shape_floor` swallow any exception (return "not watertight" / floor `0.0`); a solid whose `getTolerance()` genuinely raises would silently disable the tolerance-floor clamp so a comparison could assert tighter than the B-rep tolerance. Not a Phase-0 path (the golden/fault solids all report a tolerance); the swallow is defensive. If a real shape is found that raises on `getTolerance()`/`isClosed()`, distinguish "cannot measure" (report an INVALID_INPUT / unavailable) from a false "not watertight"/zero-floor.
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-verify-tolerance-measure-failure
 
 ### DW-33: `fingerprint._serialize` aborts the whole fingerprint if `exportBinary` raises on a specific shape — there is no per-shape fallback to `exportBrep`.
 

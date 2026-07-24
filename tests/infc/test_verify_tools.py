@@ -16,7 +16,7 @@ import Sketcher
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import fingerprints_equal
 from freecad_buddy.usecases import fingerprint, verify
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 BOX_L = 10.0
 BOX_W = 20.0
@@ -177,6 +177,56 @@ class VerifyShapeTest(_DocFixture):
         )
         self.assertEqual(envelope["status"], "INVALID_INPUT")
 
+    def test_shape_floor_missing_tolerance_attr_is_benign_zero(self):
+        self.assertEqual(verify._shape_floor(_FakeShape(tolerance=None)), 0.0)
+
+    def test_shape_floor_raising_tolerance_raises_validation_error(self):
+        with self.assertRaises(ValidationError):
+            verify._shape_floor(_FakeShape(tolerance="raise"))
+
+    def test_is_watertight_raising_isclosed_raises_validation_error(self):
+        with self.assertRaises(ValidationError):
+            verify._is_watertight(_FakeShape(solids=1, is_closed="raise"))
+
+    def test_is_watertight_multi_solid_is_real_false(self):
+        self.assertFalse(verify._is_watertight(_FakeShape(solids=2, is_closed="raise")))
+
+    def test_absent_isclosed_raises_validation_error(self):
+        with self.assertRaises(ValidationError):
+            verify._is_watertight(_FakeShape(solids=1, is_closed=None))
+
+    def test_shape_floor_clamps_comparison_to_tolerance_floor(self):
+        floor = 0.5
+        passed, detail = verify._tol_close(10.0, 10.4, {"abs": 0.01}, floor)
+        self.assertTrue(passed)
+        self.assertIn("clamped to shape tolerance floor", detail)
+
+    def test_gettolerance_raise_through_dispatch_is_invalid_input(self):
+        self._add_box()
+        with _patched_require_shape(_FakeShape(solids=1, tolerance="raise", is_closed=True)):
+            envelope = _verify_dispatch(self.registry).dispatch(
+                "verify_shape",
+                {
+                    "doc": self.handle,
+                    "object": "Box",
+                    "checks": [{"fn": "expect_volume", "expect": 6000, "tol": {"rel": 0.001}}],
+                },
+            )
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+
+    def test_isclosed_raise_through_dispatch_is_invalid_input(self):
+        self._add_box()
+        with _patched_require_shape(_FakeShape(solids=1, tolerance=0.0, is_closed="raise")):
+            envelope = _verify_dispatch(self.registry).dispatch(
+                "verify_shape",
+                {
+                    "doc": self.handle,
+                    "object": "Box",
+                    "checks": [{"fn": "expect_watertight", "expect": True}],
+                },
+            )
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+
 
 class VerifySketchTest(_DocFixture):
     def _fully_constrained_sketch(self, name="Sketch"):
@@ -255,6 +305,56 @@ class BadHandleTest(_DocFixture):
         ):
             envelope = _verify_dispatch(self.registry).dispatch(name, params)
             self.assertEqual(envelope["status"], "INVALID_INPUT", name)
+
+
+class _FakeShape:
+    """Duck-typed stand-in for a Part shape exposing the measurement surface DW-32 guards.
+
+    ``tolerance``/``is_closed`` accept ``"raise"`` to force the corresponding call to raise,
+    ``None`` to omit the attribute, or a value to return; ``solids`` sets the solid count.
+    """
+
+    def __init__(self, solids: int = 1, tolerance=0.0, is_closed=True):
+        self.Solids = [object()] * solids
+        if tolerance is not None:
+            self.getTolerance = self._tolerance_getter(tolerance)
+        if is_closed is not None:
+            self.isClosed = self._is_closed(is_closed)
+
+    @staticmethod
+    def _tolerance_getter(value):
+        def getter(mode):
+            if value == "raise":
+                raise RuntimeError("OCC tolerance failure")
+            return value
+
+        return getter
+
+    @staticmethod
+    def _is_closed(value):
+        def is_closed():
+            if value == "raise":
+                raise RuntimeError("check failed, shape may be empty")
+            return value
+
+        return is_closed
+
+
+class _patched_require_shape:
+    """Context manager forcing ``verify._require_shape`` to return ``shape``."""
+
+    def __init__(self, shape):
+        self._shape = shape
+        self._original = None
+
+    def __enter__(self):
+        self._original = verify._require_shape
+        verify._require_shape = lambda obj, name: self._shape
+        return self
+
+    def __exit__(self, *exc):
+        verify._require_shape = self._original
+        return False
 
 
 def _freecad_version() -> str:
