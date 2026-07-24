@@ -11,7 +11,7 @@ import secrets
 import threading
 from typing import Callable, TypeVar
 
-from freecad_buddy.contracts import ResultEnvelope, mirror_text
+from freecad_buddy.contracts import ResultEnvelope, summary_text
 
 T = TypeVar("T")
 
@@ -20,14 +20,47 @@ class ValidationError(Exception):
     """Caller-facing input validation failure for a document operation."""
 
 
-def _ok_envelope(structured: dict) -> ResultEnvelope:
+def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope:
     return {
         "schema": "fcb.result-envelope/1",
         "status": "OK",
         "detail": None,
         "structured_content": structured,
-        "text": mirror_text(structured),
+        "text": summary if summary is not None else summary_text(structured),
     }
+
+
+def summarize_document_list(sc: dict) -> str:
+    """One-line summary of open documents: count and labels."""
+    docs = sc.get("documents") or []
+    labels = ", ".join(d.get("label", "?") for d in docs)
+    suffix = f": {labels}" if labels else ""
+    return f"{len(docs)} open document(s){suffix}."
+
+
+def summarize_document_open(sc: dict) -> str:
+    """One-line summary of a document_open result."""
+    return f"Opened {sc.get('label', sc.get('name', '?'))} -> {sc.get('doc', '?')}."
+
+
+def summarize_document_save(sc: dict) -> str:
+    """One-line summary of a document_save result."""
+    return f"Saved {sc.get('name', '?')} (doc={sc.get('doc', '?')})."
+
+
+def summarize_document_close(sc: dict) -> str:
+    """One-line summary of a document_close result."""
+    return f"Closed {sc.get('name', '?')} (doc={sc.get('doc', '?')})."
+
+
+def summarize_document_recompute(sc: dict) -> str:
+    """One-line summary of a document_recompute result."""
+    errors = sc.get("errors") or []
+    touched = sc.get("touched", 0)
+    if errors:
+        names = ", ".join(e.get("name", "?") for e in errors)
+        return f"Recompute {sc.get('name', '?')}: {len(errors)} error(s): {names}."
+    return f"Recompute {sc.get('name', '?')}: clean, {touched} object(s) touched."
 
 
 # FreeCAD marks a failed object with "Invalid"/"Error" in obj.State; an object still "Touched"
@@ -52,7 +85,7 @@ def _recompute_error_envelope(structured: dict, errors: list) -> ResultEnvelope:
             "objects": names,
         },
         "structured_content": structured,
-        "text": mirror_text(structured),
+        "text": summarize_document_recompute(structured),
     }
 
 
@@ -157,7 +190,7 @@ class DocumentRegistry:
                 "label": document.Label,
                 "path": path,
             }
-            return _ok_envelope(structured)
+            return _ok_envelope(structured, summarize_document_open(structured))
 
     def document_save(self, doc: str | None = None, path: str | None = None) -> ResultEnvelope:
         """Save (or save-as) the document named by ``doc``."""
@@ -173,7 +206,7 @@ class DocumentRegistry:
                     )
                 document.save()
             structured = {"doc": handle, "name": document.Name, "saved": True}
-            return _ok_envelope(structured)
+            return _ok_envelope(structured, summarize_document_save(structured))
 
     def document_close(self, doc: str | None = None) -> ResultEnvelope:
         """Close the document named by ``doc`` and release every handle bound to it."""
@@ -187,7 +220,7 @@ class DocumentRegistry:
                 del self._by_handle[alias]
                 self._transient.pop(alias, None)
             structured = {"doc": handle, "name": name, "closed": True}
-            return _ok_envelope(structured)
+            return _ok_envelope(structured, summarize_document_close(structured))
 
     def document_recompute(self, doc: str | None = None) -> ResultEnvelope:
         """Full recompute; report per-object error states and fail on any error.
@@ -213,7 +246,7 @@ class DocumentRegistry:
             }
             if errors:
                 return _recompute_error_envelope(structured, errors)
-            return _ok_envelope(structured)
+            return _ok_envelope(structured, summarize_document_recompute(structured))
 
     def document_list(self) -> ResultEnvelope:
         """List every open FreeCAD document with handle, name, label, and transient flag.
@@ -241,7 +274,7 @@ class DocumentRegistry:
                 for handle, document in self._by_handle.items()
             ]
             structured = {"documents": documents}
-            return _ok_envelope(structured)
+            return _ok_envelope(structured, summarize_document_list(structured))
 
     def _prune_closed(self) -> None:
         """Drop handles whose FreeCAD document has been closed (best-effort; lock held)."""

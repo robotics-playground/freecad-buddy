@@ -23,7 +23,7 @@ import math
 import os
 import secrets
 
-from freecad_buddy.contracts import ResultEnvelope, derive_verdict, mirror_text
+from freecad_buddy.contracts import ResultEnvelope, derive_verdict, summary_text
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
@@ -166,7 +166,9 @@ def export_step(
             "bytes": os.path.getsize(path),
             "verified": False,
         }
-        return _ok_envelope(structured)
+        return _ok_envelope(
+            structured, summarize_export({"format": "STEP", "verdict": "written", "path": path})
+        )
 
     return registry.with_document(doc, write)
 
@@ -227,7 +229,10 @@ def _mesh_export(
             "facets": int(mesh.CountFacets),
             "verified": False,
         }
-        return _ok_envelope(structured)
+        return _ok_envelope(
+            structured,
+            summarize_export({"format": fmt.upper(), "verdict": "written", "path": path}),
+        )
 
     return registry.with_document(doc, write)
 
@@ -447,12 +452,14 @@ def _failure_detail(report: dict) -> dict:
 def _report_envelope(report: dict) -> ResultEnvelope:
     """Wrap a ValidationReport as a ResultEnvelope whose status mirrors the derived verdict."""
     verdict = report["verdict"]
+    subject = report.get("subject") or {}
+    path = subject.get("path", "?")
     return {
         "schema": "fcb.result-envelope/1",
         "status": verdict,
         "detail": None if verdict == "OK" else _failure_detail(report),
         "structured_content": report,
-        "text": mirror_text(report),
+        "text": summarize_export({"format": "export", "verdict": verdict, "path": path}),
     }
 
 
@@ -464,12 +471,20 @@ def _finish(report: dict) -> ResultEnvelope:
     return _report_envelope(report)
 
 
-def _ok_envelope(structured: dict) -> ResultEnvelope:
+def summarize_export(sc: dict) -> str:
+    """One-line summary of an export write or verify result."""
+    fmt = sc.get("format") or sc.get("fmt") or "?"
+    verdict = sc.get("verdict", "written")
+    path = sc.get("path", "?")
+    return f"{fmt} export {verdict} -> {path}."
+
+
+def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope:
     """Wrap a plain structured payload as an ``OK`` ResultEnvelope."""
     return {
         "schema": "fcb.result-envelope/1",
         "status": "OK",
         "detail": None,
         "structured_content": structured,
-        "text": mirror_text(structured),
+        "text": summary if summary is not None else summary_text(structured),
     }

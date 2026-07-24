@@ -1,6 +1,14 @@
 """Pure unit tests for per-tool summary builders (no FreeCAD required)."""
 
-from freecad_buddy.usecases.queries import summarize_tree, summarize_mass_properties
+from freecad_buddy.usecases.documents import summarize_document_list
+from freecad_buddy.usecases.exports import summarize_export
+from freecad_buddy.usecases.queries import (
+    summarize_dependencies,
+    summarize_mass_properties,
+    summarize_placement,
+    summarize_sketch_info,
+    summarize_tree,
+)
 from freecad_buddy.usecases.screenshot import summarize_screenshot
 from freecad_buddy.usecases.verify import summarize_recompute, summarize_shape
 
@@ -216,3 +224,101 @@ def test_summarize_shape_fail():
     out = summarize_shape(report)
     assert "Pocket" in out or "shape.volume" in out
     assert "fail" in out.lower() or "SHAPE_MISMATCH" in out or "500" in out
+
+
+# --- Task 6: documents, exports, sketch, placement, dependencies ---
+
+
+def test_summarize_document_list_counts_docs():
+    sc = {"documents": [{"label": "a"}, {"label": "b"}]}
+    assert "2" in summarize_document_list(sc)
+
+
+def test_summarize_document_list_empty():
+    sc = {"documents": []}
+    out = summarize_document_list(sc)
+    assert "0" in out
+
+
+def test_summarize_document_list_names_docs():
+    sc = {"documents": [{"label": "Part1"}, {"label": "Assembly"}]}
+    out = summarize_document_list(sc)
+    assert "Part1" in out and "Assembly" in out
+
+
+def test_summarize_export_reports_verdict():
+    sc = {"format": "STEP", "verdict": "OK", "path": "/tmp/x.step"}
+    out = summarize_export(sc)
+    assert "STEP" in out and "OK" in out
+
+
+def test_summarize_export_missing_fields_safe():
+    out = summarize_export({})
+    assert isinstance(out, str) and len(out) > 0
+
+
+def test_summarize_export_fail_verdict():
+    sc = {"format": "STL", "verdict": "MESH_MISMATCH", "path": "/tmp/x.stl"}
+    out = summarize_export(sc)
+    assert "STL" in out and "MESH_MISMATCH" in out
+
+
+def test_summarize_sketch_info_dof():
+    sc = {
+        "sketch": "Sketch",
+        "geometry": [{"index": 0, "type": "LineSegment", "construction": False}],
+        "constraints": [
+            {"id": 1, "type": "Coincident", "name": "", "driving": True},
+            {"id": 2, "type": "Distance", "name": "w", "driving": True},
+        ],
+    }
+    out = summarize_sketch_info(sc)
+    assert "Sketch" in out
+    assert "1 geo" in out or "geometry" in out.lower() or "1" in out
+    assert "2 constraint" in out or "2" in out
+
+
+def test_summarize_sketch_info_empty():
+    sc = {"sketch": "Sk", "geometry": [], "constraints": []}
+    out = summarize_sketch_info(sc)
+    assert "Sk" in out
+    assert "0" in out
+
+
+def test_summarize_placement_position():
+    sc = {
+        "object": "Body",
+        "local": {
+            "position": {
+                "x": {"value": 10.0, "unit": "mm"},
+                "y": {"value": 0.0, "unit": "mm"},
+                "z": {"value": 5.5, "unit": "mm"},
+            },
+            "axis": {"x": 0.0, "y": 0.0, "z": 1.0},
+            "angle": {"value": 45.0, "unit": "deg"},
+        },
+        "global": {
+            "position": {
+                "x": {"value": 10.0, "unit": "mm"},
+                "y": {"value": 0.0, "unit": "mm"},
+                "z": {"value": 5.5, "unit": "mm"},
+            },
+            "axis": {"x": 0.0, "y": 0.0, "z": 1.0},
+            "angle": {"value": 45.0, "unit": "deg"},
+        },
+    }
+    out = summarize_placement(sc)
+    assert "Body" in out
+    assert "10" in out or "mm" in out
+
+
+def test_summarize_dependencies_edge_count():
+    sc = {"edges": [{"from": "A", "to": "B"}, {"from": "B", "to": "C"}]}
+    out = summarize_dependencies(sc)
+    assert "2" in out
+
+
+def test_summarize_dependencies_single_object():
+    sc = {"object": "Pad", "in_list": ["Sketch"], "out_list": []}
+    out = summarize_dependencies(sc)
+    assert "Pad" in out

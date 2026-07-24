@@ -46,6 +46,33 @@ def _collect_errors(nodes: list) -> list:
     return out
 
 
+def summarize_sketch_info(sc: dict) -> str:
+    """One-line sketch summary: geometry count and constraint count."""
+    geo = sc.get("geometry") or []
+    con = sc.get("constraints") or []
+    return f"{sc.get('sketch', '?')}: {len(geo)} geo, {len(con)} constraint(s)."
+
+
+def summarize_placement(sc: dict) -> str:
+    """One-line placement summary: object name and local position."""
+    local = sc.get("local") or {}
+    pos = local.get("position") or {}
+    x = (pos.get("x") or {}).get("value", "?")
+    y = (pos.get("y") or {}).get("value", "?")
+    z = (pos.get("z") or {}).get("value", "?")
+    angle = (local.get("angle") or {}).get("value", "?")
+    return f"{sc.get('object', '?')} at ({x}, {y}, {z}) mm, rotated {angle} deg."
+
+
+def summarize_dependencies(sc: dict) -> str:
+    """One-line dependency summary: edge count or per-object in/out counts."""
+    if "edges" in sc:
+        return f"{len(sc['edges'])} dependency edge(s)."
+    in_list = sc.get("in_list") or []
+    out_list = sc.get("out_list") or []
+    return f"{sc.get('object', '?')}: {len(in_list)} upstream, {len(out_list)} downstream."
+
+
 def summarize_mass_properties(sc: dict) -> str:
     """One-line mass-properties summary: volume headline + topology counts."""
     vol = sc.get("volume") or {}
@@ -398,13 +425,14 @@ def query_dependencies(
                 "in_list": [dep.Name for dep in getattr(obj, "InList", []) or []],
                 "out_list": [dep.Name for dep in getattr(obj, "OutList", []) or []],
             }
-            return _ok_envelope(structured)
+            return _ok_envelope(structured, summarize_dependencies(structured))
         edges = [
             {"from": obj.Name, "to": dep.Name}
             for obj in document.Objects
             for dep in getattr(obj, "OutList", []) or []
         ]
-        return _ok_envelope({"edges": edges})
+        structured = {"edges": edges}
+        return _ok_envelope(structured, summarize_dependencies(structured))
 
     return registry.with_document(doc, read)
 
@@ -462,7 +490,7 @@ def query_sketch_info(
                 entry["value"] = quantity if quantity is not None else _quantity(value, None)
             constraints.append(entry)
         structured = {"sketch": obj.Name, "geometry": geometry, "constraints": constraints}
-        return _ok_envelope(structured)
+        return _ok_envelope(structured, summarize_sketch_info(structured))
 
     return registry.with_document(doc, read)
 
@@ -508,6 +536,6 @@ def query_placement(
             "local": _placement_dict(local),
             "global": _placement_dict(global_placement),
         }
-        return _ok_envelope(structured)
+        return _ok_envelope(structured, summarize_placement(structured))
 
     return registry.with_document(doc, read)
