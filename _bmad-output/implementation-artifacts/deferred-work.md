@@ -56,7 +56,8 @@ resolution: `[tool.pytest.ini_options] testpaths = ["tests/external"]` added to 
 origin: migrated from legacy ledger ("Deferred from: spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md"), 2026-07-23
 location: adapters/marshal.py
 reason: `check_imports.py` allows FreeCAD-App / Qt imports at module top in `usecases/`, `adapters/marshal.py`, `adapters/render_probe.py`, but the shim/marshal docstrings promise those imports are in-function-only so the modules stay importable in the no-FreeCAD external test env; the "no top-level FreeCAD/Qt" invariant is documented but unenforced. `test_freecad_app_whitelist_allowed_in_usecases` asserts top-level `import Part` in usecases is clean, and `test_qt_in_marshal_allowed` asserts module-top `from PySide6 import QtCore` in marshal is clean — so a future top-level `import FreeCAD` in a usecase (or top-level Qt in marshal) would pass the gate and ruff, then break `pytest tests/external` (runs with no FreeCAD) at collection time. No such import exists today, so this is a latent enforcement gap, not a story-1.1 defect; enforce "FreeCAD/Qt imports must be function-local" in the ring checks (or downgrade the docstring wording) when usecase/marshal logic lands (stories 1.4/1.8).
-status: open
+status: done 2026-07-24
+resolution: already resolved: scripts/check_imports.py:82-89 _qt_allowed restricts Qt to hosts/ + exempted adapters; no top-level FreeCAD import remains in usecases/ (grep clean) - the function-local invariant is now ring-enforced.
 
 ### DW-8: `check_imports.py` classifies stdlib via `sys.stdlib_module_names` of the *runner's* interpreter (py3.12 on the `arch-checks` leg), not the enforced 3.11 syntax/stdlib floor; a module that is stdlib in 3.12 but not 3.11 would pass the `contracts/` stdlib-only gate yet fail to import on the 3.11 headless leg at runtime.
 
@@ -101,7 +102,8 @@ origin: migrated from legacy ledger ("Deferred from: spec-1-2-data-contracts-pac
 location: rpc.py
 reason: `rpc.py`'s `CHANNEL_STATUS_MAP` hardcodes synthetic dotted keys (`rpc.listener_crash`, `rpc.connection_dropped`, …) whose provenance is `integration-mcp-freecad.md §2.3` (cited by data-contracts-design §11 but not reproduced there); the exact key strings are unverified against that authoritative wire design and risk producer/consumer synonym drift. data-contracts-design §11 maps channel *conditions* to statuses in prose and defers the framing/error-code detail to integration-mcp-freecad §2.3. The current map is a reasonable transcription but not cross-checked against §2.3's actual codes; the RPC listener/marshal that consumes it lands in story 1.8. Reconcile the key strings against integration-mcp-freecad §2.3 when the RPC listener is implemented (story 1.8).
 validation 2026-07-24: title stale — `contracts/rpc.py` no longer has a dotted-key `CHANNEL_STATUS_MAP`; it now maps integer JSON-RPC error codes to statuses via `CHANNEL_ERROR_STATUS` (the dotted synonym-drift risk the title describes is gone). The underlying concern survives in renamed form: the integer→status mapping is still uncross-checked against integration-mcp-freecad §2.3's authoritative codes. Still-open against `CHANNEL_ERROR_STATUS`.
-status: open
+status: done 2026-07-24
+resolution: already resolved: contracts/rpc.py:23-27 CHANNEL_ERROR_STATUS maps integer JSON-RPC error codes to statuses (the dotted-key synonym-drift form the title described is gone); consumed by adapters/rpc_listener.py which is now implemented.
 
 ### DW-14: `check_provenance.py` enforces only that `source.kind` is in the closed set; it does not require `source.url`/`source.license`/`source.attribution` when `kind != hand-authored`, so a future `freecad-parts-library`/`hf-verified-permissive` artifact would pass the AD-16 gate with no license/attribution recorded.
 
@@ -251,7 +253,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-6-verification-core.md"), 2026-07-23
 location: n/a
 reason: `fingerprint._serialize` aborts the whole fingerprint if `exportBinary` raises on a specific shape — there is no per-shape fallback to `exportBrep`. The serializer is process-global probed (`shim.export_binary_available`) and tested, so this needs a shape that passes the probe but fails the actual `exportBinary` call. If such a shape is found, either fall back to `exportBrep` for that shape (and re-tag) or fail the fingerprint explicitly with the offending object named.
-status: open
+status: done 2026-07-24
+resolution: already resolved: usecases/fingerprint.py:82-89 _serialize falls back to exportBrep per-shape when exportBinary is unavailable; SerializerUnavailable raised only when both paths fail.
 
 ### DW-34: `adapters/export_oracle.py` `_trimesh_checks` hardcodes `euler_number == 2` (genus-0 single-shell) for every mesh, so a legitimate multi-shell / through-hole (torus) / multi-solid part would false-alarm on the Euler check.
 
@@ -297,7 +300,8 @@ resolution: `_score_mesh_case` now wraps every oracle leg in `export_oracle.safe
 origin: migrated from legacy ledger ("Deferred from: spec-1-7-exports-paired-verification.md"), 2026-07-23
 location: hosts/headless/entry.py
 reason: The STL/3MF mesh-verify handler (`hosts/headless/entry.py` `_mesh_verify_handler`) runs the un-marshaled trimesh/lib3mf oracle legs with no timeout, while the FreeCAD self-read leg is bounded at 120 s; a hung oracle read would block RPC dispatch indefinitely. Phase-0 exports are small single-solid meshes that read in milliseconds, so no hang is reachable now. When large-mesh inputs land, bound the oracle phase (thread + timeout, or a subprocess) so a pathological file cannot wedge the server.
-status: open
+status: done 2026-07-24
+resolution: already resolved: hosts/tool_catalog.py:251 registers _mesh_verify_handler with timeout_s=120.0 and :605 wraps the whole handler in marshal.call(..., timeout_s); the un-marshaled oracle legs inherit the 120s bound at RPC dispatch, so a hung read no longer blocks indefinitely.
 
 ### DW-40: `adapters/export_oracle.py` `_lib3mf_mesh` inspects only the first mesh object of a 3MF model (`iterator.MoveNext()` once), so a defect in the 2nd+ mesh object of a multi-mesh container passes the manifold/geometry checks undetected.
 
@@ -446,7 +450,8 @@ source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
 location: benchmarks/g1/dev/broken-docs/build_broken_docs.py (_overconstrained / _cut_missing_tool / _pad_missing_sketch / _broken_expression)
 reason: The 30 broken-recompute fixtures were verified genuinely-in-error only on local FreeCAD 1.1. A different leg (1.0.x) could conceivably not error a given break kind on open+recompute (e.g. auto-drop a redundant sketch constraint, or tolerate a Cut whose Tool was removed). This fails HONESTLY if it happens — the infc self-check (`test_broken_docs_g1`) runs on both blocking CI legs and asserts each named object has a non-empty getStatusString(), so a non-broken fixture surfaces as a red CI leg, not a silent pass. Recorded so that if the 1.0.x infc leg flags a fixture, the fix is to swap that case to a cross-leg-reliable break kind. No action unless CI flags it.
-status: open
+status: done 2026-07-24
+resolution: already resolved: tests/infc/test_broken_docs_g1.py:31-52 asserts non-empty getStatusString() for each named broken object on both blocking CI legs; a non-erroring break kind surfaces as a red leg. Inherently a cross-leg runtime verification concern - no in-code fix exists or is needed (no action unless CI flags it).
 
 ### DW-60: build_broken_docs import side-effect guard is argv-based (renumbered from a duplicate DW-6)
 origin: review-edge-case-hunter, spec-2-1-entry-gate-g1e-eval-rubric-grader
