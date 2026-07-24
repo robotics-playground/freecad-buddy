@@ -72,7 +72,7 @@ Rationale for separating `links`: an `Assembly` (or any container) holds its pla
 
 ```json
 {
-  "schema": "fcb.tree/1",
+  "schema": "fcb.result-envelope/1",
   "status": "OK",
   "structured_content": {
     "doc": "fcb-doc:…",
@@ -107,6 +107,8 @@ Sparse rule visible above: the `pcb`/`USB_3_0` leaves carry only the 4 core fiel
 
 **Duplicate hint.** Standalone-vs-linked duplication is surfaced in the `text` summary (see §2), not as a structured field — the agent reads it from the summary rather than the tool computing a formal duplicate graph. (Deferred: a structured `duplicate_of` cross-reference, if a later need arises.)
 
+**Tree payload is an untyped structured dict (decided 2026-07-24).** The tree node/summary shape ships as a plain `dict` inside `ResultEnvelope.structured_content`, covered by the in-FreeCAD behavioral tests — NOT by a generated `fcb.tree/1` JSON schema. This deviates from the earlier "contracts-owned typed contract" intent below: the sparse, recursive, filter-dependent node shape (fields present or absent per depth/state) is awkward to pin as a single static TypedDict, and the same untyped-payload posture already covers `query_object`'s heterogeneous `properties`. A typed `contracts/tree.py` + drift-checked schema can be added later if a cross-file consumer needs it.
+
 ### 2. Envelope `text` — per-tool human summary (all tools)
 
 Replace the generic `mirror_text(structured) = json.dumps(structured)` with a **per-tool summary string**: one line of human/LLM-readable signal, never a JSON re-dump.
@@ -129,7 +131,7 @@ Replace the generic `mirror_text(structured) = json.dumps(structured)` with a **
 ## Impact / touch points
 
 - `usecases/queries.py` — `query_tree_summary` rewrite (depth, filters, nesting, links split, sparse nodes, inline error, visibility).
-- `contracts/tree.py` (new or extended) — the `fcb.tree/1` node + envelope TypedDicts; generated JSON schema regenerated + drift-checked (`scripts/gen_schemas.py`).
+- ~~`contracts/tree.py` (new or extended) — the `fcb.tree/1` node + envelope TypedDicts; generated JSON schema regenerated + drift-checked.~~ **Not built** — the tree payload ships as an untyped structured dict (see the decision note in §1); no `fcb.tree/1` schema, no drift check on the node shape.
 - `hosts/tool_catalog.py` — `query_tree_summary` input schema (add `depth`, `root`, `filters`); the `renderable_only` filter shares the renderer's skip-set (factor that set to a spot both modules import, respecting ring direction — the set is data, place it where `usecases/` can own it and `screenshot.py` already lives).
 - `contracts/envelope.py` — envelope builder accepts a `summary`; `mirror_text` demoted to the generic fallback.
 - All ~23 tool usecases — each supplies its one-line summary builder.
