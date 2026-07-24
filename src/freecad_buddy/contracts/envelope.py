@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Literal, TypedDict
 
 from freecad_buddy.contracts.status import ErrorDetail, TerminalStatus
@@ -30,10 +29,24 @@ class ResultEnvelope(TypedDict, total=False):
     images: list[ImageRef]
 
 
-def mirror_text(structured_content: dict) -> str:
-    """Deterministic human-readable mirror of ``structured_content``.
+def summary_text(structured_content: dict) -> str:
+    """Compact human mirror of ``structured_content``: one ``key: value`` line per top-level key.
 
-    Sole producer of ``ResultEnvelope.text``. Sorted keys keep the mirror stable
-    across dict insertion order.
+    Scalars render inline; a nested dict renders ``key: {N fields}`` and a list ``key: [N items]``
+    — a signal of shape, never a full JSON dump.
     """
-    return json.dumps(structured_content, sort_keys=True, indent=2, ensure_ascii=False)
+    lines = []
+    for key in sorted(structured_content):
+        value = structured_content[key]
+        if isinstance(value, dict):
+            lines.append(f"{key}: {{{len(value)} fields}}")
+        elif isinstance(value, list):
+            lines.append(f"{key}: [{len(value)} items]")
+        else:
+            lines.append(f"{key}: {value}")
+    return "\n".join(lines)
+
+
+def mirror_text(structured_content: dict) -> str:
+    """Backward-compatible alias of ``summary_text`` (the generic fallback mirror)."""
+    return summary_text(structured_content)

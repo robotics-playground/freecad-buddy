@@ -12,7 +12,7 @@ from freecad_buddy.contracts.document import (
     MappedNameSelector,
     Selector,
 )
-from freecad_buddy.contracts.envelope import ImageRef, ResultEnvelope, mirror_text
+from freecad_buddy.contracts.envelope import ImageRef, ResultEnvelope, mirror_text, summary_text
 from freecad_buddy.contracts.fingerprint import (
     FingerprintRecord,
     MassProps,
@@ -89,4 +89,5 @@ __all__ = [
     "fingerprints_equal",
     "massprops_equal",
     "mirror_text",
+    "summary_text",
 ]

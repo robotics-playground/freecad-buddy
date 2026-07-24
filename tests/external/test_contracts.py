@@ -305,8 +305,12 @@ def test_status_vocab_owner_exempt_only_by_relative_path(tmp_path):
 def test_text_mirror_round_trip():
     content = {"report": {"verdict": "OK"}, "z": 1, "a": [3, 2, 1]}
     text = mirror_text(content)
+    # Verify determinism: calling mirror_text twice returns the same text
     assert text == mirror_text(content)
-    assert json.loads(text) == content
+    # Verify compact format: shows container counts, not full JSON dump
+    assert "report: {1 fields}" in text
+    assert "a: [3 items]" in text
+    assert "z: 1" in text
 
 
 # --------------------------------------------------------------------------- #
