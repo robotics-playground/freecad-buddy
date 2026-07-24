@@ -137,7 +137,7 @@ Invariants: the structured diff is the mandatory payload in every row; confirmat
 
 ## 5. Image / Render Delivery Rules (AD-10)
 
-Renders are optional and capability-gated (GUI `saveImage` → offscreen/Xvfb → omit). Budget: ≤1024 px longest edge, PNG, annotated `audience: ["user"]`.
+Renders are optional and capability-gated (GUI `saveImage` → offscreen/Xvfb → omit). Budget: ≤1920 px longest edge, PNG, annotated `audience: ["user"]`.
 
 | Client | Delivery | Rationale |
 | --- | --- | --- |

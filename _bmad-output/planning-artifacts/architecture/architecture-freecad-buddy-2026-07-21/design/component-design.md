@@ -83,7 +83,7 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 | `export_oracles.py` | P0 | External-side orchestration of `verify_export_*` (AD-9): STEP re-import round-trip, trimesh primary + second oracle (admesh or Phase 0-gate fallback) for STL, lib3mf + trimesh + in-FreeCAD self-read (via RPC) for 3MF; oracle disagreement = fail; mesh tolerance derived from deflection | third-party oracles |
 | `harness.py` | P0 | **Gate runner** core (AD-13, AD-14, AD-19): runs benchmarks/fault-injection suites via pytest, computes majority-of-R, Wilson CI, McNemar; emits contracts-owned `ValidationReport` with banner; verdict from report fields only. Thin CLI lives in `benchmarks/run_gate.py` (SPEC assumption) | external process only |
 | `skills_loader.py` | P1 (router) / GS.E (forced-subset) | **Skills loader** (AD-15): one store, two modes — production metadata-first router (12 descriptions resident, 2–5 bodies routed, ≤~10K tokens, subset logged) and ablation forced explicit-subset injection with auto-activation disabled; CI shape check (4 sections, ≤1,500 words) | `--skills <subset>` flag |
-| `render_probe.py` | P0 | Capability-gated render probe serving `query_screenshot` (P0) and preview images (P2): GUI `saveImage` / offscreen-Xvfb / omit; ≤1024 px, `resource_link` preferred — one of the two adapter Qt carve-outs (AD-1, AD-10) | optional payload only |
+| `render_probe.py` | P0 | Capability-gated render probe serving `query_screenshot` (P0) and preview images (P2): GUI `saveImage` / offscreen-Xvfb / omit; ≤1920 px, `resource_link` preferred — one of the two adapter Qt carve-outs (AD-1, AD-10) | optional payload only |
 
 ## 4. Host ring — `src/freecad_buddy/hosts/` (imports adapters)
 

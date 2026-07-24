@@ -19,7 +19,7 @@ benchmarks/
     fault-injection/        #   >=10 planted-fault cases (see §6)
     cases/                  #   criterion checks (round-trip, registry introspection...)
   g1/
-    dev/                    #   50-question eval + 10 broken-doc cases
+    dev/                    #   50-question eval + 30 broken-doc cases (tiered n=10->n=30, decision 008)
     heldout/                #   SEALED (see §1.1)
     fault-injection/        #   planted confident-wrong answer cases
     rubric.md               #   human-authored grading rubric (G1.E)

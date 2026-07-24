@@ -54,7 +54,7 @@ A caller-supplied bare `Face6` is resolved to a mapped name at call time and nev
 
 ### 1.3 Result envelope & error surface (AD-17)
 
-Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` mirror in `content` (spine convention "Tool results"). No namespace defines a variant envelope.
+Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). No namespace defines a variant envelope.
 
 The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contracts-design.md §4) — this catalog consumes it, never redefines it:
 
@@ -66,7 +66,7 @@ The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contrac
     "status": { "enum": ["OK", "SPEC_FAILED", "RECOMPUTE_ERROR", "TIMEOUT", "OOM_KILLED", "WORKER_CRASHED", "INVALID_INPUT"] },
     "detail": { "type": ["object", "null"], "description": "ErrorDetail — machine code + required human message on non-OK; constraint diagnostics as {solver_id (1-based), name} per Constraints[id-1]" },
     "structured_content": { "type": "object", "description": "tool-specific payload, per-tool schema below (called `result` in §3 fragments); echoes the doc handle (AD-20)" },
-    "text": { "type": "string", "description": "human mirror, server-derived from structured_content" },
+    "text": { "type": "string", "description": "per-tool one-line human summary of structured_content (counts/headline/error flags); never a JSON re-dump" },
     "images": { "type": "array", "description": "ImageRef[], capability-gated (AD-10)" }
   },
   "required": ["status", "structured_content", "text"]
@@ -75,7 +75,7 @@ The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contrac
 
 - The status set is closed (AD-17); Phase 0–2 use-case outcomes emit `OK | SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`; the transport layer additionally emits `TIMEOUT` (marshal timeout) and `WORKER_CRASHED` (RPC listener unreachable) from Phase 0 — see integration-mcp-freecad.md §7; `OOM_KILLED` is Phase 4 supervisor-only. The schema binds from Phase 0.
 - Verification payloads reuse the contracts `ValidationReport` shape with its banner (FreeCAD version, `ElementMapVersion`, validator sensitivity where citable).
-- Renders follow AD-10 budgets: ≤1024 px, `audience:["user"]`, `resource_link` preferred over inline base64.
+- Renders follow AD-10 budgets: ≤1920 px, `audience:["user"]`, `resource_link` preferred over inline base64.
 
 ### 1.4 Mutation protocol fields (AD-5, AD-6, AD-7)
 
@@ -125,8 +125,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
 | `query_placement` | 0 | Local + global placement of an object | no |
 | `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `debug_exec` state | no |
-| `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1024 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport. Reports unavailable when no GL — never fails hard | no |
-| `query_tree_children` | 1 | Paged expansion of one tree node (drill-down after `query_tree_summary`) | no |
+| `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1920 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport; renders a document with a pending/broken recompute (`render.dirty_document: true`) rather than hard-failing. Reports unavailable when no GL — never fails hard | no |
+| `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns depth/root/filter navigation | no |
 | `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) | no |
 
 ### `export_` — artifact output (AD-9: each pairs with its `verify_export_*`)
@@ -228,22 +228,36 @@ Fragments show `result` payloads; each is wrapped in the `ResultEnvelope` (§1.3
 
 ### 3.2 `query_tree_summary`
 
+Depth-bounded, filterable, nested tree walk (G1.3 context-overflow guard by explore-then-expand, not a flat node cap). `depth` expands N levels from the document roots (or from `root`); at the depth boundary a node reports only its counts. Children are partitioned into structural `children` and `App::Link` instance `links`. `filters` AND-stacks; `exclude_types` defaults to the datum/origin clutter set. Nodes are sparse — a field appears only when it carries a value; `name`/`label`/`type`/`visibility` are always present.
+
 ```json
 { "inputSchema": { "type": "object", "properties": {
     "doc": { "type": "string" },
-    "max_depth": { "type": "integer", "default": 2 },
-    "max_nodes": { "type": "integer", "default": 100, "description": "hard cap — G1.3 context-overflow guard" }
+    "depth": { "type": "integer", "default": 1, "minimum": 1, "description": "levels to expand; 1 = top containers only" },
+    "root": { "type": "string", "description": "expand the subtree under this object instead of the document roots" },
+    "filters": { "type": "object", "additionalProperties": false, "properties": {
+      "types": { "type": "array", "items": { "type": "string" } },
+      "exclude_types": { "type": "array", "items": { "type": "string" }, "description": "defaults to App::Plane/Line/Point/Origin" },
+      "renderable_only": { "type": "boolean" },
+      "visible_only": { "type": "boolean" },
+      "name_pattern": { "type": "string" }
+    } }
   }, "required": ["doc"] },
   "outputSchema-result": { "type": "object", "properties": {
-    "nodes": { "type": "array", "items": { "type": "object", "properties": {
+    "doc": { "type": "string" }, "total_objects": { "type": "integer" },
+    "returned_nodes": { "type": "integer", "description": "emitted node count after depth + filter" },
+    "depth": { "type": "integer" }, "filters_applied": { "type": "object" },
+    "tree": { "type": "array", "items": { "type": "object", "properties": {
       "name": { "type": "string" }, "label": { "type": "string" },
       "type": { "type": "string", "description": "e.g. PartDesign::Pad" },
-      "children_count": { "type": "integer" },
-      "error": { "type": ["string", "null"], "description": "getStatusString() when in error state" }
-    }, "required": ["name", "type"] } },
-    "total_objects": { "type": "integer" },
-    "truncated": { "type": "boolean", "description": "true → drill down with query_tree_children" }
-  }, "required": ["nodes", "total_objects", "truncated"] } }
+      "visibility": { "type": "boolean" },
+      "error": { "type": "string", "description": "getStatusString() — present only when in error state" },
+      "children_count": { "type": "integer", "description": "present only when non-zero" },
+      "children": { "type": "array", "description": "structural children; present only when expanded and non-empty" },
+      "links_count": { "type": "integer", "description": "App::Link children; present only when non-zero" },
+      "links": { "type": "array", "description": "App::Link instances; present only when expanded and non-empty" }
+    }, "required": ["name", "label", "type", "visibility"] } }
+  }, "required": ["doc", "total_objects", "returned_nodes", "depth", "tree"] } }
 ```
 
 ### 3.3 `verify_shape`
@@ -402,7 +416,7 @@ All `feature_*` tools follow this shape: selectors for sub-element references, `
        "description": "mandatory payload — confirmation never waits on pixels (AD-10)" },
     "renders": { "type": "array", "items": { "type": "object", "properties": {
       "kind": { "enum": ["before", "after"] },
-      "resource_link": { "type": "string", "description": "preferred; ≤1024 px, audience:[user]" } } },
+      "resource_link": { "type": "string", "description": "preferred; ≤1920 px, audience:[user]" } } },
       "description": "optional, capability-gated" },
     "expires_at": { "type": "string", "description": "TempDoc + preview_id lifetime; TempDoc prefix FCB_TMP_, cleaned by this tool (AD-20)" }
   }, "required": ["preview_id", "diff"] } }
@@ -413,6 +427,8 @@ Field list of `diff` is the Phase 2 UX-locked schema (spine Deferred) — it mus
 ### 3.9 `query_screenshot` — view-controlled render
 
 The agent (or the human it serves) reduces visual noise by **composing the scene**, not by mutating the model: the render path builds its own Coin scene graph per call (integration-mcp-freecad.md §6), so nothing here touches `Visibility` properties, the document, or the user's live viewport. Non-mutating by construction; registered in the Phase 1 read-only profile.
+
+A document with a pending or broken recompute (a `Touched`/`Invalid`/`Error` object) is self-unstable — reading `.Shape` while fingerprinting re-triggers the failing recompute, so the render's before==after mutation guard cannot distinguish a render mutation from that pre-existing churn. When the document is dirty the guard is skipped and the render proceeds with `render.dirty_document: true`; a clean document keeps the strict read-only assertion. A broken object with a null shape is signalled by `obj.State`, not a mass-property diff.
 
 ```json
 { "inputSchema": { "type": "object", "properties": {
@@ -436,15 +452,16 @@ The agent (or the human it serves) reduces visual noise by **composing the scene
       "camera": { "enum": ["iso", "front", "top", "right", "left", "back", "bottom", "custom"], "default": "iso" },
       "custom_orientation": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4,
                               "description": "quaternion; required when camera == custom" },
-      "width": { "type": "integer", "default": 800, "maximum": 1024 },
-      "height": { "type": "integer", "default": 600, "maximum": 1024 }
+      "width": { "type": "integer", "default": 1920, "maximum": 1920 },
+      "height": { "type": "integer", "default": 1920, "maximum": 1920 }
     } }
   }, "required": ["doc"] },
   "outputSchema-result": { "type": "object", "properties": {
     "render": { "type": "object", "properties": {
       "resource_link": { "type": "string" },
       "available": { "type": "boolean" },
-      "reason": { "type": ["string", "null"], "description": "why unavailable (no GL / no FreeCADGui)" }
+      "reason": { "type": ["string", "null"], "description": "why unavailable (no GL / no FreeCADGui)" },
+      "dirty_document": { "type": "boolean", "description": "true when rendered against a document with a pending/broken recompute; the read-only mutation guard was skipped" }
     }, "required": ["available"] },
     "scene": { "type": "object", "properties": {
       "rendered_objects": { "type": "array", "items": { "type": "string" } },

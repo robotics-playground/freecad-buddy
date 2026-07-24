@@ -77,7 +77,7 @@ class ImageRef(TypedDict, total=False):
     kind: Literal["resource_link", "inline"]   # resource_link preferred (AD-10)
     uri: str                # set when kind == "resource_link"
     mime_type: str          # "image/png"
-    data_b64: str           # set when kind == "inline"; server enforces ≤1024 px longest edge
+    data_b64: str           # set when kind == "inline"; server enforces ≤1920 px longest edge
     audience: list[str]     # always ["user"] — never model-directed
     label: str              # "before" | "after" | free text
 

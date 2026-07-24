@@ -299,7 +299,7 @@ Render code runs where FreeCAD lives. The **capability probe** sits in `adapters
 **Offscreen path** (`hosts/headless/offscreen_render.py`, adapted from FreeCAD's first-party `src/Tools/make_snapshot.py`):
 
 ```python
-def render_offscreen(doc, out_path: str, width: int = 1024, height: int = 768,
+def render_offscreen(doc, out_path: str, width: int = 1920, height: int = 1920,
                      orientation: str = "iso") -> RenderResult:
     # FreeCADGui.setupWithoutGUI() already done by probe
     root = coin.SoSeparator()
