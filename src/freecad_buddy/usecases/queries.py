@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import math
 import re
+from typing import Literal
 
-from freecad_buddy.contracts import ResultEnvelope, summary_text
+from freecad_buddy.contracts import CapabilityBanner, ResultEnvelope, summary_text
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
@@ -92,14 +93,16 @@ def summarize_mass_properties(sc: dict) -> str:
     )
 
 
-def query_capabilities(exec_enabled: bool = False, render: str = "none") -> ResultEnvelope:
+def query_capabilities(
+    exec_enabled: bool = False,
+    render: Literal["gui_constructed", "offscreen", "none"] = "none",
+) -> ResultEnvelope:
     """Report runtime capabilities: FreeCAD version, element-map, serializer, VarSet, render, exec.
 
     Every field is a live probe. ``render`` is the host-probed render-ladder mode and
     ``exec_enabled`` reflects whether the exec tool is reachable.
     """
-    structured = dict(shim.capability_banner(render))
-    structured["exec_enabled"] = exec_enabled
+    structured: CapabilityBanner = {**shim.capability_banner(render), "exec_enabled": exec_enabled}
     return _ok_envelope(structured)
 
 

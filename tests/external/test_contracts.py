@@ -182,6 +182,7 @@ def test_empty_object_rejected_for_every_wire_root():
         "audit-record",
         "geometry-diff",
         "fingerprint",
+        "capability-banner",
     ):
         assert not _root_validator(stem).is_valid({}), f"{stem} must reject {{}}"
 
@@ -256,6 +257,31 @@ def test_check_def_rejects_empty():
     assert v.is_valid({"passed": True})
 
 
+def test_capability_banner_positive_and_vocab_rejection():
+    """A full valid banner validates; off-vocabulary render/serializer values are rejected."""
+    v = _root_validator("capability-banner")
+    good = {
+        "freecad_version": "1.1.0",
+        "element_map_available": True,
+        "serializer": "exportBinary",
+        "varset_backend": "varset",
+        "render": "none",
+        "exec_enabled": False,
+    }
+    assert v.is_valid(good)
+    assert not v.is_valid({**good, "render": "offscren"})
+    assert not v.is_valid({**good, "serializer": "bogus"})
+
+
+def test_capability_banner_annotations_match_manifest():
+    """The manifest's required set equals the TypedDict field set (no silent rot)."""
+    from freecad_buddy.contracts.capabilities import CapabilityBanner
+
+    assert set(CapabilityBanner.__annotations__) == set(
+        gen_schemas.REQUIRED_FIELDS["CapabilityBanner"]
+    )
+
+
 # --------------------------------------------------------------------------- #
 # manifest-completeness audit: expected-required table == emitted required
 # --------------------------------------------------------------------------- #
@@ -267,6 +293,14 @@ EXPECTED_REQUIRED = {
     "AuditRecord": {"schema", "ts", "actor", "event"},
     "GeometryDiff": {"schema", "deltas", "counts", "validity", "tnp_precheck"},
     "FingerprintRecord": {"schema", "serializer", "objects", "digest"},
+    "CapabilityBanner": {
+        "freecad_version",
+        "element_map_available",
+        "serializer",
+        "varset_backend",
+        "render",
+        "exec_enabled",
+    },
     "ErrorDetail": {"message"},
     "ReportBanner": {"freecad_version", "element_map_version"},
     "Check": {"passed"},

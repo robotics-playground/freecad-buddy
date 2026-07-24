@@ -9,6 +9,9 @@ probe that cannot run returns a conservative default rather than raising.
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
+
+from freecad_buddy.contracts import CapabilityBanner
 
 _STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
 _STEP_SCHEMES = frozenset({"AP203", "AP214", "AP242"})
@@ -27,13 +30,13 @@ def export_binary_available() -> bool:
 
 
 @lru_cache(maxsize=1)
-def serializer_tag() -> str:
+def serializer_tag() -> Literal["exportBinary", "exportBrep"]:
     """Fingerprint serializer tag: ``exportBinary`` when exposed, else ``exportBrep``."""
     return "exportBinary" if export_binary_available() else "exportBrep"
 
 
 @lru_cache(maxsize=1)
-def varset_backend() -> str:
+def varset_backend() -> Literal["varset", "spreadsheet"]:
     """Driving-dimension backend: ``varset`` when ``App::VarSet`` is usable, else ``spreadsheet``.
 
     Attempts to add an ``App::VarSet`` on a throwaway document and confirms it materializes.
@@ -163,7 +166,9 @@ def step_schema() -> str:
     return FreeCAD.ParamGet(_STEP_PARAM_PATH).GetString("Scheme")
 
 
-def capability_banner(render: str = "none") -> dict:
+def capability_banner(
+    render: Literal["gui_constructed", "offscreen", "none"] = "none",
+) -> CapabilityBanner:
     """Runtime capability payload for the report banner and ``query_capabilities``.
 
     Every field is a live probe except ``render``, whose ladder mode is host-probed in

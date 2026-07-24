@@ -1,0 +1,44 @@
+{
+  "$id": "fcb.capability-banner/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "element_map_available": {
+      "type": "boolean"
+    },
+    "exec_enabled": {
+      "type": "boolean"
+    },
+    "freecad_version": {
+      "type": "string"
+    },
+    "render": {
+      "enum": [
+        "gui_constructed",
+        "offscreen",
+        "none"
+      ]
+    },
+    "serializer": {
+      "enum": [
+        "exportBinary",
+        "exportBrep"
+      ]
+    },
+    "varset_backend": {
+      "enum": [
+        "varset",
+        "spreadsheet"
+      ]
+    }
+  },
+  "required": [
+    "freecad_version",
+    "element_map_available",
+    "serializer",
+    "varset_backend",
+    "render",
+    "exec_enabled"
+  ],
+  "title": "CapabilityBanner",
+  "type": "object"
+}

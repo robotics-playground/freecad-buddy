@@ -135,7 +135,8 @@ resolution: `document_recompute` now returns `RECOMPUTE_ERROR` (code `recompute.
 origin: migrated from legacy ledger ("Deferred from: spec-1-4-document-lifecycle-headless-host-mcp-surface.md"), 2026-07-23
 location: n/a
 reason: `query_capabilities` capability-banner payload crosses the wire but has no `contracts/`-owned TypedDict/schema, unlike every other wire type (AD-17 "contracts-owned"). `shim.capability_banner() -> dict` and `queries.query_capabilities` assemble a loose dict. Read-only query payloads are formalized in story 1.5 (query_ surface); the banner shape should be defined in contracts then.
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-capability-banner-contract-type
 
 ### DW-18: `shim.element_map_available()` requires a NON-empty element map on a probe box, which is behavioral (did this shape populate a map) rather than pure capability (is the API exposed) — a lazily-populating build could yield a false negative (AD-11 wants a capability probe).
 

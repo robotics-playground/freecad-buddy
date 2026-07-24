@@ -5,6 +5,7 @@ Single import surface for the data contract types and helpers.
 
 from freecad_buddy.contracts.assertions import AnchorFrame
 from freecad_buddy.contracts.audit import AuditRecord
+from freecad_buddy.contracts.capabilities import CapabilityBanner
 from freecad_buddy.contracts.diff import CountDelta, GeometryDiff, ScalarDelta
 from freecad_buddy.contracts.document import (
     DocHandle,
@@ -51,6 +52,7 @@ from freecad_buddy.contracts.status import ErrorDetail, JobState, TerminalStatus
 __all__ = [
     "AnchorFrame",
     "AuditRecord",
+    "CapabilityBanner",
     "Check",
     "CountDelta",
     "DocHandle",

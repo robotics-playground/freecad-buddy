@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any, Literal, Union, get_args, get_origin, get_type_hints
 
 from freecad_buddy.contracts.audit import AuditRecord
+from freecad_buddy.contracts.capabilities import CapabilityBanner
 from freecad_buddy.contracts.diff import GeometryDiff
 from freecad_buddy.contracts.envelope import ResultEnvelope
 from freecad_buddy.contracts.fingerprint import FingerprintRecord
@@ -45,6 +46,7 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("audit-record", AuditRecord),
     ("geometry-diff", GeometryDiff),
     ("fingerprint", FingerprintRecord),
+    ("capability-banner", CapabilityBanner),
 ]
 
 # Required-field manifest (type name -> required field names).
@@ -57,6 +59,14 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "AuditRecord": ["schema", "ts", "actor", "event"],
     "GeometryDiff": ["schema", "deltas", "counts", "validity", "tnp_precheck"],
     "FingerprintRecord": ["schema", "serializer", "objects", "digest"],
+    "CapabilityBanner": [
+        "freecad_version",
+        "element_map_available",
+        "serializer",
+        "varset_backend",
+        "render",
+        "exec_enabled",
+    ],
     # embedded $defs
     "ErrorDetail": ["message"],
     "ReportBanner": ["freecad_version", "element_map_version"],
