@@ -72,10 +72,10 @@ def render_available(render: str = "none") -> bool:
 
 @lru_cache(maxsize=1)
 def element_map_available() -> bool:
-    """Whether the topological element map is exposed on the running FreeCAD build.
+    """Whether the topological element-map API is exposed on the running FreeCAD build.
 
-    True when ``TopoShape`` exposes ``getElementHistory`` and a probe box yields a non-empty
-    element map.
+    True when a probe box exposes the ``getElementHistory`` method and the ``ElementMapSize``
+    and ``ElementMap`` attributes.
     """
     try:
         import Part
@@ -85,13 +85,7 @@ def element_map_available() -> bool:
         return False
     if not callable(getattr(shape, "getElementHistory", None)):
         return False
-    mapper = getattr(shape, "ElementMap", None)
-    if mapper is None:
-        return False
-    try:
-        return len(mapper) > 0
-    except TypeError:
-        return bool(mapper)
+    return hasattr(shape, "ElementMapSize") and hasattr(shape, "ElementMap")
 
 
 @lru_cache(maxsize=1)
@@ -126,6 +120,23 @@ def freecad_version() -> str:
         return "unknown"
     version = FreeCAD.Version()
     return ".".join(str(part) for part in version[:3])
+
+
+def warm_capability_probes() -> None:
+    """Force-evaluate every cached capability probe once so their work runs at a controlled point.
+
+    Must run on the FreeCAD execution thread before the host serves requests, so the
+    ``varset_backend`` probe's temp-document churn cannot interleave with a registry mutation.
+    Each probe returns its conservative default when it cannot run; a probe whose teardown
+    fails may still propagate, so callers warm defensively.
+    """
+    export_binary_available()
+    serializer_tag()
+    varset_backend()
+    varset_available()
+    element_map_available()
+    element_map_version()
+    freecad_version()
 
 
 def pin_step_config(ap: str) -> None:

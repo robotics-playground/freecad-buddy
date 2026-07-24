@@ -27,6 +27,7 @@ from freecad_buddy.adapters.mcp_server import (
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
+from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
 
@@ -71,6 +72,10 @@ def run(argv: list[str] | None = None) -> int:  # noqa: ARG001 - reserved for fu
     doc_registry = DocumentRegistry()
     marshal = Marshal(InlineExecutor())
     methods = build_registry(doc_registry, caps, marshal)
+    try:
+        marshal.call(shim.warm_capability_probes, 30.0)
+    except Exception:  # noqa: BLE001 - warm-up is best-effort; degrade to lazy probing
+        logger.warning("capability-probe warm-up failed; probing lazily", exc_info=True)
     audit_path = _default_audit_path().resolve()
     logger.info("audit log: %s", audit_path)
     audit = AuditSink(audit_path)

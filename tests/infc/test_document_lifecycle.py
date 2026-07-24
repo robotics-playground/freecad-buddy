@@ -142,6 +142,25 @@ class CapabilityProbeTest(unittest.TestCase):
         self.assertIsInstance(shim.varset_backend(), str)
         self.assertRegex(shim.freecad_version(), r"^\d+\.\d+")
 
+    def test_element_map_available_is_pure_exposure_probe(self):
+        # A build exposing the element-map API reports True even when a fresh box has an empty
+        # map: pure exposure, not populated-map non-emptiness.
+        result = shim.element_map_available()
+        self.assertIsInstance(result, bool)
+        self.assertTrue(result)
+
+    def test_warm_capability_probes_is_idempotent_and_leaves_no_temp_doc(self):
+        # Clear the probe caches so warming actually re-runs varset_backend (which opens and
+        # closes a throwaway document); a cache hit would exercise nothing.
+        shim.varset_backend.cache_clear()
+        shim.varset_available.cache_clear()
+        shim.warm_capability_probes()
+        self.assertNotIn("FCB_TMP_varset_probe", App.listDocuments())
+        shim.varset_backend.cache_clear()
+        shim.varset_available.cache_clear()
+        shim.warm_capability_probes()
+        self.assertNotIn("FCB_TMP_varset_probe", App.listDocuments())
+
 
 if __name__ == "__main__":
     unittest.main()

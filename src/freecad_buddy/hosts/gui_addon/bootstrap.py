@@ -24,6 +24,7 @@ from freecad_buddy.adapters.rpc_listener import RpcListener
 from freecad_buddy.hosts.gui_addon.pump import QtMainThreadExecutor
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
+from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
 
@@ -87,6 +88,10 @@ def start_bridge() -> RpcListener:
     caps = Capabilities.from_env(dict(os.environ))
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)
+    try:
+        marshal.call(shim.warm_capability_probes, 30.0)
+    except Exception:  # noqa: BLE001 - warm-up is best-effort; degrade to lazy probing
+        logger.warning("capability-probe warm-up failed; probing lazily", exc_info=True)
     doc_registry = DocumentRegistry()
     registry = build_inline_handlers(
         doc_registry, ExportRegistry(), caps, None, OffscreenRenderPort()

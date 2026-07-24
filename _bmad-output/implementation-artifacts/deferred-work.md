@@ -142,7 +142,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-4-document-lifecycle-headless-host-mcp-surface.md"), 2026-07-23
 location: n/a
 reason: `shim.element_map_available()` requires a NON-empty element map on a probe box, which is behavioral (did this shape populate a map) rather than pure capability (is the API exposed) — a lazily-populating build could yield a false negative (AD-11 wants a capability probe). probe uses `Part.makeBox(...)` then checks map non-emptiness. Passes on real FreeCAD 1.1 today, but the TNP guard (story 1.6/1.7) depends on this signal; revisit the probe form when the TNP audit lands.
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-capability-probe-hardening
 
 ### DW-19: `debug_exec` audit records the `params_digest` (sha256 of `{doc, code}`) but does NOT persist the executed source; the highest-risk path leaves an audit line that proves a hash but cannot reproduce what ran.
 
@@ -165,7 +166,8 @@ resolution: Already resolved in current source — `document_open` calls `_handl
 origin: migrated from legacy ledger ("Deferred from: spec-1-4-document-lifecycle-headless-host-mcp-surface.md"), 2026-07-23
 location: n/a
 reason: The `shim.varset_backend()` capability probe creates and closes a throwaway `FCB_TMP_varset_probe` FreeCAD document OUTSIDE the `DocumentRegistry` single-writer lock (invoked once, lru_cache'd, via `query_capabilities`), so its doc-set churn is not serialized against registry mutations (AD-20). `varset_backend` calls `FreeCAD.newDocument`/`closeDocument` directly; `query_capabilities` is non-mutating and the probe runs at most once per process under the single-threaded `InlineExecutor`, so no race is reachable in Phase-0 H1. Becomes relevant when a concurrent (GUI/RPC) executor lands and probes could interleave with registry ops; serialize the probe under the writer lock (or run all capability probes once at startup before serving) then.
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-capability-probe-hardening
 
 ### DW-22: `debug_exec` runs its `exec(code)` body inline (single-process `InlineExecutor`), so the marshal `timeout_s` never fires; an infinite or long-running operator body hangs the whole headless server with no `TIMEOUT` and no interrupt.
 
