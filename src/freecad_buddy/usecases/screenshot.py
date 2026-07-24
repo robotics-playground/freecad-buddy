@@ -49,9 +49,15 @@ _NON_RENDER_TYPES = frozenset({"PartDesign::Body", "Sketcher::SketchObject"})
 
 
 def _is_default_renderable(obj: object) -> bool:
-    """Whether ``obj`` is in the automatic render set: has a shape, not a datum/container."""
+    """Whether ``obj`` is in the automatic render set: visible, has a shape, not a datum/container.
+
+    The default (no-``include``) set mirrors the live viewport — an object hidden via its
+    ``Visibility`` flag is omitted. An explicit ``include`` bypasses this and renders the object.
+    """
     type_id = str(getattr(obj, "TypeId", ""))
     if type_id in _NON_RENDER_TYPES or type_id.startswith(_NON_RENDER_TYPE_PREFIXES):
+        return False
+    if not bool(getattr(obj, "Visibility", True)):
         return False
     return _has_shape(obj)
 

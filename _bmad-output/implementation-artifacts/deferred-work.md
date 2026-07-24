@@ -5,21 +5,24 @@ origin: review-budget-followup
 source_spec: `spec-1-1-repo-scaffold-ci-matrix-phase-0-spikes.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
-status: open
+resolution: accepted cap-driven closure 2026-07-24 (TanNT) — story is done with green verify; the damping cap intentionally bounds review spend and the recommendation is advisory. No follow-up review will be run.
+status: done 2026-07-24
 
 ### DW-2: Follow-up review still recommended for 1-4-document-lifecycle-headless-host-mcp-surface after the damping cap was spent
 origin: review-budget-followup
 source_spec: `spec-1-4-document-lifecycle-headless-host-mcp-surface.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
-status: open
+resolution: accepted cap-driven closure 2026-07-24 (TanNT) — story is done with green verify; the damping cap intentionally bounds review spend and the recommendation is advisory. No follow-up review will be run.
+status: done 2026-07-24
 
 ### DW-3: Follow-up review still recommended for 1-7-exports-paired-verification after the damping cap was spent
 origin: review-budget-followup
 source_spec: `spec-1-7-exports-paired-verification.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260721-185755-5f54; this entry preserves the lingering recommendation for a deliberate later review.
-status: open
+resolution: accepted cap-driven closure 2026-07-24 (TanNT) — story is done with green verify; the damping cap intentionally bounds review spend and the recommendation is advisory. No follow-up review will be run.
+status: done 2026-07-24
 
 ### DW-4: query_screenshot default render set includes Sketcher::SketchObject (sketch leaks into the scene)
 
@@ -344,7 +347,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-screenshots.md"), 2026-07-23
 location: usecases/screenshot.py
 reason: `query_screenshot`'s default object set (`include` omitted) renders every shape-bearing object regardless of the object's live `Visibility` flag, so an object the user has hidden still appears in the constructed scene. `usecases/screenshot.py` `_visible_objects` treats "has a non-null Shape" as visible; `subgraphFromObject` ignores `Visibility` (FreeCAD `Application.cpp`). This is a by-design constructed-scene choice for Phase-0 (the tool composes its own scene), but whether the default should honor live `Visibility` is a product/UX decision — revisit when the assistant surface (Phase 1) defines the default-view contract.
-status: open
+resolution: decided + built 2026-07-24 (TanNT: "the default should mirror what I see") — `usecases/screenshot.py` `_is_default_renderable` now excludes an object with `Visibility=false` from the default (no-`include`) set, so the default render mirrors the live viewport; an explicit `include` still bypasses the filter and renders a hidden object. Covered by infc test `test_default_set_honors_visibility`.
+status: done 2026-07-24
 
 ### DW-47: A `focus`/`highlight` `mapped_name` selector that fails to resolve (`shape.getElement` raises / returns None) silently frames the whole object while `focused_on` still echoes the unresolved `mapped_name`, so the response confirms an element that was not actually framed.
 
@@ -508,4 +512,5 @@ origin: review-budget-followup
 source_spec: `spec-2-4-gate-g1-exit.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260724-004118-3961; this entry preserves the lingering recommendation for a deliberate later review.
-status: open
+resolution: accepted cap-driven closure 2026-07-24 (TanNT) — story is done with green verify; the damping cap intentionally bounds review spend and the recommendation is advisory. No follow-up review will be run.
+status: done 2026-07-24

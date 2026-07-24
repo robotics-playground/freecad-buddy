@@ -98,6 +98,23 @@ class ScreenshotTest(unittest.TestCase):
         rendered = envelope["structured_content"]["scene"]["rendered_objects"]
         self.assertEqual(rendered, ["Box"])
 
+    def test_default_set_honors_visibility(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        hidden = self.document.addObject("Part::Box", "Hidden")
+        hidden.Length = 5.0
+        self.document.recompute()
+        hidden.Visibility = False
+        # default set (no include) omits the hidden object...
+        default_rendered = self._shot()["structured_content"]["scene"]["rendered_objects"]
+        self.assertIn("Box", default_rendered)
+        self.assertNotIn("Hidden", default_rendered)
+        # ...but an explicit include still renders it.
+        included = self._shot(view={"include": ["Hidden"]})["structured_content"]["scene"][
+            "rendered_objects"
+        ]
+        self.assertEqual(included, ["Hidden"])
+
     def test_focus_frames_a_face(self):
         if not _render_available():
             self.skipTest("no render context on this leg")
