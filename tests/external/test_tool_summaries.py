@@ -39,9 +39,7 @@ def test_summarize_tree_clean_no_error_suffix():
     sc = {
         "total_objects": 5,
         "returned_nodes": 3,
-        "tree": [
-            {"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": True}
-        ],
+        "tree": [{"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": True}],
     }
     out = summarize_tree(sc)
     assert "5 objects" in out
@@ -77,7 +75,12 @@ def test_summarize_mass_properties_non_solid():
 
 def test_summarize_screenshot_renders_count():
     sc = {
-        "render": {"available": True, "dirty_document": False, "resource_link": "/tmp/x.png", "reason": None},
+        "render": {
+            "available": True,
+            "dirty_document": False,
+            "resource_link": "/tmp/x.png",
+            "reason": None,
+        },
         "scene": {"rendered_objects": ["Body", "Pad", "Fillet"], "focused_on": None},
     }
     out = summarize_screenshot(sc)
@@ -88,7 +91,12 @@ def test_summarize_screenshot_renders_count():
 
 def test_summarize_screenshot_dirty_document():
     sc = {
-        "render": {"available": True, "dirty_document": True, "resource_link": "/tmp/x.png", "reason": None},
+        "render": {
+            "available": True,
+            "dirty_document": True,
+            "resource_link": "/tmp/x.png",
+            "reason": None,
+        },
         "scene": {"rendered_objects": ["Body"], "focused_on": None},
     }
     out = summarize_screenshot(sc)
@@ -136,14 +144,22 @@ def test_summarize_recompute_with_failures():
                 "measured": "Invalid",
                 "expected": None,
                 "passed": False,
-                "detail": {"code": "recompute.error", "message": "Pad: Invalid", "objects": ["Pad"]},
+                "detail": {
+                    "code": "recompute.error",
+                    "message": "Pad: Invalid",
+                    "objects": ["Pad"],
+                },
             },
             {
                 "id": "recompute.object",
                 "measured": "Error",
                 "expected": None,
                 "passed": False,
-                "detail": {"code": "recompute.error", "message": "Fillet: Error", "objects": ["Fillet"]},
+                "detail": {
+                    "code": "recompute.error",
+                    "message": "Fillet: Error",
+                    "objects": ["Fillet"],
+                },
             },
         ],
         "banner": {"freecad_version": "1.0", "element_map_version": 1},
@@ -159,8 +175,20 @@ def test_summarize_shape_ok():
         "verdict": "OK",
         "subject": {"object": "Body"},
         "checks": [
-            {"id": "shape.volume", "measured": 1000.0, "expected": 1000.0, "passed": True, "detail": {"message": "ok"}},
-            {"id": "shape.valid", "measured": True, "expected": True, "passed": True, "detail": {"message": "ok"}},
+            {
+                "id": "shape.volume",
+                "measured": 1000.0,
+                "expected": 1000.0,
+                "passed": True,
+                "detail": {"message": "ok"},
+            },
+            {
+                "id": "shape.valid",
+                "measured": True,
+                "expected": True,
+                "passed": True,
+                "detail": {"message": "ok"},
+            },
         ],
         "banner": {"freecad_version": "1.0", "element_map_version": 1},
     }
