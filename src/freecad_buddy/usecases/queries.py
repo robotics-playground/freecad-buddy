@@ -282,7 +282,7 @@ def query_tree_summary(
                 raise ValidationError(f"unknown object: {root}")
             roots = [root_obj]
         else:
-            in_lists = {c.Name for o in document.Objects for c in _out_list(o)}
+            in_lists = {c.Name for o in document.Objects if not _is_link(o) for c in _out_list(o)}
             roots = [o for o in document.Objects if o.Name not in in_lists]
 
         counter = {"n": 0}

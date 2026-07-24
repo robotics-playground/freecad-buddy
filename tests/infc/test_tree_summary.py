@@ -92,6 +92,17 @@ class TreeSummaryTest(unittest.TestCase):
         return sum(1 + self._count(n.get("children", [])) + self._count(n.get("links", []))
                    for n in nodes)
 
+    def test_link_target_still_a_root(self):
+        # A standalone Body that an App::Link also targets must remain a top-level root
+        # (an App::Link's OutList contains its LinkedObject; that must not prune the target).
+        link = self.doc.addObject("App::Link", "BodyLink")
+        link.LinkedObject = self.body
+        self.doc.recompute()
+        sc = self._tree(depth=1)
+        names = [n["name"] for n in sc["tree"]]
+        self.assertIn("Body", names)   # standalone Body still a root
+        self.assertIn("BodyLink", names)  # the link is also a root
+
     def test_text_is_summary_not_json_dump(self):
         env = queries.query_tree_summary(self.registry, doc=self.handle, depth=1)
         self.assertNotIn("{", env["text"])  # no JSON braces — it's prose
