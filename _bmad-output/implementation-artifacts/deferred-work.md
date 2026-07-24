@@ -457,7 +457,8 @@ source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
 location: benchmarks/g0/export-fault-injection/score_export_verify.py (`merge_validators_yaml`), consumed by benchmarks/g1/fault-injection/score_grader.py
 reason: The shared `merge_validators_yaml` read-merge-write is the mechanism every fault scorer uses so none clobbers another's blocks (grader appended while the four `verify_*` blocks survive verbatim). It is only ever exercised against the already-populated committed `validators.yaml`, so a regression in `_split_blocks`/merge that dropped a sibling block on a *fresh* write (starting from a verify-only YAML) would go uncaught by the G1 tests — and the G0 export scorer shares the same untested seam. Pre-existing shared-plumbing gap surfaced by the 2.1 review, not caused by this story's core change. Fix: a unit test feeding a verify-only YAML through `merge_validators_yaml({"grader": ...})` asserting all five top-level keys survive.
-status: open
+status: done 2026-07-24
+resolution: already resolved: tests/external/test_export_fault_score.py test_merge_preserves_verify_shape_block now feeds validators.yaml through merge_validators_yaml and asserts the verify_shape block + suite path survive, closing the untested-fresh-write seam; merge helper at benchmarks/g0/export-fault-injection/score_export_verify.py:296-311.
 
 ### DW-62: grader AND-conjunction is discriminator-tested for only one break kind (renumbered from a duplicate DW-8)
 origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader (follow-up review 2026-07-24)
