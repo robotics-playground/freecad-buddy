@@ -127,6 +127,40 @@ class ScreenshotTest(unittest.TestCase):
         if link and os.path.exists(link):
             os.remove(link)
 
+    def test_dirty_document_renders_with_note_not_error(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Build a genuinely broken-recompute object: a Part::Cut whose Tool is removed leaves the
+        # Cut perpetually in error (a linked-object break, like a dangling Joint reference). Such a
+        # document is self-unstable — fingerprint()'s .Shape read re-triggers the failing recompute,
+        # so two consecutive fingerprints differ on their own with no render between, and the strict
+        # before==after guard would misread that churn as a render mutation. A dirty doc must still
+        # render (with a note), not hard-error.
+        base = self.document.addObject("Part::Box", "CutBase")
+        tool = self.document.addObject("Part::Box", "CutTool")
+        tool.Placement.Base.z = 5.0
+        cut = self.document.addObject("Part::Cut", "Cut")
+        cut.Base = base
+        cut.Tool = tool
+        self.document.recompute()
+        self.document.removeObject(tool.Name)  # Cut now references a removed Tool -> broken
+        envelope = self._shot(view={"include": ["Box"]})
+        self.assertEqual(envelope["status"], "OK")
+        self.assertTrue(envelope["structured_content"]["render"]["dirty_document"])
+        link = envelope["structured_content"]["render"]["resource_link"]
+        self.assertTrue(link and os.path.getsize(link) > 0)
+        os.remove(link)
+
+    def test_clean_document_reports_not_dirty(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        envelope = self._shot()
+        self.assertEqual(envelope["status"], "OK")
+        self.assertFalse(envelope["structured_content"]["render"]["dirty_document"])
+        link = envelope["structured_content"]["render"].get("resource_link")
+        if link and os.path.exists(link):
+            os.remove(link)
+
     def test_partdesign_default_render_skips_body_and_datum(self):
         if not _render_available():
             self.skipTest("no render context on this leg")

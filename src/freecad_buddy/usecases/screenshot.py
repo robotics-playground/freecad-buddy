@@ -31,9 +31,9 @@ from freecad_buddy.contracts import (
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 
-_MAX_DIM = 1024
-_DEFAULT_WIDTH = 800
-_DEFAULT_HEIGHT = 600
+_MAX_DIM = 1920
+_DEFAULT_WIDTH = 1920
+_DEFAULT_HEIGHT = 1920
 
 _ELEMENT_TYPES = frozenset({"face", "edge", "vertex"})
 
@@ -89,8 +89,16 @@ def query_screenshot(
             return _unavailable_envelope(reason)
 
         scene, focus_echo = _build_scene(document, options)
+        # A document with a pending or broken recompute (a Touched, Invalid, or Error object) is
+        # self-unstable: reading .Shape while fingerprinting re-triggers the failing recompute, so
+        # the render's before==after mutation guard cannot distinguish "render mutated geometry"
+        # from that pre-existing churn. When the document is dirty the guard is skipped and the
+        # render proceeds with a dirty_document note; a clean document keeps the strict read-only
+        # assertion. A broken object with a null shape never enters the fingerprint, so State — not
+        # a mass-property diff — is the signal that catches it.
+        dirty = _document_is_dirty(document)
         before = fingerprint(document)
-        result, out_path = _render_with_lifecycle(render_port, document, scene, before)
+        result, out_path = _render_with_lifecycle(render_port, document, scene, before, dirty)
         image: ImageRef = {
             "kind": "resource_link",
             "uri": out_path,
@@ -98,7 +106,12 @@ def query_screenshot(
             "audience": ["user"],
         }
         structured = {
-            "render": {"available": True, "resource_link": out_path, "reason": None},
+            "render": {
+                "available": True,
+                "resource_link": out_path,
+                "reason": None,
+                "dirty_document": dirty,
+            },
             "scene": {
                 "rendered_objects": result.rendered_objects,
                 "focused_on": _focused_on(focus_echo, result.focused),
@@ -109,23 +122,40 @@ def query_screenshot(
     return registry.with_document(doc, read)
 
 
-def _render_with_lifecycle(render_port, document, scene, before):
+# An object still carrying one of these in ``State`` did not recompute cleanly — either a failure
+# ("Invalid"/"Error") or a silently-skipped pending recompute ("Touched"). Same vocabulary the
+# verify_recompute use case keys on.
+_DIRTY_STATES = frozenset({"Invalid", "Error", "Touched"})
+
+
+def _document_is_dirty(document: object) -> bool:
+    """Whether any object has a pending or failed recompute (Touched/Invalid/Error in ``State``)."""
+    return any(
+        token in _DIRTY_STATES
+        for obj in document.Objects
+        for token in (getattr(obj, "State", None) or [])
+    )
+
+
+def _render_with_lifecycle(render_port, document, scene, before, dirty):
     """Render into a temp PNG, verifying read-only + a non-empty file; clean up on any failure.
 
     The temp PNG is removed on EVERY non-OK path: ``render()`` raising, a fingerprint mismatch,
     an empty/absent output file, AND a raising post-render ``fingerprint()``/``fingerprints_equal``
     (a serializer-tag mismatch raises ``ValueError``). No path returns or propagates with the temp
     file orphaned.
+
+    When ``dirty`` is set the document is already self-unstable (a pending or broken recompute), so
+    the before==after mutation guard is meaningless and skipped; the non-empty-PNG check still runs.
     """
     fd, out_path = tempfile.mkstemp(prefix="FCB_TMP_shot_", suffix=".png")
     os.close(fd)
     try:
         result = render_port.render(document, scene, out_path)
-        after = fingerprint(document)
         # Compare geometry (mass-properties), not raw BRep bytes: OCCT re-lays-out a freshly
         # loaded shape's serialization the first time a render touches it, so the byte digest
         # changes while the geometry is identical. A real mutation still changes the mass-props.
-        if not massprops_equal(before, after):
+        if not dirty and not massprops_equal(before, fingerprint(document)):
             raise ValidationError("screenshot mutated the document (geometry changed)")
         if not os.path.exists(out_path) or os.path.getsize(out_path) <= 0:
             raise _RenderProduceError("render produced an empty or missing PNG")

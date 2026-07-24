@@ -120,8 +120,10 @@ def test_screenshot_schema_is_tightened_on_view_and_selectors():
         assert "index" in sel["properties"]
         assert "mapped_name" in sel["properties"]
         assert sel["required"] == ["object"]
-    assert view["properties"]["width"]["maximum"] == 1024
-    assert view["properties"]["height"]["maximum"] == 1024
+    assert view["properties"]["width"]["maximum"] == 1920
+    assert view["properties"]["height"]["maximum"] == 1920
+    assert view["properties"]["width"]["default"] == 1920
+    assert view["properties"]["height"]["default"] == 1920
 
 
 def test_dispatch_query_with_unknown_handle_is_invalid_input():
