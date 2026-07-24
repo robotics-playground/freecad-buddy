@@ -75,6 +75,7 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-2-data-contracts-package.md"), 2026-07-23
 location: gen_schemas.py
 reason: `gen_schemas.py` type-form coverage is limited to the forms the current contracts use (TypedDict, `Literal`, `X | Y | None` unions, `list[T]`, nested TypedDicts); `Annotated[...]`, `Any`, parameterized `dict[K,V]`, and `tuple`/`set` would crash generation with an opaque `TypeError` rather than a clear message, and `include_extras=True` makes `Annotated` reachable. No contract field uses those forms today, so nothing regresses; the generator correctly `raise`s on the unknown form (fails closed, never mis-emits). Harden the converter with explicit `Annotated`-stripping and `dict[K,V]`/`Any` mappings if/when a contract field adopts one of these type shapes.
+validation 2026-07-24: title/description partly stale — current `_schema_for` now handles `Any` (→ `{}`) and parameterized/bare `dict` (→ `{"type":"object"}`), and `get_type_hints(include_extras=False)` strips `Annotated` before it reaches the converter. Residual gap: `tuple`/`set` fall through to `return {}` (a SILENT over-permissive empty schema, NOT the "opaque TypeError crash" the title claims). Real gap = silent empty schema for tuple/set, not a crash. Still-open.
 status: open
 
 ### DW-11: §12.2's second clause ("`wilson_ci` present whenever any check `measured` is a rate") is not enforced by the schema, `derive_verdict`, or the tests — there is no conditional (`if/then`) schema or runtime check tying a rate-valued `measured` to a present `wilson_ci`.
@@ -96,6 +97,7 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-2-data-contracts-package.md"), 2026-07-23
 location: rpc.py
 reason: `rpc.py`'s `CHANNEL_STATUS_MAP` hardcodes synthetic dotted keys (`rpc.listener_crash`, `rpc.connection_dropped`, …) whose provenance is `integration-mcp-freecad.md §2.3` (cited by data-contracts-design §11 but not reproduced there); the exact key strings are unverified against that authoritative wire design and risk producer/consumer synonym drift. data-contracts-design §11 maps channel *conditions* to statuses in prose and defers the framing/error-code detail to integration-mcp-freecad §2.3. The current map is a reasonable transcription but not cross-checked against §2.3's actual codes; the RPC listener/marshal that consumes it lands in story 1.8. Reconcile the key strings against integration-mcp-freecad §2.3 when the RPC listener is implemented (story 1.8).
+validation 2026-07-24: title stale — `contracts/rpc.py` no longer has a dotted-key `CHANNEL_STATUS_MAP`; it now maps integer JSON-RPC error codes to statuses via `CHANNEL_ERROR_STATUS` (the dotted synonym-drift risk the title describes is gone). The underlying concern survives in renamed form: the integer→status mapping is still uncross-checked against integration-mcp-freecad §2.3's authoritative codes. Still-open against `CHANNEL_ERROR_STATUS`.
 status: open
 
 ### DW-14: `check_provenance.py` enforces only that `source.kind` is in the closed set; it does not require `source.url`/`source.license`/`source.attribution` when `kind != hand-authored`, so a future `freecad-parts-library`/`hf-verified-permissive` artifact would pass the AD-16 gate with no license/attribution recorded.
@@ -349,7 +351,8 @@ status: open
 origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-screenshots.md"), 2026-07-23
 location: adapters/render_probe.py
 reason: A `focus`/`highlight` `mapped_name` selector that fails to resolve (`shape.getElement` raises / returns None) silently frames the whole object while `focused_on` still echoes the unresolved `mapped_name`, so the response confirms an element that was not actually framed. `adapters/render_probe.py` `_focus_sub_shape` swallows the `getElement` failure and returns the whole shape; `usecases/screenshot.py` `_resolve_selector` accepts any truthy `mapped_name` without checking it resolves. Element-map-backed selectors are out of scope this story (mapped-name resolution firms up with the TNP/sub-element tools); when it lands, either validate the mapped name resolves or drop it from the echo on fallback.
-status: open
+status: done 2026-07-24
+resolution: verified resolved 2026-07-24 — when the sub-element fails to frame (`_focus_bbox` returns None → `_aim_camera` falls back to whole-scene `viewAll`, returning `focused=False`), `usecases/screenshot.py` `_focused_on(focus_echo, result.focused)` returns object-only and drops the sub-element fields, so an unresolved `mapped_name` is no longer echoed as framed.
 
 ### DW-48: When every requested object is skipped (empty document, or an `include` list of names that all resolve to no subgraph), the renderer `viewAll`s a scene holding only the camera + light, producing a blank/undefined-framed PNG returned as `OK`.
 
@@ -378,7 +381,8 @@ resolution: already resolved: adapters/render_probe.py:294-296 `_frame_bbox` cla
 origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-screenshots.md"), 2026-07-23
 location: adapters/render_probe.py
 reason: The offscreen render does not check the return value of `SoQtOffscreenRenderer.render()` / `writeToImage()`; a partial or garbage-but-non-empty PNG (e.g. a failed GL write that still leaves bytes) passes the usecase's non-empty-file check and is returned as a valid `resource_link`. `adapters/render_probe.py` `render` calls `renderer.render(root)` and `writeToImage(out_path)` without inspecting their booleans; `usecases/screenshot.py` only guards `size > 0`. The 0-byte/absent case IS caught. A truncated PNG is unlikely with the software rasterizer but unverified; inspect the `writeToImage` return (and optionally validate the PNG header/size matches width×height expectations) if a caller reports corrupt images.
-status: open
+status: done 2026-07-24
+resolution: partially resolved 2026-07-24 — `adapters/render_probe.py` render now raises `RenderError` when the output file is absent or 0-byte after `writeToImage` (post-render `isfile`/`getsize==0` check), so an empty/failed write no longer returns a valid `resource_link` (the `writeToImage` boolean is None-on-success on some builds, so the file check is the real signal). Residual truncated-but-non-empty PNG (no PNG-header/dimension validation) is acknowledged and left open as low-risk under the software rasterizer.
 
 ### DW-52: `scripts/check_imports.py` has no rule banning `FreeCAD.ActiveDocument` as an operation target (AD-20), so the loop-2 fix (render the explicit handle, never `ActiveDocument`) is enforced only by manual review, not by the CI ring gate.
 
@@ -427,7 +431,7 @@ reason: FIXED — the offscreen render used a single fixed `SoDirectionalLight`,
 status: done 2026-07-23
 resolution: Added `Sketcher::SketchObject` to `_NON_RENDER_TYPES`, so a sketch no longer leaks into the default (no-`include`) render set — an explicit `include` still renders it. The separate "honor live `Visibility`" question (a Phase-1 default-view-contract UX decision) stays open under the spec-1-9 Visibility entry above.
 
-### DW-5: G1 broken-doc break kinds unverified on the FreeCAD 1.0.x leg
+### DW-59: G1 broken-doc break kinds unverified on the FreeCAD 1.0.x leg (renumbered from a duplicate DW-5)
 origin: review-edge-case-hunter, spec-2-1-entry-gate-g1e-eval-rubric-grader
 source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
@@ -435,7 +439,7 @@ location: benchmarks/g1/dev/broken-docs/build_broken_docs.py (_overconstrained /
 reason: The 30 broken-recompute fixtures were verified genuinely-in-error only on local FreeCAD 1.1. A different leg (1.0.x) could conceivably not error a given break kind on open+recompute (e.g. auto-drop a redundant sketch constraint, or tolerate a Cut whose Tool was removed). This fails HONESTLY if it happens — the infc self-check (`test_broken_docs_g1`) runs on both blocking CI legs and asserts each named object has a non-empty getStatusString(), so a non-broken fixture surfaces as a red CI leg, not a silent pass. Recorded so that if the 1.0.x infc leg flags a fixture, the fix is to swap that case to a cross-leg-reliable break kind. No action unless CI flags it.
 status: open
 
-### DW-6: build_broken_docs import side-effect guard is argv-based
+### DW-60: build_broken_docs import side-effect guard is argv-based (renumbered from a duplicate DW-6)
 origin: review-edge-case-hunter, spec-2-1-entry-gate-g1e-eval-rubric-grader
 source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
@@ -443,7 +447,7 @@ location: benchmarks/g1/dev/broken-docs/build_broken_docs.py (`_is_top_level_scr
 reason: FreeCADCmd sets `__name__` to the file stem (not `__main__`), so the generator guards top-level execution by matching `sys.argv[1]` against `__file__`. The infc self-check imports the module (for `gen.CASES`) under a run where `argv[1]` is `tests/run_tests.py`, so `build_all()` does not fire — verified green. The residual edge: a hypothetical discovery runner that passed the generator's own path as argv[1] would re-trigger a rebuild-on-import, overwriting the 30 committed fixtures. Low risk (no such runner exists); recorded in case the generator is ever imported by a path-passing harness.
 status: open
 
-### DW-7: merge_validators_yaml block-preservation is untested from a verify-only tree
+### DW-61: merge_validators_yaml block-preservation is untested from a verify-only tree (renumbered from a duplicate DW-7)
 origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader
 source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
@@ -451,7 +455,7 @@ location: benchmarks/g0/export-fault-injection/score_export_verify.py (`merge_va
 reason: The shared `merge_validators_yaml` read-merge-write is the mechanism every fault scorer uses so none clobbers another's blocks (grader appended while the four `verify_*` blocks survive verbatim). It is only ever exercised against the already-populated committed `validators.yaml`, so a regression in `_split_blocks`/merge that dropped a sibling block on a *fresh* write (starting from a verify-only YAML) would go uncaught by the G1 tests — and the G0 export scorer shares the same untested seam. Pre-existing shared-plumbing gap surfaced by the 2.1 review, not caused by this story's core change. Fix: a unit test feeding a verify-only YAML through `merge_validators_yaml({"grader": ...})` asserting all five top-level keys survive.
 status: open
 
-### DW-8: grader AND-conjunction is discriminator-tested for only one break kind
+### DW-62: grader AND-conjunction is discriminator-tested for only one break kind (renumbered from a duplicate DW-8)
 origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader (follow-up review 2026-07-24)
 source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
@@ -459,7 +463,7 @@ location: benchmarks/g1/fault-injection/ (`fault-and-discriminator-boss` is the 
 reason: The grader PASSes iff object AND cause both match. Only `fault-and-discriminator-boss` (broken-expression `be` kind) proves the grader is AND not OR — a case with the RIGHT object plus a DIFFERENT diagnosis's cause (own cause absent), which an OR grader would wrongly PASS. The other three break kinds (over-constrained `oc`, pad-missing-sketch `pd`, cut-missing-tool `cut`) have no AND-discriminator: a regression turning the grader into OR-of(object,cause) for those kinds would not be caught, because their wrong-object and wrong-cause cases each still fail an OR grader on one leg. Coverage gap, not a shipped defect (the grader is AND today). Fix: add one right-object+foreign-cause discriminator case per remaining break kind.
 status: open
 
-### DW-9: committed grader validator_sha does not cover the fault-case files, so a score-preserving suite edit slips --check
+### DW-63: committed grader validator_sha does not cover the fault-case files, so a score-preserving suite edit slips --check (renumbered from a duplicate DW-9)
 origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader (follow-up review 2026-07-24)
 source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
