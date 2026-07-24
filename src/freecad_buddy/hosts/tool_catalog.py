@@ -416,7 +416,19 @@ def tool_specs() -> list[ToolSpec]:
                 "type": "object",
                 "properties": {
                     "doc": _DOC_SCHEMA,
-                    "max_nodes": {"type": "integer", "default": 100, "minimum": 0},
+                    "depth": {"type": "integer", "default": 1, "minimum": 1},
+                    "root": {"type": "string"},
+                    "filters": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "types": {"type": "array", "items": {"type": "string"}},
+                            "exclude_types": {"type": "array", "items": {"type": "string"}},
+                            "renderable_only": {"type": "boolean"},
+                            "visible_only": {"type": "boolean"},
+                            "name_pattern": {"type": "string"},
+                        },
+                    },
                 },
                 "required": ["doc"],
                 "additionalProperties": False,

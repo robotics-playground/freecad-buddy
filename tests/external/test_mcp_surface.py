@@ -380,3 +380,17 @@ def test_call_tool_non_ok_status_sets_is_error():
     result = _call_tool_via_server(server, "stub_tool", {})
     assert result.isError is True
     assert result.structuredContent["status"] == "INVALID_INPUT"
+
+
+def test_tree_summary_schema_has_depth_root_filters():
+    caps = Capabilities(allow_exec=False)
+    tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
+    schema = tools["query_tree_summary"].inputSchema
+    props = schema["properties"]
+    assert props["depth"]["default"] == 1
+    assert props["depth"]["minimum"] == 1
+    assert "root" in props
+    fprops = props["filters"]["properties"]
+    for key in ("types", "exclude_types", "renderable_only", "visible_only", "name_pattern"):
+        assert key in fprops
+    assert "max_nodes" not in props
