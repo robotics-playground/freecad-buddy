@@ -404,7 +404,9 @@ resolution: Already resolved — `check_imports._check_active_document` bans `Fr
 origin: migrated from legacy ledger ("Deferred from: spec-1-10-gate-g0-exit.md"), 2026-07-23
 location: n/a
 reason: The `gui_smoke` human token has no cryptographic signature — its `binds_reports_sha256` is a public SHA-256, so anyone who can write the run's `human/` dir can forge a valid PASS token. validation-harness-design §7 models tokens as artifacts the runner checks for presence + binding (never performs), so this is a design-level posture; a real signature/secret would need a spine amendment, not a story fix.
-status: open
+status: done 2026-07-24
+resolution: closed by human decision: Accept validation-harness-design section 7's trusted-operator posture; the token is a presence+binding artifact by design and a public SHA-256 is sufficient under that trust model. Close.
+decision: 2026-07-24 Keep presence+binding model — Accept validation-harness-design section 7's trusted-operator posture; the token is a presence+binding artifact by design and a public SHA-256 is sufficient under that trust model. Close.
 
 ### DW-54: A `<criterion>.json.tmp` file can linger in `reports/` if the process crashes between the atomic write's `write_text` and `replace`.
 
