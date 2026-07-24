@@ -179,13 +179,6 @@ def _read_property(obj: object, prop: str) -> object:
     return _json_safe(raw)
 
 
-def _node_cap(max_nodes: int) -> int:
-    """Coerce ``max_nodes`` to a non-negative int; a non-integer raises ``ValidationError``."""
-    try:
-        return max(0, int(max_nodes))
-    except (TypeError, ValueError, OverflowError) as exc:
-        raise ValidationError(f"invalid max_nodes: {max_nodes!r}") from exc
-
 
 _ANGLE_CONSTRAINT_TYPES = {"Angle", "AngleViaPoint"}
 _DIMENSIONAL_LENGTH_TYPES = {"Distance", "DistanceX", "DistanceY", "Radius", "Diameter"}
@@ -206,38 +199,72 @@ def _constraint_quantity(constraint_type: str, value: float) -> dict | None:
 def query_tree_summary(
     registry: DocumentRegistry,
     doc: str | None = None,
-    max_nodes: int = 100,
+    depth: int = 1,
+    root: str | None = None,
+    filters: dict | None = None,
 ) -> ResultEnvelope:
-    """Summarize the document feature tree, bounded by ``max_nodes``.
+    """Summarize the feature tree as a nested, depth-bounded, filtered node tree.
 
-    Emits at most ``max_nodes`` nodes drawn from the flat ``document.Objects`` list, each with
-    name, label, type, ``children_count`` (``OutList`` size), and ``error`` (``getStatusString()``
-    or null). ``total_objects`` is the full count; ``truncated`` is true when the cap clipped it.
+    Expands ``depth`` levels from the document roots (or from ``root`` when given). Each object's
+    children are partitioned into structural ``children`` and ``App::Link`` ``links``; at the depth
+    boundary a node reports only its ``children_count``/``links_count``. ``filters`` AND-stacks
+    ``types``/``exclude_types``/``renderable_only``/``visible_only``/``name_pattern``;
+    ``exclude_types`` defaults to the datum/origin clutter set. Nodes are sparse — a field appears
+    only when it carries a value; ``name``/``label``/``type``/``visibility`` are always present.
     """
+    effective = dict(filters or {})
+    effective.setdefault("exclude_types", list(_DATUM_EXCLUDE_DEFAULT))
 
     def read(_handle: str, document: object) -> ResultEnvelope:
-        objects = list(document.Objects)
-        total = len(objects)
-        cap = _node_cap(max_nodes)
-        emitted = objects[:cap]
-        nodes = [
-            {
-                "name": obj.Name,
-                "label": obj.Label,
-                "type": obj.TypeId,
-                "children_count": len(list(getattr(obj, "OutList", []) or [])),
-                "error": _status_string(obj),
-            }
-            for obj in emitted
-        ]
+        by_name = {obj.Name: obj for obj in document.Objects}
+        if root is not None:
+            root_obj = by_name.get(root)
+            if root_obj is None:
+                raise ValidationError(f"unknown object: {root}")
+            roots = [root_obj]
+        else:
+            in_lists = {c.Name for o in document.Objects for c in _out_list(o)}
+            roots = [o for o in document.Objects if o.Name not in in_lists]
+
+        counter = {"n": 0}
+
+        def build(obj: object, remaining: int) -> dict:
+            out = _out_list(obj)
+            child_objs = [c for c in out if not _is_link(c)]
+            link_objs = [c for c in out if _is_link(c)]
+            children, links = [], []
+            if remaining > 1:
+                children = [
+                    build(c, remaining - 1) for c in child_objs if _node_passes(c, effective)
+                ]
+                links = [
+                    build(c, remaining - 1) for c in link_objs if _node_passes(c, effective)
+                ]
+            counter["n"] += 1
+            return _sparse_node(obj, children, links, len(child_objs), len(link_objs))
+
+        tree = [build(o, depth) for o in roots if _node_passes(o, effective)]
         structured = {
-            "nodes": nodes,
-            "total_objects": total,
-            "truncated": total > len(nodes),
+            "doc": _handle,
+            "total_objects": len(document.Objects),
+            "returned_nodes": counter["n"],
+            "depth": depth,
+            "filters_applied": effective,
+            "tree": tree,
         }
         return _ok_envelope(structured)
 
     return registry.with_document(doc, read)
+
+
+def _out_list(obj: object) -> list:
+    """The object's direct children (``OutList``), empty when absent."""
+    return list(getattr(obj, "OutList", []) or [])
+
+
+def _is_link(obj: object) -> bool:
+    """Whether ``obj`` is an ``App::Link`` instance, grouped separately from structural children."""
+    return str(getattr(obj, "TypeId", "")).startswith("App::Link")
 
 
 def query_object(

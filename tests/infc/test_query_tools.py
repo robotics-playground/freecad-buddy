@@ -67,21 +67,18 @@ class QueryToolsTest(unittest.TestCase):
             )
         return methods
 
-    def test_tree_summary_caps_and_flags_truncation(self):
-        envelope = queries.query_tree_summary(self.registry, doc=self.handle, max_nodes=1)
+    def test_tree_summary_returns_ok_with_tree_and_totals(self):
+        envelope = queries.query_tree_summary(self.registry, doc=self.handle, depth=1)
         content = envelope["structured_content"]
         self.assertEqual(envelope["status"], "OK")
-        self.assertLessEqual(len(content["nodes"]), 1)
-        self.assertTrue(content["truncated"])
-        self.assertEqual(content["total_objects"], len(self.document.Objects))
+        self.assertGreater(content["total_objects"], 0)
+        self.assertIn("tree", content)
+        self.assertIn("returned_nodes", content)
 
-    def test_tree_summary_full_when_uncapped(self):
-        envelope = queries.query_tree_summary(self.registry, doc=self.handle, max_nodes=100)
+    def test_tree_summary_root_filter_scopes_result(self):
+        envelope = queries.query_tree_summary(self.registry, doc=self.handle, depth=1, root="Box")
         content = envelope["structured_content"]
-        self.assertFalse(content["truncated"])
-        self.assertEqual(len(content["nodes"]), len(self.document.Objects))
-        names = {node["name"] for node in content["nodes"]}
-        self.assertIn("Box", names)
+        self.assertEqual(content["tree"][0]["name"], "Box")
 
     def test_query_object_reports_type_and_null_error(self):
         envelope = queries.query_object(self.registry, doc=self.handle, object="Box")
