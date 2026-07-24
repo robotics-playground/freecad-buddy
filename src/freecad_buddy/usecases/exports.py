@@ -307,7 +307,11 @@ def verify_export_step(
         reimported = Part.Shape()
         reimported.read(entry["path"])
         checks = _step_checks(reimported, source)
-        report = {"subject": {"export_id": export_id, "path": entry["path"]}, "checks": checks}
+        report = {
+            "subject": {"export_id": export_id, "path": entry["path"]},
+            "checks": checks,
+            "format": "step",
+        }
         return _finish(report)
 
     return registry.with_document(doc, read)
@@ -454,12 +458,13 @@ def _report_envelope(report: dict) -> ResultEnvelope:
     verdict = report["verdict"]
     subject = report.get("subject") or {}
     path = subject.get("path", "?")
+    fmt = report.get("format", "export")
     return {
         "schema": "fcb.result-envelope/1",
         "status": verdict,
         "detail": None if verdict == "OK" else _failure_detail(report),
         "structured_content": report,
-        "text": summarize_export({"format": "export", "verdict": verdict, "path": path}),
+        "text": summarize_export({"format": fmt.upper(), "verdict": verdict, "path": path}),
     }
 
 
