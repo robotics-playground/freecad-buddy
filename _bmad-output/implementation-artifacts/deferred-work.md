@@ -241,7 +241,8 @@ resolution: `score_verify_shape.py` now imports and uses the export scorer's sha
 origin: migrated from legacy ledger ("Deferred from: spec-1-6-verification-core.md"), 2026-07-23
 location: n/a
 reason: The scorer's hand-rolled `case.yaml` parser is brittle — a greedy `_CHECK_RE` and a blind `.replace('rel'/'abs')` before `ast.literal_eval` — and can mis-parse checks with those substrings in values or multi-line flow mappings. pyyaml is external-process only (AD-12) so the in-FreeCAD scorer parses the fixed flow shape itself; it works on the committed fixtures. If fixtures grow richer check shapes, replace the regex/replace hack with a small proper flow-mapping tokenizer (or move scoring to the external process and pass results in via RPC).
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-fault-scorer-yaml-parser
 
 ### DW-32: `verify.py` `_is_watertight` and `_shape_floor` swallow any exception (return "not watertight" / floor `0.0`); a solid whose `getTolerance()` genuinely raises would silently disable the tolerance-floor clamp so a comparison could assert tighter than the B-rep tolerance.
 

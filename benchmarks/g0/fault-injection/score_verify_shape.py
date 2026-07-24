@@ -16,7 +16,6 @@ parses the small fixed ``case.yaml`` shape itself.
 
 from __future__ import annotations
 
-import ast
 import datetime
 import hashlib
 import re
@@ -47,8 +46,6 @@ VALIDATOR_SOURCES = (
 SENSITIVITY_BAR = 0.95
 FALSE_ALARM_BAR = 0.05
 
-_CHECK_RE = re.compile(r"\{(fn:.*)\}")
-
 # Seed header used only when validators.yaml does not yet exist; merge_validators_yaml preserves
 # an existing file's header verbatim.
 _HEADER = (
@@ -67,7 +64,7 @@ def _parse_scalar(text: str):
     if lowered == "false":
         return False
     if text.startswith("[") and text.endswith("]"):
-        return [_parse_scalar(part) for part in text[1:-1].split(",") if part.strip()]
+        return [_parse_scalar(part) for part in _split_top_level(text[1:-1]) if part.strip()]
     try:
         return int(text)
     except ValueError:
@@ -99,6 +96,66 @@ def _split_top_level(body: str) -> list[str]:
     return parts
 
 
+def _iter_flow_mappings(text: str) -> list[str]:
+    """Extract each top-level ``{...}`` block's inner body from the ``assertions.checks:`` region.
+
+    Scans ``text`` after the ``assertions.checks:`` line, tracking brace ``{``/``}`` and bracket
+    ``[``/``]`` depth while ignoring bracket chars inside single- or double-quoted runs and after a
+    depth-zero ``#`` comment. A block starts when depth goes 0->1 on ``{`` and ends when depth
+    returns to 0; the accumulated body between (exclusive of) the outer braces is returned. Returns
+    the inner bodies in order. Raises ``ValueError`` when no ``checks:`` region exists or a block is
+    left unterminated (malformed case shape).
+    """
+    checks_line = re.search(r"^\s*checks:\s*$", text, re.MULTILINE)
+    if checks_line is None:
+        raise ValueError("no 'checks:' region found in case.yaml")
+    scope = text[checks_line.end():]
+
+    blocks: list[str] = []
+    depth = 0
+    quote = ""
+    comment = False
+    current: list[str] = []
+    for char in scope:
+        if comment:
+            if char == "\n":
+                comment = False
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            if depth > 0:
+                current.append(char)
+            continue
+        if depth == 0 and char == "#":
+            comment = True
+            continue
+        if char in "'\"":
+            quote = char
+            if depth > 0:
+                current.append(char)
+            continue
+        if char in "{[":
+            if char == "{" and depth == 0:
+                current = []
+            else:
+                current.append(char)
+            depth += 1
+            continue
+        if char in "}]":
+            depth -= 1
+            if char == "}" and depth == 0:
+                blocks.append("".join(current))
+            else:
+                current.append(char)
+            continue
+        if depth > 0:
+            current.append(char)
+    if depth != 0 or quote:
+        raise ValueError("unterminated flow mapping in case.yaml checks")
+    return blocks
+
+
 def _parse_check(flow: str) -> dict:
     """Parse a ``{fn: ..., expect: ..., tol: {...}}`` flow mapping into a check dict."""
     check: dict = {}
@@ -109,7 +166,15 @@ def _parse_check(flow: str) -> dict:
         key = key.strip()
         value = value.strip()
         if key == "tol":
-            check["tol"] = ast.literal_eval(value.replace("rel", "'rel'").replace("abs", "'abs'"))
+            value = value.strip()
+            if not (value.startswith("{") and value.endswith("}")):
+                raise ValueError(f"malformed tol value: {value!r}")
+            inner = value[1:-1]
+            check["tol"] = {
+                k.strip(): _parse_scalar(v)
+                for k, _, v in (p.partition(":") for p in _split_top_level(inner))
+                if k.strip()
+            }
         else:
             check[key] = _parse_scalar(value)
     return check
@@ -120,7 +185,7 @@ def _load_case(case_yaml: Path) -> dict:
     text = case_yaml.read_text(encoding="utf-8")
     case_id = re.search(r"^id:\s*(\S+)", text, re.MULTILINE).group(1)
     expectation = re.search(r"expectation:\s*(\S+)", text).group(1)
-    checks = [_parse_check(match.group(1)) for match in _CHECK_RE.finditer(text)]
+    checks = [_parse_check(flow) for flow in _iter_flow_mappings(text)]
     return {"id": case_id, "expectation": expectation, "checks": checks, "dir": case_yaml.parent}
 
 
