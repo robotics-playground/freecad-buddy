@@ -327,7 +327,9 @@ resolution: Investigated, premise disproven, closed as not-actionable-as-stated.
 origin: migrated from legacy ledger ("Deferred from: spec-1-8-gui-host-addon-rpc-marshal.md"), 2026-07-23
 location: hosts/tool_catalog.py
 reason: In GUI/RPC mode the mesh-verify tools (`verify_export_stl`/`verify_export_3mf`) run their third-party oracle legs (trimesh/lib3mf/stdlib STL parse) inside the listener's single `marshal.call`, i.e. on the Qt main thread, freezing the FreeCAD GUI for the whole mesh parse; only the `_self_read` leg needs the main thread. `hosts/tool_catalog.py` `_mesh_verify_handler` runs oracle legs in the same handler the listener wraps in `marshal.call` (`adapters/rpc_listener.py`). Confirmed by both pass-2 reviewers. A clean fix needs a partial-marshal mechanism (marshal only the self-read leg, run oracles on the listener thread) — a small design task beyond this story's scope. Impact bounded: two verify tools, GUI mode only, and export/verify are already documented as accepted op-duration freezes (integration-mcp-freecad.md §3.3).
-status: open
+status: done 2026-07-24
+resolution: closed by human decision: The freeze is bounded to two GUI-mode verify tools and already covered by integration-mcp-freecad section 3.3's accepted op-duration freezes; close as accepted.
+decision: 2026-07-24 Accept freeze (documented) — The freeze is bounded to two GUI-mode verify tools and already covered by integration-mcp-freecad section 3.3's accepted op-duration freezes; close as accepted.
 
 ### DW-44: `query_screenshot` camera presets `front`/`top`/`bottom`/`right`/`left`/`back` are unverified magic quaternions (only `iso` is cited from `make_snapshot.py` and only `iso` is exercised by the in-FreeCAD tests); `back` = `(0,0,0.707,0.707)` is a 90° Z-rotation, not a back view.
 
