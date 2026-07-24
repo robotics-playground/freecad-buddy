@@ -1,0 +1,11 @@
+{
+  "DW-29": {
+    "answered_at": "2026-07-24",
+    "bundle_name": "",
+    "effect": "keep-open",
+    "intent": "",
+    "key": "1",
+    "label": "Keep gated, document divergence",
+    "resolution": ""
+  }
+}

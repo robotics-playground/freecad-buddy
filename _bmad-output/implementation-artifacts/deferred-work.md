@@ -222,6 +222,7 @@ origin: migrated from legacy ledger ("Deferred from: spec-1-6-verification-core.
 location: usecases/verify.py
 reason: `verify_sketch` gates `evaluateConstraints()` behind `bool(MalformedConstraints)`, but AD-8 / verification-design §4 list `evaluateConstraints()` as an independent hard-fail trigger. On FreeCAD 1.1 `evaluateConstraints()` returns `True` for a healthy fully-constrained sketch (build divergence, documented inline in `usecases/verify.py`), so it cannot be used unconditionally; but a genuinely malformed sketch whose `MalformedConstraints` property is empty would slip past the hard-fail. Not demonstrated reachable on 1.0/1.1 (bad-index constraints raise at `addConstraint`). Revisit if a build populates `evaluateConstraints()` reliably or a malformed-but-empty-property case is found; add a planted malformed-constraint fault case to the sketch validator suite.
 status: open
+decision: 2026-07-24 Keep gated, document divergence
 
 ### DW-30: The fault scorer (`benchmarks/g0/fault-injection/score_verify_shape.py`) rewrites `validators.yaml` from a fixed single-validator template, so a second validator block would be dropped on the next run.
 
