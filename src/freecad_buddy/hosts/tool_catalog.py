@@ -433,7 +433,7 @@ def tool_specs() -> list[ToolSpec]:
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Bounded feature-tree summary; caps nodes and flags truncation.",
+            "Depth-bounded, filterable feature-tree summary with nesting of children/App::Link.",
         ),
         _query_method(
             "query_object",

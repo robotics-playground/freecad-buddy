@@ -393,4 +393,5 @@ def test_tree_summary_schema_has_depth_root_filters():
     fprops = props["filters"]["properties"]
     for key in ("types", "exclude_types", "renderable_only", "visible_only", "name_pattern"):
         assert key in fprops
+    assert props["filters"]["additionalProperties"] is False
     assert "max_nodes" not in props
