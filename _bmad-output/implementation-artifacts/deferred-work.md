@@ -111,7 +111,8 @@ resolution: already resolved: contracts/rpc.py:23-27 CHANNEL_ERROR_STATUS maps i
 origin: migrated from legacy ledger ("Deferred from: spec-1-3-entry-gate-g0e-golden-models-fault-suite.md"), 2026-07-23
 location: check_provenance.py
 reason: `check_provenance.py` enforces only that `source.kind` is in the closed set; it does not require `source.url`/`source.license`/`source.attribution` when `kind != hand-authored`, so a future `freecad-parts-library`/`hf-verified-permissive` artifact would pass the AD-16 gate with no license/attribution recorded. Every G0 artifact in this story is `hand-authored` (AD-16 requires only a `real_world_basis` for that kind, which is enforced), so nothing regresses now; the url/license/attribution enforcement is only needed once a non-hand-authored artifact ships (design §1.2 warns DeepCAD/ABC/Fusion lineage is never shipped and library imports carry attribution). Add the conditional license-fields check to `check_provenance.py` when the first non-`hand-authored` benchmark artifact lands.
-status: open
+status: done 2026-07-24
+resolution: resolved by sweep bundle dw-provenance-license-fields
 
 ### DW-15: `check_provenance.py` flags an artifact with no manifest, but does NOT flag an ORPHAN manifest (a `_registry/provenance/*.yaml` whose declared `artifact` no longer has a matching `.FCStd`, e.g. after a fixture rename/delete).
 

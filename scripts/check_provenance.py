@@ -10,7 +10,9 @@ Recursively walks ``benchmarks/**`` for artifact files (``*.FCStd``), excluding 
 Additionally flags:
   - a fault case dir with a ``case.yaml`` but no ``fixture.FCStd``;
   - duplicate ``artifact`` ids across manifests (a duplicate must not silently overwrite);
-  - an orphan manifest whose ``artifact`` id has no matching ``.FCStd`` on disk.
+  - an orphan manifest whose ``artifact`` id has no matching ``.FCStd`` on disk;
+  - a manifest whose ``source.kind`` is a non-``hand-authored`` closed-set kind but is missing
+    a non-empty ``source.url``, ``source.license``, or ``source.attribution``.
 
 On any violation: print ``path -- rule`` and exit 1. Clean tree: exit 0.
 
@@ -161,6 +163,13 @@ def check_tree(benchmarks_root: Path) -> list[str]:
                 f"{rel} -- source.kind '{kind}' not in closed set "
                 f"({', '.join(sorted(CLOSED_SOURCE_KINDS))})"
             )
+        elif kind != "hand-authored":
+            for field in ("url", "license", "attribution"):
+                value = source.get(field)
+                if not (isinstance(value, str) and value.strip()):
+                    violations.append(
+                        f"{rel} -- source.{field} required for non-hand-authored kind '{kind}'"
+                    )
 
     for artifact_id, manifest_path in sorted(manifest_paths.items()):
         if any(part in _EXCLUDED_DIRS for part in Path(artifact_id).parts):

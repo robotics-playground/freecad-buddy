@@ -176,6 +176,79 @@ def test_check_provenance_flags_case_missing_fixture(tmp_path):
     assert any("fixture.FCStd missing" in p for p in problems), problems
 
 
+def test_check_provenance_flags_non_hand_authored_missing_license_fields(tmp_path):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    manifest = copy / "_registry" / "provenance" / "g0-golden-box-10-20-30.yaml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data["source"] = {"kind": "freecad-parts-library"}
+    manifest.write_text(yaml.safe_dump(data), encoding="utf-8")
+    problems = check_provenance.check_tree(copy)
+    for field in ("url", "license", "attribution"):
+        assert any(
+            f"source.{field} required for non-hand-authored kind" in p for p in problems
+        ), (field, problems)
+
+
+def test_check_provenance_clean_on_complete_non_hand_authored(tmp_path):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    manifest = copy / "_registry" / "provenance" / "g0-golden-box-10-20-30.yaml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data["source"] = {
+        "kind": "freecad-parts-library",
+        "url": "https://github.com/FreeCAD/FreeCAD-library/box",
+        "license": "CC-BY-3.0",
+        "attribution": "Original part by author, FreeCAD Parts Library",
+    }
+    manifest.write_text(yaml.safe_dump(data), encoding="utf-8")
+    problems = check_provenance.check_tree(copy)
+    assert not any("required for non-hand-authored kind" in p for p in problems), problems
+
+
+def test_check_provenance_flags_non_hand_authored_blank_license_field(tmp_path):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    manifest = copy / "_registry" / "provenance" / "g0-golden-box-10-20-30.yaml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data["source"] = {
+        "kind": "hf-verified-permissive",
+        "url": "https://huggingface.co/datasets/example/box",
+        "license": "   ",
+        "attribution": "Example dataset",
+    }
+    manifest.write_text(yaml.safe_dump(data), encoding="utf-8")
+    problems = check_provenance.check_tree(copy)
+    assert any(
+        "source.license required for non-hand-authored kind" in p for p in problems
+    ), problems
+    assert not any("source.url required" in p for p in problems), problems
+    assert not any("source.attribution required" in p for p in problems), problems
+
+
+def test_check_provenance_unknown_kind_does_not_crash_license_check(tmp_path):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    manifest = copy / "_registry" / "provenance" / "g0-golden-box-10-20-30.yaml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data["source"] = {"kind": "bogus"}
+    manifest.write_text(yaml.safe_dump(data), encoding="utf-8")
+    problems = check_provenance.check_tree(copy)
+    assert any("not in closed set" in p for p in problems), problems
+    assert not any("required for non-hand-authored kind" in p for p in problems), problems
+
+
+def test_check_provenance_clean_on_hand_authored_without_license_fields(tmp_path):
+    copy = tmp_path / "benchmarks"
+    shutil.copytree(BENCHMARKS, copy)
+    manifest = copy / "_registry" / "provenance" / "g0-golden-box-10-20-30.yaml"
+    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data["source"] = {"kind": "hand-authored"}
+    manifest.write_text(yaml.safe_dump(data), encoding="utf-8")
+    problems = check_provenance.check_tree(copy)
+    assert not any("required for non-hand-authored kind" in p for p in problems), problems
+
+
 def test_check_provenance_runnable_exit_0():
     result = subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "check_provenance.py")],
