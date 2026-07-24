@@ -385,6 +385,7 @@ origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-sc
 location: adapters/render_probe.py
 reason: `query_screenshot` `styles` + `highlight` on the SAME object: the highlight accent material silently overrides the requested style color/transparency (accent takes precedence in `_style_wrap`), so a caller styling and highlighting one object loses the style with no signal. `adapters/render_probe.py` `_style_wrap` applies the accent material OR the style, not both, when `accent` is true. Benign for Phase-0 (highlight is the stronger intent), but a caller wanting "transparent AND accented" gets only the accent. Compose both (accent color + style transparency) or document the precedence in the tool description when the assistant surface exercises combined styling.
 status: open
+decision: 2026-07-24 Compose accent + style — Compose the accent color with the requested style transparency (accent hue + style alpha) in _wrap_style so a styled-and-highlighted object retains both, rather than silently dropping the style.
 
 ### DW-50: A `focus` that resolves to a single vertex (or a zero-thickness edge/face) yields a degenerate `BoundBox` (one or more axis lengths 0); `_grow_bbox` grows by `max(dims)*0.2` which is 0 for an all-zero box, and the proxy cube then clamps to 1e-6, producing an extreme/near-singular camera zoom.
 

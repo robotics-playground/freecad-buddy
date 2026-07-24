@@ -7,5 +7,14 @@
     "key": "1",
     "label": "Keep gated, document divergence",
     "resolution": ""
+  },
+  "DW-49": {
+    "answered_at": "2026-07-24",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Compose the accent color with the requested style transparency (accent hue + style alpha) in _wrap_style so a styled-and-highlighted object retains both, rather than silently dropping the style.",
+    "key": "1",
+    "label": "Compose accent + style",
+    "resolution": ""
   }
 }
