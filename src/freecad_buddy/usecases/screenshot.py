@@ -61,10 +61,14 @@ def _is_default_renderable(obj: object) -> bool:
         return False
     return _has_shape(obj)
 
-# Fixed camera orientations (x, y, z, w quaternions). ``iso`` is FreeCAD's axonometric preset.
+# Fixed camera orientations (x, y, z, w quaternions), transcribed from FreeCAD's
+# ``src/Gui/Camera.cpp``: ``iso`` is ``Camera::isometric()``, ``front`` ``Camera::front()``,
+# ``top`` ``Camera::top()``, ``bottom`` ``Camera::bottom()``, ``right`` ``Camera::right()``,
+# ``back`` ``Camera::rear()``, and ``left`` the negation of ``Camera::left()`` (q and -q encode
+# the same rotation).
 _CAMERA_QUATS: dict[str, tuple[float, float, float, float]] = {
-    "iso": (0.424708, 0.17591, 0.339851, 0.820473),
-    "front": (0.5, 0.5, 0.5, 0.5),
+    "iso": (0.424708, 0.17592, 0.339851, 0.820473),
+    "front": (0.707107, 0.0, 0.0, 0.707107),
     "top": (0.0, 0.0, 0.0, 1.0),
     "bottom": (1.0, 0.0, 0.0, 0.0),
     "right": (0.5, 0.5, 0.5, 0.5),

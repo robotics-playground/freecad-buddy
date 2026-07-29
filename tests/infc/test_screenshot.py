@@ -8,6 +8,7 @@ screenshot of document A's handle renders A's objects even while an empty docume
 assertions are skip-guarded when the render ladder reports ``none``.
 """
 
+import math
 import os
 import unittest
 
@@ -16,7 +17,7 @@ import FreeCAD as App
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability
 from freecad_buddy.contracts import massprops_equal
 from freecad_buddy.usecases import screenshot
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 
 BOX_L = 10.0
@@ -210,6 +211,104 @@ class ScreenshotTest(unittest.TestCase):
         link = envelope["structured_content"]["render"].get("resource_link")
         self.assertTrue(link and os.path.getsize(link) > 0)
         os.remove(link)
+
+
+_ROOT = math.sqrt(2.0) / 2.0
+
+# Expected camera quaternions (x, y, z, w) transcribed from FreeCAD's ``src/Gui/Camera.cpp``.
+_CAMERA_CPP_QUATS = {
+    "iso": (0.424708, 0.17592, 0.339851, 0.820473),
+    "front": (_ROOT, 0.0, 0.0, _ROOT),
+    "top": (0.0, 0.0, 0.0, 1.0),
+    "bottom": (1.0, 0.0, 0.0, 0.0),
+    "right": (0.5, 0.5, 0.5, 0.5),
+    "left": (-0.5, 0.5, 0.5, -0.5),
+    "back": (0.0, _ROOT, _ROOT, 0.0),
+}
+
+_SQUARED_TOLERANCE = 1e-6
+
+
+def _normalized(quat):
+    """Scale ``quat`` to unit length so the squared-distance metric measures rotation alone."""
+    norm = math.sqrt(sum(component * component for component in quat))
+    return tuple(component / norm for component in quat)
+
+
+def _same_rotation(lhs, rhs, tolerance=_SQUARED_TOLERANCE):
+    """Whether two quaternions encode the same rotation, ignoring sign (q and -q).
+
+    Mirrors ``Camera::rotationsMatch`` -- the squared distance ``2 * (1 - |dot|)`` must be within
+    ``tolerance`` -- but normalizes first, because that identity measures rotation only for unit
+    quaternions and the stored presets are 6-decimal roundings.
+    """
+    lhs, rhs = _normalized(lhs), _normalized(rhs)
+    dot = sum(a * b for a, b in zip(lhs, rhs))
+    return 2.0 * (1.0 - abs(dot)) <= tolerance
+
+
+def _aligned(lhs, rhs):
+    """Return ``rhs`` negated when that is the sign closer to ``lhs``, so components compare.
+
+    At ``dot == 0`` the two are orthogonal and neither sign is closer; the un-negated ``rhs`` is
+    returned and the caller's component assertion reports the mismatch.
+    """
+    dot = sum(a * b for a, b in zip(lhs, rhs))
+    return rhs if dot >= 0.0 else tuple(-component for component in rhs)
+
+
+class CameraPresetTest(unittest.TestCase):
+    def test_every_preset_matches_camera_cpp(self):
+        self.assertEqual(set(screenshot._CAMERA_QUATS), set(_CAMERA_CPP_QUATS))
+        for preset, expected in _CAMERA_CPP_QUATS.items():
+            actual = screenshot._CAMERA_QUATS[preset]
+            self.assertTrue(
+                _same_rotation(actual, expected),
+                f"camera preset {preset!r} is {actual}, expected {expected} (up to sign)",
+            )
+
+    def test_every_preset_is_a_unit_quaternion(self):
+        for preset, quat in screenshot._CAMERA_QUATS.items():
+            self.assertEqual(len(quat), 4, f"camera preset {preset!r} is not 4 components: {quat}")
+            norm = math.sqrt(sum(component * component for component in quat))
+            self.assertAlmostEqual(norm, 1.0, places=5, msg=f"preset {preset!r} norm is {norm}")
+
+    def test_every_preset_component_matches_camera_cpp(self):
+        """Catch digit-level transcription drift that is too small to move the rotation."""
+        for preset, expected in _CAMERA_CPP_QUATS.items():
+            actual = screenshot._CAMERA_QUATS[preset]
+            self.assertEqual(
+                len(actual), len(expected), f"camera preset {preset!r} has wrong arity"
+            )
+            for index, (component, want) in enumerate(zip(actual, _aligned(actual, expected))):
+                self.assertAlmostEqual(
+                    component,
+                    want,
+                    places=6,
+                    msg=f"camera preset {preset!r} component {index} is {component}, "
+                    f"expected {want}",
+                )
+
+    def test_presets_are_pairwise_distinct_rotations(self):
+        presets = sorted(screenshot._CAMERA_QUATS)
+        for i, left in enumerate(presets):
+            for right in presets[i + 1 :]:
+                self.assertFalse(
+                    _same_rotation(screenshot._CAMERA_QUATS[left], screenshot._CAMERA_QUATS[right]),
+                    f"camera presets {left!r} and {right!r} encode the same rotation",
+                )
+
+    def test_front_and_right_resolve_to_different_orientations(self):
+        front = screenshot._orientation({"camera": "front"})
+        right = screenshot._orientation({"camera": "right"})
+        self.assertFalse(_same_rotation(front, right))
+
+    def test_default_camera_is_isometric(self):
+        self.assertTrue(_same_rotation(screenshot._orientation({}), _CAMERA_CPP_QUATS["iso"]))
+
+    def test_unknown_preset_rejected(self):
+        with self.assertRaises(ValidationError):
+            screenshot._orientation({"camera": "bogus"})
 
 
 if __name__ == "__main__":
