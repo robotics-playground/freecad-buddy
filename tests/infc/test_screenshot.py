@@ -10,10 +10,12 @@ assertions are skip-guarded when the render ladder reports ``none``.
 
 import math
 import os
+import tempfile
 import unittest
 
 import FreeCAD as App
 
+from freecad_buddy.adapters import render_probe
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability
 from freecad_buddy.contracts import massprops_equal
 from freecad_buddy.usecases import screenshot
@@ -213,6 +215,57 @@ class ScreenshotTest(unittest.TestCase):
         os.remove(link)
 
 
+class EmptySceneTest(unittest.TestCase):
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.port = OffscreenRenderPort()
+        handle = self.registry.document_create("screenshot_empty_scene")
+        self.handle = handle["structured_content"]["doc"]
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def test_empty_document_reports_empty_scene_without_an_image(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        before = set(_temp_shot_files())
+        envelope = screenshot.query_screenshot(self.registry, self.port, doc=self.handle)
+
+        self.assertEqual(envelope["status"], "OK")
+        render = envelope["structured_content"]["render"]
+        self.assertTrue(render["empty_scene"])
+        self.assertIsNone(render["resource_link"])
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], [])
+        # A blank PNG would still be a PNG; the contract is that no image is produced at all.
+        self.assertNotIn("images", envelope)
+        self.assertEqual(set(_temp_shot_files()) - before, set())
+
+    def test_populated_document_is_not_an_empty_scene(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        _, document = self.registry.with_document(self.handle, lambda h, d: (h, d))
+        box = document.addObject("Part::Box", "Box")
+        box.Length, box.Width, box.Height = BOX_L, BOX_W, BOX_H
+        document.recompute()
+
+        envelope = screenshot.query_screenshot(self.registry, self.port, doc=self.handle)
+        render = envelope["structured_content"]["render"]
+        self.assertFalse(render["empty_scene"])
+        self.assertIn("images", envelope)
+        self.assertTrue(os.path.getsize(render["resource_link"]) > 0)
+        os.remove(render["resource_link"])
+
+
+def _temp_shot_files():
+    """The screenshot temp PNGs currently on disk, so a leaked file is detectable."""
+    directory = tempfile.gettempdir()
+    try:
+        return [name for name in os.listdir(directory) if name.startswith("FCB_TMP_shot_")]
+    except OSError:
+        return []
+
+
 _ROOT = math.sqrt(2.0) / 2.0
 
 # Expected camera quaternions (x, y, z, w) transcribed from FreeCAD's ``src/Gui/Camera.cpp``.
@@ -309,6 +362,130 @@ class CameraPresetTest(unittest.TestCase):
     def test_unknown_preset_rejected(self):
         with self.assertRaises(ValidationError):
             screenshot._orientation({"camera": "bogus"})
+
+
+_VIEWPORTS = ((1920, 1920), (1920, 1080), (1080, 1920))
+
+# Camera quaternions used to frame from several directions; the framing must hold for each.
+_FRAMING_ORIENTATIONS = {
+    "top": (0.0, 0.0, 0.0, 1.0),
+    "front": (_ROOT, 0.0, 0.0, _ROOT),
+    "iso": (0.424708, 0.17592, 0.339851, 0.820473),
+}
+
+# The bbox must span 1/1.2 of the frame along whichever axis binds: the ~20% margin _frame_bbox
+# promises. Derived from the grow factor, not captured from the implementation.
+_EXPECTED_OCCUPANCY = 1.0 / 1.2
+
+
+def _framed_occupancy(orientation, bbox, width, height):
+    """Frame ``bbox`` and return its (u, v) extents in normalized screen space.
+
+    Projecting the framed corners back through the camera's own view volume measures what the
+    image actually shows, so a camera that over-zooms, under-zooms, or clips is visible here --
+    which asserting the raw ``height`` field alone cannot detect.
+    """
+    from pivy import coin
+
+    camera = coin.SoOrthographicCamera()
+    camera.orientation.setValue(coin.SbRotation(*orientation))
+    viewport = coin.SbViewportRegion(width, height)
+    render_probe._frame_bbox(coin, camera, bbox, viewport)
+
+    volume = camera.getViewVolume(width / height)
+    us, vs = [], []
+    for x in (bbox.XMin, bbox.XMax):
+        for y in (bbox.YMin, bbox.YMax):
+            for z in (bbox.ZMin, bbox.ZMax):
+                screen = volume.projectToScreen(coin.SbVec3f(x, y, z))
+                u, v, _ = screen.getValue()
+                us.append(u)
+                vs.append(v)
+    return (max(us) - min(us)), (max(vs) - min(vs)), camera
+
+
+def _bound_box(xmin, ymin, zmin, xmax, ymax, zmax):
+    return App.BoundBox(xmin, ymin, zmin, xmax, ymax, zmax)
+
+
+class FocusFramingTest(unittest.TestCase):
+    """``_frame_bbox`` must leave the requested margin, on every orientation and viewport.
+
+    Pure Coin math -- no rasterization -- so these run on a leg with no render capability.
+    """
+
+    def test_bbox_fills_the_requested_fraction_of_the_frame(self):
+        bbox = _bound_box(0.0, 0.0, 0.0, BOX_L, BOX_W, BOX_H)
+        for width, height in _VIEWPORTS:
+            for name, orientation in _FRAMING_ORIENTATIONS.items():
+                span_u, span_v, _ = _framed_occupancy(orientation, bbox, width, height)
+                self.assertAlmostEqual(
+                    max(span_u, span_v),
+                    _EXPECTED_OCCUPANCY,
+                    places=3,
+                    msg=f"{name} at {width}x{height} spans {max(span_u, span_v)}, "
+                    f"expected {_EXPECTED_OCCUPANCY}",
+                )
+
+    def test_framing_never_clips_the_bbox(self):
+        """No corner may fall outside the frame -- the proxy-cube framing clipped on iso views."""
+        bbox = _bound_box(0.0, 0.0, 0.0, BOX_L, BOX_W, BOX_H)
+        for width, height in _VIEWPORTS:
+            for name, orientation in _FRAMING_ORIENTATIONS.items():
+                span_u, span_v, _ = _framed_occupancy(orientation, bbox, width, height)
+                self.assertLessEqual(
+                    max(span_u, span_v), 1.0, f"{name} at {width}x{height} clips the bbox"
+                )
+
+    def test_framing_is_translation_invariant(self):
+        """An off-origin bbox frames exactly as the same box at the origin."""
+        at_origin = _bound_box(0.0, 0.0, 0.0, BOX_L, BOX_W, BOX_H)
+        offset = _bound_box(100.0, -50.0, 5.0, 100.0 + BOX_L, -50.0 + BOX_W, 5.0 + BOX_H)
+        for name, orientation in _FRAMING_ORIENTATIONS.items():
+            _, _, origin_camera = _framed_occupancy(orientation, at_origin, 1920, 1920)
+            _, _, offset_camera = _framed_occupancy(orientation, offset, 1920, 1920)
+            self.assertAlmostEqual(
+                origin_camera.height.getValue(),
+                offset_camera.height.getValue(),
+                places=4,
+                msg=f"{name} framing depends on bbox position",
+            )
+
+    def test_framing_varies_with_orientation(self):
+        """A sphere-based framing is orientation-invariant; a projected one is not."""
+        bbox = _bound_box(0.0, 0.0, 0.0, BOX_L, BOX_W, BOX_H)
+        heights = {
+            name: _framed_occupancy(orientation, bbox, 1920, 1920)[2].height.getValue()
+            for name, orientation in _FRAMING_ORIENTATIONS.items()
+        }
+        self.assertNotAlmostEqual(
+            heights["top"],
+            heights["front"],
+            places=3,
+            msg=f"framing ignores orientation (sphere circumscription?): {heights}",
+        )
+
+    def test_top_view_height_is_the_grown_in_plane_extent(self):
+        """Looking down -Z at a 10x20x30 box, the binding extent is the 20 mm Y span."""
+        bbox = _bound_box(0.0, 0.0, 0.0, BOX_L, BOX_W, BOX_H)
+        _, _, camera = _framed_occupancy(_FRAMING_ORIENTATIONS["top"], bbox, 1920, 1920)
+        self.assertAlmostEqual(camera.height.getValue(), BOX_W * 1.2, places=3)
+
+    def test_flat_bbox_frames_its_two_real_axes(self):
+        """A zero-thickness face still frames tightly, with no NaN from the degenerate axis."""
+        bbox = _bound_box(0.0, 0.0, 0.0, BOX_L, BOX_W, 0.0)
+        span_u, span_v, camera = _framed_occupancy(_FRAMING_ORIENTATIONS["top"], bbox, 1920, 1920)
+        self.assertAlmostEqual(max(span_u, span_v), _EXPECTED_OCCUPANCY, places=3)
+        self.assertTrue(math.isfinite(camera.height.getValue()))
+
+    def test_degenerate_bbox_keeps_a_positive_finite_height(self):
+        """An edge seen end-on projects to nothing; the clamp must keep the camera valid."""
+        bbox = _bound_box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        _, _, camera = _framed_occupancy(_FRAMING_ORIENTATIONS["top"], bbox, 1920, 1920)
+        value = camera.height.getValue()
+        self.assertTrue(math.isfinite(value))
+        self.assertGreaterEqual(value, 1e-3)
+        self.assertGreater(camera.farDistance.getValue(), camera.nearDistance.getValue())
 
 
 if __name__ == "__main__":

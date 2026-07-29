@@ -109,25 +109,29 @@ def query_screenshot(
         dirty = _document_is_dirty(document)
         before = fingerprint(document)
         result, out_path = _render_with_lifecycle(render_port, document, scene, before, dirty)
-        image: ImageRef = {
-            "kind": "resource_link",
-            "uri": out_path,
-            "mime_type": "image/png",
-            "audience": ["user"],
-        }
         structured = {
             "render": {
                 "available": True,
                 "resource_link": out_path,
                 "reason": None,
                 "dirty_document": dirty,
+                "empty_scene": result.empty_scene,
             },
             "scene": {
                 "rendered_objects": result.rendered_objects,
                 "focused_on": _focused_on(focus_echo, result.focused),
             },
         }
-        return _ok_envelope(structured, image, summarize_screenshot(structured))
+        summary = summarize_screenshot(structured)
+        if out_path is None:
+            return _ok_envelope(structured, None, summary)
+        image: ImageRef = {
+            "kind": "resource_link",
+            "uri": out_path,
+            "mime_type": "image/png",
+            "audience": ["user"],
+        }
+        return _ok_envelope(structured, image, summary)
 
     return registry.with_document(doc, read)
 
@@ -157,6 +161,9 @@ def _render_with_lifecycle(render_port, document, scene, before, dirty):
 
     When ``dirty`` is set the document is already self-unstable (a pending or broken recompute), so
     the before==after mutation guard is meaningless and skipped; the non-empty-PNG check still runs.
+
+    A port reporting an empty scene wrote no image by design, so the placeholder temp file is
+    removed and ``None`` is returned in place of a path.
     """
     fd, out_path = tempfile.mkstemp(prefix="FCB_TMP_shot_", suffix=".png")
     os.close(fd)
@@ -167,6 +174,9 @@ def _render_with_lifecycle(render_port, document, scene, before, dirty):
         # changes while the geometry is identical. A real mutation still changes the mass-props.
         if not dirty and not massprops_equal(before, fingerprint(document)):
             raise ValidationError("screenshot mutated the document (geometry changed)")
+        if result.empty_scene:
+            _remove(out_path)
+            return result, None
         if not os.path.exists(out_path) or os.path.getsize(out_path) <= 0:
             raise _RenderProduceError("render produced an empty or missing PNG")
     except BaseException:
@@ -395,24 +405,31 @@ def summarize_screenshot(sc: dict) -> str:
     if not render.get("available", False):
         return f"Render unavailable: {render.get('reason')}."
     dirty = " Document dirty (pending/broken recompute)." if render.get("dirty_document") else ""
+    if render.get("empty_scene"):
+        return f"Empty scene: no drawable geometry, no image rendered.{dirty}"
     return f"Rendered {n} objects.{dirty}"
 
 
-def _ok_envelope(structured: dict, image: ImageRef, summary: str | None = None) -> ResultEnvelope:
-    return {
+def _ok_envelope(
+    structured: dict, image: ImageRef | None, summary: str | None = None
+) -> ResultEnvelope:
+    """Build the OK envelope; ``image`` is ``None`` when no image was produced (empty scene)."""
+    envelope: ResultEnvelope = {
         "schema": "fcb.result-envelope/1",
         "status": "OK",
         "detail": None,
         "structured_content": structured,
         "text": summary if summary is not None else mirror_text(structured),
-        "images": [image],
     }
+    if image is not None:
+        envelope["images"] = [image]
+    return envelope
 
 
 def _unavailable_envelope(reason: str | None) -> ResultEnvelope:
     """Render unavailable: ``OK`` with ``render.available:false`` and no ``resource_link``."""
     structured = {
-        "render": {"available": False, "reason": reason},
+        "render": {"available": False, "reason": reason, "empty_scene": False},
         "scene": {"rendered_objects": [], "focused_on": None},
     }
     return {

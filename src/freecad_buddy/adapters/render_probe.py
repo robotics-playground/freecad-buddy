@@ -20,6 +20,12 @@ _PROBE_SIZE = 8
 
 _ACCENT_COLOR = (1.0, 0.55, 0.0)
 
+# Focus framing: the bbox spans 1/_FRAME_GROW of the frame's binding axis, leaving ~20% margin.
+# _MIN_FRAME_EXTENT floors every derived extent so a bbox degenerate on a projected axis still
+# yields a valid view volume.
+_FRAME_GROW = 1.2
+_MIN_FRAME_EXTENT = 1e-3
+
 # FreeCAD stores the 3D-view anti-aliasing choice as the ``AntiAliasing`` enum value under this
 # preference group/key (Gui/Multisample.h). The enum is NOT sequential — MSAA6x=5 and MSAA8x=4 —
 # so map each stored value to its true multisample count, matching the live viewport instead of a
@@ -172,6 +178,12 @@ class OffscreenRenderPort:
             rendered.append(name)
             subgraphs[name] = sub
 
+        if not rendered:
+            # Nothing drawable was added, so the only thing left to frame is the camera and the
+            # light. Rendering that writes a blank PNG the caller cannot distinguish from a real
+            # one; report the empty scene instead and write no image at all.
+            return RenderResult(rendered_objects=[], focused=False, empty_scene=True)
+
         viewport = coin.SbViewportRegion(scene.width, scene.height)
         focused = _aim_camera(coin, camera, document, scene.focus, rendered, root, viewport)
 
@@ -287,18 +299,45 @@ def _mapped_sub_shape(shape, mapped_name: str):
 
 
 def _frame_bbox(coin, camera, bbox, viewport):
-    """Aim ``camera`` at ``bbox`` (grown ~20%) by framing a proxy cube of the grown extent."""
-    proxy = coin.SoSeparator()
-    cube = coin.SoCube()
-    grow = 1.2
-    cube.width.setValue(max(bbox.XLength, 1e-3) * grow)
-    cube.height.setValue(max(bbox.YLength, 1e-3) * grow)
-    cube.depth.setValue(max(bbox.ZLength, 1e-3) * grow)
-    transform = coin.SoTransform()
-    transform.translation.setValue(bbox.Center.x, bbox.Center.y, bbox.Center.z)
-    proxy.addChild(transform)
-    proxy.addChild(cube)
-    camera.viewAll(proxy, viewport)
+    """Aim ``camera`` at ``bbox`` so it spans ``1 / _FRAME_GROW`` of the frame's binding axis.
+
+    The bbox corners are rotated into the camera's own frame, and the height comes from the extents
+    measured there. Framing via ``viewAll`` over a proxy cube cannot do this: ``viewAll``
+    circumscribes a *sphere*, so the resulting height is the bbox space diagonal regardless of
+    orientation — loose on most views and clipping on others.
+
+    ``camera.height`` is the world height and the world width is ``height * aspect``, so the
+    horizontal extent only constrains the framing on a viewport taller than it is wide.
+    """
+    inverse = camera.orientation.getValue().inverse()
+    local = [
+        inverse.multVec(coin.SbVec3f(x, y, z)).getValue()
+        for x in (bbox.XMin, bbox.XMax)
+        for y in (bbox.YMin, bbox.YMax)
+        for z in (bbox.ZMin, bbox.ZMax)
+    ]
+    span_x, span_y, span_z = (
+        max(axis) - min(axis) for axis in ([point[i] for point in local] for i in range(3))
+    )
+
+    size = viewport.getViewportSizePixels()
+    aspect = size[0] / size[1]
+    # A bbox degenerate on a projected axis (an edge seen end-on) would give a zero height and an
+    # undefined view volume; the floor keeps the camera valid and the render non-blank.
+    height = max(span_y * _FRAME_GROW, span_x * _FRAME_GROW / aspect, _MIN_FRAME_EXTENT)
+
+    view_direction = camera.orientation.getValue().multVec(coin.SbVec3f(0.0, 0.0, -1.0))
+    center = coin.SbVec3f(bbox.Center.x, bbox.Center.y, bbox.Center.z)
+    # Stand off by the full frame height beyond the geometry's own depth so the near plane clears
+    # the bbox for any orientation. The depth is floored too: a bbox flat along the view axis would
+    # otherwise collapse near onto far, leaving a zero-thickness view volume that renders nothing.
+    depth = max(span_z, _MIN_FRAME_EXTENT)
+    distance = depth * 0.5 + height
+    camera.height.setValue(height)
+    camera.position.setValue(center - view_direction * distance)
+    camera.nearDistance.setValue(max(distance - depth, _MIN_FRAME_EXTENT))
+    camera.farDistance.setValue(distance + depth)
+    camera.focalDistance.setValue(distance)
 
 
 __all__ = [

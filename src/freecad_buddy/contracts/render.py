@@ -66,11 +66,14 @@ class RenderResult:
 
     ``rendered_objects`` is the ordered list of object Names actually added to the scene;
     ``focused`` is ``True`` iff the camera sub-framed the focus element (``False`` means it fell
-    back to whole-object/whole-scene framing, so the usecase echoes object-only).
+    back to whole-object/whole-scene framing, so the usecase echoes object-only);
+    ``empty_scene`` is ``True`` when no drawable geometry was added, in which case no image was
+    written and the caller must not expect one.
     """
 
     rendered_objects: list[str]
     focused: bool = False
+    empty_scene: bool = False
 
 
 @runtime_checkable

@@ -361,7 +361,8 @@ resolution: resolved by sweep bundle dw-camera-preset-quaternions
 origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-screenshots.md"), 2026-07-23
 location: adapters/render_probe.py
 reason: `OffscreenRenderPort._aim_camera` frames a `SoCube` proxy sized to the focus bbox and `viewAll`s it, so the effective framing is the cube's half-diagonal, not the intended ~20% margin — focus framing is systematically loose and the grow factor is approximate. `adapters/render_probe.py` `_aim_camera` builds a cube at bbox center with bbox dims. Functionally correct (the element is in frame) but not tight; Phase-0 has no framing-precision assertion. Tighten to frame the actual sub-shape (or compute the camera distance from the bbox extents directly) if a caller needs precise element zoom.
-status: open
+status: done 2026-07-29
+resolution: resolved by sweep bundle dw-render-scene-framing-edges
 
 ### DW-46: `query_screenshot`'s default object set (`include` omitted) renders every shape-bearing object regardless of the object's live `Visibility` flag, so an object the user has hidden still appears in the constructed scene.
 
@@ -384,7 +385,8 @@ resolution: verified resolved 2026-07-24 — when the sub-element fails to frame
 origin: migrated from legacy ledger ("Deferred from: spec-1-9-view-controlled-screenshots.md"), 2026-07-23
 location: adapters/render_probe.py
 reason: When every requested object is skipped (empty document, or an `include` list of names that all resolve to no subgraph), the renderer `viewAll`s a scene holding only the camera + light, producing a blank/undefined-framed PNG returned as `OK`. `adapters/render_probe.py` `render` appends nothing to `root` when all objects skip; `_aim_camera` then `viewAll`s an effectively empty graph. Reachable only with an empty doc or an all-nonexistent include (the latter now rejected by the loop-1 existence validation), so the residual case is a genuinely empty document. Consider returning an explicit "empty scene" note (rendered_objects: []) rather than a blank image when the scene has no drawable geometry.
-status: open
+status: done 2026-07-29
+resolution: resolved by sweep bundle dw-render-scene-framing-edges
 
 ### DW-49: `query_screenshot` `styles` + `highlight` on the SAME object: the highlight accent material silently overrides the requested style color/transparency (accent takes precedence in `_style_wrap`), so a caller styling and highlighting one object loses the style with no signal.
 
