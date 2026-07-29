@@ -191,3 +191,7 @@ Whole-tree `ruff check src tests` and `ruff format --check src tests` fail, but 
 - `test_transparency_only_style_keeps_the_object_color` asserts the rendered pixel is *unchanged*, because an opaque box against a white background at the iso view shows no visible alpha effect. It proves the hue is not repainted; it does not prove transparency is visible in the image. No current test does, and transparency rendering depends on the renderer's transparency type, which the Python binding does not expose.
 - Two constraints inside the read-only `<intent-contract>` are now superseded by measured evidence (the pixel-assertion ban and the fast-path wording). Both are recorded in the Spec Change Log as deliberate departures; the contract text still states the opposite and wants reconciling.
 - `followup_review_recommended: true` — pass 2 changed the override mechanism on a high-severity finding late in the loop, which merits an independent look.
+
+### Follow-up review: not performed
+
+The recommended independent pass was launched and did not complete: both mandatory blind reviewers (`bmad-review-adversarial-general`, `bmad-review-edge-case-hunter`) were dispatched and neither returned findings, so no triage was produced and no code was changed. The implementation above is unmodified and its verification stands. `followup_review_recommended` remains `true`; the override-mechanism change from pass 2 has not received an independent adversarial look.
