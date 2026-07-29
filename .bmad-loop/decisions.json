@@ -1,4 +1,13 @@
 {
+  "DW-22": {
+    "answered_at": "2026-07-29",
+    "bundle_name": "",
+    "effect": "build",
+    "intent": "Give the headless host a bounded exec path so the declared debug_exec timeout is real: run the exec body on a worker thread and have Marshal.call's existing done.wait(timeout_s) actually block, so exceeding the budget returns a TIMEOUT envelope instead of hanging the server. Because a Python thread cannot be forcibly killed, the abandoned body may still be running, so the timeout must mark the session document-suspect exactly as MarshalTimeout's docstring specifies (no blind retry) and the TIMEOUT envelope must say so. Keep the GUI/RPC host's marshal semantics unchanged, and add an external test that a sleeping/looping exec body yields TIMEOUT rather than blocking.",
+    "key": "1",
+    "label": "Thread-based bounded exec",
+    "resolution": ""
+  },
   "DW-29": {
     "answered_at": "2026-07-24",
     "bundle_name": "",
