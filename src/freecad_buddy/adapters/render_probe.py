@@ -200,22 +200,27 @@ class OffscreenRenderPort:
 
 
 def _wrap_style(coin, subgraph, style, is_highlight):
-    """Wrap ``subgraph`` in a separator with a prepended material for style/highlight overrides.
+    """Wrap ``subgraph`` in a separator with a prepended overriding material.
 
-    A highlight accent takes precedence over a plain style override on the same object. Returns
-    the raw subgraph unchanged when neither a style nor a highlight applies.
+    A highlight sets the diffuse color to ``_ACCENT_COLOR``, taking precedence over ``style.color``;
+    ``style.transparency`` is applied whether or not the object is highlighted. Returns the raw
+    subgraph unchanged when there is no highlight and no style field to apply.
+
+    The material is marked as overriding only when a diffuse color is written. ``setOverride`` is
+    node-wide rather than per-field, so a material that overrode while carrying an unwritten diffuse
+    would force Coin's default grey over the object's own color.
     """
-    if style is None and not is_highlight:
+    has_style = style is not None and (style.color is not None or style.transparency is not None)
+    if not has_style and not is_highlight:
         return subgraph
     separator = coin.SoSeparator()
     material = coin.SoMaterial()
-    if is_highlight:
-        material.diffuseColor.setValue(*_ACCENT_COLOR)
-    else:
-        if style.color is not None:
-            material.diffuseColor.setValue(*style.color)
-        if style.transparency is not None:
-            material.transparency.setValue(style.transparency)
+    color = _ACCENT_COLOR if is_highlight else style.color
+    if color is not None:
+        material.diffuseColor.setValue(*color)
+        material.setOverride(True)
+    if style is not None and style.transparency is not None:
+        material.transparency.setValue(style.transparency)
     separator.addChild(material)
     separator.addChild(subgraph)
     return separator

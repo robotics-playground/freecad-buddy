@@ -18,6 +18,7 @@ import FreeCAD as App
 from freecad_buddy.adapters import render_probe
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability
 from freecad_buddy.contracts import massprops_equal
+from freecad_buddy.contracts.render import SceneSpec, StyleSpec
 from freecad_buddy.usecases import screenshot
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
@@ -486,6 +487,160 @@ class FocusFramingTest(unittest.TestCase):
         self.assertTrue(math.isfinite(value))
         self.assertGreaterEqual(value, 1e-3)
         self.assertGreater(camera.farDistance.getValue(), camera.nearDistance.getValue())
+
+
+_STYLE_COLOR = (0.1, 0.2, 0.3)
+_STYLE_TRANSPARENCY = 0.8
+_COIN_DEFAULT_TRANSPARENCY = 0.0
+
+
+def _wrapped_material(style, is_highlight):
+    """Call ``_wrap_style`` on a bare subgraph and read back the prepended material.
+
+    Returns ``(wrapped, diffuse, transparency, is_override)`` where ``wrapped`` says whether a
+    separator was added; the three material values are ``None`` when the subgraph came back
+    unwrapped. The values are copied out while the wrapper is still referenced, because a Coin node
+    whose only owner is a dropped parent is freed with it.
+    """
+    from pivy import coin
+
+    subgraph = coin.SoSeparator()
+    result = render_probe._wrap_style(coin, subgraph, style, is_highlight)
+    if result is subgraph:
+        return False, None, None, None
+    material = result.getChild(0)
+    return (
+        True,
+        material.diffuseColor.getValues()[0].getValue(),
+        material.transparency.getValues()[0],
+        bool(material.isOverride()),
+    )
+
+
+class WrapStyleTest(unittest.TestCase):
+    """``_wrap_style`` composes the highlight accent with the requested style transparency.
+
+    Pure Coin node manipulation -- no rasterization -- so these run on a leg with no render
+    capability.
+    """
+
+    def _assert_diffuse(self, actual, expected):
+        self.assertEqual(len(actual), len(expected), f"diffuse arity {actual}")
+        for index, (component, want) in enumerate(zip(actual, expected)):
+            self.assertAlmostEqual(
+                component, want, places=5, msg=f"diffuse component {index} is {component}"
+            )
+
+    def test_styled_and_highlighted_keeps_accent_hue_and_style_transparency(self):
+        style = StyleSpec(object="Box", color=_STYLE_COLOR, transparency=_STYLE_TRANSPARENCY)
+        wrapped, diffuse, transparency, is_override = _wrapped_material(style, True)
+        self.assertTrue(wrapped)
+        self._assert_diffuse(diffuse, render_probe._ACCENT_COLOR)
+        self.assertAlmostEqual(transparency, _STYLE_TRANSPARENCY, places=5)
+        self.assertTrue(is_override)
+
+    def test_highlighted_with_transparency_only_style(self):
+        style = StyleSpec(object="Box", transparency=0.5)
+        wrapped, diffuse, transparency, _ = _wrapped_material(style, True)
+        self.assertTrue(wrapped)
+        self._assert_diffuse(diffuse, render_probe._ACCENT_COLOR)
+        self.assertAlmostEqual(transparency, 0.5, places=5)
+
+    def test_highlighted_without_style_uses_accent_and_default_transparency(self):
+        wrapped, diffuse, transparency, _ = _wrapped_material(None, True)
+        self.assertTrue(wrapped)
+        self._assert_diffuse(diffuse, render_probe._ACCENT_COLOR)
+        self.assertAlmostEqual(transparency, _COIN_DEFAULT_TRANSPARENCY, places=5)
+
+    def test_styled_only_uses_the_style_color_and_transparency(self):
+        style = StyleSpec(object="Box", color=_STYLE_COLOR, transparency=_STYLE_TRANSPARENCY)
+        wrapped, diffuse, transparency, is_override = _wrapped_material(style, False)
+        self.assertTrue(wrapped)
+        self._assert_diffuse(diffuse, _STYLE_COLOR)
+        self.assertAlmostEqual(transparency, _STYLE_TRANSPARENCY, places=5)
+        self.assertTrue(is_override)
+
+    def test_transparency_only_style_does_not_override_the_object_color(self):
+        style = StyleSpec(object="Box", transparency=0.5)
+        wrapped, _, transparency, is_override = _wrapped_material(style, False)
+        self.assertTrue(wrapped)
+        self.assertAlmostEqual(transparency, 0.5, places=5)
+        self.assertFalse(is_override, "an unwritten diffuse would force Coin's default grey")
+
+    def test_color_only_style_leaves_transparency_at_the_coin_default(self):
+        style = StyleSpec(object="Box", color=_STYLE_COLOR)
+        wrapped, diffuse, transparency, _ = _wrapped_material(style, False)
+        self.assertTrue(wrapped)
+        self._assert_diffuse(diffuse, _STYLE_COLOR)
+        self.assertAlmostEqual(transparency, _COIN_DEFAULT_TRANSPARENCY, places=5)
+
+    def test_no_style_and_no_highlight_returns_the_subgraph_unwrapped(self):
+        self.assertFalse(_wrapped_material(None, False)[0])
+
+    def test_empty_style_on_a_plain_object_returns_the_subgraph_unwrapped(self):
+        self.assertFalse(_wrapped_material(StyleSpec(object="Box"), False)[0])
+
+
+class StyleReachesThePixelsTest(unittest.TestCase):
+    """The prepended material must survive Coin traversal and change the rendered image."""
+
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.port = OffscreenRenderPort()
+        handle = self.registry.document_create("screenshot_pixels")["structured_content"]["doc"]
+        _, self.document = self.registry.with_document(handle, lambda h, d: (h, d))
+        box = self.document.addObject("Part::Box", "Box")
+        box.Length, box.Width, box.Height = BOX_L, BOX_W, BOX_H
+        self.document.recompute()
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _center_pixel(self, styles, highlight):
+        """Render the box with ``styles``/``highlight`` and return the center pixel (r, g, b)."""
+        from PySide import QtGui
+
+        scene = SceneSpec(
+            objects=["Box"],
+            orientation=screenshot._CAMERA_QUATS["iso"],
+            width=200,
+            height=200,
+            styles=styles,
+            highlight=highlight,
+        )
+        handle, path = tempfile.mkstemp(suffix=".png")
+        os.close(handle)
+        try:
+            self.port.render(self.document, scene, path)
+            color = QtGui.QImage(path).pixelColor(100, 100)
+            return color.red(), color.green(), color.blue()
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+
+    def test_style_and_highlight_change_the_rendered_pixels(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        plain = self._center_pixel([], None)
+        styled = self._center_pixel([StyleSpec(object="Box", color=(0.0, 0.0, 1.0))], None)
+        highlighted = self._center_pixel([StyleSpec(object="Box", color=(0.0, 0.0, 1.0))], "Box")
+
+        self.assertNotEqual(plain, styled, "the style override never reached the image")
+        self.assertGreater(styled[2], styled[0], f"styled render is not blue-dominant: {styled}")
+        self.assertGreater(
+            highlighted[0], highlighted[2], f"highlight is not accent-hued: {highlighted}"
+        )
+
+    def test_transparency_only_style_keeps_the_object_color(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        plain = self._center_pixel([], None)
+        transparent = self._center_pixel([StyleSpec(object="Box", transparency=0.5)], None)
+
+        self.assertEqual(
+            plain, transparent, f"a transparency-only style repainted the object: {transparent}"
+        )
 
 
 if __name__ == "__main__":
