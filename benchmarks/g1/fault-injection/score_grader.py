@@ -66,8 +66,16 @@ def _load_case(case_yaml: Path) -> dict:
 
 
 def _suite_case_files() -> list[Path]:
-    """The suite's ``case.yaml`` files, ordered by their suite-relative POSIX path."""
-    return sorted(HERE.rglob("case.yaml"), key=lambda p: p.relative_to(HERE).as_posix())
+    """The suite's ``case.yaml`` files, ordered by their suite-relative POSIX path.
+
+    The exact-name filter keeps the set platform-independent: ``rglob`` is case-insensitive on
+    Windows, so a miscased ``Case.YAML`` would otherwise be scored and hashed there and not on
+    Linux CI.
+    """
+    return sorted(
+        (p for p in HERE.rglob("case.yaml") if p.name == "case.yaml"),
+        key=lambda p: p.relative_to(HERE).as_posix(),
+    )
 
 
 def _validator_sha() -> str:

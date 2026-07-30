@@ -251,13 +251,23 @@ def test_every_break_kind_has_an_and_discriminator_case():
         return parts[2]
 
     broken = _load_broken_cases()
-    every_cause_keyword = sorted({kw for c in broken for kw in c["expected"]["cause_keywords"]})
+    broken_ids = {c["id"] for c in broken}
+    fault_cases = _load_fault_cases()
+    # The OR grader this test models would be keyed on the fault suite's own keyword sets, so the
+    # "foreign" universe must come from the suite, not from the broader broken-docs corpus.
+    every_cause_keyword = sorted(
+        {kw for c in fault_cases for kw in c["expected_findings"]["cause_keywords"]}
+    )
 
     discriminated = set()
     kinds = set()
-    for case in _load_fault_cases():
+    for case in fault_cases:
         question_ref = case.get("question_ref")
         assert question_ref, f"{case['id']}: fault case must name its question_ref"
+        # A dangling ref would invent a phantom break kind that satisfies the coverage assertion.
+        assert question_ref in broken_ids, (
+            f"{case['id']}: question_ref {question_ref!r} names no broken-docs case"
+        )
         kind = _kind(question_ref)
         kinds.add(kind)
         if case["fault"]["expectation"] != "DETECT":

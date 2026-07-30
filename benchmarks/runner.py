@@ -187,19 +187,16 @@ def _grader_suite_sources() -> list[tuple[bytes, Path]]:
 
     Each case contributes its suite-relative POSIX path as well as its bytes, so an added,
     removed, renamed or edited case all change the digest. Ordered by that same relative path to
-    match score_grader.py's ordering. A missing or unreadable suite tree yields an empty list,
-    which the caller reports as stale.
+    match score_grader.py's ordering. A missing suite tree yields an empty list, which the caller
+    reports as stale. The exact-name filter keeps the digest platform-independent: ``rglob`` is
+    case-insensitive on Windows, so a miscased ``Case.YAML`` would otherwise join the digest there
+    and not on Linux CI.
     """
-    try:
-        cases = sorted(
-            _GRADER_SUITE_ROOT.rglob("case.yaml"),
-            key=lambda p: p.relative_to(_GRADER_SUITE_ROOT).as_posix(),
-        )
-    except OSError:
-        return []
-    return [
-        (p.relative_to(_GRADER_SUITE_ROOT).as_posix().encode("utf-8"), p) for p in cases
-    ]
+    cases = sorted(
+        (p for p in _GRADER_SUITE_ROOT.rglob("case.yaml") if p.name == "case.yaml"),
+        key=lambda p: p.relative_to(_GRADER_SUITE_ROOT).as_posix(),
+    )
+    return [(p.relative_to(_GRADER_SUITE_ROOT).as_posix().encode("utf-8"), p) for p in cases]
 
 
 def _validator_src_hasher(name: str) -> str:
