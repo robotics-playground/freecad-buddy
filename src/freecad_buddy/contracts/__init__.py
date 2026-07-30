@@ -31,10 +31,12 @@ from freecad_buddy.contracts.render import (
 )
 from freecad_buddy.contracts.report import (
     Check,
+    MeasuredKind,
     ReportBanner,
     ValidationReport,
     WilsonCI,
     derive_verdict,
+    require_wilson_ci_for_rates,
 )
 from freecad_buddy.contracts.rpc import (
     RpcError,
@@ -66,6 +68,7 @@ __all__ = [
     "JobStatus",
     "MappedNameSelector",
     "MassProps",
+    "MeasuredKind",
     "ObjectFingerprint",
     "RenderPort",
     "RenderResult",
@@ -91,5 +94,6 @@ __all__ = [
     "fingerprints_equal",
     "massprops_equal",
     "mirror_text",
+    "require_wilson_ci_for_rates",
     "summary_text",
 ]

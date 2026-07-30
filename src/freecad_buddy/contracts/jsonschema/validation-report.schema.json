@@ -53,6 +53,22 @@
             }
           ]
         },
+        "measured_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "rate",
+                "quantity",
+                "count",
+                "flag",
+                "text"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "passed": {
           "type": "boolean"
         },
@@ -161,11 +177,64 @@
           "type": "number"
         }
       },
+      "required": [
+        "rate",
+        "low",
+        "high",
+        "n",
+        "r"
+      ],
       "type": "object"
     }
   },
   "$id": "fcb.validation-report/1",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "if": {
+    "anyOf": [
+      {
+        "properties": {
+          "checks": {
+            "contains": {
+              "properties": {
+                "measured_kind": {
+                  "const": "rate"
+                }
+              },
+              "required": [
+                "measured_kind"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "checks"
+        ]
+      },
+      {
+        "properties": {
+          "warnings": {
+            "contains": {
+              "properties": {
+                "measured_kind": {
+                  "const": "rate"
+                }
+              },
+              "required": [
+                "measured_kind"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "warnings"
+        ]
+      }
+    ]
+  },
   "properties": {
     "banner": {
       "$ref": "#/$defs/ReportBanner"
@@ -206,6 +275,24 @@
     "checks",
     "verdict"
   ],
+  "then": {
+    "properties": {
+      "banner": {
+        "properties": {
+          "wilson_ci": {
+            "$ref": "#/$defs/WilsonCI"
+          }
+        },
+        "required": [
+          "wilson_ci"
+        ],
+        "type": "object"
+      }
+    },
+    "required": [
+      "banner"
+    ]
+  },
   "title": "ValidationReport",
   "type": "object"
 }

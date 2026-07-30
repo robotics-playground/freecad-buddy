@@ -13,9 +13,16 @@ so ``__required_keys__`` is empty. The prose-required fields are carried in an e
 ``required`` array. A wire root or ``$def`` that validates ``{}`` for a required field
 is a defect.
 
+Conditionals: cross-field rules that ``required`` cannot express are carried in an
+explicit ``CONDITIONALS`` manifest and emitted as a Draft-2020-12 ``if``/``then`` pair on
+the wire root. The ``then`` clause reuses the target field's own emitted fragment with
+any null branch dropped.
+
 Self-consistency GUARD: after building each schema object the generator asserts
 ``set(required) ⊆ set(properties)`` for every root and ``$def`` and raises on a manifest
-entry naming a field not in the emitted properties (catches manifest typos/drift).
+entry naming a field not in the emitted properties (catches manifest typos/drift). The
+same guard covers every field named by ``CONDITIONALS``, whose entries must also carry
+the full spec key set and name a wire root.
 
 ``--check`` regenerates in-memory and diffs against disk (drift = exit 1), and also
 fails on an orphan ``*.schema.json`` on disk not in the freshly-generated set.
@@ -71,12 +78,36 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "ErrorDetail": ["message"],
     "ReportBanner": ["freecad_version", "element_map_version"],
     "Check": ["passed"],
+    "WilsonCI": ["rate", "low", "high", "n", "r"],
     "DocHandle": ["handle"],
     "ObjectFingerprint": ["name", "brep_sha256", "massprops"],
     "MassProps": ["volume", "area", "bbox", "com", "principal_moments", "quantum"],
     "GeometricSelector": ["kind", "object", "element_type"],
     "MappedNameSelector": ["kind", "object", "mapped_name", "element_map_version"],
 }
+
+# Conditional manifest (wire-root type name -> conditional spec). Each entry binds
+# "some entry of an array field carries a discriminator value" to "a field of a nested
+# object is required and non-null", emitted as a Draft-2020-12 ``if``/``then`` pair.
+CONDITIONALS: dict[str, dict[str, Any]] = {
+    "ValidationReport": {
+        "when_array_fields": ["checks", "warnings"],
+        "entry_field": "measured_kind",
+        "entry_value": "rate",
+        "then_object_field": "banner",
+        "then_required_field": "wilson_ci",
+    },
+}
+
+_CONDITIONAL_SPEC_KEYS = frozenset(
+    {
+        "when_array_fields",
+        "entry_field",
+        "entry_value",
+        "then_object_field",
+        "then_required_field",
+    }
+)
 
 _UNION_ORIGINS = (Union, types.UnionType)
 
@@ -200,6 +231,126 @@ def _register_def(tp: Any, defs: dict[str, dict]) -> None:
     defs[name] = body
 
 
+def _conditional(name: str, properties: dict, defs: dict[str, dict]) -> dict | None:
+    """Build the ``if``/``then`` pair for a type, or ``None`` if it has no entry.
+
+    Raises ``ValueError`` when the manifest entry lacks a spec key, names no array
+    field at all, an array field absent from ``properties``, a field that is not
+    array-typed, an array whose items or an object field that is not a ``$ref``,
+    an entry field absent from the array item's ``$def``, an entry value outside
+    that entry field's emitted enum, or an object field whose ``$def`` lacks the
+    required field.
+    """
+    spec = CONDITIONALS.get(name)
+    if spec is None:
+        return None
+
+    absent_keys = sorted(_CONDITIONAL_SPEC_KEYS - set(spec))
+    if absent_keys:
+        raise ValueError(f"CONDITIONALS['{name}'] is missing spec key(s): {absent_keys}")
+
+    def _ref_props(fragment: dict, what: str) -> dict:
+        ref = fragment.get("$ref")
+        if not isinstance(ref, str):
+            raise ValueError(
+                f"CONDITIONALS['{name}'] targets {what}, which is not a $ref to a $def: {fragment}"
+            )
+        return defs.get(ref.rsplit("/", 1)[-1], {}).get("properties", {})
+
+    def _non_null(fragment: dict) -> dict:
+        """Return ``fragment`` with any ``anyOf`` null branch dropped."""
+        branches = [b for b in fragment.get("anyOf", ()) if b != {"type": "null"}]
+        if not branches:
+            return {"not": {"type": "null"}, **fragment}
+        if len(branches) == 1:
+            return branches[0]
+        return {"anyOf": branches}
+
+    def _enum_members(fragment: dict) -> list[Any]:
+        if "const" in fragment:
+            return [fragment["const"]]
+        if "enum" in fragment:
+            return list(fragment["enum"])
+        members: list[Any] = []
+        for sub in fragment.get("anyOf", ()):
+            members.extend(_enum_members(sub))
+        return members
+
+    array_fields = list(spec["when_array_fields"])
+    if not array_fields:
+        raise ValueError(f"CONDITIONALS['{name}'] names no array field in 'when_array_fields'")
+
+    antecedents: list[dict] = []
+    for field in array_fields:
+        if field not in properties:
+            raise ValueError(
+                f"CONDITIONALS['{name}'] names array field '{field}' not in "
+                f"properties: {sorted(properties)}"
+            )
+        if properties[field].get("type") != "array":
+            raise ValueError(
+                f"CONDITIONALS['{name}'] names array field '{field}' whose emitted "
+                f"property is not array-typed: {properties[field]}"
+            )
+        item_props = _ref_props(properties[field].get("items", {}), f"items of '{field}'")
+        if spec["entry_field"] not in item_props:
+            raise ValueError(
+                f"CONDITIONALS['{name}'] names entry field "
+                f"'{spec['entry_field']}' not in items of '{field}': "
+                f"{sorted(item_props)}"
+            )
+        members = _enum_members(item_props[spec["entry_field"]])
+        if spec["entry_value"] not in members:
+            raise ValueError(
+                f"CONDITIONALS['{name}'] names entry value "
+                f"{spec['entry_value']!r} not among '{spec['entry_field']}' enum "
+                f"members of '{field}': {members}"
+            )
+        antecedents.append(
+            {
+                "properties": {
+                    field: {
+                        "contains": {
+                            "properties": {spec["entry_field"]: {"const": spec["entry_value"]}},
+                            "required": [spec["entry_field"]],
+                            "type": "object",
+                        },
+                        "type": "array",
+                    }
+                },
+                "required": [field],
+            }
+        )
+
+    obj_field = spec["then_object_field"]
+    if obj_field not in properties:
+        raise ValueError(
+            f"CONDITIONALS['{name}'] names object field '{obj_field}' not in "
+            f"properties: {sorted(properties)}"
+        )
+    obj_props = _ref_props(properties[obj_field], f"object field '{obj_field}'")
+    req_field = spec["then_required_field"]
+    if req_field not in obj_props:
+        raise ValueError(
+            f"CONDITIONALS['{name}'] names required field '{req_field}' not in "
+            f"'{obj_field}' properties: {sorted(obj_props)}"
+        )
+
+    return {
+        "if": {"anyOf": antecedents},
+        "then": {
+            "properties": {
+                obj_field: {
+                    "properties": {req_field: _non_null(obj_props[req_field])},
+                    "required": [req_field],
+                    "type": "object",
+                }
+            },
+            "required": [obj_field],
+        },
+    }
+
+
 def build_schema(stem: str, tp: Any) -> dict:
     defs: dict[str, dict] = {}
     properties, required = _properties_and_required(tp, defs)
@@ -212,6 +363,14 @@ def build_schema(stem: str, tp: Any) -> dict:
     }
     if required:
         schema["required"] = required
+    conditional = _conditional(tp.__name__, properties, defs)
+    if conditional:
+        clash = sorted(schema.keys() & conditional.keys())
+        if clash:
+            raise ValueError(
+                f"CONDITIONALS['{tp.__name__}'] would overwrite existing schema key(s): {clash}"
+            )
+        schema.update(conditional)
     if defs:
         schema["$defs"] = defs
     return schema
@@ -232,7 +391,13 @@ def _output_dir() -> Path:
 
 
 def generate() -> dict[str, str]:
-    """Return {filename: serialized-schema-text} for every wire root."""
+    """Return {filename: serialized-schema-text} for every wire root.
+
+    :raises ValueError: ``CONDITIONALS`` names a type that is not a wire root.
+    """
+    orphans = sorted(set(CONDITIONALS) - {tp.__name__ for _, tp in WIRE_ROOTS})
+    if orphans:
+        raise ValueError(f"CONDITIONALS names non-wire-root type(s) {orphans}")
     out: dict[str, str] = {}
     for stem, tp in WIRE_ROOTS:
         out[f"{stem}.schema.json"] = _serialize(build_schema(stem, tp))

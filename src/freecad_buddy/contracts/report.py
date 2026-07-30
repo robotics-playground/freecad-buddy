@@ -1,12 +1,14 @@
-"""Validation report shape and the ``derive_verdict`` rule.
+"""Validation report shape, the ``derive_verdict`` rule, and the rate/CI guard.
 
-``derive_verdict`` is the one behavior-bearing helper here: it derives the terminal
-verdict from a report's checks.
+``derive_verdict`` derives the terminal verdict from a report's checks.
+``require_wilson_ci_for_rates`` raises when a check declares a rate but the banner
+carries no complete ``WilsonCI``.
 """
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, TypedDict, get_args, get_type_hints
 
 from freecad_buddy.contracts.status import ErrorDetail, TerminalStatus
 
@@ -26,9 +28,13 @@ class ReportBanner(TypedDict, total=False):
     wilson_ci: WilsonCI | None
 
 
+MeasuredKind = Literal["rate", "quantity", "count", "flag", "text"]
+
+
 class Check(TypedDict, total=False):
     id: str
     measured: float | str | bool | list | None
+    measured_kind: MeasuredKind | None  # None ⇔ kind not declared
     expected: float | str | bool | list | None
     tolerance: dict | None
     passed: bool  # required
@@ -88,3 +94,111 @@ def derive_verdict(report: dict) -> TerminalStatus:
             worst = cls
 
     return worst if worst is not None else "OK"
+
+
+_MEASURED_KINDS: frozenset[str] = frozenset(get_args(MeasuredKind))
+_WILSON_CI_KEYS: frozenset[str] = frozenset(WilsonCI.__required_keys__)
+_WILSON_CI_INT_KEYS: frozenset[str] = frozenset(
+    key for key, tp in get_type_hints(WilsonCI).items() if tp is int and key in _WILSON_CI_KEYS
+)
+
+
+def _check_label(check: Mapping) -> str:
+    """Return a check's ``id`` for messages, or ``"<unnamed>"`` when it has none."""
+    check_id = check.get("id")
+    return check_id if isinstance(check_id, str) else "<unnamed>"
+
+
+def _rate_check_ids(report: Mapping) -> list[str]:
+    """Collect the ids of checks whose ``measured_kind`` is ``"rate"``.
+
+    Reads ``checks`` and ``warnings`` defensively: a container that is not a
+    non-string sequence, or an entry that is not a mapping, is skipped rather than
+    raising. An entry without an ``id`` reports as ``"<unnamed>"``; ids are
+    de-duplicated in first-seen order.
+
+    :raises ValueError: An entry declares a ``measured_kind`` that is neither
+        ``None`` nor a ``MeasuredKind`` member.
+    """
+    ids: list[str] = []
+    for key in ("checks", "warnings"):
+        container = report.get(key)
+        if not isinstance(container, Sequence) or isinstance(container, str | bytes):
+            continue
+        for check in container:
+            if not isinstance(check, Mapping):
+                continue
+            kind = check.get("measured_kind")
+            if kind is None:
+                continue
+            if not isinstance(kind, str) or kind not in _MEASURED_KINDS:
+                raise ValueError(
+                    f"unknown measured_kind {kind!r} on check "
+                    f"'{_check_label(check)}'; expected one of "
+                    f"{sorted(_MEASURED_KINDS)} or None"
+                )
+            if kind == "rate":
+                ids.append(_check_label(check))
+    return list(dict.fromkeys(ids))
+
+
+def _mistyped_wilson_ci_keys(wilson_ci: Mapping) -> list[str]:
+    """Return the ``WilsonCI`` keys whose value is not of the declared type.
+
+    ``n`` and ``r`` accept an integral ``float`` (``30.0``), matching JSON Schema's
+    ``integer``. ``bool`` is rejected everywhere.
+    """
+    bad: list[str] = []
+    for key in sorted(_WILSON_CI_KEYS):
+        value = wilson_ci[key]
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            bad.append(key)
+            continue
+        if key in _WILSON_CI_INT_KEYS and isinstance(value, float) and not value.is_integer():
+            bad.append(key)
+    return bad
+
+
+def require_wilson_ci_for_rates(report: Any) -> None:
+    """Raise when a rate-measuring check is present without ``banner.wilson_ci``.
+
+    A check declares its ``measured`` value to be a rate by setting
+    ``measured_kind`` to ``"rate"``; ``checks`` and ``warnings`` are both scanned.
+    The CI must carry every ``WilsonCI`` key with a value of the declared numeric
+    type. Returns ``None`` when no rate check exists, when ``banner.wilson_ci`` is
+    a complete interval, or when ``report`` is not a mapping.
+
+    :param report: ValidationReport-shaped mapping.
+    :raises ValueError: A rate check is present and ``banner.wilson_ci`` is
+        absent, ``None``, not a mapping, or carries a missing or mistyped key
+        (the message names the offending check ids), or a check declares a
+        ``measured_kind`` outside ``MeasuredKind``.
+    """
+    if not isinstance(report, Mapping):
+        return
+
+    rate_ids = _rate_check_ids(report)
+    if not rate_ids:
+        return
+
+    banner = report.get("banner")
+    wilson_ci = banner.get("wilson_ci") if isinstance(banner, Mapping) else None
+    if not isinstance(wilson_ci, Mapping):
+        raise ValueError(
+            "banner.wilson_ci is required when a check measures a rate; "
+            f"offending check id(s): {rate_ids}"
+        )
+
+    absent = sorted(_WILSON_CI_KEYS - set(wilson_ci))
+    if absent:
+        raise ValueError(
+            f"banner.wilson_ci is missing key(s) {absent} but a check measures a "
+            f"rate; offending check id(s): {rate_ids}"
+        )
+
+    mistyped = _mistyped_wilson_ci_keys(wilson_ci)
+    if mistyped:
+        raise ValueError(
+            f"banner.wilson_ci has non-numeric key(s) {mistyped} but a check "
+            f"measures a rate; offending check id(s): {rate_ids}"
+        )

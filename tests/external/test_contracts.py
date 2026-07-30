@@ -5,6 +5,7 @@ import json
 import sys
 import typing
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 from jsonschema import Draft202012Validator
@@ -19,7 +20,11 @@ import gen_schemas  # noqa: E402
 
 from freecad_buddy.contracts.envelope import mirror_text  # noqa: E402
 from freecad_buddy.contracts.fingerprint import fingerprints_equal  # noqa: E402
-from freecad_buddy.contracts.report import derive_verdict  # noqa: E402
+from freecad_buddy.contracts.report import (  # noqa: E402
+    MeasuredKind,
+    derive_verdict,
+    require_wilson_ci_for_rates,
+)
 
 
 def _load(stem: str) -> dict:
@@ -307,7 +312,8 @@ EXPECTED_REQUIRED = {
     "DocHandle": {"handle"},
     "ObjectFingerprint": {"name", "brep_sha256", "massprops"},
     "MassProps": {"volume", "area", "bbox", "com", "principal_moments", "quantum"},
-    # WilsonCI/ImageRef/ResultEnvelope-nested carry their own (or empty) required sets,
+    "WilsonCI": {"rate", "low", "high", "n", "r"},
+    # ImageRef/ResultEnvelope-nested carry their own (or empty) required sets,
     # verified generically below.
 }
 
@@ -561,3 +567,536 @@ def test_verdict_non_dict_detail_degrades_to_spec_failed():
     assert derive_verdict({"checks": [{"passed": False, "detail": None}]}) == "SPEC_FAILED"
     assert derive_verdict({"checks": [{"passed": False, "detail": "oops"}]}) == "SPEC_FAILED"
     assert derive_verdict({"checks": [{"passed": False}]}) == "SPEC_FAILED"
+
+
+# --------------------------------------------------------------------------- #
+# rate check ⇒ banner.wilson_ci (schema conditional + runtime guard)
+# --------------------------------------------------------------------------- #
+
+_WILSON_CI = {"rate": 0.9, "low": 0.8, "high": 0.95, "n": 30, "r": 27}
+
+
+def _rate_ck(kind="rate", check_id="gate.pass_rate"):
+    check = {"id": check_id, "passed": True, "measured": 0.9}
+    if kind is not None:
+        check["measured_kind"] = kind
+    return check
+
+
+def _report(checks=None, warnings=None, banner_extra=None):
+    banner = {"freecad_version": "1.0.2", "element_map_version": None}
+    if banner_extra is not None:
+        banner.update(banner_extra)
+    report = {
+        "schema": "fcb.validation-report/1",
+        "banner": banner,
+        "checks": [] if checks is None else checks,
+        "verdict": "OK",
+    }
+    if warnings is not None:
+        report["warnings"] = warnings
+    return report
+
+
+def test_check_def_exposes_measured_kind_discriminator():
+    props = _load("validation-report")["$defs"]["Check"]["properties"]
+    assert "measured_kind" in props
+    enum = props["measured_kind"]["anyOf"][0]["enum"]
+    assert "rate" in enum
+    assert "measured_kind" not in _load("validation-report")["$defs"]["Check"]["required"]
+
+
+def test_validation_report_emits_draft2020_conditional():
+    schema = _load("validation-report")
+    assert "if" in schema and "then" in schema
+    antecedent_fields = [
+        next(iter(branch["properties"])) for branch in schema["if"]["anyOf"]
+    ]
+    assert antecedent_fields == ["checks", "warnings"]
+    for field, branch in zip(antecedent_fields, schema["if"]["anyOf"], strict=True):
+        assert branch["required"] == [field]
+        array_field = branch["properties"][field]
+        assert array_field["type"] == "array"
+        contains = array_field["contains"]
+        assert contains["properties"]["measured_kind"] == {"const": "rate"}
+        assert contains["required"] == ["measured_kind"]
+    banner_then = schema["then"]["properties"]["banner"]
+    assert banner_then["type"] == "object"
+    assert banner_then["required"] == ["wilson_ci"]
+    assert banner_then["properties"]["wilson_ci"] == {"$ref": "#/$defs/WilsonCI"}
+
+
+def test_no_rate_declared_schema_valid_and_guard_silent():
+    report = _report(checks=[{"id": "shape.volume", "passed": True, "measured": 12.0}])
+    assert _root_validator("validation-report").is_valid(report)
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_rate_declared_with_wilson_ci_schema_valid_and_guard_silent():
+    report = _report(checks=[_rate_ck()], banner_extra={"wilson_ci": _WILSON_CI})
+    assert _root_validator("validation-report").is_valid(report)
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_rate_declared_without_wilson_ci_rejected_by_both_surfaces():
+    report = _report(checks=[_rate_ck()])
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match="gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_rate_declared_with_null_wilson_ci_rejected_by_both_surfaces():
+    report = _report(checks=[_rate_ck()], banner_extra={"wilson_ci": None})
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match="gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_rate_declared_in_warnings_only_rejected_by_both_surfaces():
+    report = _report(warnings=[_rate_ck(check_id="warn.flake_rate")])
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match="warn.flake_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_rate_declared_in_warnings_with_wilson_ci_accepted():
+    report = _report(
+        warnings=[_rate_ck(check_id="warn.flake_rate")],
+        banner_extra={"wilson_ci": _WILSON_CI},
+    )
+    assert _root_validator("validation-report").is_valid(report)
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_non_rate_discriminator_does_not_require_wilson_ci():
+    for kind in ("quantity", "count", "flag", "text"):
+        report = _report(checks=[_rate_ck(kind=kind)])
+        assert _root_validator("validation-report").is_valid(report), kind
+        assert require_wilson_ci_for_rates(report) is None
+
+
+def test_null_discriminator_does_not_require_wilson_ci():
+    explicit_null = _report(checks=[dict(_rate_ck(), measured_kind=None)])
+    omitted = _report(checks=[_rate_ck(kind=None)])
+    for report in (explicit_null, omitted):
+        assert _root_validator("validation-report").is_valid(report)
+        assert require_wilson_ci_for_rates(report) is None
+
+
+def test_unknown_discriminator_value_rejected_by_schema():
+    report = _report(checks=[_rate_ck(kind="ratio")])
+    assert not _root_validator("validation-report").is_valid(report)
+
+
+def test_guard_degrades_on_malformed_containers():
+    for container in ({"not": "a list"}, "nope", None, 7):
+        assert require_wilson_ci_for_rates({"checks": container}) is None
+        assert require_wilson_ci_for_rates({"warnings": container}) is None
+    assert require_wilson_ci_for_rates({"checks": ["nope", None, 7]}) is None
+    assert require_wilson_ci_for_rates({}) is None
+
+
+def test_guard_reports_unnamed_rate_check_without_id():
+    report = _report(checks=[{"passed": True, "measured_kind": "rate"}])
+    with pytest.raises(ValueError, match="<unnamed>"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_raises_on_non_dict_banner():
+    report = {"checks": [_rate_ck()], "banner": "nope"}
+    with pytest.raises(ValueError, match="gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_names_every_offending_rate_check():
+    report = _report(
+        checks=[_rate_ck(check_id="a.rate")],
+        warnings=[_rate_ck(check_id="b.rate")],
+    )
+    with pytest.raises(ValueError, match="a.rate.*b.rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_wilson_ci_def_requires_every_interval_field():
+    """WilsonCI is total=True; the $def must reject {} and each partial interval."""
+    full = _load("validation-report")["$defs"]["WilsonCI"]
+    assert set(full["required"]) == set(_WILSON_CI)
+    v = _def_validator("validation-report", "WilsonCI")
+    assert not v.is_valid({})
+    assert v.is_valid(_WILSON_CI)
+    for dropped in _WILSON_CI:
+        partial = {k: val for k, val in _WILSON_CI.items() if k != dropped}
+        assert not v.is_valid(partial), f"WilsonCI without '{dropped}' must FAIL"
+
+
+def test_rate_declared_with_empty_wilson_ci_rejected_by_both_surfaces():
+    """An empty CI is not a CI: the real consumer reads wilson_ci['r']."""
+    report = _report(checks=[_rate_ck()], banner_extra={"wilson_ci": {}})
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match="gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_rate_declared_with_partial_wilson_ci_rejected_by_both_surfaces():
+    for dropped in _WILSON_CI:
+        partial = {k: v for k, v in _WILSON_CI.items() if k != dropped}
+        report = _report(checks=[_rate_ck()], banner_extra={"wilson_ci": partial})
+        assert not _root_validator("validation-report").is_valid(report), dropped
+        with pytest.raises(ValueError, match=f"missing key\\(s\\) \\['{dropped}'\\]"):
+            require_wilson_ci_for_rates(report)
+
+
+def test_rate_declared_with_non_mapping_wilson_ci_rejected_by_both_surfaces():
+    for ci in ("nope", 7, [0.9, 0.8]):
+        report = _report(checks=[_rate_ck()], banner_extra={"wilson_ci": ci})
+        assert not _root_validator("validation-report").is_valid(report), ci
+        with pytest.raises(ValueError, match="gate.pass_rate"):
+            require_wilson_ci_for_rates(report)
+
+
+def test_guard_wilson_ci_key_set_tracks_the_typeddict():
+    from freecad_buddy.contracts.report import _WILSON_CI_KEYS, WilsonCI
+
+    assert _WILSON_CI_KEYS == {"rate", "low", "high", "n", "r"}
+    assert _WILSON_CI_KEYS == set(WilsonCI.__required_keys__)
+
+
+def test_guard_int_key_set_tracks_the_typeddict():
+    from freecad_buddy.contracts.report import _WILSON_CI_INT_KEYS
+
+    assert _WILSON_CI_INT_KEYS == {"n", "r"}
+    integer_props = {
+        key
+        for key, prop in _load("validation-report")["$defs"]["WilsonCI"]["properties"].items()
+        if prop.get("type") == "integer"
+    }
+    assert _WILSON_CI_INT_KEYS == integer_props
+
+
+def _conditional_validator(stem: str) -> Draft202012Validator:
+    """A validator carrying ONLY the schema's ``if``/``then`` (plus ``$defs``).
+
+    Isolates the conditional so the base property types cannot mask whether the
+    conditional itself accepts or rejects an instance.
+    """
+    schema = _load(stem)
+    return Draft202012Validator(
+        {
+            "$schema": schema["$schema"],
+            "if": schema["if"],
+            "then": schema["then"],
+            "$defs": schema["$defs"],
+        }
+    )
+
+
+def test_conditional_antecedent_ignores_non_array_checks():
+    """A non-array ``checks`` carries no rate check, so wilson_ci is not demanded."""
+    v = _conditional_validator("validation-report")
+    for container in ("not-a-list", 7, None, {"measured_kind": "rate"}):
+        assert v.is_valid({"checks": container, "banner": {}}), container
+
+
+def test_non_array_checks_not_accused_of_missing_wilson_ci():
+    """The full schema rejects a non-array ``checks`` on type, never on wilson_ci."""
+    report = _report()
+    report["checks"] = "not-a-list"
+    errors = list(_root_validator("validation-report").iter_errors(report))
+    assert errors
+    assert not any("wilson_ci" in e.message for e in errors), [e.message for e in errors]
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_conditional_then_rejects_non_object_banner_on_its_own():
+    """``then`` carries its own ``type: object`` so it does not rely on ReportBanner."""
+    v = _conditional_validator("validation-report")
+    for banner in ("nope", 7, [], None):
+        assert not v.is_valid({"checks": [_rate_ck()], "banner": banner}), banner
+    assert v.is_valid({"checks": [_rate_ck()], "banner": {"wilson_ci": _WILSON_CI}})
+
+
+def test_guard_rejects_unknown_measured_kind():
+    for kind in ("Rate", "rate ", "ratio", "RATE", 7):
+        report = _report(checks=[_rate_ck(kind=kind)], banner_extra={"wilson_ci": _WILSON_CI})
+        with pytest.raises(ValueError, match="unknown measured_kind"):
+            require_wilson_ci_for_rates(report)
+
+
+def test_guard_rejects_unknown_measured_kind_in_warnings():
+    report = _report(warnings=[_rate_ck(kind="Rate", check_id="warn.flake_rate")])
+    with pytest.raises(ValueError, match="warn.flake_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_and_schema_agree_on_miscased_measured_kind():
+    report = _report(checks=[_rate_ck(kind="Rate")], banner_extra={"wilson_ci": _WILSON_CI})
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_accepts_every_declared_measured_kind():
+    for kind in typing.get_args(MeasuredKind):
+        report = _report(
+            checks=[_rate_ck(kind=kind)],
+            banner_extra={"wilson_ci": _WILSON_CI},
+        )
+        assert require_wilson_ci_for_rates(report) is None, kind
+
+
+def test_guard_degrades_on_non_mapping_report():
+    """Like derive_verdict, the guard never raises on a malformed report argument."""
+    for report in (None, "nope", 7, [], ["checks"], object()):
+        assert require_wilson_ci_for_rates(report) is None
+
+
+def test_generator_conditional_guard_raises_on_empty_array_fields(monkeypatch):
+    """An empty antecedent would emit a meta-schema-invalid `anyOf: []`."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(gen_schemas.CONDITIONALS["ValidationReport"], when_array_fields=[]),
+    )
+    with pytest.raises(ValueError, match="no array field"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_off_enum_entry_value(monkeypatch):
+    """An entry value outside the emitted enum would make the rule never fire."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(gen_schemas.CONDITIONALS["ValidationReport"], entry_value="Rate"),
+    )
+    with pytest.raises(ValueError, match="not among 'measured_kind' enum members"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_non_array_when_field(monkeypatch):
+    """A non-array `when_array_fields` entry names THAT problem, not a missing item."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(gen_schemas.CONDITIONALS["ValidationReport"], when_array_fields=["subject"]),
+    )
+    with pytest.raises(ValueError, match="not array-typed"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_bogus_field(monkeypatch):
+    """The conditional manifest cannot name a field absent from emitted properties."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(
+            gen_schemas.CONDITIONALS["ValidationReport"],
+            entry_field="does_not_exist",
+        ),
+    )
+    with pytest.raises(ValueError, match="does_not_exist"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_bogus_array_field(monkeypatch):
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(
+            gen_schemas.CONDITIONALS["ValidationReport"],
+            when_array_fields=["no_such_array"],
+        ),
+    )
+    with pytest.raises(ValueError, match="no_such_array"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_bogus_required_field(monkeypatch):
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(
+            gen_schemas.CONDITIONALS["ValidationReport"],
+            then_required_field="no_such_banner_field",
+        ),
+    )
+    with pytest.raises(ValueError, match="no_such_banner_field"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_missing_spec_key(monkeypatch):
+    """A spec key typo must surface as the manifest ValueError, never a KeyError."""
+    original = dict(gen_schemas.CONDITIONALS["ValidationReport"])
+    for dropped in original:
+        monkeypatch.setitem(
+            gen_schemas.CONDITIONALS,
+            "ValidationReport",
+            {k: v for k, v in original.items() if k != dropped},
+        )
+        with pytest.raises(ValueError, match=f"missing spec key\\(s\\): \\['{dropped}'\\]"):
+            gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_non_wire_root_key(monkeypatch):
+    """An entry keyed on a non-root type would never be emitted; that must not pass."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "Check",
+        dict(gen_schemas.CONDITIONALS["ValidationReport"]),
+    )
+    with pytest.raises(ValueError, match="non-wire-root type\\(s\\) \\['Check'\\]"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_non_ref_object_field(monkeypatch):
+    """`subject` is an inline object with no $def, so it cannot be constrained."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "ValidationReport",
+        dict(gen_schemas.CONDITIONALS["ValidationReport"], then_object_field="subject"),
+    )
+    with pytest.raises(ValueError, match="object field 'subject', which is not a \\$ref"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_inline_array_items(monkeypatch):
+    """An array of inline items names THAT problem, not an absent entry field."""
+    monkeypatch.setitem(
+        gen_schemas.CONDITIONALS,
+        "GeometryDiff",
+        dict(
+            gen_schemas.CONDITIONALS["ValidationReport"],
+            when_array_fields=["touched"],
+            then_object_field="counts",
+        ),
+    )
+    with pytest.raises(ValueError, match="items of 'touched', which is not a \\$ref"):
+        gen_schemas.generate()
+
+
+def test_generator_conditional_guard_raises_on_clobbering_root_key(monkeypatch):
+    """A conditional must never silently overwrite a key the root already carries."""
+    monkeypatch.setattr(
+        gen_schemas,
+        "_conditional",
+        lambda name, properties, defs: {"title": "hijacked"},
+    )
+    with pytest.raises(ValueError, match=r"would overwrite existing schema key\(s\): \['title'\]"):
+        gen_schemas.generate()
+
+
+def test_guard_rejects_unhashable_measured_kind():
+    """An unhashable kind must give the documented ValueError, not a TypeError."""
+    for kind in ([], {}, {"a"}, [1, 2]):
+        report = _report(
+            checks=[{"id": "x.rate", "passed": True, "measured_kind": kind}],
+            banner_extra={"wilson_ci": _WILSON_CI},
+        )
+        with pytest.raises(ValueError, match="unknown measured_kind"):
+            require_wilson_ci_for_rates(report)
+
+
+def test_guard_scans_tuple_containers():
+    """In-code assembly may hand a tuple; enforcement must not silently drop it."""
+    report = _report()
+    report["checks"] = (_rate_ck(),)
+    with pytest.raises(ValueError, match="gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+    report["banner"]["wilson_ci"] = _WILSON_CI
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_guard_still_skips_string_containers():
+    """A string is a Sequence but never a check list; it must degrade, not iterate."""
+    assert require_wilson_ci_for_rates({"checks": "rate"}) is None
+    assert require_wilson_ci_for_rates({"warnings": b"rate"}) is None
+
+
+def test_guard_rejects_mistyped_wilson_ci_values():
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": {"rate": "x", "low": None, "high": [], "n": "z", "r": {}}},
+    )
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match=r"non-numeric key\(s\).*gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_rejects_all_null_wilson_ci_values():
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": dict.fromkeys(_WILSON_CI)},
+    )
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match="non-numeric key"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_rejects_bool_wilson_ci_counts():
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": dict(_WILSON_CI, n=True, r=False)},
+    )
+    with pytest.raises(ValueError, match=r"non-numeric key\(s\) \['n', 'r'\]"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_accepts_integral_rate_bounds():
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": {"rate": 1, "low": 0, "high": 1, "n": 30, "r": 30}},
+    )
+    assert _root_validator("validation-report").is_valid(report)
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_guard_accepts_integral_float_counts():
+    """Draft 2020-12 ``integer`` admits ``30.0``; both surfaces must agree."""
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": dict(_WILSON_CI, n=30.0, r=27.0)},
+    )
+    assert _root_validator("validation-report").is_valid(report)
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_guard_rejects_fractional_counts():
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": dict(_WILSON_CI, n=29.5)},
+    )
+    assert not _root_validator("validation-report").is_valid(report)
+    with pytest.raises(ValueError, match=r"non-numeric key\(s\) \['n'\]"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_scans_non_dict_mapping_entries():
+    """A frozen or proxied check entry must not bypass enforcement."""
+    report = _report()
+    report["checks"] = [MappingProxyType(_rate_ck())]
+    with pytest.raises(ValueError, match="gate.pass_rate"):
+        require_wilson_ci_for_rates(report)
+    report["banner"]["wilson_ci"] = _WILSON_CI
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_guard_deduplicates_offending_ids():
+    report = _report(checks=[_rate_ck(), _rate_ck()], warnings=[_rate_ck()])
+    with pytest.raises(ValueError) as excinfo:
+        require_wilson_ci_for_rates(report)
+    assert "['gate.pass_rate']" in str(excinfo.value)
+
+
+def test_conditional_then_rejects_incomplete_wilson_ci_on_its_own():
+    """``then`` $refs WilsonCI, so it rejects a partial CI without ReportBanner."""
+    v = _conditional_validator("validation-report")
+    for bad in ({}, "nope", 7, [], {"rate": 0.9}):
+        assert not v.is_valid({"checks": [_rate_ck()], "banner": {"wilson_ci": bad}}), bad
+    assert v.is_valid({"checks": [_rate_ck()], "banner": {"wilson_ci": _WILSON_CI}})
+
+
+def test_measured_kind_and_guard_are_package_exports():
+    import freecad_buddy.contracts as contracts_pkg
+
+    assert contracts_pkg.require_wilson_ci_for_rates is require_wilson_ci_for_rates
+    assert "MeasuredKind" in contracts_pkg.__all__
+    assert "require_wilson_ci_for_rates" in contracts_pkg.__all__
