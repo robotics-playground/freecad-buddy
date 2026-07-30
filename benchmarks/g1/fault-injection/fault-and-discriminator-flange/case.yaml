@@ -1,0 +1,16 @@
+id: g1-fault-and-discriminator-flange
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-oc-flange-outline
+# AND-discriminator for the `oc` break kind: the answer names the RIGHT object (FlangeOutline)
+# AND mentions a cause keyword — but a keyword from a DIFFERENT diagnosis (expression binding),
+# NOT this case's own cause (over-constrained sketch). An object-only grader PASSes it (object
+# present) and MISSes the defect; an OR(object, any-cause) grader also PASSes it; only the AND
+# grader keyed to THIS case's own cause_keywords correctly FAILs it (own cause absent).
+expected_findings:
+  object: FlangeOutline
+  cause_keywords: [conflicting, over-constrained, overconstrained, redundant constraint]
+candidate_answer: "FlangeOutline fails because its expression binding points at a reference that is not found; repair the expression."

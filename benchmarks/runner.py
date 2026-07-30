@@ -89,14 +89,19 @@ _VALIDATOR_SOURCES = {
         _SRC / "usecases" / "verify.py",
         _SRC / "usecases" / "fingerprint.py",
     ),
-    # The G1 grader's currency depends on BOTH the grader source and the rubric it encodes; a
-    # rubric edit changes the pass rule and must stale the score. Order matches score_grader.py's
-    # hash (grader.py then rubric.md) so a clean tree is CURRENT, not stale.
+    # The G1 grader's currency depends on the grader source, the rubric it encodes AND the fault
+    # suite the score was measured over; a rubric edit changes the pass rule and a case edit
+    # changes the measured population, so both must stale the score. Order matches
+    # score_grader.py's hash (grader.py, rubric.md, then the suite folded in by
+    # `_grader_suite_sources`) so a clean tree is CURRENT, not stale.
     "grader": (
         _REPO_ROOT / "benchmarks" / "g1" / "grader.py",
         _REPO_ROOT / "benchmarks" / "g1" / "rubric.md",
     ),
 }
+
+# The G1 fault suite whose `case.yaml` set is folded into the `grader` hash.
+_GRADER_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g1" / "fault-injection"
 
 
 class UsageError(Exception):
@@ -177,8 +182,33 @@ def _load_gate_def(gate: str) -> dict:
     return data
 
 
+def _grader_suite_sources() -> list[tuple[bytes, Path]]:
+    """The G1 fault suite's ``case.yaml`` files as (identity prefix, path) pairs.
+
+    Each case contributes its suite-relative POSIX path as well as its bytes, so an added,
+    removed, renamed or edited case all change the digest. Ordered by that same relative path to
+    match score_grader.py's ordering. An unreadable suite tree yields an empty list, which the
+    caller reports as stale.
+    """
+    try:
+        cases = sorted(
+            _GRADER_SUITE_ROOT.rglob("case.yaml"),
+            key=lambda p: p.relative_to(_GRADER_SUITE_ROOT).as_posix(),
+        )
+    except OSError:
+        return []
+    return [
+        (p.relative_to(_GRADER_SUITE_ROOT).as_posix().encode("utf-8"), p) for p in cases
+    ]
+
+
 def _validator_src_hasher(name: str) -> str:
     """SHA-256 over a validator's concatenated source files (matches the fault scorers).
+
+    For ``grader`` the G1 fault suite's ``case.yaml`` set is folded in after the source files,
+    mirroring score_grader.py's ``_validator_sha`` byte for byte. An empty suite returns ``""``
+    rather than the source-only digest, which is a value the registry has already carried and
+    would read as current over a deleted suite.
 
     An unknown validator or an unreadable source file returns ``""`` — a hash that matches no
     real ``validator_sha``, so leg-b reports the validator stale rather than escaping an
@@ -193,6 +223,17 @@ def _validator_src_hasher(name: str) -> str:
             hasher.update(path.read_bytes())
         except OSError:
             return ""
+    if name == "grader":
+        suite = _grader_suite_sources()
+        if not suite:
+            return ""
+        for identity, path in suite:
+            try:
+                content = path.read_bytes()
+            except OSError:
+                return ""
+            hasher.update(identity)
+            hasher.update(content)
     return hasher.hexdigest()
 
 

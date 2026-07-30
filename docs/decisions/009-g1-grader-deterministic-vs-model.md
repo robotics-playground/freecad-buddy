@@ -72,12 +72,14 @@ this survey records why).
   to the model grader behind `GraderClient`. The planted fault suite therefore contains no
   negated-cause case (adding one would honestly drop the deterministic grader below the bar —
   the limitation is documented here instead of faked).
-- **The rubric is part of the validator.** The deterministic grader *encodes* the rubric's pass
-  rule but does not *read* `rubric.md` at runtime (the rule is Python). To keep the design's
-  rubric-versioning invariant (a rubric edit stales prior sensitivity runs, harness §6/§8), both
-  `grader.py` AND `rubric.md` are hashed into `validator_sha` (in `score_grader.py` and the
-  runner's `_VALIDATOR_SOURCES`, same file order), so editing the rubric's worked examples or
-  keyword sets stales the score.
+- **The rubric and the fault suite are part of the validator.** The deterministic grader *encodes*
+  the rubric's pass rule but does not *read* `rubric.md` at runtime (the rule is Python). To keep
+  the design's rubric-versioning invariant (a rubric edit stales prior sensitivity runs, harness
+  §6/§8), `grader.py`, `rubric.md` AND the fault suite's `case.yaml` set are hashed into
+  `validator_sha` — in `score_grader.py` and, in the same byte order, in the runner's validator
+  hasher. Editing the rubric's worked examples or keyword sets stales the score; so does any suite
+  mutation, including one that leaves the aggregate rate unchanged and would otherwise let a
+  changed suite be cited under the old number.
 - **The suite validates the AND conjunction, not just each leg.** Wrong-object cases (right
   cause, wrong object) catch a cause-only grader; wrong-cause cases (right object, wrong cause)
   catch an object-only grader; an explicit AND-discriminator case (right object + a *different*

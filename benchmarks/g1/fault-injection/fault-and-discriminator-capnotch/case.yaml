@@ -1,0 +1,16 @@
+id: g1-fault-and-discriminator-capnotch
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-cut-cap-notch
+# AND-discriminator for the `cut` break kind: the answer names the RIGHT object (CapNotch) AND
+# mentions a cause keyword — but a keyword from a DIFFERENT diagnosis (expression binding), NOT
+# this case's own cause (a cut that lost its tool object). An object-only grader PASSes it
+# (object present) and MISSes the defect; an OR(object, any-cause) grader also PASSes it; only the
+# AND grader keyed to THIS case's own cause_keywords correctly FAILs it (own cause absent).
+expected_findings:
+  object: CapNotch
+  cause_keywords: [missing tool, linked object, removed tool, boolean, tool]
+candidate_answer: "CapNotch fails because its Length expression binding references an object that is not found; repoint the expression."

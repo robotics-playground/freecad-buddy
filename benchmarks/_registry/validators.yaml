@@ -64,15 +64,15 @@ verify_export_step:
 
 grader:
   suite: g1/fault-injection/
-  validator_sha: "137c6fbfbeefc6bbaa2d870e73ebfd9f7a9fed30f7b06a5ca5fd0a11236feb17"
+  validator_sha: "fbdf9d897ac031c0926da85a430dfdb500ecbeb284a26a64965d5d95107d249c"
   last_run:
-    run_id: gr-2026-07-24-1
+    run_id: gr-2026-07-30-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-07-24
+    date: 2026-07-30
     wilson_ci:
       rate: 1.0
-      low: 0.7719
+      low: 0.8064
       high: 1.0
-      n: 13
-      r: 13
+      n: 16
+      r: 16

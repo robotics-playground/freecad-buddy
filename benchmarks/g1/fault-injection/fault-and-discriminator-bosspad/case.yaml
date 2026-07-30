@@ -1,0 +1,16 @@
+id: g1-fault-and-discriminator-bosspad
+gate: g1
+targets_validator: grader
+fault:
+  kind: planted_defect
+  expectation: DETECT
+question_ref: g1-broken-pd-boss-pad
+# AND-discriminator for the `pd` break kind: the answer names the RIGHT object (BossPad) AND
+# mentions a cause keyword — but a keyword from a DIFFERENT diagnosis (over-constrained sketch),
+# NOT this case's own cause (a pad that lost its profile sketch). An object-only grader PASSes it
+# (object present) and MISSes the defect; an OR(object, any-cause) grader also PASSes it; only the
+# AND grader keyed to THIS case's own cause_keywords correctly FAILs it (own cause absent).
+expected_findings:
+  object: BossPad
+  cause_keywords: [missing sketch, no object linked, deleted profile, profile, base sketch]
+candidate_answer: "BossPad fails because its sketch is over-constrained with conflicting constraints; remove the redundant constraint."

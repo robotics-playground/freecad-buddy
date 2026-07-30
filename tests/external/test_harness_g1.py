@@ -237,6 +237,101 @@ def test_grader_requires_both_object_and_cause():
     assert grader.grade("q", "BracketPlate has conflicting constraints.", "", expected).pass_
 
 
+def test_every_break_kind_has_an_and_discriminator_case():
+    # An AND-discriminator names the RIGHT object while omitting its own cause keywords: an
+    # object-only or OR(object, any-cause) grader PASSes it, only the AND grader FAILs it. A
+    # wholesale OR regression is caught by the bars anyway; one confined to a single break kind is
+    # not, so every kind needs its own discriminator.
+    from grader import _mentions_cause, _mentions_object, _normalize
+
+    def _kind(case_id: str) -> str:
+        # Break kind is the id prefix (g1-broken-<kind>-...).
+        parts = case_id.split("-")
+        assert len(parts) > 2, f"unparseable case id {case_id!r}"
+        return parts[2]
+
+    discriminated = set()
+    kinds = set()
+    for case in _load_fault_cases():
+        question_ref = case.get("question_ref")
+        assert question_ref, f"{case['id']}: fault case must name its question_ref"
+        kind = _kind(question_ref)
+        kinds.add(kind)
+        if case["fault"]["expectation"] != "DETECT":
+            continue
+        expected = case["expected_findings"]
+        answer = _normalize(case["candidate_answer"])
+        names_object = _mentions_object(answer, expected["object"])
+        own_cause = _mentions_cause(answer, expected["cause_keywords"])
+        if names_object and not own_cause:
+            discriminated.add(kind)
+
+    broken_kinds = {_kind(c["id"]) for c in _load_broken_cases()}
+    assert kinds == broken_kinds, (
+        f"fault suite covers kinds {sorted(kinds)}, broken-docs has {sorted(broken_kinds)}"
+    )
+    assert discriminated == kinds, (
+        f"break kinds without an AND-discriminator case: {sorted(kinds - discriminated)}"
+    )
+
+
+def test_validator_sha_changes_when_the_fault_suite_is_mutated(tmp_path, monkeypatch):
+    # A score-preserving suite edit must stale the committed score, so the suite is part of
+    # validator_sha (otherwise --check reports "committed score matches" over a changed suite).
+    import score_grader
+
+    suite = tmp_path / "fault-injection"
+    shutil.copytree(FAULT_DIR, suite, ignore=shutil.ignore_patterns("__pycache__"))
+    monkeypatch.setattr(score_grader, "HERE", suite)
+    before = score_grader._validator_sha()
+
+    added = suite / "control-extra" / "case.yaml"
+    added.parent.mkdir()
+    added.write_text(
+        (FAULT_DIR / "control-bracket-correct" / "case.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    assert score_grader._validator_sha() != before
+
+    added.write_text("id: g1-control-extra\n", encoding="utf-8")
+    edited = score_grader._validator_sha()
+    assert edited != before
+
+    # A rename with byte-identical content is what the hashed path identity exists to catch.
+    shutil.move(str(added.parent), str(suite / "control-extra-renamed"))
+    assert score_grader._validator_sha() != edited
+
+    shutil.rmtree(suite / "control-extra-renamed")
+    assert score_grader._validator_sha() == before
+
+    # An emptied suite must raise rather than fall back to the source-only digest, which is a
+    # value the registry has already carried and would read as current over a deleted suite.
+    for case_yaml in list(suite.rglob("case.yaml")):
+        case_yaml.unlink()
+    with pytest.raises(score_grader.SuiteError):
+        score_grader._validator_sha()
+
+
+def test_runner_grader_hash_mirrors_the_scorer_hash():
+    # Leg-b compares the committed validator_sha to runner._validator_src_hasher; if the runner's
+    # hash does not mirror the scorer's byte for byte the grader is permanently reported stale.
+    import score_grader
+
+    committed = yaml.safe_load(
+        (BENCHMARKS / "_registry" / "validators.yaml").read_text(encoding="utf-8")
+    )
+    mirrored = runner._validator_src_hasher("grader")
+    assert mirrored == score_grader._validator_sha()
+    assert mirrored == committed["grader"]["validator_sha"]
+
+
+def test_runner_grader_hash_is_stale_not_source_only_when_suite_is_missing(tmp_path, monkeypatch):
+    # The runner must report stale rather than degrade to the source-only digest: that digest is a
+    # value the registry has already carried, so a deleted suite would read as current.
+    monkeypatch.setattr(runner, "_GRADER_SUITE_ROOT", tmp_path / "gone")
+    assert runner._validator_src_hasher("grader") == ""
+
+
 def test_score_grader_meets_bars_exit_0():
     # --check verifies the committed score (sha + sensitivity/FA) without writing, so the test is
     # hermetic (a clean tree) AND asserts the committed validators.yaml block is not stale.

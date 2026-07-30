@@ -45,9 +45,11 @@ run the assistant against them.
 `contracts/` wire type is added by this story). The fault scorer maps each verdict into a
 contracts `ValidationReport` and computes sensitivity / false-alarm + a Wilson CI. A planted
 confident-wrong answer (`DETECT`) is *detected* when the grader FAILs it (`pass_ == False`); a
-clean-correct control is a *false alarm* when the grader FAILs it. Both `grader.py` AND `rubric.md`
-are hashed into `validator_sha` in `_registry/validators.yaml` (a rubric edit stales the score),
-so the score is citable only while the grader + rubric are unedited.
+clean-correct control is a *false alarm* when the grader FAILs it. `grader.py`, `rubric.md` AND the
+suite's `case.yaml` set are hashed into `validator_sha` in `_registry/validators.yaml` (a rubric
+edit stales the score; so does a case edit, even one that leaves the rate unchanged), so the score
+is citable only while the grader, rubric and suite are unedited. After changing any of the three,
+re-run `score_grader.py` without `--check` to refresh the committed block.
 
 ## Forward note (Stories 2.2/2.3)
 

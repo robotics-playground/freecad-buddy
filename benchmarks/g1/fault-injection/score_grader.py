@@ -6,8 +6,8 @@ DETECT / PASS_CLEAN outcome. A planted confident-wrong answer (``expectation: DE
 DETECTED when the grader verdict is FAIL (``pass_ == False`` — the grader correctly rejects the
 wrong diagnosis); a clean-correct control (``expectation: PASS_CLEAN``) is a FALSE ALARM when
 the grader FAILs it. Computes ``sensitivity``/``false_alarm`` + a Wilson CI, hashes the grader
-source into ``validator_sha``, and merge-writes ONLY the ``grader`` block of
-``_registry/validators.yaml`` via the shared ``merge_validators_yaml`` (preserving every
+source, the rubric and the fault suite into ``validator_sha``, and merge-writes ONLY the ``grader``
+block of ``_registry/validators.yaml`` via the shared ``merge_validators_yaml`` (preserving every
 ``verify_*`` block). Prints a per-case table to stderr and exits non-zero when the bars are unmet.
 
 Unlike the G0 scorers this runs under uv (text cases, no geometry) — so it imports the shared
@@ -65,18 +65,36 @@ def _load_case(case_yaml: Path) -> dict:
     return data
 
 
+def _suite_case_files() -> list[Path]:
+    """The suite's ``case.yaml`` files, ordered by their suite-relative POSIX path."""
+    return sorted(HERE.rglob("case.yaml"), key=lambda p: p.relative_to(HERE).as_posix())
+
+
 def _validator_sha() -> str:
-    """SHA-256 over the grader source AND the rubric it encodes.
+    """SHA-256 over the grader source, the rubric it encodes, AND the fault suite.
 
     The rubric is part of the validator: a rubric edit changes the pass rule the deterministic
     grader is meant to encode, so it must stale the sensitivity run (validation-harness §6/§8).
-    Hashing both files keeps the currency check honest.
+    The fault suite is part of it too: a score-preserving case edit changes what the committed
+    sensitivity was measured over, so it must stale the run as well. Each case contributes its
+    suite-relative POSIX path and its bytes, so an added, removed, renamed, or edited case all
+    change the digest.
+
+    Raises ``SuiteError`` when the rubric is missing or the suite holds no cases — an empty
+    suite would otherwise digest to the source-only hash, which is a value the registry has
+    already carried, so a deleted suite would read as current instead of stale.
     """
     if not RUBRIC.is_file():
         raise SuiteError(f"rubric not found: {RUBRIC} (the rubric is part of the validator)")
+    cases = _suite_case_files()
+    if not cases:
+        raise SuiteError(f"no case.yaml found under {HERE} (the suite is part of the validator)")
     digest = hashlib.sha256()
     digest.update(GRADER_SOURCE.read_bytes())
     digest.update(RUBRIC.read_bytes())
+    for case_yaml in cases:
+        digest.update(case_yaml.relative_to(HERE).as_posix().encode("utf-8"))
+        digest.update(case_yaml.read_bytes())
     return digest.hexdigest()
 
 
@@ -202,9 +220,10 @@ def _committed_score_drift(run: dict) -> str | None:
     """Return why the committed ``grader`` block is stale vs the fresh run, or None if current.
 
     ``--check`` verifies the score already committed to ``validators.yaml`` — the committed
-    ``validator_sha`` must equal the current ``sha256(grader.py + rubric.md)`` and the committed
-    ``sensitivity``/``false_alarm`` must equal the freshly computed values. A garbage or stale
-    committed block is caught here in CI, not left to a later gate-verdict recompute.
+    ``validator_sha`` must equal the current ``sha256(grader.py + rubric.md + fault suite)`` and
+    the committed ``sensitivity``/``false_alarm`` must equal the freshly computed values. A
+    garbage or stale committed block is caught here in CI, not left to a later gate-verdict
+    recompute.
     """
     if not VALIDATORS_YAML.exists():
         return f"{VALIDATORS_YAML} does not exist"
@@ -213,7 +232,7 @@ def _committed_score_drift(run: dict) -> str | None:
     if not isinstance(block, dict):
         return "no 'grader' block committed"
     if block.get("validator_sha") != _validator_sha():
-        return "committed validator_sha != sha256(grader.py + rubric.md)"
+        return "committed validator_sha != sha256(grader.py + rubric.md + fault suite case.yaml)"
     committed = block.get("last_run") or {}
     if committed.get("sensitivity") != run["sensitivity"]:
         return f"committed sensitivity {committed.get('sensitivity')} != {run['sensitivity']}"
