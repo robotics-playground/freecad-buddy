@@ -1,9 +1,12 @@
 """Deterministic FreeCADCmd generator for the 30 broken-recompute fixtures.
 
-Run under FreeCADCmd (``FreeCADCmd build_broken_docs.py``). Each fixture carries a REAL broken
-recompute on a fixed failing object ``Name``: after ``doc.recompute()`` that object has a
-non-empty ``getStatusString()``. The ``tests/infc`` self-check opens each committed fixture,
-recomputes, and asserts the named object is genuinely in error.
+Run under FreeCADCmd with ``FREECAD_BUDDY_BUILD_BROKEN_DOCS=1`` in the environment — POSIX
+``FREECAD_BUDDY_BUILD_BROKEN_DOCS=1 FreeCADCmd build_broken_docs.py``, PowerShell
+``$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS=1; FreeCADCmd build_broken_docs.py``. Importing the module
+never builds. Each fixture carries a REAL broken recompute on a fixed failing object ``Name``:
+after ``doc.recompute()`` that object has a non-empty ``getStatusString()``. The ``tests/infc``
+self-check opens each committed fixture, recomputes, and asserts the named object is genuinely
+in error.
 
 Four break kinds are repeated across the 30 cases with distinct object names + parameters
 (a handful of reliable kinds suffices — G1.2 requires each fixture to break genuinely on its
@@ -19,7 +22,7 @@ Fixtures are written next to their ``case.yaml`` as ``<case-id>/fixture.FCStd``.
 
 from __future__ import annotations
 
-import sys
+import os
 from pathlib import Path
 
 import FreeCAD as App
@@ -143,19 +146,14 @@ def build_all(base_dir: Path | None = None) -> list[Path]:
     return [_save(case_id, base_dir) for case_id in CASES]
 
 
-def _is_top_level_script() -> bool:
-    """Whether this file is the script FreeCADCmd (or python) was launched with.
-
-    FreeCADCmd sets ``__name__`` to the file stem, not ``"__main__"``, so the standard guard
-    never fires; this also matches ``__file__`` against the launched ``sys.argv[1]``.
-    """
-    if __name__ == "__main__":
-        return True
-    if len(sys.argv) > 1:
-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
-    return False
+_BUILD_FLAG = "FREECAD_BUDDY_BUILD_BROKEN_DOCS"
 
 
-if _is_top_level_script():
+def _build_requested() -> bool:
+    """Whether an explicit opt-in asked for a fixture rebuild (import never does)."""
+    return os.environ.get(_BUILD_FLAG) == "1"
+
+
+if _build_requested():
     for path in build_all():
         print(f"wrote {path}")

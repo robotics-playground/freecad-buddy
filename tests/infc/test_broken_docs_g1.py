@@ -7,6 +7,9 @@ requires *the* failing object). Opens documents via raw ``App.openDocument`` (a 
 test is acceptable here); every opened doc is closed.
 """
 
+import hashlib
+import importlib.util
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -21,6 +24,7 @@ sys.path.insert(0, str(BROKEN_DIR))
 import build_broken_docs as gen  # noqa: E402
 
 EXPECTED_COUNT = 30
+_BUILD_FLAG = gen._BUILD_FLAG
 
 
 def _load_case(case_id: str) -> dict:
@@ -50,6 +54,50 @@ class BrokenDocsG1Test(unittest.TestCase):
                 )
             finally:
                 App.closeDocument(doc.Name)
+
+    def test_import_with_generator_path_as_argv_does_not_rebuild(self):
+        """Import with argv[1] set to the generator's own path must not touch any fixture."""
+        fixtures = sorted(BROKEN_DIR.rglob("fixture.FCStd"))
+        self.assertEqual(len(fixtures), EXPECTED_COUNT, "no fixtures to compare against")
+        before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures}
+
+        generator_path = BROKEN_DIR / "build_broken_docs.py"
+        saved_argv = sys.argv[:]
+        saved_flag = os.environ.get(_BUILD_FLAG)
+        self.addCleanup(self._restore_argv_and_flag, saved_argv, saved_flag)
+        sys.argv = [str(generator_path), str(generator_path)]
+        os.environ.pop(_BUILD_FLAG, None)
+
+        spec = importlib.util.spec_from_file_location("_broken_docs_reimport", generator_path)
+        self.assertIsNotNone(spec, f"cannot load {generator_path}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        self.assertFalse(module._build_requested(), "build must not be requested without the flag")
+        after = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures}
+        self.assertEqual(before, after, "import must not modify any committed fixture")
+
+    def test_build_flag_enables_only_on_the_documented_value(self):
+        """The opt-in fires for "1" and stays off for absent, empty, and non-enabling values."""
+        saved_flag = os.environ.get(_BUILD_FLAG)
+        self.addCleanup(self._restore_argv_and_flag, sys.argv[:], saved_flag)
+        for value, expected in (("1", True), ("0", False), ("", False), ("true", False)):
+            with self.subTest(value=value):
+                os.environ[_BUILD_FLAG] = value
+                self.assertIs(gen._build_requested(), expected)
+        os.environ.pop(_BUILD_FLAG, None)
+        self.assertFalse(gen._build_requested())
+
+    def test_build_flag_is_not_set_while_the_suite_runs(self):
+        """An ambient enabling flag would let any import of the generator rewrite the fixtures."""
+        self.assertNotEqual(os.environ.get(_BUILD_FLAG), "1")
+
+    def _restore_argv_and_flag(self, saved_argv: list, saved_flag) -> None:
+        sys.argv = saved_argv
+        if saved_flag is None:
+            os.environ.pop(_BUILD_FLAG, None)
+        else:
+            os.environ[_BUILD_FLAG] = saved_flag
 
     def test_case_set_equality_and_count(self):
         case_dirs = {p.parent.name for p in BROKEN_DIR.rglob("case.yaml")}
