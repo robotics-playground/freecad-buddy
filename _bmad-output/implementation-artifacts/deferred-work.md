@@ -73,6 +73,7 @@ origin: migrated from legacy ledger ("Deferred from: spec-1-2-data-contracts-pac
 location: n/a
 reason: Generated JSON Schemas use non-URI `$id` (`fcb.<name>/1`) and inline-duplicate shared `$defs` (`ErrorDetail`, `ImageRef`, `ResultEnvelope`, `DocHandle`) into every file, so design §1's "per-tool outputSchemas composed by `$ref`" cannot resolve cross-file and a change to a shared type must regenerate N files consistently. `$id` is a tag not a resolvable URI, and both `result-envelope` and `job-status` embed a full copy of `ErrorDetail`/`ImageRef`. Self-contained schemas validate correctly today (this story only emits per-type schemas), and cross-file `$ref` composition is an adapter concern in stories 1.4+ where per-tool `outputSchema`s are assembled — not a story-1.2 defect. Introduce a resolvable `$id` scheme + shared-`$defs` `$ref` when the adapter first composes an `outputSchema`.
 status: open
+decision: 2026-07-30 Defer to the Phase-2 adapter story — Leave the entry open and settle the $id scheme when the adapter first actually composes a per-tool outputSchema, so the URI shape is chosen against a real consumer rather than guessed.
 
 ### DW-10: `gen_schemas.py` type-form coverage is limited to the forms the current contracts use (TypedDict, `Literal`, `X | Y | None` unions, `list[T]`, nested TypedDicts); `Annotated[...]`, `Any`, parameterized `dict[K,V]`, and `tuple`/`set` would crash generation with an opaque `TypeError` rather than a clear message, and `include_extras=True` makes `Annotated` reachable.
 

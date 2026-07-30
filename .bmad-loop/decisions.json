@@ -25,5 +25,14 @@
     "key": "1",
     "label": "Compose accent + style",
     "resolution": ""
+  },
+  "DW-9": {
+    "answered_at": "2026-07-30",
+    "bundle_name": "",
+    "effect": "keep-open",
+    "intent": "",
+    "key": "3",
+    "label": "Defer to the Phase-2 adapter story",
+    "resolution": "Leave the entry open and settle the $id scheme when the adapter first actually composes a per-tool outputSchema, so the URI shape is chosen against a real consumer rather than guessed."
   }
 }
