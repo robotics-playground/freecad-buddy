@@ -2,8 +2,9 @@
 title: 'G1 grader suite integrity: per-kind AND-discriminators + suite hash in validator_sha'
 type: 'bugfix'
 created: '2026-07-30'
-status: 'in-review'
+status: 'done'
 baseline_revision: '6f8a90c3abea9647fe778ce1f8a6ac575537235e'
+final_revision: 'ec67dfdf59415c55d538030a5940a6b85ed5dd2f'
 review_loop_iteration: 0
 followup_review_recommended: true
 context:
