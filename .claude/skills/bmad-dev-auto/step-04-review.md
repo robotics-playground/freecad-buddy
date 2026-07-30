@@ -24,6 +24,8 @@ Do NOT `git add` anything — this is read-only inspection.
 
 Launch Blind Hunter and Edge Case Hunter in parallel without prior conversation context.
 
+Dispatch both as synchronous subagents in a single message — two parallel tool calls that return their findings as tool results. Do not dispatch them as background or teammate-style agents: their findings must arrive as return values. An availability or idle notification is not a result, and re-prompting or sleeping is never the way to collect one. If a reviewer returns no findings, treat that as its verdict, not as a delivery failure.
+
 - **Blind Hunter** — prompt:
   > Invoke the `bmad-review-adversarial-general` skill on this diff:
   >
