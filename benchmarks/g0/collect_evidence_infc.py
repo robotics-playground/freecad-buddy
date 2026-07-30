@@ -1,6 +1,11 @@
 """In-FreeCADCmd evidence collector for G0.3 (golden suite) and G0.5 (STEP round-trip).
 
-Runs under ``FreeCADCmd`` and writes two evidence report JSONs into a passed ``--run <id>``
+Runs under ``FreeCADCmd`` with the collection opt-in set, so that importing this module never
+starts a collection run::
+
+    FREECAD_BUDDY_RUN_EVIDENCE_COLLECTOR=1 FreeCADCmd collect_evidence_infc.py --run <id>
+
+It writes two evidence report JSONs into the passed ``--run <id>``
 dir; the runner's ``run`` command ingests + re-derives them into ``reports/``. Each report is
 built via ``report_build.evidence_report`` — the verdict is DERIVED from measured checks, never
 asserted, so this collector cannot self-grade (AD-13).
@@ -16,6 +21,7 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 import FreeCAD as App
@@ -187,15 +193,23 @@ def main(argv: list[str]) -> int:
     return 0
 
 
-def _is_top_level_script() -> bool:
-    if __name__ == "__main__":
-        return True
-    if len(sys.argv) > 1:
-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
-    return False
+_RUN_FLAG = "FREECAD_BUDDY_RUN_EVIDENCE_COLLECTOR"
 
 
-if _is_top_level_script():
+def _run_requested_in(env: Mapping[str, str]) -> bool:
+    """Whether ``env`` carries the explicit collection-run opt-in."""
+    return env.get(_RUN_FLAG) == "1"
+
+
+def _run_requested() -> bool:
+    """Whether direct execution or an explicit opt-in asked for a collection run.
+
+    An import never collects: ``__name__`` is the module name and the flag is absent.
+    """
+    return __name__ == "__main__" or _run_requested_in(os.environ)
+
+
+if _run_requested():
     # FreeCADCmd passes the script path as argv[1]; user args follow.
     _launched_by_path = bool(sys.argv[1:]) and Path(sys.argv[1]).name == Path(__file__).name
     _args = sys.argv[2:] if _launched_by_path else sys.argv[1:]

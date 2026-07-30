@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import datetime
 import hashlib
+import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -377,14 +379,18 @@ def main() -> int:
     return 0
 
 
-def _is_top_level_script() -> bool:
-    """Whether this file is the script the interpreter (FreeCADCmd or python) was launched with."""
-    if __name__ == "__main__":
-        return True
-    if len(sys.argv) > 1:
-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
-    return False
+_RUN_FLAG = "FREECAD_BUDDY_RUN_EXPORT_SCORER"
 
 
-if _is_top_level_script():
+def _run_requested_in(env: Mapping[str, str]) -> bool:
+    """Whether ``env`` carries the explicit scoring-run opt-in."""
+    return env.get(_RUN_FLAG) == "1"
+
+
+def _run_requested() -> bool:
+    """Whether an explicit opt-in asked for a scoring run (import never scores)."""
+    return __name__ == "__main__" or _run_requested_in(os.environ)
+
+
+if _run_requested():
     sys.exit(main())

@@ -1,6 +1,12 @@
 """Deterministic FreeCADCmd generator for the G0 export-fault + clean-control fixtures.
 
-Run under FreeCADCmd (``FreeCADCmd build_export_fault_fixtures.py``). Each case writes a real
+Run under FreeCADCmd with the rebuild opt-in set, so that importing this module for its case
+list never overwrites the committed fixtures::
+
+    FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES=1 FreeCADCmd build_export_fault_fixtures.py
+    $env:FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES="1"; FreeCADCmd build_export_fault_fixtures.py
+
+Each case writes a real
 exported file carrying a planted defect (or a clean control) next to a ``case.yaml`` recording
 the targeted verifier, the format, the DETECT/PASS_CLEAN expectation, and the reference facts
 the verifier compares against. The oracle-side scorer and ``tests/external`` re-read these
@@ -16,9 +22,11 @@ shell, carries an unrefined fuse or CompSolid, or gained a notch, an overlap, or
 
 from __future__ import annotations
 
+import os
 import shutil
 import struct
 import zipfile
+from collections.abc import Mapping
 from pathlib import Path
 
 import FreeCAD as App
@@ -546,21 +554,22 @@ def build_all(base_dir: Path | None = None) -> list[Path]:
     return written
 
 
-def _is_top_level_script() -> bool:
-    """Whether this file is the script FreeCADCmd (or python) was launched with.
+_BUILD_FLAG = "FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES"
 
-    FreeCADCmd runs a script with ``__name__`` set to the file stem rather than ``"__main__"``,
-    so the standard guard alone never fires; this also matches ``__file__`` against ``argv[1]``.
+
+def _build_requested_in(env: Mapping[str, str]) -> bool:
+    """Whether ``env`` carries the explicit rebuild opt-in."""
+    return env.get(_BUILD_FLAG) == "1"
+
+
+def _build_requested() -> bool:
+    """Whether direct execution or an explicit opt-in asked for a fixture rebuild.
+
+    An import never rebuilds: ``__name__`` is the module name and the flag is absent.
     """
-    import sys
-
-    if __name__ == "__main__":
-        return True
-    if len(sys.argv) > 1:
-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
-    return False
+    return __name__ == "__main__" or _build_requested_in(os.environ)
 
 
-if _is_top_level_script():
+if _build_requested():
     for path in build_all():
         print(f"wrote {path}")

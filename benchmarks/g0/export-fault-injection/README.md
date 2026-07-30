@@ -78,7 +78,19 @@ volume band derives from the tessellation deflection (never STEP's +-0.1%).
 ## Building fixtures and scoring
 
 `build_export_fault_fixtures.py` runs under FreeCADCmd and writes each `export.<fmt>` +
-`case.yaml`. `score_export_verify.py` scores whichever verifiers the current environment can
+`case.yaml`. Both the generator and the scorers only act when explicitly asked, so importing
+either for its case list never overwrites committed fixtures or the registry:
+
+```sh
+FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES=1 FreeCADCmd build_export_fault_fixtures.py
+FREECAD_BUDDY_RUN_EXPORT_SCORER=1 python score_export_verify.py
+```
+
+```powershell
+$env:FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES="1"; FreeCADCmd build_export_fault_fixtures.py
+```
+
+`score_export_verify.py` scores whichever verifiers the current environment can
 run: the mesh verifiers read the committed `.stl`/`.3mf` directly (trimesh + lib3mf, no
 FreeCAD), and `verify_export_step` re-imports the committed `.step` (FreeCAD, no oracles). No
 single CI leg has both FreeCAD and the oracles, so a run scores its subset and load-merges only

@@ -1,4 +1,10 @@
-"""In-FreeCAD fault scorer for ``verify_shape`` (run under FreeCADCmd).
+"""In-FreeCAD fault scorer for ``verify_shape``.
+
+Run under FreeCADCmd with the scoring opt-in set, so that importing this module for its parsing
+helpers never starts a scoring run::
+
+    FREECAD_BUDDY_RUN_FAULT_SCORER=1 FreeCADCmd score_verify_shape.py
+    $env:FREECAD_BUDDY_RUN_FAULT_SCORER="1"; FreeCADCmd score_verify_shape.py
 
 For every ``case.yaml`` in this suite: open the paired ``fixture.FCStd``, run ``verify_shape``
 with the case's reference ``assertions.checks`` against the fixture's object, and record the
@@ -18,8 +24,10 @@ from __future__ import annotations
 
 import datetime
 import hashlib
+import os
 import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -321,19 +329,21 @@ def main() -> int:
     return 0
 
 
-def _is_top_level_script() -> bool:
-    """Whether this file is the script FreeCADCmd was launched with.
+_RUN_FLAG = "FREECAD_BUDDY_RUN_FAULT_SCORER"
 
-    FreeCADCmd runs a script with ``__name__`` set to the file stem, not ``"__main__"``, so the
-    standard guard never fires; this compares ``__file__`` against ``sys.argv[1]`` to detect a
-    direct ``FreeCADCmd score_verify_shape.py`` launch as well as a plain ``python`` run.
+
+def _run_requested_in(env: Mapping[str, str]) -> bool:
+    """Whether ``env`` carries the explicit scoring-run opt-in."""
+    return env.get(_RUN_FLAG) == "1"
+
+
+def _run_requested() -> bool:
+    """Whether direct execution or an explicit opt-in asked for a scoring run.
+
+    An import never scores: ``__name__`` is the module name and the flag is absent.
     """
-    if __name__ == "__main__":
-        return True
-    if len(sys.argv) > 1:
-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
-    return False
+    return __name__ == "__main__" or _run_requested_in(os.environ)
 
 
-if _is_top_level_script():
+if _run_requested():
     sys.exit(main())
