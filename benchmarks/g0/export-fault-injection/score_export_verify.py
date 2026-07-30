@@ -39,6 +39,12 @@ VALIDATOR_SOURCES = (
 
 SENSITIVITY_BAR = 0.95
 FALSE_ALARM_BAR = 0.05
+MIN_PLANTED = 10
+MIN_CONTROLS = 1
+
+
+class SuiteError(SystemExit):
+    """A malformed / degenerate fault suite — exit non-zero with a clean message, never write."""
 
 
 def _parse_scalar(text: str):
@@ -132,9 +138,7 @@ def _score_mesh_case(case: dict) -> bool:
         legs = [
             export_oracle.safe_oracle(
                 "lib3mf",
-                lambda: export_oracle.mesh3mf_oracle(
-                    path, source["is_mm"], source["volume"], band
-                ),
+                lambda: export_oracle.mesh3mf_oracle(path, source["is_mm"], source["volume"], band),
             ),
         ]
     envelope = export_verdict.assemble_export_verdict(legs, facts, banner={})
@@ -181,9 +185,21 @@ def _validator_sha() -> str:
 
 
 def _score_validator(validator: str, cases: list[dict], scorer) -> dict:
-    """Run ``scorer`` over ``cases`` for one validator; return its aggregate result + rows."""
+    """Run ``scorer`` over ``cases`` for one validator; return its aggregate result + rows.
+
+    Raises ``SuiteError`` when the validator has fewer than ``MIN_PLANTED`` planted cases or
+    fewer than ``MIN_CONTROLS`` controls: ``false_alarm`` is vacuously 0 with no controls and
+    ``sensitivity`` is vacuously 1 over a thin planted arm, so the bars must never be evaluated
+    over a degenerate partition.
+    """
     planted = [c for c in cases if c["expectation"] == "DETECT"]
     controls = [c for c in cases if c["expectation"] == "PASS_CLEAN"]
+    if len(planted) < MIN_PLANTED or len(controls) < MIN_CONTROLS:
+        raise SuiteError(
+            f"degenerate suite for {validator}: need >={MIN_PLANTED} planted + "
+            f">={MIN_CONTROLS} controls, have planted={len(planted)} "
+            f"controls={len(controls)} — the bars would be vacuous"
+        )
     detected = 0
     flagged = 0
     rows = []

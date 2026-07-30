@@ -6,6 +6,7 @@ expectation: DETECT
 export_file: export.step
 source:
   volume: 12000.0
+  area: 4400.0
   faces: 12
   edges: 24
   solids: 2

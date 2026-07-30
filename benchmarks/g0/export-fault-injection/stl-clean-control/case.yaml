@@ -6,6 +6,7 @@ expectation: PASS_CLEAN
 export_file: export.stl
 source:
   volume: 6000.0
+  area: 2200.0
   faces: 6
   edges: 12
   solids: 1

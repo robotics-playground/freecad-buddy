@@ -1,0 +1,17 @@
+id: g0-export-stl-shifted-vertex
+gate: g0
+targets_validator: verify_export_stl
+format: stl
+expectation: DETECT
+export_file: export.stl
+source:
+  volume: 6000.0
+  area: 2200.0
+  faces: 6
+  edges: 12
+  solids: 1
+  bbox: [10.0, 20.0, 30.0]
+  is_mm: true
+tess:
+  linear: 0.1
+  angular: 0.5

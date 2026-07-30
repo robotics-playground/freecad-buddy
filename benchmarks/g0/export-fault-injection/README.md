@@ -15,19 +15,54 @@ detects the deviation. A control's file matches its reference and must pass.
 
 ## Cases
 
-| id                     | verifier            | defect                                              | expectation |
-| ---------------------- | ------------------- | --------------------------------------------------- | ----------- |
-| step-dropped-solid     | verify_export_step  | single box where the reference is a 2-solid compound | DETECT      |
-| step-unit-lie          | verify_export_step  | 1/10-scale box (vol 6) sold as the mm reference      | DETECT      |
-| step-clean-control     | verify_export_step  | exact box-10-20-30 round-trip                        | PASS_CLEAN  |
-| stl-hole               | verify_export_stl   | clean STL with one facet removed (open surface)      | DETECT      |
-| stl-flipped-normals    | verify_export_stl   | every facet's winding reversed                       | DETECT      |
-| stl-non-manifold       | verify_export_stl   | duplicated facet -> edge shared by three facets      | DETECT      |
-| stl-clean-control      | verify_export_stl   | sound tessellated box                                | PASS_CLEAN  |
-| 3mf-type-model-lie     | verify_export_3mf   | open surface written as a solid model object         | DETECT      |
-| 3mf-unit-lie           | verify_export_3mf   | container re-tagged millimetre -> metre              | DETECT      |
-| 3mf-corrupt-container  | verify_export_3mf   | truncated zip container (lib3mf cannot parse)        | DETECT      |
-| 3mf-clean-control      | verify_export_3mf   | sound tessellated box                                | PASS_CLEAN  |
+Each verifier carries 10 planted cases plus a clean control, so its Wilson lower bound is
+computed over n=10 rather than the vacuous n=2/n=3 the suite originally shipped.
+
+| id                             | verifier           | defect                                                        | expectation |
+| ------------------------------ | ------------------ | ------------------------------------------------------------- | ----------- |
+| step-dropped-solid             | verify_export_step | single box where the reference is a 2-solid compound           | DETECT      |
+| step-unit-lie                  | verify_export_step | 1/10-scale box (vol 6) sold as the mm reference                | DETECT      |
+| step-shell-no-solid            | verify_export_step | closed shell with no solid — solids 0 vs 1, volume exact       | DETECT      |
+| step-unrefined-fuse            | verify_export_step | stacked halves fused unrefined — faces 10/edges 20, vol exact  | DETECT      |
+| step-cut-notch                 | verify_export_step | 2x2x2 corner notch cut out — vol 5992, faces 9, edges 21       | DETECT      |
+| step-fused-overlap             | verify_export_step | 5x5x5 block fused on +X — vol 6125, faces 11, edges 24         | DETECT      |
+| step-compsolid                 | verify_export_step | stacked halves as a CompSolid — solids 2, volume exact         | DETECT      |
+| step-loose-face                | verify_export_step | box compounded with a stray far-off plane — vol 6607, faces 7  | DETECT      |
+| step-open-shell                | verify_export_step | shell with the top face dropped — vol 4800, faces 5, solids 0  | DETECT      |
+| step-scaled-half-box           | verify_export_step | half-size box (vol 750) sold as the full-scale reference       | DETECT      |
+| step-clean-control             | verify_export_step | exact box-10-20-30 round-trip                                  | PASS_CLEAN  |
+| stl-hole                       | verify_export_stl  | clean STL with one facet removed (open surface)                | DETECT      |
+| stl-flipped-normals            | verify_export_stl  | every facet's winding reversed                                 | DETECT      |
+| stl-non-manifold               | verify_export_stl  | duplicated facet -> edge shared by three facets                | DETECT      |
+| stl-duplicated-shell           | verify_export_stl  | every facet emitted twice — doubled shell, vol 12000           | DETECT      |
+| stl-scaled-mesh                | verify_export_stl  | every coordinate scaled 0.9 — vol 4374 outside the band        | DETECT      |
+| stl-missing-face               | verify_export_stl  | the whole top face removed — box open across one side          | DETECT      |
+| stl-shifted-vertex             | verify_export_stl  | one facet's first vertex displaced 1 mm — torn corner          | DETECT      |
+| stl-appended-degenerate        | verify_export_stl  | zero-area facet appended (three identical vertices)            | DETECT      |
+| stl-collapsed-facet            | verify_export_stl  | one facet collapsed in place onto a single vertex              | DETECT      |
+| stl-truncated-coordinates      | verify_export_stl  | cylinder mesh rounded to whole mm — 10 collapsed facets        | DETECT      |
+| stl-clean-control              | verify_export_stl  | sound tessellated box                                          | PASS_CLEAN  |
+| 3mf-type-model-lie             | verify_export_3mf  | open surface written as a solid model object                   | DETECT      |
+| 3mf-unit-lie                   | verify_export_3mf  | container re-tagged millimetre -> metre                        | DETECT      |
+| 3mf-corrupt-container          | verify_export_3mf  | truncated zip container (lib3mf cannot parse)                  | DETECT      |
+| 3mf-missing-model-part         | verify_export_3mf  | container rebuilt without `3D/3dmodel.model`                   | DETECT      |
+| 3mf-malformed-transform        | verify_export_3mf  | build-item transform with a non-numeric token                  | DETECT      |
+| 3mf-missing-triangle           | verify_export_3mf  | one `<triangle>` element deleted — open, non-manifold          | DETECT      |
+| 3mf-corrupt-vertex             | verify_export_3mf  | one vertex pulled x=10 -> x=5 — vol 5000 outside the band      | DETECT      |
+| 3mf-duplicated-triangle        | verify_export_3mf  | one `<triangle>` repeated — edges shared by three triangles    | DETECT      |
+| 3mf-vertex-index-out-of-range  | verify_export_3mf  | a triangle referencing a vertex index past the array end       | DETECT      |
+| 3mf-second-non-manifold-object | verify_export_3mf  | a second mesh object that is a single loose triangle           | DETECT      |
+| 3mf-clean-control              | verify_export_3mf  | sound tessellated box                                          | PASS_CLEAN  |
+
+`stl-truncated-coordinates` is built from a cylinder, not the box: the box mesh's vertices are
+all integer-valued, so rounding it is a bitwise no-op. Its `case.yaml` therefore records the
+cylinder's own source facts, and the mesh volume band derives from the cylinder's area.
+
+## Degenerate-suite guard
+
+`score_export_verify.py` raises `SuiteError` and exits non-zero when any validator has fewer
+than `MIN_PLANTED` (10) planted cases or fewer than `MIN_CONTROLS` (1) control, so a thin suite
+cannot ship a green-but-vacuous sensitivity again.
 
 ## Independent oracles — disagreement is signal
 
