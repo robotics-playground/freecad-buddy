@@ -1100,3 +1100,43 @@ def test_measured_kind_and_guard_are_package_exports():
     assert contracts_pkg.require_wilson_ci_for_rates is require_wilson_ci_for_rates
     assert "MeasuredKind" in contracts_pkg.__all__
     assert "require_wilson_ci_for_rates" in contracts_pkg.__all__
+
+
+@pytest.mark.parametrize(
+    ("wilson_ci", "reason"),
+    [
+        ({**_WILSON_CI, "rate": float("nan")}, "not finite"),
+        ({**_WILSON_CI, "low": float("-inf")}, "not finite"),
+        ({**_WILSON_CI, "rate": 5.0, "high": 5.0}, r"outside \[0, 1\]"),
+        ({**_WILSON_CI, "low": -0.5}, r"outside \[0, 1\]"),
+        ({**_WILSON_CI, "low": 0.95, "high": 0.8}, "not ordered"),
+        ({**_WILSON_CI, "rate": 0.99}, "not ordered"),
+        ({**_WILSON_CI, "n": 0, "r": 0}, "positive trial count"),
+        ({**_WILSON_CI, "n": -3}, "positive trial count"),
+        ({**_WILSON_CI, "r": 99}, r"outside \[0, n\]"),
+        ({**_WILSON_CI, "r": -1}, r"outside \[0, n\]"),
+    ],
+)
+def test_guard_rejects_an_impossible_interval(wilson_ci, reason):
+    """A present, correctly-typed CI that cannot describe a real interval still fails."""
+    report = _report(checks=[_rate_ck()], banner_extra={"wilson_ci": wilson_ci})
+    with pytest.raises(ValueError, match=reason):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_accepts_the_degenerate_but_possible_interval():
+    """rate=low=high=1.0 with r == n is unusual but real, and must not be rejected."""
+    report = _report(
+        checks=[_rate_ck()],
+        banner_extra={"wilson_ci": {"rate": 1.0, "low": 1.0, "high": 1.0, "n": 10, "r": 10}},
+    )
+    assert require_wilson_ci_for_rates(report) is None
+
+
+def test_guard_coherence_only_applies_when_a_rate_is_declared():
+    """An impossible CI on a report with no rate check is out of this guard's scope."""
+    report = _report(
+        checks=[{"id": "shape.volume", "passed": True, "measured": 12.0}],
+        banner_extra={"wilson_ci": {**_WILSON_CI, "r": 99}},
+    )
+    assert require_wilson_ci_for_rates(report) is None

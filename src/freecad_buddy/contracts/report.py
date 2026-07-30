@@ -159,6 +159,31 @@ def _mistyped_wilson_ci_keys(wilson_ci: Mapping) -> list[str]:
     return bad
 
 
+def _incoherent_wilson_ci(wilson_ci: Mapping) -> str | None:
+    """Return why ``wilson_ci`` cannot describe a real interval, or ``None`` when it can.
+
+    Assumes every key is present and numeric. Rejects non-finite values, proportions
+    outside ``[0, 1]``, a bound ordering other than ``low <= rate <= high``, a negative
+    or zero trial count, and a success count outside ``0 <= r <= n``.
+    """
+    proportions = {key: float(wilson_ci[key]) for key in ("rate", "low", "high")}
+    counts = {key: float(wilson_ci[key]) for key in ("n", "r")}
+
+    for key, value in (*proportions.items(), *counts.items()):
+        if value != value or value in (float("inf"), float("-inf")):
+            return f"{key} is not finite"
+    for key, value in proportions.items():
+        if not 0.0 <= value <= 1.0:
+            return f"{key} is outside [0, 1]"
+    if not proportions["low"] <= proportions["rate"] <= proportions["high"]:
+        return "bounds are not ordered low <= rate <= high"
+    if counts["n"] <= 0:
+        return "n is not a positive trial count"
+    if not 0.0 <= counts["r"] <= counts["n"]:
+        return "r is outside [0, n]"
+    return None
+
+
 def require_wilson_ci_for_rates(report: Any) -> None:
     """Raise when a rate-measuring check is present without ``banner.wilson_ci``.
 
@@ -170,9 +195,12 @@ def require_wilson_ci_for_rates(report: Any) -> None:
 
     :param report: ValidationReport-shaped mapping.
     :raises ValueError: A rate check is present and ``banner.wilson_ci`` is
-        absent, ``None``, not a mapping, or carries a missing or mistyped key
-        (the message names the offending check ids), or a check declares a
-        ``measured_kind`` outside ``MeasuredKind``.
+        absent, ``None``, not a mapping, carries a missing or mistyped key, or
+        cannot describe a real interval (non-finite, a proportion outside
+        ``[0, 1]``, bounds not ordered ``low <= rate <= high``, ``n`` not
+        positive, or ``r`` outside ``[0, n]``) — the message names the offending
+        check ids — or a check declares a ``measured_kind`` outside
+        ``MeasuredKind``.
     """
     if not isinstance(report, Mapping):
         return
@@ -201,4 +229,11 @@ def require_wilson_ci_for_rates(report: Any) -> None:
         raise ValueError(
             f"banner.wilson_ci has non-numeric key(s) {mistyped} but a check "
             f"measures a rate; offending check id(s): {rate_ids}"
+        )
+
+    incoherent = _incoherent_wilson_ci(wilson_ci)
+    if incoherent:
+        raise ValueError(
+            f"banner.wilson_ci {incoherent} but a check measures a rate; "
+            f"offending check id(s): {rate_ids}"
         )

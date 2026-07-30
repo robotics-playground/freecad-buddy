@@ -49,7 +49,7 @@ from benchmarks.harness.verdict import (  # noqa: E402
     bind_hash,
     compute_verdict,
 )
-from freecad_buddy.contracts.report import Check  # noqa: E402
+from freecad_buddy.contracts.report import Check, require_wilson_ci_for_rates  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
 KNOWN_GATES = {"G0": "g0", "G1": "g1"}
@@ -533,6 +533,7 @@ def _exit_case_reports(result, tier) -> list[dict]:
         for check in report["checks"]:
             check.setdefault("detail", {})
             check["detail"]["majority"] = {"passes": passes, "repeats": len(case.repeat_passes)}
+        require_wilson_ci_for_rates(report)
         stamped.append(report)
     return stamped
 
