@@ -482,7 +482,8 @@ source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
 location: benchmarks/g1/dev/broken-docs/build_broken_docs.py (`_is_top_level_script`)
 reason: FreeCADCmd sets `__name__` to the file stem (not `__main__`), so the generator guards top-level execution by matching `sys.argv[1]` against `__file__`. The infc self-check imports the module (for `gen.CASES`) under a run where `argv[1]` is `tests/run_tests.py`, so `build_all()` does not fire — verified green. The residual edge: a hypothetical discovery runner that passed the generator's own path as argv[1] would re-trigger a rebuild-on-import, overwriting the 30 committed fixtures. Low risk (no such runner exists); recorded in case the generator is ever imported by a path-passing harness.
-status: open
+status: done 2026-07-30
+resolution: resolved by sweep bundle dw-broken-docs-import-guard
 
 ### DW-61: merge_validators_yaml block-preservation is untested from a verify-only tree (renumbered from a duplicate DW-7)
 origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader
@@ -665,4 +666,12 @@ origin: review-budget-followup
 source_spec: `spec-dw-11-rate-check-wilson-ci-enforcement.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260730-192356-ac65; this entry preserves the lingering recommendation for a deliberate later review.
+status: open
+
+### DW-65: build_export_fault_fixtures.py still carries the argv-based rebuild-on-import hazard DW-60 removed from the G1 generator
+origin: review-adversarial-general, review-edge-case-hunter
+source_spec: `spec-dw-60-broken-docs-import-guard.md`
+severity: medium
+location: benchmarks/g0/export-fault-injection/build_export_fault_fixtures.py (`_is_top_level_script`, lines 549-566)
+reason: DW-60 replaced the argv/`__file__` heuristic in the G1 broken-doc generator with an explicit `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` env opt-in, so import is side-effect-free by construction. The G0 export-fault generator still guards its module-level `build_all()` by matching `Path(sys.argv[1]).resolve()` against `__file__` — verified byte-identical in shape at review time — so any harness importing it for its case list while `argv[1]` happens to be that file's own path would silently overwrite the committed export fixtures. The defect class is now closed in one of two generators while the shipped G1 README and docstring describe the opt-in as the convention, which a reader will reasonably assume is repo-wide. Three further copies of the same heuristic exist (`benchmarks/g0/fault-injection/score_verify_shape.py`, `benchmarks/g0/export-fault-injection/score_export_verify.py`, `benchmarks/g0/collect_evidence_infc.py`), though those are scorers/collectors that do not overwrite committed fixtures, so only the generator carries the destructive consequence. Pre-existing and outside DW-60's stated scope (its intent names only the G1 broken-doc generator). Fix: the same one-line env-flag opt-in (e.g. `FREECAD_BUDDY_BUILD_EXPORT_FAULTS=1`) plus an import-safety test mirroring `tests/infc/test_broken_docs_g1.py`, and a decision on whether to unify the convention across the remaining three call sites.
 status: open

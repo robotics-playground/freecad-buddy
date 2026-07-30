@@ -2,7 +2,7 @@
 
 Run under FreeCADCmd with ``FREECAD_BUDDY_BUILD_BROKEN_DOCS=1`` in the environment — POSIX
 ``FREECAD_BUDDY_BUILD_BROKEN_DOCS=1 FreeCADCmd build_broken_docs.py``, PowerShell
-``$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS=1; FreeCADCmd build_broken_docs.py``. Importing the module
+``$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS="1"; FreeCADCmd build_broken_docs.py``. Importing the module
 never builds. Each fixture carries a REAL broken recompute on a fixed failing object ``Name``:
 after ``doc.recompute()`` that object has a non-empty ``getStatusString()``. The ``tests/infc``
 self-check opens each committed fixture, recomputes, and asserts the named object is genuinely

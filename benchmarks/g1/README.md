@@ -18,10 +18,11 @@ independent grader land and fail honestly against a stub assistant BEFORE any as
 - `dev/eval-questions.yaml` — 50 hand-authored questions with independent expected findings
   across tree-explanation / error-diagnosis / next-tool-guidance (FR7).
 - `dev/broken-docs/<case>/` — 30 broken-recompute fixtures, each `case.yaml` naming *the* failing
-  object + cause; `build_broken_docs.py` is the deterministic FreeCADCmd generator, run with
-  `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` in the environment (PowerShell:
-  `$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS=1; FreeCADCmd build_broken_docs.py`). Importing the module
-  never rebuilds — asserted in `test_import_with_generator_path_as_argv_does_not_rebuild`.
+  object + cause; `build_broken_docs.py` is the deterministic FreeCADCmd generator. It rebuilds
+  only when `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` is in the environment — POSIX
+  `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1 FreeCADCmd build_broken_docs.py`, PowerShell
+  `$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS="1"; FreeCADCmd build_broken_docs.py`. Importing the
+  module never rebuilds, for any `sys.argv` — asserted in `tests/infc/test_broken_docs_g1.py`.
 - `dev/fixtures/` — small shared read-only `.FCStd` fixtures for eval questions that need a
   concrete document (currently empty; error-diagnosis questions use the broken-docs fixtures).
 - `fault-injection/<case>/case.yaml` — planted confident-wrong + clean-correct control text

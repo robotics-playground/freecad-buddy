@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-07-30'
 status: 'done'
 baseline_revision: '0f94b795d748cf8812d8c63c6703d99899ebce29'
-final_revision: '2ecdb43'
+final_revision: 'PENDING'
 review_loop_iteration: 0
 followup_review_recommended: true
 context:
@@ -94,6 +94,21 @@ warnings: []
     summary: `benchmarks/g0/export-fault-injection/build_export_fault_fixtures.py` still carries the identical argv-based rebuild-on-import hazard DW-60 was filed for, so the defect class is closed in only one of two generators.
     evidence: `_is_top_level_script` at lines 549-562 matches `Path(sys.argv[1]).resolve()` against `__file__`, and line 564 runs `build_all()` at module level, overwriting committed export fixtures. Verified present at review time; pre-existing and outside DW-60's stated scope (the intent names only the G1 broken-doc generator). Same one-line env-flag opt-in applies.
 
+### 2026-07-30 — Review pass (follow-up)
+- intent_gap: 0
+- bad_spec: 0
+- patch: 6: (high 0, medium 3, low 3)
+- defer: 1: (high 0, medium 1, low 0)
+- reject: 8: (high 0, medium 3, low 5)
+- addressed_findings:
+  - `[medium]` `[patch]` the import-safety test spoofed `sys.argv` and was named for an argv barrier, but the generator no longer reads `sys.argv` or `__name__` at all (verified: `grep` for both returns nothing) — so the argv half of the test could not fail and nothing covered the non-enabling *values*. Retitled to the behavior actually guarded and widened to re-import under `None`/`"0"`/`""`, each with a full sha256 re-check.
+  - `[medium]` `[patch]` `_restore_argv_and_flag` wrote an ambient `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` back into the process environment on cleanup (reproduced in a standalone probe), re-arming the rebuild trigger for whatever ran next and directly contradicting the sibling test that declares such an environment unfit — cleanup now drops an enabling value instead of restoring it.
+  - `[medium]` `[patch]` the ambient-flag guard sampled `os.environ` *after* the flag-value test had set and popped `"1"` (unittest orders `..._enables_only_...` before `..._is_not_set_...` alphabetically — confirmed), so it could only ever observe a self-cleaned environment. Now asserts a module-import-time snapshot (`_AMBIENT_BUILD_FLAG`), taken before any test mutates the environment.
+  - `[low]` `[patch]` `BROKEN_DIR.rglob("fixture.FCStd")` recursed without bound under a fixture root the G1 README documents as containing SEALED `heldout/` content — narrowed to `glob("*/fixture.FCStd")`, which matches the documented `<case>/fixture.FCStd` layout and cannot drift.
+  - `[low]` `[patch]` the count guard's message read `"no fixtures to compare against"` but fires on any mismatch, so a 29- or 31-fixture tree would report a false cause — message now states expected vs found.
+  - `[low]` `[patch]` `$env:VAR=1` in the README assigned an integer that worked only by PowerShell coercion, the README omitted the POSIX form the docstring carried, and it cited a test name that this pass renamed — both docs now use `$env:VAR="1"`, carry both shells, and cite the test *file* rather than a method name.
+- rejected (verified against source, not taken): re-adding an `argv[0]`/`__file__` conjunct to the build guard (would reintroduce the exact coupling DW-60 removed); making `base_dir` mandatory or staging the build through a temp dir (spec **Never** forbids changing `build_all`'s signature); normalizing `" 1 "`/`"true"`/case (strict `"1"` is the deliberate documented contract, rejected in the prior pass too); moving the ambient check into `setUpModule` (the module-scope snapshot already samples pre-mutation state); private-name access across the test boundary (`_BUILD_FLAG`/`_build_requested` *are* the contract under test); the double `read_bytes()` cost (sha256 over 30 dev fixtures is not a real cost); a stderr warning when the flagless command is run (contradicts the minimum-code boundary).
+
 ## Design Notes
 
 Env flag over a self-defined CLI argument: FreeCADCmd passes its own argv through to the script, so an argument-based opt-in would still be argv-coupled — exactly the class of accident DW-60 records. An environment variable is set only by a deliberate invocation and is invisible to `import`.
@@ -128,20 +143,29 @@ The import-safety test must force a real re-import (the module is already in `sy
 - Build path preserved: `build_all(tmpdir)` under FreeCADCmd wrote 30 fixtures into a temp directory with the committed fixtures untouched.
 - Falsification probe: a same-size, same-mtime byte rewrite is invisible to an mtime+size witness but caught by the sha256 witness the test now uses.
 
+**Follow-up review pass (2026-07-30):**
+- `micromamba run -n fcb FreeCADCmd tests/run_tests.py` — **Actual:** `Ran 137 tests in 13.752s` / `OK (skipped=1)`, exit 0. Same test count as the prior pass, so the test restructure lost no case; all three flag/import tests present in the run log.
+- `git status --porcelain benchmarks/g1/dev/broken-docs` — **Actual:** only `M build_broken_docs.py`; zero `fixture.FCStd` modified by the suite run.
+- `uv run ruff check` + `ruff format --check` on both changed files — **Actual:** `All checks passed!` / `2 files already formatted`.
+- `uv run ruff check .` — **Actual:** `Found 10 errors.` — same count as the pre-existing baseline, so no regression.
+- Falsification probes for this pass: (1) reproduced the cleanup re-arm — with `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` ambient, the old `_restore_argv_and_flag` wrote `"1"` back after the test; (2) confirmed `unittest`'s alphabetical ordering runs the flag-setting test before the ambient guard, so the guard could only read a self-cleaned environment; (3) confirmed by `grep` that the generator now references neither `sys.argv` nor `__name__`, which is what made the old test's argv spoofing unfalsifiable.
+
 ## Auto Run Result
 
 Status: done
 
-**Implemented change:** the G1 broken-doc fixture generator no longer infers "am I the launched script" from `sys.argv[1]`. It builds only when `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` is in the environment, so importing the module for `gen.CASES` is side-effect-free under any `argv` and any `__name__` — closing DW-60's rebuild-on-import hole by construction rather than by luck.
+**Implemented change:** the G1 broken-doc fixture generator builds only when `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` is in the environment, so importing it for `gen.CASES` is side-effect-free under any `argv` and any `__name__`. This follow-up pass hardened the *tests* that prove it: they no longer leave an enabling flag armed behind them, no longer assert on a self-cleaned environment, and now cover every non-enabling flag value on the real import path.
 
 **Files changed:**
-- `benchmarks/g1/dev/broken-docs/build_broken_docs.py` — `_is_top_level_script()` (argv/`__file__` match) replaced by `_build_requested()` reading `_BUILD_FLAG`; `import sys` dropped for `import os`; docstring documents the POSIX and PowerShell invocations.
-- `tests/infc/test_broken_docs_g1.py` — three new tests: import-with-generator-path-as-`argv[1]` writes nothing (sha256 witness over all 30 fixtures, count-guarded, isolated module load, `addCleanup` restore of only `sys.argv` + the flag); flag enables only on `"1"`; flag is not ambiently set while the suite runs.
-- `benchmarks/g1/README.md` — generator line states the opt-in invocation (both shells) and cites the asserting test.
+- `benchmarks/g1/dev/broken-docs/build_broken_docs.py` — `_is_top_level_script()` replaced by `_build_requested()` reading `_BUILD_FLAG`; `import sys` dropped for `import os`; docstring documents both shells with PowerShell's correct `="1"` quoting.
+- `tests/infc/test_broken_docs_g1.py` — import-safety test now re-imports under `None`/`"0"`/`""` with a sha256 witness over all 30 fixtures and a bounded `glob("*/fixture.FCStd")`; cleanup split into `_restore_argv`/`_restore_flag`, the latter refusing to re-arm `"1"`; the ambient-flag guard asserts a module-import-time snapshot taken before any test mutates the environment.
+- `benchmarks/g1/README.md` — states both the POSIX and PowerShell invocations and cites the asserting test file rather than a method name.
 
-**Review findings:** 7 patches applied (1 high, 5 medium, 1 low), 1 deferred (medium), 6 rejected. Rejected as noise or scope creep: flag-value normalization (`true`/`yes`/whitespace — strict `"1"` is the deliberate documented contract); emitting a stderr note when the old flagless command is run (contradicts the spec's minimum-code boundary; docstring + README carry the invocation); ledger and spec-status findings (orchestrator-owned); README test-citation nit (folded into a patch anyway); unifying the three top-level-guard conventions across `benchmarks/g0/` generators.
+**Review findings:** 6 patches applied (3 medium, 3 low), 1 deferred as DW-65 (medium), 8 rejected. The three medium patches were all in the test file and compounded: the suite added to prove "import never rebuilds" was itself re-arming the rebuild trigger on cleanup, while the test meant to catch that condition could not observe it.
 
 **Residual risks:**
-- The identical argv-based hazard survives in `benchmarks/g0/export-fault-injection/build_export_fault_fixtures.py:564` — deferred above, outside DW-60's stated scope.
-- The infc suite was run on FreeCAD 1.1.0 only; the 1.0.x blocking leg is unverified locally and will be exercised in CI. Nothing in the change is version-sensitive (stdlib `os.environ` + `importlib`).
-- `_build_requested()` accepts only the literal `"1"`, so a mis-set flag (`true`, trailing space) is a silent no-op rather than a loud error. Deliberate: the value is asserted in-suite and both documented invocations use `1`.
+- The identical argv hazard survives in `benchmarks/g0/export-fault-injection/build_export_fault_fixtures.py` — deferred as DW-65, outside DW-60's scope.
+- The module-level `if _build_requested():` branch is covered only for the non-taken direction. Guard *inversion* is caught (the import-safety test would rebuild and fail the hash check), but a guard reduced to a permanent no-op — wrong flag name at the module level, `if False:` — leaves all tests green and makes the documented build silently do nothing. Accepted: the generator is a dev-only tool whose output is committed and independently self-checked by `test_each_committed_fixture_is_broken_on_its_named_object`.
+- Verified on FreeCAD 1.1.0 only; the 1.0.x leg is CI's. Nothing in the change is version-sensitive (stdlib `os.environ` + `importlib`).
+- `_build_requested()` accepts only the literal `"1"`, so a mis-set flag (`true`, trailing space) is a silent no-op rather than a loud error — deliberate, asserted in-suite, and both documented invocations use `1`.
+
