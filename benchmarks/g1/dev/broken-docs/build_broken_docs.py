@@ -3,10 +3,10 @@
 Run under FreeCADCmd with ``FREECAD_BUDDY_BUILD_BROKEN_DOCS=1`` in the environment — POSIX
 ``FREECAD_BUDDY_BUILD_BROKEN_DOCS=1 FreeCADCmd build_broken_docs.py``, PowerShell
 ``$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS="1"; FreeCADCmd build_broken_docs.py``. Importing the module
-never builds. Each fixture carries a REAL broken recompute on a fixed failing object ``Name``:
-after ``doc.recompute()`` that object has a non-empty ``getStatusString()``. The ``tests/infc``
-self-check opens each committed fixture, recomputes, and asserts the named object is genuinely
-in error.
+without that flag never builds. Each fixture carries a REAL broken recompute on a fixed failing
+object ``Name``: after ``doc.recompute()`` that object has a non-empty ``getStatusString()``. The
+``tests/infc`` self-check opens each committed fixture, recomputes, and asserts the named object is
+genuinely in error.
 
 Four break kinds are repeated across the 30 cases with distinct object names + parameters
 (a handful of reliable kinds suffices — G1.2 requires each fixture to break genuinely on its
@@ -23,6 +23,7 @@ Fixtures are written next to their ``case.yaml`` as ``<case-id>/fixture.FCStd``.
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 
 import FreeCAD as App
@@ -149,9 +150,14 @@ def build_all(base_dir: Path | None = None) -> list[Path]:
 _BUILD_FLAG = "FREECAD_BUDDY_BUILD_BROKEN_DOCS"
 
 
+def _build_requested_in(env: Mapping[str, str]) -> bool:
+    """Whether ``env`` carries the explicit rebuild opt-in."""
+    return env.get(_BUILD_FLAG) == "1"
+
+
 def _build_requested() -> bool:
     """Whether an explicit opt-in asked for a fixture rebuild (import never does)."""
-    return os.environ.get(_BUILD_FLAG) == "1"
+    return _build_requested_in(os.environ)
 
 
 if _build_requested():

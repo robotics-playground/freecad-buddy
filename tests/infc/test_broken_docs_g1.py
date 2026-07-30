@@ -10,7 +10,9 @@ test is acceptable here); every opened doc is closed.
 import hashlib
 import importlib.util
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -56,46 +58,59 @@ class BrokenDocsG1Test(unittest.TestCase):
             finally:
                 App.closeDocument(doc.Name)
 
-    def test_import_with_generator_path_as_argv_does_not_rebuild(self):
-        """Import must not touch any fixture, for any argv and any non-enabling flag value."""
+    def test_import_without_the_enabling_flag_does_not_rebuild(self):
+        """Import must create, remove, or modify nothing under the fixture root."""
         fixtures = sorted(BROKEN_DIR.glob("*/fixture.FCStd"))
         self.assertEqual(
             len(fixtures),
             EXPECTED_COUNT,
             f"expected {EXPECTED_COUNT} fixtures, found {len(fixtures)}",
         )
-        before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures}
+        before = self._fixture_tree_digest()
 
-        generator_path = BROKEN_DIR / "build_broken_docs.py"
-        self.addCleanup(self._restore_argv, sys.argv[:])
         self.addCleanup(self._restore_flag, os.environ.get(_BUILD_FLAG))
-        sys.argv = [str(generator_path), str(generator_path)]
-
         for flag_value in (None, "0", ""):
             with self.subTest(flag=flag_value):
                 if flag_value is None:
                     os.environ.pop(_BUILD_FLAG, None)
                 else:
                     os.environ[_BUILD_FLAG] = flag_value
-                spec = importlib.util.spec_from_file_location(
-                    "_broken_docs_reimport", generator_path
-                )
-                assert spec is not None and spec.loader is not None
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
+                module = self._load_generator_afresh()
                 self.assertFalse(module._build_requested())
-                after = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in fixtures}
-                self.assertEqual(before, after, "import must not modify any committed fixture")
+                self.assertEqual(
+                    before,
+                    self._fixture_tree_digest(),
+                    "import must not add, drop, or modify any file under the fixture root",
+                )
+
+    def test_enabling_flag_runs_the_build_at_module_level(self):
+        """With the flag on, importing the module builds — into ``base_dir``, not over commits."""
+        before = self._fixture_tree_digest()
+        target = Path(tempfile.mkdtemp(prefix="fcb_broken_docs_build_"))
+        self.addCleanup(shutil.rmtree, target, True)
+        self.addCleanup(self._restore_flag, os.environ.get(_BUILD_FLAG))
+        os.environ[_BUILD_FLAG] = "1"
+
+        module = self._load_generator_afresh(build_into=target)
+
+        self.assertTrue(module._build_requested())
+        self.assertEqual(
+            sorted(p.parent.name for p in target.glob("*/fixture.FCStd")),
+            sorted(gen.CASES),
+            "the module-level build must write every case into base_dir",
+        )
+        self.assertEqual(
+            before,
+            self._fixture_tree_digest(),
+            "a redirected build must leave the committed fixtures untouched",
+        )
 
     def test_build_flag_enables_only_on_the_documented_value(self):
         """The opt-in fires for "1" and stays off for absent, empty, and non-enabling values."""
-        self.addCleanup(self._restore_flag, os.environ.get(_BUILD_FLAG))
         for value, expected in (("1", True), ("0", False), ("", False), ("true", False)):
             with self.subTest(value=value):
-                os.environ[_BUILD_FLAG] = value
-                self.assertIs(gen._build_requested(), expected)
-        os.environ.pop(_BUILD_FLAG, None)
-        self.assertFalse(gen._build_requested())
+                self.assertIs(gen._build_requested_in({_BUILD_FLAG: value}), expected)
+        self.assertFalse(gen._build_requested_in({}))
 
     def test_build_flag_was_not_ambiently_set_when_the_suite_started(self):
         """An ambient enabling flag would let any import of the generator rewrite the fixtures."""
@@ -109,8 +124,28 @@ class BrokenDocsG1Test(unittest.TestCase):
         self.assertEqual(committed, generator_ids, "committed fixtures vs generator CASES")
         self.assertEqual(len(generator_ids), EXPECTED_COUNT, "expected exactly 30 cases")
 
-    def _restore_argv(self, saved_argv: list) -> None:
-        sys.argv = saved_argv
+    def _fixture_tree_digest(self) -> dict:
+        """Path -> sha256 for every file under the fixture root, so new files show up too."""
+        return {
+            p.relative_to(BROKEN_DIR).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(BROKEN_DIR.rglob("*"))
+            if p.is_file()
+        }
+
+    def _load_generator_afresh(self, build_into: Path | None = None):
+        """Execute the generator as a throwaway module.
+
+        ``build_into`` runs a byte-identical copy from that directory instead, so the module's
+        own ``HERE = Path(__file__).parent`` points there and a build cannot reach the commits.
+        """
+        generator_path = BROKEN_DIR / "build_broken_docs.py"
+        if build_into is not None:
+            generator_path = Path(shutil.copy2(generator_path, build_into))
+        spec = importlib.util.spec_from_file_location("_broken_docs_reimport", generator_path)
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
     def _restore_flag(self, saved_flag: str | None) -> None:
         """Restore the flag, never re-arming an enabling value the suite must not run under."""

@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-07-30'
 status: 'done'
 baseline_revision: '0f94b795d748cf8812d8c63c6703d99899ebce29'
-final_revision: '349b525'
+final_revision: '8a53b94'
 review_loop_iteration: 0
 followup_review_recommended: true
 context:
@@ -109,6 +109,20 @@ warnings: []
   - `[low]` `[patch]` `$env:VAR=1` in the README assigned an integer that worked only by PowerShell coercion, the README omitted the POSIX form the docstring carried, and it cited a test name that this pass renamed — both docs now use `$env:VAR="1"`, carry both shells, and cite the test *file* rather than a method name.
 - rejected (verified against source, not taken): re-adding an `argv[0]`/`__file__` conjunct to the build guard (would reintroduce the exact coupling DW-60 removed); making `base_dir` mandatory or staging the build through a temp dir (spec **Never** forbids changing `build_all`'s signature); normalizing `" 1 "`/`"true"`/case (strict `"1"` is the deliberate documented contract, rejected in the prior pass too); moving the ambient check into `setUpModule` (the module-scope snapshot already samples pre-mutation state); private-name access across the test boundary (`_BUILD_FLAG`/`_build_requested` *are* the contract under test); the double `read_bytes()` cost (sha256 over 30 dev fixtures is not a real cost); a stderr warning when the flagless command is run (contradicts the minimum-code boundary).
 
+### 2026-07-30 — Review pass (follow-up 2)
+- intent_gap: 0
+- bad_spec: 0
+- patch: 5: (high 1, medium 3, low 1)
+- defer: 1: (high 0, medium 1, low 0)
+- reject: 11: (high 0, medium 3, low 8)
+- addressed_findings:
+  - `[high]` `[patch]` both reviewers found independently that nothing executed the module with the flag *on* — the prior pass's `test_build_flag_enables_only_...` only called `_build_requested()` directly, so the module-level `if _build_requested(): build_all()` had no automated witness and Acceptance Criterion 3 rested on a hand-run probe. A mistyped guard would make the documented generator a permanent silent no-op with the suite green. Added `test_enabling_flag_runs_the_build_at_module_level`, which runs a byte-identical copy of the generator from a temp dir (so the module's own `HERE = Path(__file__).parent` points there and a build cannot reach the commits) with the flag set, then asserts all 30 cases were written into that dir and the committed tree is unchanged. Falsification: sabotaging the comparison to `== "1x"` turns the suite `FAILED (failures=2)`; the pre-patch suite passed that same sabotage.
+  - `[medium]` `[patch]` `test_build_flag_enables_only_...` wrote `"1"` into the *real* shared-process environment (all infc modules share one FreeCADCmd process), the exact state its own sibling test declares unfit — any fresh import during that window rebuilds the fixtures. `_build_requested()` is a pure function of a mapping, so the real environment was never needed: added `_build_requested_in(env)` to the generator and the value test now asserts against injected dicts, touching `os.environ` not at all.
+  - `[medium]` `[patch]` the sha256 witness keyed a *fixed* path set (`before` computed from a `glob` snapshot), so it proved "these 30 files unchanged" rather than the spec Boundary "must never write, create, or mutate any file" — a created `.FCStd1` backup or lock file was invisible by construction. Replaced with a whole-tree digest over `rglob("*")`. Falsification probe: creating `oc-bracket-plate/fixture.FCStd1` is missed by the fixed-key witness and caught by the tree witness.
+  - `[medium]` `[patch]` the test name and its argv scaffolding were dead weight — the generator reads neither `sys.argv` nor `__name__`, so deleting the spoof and `_restore_argv` could not make the test fail. Renamed to `test_import_without_the_enabling_flag_does_not_rebuild` and dropped the inert argv machinery, leaving the flag-value dimension as the real axis.
+  - `[low]` `[patch]` the README and module docstring claimed import never rebuilds "for any `sys.argv`", which nothing asserts and which argv-independence makes meaningless — both now say "without that flag", matching what the suite proves.
+- rejected (verified against source, not taken): the bare `assert spec is not None` (kept — `assertIsNotNone` does not narrow for the type checker, and the next line raises regardless); `before` snapshotted outside the subTest loop (comparing all iterations to one baseline is correct for an invariant); `_restore_flag` dropping an ambient `"1"` (deliberate, added last pass — restoring it would re-arm the trigger); making the ambient guard an allowlist instead of `assertNotEqual(..., "1")` (it defends today's exact comparison; a loosened comparison is the hypothetical, and the value test now pins strictness); normalizing `" 1 "`/`"TRUE"`/`"yes"` (strict `"1"` is the documented contract, rejected in both prior passes); moving `_BUILD_FLAG` up beside `HERE` (cosmetic); adding a cmd.exe README form (POSIX + PowerShell cover the documented shells); a stderr hint on flagless invocation (spec **Never**: no abstraction beyond the flag check); partial-write handling inside `build_all` (spec **Never** freezes its signature); wrapping `read_bytes` OSError (a raw traceback already names the path); varying `sys.argv` across shapes (argv is not an input to the guard); changing `tests/run_tests.py`'s heuristic (spec **Never** excludes it explicitly).
+
 ## Design Notes
 
 Env flag over a self-defined CLI argument: FreeCADCmd passes its own argv through to the script, so an argument-based opt-in would still be argv-coupled — exactly the class of accident DW-60 records. An environment variable is set only by a deliberate invocation and is invisible to `import`.
@@ -149,6 +163,30 @@ The import-safety test must force a real re-import (the module is already in `sy
 - `uv run ruff check` + `ruff format --check` on both changed files — **Actual:** `All checks passed!` / `2 files already formatted`.
 - `uv run ruff check .` — **Actual:** `Found 10 errors.` — same count as the pre-existing baseline, so no regression.
 - Falsification probes for this pass: (1) reproduced the cleanup re-arm — with `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` ambient, the old `_restore_argv_and_flag` wrote `"1"` back after the test; (2) confirmed `unittest`'s alphabetical ordering runs the flag-setting test before the ambient guard, so the guard could only read a self-cleaned environment; (3) confirmed by `grep` that the generator now references neither `sys.argv` nor `__name__`, which is what made the old test's argv spoofing unfalsifiable.
+
+**Follow-up review pass 2 (2026-07-30):**
+- `micromamba run -n fcb FreeCADCmd tests/run_tests.py` — **Actual:** `Ran 138 tests in 14.054s` / `OK (skipped=1)`, exit 0. One test more than the prior pass (137), the added positive-path build test; all four flag/import tests `ok` in the run log.
+- `git status --porcelain benchmarks/g1/dev/broken-docs` — **Actual:** only `M build_broken_docs.py`; zero `fixture.FCStd` modified, confirming the new build test's temp-dir redirection never reaches the commits.
+- `uv run ruff check` + `ruff format --check` on both changed files — **Actual:** `All checks passed!` / `2 files already formatted`.
+- `uv run ruff check .` — **Actual:** `Found 10 errors.` — identical count on clean `HEAD` (re-verified this pass by stashing `benchmarks/` + `tests/`), so pre-existing and unrelated.
+- Falsification probes for this pass: (1) sabotaged the guard comparison to `env.get(_BUILD_FLAG) == "1x"` and re-ran the suite — `FAILED (failures=2, skipped=1)`, with `test_enabling_flag_runs_the_build_at_module_level` among the failures; the pre-patch suite passed that same sabotage, proving the positive path previously had no witness. Generator restored and re-verified at `== "1"`. (2) Created a stray `oc-bracket-plate/fixture.FCStd1` and compared witnesses: the prior fixed-key sha256 map reports no change (`False`), the whole-tree digest reports a change (`True`), confirming the tree witness covers the spec's "must never write, create, or mutate any file" where the fixed-key one did not. Probe file removed; tree digest confirmed restored.
+
+## Auto Run Result
+
+Status: done
+
+**Implemented change.** `build_broken_docs.py` builds fixtures only on the explicit opt-in `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1`, replacing an `argv[1]`-vs-`__file__` heuristic that let any importer silently overwrite all 30 committed fixtures. Import is now side-effect-free by construction, independent of `argv` and `__name__`. This follow-up review pass added the missing witness for the *enabling* path and strengthened the "nothing written" witness.
+
+**Files changed.**
+- `benchmarks/g1/dev/broken-docs/build_broken_docs.py` — argv heuristic replaced by `_build_requested()` over the env flag; `_build_requested_in(env)` extracted so the predicate is testable without mutating the shared process environment; docstring documents the POSIX and PowerShell invocations.
+- `tests/infc/test_broken_docs_g1.py` — `test_import_without_the_enabling_flag_does_not_rebuild` (re-imports under unset/`"0"`/`""`, whole-tree sha256 witness), `test_enabling_flag_runs_the_build_at_module_level` (runs a copy of the generator from a temp dir with the flag on, asserts 30 cases written there and commits untouched), `test_build_flag_enables_only_on_the_documented_value` (injected-mapping value matrix), `test_build_flag_was_not_ambiently_set_when_the_suite_started`.
+- `benchmarks/g1/README.md` — documents the opt-in invocation for both shells and cites the asserting test file.
+
+**Review findings this pass.** 5 patches applied (1 high, 3 medium, 1 low): the untested enabling path, the shared-environment mutation, the fixed-key witness, and the dead argv scaffolding plus its overclaiming docs. 1 deferred as new ledger entry DW-66 (argv-heuristic modules reachable from the live infc process — distinct from the existing DW-65; no existing entry was modified). 11 rejected, each checked against source and against the spec's **Never** boundaries.
+
+**Verification.** `FreeCADCmd tests/run_tests.py`: `Ran 138 tests` / `OK (skipped=1)`, exit 0. Zero committed fixtures modified. ruff check + format clean on both changed files; repo-wide count unchanged from HEAD at 10 pre-existing errors. Two falsification probes confirm both new witnesses fail when the behavior they guard is broken.
+
+**Residual risks.** The ambient-flag guard asserts a module-import-time snapshot, so it cannot observe an enabling flag exported mid-suite by code outside this module; no in-repo caller does that today. Four copies of the retired argv heuristic survive elsewhere in `benchmarks/` plus one in `tests/run_tests.py`, which the spec places out of scope — tracked as DW-65 and DW-66.
 
 ## Auto Run Result
 

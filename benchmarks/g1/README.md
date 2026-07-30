@@ -22,7 +22,7 @@ independent grader land and fail honestly against a stub assistant BEFORE any as
   only when `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1` is in the environment — POSIX
   `FREECAD_BUDDY_BUILD_BROKEN_DOCS=1 FreeCADCmd build_broken_docs.py`, PowerShell
   `$env:FREECAD_BUDDY_BUILD_BROKEN_DOCS="1"; FreeCADCmd build_broken_docs.py`. Importing the
-  module never rebuilds, for any `sys.argv` — asserted in `tests/infc/test_broken_docs_g1.py`.
+  module without that flag rebuilds nothing — asserted in `tests/infc/test_broken_docs_g1.py`.
 - `dev/fixtures/` — small shared read-only `.FCStd` fixtures for eval questions that need a
   concrete document (currently empty; error-diagnosis questions use the broken-docs fixtures).
 - `fault-injection/<case>/case.yaml` — planted confident-wrong + clean-correct control text
