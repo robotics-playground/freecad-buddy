@@ -5,6 +5,10 @@ Builds the low-level ``mcp.server.lowlevel.Server`` and exposes ``tools/list`` a
 the shared result-envelope ``outputSchema``, and a description. ``debug_exec`` is surfaced
 only when the startup capability record enables it. Mutating and exec calls are audit-logged
 before and after execution; all logging goes to stderr.
+
+A marshaled call that overruns its budget returns ``TIMEOUT`` while its body may still be
+running, so ``tools/call`` also keeps a per-server document-suspect set: after such a timeout on
+a mutating call the document is refused further mutations until a read on it returns ``OK``.
 """
 
 from __future__ import annotations
@@ -77,6 +81,68 @@ def _to_call_result(envelope: dict) -> types.CallToolResult:
     )
 
 
+class _SuspectDocuments:
+    """Document handles whose state is unknown because a call on them timed out.
+
+    A ``doc``-less call gets its own slot so it cannot be confused with a handle. The tool-call
+    boundary processes one call at a time, so this needs no lock.
+    """
+
+    def __init__(self) -> None:
+        self._docs: set[str] = set()
+        self._no_doc = False
+
+    def is_suspect(self, doc) -> bool:
+        if doc is None:
+            return self._no_doc
+        return isinstance(doc, str) and doc in self._docs
+
+    def mark(self, doc) -> None:
+        if doc is None:
+            self._no_doc = True
+        elif isinstance(doc, str):
+            self._docs.add(doc)
+
+    def clear(self, doc) -> None:
+        if doc is None:
+            self._no_doc = False
+        elif isinstance(doc, str):
+            self._docs.discard(doc)
+
+
+def _is_marshal_timeout(envelope: dict) -> bool:
+    if envelope.get("status") != "TIMEOUT":
+        return False
+    detail = envelope.get("detail")
+    data = detail.get("data") if isinstance(detail, dict) else None
+    return bool(isinstance(data, dict) and data.get("marshal_timeout"))
+
+
+def _with_suspect_message(envelope: dict, *, marked_suspect: bool) -> dict:
+    """Restate a marshal ``TIMEOUT`` so the operator reads the consequence, not just the budget.
+
+    ``marked_suspect`` selects the wording: a mutating call leaves the document refused until a
+    read clears it, while a read that timed out only leaves a body still running.
+    """
+    detail = envelope.get("detail")
+    if not isinstance(detail, dict):
+        return envelope
+    consequence = (
+        "the document is now suspect: do not blind-retry, run a query_* read first to confirm "
+        "the document still responds"
+        if marked_suspect
+        else "no mutation was attempted, so the document is not marked suspect"
+    )
+    amended = dict(envelope)
+    amended_detail = dict(detail)
+    amended_detail["message"] = (
+        f"{detail.get('message') or 'marshaled call timed out'}; "
+        f"the body may still be running and {consequence}"
+    )
+    amended["detail"] = amended_detail
+    return amended
+
+
 def build_server(
     registry: MethodRegistry,
     caps: Capabilities,
@@ -89,6 +155,7 @@ def build_server(
         logger.warning("SECURITY: debug_exec ENABLED by operator flag")
 
     server: Server = Server(name)
+    suspect = _SuspectDocuments()
 
     @server.list_tools()
     async def _list_tools() -> list[types.Tool]:
@@ -107,12 +174,37 @@ def build_server(
             return _to_call_result(envelope)
 
         method = registry.get(tool_name)
+        mutating = bool(method is not None and method.mutating)
         audited = method is not None and (method.mutating or method.name == "debug_exec")
         event = method.audit_event if method is not None else "mutation"
+
+        if doc is not None and not isinstance(doc, str):
+            if audited:
+                _audit_safe(audit.before, event, tool_name, None, args)
+            envelope = _invalid_input_envelope("doc handle must be a string")
+            if audited:
+                _audit_safe(audit.after, event, tool_name, None, args, envelope.get("status"))
+            return _to_call_result(envelope)
+
+        if mutating and suspect.is_suspect(doc):
+            _audit_safe(audit.before, event, tool_name, doc, args)
+            envelope = _invalid_input_envelope(
+                "document-suspect: a prior call timed out on this document and its body may "
+                "still be running; run a query_* read to confirm the document still responds "
+                "before mutating"
+            )
+            _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"))
+            return _to_call_result(envelope)
 
         if audited:
             _audit_safe(audit.before, event, tool_name, doc, args)
         envelope = registry.dispatch(tool_name, args)
+        if _is_marshal_timeout(envelope):
+            if mutating:
+                suspect.mark(doc)
+            envelope = _with_suspect_message(envelope, marked_suspect=mutating)
+        elif method is not None and not mutating and envelope.get("status") == "OK":
+            suspect.clear(doc)
         if audited:
             _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"))
         return _to_call_result(envelope)
@@ -132,21 +224,23 @@ def _audit_safe(fn, *args) -> None:
         logger.exception("audit write failed")
 
 
-def _denied_exec_envelope() -> dict:
+def _invalid_input_envelope(message: str) -> dict:
     from freecad_buddy.contracts import mirror_text
 
     structured: dict = {}
     return {
         "schema": "fcb.result-envelope/1",
         "status": "INVALID_INPUT",
-        "detail": {
-            "code": "INVALID_INPUT",
-            "message": "debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)",
-            "data": {},
-        },
+        "detail": {"code": "INVALID_INPUT", "message": message, "data": {}},
         "structured_content": structured,
         "text": mirror_text(structured),
     }
+
+
+def _denied_exec_envelope() -> dict:
+    return _invalid_input_envelope(
+        "debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)"
+    )
 
 
 async def serve_stdio(server: Server) -> None:

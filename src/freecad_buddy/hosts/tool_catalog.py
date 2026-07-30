@@ -8,7 +8,9 @@ the use-case registries.
 passed each handler is wrapped in ``marshal.call`` (the headless inline host, whose
 ``InlineExecutor`` is a same-thread no-op); when ``marshal`` is ``None`` the handler calls the
 use case directly (the listener path, where the ``RpcListener`` owns the single ``marshal.call``
-and a second layer would deadlock the Qt main thread).
+and a second layer would deadlock the Qt main thread). ``debug_exec`` is the one exception on
+the inline host: it gets a further bounded layer that runs the exec body on a worker thread so
+its declared budget is enforced.
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from freecad_buddy.adapters import export_oracle, export_verdict
-from freecad_buddy.adapters.marshal import Marshal
+from freecad_buddy.adapters.marshal import Marshal, ThreadExecutor
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import RenderPort
@@ -598,9 +600,13 @@ def build_inline_handlers(
     ``marshal`` is ``None`` → handlers call the use case directly (the listener owns the single
     ``marshal.call`` and a second layer would deadlock the Qt main thread). ``render_port``
     defaults to a fresh ``OffscreenRenderPort`` (the one render capability serves every host).
+
+    With a ``marshal``, ``debug_exec`` alone gets an inner bounded marshal so its body runs on a
+    worker thread and its budget is enforced; every other tool stays on the calling thread.
     """
     port = render_port if render_port is not None else OffscreenRenderPort()
     methods = MethodRegistry()
+    bounded = Marshal(ThreadExecutor()) if marshal is not None else None
 
     def wrap(raw, timeout_s):
         if marshal is None:
@@ -611,12 +617,24 @@ def build_inline_handlers(
 
         return handler
 
+    def bound_off_main_thread(raw, timeout_s):
+        """Run ``raw`` on a worker thread, raising ``MarshalTimeout`` once the budget elapses."""
+        if bounded is None:
+            return raw
+
+        def handler(**params):
+            return bounded.call(lambda: raw(**params), timeout_s)
+
+        return handler
+
     specs = list(tool_specs())
     if exec_registered(caps):
         specs.append(DEBUG_EXEC_SPEC)
 
     for spec in specs:
         raw = spec.make_handler(doc_registry, export_registry, caps, port)
+        if spec.name == "debug_exec":
+            raw = bound_off_main_thread(raw, spec.timeout_s)
         methods.register(
             RpcMethod(
                 name=spec.name,

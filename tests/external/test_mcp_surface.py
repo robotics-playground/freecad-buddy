@@ -8,13 +8,22 @@ in-FreeCAD lifecycle and probe behavior lives in ``tests/infc/``.
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import json
+import threading
+import time
 from pathlib import Path
 
 import jsonschema
+import pytest
 
 from freecad_buddy.adapters.audit_log import AuditSink
-from freecad_buddy.adapters.marshal import InlineExecutor, Marshal
+from freecad_buddy.adapters.marshal import (
+    InlineExecutor,
+    Marshal,
+    MarshalTimeout,
+    ThreadExecutor,
+)
 from freecad_buddy.adapters.mcp_server import (
     Capabilities,
     build_server,
@@ -395,3 +404,307 @@ def test_tree_summary_schema_has_depth_root_filters():
         assert key in fprops
     assert props["filters"]["additionalProperties"] is False
     assert "max_nodes" not in props
+
+
+_BUDGET = 0.2
+
+
+@pytest.fixture
+def release():
+    """An event set at teardown so a deliberately blocked body never outlives its test."""
+    event = threading.Event()
+    yield event
+    event.set()
+
+
+def test_thread_executor_marshal_returns_value_under_budget():
+    marshal = Marshal(ThreadExecutor())
+    assert marshal.call(lambda: 21 * 2, 5.0) == 42
+
+
+def test_thread_executor_marshal_reraises_same_exception_instance():
+    marshal = Marshal(ThreadExecutor())
+    raised = ValidationError("bad handle")
+
+    def _boom():
+        raise raised
+
+    with pytest.raises(ValidationError) as excinfo:
+        marshal.call(_boom, 5.0)
+    assert excinfo.value is raised
+
+
+def test_thread_executor_marshal_times_out_promptly_while_body_still_runs(release):
+    marshal = Marshal(ThreadExecutor())
+    started = time.monotonic()
+
+    with pytest.raises(MarshalTimeout):
+        marshal.call(lambda: release.wait(30.0), _BUDGET)
+
+    elapsed = time.monotonic() - started
+    assert elapsed < _BUDGET * 5, f"timeout took {elapsed}s for a {_BUDGET}s budget"
+    assert not release.is_set(), "body finished on its own; the test proves nothing"
+
+
+def _suspect_server(behaviors: dict, audit_path: Path):
+    """Build a server whose stub tools return canned envelopes, recording every invocation.
+
+    ``behaviors`` maps tool name to ``(mutating, envelope_factory)``. The returned ``calls``
+    list records each tool name that actually reached its handler.
+    """
+    calls: list[str] = []
+    registry = MethodRegistry()
+    for name, (mutating, factory) in behaviors.items():
+
+        def _handler(_name=name, _factory=factory, **_params):
+            calls.append(_name)
+            return _factory()
+
+        registry.register(RpcMethod(name=name, handler=_handler, mutating=mutating))
+    server = build_server(registry, Capabilities(allow_exec=False), AuditSink(audit_path))
+    return server, calls
+
+
+def _timeout_envelope() -> dict:
+    raise MarshalTimeout(f"marshaled call exceeded {_BUDGET}s")
+
+
+def _ok_envelope() -> dict:
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": {},
+        "text": "{}",
+    }
+
+
+def _mutate_ok_envelope() -> dict:
+    return _ok_envelope()
+
+
+def _suspect_fixture(tmp_path: Path):
+    return _suspect_server(
+        {
+            "slow_mutate": (True, _timeout_envelope),
+            "fast_mutate": (True, _mutate_ok_envelope),
+            "slow_read": (False, _timeout_envelope),
+            "read": (False, _ok_envelope),
+            "failing_read": (
+                False,
+                lambda: {
+                    "schema": "fcb.result-envelope/1",
+                    "status": "INVALID_INPUT",
+                    "detail": {"code": "INVALID_INPUT", "message": "nope", "data": {}},
+                    "structured_content": {},
+                    "text": "{}",
+                },
+            ),
+        },
+        tmp_path / "audit.jsonl",
+    )
+
+
+def test_marshal_timeout_returns_timeout_envelope_and_marks_doc_suspect(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+
+    result = _call_tool_via_server(server, "slow_mutate", {"doc": "fcb-doc:D"})
+
+    envelope = result.structuredContent
+    assert envelope["status"] == "TIMEOUT"
+    assert envelope["detail"]["data"]["marshal_timeout"] is True
+    assert envelope["detail"]["data"]["maybe_still_running"] is True
+    assert "may still be running" in envelope["detail"]["message"]
+    assert "do not blind-retry" in envelope["detail"]["message"]
+    assert calls == ["slow_mutate"]
+
+    records = [
+        json.loads(line)
+        for line in (tmp_path / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(records) == 2
+    assert "fingerprint_before" in records[0]
+    assert records[1]["verify_verdict"] == "TIMEOUT"
+
+
+def test_mutating_call_on_suspect_doc_is_refused_without_reaching_the_handler(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    _call_tool_via_server(server, "slow_mutate", {"doc": "fcb-doc:D"})
+    calls.clear()
+
+    result = _call_tool_via_server(server, "fast_mutate", {"doc": "fcb-doc:D"})
+
+    assert result.structuredContent["status"] == "INVALID_INPUT"
+    assert "document-suspect" in result.structuredContent["detail"]["message"]
+    assert calls == []
+
+    records = [
+        json.loads(line)
+        for line in (tmp_path / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert "fingerprint_before" in records[-2]
+    assert records[-1]["verify_verdict"] == "INVALID_INPUT"
+
+
+def test_ok_read_on_suspect_doc_clears_the_flag(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    _call_tool_via_server(server, "slow_mutate", {"doc": "fcb-doc:D"})
+
+    assert (
+        _call_tool_via_server(server, "read", {"doc": "fcb-doc:D"}).structuredContent["status"]
+        == "OK"
+    )
+    calls.clear()
+
+    result = _call_tool_via_server(server, "fast_mutate", {"doc": "fcb-doc:D"})
+    assert result.structuredContent["status"] == "OK"
+    assert calls == ["fast_mutate"]
+
+
+def test_read_on_a_different_doc_does_not_clear_the_flag(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    _call_tool_via_server(server, "slow_mutate", {"doc": "fcb-doc:D"})
+    _call_tool_via_server(server, "read", {"doc": "fcb-doc:OTHER"})
+    calls.clear()
+
+    result = _call_tool_via_server(server, "fast_mutate", {"doc": "fcb-doc:D"})
+    assert result.structuredContent["status"] == "INVALID_INPUT"
+    assert calls == []
+
+
+def test_read_returning_non_ok_leaves_the_flag_set(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    _call_tool_via_server(server, "slow_mutate", {"doc": "fcb-doc:D"})
+    _call_tool_via_server(server, "failing_read", {"doc": "fcb-doc:D"})
+    calls.clear()
+
+    result = _call_tool_via_server(server, "fast_mutate", {"doc": "fcb-doc:D"})
+    assert result.structuredContent["status"] == "INVALID_INPUT"
+    assert calls == []
+
+
+def test_timed_out_non_mutating_call_sets_no_suspect_flag(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    timed_out = _call_tool_via_server(server, "slow_read", {"doc": "fcb-doc:D"}).structuredContent
+    assert timed_out["status"] == "TIMEOUT"
+    assert "not marked suspect" in timed_out["detail"]["message"], (
+        "a read timeout must not tell the operator the document is suspect"
+    )
+    calls.clear()
+
+    result = _call_tool_via_server(server, "fast_mutate", {"doc": "fcb-doc:D"})
+    assert result.structuredContent["status"] == "OK"
+    assert calls == ["fast_mutate"]
+
+
+def test_timeout_without_a_doc_marks_only_the_doc_less_slot(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    _call_tool_via_server(server, "slow_mutate", {})
+    calls.clear()
+
+    assert (
+        _call_tool_via_server(server, "fast_mutate", {}).structuredContent["status"]
+        == "INVALID_INPUT"
+    )
+    assert (
+        _call_tool_via_server(server, "fast_mutate", {"doc": "fcb-doc:D"}).structuredContent[
+            "status"
+        ]
+        == "OK"
+    )
+    assert calls == ["fast_mutate"]
+
+
+def test_non_string_doc_is_rejected_before_it_keys_the_suspect_set(tmp_path):
+    server, calls = _suspect_fixture(tmp_path)
+    result = _call_tool_via_server(server, "fast_mutate", {"doc": 7})
+    assert result.structuredContent["status"] == "INVALID_INPUT"
+    assert "doc handle must be a string" in result.structuredContent["detail"]["message"]
+    assert calls == []
+
+
+def test_rejected_doc_never_reaches_the_audit_log(tmp_path):
+    schema = _load_schema("audit-record.schema.json")
+    audit_path = tmp_path / "audit.jsonl"
+    server, _calls = _suspect_fixture(tmp_path)
+
+    for bad in (7, [], {"handle": "x"}, 1.5):
+        _call_tool_via_server(server, "fast_mutate", {"doc": bad})
+
+    records = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines()]
+    assert records, "the rejected calls must still be audited"
+    for record in records:
+        jsonschema.validate(instance=record, schema=schema)
+        assert "doc" not in record, "a non-string handle must not be written to the audit log"
+
+
+def test_suspect_state_is_per_server(tmp_path):
+    first, _ = _suspect_fixture(tmp_path)
+    second, calls = _suspect_fixture(tmp_path / "second")
+    _call_tool_via_server(first, "slow_mutate", {"doc": "fcb-doc:D"})
+
+    assert (
+        _call_tool_via_server(second, "fast_mutate", {"doc": "fcb-doc:D"}).structuredContent[
+            "status"
+        ]
+        == "OK"
+    )
+    assert calls == ["fast_mutate"]
+
+
+def _catalog_with_short_exec(monkeypatch, exec_body):
+    """Build the production catalog with ``debug_exec`` on a short budget and a stub body."""
+    from freecad_buddy.hosts import tool_catalog
+
+    monkeypatch.setattr(
+        tool_catalog,
+        "DEBUG_EXEC_SPEC",
+        dataclasses.replace(tool_catalog.DEBUG_EXEC_SPEC, timeout_s=_BUDGET),
+    )
+    monkeypatch.setattr(tool_catalog.debug_exec_uc, "debug_exec", exec_body)
+    return tool_catalog.build_inline_handlers(
+        DocumentRegistry(),
+        tool_catalog.ExportRegistry(),
+        Capabilities(allow_exec=True),
+        Marshal(InlineExecutor()),
+        render_port=object(),
+    )
+
+
+def test_debug_exec_overrunning_its_budget_times_out_through_the_real_catalog(monkeypatch, release):
+    registry = _catalog_with_short_exec(
+        monkeypatch, lambda _registry, _doc, _code: release.wait(30.0)
+    )
+    started = time.monotonic()
+
+    envelope = registry.dispatch("debug_exec", {"doc": "fcb-doc:D", "code": "pass"})
+
+    elapsed = time.monotonic() - started
+    assert envelope["status"] == "TIMEOUT"
+    assert envelope["detail"]["data"]["marshal_timeout"] is True
+    assert elapsed < _BUDGET * 5, f"timeout took {elapsed}s for a {_BUDGET}s budget"
+    assert not release.is_set(), "exec body finished on its own; the test proves nothing"
+
+
+def test_only_debug_exec_runs_off_the_main_thread(monkeypatch):
+    """A non-exec tool must stay on the caller's thread; only ``debug_exec`` may be threaded."""
+    from freecad_buddy.hosts import tool_catalog
+
+    seen: dict[str, int] = {}
+    monkeypatch.setattr(
+        tool_catalog.queries,
+        "query_tree_summary",
+        lambda *_a, **_k: seen.setdefault("query_tree_summary", threading.get_ident()),
+    )
+    registry = _catalog_with_short_exec(
+        monkeypatch,
+        lambda _registry, _doc, _code: seen.setdefault("debug_exec", threading.get_ident()),
+    )
+
+    registry.dispatch("debug_exec", {"doc": "fcb-doc:D", "code": "pass"})
+    registry.dispatch("query_tree_summary", {"doc": "fcb-doc:D"})
+
+    assert seen["debug_exec"] != threading.get_ident(), "debug_exec did not run on a worker"
+    assert seen["query_tree_summary"] == threading.get_ident(), (
+        "a non-exec tool ran off the main thread"
+    )

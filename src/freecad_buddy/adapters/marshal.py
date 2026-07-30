@@ -29,19 +29,37 @@ class InlineExecutor:
         fn()
 
 
+class ThreadExecutor:
+    """Executor that runs each submitted callable on its own daemon thread.
+
+    A per-submission thread, never a pool: a pooled worker left wedged by an abandoned body
+    would silently starve every later call. Threads cannot be killed, so a callable that
+    overruns its budget keeps running after ``Marshal.call`` has already raised — the caller
+    must treat such a timeout as document-suspect and refuse to blind-retry a mutation.
+
+    This runs the callable off the main thread, which is why the inline host uses it for the
+    operator exec path alone; all other FreeCAD state must be touched on the main thread. Hosts
+    that already marshal onto a Qt main thread bound that path through their own pump instead.
+    """
+
+    def submit(self, fn: Callable[[], None]) -> None:
+        threading.Thread(target=fn, daemon=True).start()
+
+
 class MarshalTimeout(Exception):
     """Raised when a marshaled call does not complete within its budget.
 
     The wrapped callable may still execute later, so the session is document-suspect until a
-    fingerprint check confirms state; do not blind-retry a mutation after this.
+    read confirms the document still responds; do not blind-retry a mutation after this.
     """
 
 
 class Marshal:
     """Runs a callable on the FreeCAD execution thread and waits (bounded) for its result.
 
-    With ``InlineExecutor`` the callable runs synchronously and the wait never blocks; the
-    timeout path exists for hosts where ``submit`` hands off to another thread.
+    With ``InlineExecutor`` the callable runs synchronously and the wait never blocks, so the
+    budget is not enforced; the timeout is real only with an executor whose ``submit`` hands
+    off to another thread (``ThreadExecutor``) or to a Qt pump.
     """
 
     def __init__(self, executor: Executor) -> None:
