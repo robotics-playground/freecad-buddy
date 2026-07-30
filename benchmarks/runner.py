@@ -187,8 +187,8 @@ def _grader_suite_sources() -> list[tuple[bytes, Path]]:
 
     Each case contributes its suite-relative POSIX path as well as its bytes, so an added,
     removed, renamed or edited case all change the digest. Ordered by that same relative path to
-    match score_grader.py's ordering. An unreadable suite tree yields an empty list, which the
-    caller reports as stale.
+    match score_grader.py's ordering. A missing or unreadable suite tree yields an empty list,
+    which the caller reports as stale.
     """
     try:
         cases = sorted(
@@ -232,7 +232,9 @@ def _validator_src_hasher(name: str) -> str:
                 content = path.read_bytes()
             except OSError:
                 return ""
+            hasher.update(len(identity).to_bytes(4, "big"))
             hasher.update(identity)
+            hasher.update(len(content).to_bytes(8, "big"))
             hasher.update(content)
     return hasher.hexdigest()
 

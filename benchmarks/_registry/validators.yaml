@@ -64,7 +64,7 @@ verify_export_step:
 
 grader:
   suite: g1/fault-injection/
-  validator_sha: "fbdf9d897ac031c0926da85a430dfdb500ecbeb284a26a64965d5d95107d249c"
+  validator_sha: "bcec425e6aad723d4d71b6bfc2365ceab4aab317384234ba8c5dd814cc7a43e0"
   last_run:
     run_id: gr-2026-07-30-1
     sensitivity: 1.0

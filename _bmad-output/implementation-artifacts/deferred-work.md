@@ -495,7 +495,8 @@ source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
 location: benchmarks/g1/fault-injection/ (`fault-and-discriminator-boss` is the only right-object+wrong-cause case)
 reason: The grader PASSes iff object AND cause both match. Only `fault-and-discriminator-boss` (broken-expression `be` kind) proves the grader is AND not OR — a case with the RIGHT object plus a DIFFERENT diagnosis's cause (own cause absent), which an OR grader would wrongly PASS. The other three break kinds (over-constrained `oc`, pad-missing-sketch `pd`, cut-missing-tool `cut`) have no AND-discriminator: a regression turning the grader into OR-of(object,cause) for those kinds would not be caught, because their wrong-object and wrong-cause cases each still fail an OR grader on one leg. Coverage gap, not a shipped defect (the grader is AND today). Fix: add one right-object+foreign-cause discriminator case per remaining break kind.
-status: open
+status: done 2026-07-30
+resolution: resolved by sweep bundle dw-g1-grader-suite-integrity
 
 ### DW-63: committed grader validator_sha does not cover the fault-case files, so a score-preserving suite edit slips --check (renumbered from a duplicate DW-9)
 origin: review-adversarial-general, spec-2-1-entry-gate-g1e-eval-rubric-grader (follow-up review 2026-07-24)
@@ -503,7 +504,8 @@ source_spec: `spec-2-1-entry-gate-g1e-eval-rubric-grader.md`
 severity: low
 location: benchmarks/g1/fault-injection/score_grader.py (`_validator_sha` hashes only grader.py + rubric.md)
 reason: `validator_sha` = sha256(grader.py + rubric.md); the fault `case.yaml` files (candidate_answers, cause_keywords, expectations) are NOT in the hash. `--check` recomputes the live score and compares committed sensitivity/false_alarm to the fresh run, so any edit that CHANGES the score is still caught. The residual gap: an edit that leaves the aggregate rate unchanged (swap one detected planted answer for another equally-detected one; add a planted case that is also detected) mutates what the sensitivity number measures while keeping validator_sha and the numbers identical, so `--check` reports "committed score matches" over a changed suite. Low consequence (a score-changing edit is caught; the ≥10-planted+≥1-control degenerate guard still holds). Fix: fold a hash of the sorted fault `case.yaml` set into `validator_sha` so any suite mutation stales the committed score.
-status: open
+status: done 2026-07-30
+resolution: resolved by sweep bundle dw-g1-grader-suite-integrity
 
 - source_spec: `spec-2-2-assistant-claude-backend.md`
   summary: Repo-wide `ruff check .` is red on 10 pre-existing E501 lines in `scripts/automation/run_mcp_e2e.py`, `scripts/automation/run_mcp_edge_cases.py`, and `tests/external/test_check_imports.py`.
@@ -608,3 +610,11 @@ status: done 2026-07-24
 - source_spec: `spec-dw-62-63-g1-grader-suite-integrity.md`
   summary: `benchmarks/_registry/validators.yaml` is a shared mutable file that one test rewrites while others read it, so the external suite is order-dependent and would race under any parallel test runner.
   evidence: `tests/external/test_harness_g1.py` `test_faults_g1_routes_to_scorer_exit_0` invokes the real `faults G1` path, which writes the tracked `_registry/validators.yaml`, restoring it from a snapshot in a `finally`; `test_score_grader_meets_bars_exit_0` subprocesses `--check` against that same file. Serially correct today (392 tests pass, and no `-n auto`/xdist `addopts` is configured in `pyproject.toml`), so this is a forward risk, not a current failure. Pre-existing: the write-and-restore test and the reader predate this change, which only added another reader. Fix: have the scorer-writing test target a tmp `VALIDATORS_YAML` via monkeypatch rather than snapshot-restoring the tracked file.
+
+- source_spec: `spec-dw-62-63-g1-grader-suite-integrity.md`
+  summary: Nothing verifies that a fault case's `question_ref` resolves to a real `broken-docs` case id, so a typo'd or dangling ref binds the case to no question and is silently accepted.
+  evidence: `score_grader.score()` reads the ref as `case.get("question_ref", "")` with no `_require` and passes it to the grader as the question string, which the deterministic grader never inspects; `tests/external/test_harness_g1.py` asserts the ref is present and parses its kind segment but never checks membership in `{c["id"] for c in _load_broken_cases()}`. All 20 refs resolve today, so this is a missing guard rather than a live defect. Pre-existing — the optional-ref handling and the inventory test both predate this change, which only added three more cases that rely on the convention. Fix: assert ref membership in the inventory test and `_require` it in the scorer.
+
+- source_spec: `spec-dw-62-63-g1-grader-suite-integrity.md`
+  summary: `fault-and-discriminator-boss` declares a narrower `cause_keywords` set than the `g1-broken-be-boss-post` case it references, so it grades the discriminator property against a keyword set the real question does not use.
+  evidence: The broken doc's `expected.cause_keywords` includes `missing object`, which the fault case's `expected_findings.cause_keywords` omits. A discriminator's correctness is defined as "own cause absent, foreign cause present", so a keyword the real question owns but the fault case drops widens the set of answers that read as discriminating. Pre-existing: `fault-and-discriminator-boss` predates this change (it is the case the three new ones were modeled on), and the three added here do copy their referenced doc's set verbatim, so the change narrowed rather than widened the inconsistency. Fix: align the case's keyword set with its broken doc, then re-score.

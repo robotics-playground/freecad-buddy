@@ -103,6 +103,19 @@ warnings: []
   - `[low]` `[patch]` The test comment claimed a wholesale OR regression "goes unscored"; measured at 0.312 sensitivity, it is caught loudly. Only a *per-kind* OR regression escaped (`cut`-only scored 1.000 before this change, 0.938 after). Comment corrected to state the real justification.
   - `[low]` `[patch]` Hardcoded `{"oc","pd","cut","be"}` turned legitimate suite growth into a false "suite invalid" failure; the sibling `test_broken_docs_inventory_tiered_30` derives kinds from data. Now derived from `broken-docs` ids, keeping the real `discriminated == kinds` assertion.
 
+### 2026-07-30 — Review pass (follow-up)
+- intent_gap: 0
+- bad_spec: 0
+- patch: 5: (high 1, medium 2, low 2)
+- defer: 2: (low 2)
+- reject: 9
+- addressed_findings:
+  - `[high]` `[patch]` `test_every_break_kind_has_an_and_discriminator_case` did not test what it claimed: the predicate `names_object and not own_cause` is satisfied by the four pre-existing `fault-wrong-cause-*` cases as well as the four real discriminators. Measured over the suite, `wrong-cause-cover`/`-shim` cover `oc` and `-pillar`/`-spacer` cover `be`, so deleting `fault-and-discriminator-flange` left the `oc` leg "discriminated" and the test green — the exact DW-62 regression it exists to pin. The distinguishing property is that only a real discriminator mentions SOME cause keyword (a foreign one); the wrong-cause cases mention none. Predicate now also requires `foreign_cause`; verified by falsification (removing the `oc` discriminator now fails the test).
+  - `[medium]` `[patch]` `_validator_sha` appended each case's path and bytes with no delimiter, so a case whose content spells the next case's path collides with a different suite. Verified: a two-case suite (`a/case.yaml` = `id: one`, `b/case.yaml` = `id: two`) and a one-case suite whose bytes are `id: one\nb/case.yamlid: two\n` — which parses as valid YAML — digested identically. Both hash sites now length-prefix the path and the content; collision reproduces as False.
+  - `[medium]` `[patch]` The scorer read each `case.yaml` unguarded while the runner wrapped the identical read in `except OSError: return ""`, so an unreadable case crashed `--check` with a raw `PermissionError` traceback against the module's own `SuiteError` contract ("exit non-zero with a clean message, never write"). Reproduced with a directory named `case.yaml`. The read now raises `SuiteError`, so both entry points report the same tree without a traceback.
+  - `[low]` `[patch]` `score()` still ordered cases by `sorted(HERE.rglob(...))` (OS-native `Path` order) while the new `_suite_case_files()` sorts by suite-relative POSIX path — two orderings over one set, created by this change, that diverge for any nested or dotted case dir. `score()` now uses the helper.
+  - `[low]` `[patch]` `_kind` accepted `'g1-broken-'`, yielding an empty-string kind that counted as a covered break kind. Now asserts the segment is non-empty.
+
 ## Design Notes
 
 Verified against the working tree (`python` + `grader.DeterministicGrader`) that all three planned `candidate_answer` strings have the discriminator property — object present, own cause absent, AND-grader FAILs:
@@ -128,34 +141,30 @@ The suite-hash mirror follows the precedent set when `rubric.md` was added to th
 - `uv run ruff check benchmarks/ tests/external/test_harness_g1.py` -- expected: clean on touched files (repo-wide `ruff check .` is red on 10 pre-existing E501s in `scripts/automation/` + `tests/external/test_check_imports.py`; those are out of scope).
 - `uv run python -c "import sys; sys.path.insert(0,'.'); import yaml; from pathlib import Path; from benchmarks import runner; from benchmarks.harness.verdict import check_validator_currency; v=yaml.safe_load(Path('benchmarks/_registry/validators.yaml').read_text(encoding='utf-8')); print(check_validator_currency({'criteria':[{'cited_validators':['grader']}]}, v, runner._validator_src_hasher))"` -- expected: `[]` (leg-b reports no stale/below-bar validator).
 
+
 ## Auto Run Result
 
-Status: done
-
-**Summary.** Closed both G1 grader fault-suite integrity gaps. DW-62: added one right-object-plus-foreign-cause AND-discriminator case per remaining break kind (`oc`, `pd`, `cut`), so the grader's object-AND-cause conjunction is now discriminator-tested for all four kinds instead of only `be`. DW-63: folded a hash of the sorted fault `case.yaml` set (path identity + bytes) into `score_grader._validator_sha`, mirrored byte-for-byte in the runner's validator hasher, so a score-preserving suite edit stales the committed score instead of slipping `--check`.
+**Implemented change.** Closes DW-62 (per-break-kind AND-discriminator coverage) and DW-63 (fault suite bound into `validator_sha`). Three new right-object-plus-foreign-cause discriminator cases give `oc`, `pd` and `cut` the coverage only `be` had; the fault suite's `case.yaml` set is folded into `validator_sha` at both hash sites, so a score-preserving suite edit stales `--check` instead of slipping it.
 
 **Files changed.**
-- `benchmarks/g1/fault-injection/fault-and-discriminator-flange/case.yaml` (new) -- `oc` discriminator: `FlangeOutline` + a `be` (expression-binding) foreign cause.
-- `benchmarks/g1/fault-injection/fault-and-discriminator-bosspad/case.yaml` (new) -- `pd` discriminator: `BossPad` + an `oc` foreign cause.
-- `benchmarks/g1/fault-injection/fault-and-discriminator-capnotch/case.yaml` (new) -- `cut` discriminator: `CapNotch` + a `be` foreign cause (varied in review so 3 of 4 discriminators no longer share one keyword family).
-- `benchmarks/g1/fault-injection/score_grader.py` -- `_suite_case_files()`; `_validator_sha` folds each case's suite-relative POSIX path + bytes; raises `SuiteError` on an empty suite; drift message names the suite.
-- `benchmarks/runner.py` -- `_GRADER_SUITE_ROOT` + `_grader_suite_sources()`; `_validator_src_hasher` folds the same bytes in the same order for `grader`, returns `""` (stale) on an empty or unreadable suite, never raises.
-- `tests/external/test_harness_g1.py` -- 4 new tests: per-kind AND-discriminator coverage (kinds derived from `broken-docs`), suite-mutation staleness (add / edit / rename / remove / emptied), scorer-runner hash mirror, runner missing-suite staleness.
-- `benchmarks/_registry/validators.yaml` -- `grader` block refreshed by the scorer; all four `verify_*` blocks byte-preserved.
-- `benchmarks/g1/README.md`, `docs/decisions/009-g1-grader-deterministic-vs-model.md` -- corrected the now-false "only grader.py + rubric.md are hashed" claims.
-- `_bmad-output/implementation-artifacts/deferred-work.md` -- 3 new defer entries appended (no existing entry modified).
+- `benchmarks/g1/fault-injection/fault-and-discriminator-{flange,bosspad,capnotch}/case.yaml` — new `oc`/`pd`/`cut` discriminators, each naming the right object with a foreign cause and none of its own keywords.
+- `benchmarks/g1/fault-injection/score_grader.py` — `_suite_case_files()` + suite fold into `_validator_sha()` with length-prefixed path/content, `SuiteError` on an empty suite and on an unreadable case, `score()` sharing the one ordering helper, updated drift message.
+- `benchmarks/runner.py` — `_GRADER_SUITE_ROOT` + `_grader_suite_sources()`; `_validator_src_hasher("grader")` mirrors the scorer byte for byte and returns `""` (stale) rather than the source-only digest when the suite is gone.
+- `tests/external/test_harness_g1.py` — per-kind discriminator coverage (object present, own cause absent, foreign cause present), suite-mutation staleness across add/edit/rename/remove plus collision-resistance and unreadable-case legs, scorer↔runner mirror equality, runner staleness on a missing suite.
+- `benchmarks/_registry/validators.yaml` — refreshed `grader` block: `n`/`r` 16, sensitivity 1.0, false_alarm 0.0, Wilson low 0.8064; every `verify_*` block preserved by the shared merge-write.
+- `benchmarks/g1/README.md`, `docs/decisions/009-g1-grader-deterministic-vs-model.md` — both previously asserted `validator_sha` = grader.py + rubric.md only.
 
-**Review findings.** 6 patches applied (1 high, 3 medium, 2 low), 3 deferred, 8 rejected, 0 intent gaps, 0 bad-spec loopbacks. The high-severity patch: an empty/deleted suite made both hashes collapse to the source-only digest — byte-identical to the previously committed `137c6fb…` — so a deleted suite would have reported the grader CURRENT against a score measured over a suite that no longer existed, the exact failure DW-63 exists to prevent. Two reviewer findings were rejected after direct falsification: removing the path-identity line does NOT go green (3 tests fail), and the claimed in-scope requirement to update README/009 came from a different run's bundle file (the docs were still patched, as staleness this change caused).
+**Review findings.** Two review passes. First pass: 6 patched (1 high, 3 medium, 2 low), 3 deferred, 8 rejected. Follow-up pass: 5 patched (1 high, 2 medium, 2 low), 2 deferred, 9 rejected. The high finding in the follow-up pass was a test that could not detect the regression it existed to pin — its predicate was also satisfied by four pre-existing `wrong-cause-*` cases, so the `oc` and `be` legs were unguarded. Rejected as noise or out of scope: the unconditional pre-bar registry write (pre-existing and by design — the registry records the measured rate honestly and the non-zero exit is the gate), the `n=16` planted-only CI denominator (pre-existing convention), `MIN_PLANTED` headroom framing, the dead `except OSError` around `rglob`, decision-009's singular phrasing, `_grader_suite_sources`' tuple shape, case-insensitive-filesystem and symlink speculation, and the stringly-typed `name == "grader"` branch (the spec fixes the two hash sites).
 
-**Verification.**
-- `score_grader.py` (write) then `--check`: exit 0, `planted=16 detected=16 sensitivity=1.000`, `controls=4 flagged=0 false_alarm=0.000`, `wilson_ci=[0.806, 1.000]`, `--check: committed score matches`.
-- `validator_sha`: `137c6fbf…feb17` -> `fbdf9d89…d249c` (refreshed after the capnotch variation); `n`/`r` 13 -> 16.
-- Scorer/runner mirror: `True`. Leg-b `check_validator_currency` for `grader`: `[]` (current).
-- `uv run pytest tests/external -q`: `392 passed`.
-- `check_provenance OK`, `check_imports OK`, `ruff check benchmarks/ tests/external/test_harness_g1.py`: `All checks passed!`.
-- Falsification (independently run, not reported by a subagent): a wholesale OR regression scores 0.312; per-kind OR regressions now score `oc` 0.750 / `pd` 0.875 / `cut` 0.938 / `be` 0.750 — all four below the 0.95 bar, i.e. CAUGHT. Before this change a `cut`-only OR regression scored 1.000 and escaped the bar. A genuinely score-preserving suite addition (rate unchanged at 1.000/0.000) now fails `--check` with exit 1.
+**Verification performed.**
+- `score_grader.py` → exit 0, all 16 planted `DETECTED`, all 4 controls `PASS_CLEAN`, sensitivity 1.000, false_alarm 0.000, wrote `validators.yaml`.
+- `score_grader.py --check` → exit 0, `--check: committed score matches`.
+- Scorer↔runner hash mirror → `True`.
+- `check_validator_currency` over the committed block → `[]` (grader current, leg-b not stale).
+- `pytest tests/external -q` → 392 passed.
+- `ruff check benchmarks/ tests/external/test_harness_g1.py` → All checks passed.
+- `check_provenance.py` → `check_provenance OK`.
+- Falsification: with `fault-and-discriminator-flange` removed, the coverage test fails (it passed under the old predicate). Case restored, tree clean.
+- Collision: the two-suite/one-suite pair that digested identically before now differs.
 
-**Residual risks.**
-- `verify_shape`, `verify_export_stl`, `verify_export_3mf`, and `verify_export_step` report stale under leg-b. Confirmed pre-existing at baseline `6f8a90c` by stashing this change and re-running (all four stale there too, `grader` current) — not a regression from this work, and out of scope. They need their own G0 re-score.
-- The runner's suite fold is an `if name == "grader"` branch inside an otherwise table-driven hasher; a future second suite-bound validator would need another branch. Current behavior is correct and the mirror is test-pinned for `grader` only.
-- The `wilson_ci`/`n`/`r` fields remain outside `_committed_score_drift`'s comparison (deferred).
+**Residual risks.** The three new discriminators depend on the four kinds' keyword sets staying disjoint under whole-token matching; nothing pins that coupling, so widening a `broken-docs` keyword set could flip a discriminator to `MISSED` and break the bar. `pd` owns the bare token `profile` and `cut` owns `tool`, so any future foreign cause for those kinds must avoid those words. With 16 planted at sensitivity exactly 1.000, a single miss yields 0.9375 and fails the 0.95 bar — deliberate, but zero-slack. Two low-severity findings deferred to the ledger.

@@ -247,8 +247,11 @@ def test_every_break_kind_has_an_and_discriminator_case():
     def _kind(case_id: str) -> str:
         # Break kind is the id prefix (g1-broken-<kind>-...).
         parts = case_id.split("-")
-        assert len(parts) > 2, f"unparseable case id {case_id!r}"
+        assert len(parts) > 2 and parts[2], f"unparseable case id {case_id!r}"
         return parts[2]
+
+    broken = _load_broken_cases()
+    every_cause_keyword = sorted({kw for c in broken for kw in c["expected"]["cause_keywords"]})
 
     discriminated = set()
     kinds = set()
@@ -263,10 +266,13 @@ def test_every_break_kind_has_an_and_discriminator_case():
         answer = _normalize(case["candidate_answer"])
         names_object = _mentions_object(answer, expected["object"])
         own_cause = _mentions_cause(answer, expected["cause_keywords"])
-        if names_object and not own_cause:
+        # A foreign cause is what separates a discriminator from a plain wrong-cause case: only
+        # an answer carrying SOME cause keyword is passed by an OR(object, any-cause) grader.
+        foreign_cause = _mentions_cause(answer, every_cause_keyword)
+        if names_object and not own_cause and foreign_cause:
             discriminated.add(kind)
 
-    broken_kinds = {_kind(c["id"]) for c in _load_broken_cases()}
+    broken_kinds = {_kind(c["id"]) for c in broken}
     assert kinds == broken_kinds, (
         f"fault suite covers kinds {sorted(kinds)}, broken-docs has {sorted(broken_kinds)}"
     )
@@ -303,6 +309,35 @@ def test_validator_sha_changes_when_the_fault_suite_is_mutated(tmp_path, monkeyp
 
     shutil.rmtree(suite / "control-extra-renamed")
     assert score_grader._validator_sha() == before
+
+    # A case whose bytes spell the following case's path must not collide with the two-case suite
+    # it imitates — the length prefixes are what keep the path+content concatenation unambiguous.
+    two = tmp_path / "two"
+    (two / "a").mkdir(parents=True)
+    (two / "b").mkdir()
+    (two / "a" / "case.yaml").write_bytes(b"id: one\n")
+    (two / "b" / "case.yaml").write_bytes(b"id: two\n")
+    monkeypatch.setattr(score_grader, "HERE", two)
+    two_cases = score_grader._validator_sha()
+
+    one = tmp_path / "one"
+    (one / "a").mkdir(parents=True)
+    (one / "a" / "case.yaml").write_bytes(b"id: one\nb/case.yamlid: two\n")
+    monkeypatch.setattr(score_grader, "HERE", one)
+    assert score_grader._validator_sha() != two_cases
+
+    monkeypatch.setattr(score_grader, "HERE", suite)
+
+    # An unreadable case must surface as a clean SuiteError, never a raw OSError traceback — the
+    # runner reports the same tree stale, so neither entry point crashes on it.
+    unreadable = suite / "control-bracket-correct" / "case.yaml"
+    kept = unreadable.read_bytes()
+    unreadable.unlink()
+    unreadable.mkdir()
+    with pytest.raises(score_grader.SuiteError):
+        score_grader._validator_sha()
+    unreadable.rmdir()
+    unreadable.write_bytes(kept)
 
     # An emptied suite must raise rather than fall back to the source-only digest, which is a
     # value the registry has already carried and would read as current over a deleted suite.

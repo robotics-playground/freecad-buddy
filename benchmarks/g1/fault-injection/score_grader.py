@@ -77,12 +77,13 @@ def _validator_sha() -> str:
     grader is meant to encode, so it must stale the sensitivity run (validation-harness §6/§8).
     The fault suite is part of it too: a score-preserving case edit changes what the committed
     sensitivity was measured over, so it must stale the run as well. Each case contributes its
-    suite-relative POSIX path and its bytes, so an added, removed, renamed, or edited case all
-    change the digest.
+    suite-relative POSIX path and its bytes, each length-prefixed so the concatenation is
+    unambiguous — an added, removed, renamed, or edited case all change the digest, and no case
+    can spell another case's path inside its own bytes to collide with a different suite.
 
-    Raises ``SuiteError`` when the rubric is missing or the suite holds no cases — an empty
-    suite would otherwise digest to the source-only hash, which is a value the registry has
-    already carried, so a deleted suite would read as current instead of stale.
+    Raises ``SuiteError`` when the rubric is missing, the suite holds no cases, or a case cannot
+    be read. An empty suite would otherwise digest to the source-only hash, which is a value the
+    registry has already carried, so a deleted suite would read as current instead of stale.
     """
     if not RUBRIC.is_file():
         raise SuiteError(f"rubric not found: {RUBRIC} (the rubric is part of the validator)")
@@ -93,8 +94,15 @@ def _validator_sha() -> str:
     digest.update(GRADER_SOURCE.read_bytes())
     digest.update(RUBRIC.read_bytes())
     for case_yaml in cases:
-        digest.update(case_yaml.relative_to(HERE).as_posix().encode("utf-8"))
-        digest.update(case_yaml.read_bytes())
+        identity = case_yaml.relative_to(HERE).as_posix().encode("utf-8")
+        try:
+            content = case_yaml.read_bytes()
+        except OSError as exc:
+            raise SuiteError(f"unreadable case {case_yaml}: {exc}") from exc
+        digest.update(len(identity).to_bytes(4, "big"))
+        digest.update(identity)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
     return digest.hexdigest()
 
 
@@ -121,7 +129,7 @@ def score() -> dict:
     if not RUBRIC.is_file():
         raise SuiteError(f"rubric not found: {RUBRIC} (the rubric is part of the validator)")
     rubric = RUBRIC.read_text(encoding="utf-8")
-    cases = [_load_case(p) for p in sorted(HERE.rglob("case.yaml"))]
+    cases = [_load_case(p) for p in _suite_case_files()]
 
     for case in cases:
         fault = _require(case, "fault")
