@@ -1,0 +1,17 @@
+id: g2-fault-tnp-d-expression-rename-break
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: planted_defect
+  description: >-
+    An object is renamed while an expression binds to its old name; resolveErrorString reports the unresolved binding.
+  expectation: DETECT
+expected:
+  scenario: "d"
+  provoking_mutation: "object rename breaking an expression"
+  expected_verdict: "BROKEN"
+  expected_layer: 0
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

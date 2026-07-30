@@ -1,0 +1,12 @@
+id: g2-dev-008-pad
+gate: g2
+criterion: G2.1
+op_type: pad
+# the pad sits over the existing hole, so its footprint is 30^2 minus the pi*5^2 hole
+spec: "Pad the square profile 8 mm upward from the top face of the plate."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 21786.2833, tol: {rel: 0.001}}

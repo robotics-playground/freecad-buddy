@@ -1,0 +1,18 @@
+id: g2-fault-tnp-a-fillet-edge-renumber
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: planted_defect
+  description: >-
+    Upstream sketch edge insertion renumbers a filleted edge; the dress-up Base LinkSubList loses an entry while recompute stays clean.
+  expectation: DETECT
+expected:
+  scenario: "a"
+  provoking_mutation: "upstream sketch edge insertion"
+  expected_verdict: "DROPPED"
+  expected_layer: 1
+  must_not_be_caught_by: "layer_0_error_sweep"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

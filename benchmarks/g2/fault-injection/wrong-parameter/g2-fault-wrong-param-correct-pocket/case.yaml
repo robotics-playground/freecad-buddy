@@ -1,0 +1,15 @@
+id: g2-fault-wrong-param-correct-pocket
+gate: g2
+criterion: G2.1
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: clean_control
+  description: >-
+    The pocket matches the commanded 5 mm depth exactly.
+  expectation: PASS_CLEAN
+expected:
+  declared: "5 mm deep pocket"
+  actual: "5 mm"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

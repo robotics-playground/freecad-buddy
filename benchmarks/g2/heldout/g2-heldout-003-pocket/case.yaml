@@ -1,0 +1,13 @@
+id: g2-heldout-003-pocket
+gate: g2
+criterion: G2.1
+op_type: pocket
+split: heldout
+# the pocket straddles the existing hole: (400 - pi*25)*3 = 964.38 mm^3 removed
+spec: "Cut a 20 by 20 mm pocket 3 mm deep into the plate, centred on the hole."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 14250.2213, tol: {rel: 0.001}}

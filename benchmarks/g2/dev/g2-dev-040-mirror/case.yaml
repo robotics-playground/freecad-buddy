@@ -1,0 +1,12 @@
+id: g2-dev-040-mirror
+gate: g2
+criterion: G2.1
+op_type: mirror
+# mirroring across two planes yields 4 total occurrences of the hole
+spec: "Mirror the filleted hole feature across both centre planes."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 4}

@@ -1,0 +1,13 @@
+id: g2-heldout-008-mirror
+gate: g2
+criterion: G2.1
+op_type: mirror
+split: heldout
+# one mirrored occurrence doubles the hole count
+spec: "Mirror the blind hole across the XY plane."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 2}

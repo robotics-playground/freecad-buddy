@@ -1,0 +1,12 @@
+id: g2-dev-012-pocket
+gate: g2
+criterion: G2.1
+op_type: pocket
+# the pocket straddles the existing hole, so removed area excludes the already-void pi*5^2
+spec: "Pocket the 30 by 30 square 4 mm into the plate."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 11928.7611, tol: {rel: 0.001}}

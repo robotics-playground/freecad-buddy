@@ -1,0 +1,18 @@
+id: g2-fault-dressup-silent-edge-drop
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: planted_defect
+  description: >-
+    A fillet's Base LinkSubList silently loses one edge after an upstream change; the feature recomputes without error and reports no status string.
+  expectation: DETECT
+expected:
+  expected_verdict: "DROPPED"
+  expected_layer: 1
+  must_not_be_caught_by: "layer_0_error_sweep"
+  entries_before: 4
+  entries_after: 3
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

@@ -1,0 +1,13 @@
+id: g2-dev-004-sketch
+gate: g2
+criterion: G2.1
+op_type: sketch
+# 3 segments; equal-length plus one dimension and placement fully constrain it
+spec: "Sketch a 6 mm equilateral triangle on the XZ plane and constrain it fully."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_sketch_fully_constrained, expect: true}
+    - {fn: expect_sketch_geometry_count, kind: line_segment, expect: 3}

@@ -1,0 +1,17 @@
+id: g2-fault-tnp-c-external-geometry-source-changed
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: planted_defect
+  description: >-
+    The topology a sketch's external geometry links to changes; the sketch carries the Missing flag and the reference renders as '? '.
+  expectation: DETECT
+expected:
+  scenario: "c"
+  provoking_mutation: "external-geometry source topology change"
+  expected_verdict: "BROKEN"
+  expected_layer: 1
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

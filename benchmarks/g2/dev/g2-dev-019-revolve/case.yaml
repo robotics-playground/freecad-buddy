@@ -1,0 +1,13 @@
+id: g2-dev-019-revolve
+gate: g2
+criterion: G2.1
+op_type: revolve
+# the axis clears the profile (25 > 15), so the sweep is a torus-like ring, not self-intersecting
+spec: "Revolve the square sketch a full turn about an axis 25 mm from its centre."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: expect_solid_count, expect: 1}

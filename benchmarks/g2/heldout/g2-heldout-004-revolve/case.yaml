@@ -1,0 +1,13 @@
+id: g2-heldout-004-revolve
+gate: g2
+criterion: G2.1
+op_type: revolve
+split: heldout
+# a three-quarter revolve must close into a valid solid
+spec: "Revolve the rectangle 270 degrees about the Z axis."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}

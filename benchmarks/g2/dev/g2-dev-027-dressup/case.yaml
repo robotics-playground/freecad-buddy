@@ -1,0 +1,13 @@
+id: g2-dev-027-dressup
+gate: g2
+criterion: G2.1
+op_type: dressup
+# a 1 mm 45-degree chamfer removes a 0.5 mm^2 triangular section along the 60 mm perimeter
+spec: "Chamfer the top face edges by 1 mm."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 5970.0, tol: {rel: 0.02}}

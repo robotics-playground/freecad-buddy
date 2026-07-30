@@ -1,0 +1,12 @@
+id: g2-dev-018-revolve
+gate: g2
+criterion: G2.1
+op_type: revolve
+# quarter revolve; validity is the assertion, the swept volume depends on profile placement
+spec: "Revolve the profile 90 degrees about the Y axis."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}

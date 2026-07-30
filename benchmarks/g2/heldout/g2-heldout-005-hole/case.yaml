@@ -1,0 +1,14 @@
+id: g2-heldout-005-hole
+gate: g2
+criterion: G2.1
+op_type: hole
+split: heldout
+# pi*1.5^2*10 = 70.686 mm^3 removed; blind, not through
+spec: "Drill a 3 mm blind hole 10 mm deep into the top face."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 5929.3142, tol: {rel: 0.001}}
+    - {fn: expect_through, expect: false}

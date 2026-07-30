@@ -1,0 +1,13 @@
+id: g2-dev-022-hole
+gate: g2
+criterion: G2.1
+op_type: hole
+# a second r=5 through hole in the 10 mm plate removes another pi*5^2*10 = 785.398 mm^3
+spec: "Add a second 10 mm diameter through hole 12 mm from the existing one."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 2}
+    - {fn: expect_volume, expect: 14429.2037, tol: {rel: 0.001}}

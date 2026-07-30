@@ -1,0 +1,12 @@
+id: g2-dev-037-mirror
+gate: g2
+criterion: G2.1
+op_type: mirror
+# one mirrored occurrence doubles the hole count
+spec: "Mirror the hole across the plate's vertical centre plane."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 2}

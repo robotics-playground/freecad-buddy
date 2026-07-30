@@ -1,0 +1,13 @@
+id: g2-dev-003-sketch
+gate: g2
+criterion: G2.1
+op_type: sketch
+# 4 segments; concentric-with-hole plus two dimensions fully constrain it
+spec: "On the top face of the plate, sketch a 30 by 30 mm square centred on the existing hole."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_sketch_fully_constrained, expect: true}
+    - {fn: expect_sketch_geometry_count, kind: line_segment, expect: 4}

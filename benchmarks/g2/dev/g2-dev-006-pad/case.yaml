@@ -1,0 +1,12 @@
+id: g2-dev-006-pad
+gate: g2
+criterion: G2.1
+op_type: pad
+# adds an 8x16x5 = 640 mm^3 prism to the 6000 mm^3 box
+spec: "Pad the profile 5 mm in the positive Z direction."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 6640.0, tol: {rel: 0.001}}

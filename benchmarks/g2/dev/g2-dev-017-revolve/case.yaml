@@ -1,0 +1,12 @@
+id: g2-dev-017-revolve
+gate: g2
+criterion: G2.1
+op_type: revolve
+# a half revolve must still close into a valid solid
+spec: "Revolve the triangle 180 degrees about the vertical axis."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}

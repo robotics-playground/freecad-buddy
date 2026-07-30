@@ -1,0 +1,13 @@
+id: g2-dev-023-hole
+gate: g2
+criterion: G2.1
+op_type: hole
+# a 4 mm bore with a 6 mm counterbore fits the 10 mm width; one stepped hole, still through
+spec: "Make a 4 mm diameter counterbored hole with a 6 mm wide, 2 mm deep counterbore, through the block."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: expect_through, expect: true}

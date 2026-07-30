@@ -1,0 +1,13 @@
+id: g2-heldout-002-pad
+gate: g2
+criterion: G2.1
+op_type: pad
+split: heldout
+# 5x9x4 = 180 mm^3 added to the 6000 mm^3 box
+spec: "Pad the profile 4 mm upward."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 6180.0, tol: {rel: 0.001}}

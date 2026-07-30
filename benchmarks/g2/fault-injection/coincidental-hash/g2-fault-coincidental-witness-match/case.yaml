@@ -1,0 +1,16 @@
+id: g2-fault-coincidental-witness-match
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: planted_defect
+  description: >-
+    A reference is re-pointed to a different element whose witness hash coincides with the original; Layer 1 sees no change.
+  expectation: DETECT
+expected:
+  expected_verdict: "REPOINTED"
+  expected_layer: 2
+  must_not_be_caught_by: "layer_1_witness_comparison"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

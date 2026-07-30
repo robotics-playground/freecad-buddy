@@ -1,0 +1,13 @@
+id: g2-dev-039-mirror
+gate: g2
+criterion: G2.1
+op_type: mirror
+# a fusing mirror must leave one valid solid, not two disjoint lumps
+spec: "Mirror the pad across the XZ plane and fuse the result."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_solid_count, expect: 1}
+    - {fn: expect_is_valid_solid, expect: true}

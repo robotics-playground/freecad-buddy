@@ -1,0 +1,16 @@
+id: g2-fault-rollback-6031-sketch-on-plane
+gate: g2
+criterion: G2.2
+targets_validator: run_mutation@usecases.mutation.run_mutation
+fault:
+  kind: planted_defect
+  description: >-
+    The #6031 pattern: a sketch created on a plane in PartDesign inside a transaction persists after abort, so the post-abort fingerprint does not match.
+  expectation: DETECT
+expected:
+  issue: "FreeCAD#6031"
+  expected_path: "snapshot_restore"
+  expected_rollback: "rolled_back_via_snapshot"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

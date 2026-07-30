@@ -1,0 +1,16 @@
+id: g2-fault-wrong-param-pattern-spacing
+gate: g2
+criterion: G2.1
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The pattern spacing is 12 mm where 10 mm was commanded; the count is right.
+  expectation: DETECT
+expected:
+  declared: "10 mm pitch"
+  actual: "12 mm"
+  clean_recompute: true
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

@@ -1,0 +1,13 @@
+id: g2-dev-033-pattern
+gate: g2
+criterion: G2.1
+op_type: pattern
+# 6 occurrences of the pi*3^2*2 recess = 339.292 mm^3 removed total
+spec: "Create a polar pattern of the pocket, 6 copies evenly around the axis."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 1231.5043, tol: {rel: 0.001}}

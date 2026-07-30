@@ -1,0 +1,13 @@
+id: g2-dev-005-sketch
+gate: g2
+criterion: G2.1
+op_type: sketch
+# a slot is 2 straight segments plus 2 end arcs; the arcs are the discriminating count
+spec: "Sketch a 20 by 10 mm slot with two 5 mm radius rounded ends on the XY plane, fully constrained."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_sketch_fully_constrained, expect: true}
+    - {fn: expect_sketch_geometry_count, kind: arc_of_circle, expect: 2}

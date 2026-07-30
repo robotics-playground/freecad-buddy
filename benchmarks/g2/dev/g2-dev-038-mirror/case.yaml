@@ -1,0 +1,13 @@
+id: g2-dev-038-mirror
+gate: g2
+criterion: G2.1
+op_type: mirror
+# a second pi*2^2*8 = 100.531 mm^3 blind hole on the mirrored face
+spec: "Mirror the blind hole to the opposite face."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 1369.7344, tol: {rel: 0.001}}
+    - {fn: count_cylindrical_holes, expect: 2}

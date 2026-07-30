@@ -1,0 +1,12 @@
+id: g2-dev-026-dressup
+gate: g2
+criterion: G2.1
+op_type: dressup
+# each 2 mm corner fillet removes (r^2 - pi*r^2/4)*h = (4-pi)*30 per edge, 4 edges
+spec: "Put a 2 mm fillet on all four vertical edges of the block."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 5896.9911, tol: {rel: 0.001}}

@@ -1,0 +1,13 @@
+id: g2-dev-013-pocket
+gate: g2
+criterion: G2.1
+op_type: pocket
+# a d=6 through-cut along the 20 mm Y extent removes pi*3^2*20 = 565.487 mm^3
+spec: "Cut a 6 mm diameter profile through the entire block along Y."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 5434.5133, tol: {rel: 0.001}}
+    - {fn: expect_through, expect: true}

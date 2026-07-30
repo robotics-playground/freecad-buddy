@@ -1,0 +1,12 @@
+id: g2-dev-036-mirror
+gate: g2
+criterion: G2.1
+op_type: mirror
+# the mirrored pocket removes a second 360 mm^3, total 720 mm^3
+spec: "Mirror the pocket across the YZ plane."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 5280.0, tol: {rel: 0.001}}

@@ -1,0 +1,13 @@
+id: g2-dev-001-sketch
+gate: g2
+criterion: G2.1
+op_type: sketch
+# a closed rectangle is 4 line segments; full constraint is the AD-8 pass signal
+spec: "Sketch an 8 by 16 mm rectangle on the XY plane and fully constrain it."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_sketch_fully_constrained, expect: true}
+    - {fn: expect_sketch_geometry_count, kind: line_segment, expect: 4}

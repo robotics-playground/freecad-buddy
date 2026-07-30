@@ -1,0 +1,12 @@
+id: g2-dev-020-revolve
+gate: g2
+criterion: G2.1
+op_type: revolve
+# Pappus: V = 2*pi*R*A = 2*pi*20*(pi*6^2) = 14212.229 mm^3
+spec: "Revolve the circle 360 degrees about an axis 20 mm away to make a ring."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 14212.2303, tol: {rel: 0.001}}

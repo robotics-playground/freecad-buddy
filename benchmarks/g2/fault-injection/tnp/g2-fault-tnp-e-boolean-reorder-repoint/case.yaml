@@ -1,0 +1,18 @@
+id: g2-fault-tnp-e-boolean-reorder-repoint
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: planted_defect
+  description: >-
+    Re-ordering a boolean operation re-points a face reference to a different face; the reference still resolves and the witness coincides.
+  expectation: DETECT
+expected:
+  scenario: "e"
+  provoking_mutation: "boolean-op re-ordering"
+  expected_verdict: "REPOINTED"
+  expected_layer: 2
+  must_not_be_caught_by: "layer_1_witness_comparison"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

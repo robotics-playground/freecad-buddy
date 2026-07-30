@@ -1,0 +1,16 @@
+id: g2-fault-dressup-intended-edge-removal
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: clean_control
+  description: >-
+    The operator deliberately removes an edge from the fillet; the drop is the mutation's intended target, not a silent loss.
+  expectation: PASS_CLEAN
+expected:
+  expected_verdict: "PASS"
+  entries_before: 4
+  entries_after: 3
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

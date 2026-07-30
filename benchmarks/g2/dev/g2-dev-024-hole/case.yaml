@@ -1,0 +1,13 @@
+id: g2-dev-024-hole
+gate: g2
+criterion: G2.1
+op_type: hole
+# pi*2^2*8 = 100.531 mm^3 removed; blind means not through
+spec: "Drill a 4 mm blind hole 8 mm deep into the top face."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 1470.2654, tol: {rel: 0.001}}
+    - {fn: expect_through, expect: false}

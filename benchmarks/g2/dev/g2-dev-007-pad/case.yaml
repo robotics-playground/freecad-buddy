@@ -1,0 +1,12 @@
+id: g2-dev-007-pad
+gate: g2
+criterion: G2.1
+op_type: pad
+# 8x16x12 = 1536 mm^3 added; symmetry moves material, not volume
+spec: "Extrude the sketch 12 mm, symmetric to the plane."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 7536.0, tol: {rel: 0.001}}

@@ -1,0 +1,12 @@
+id: g2-dev-025-hole
+gate: g2
+criterion: G2.1
+op_type: hole
+# 4 new holes plus the plate's existing central hole = 5 cylindrical holes total
+spec: "Add four 5 mm holes, one near each corner of the plate."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 5}

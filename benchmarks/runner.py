@@ -52,7 +52,9 @@ from benchmarks.harness.verdict import (  # noqa: E402
 from freecad_buddy.contracts.report import Check, require_wilson_ci_for_rates  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
-KNOWN_GATES = {"G0": "g0", "G1": "g1"}
+KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2"}
+# Gates carrying a sealed held-out split. G0's suites are all open by design.
+_SEALABLE_GATES = frozenset({"G1", "G2"})
 
 _EXIT_USAGE = 2
 _EXIT_FAIL = 1
@@ -495,8 +497,10 @@ def _git_sha() -> str:
 
 def seal_command(gate: str) -> int:
     """Seal ``gate``'s held-out split into ``SEAL.json`` + ``heldout.tar.enc`` (key-gated)."""
-    if gate != "G1":
-        raise UsageError(f"seal is only defined for gate G1, got {gate!r}")
+    if gate not in _SEALABLE_GATES:
+        raise UsageError(
+            f"seal is only defined for gates {', '.join(sorted(_SEALABLE_GATES))}, got {gate!r}"
+        )
     _load_gate(gate)
     key = _require_unseal_key()
     from benchmarks.harness import seal

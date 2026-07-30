@@ -1,0 +1,13 @@
+id: g2-dev-002-sketch
+gate: g2
+criterion: G2.1
+op_type: sketch
+# one circle; centre-at-origin plus a diameter constraint fully constrains it
+spec: "Sketch a circle of diameter 12 mm centred on the origin of the XY plane, fully constrained."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_sketch_fully_constrained, expect: true}
+    - {fn: expect_sketch_geometry_count, kind: circle, expect: 1}

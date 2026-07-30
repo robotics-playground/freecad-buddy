@@ -1,0 +1,12 @@
+id: g2-dev-011-pocket
+gate: g2
+criterion: G2.1
+op_type: pocket
+# removes 6x12x5 = 360 mm^3 from the 6000 mm^3 box
+spec: "Cut a 5 mm deep, 6 by 12 mm pocket into the top face."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 5640.0, tol: {rel: 0.001}}

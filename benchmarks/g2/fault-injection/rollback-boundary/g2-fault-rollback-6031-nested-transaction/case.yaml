@@ -1,0 +1,16 @@
+id: g2-fault-rollback-6031-nested-transaction
+gate: g2
+criterion: G2.2
+targets_validator: run_mutation@usecases.mutation.run_mutation
+fault:
+  kind: planted_defect
+  description: >-
+    A nested transaction auto-commits the outer one; abort then restores the wrong boundary and the fingerprint diverges.
+  expectation: DETECT
+expected:
+  issue: "FreeCAD#6031"
+  expected_path: "snapshot_restore"
+  expected_rollback: "rolled_back_via_snapshot"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending

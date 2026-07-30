@@ -1,0 +1,13 @@
+id: g2-dev-028-dressup
+gate: g2
+criterion: G2.1
+op_type: dressup
+# the hole must survive the fillet as a hole; count guards the dress-up silent-drop path
+spec: "Fillet the edge of the central hole on the top face with a 1 mm radius."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: count_cylindrical_holes, expect: 1}

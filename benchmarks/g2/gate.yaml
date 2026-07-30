@@ -1,0 +1,69 @@
+# Declarative mirror of the G2 exit-criteria table (spec-freecad-buddy/phase-gates.md).
+# The gate runner READS this — it never hardcodes the criteria. In --stub mode every
+# criterion FAILS honestly (INVALID_INPUT: no mutation tool exists yet, AD-19).
+#
+# G2 is forward-declared: the confirmed copilot lands in Stories 3.2-3.7. This story (3.1) lands
+# the 40-command benchmark + per-command geometry assertions + the fault suites, so the machinery
+# fails honestly against a stub BEFORE any mutation tool exists.
+#
+# Op-type taxonomy (decision 013): the 40 commands partition 5-per-type across eight op types —
+# sketch, pad, pocket, revolve, hole, dressup, pattern, mirror. "8 op types" is asserted by
+# phase-gates.md, epics.md, intent.md and SPEC.md but enumerated by none of them; decision 013 is
+# the enumeration they refer to. Each dev case declares `op_type` from that closed set.
+#
+# Fault suites live BESIDE the dev/heldout split, never inside it (validation-harness-design.md
+# §1): they validate validators and never count toward the G2.1 pass rate. The 5 TNP-provoking
+# scenarios live under fault-injection/tnp/ and are cited by G2.4.
+
+gate: G2
+
+# The command actor drives the confirmed-copilot profile: preview -> confirm -> execute, one
+# operation per command (AD-5). Unlike G1 there is no independent model grader — every G2
+# criterion is scored by deterministic re-execution of geometry assertions and by reading the
+# audit log, so the actor cannot grade itself (AD-13/AD-17) by construction.
+actor:
+  model: claude-mcp-client
+  context: copilot-under-test
+  transport: mcp
+  profile: confirmed-mutation
+
+# Deterministic validators, re-executed by the runner. Agent claims are never echoed as results.
+grader:
+  model: deterministic-geometry-assertions
+  context: independent-grader
+  implementation: benchmarks/harness/assertions.py
+
+# Gate-level required human tokens (validation-harness-design.md §7), checked for PRESENCE at
+# exit (Story 3.8), not here.
+required_tokens: [assertion_review, spot_audit]
+
+# The sealed held-out split is unsealed only at Gate G2 exit (Story 3.8); dev iteration touches
+# dev/ only. The runner must never sweep g2/heldout/.
+verdict:
+  heldout: sealed
+
+criteria:
+  - id: G2.1
+    text: "Command benchmark: 40 commands x 8 op types on reference models, R=5, per-command geometry assertions"
+    pass_rule: ">=85% first-attempt pass"
+    cited_validators: [assertions]
+  - id: G2.2
+    text: "Universal post-verify + rollback: inject failing ops, read audit log + reports"
+    pass_rule: "100% of executed ops show a post-verify record; every failed verify shows automatic rollback + human-readable explanation"
+    cited_validators: [run_mutation]
+  - id: G2.3
+    text: "Exact undo: for every benchmark op, fingerprint before, mutate, undo, fingerprint after (AD-6)"
+    pass_rule: "Hash-identical in 100% of cases (snapshot-restore path counts, and is reported when taken)"
+    cited_validators: [fingerprint]
+  - id: G2.4
+    text: "TNP guard: run the 5 TNP-provoking scenarios through the guard"
+    pass_rule: "5/5 flagged; zero false-clean; UNSUPPORTED never reported on matrix legs"
+    cited_validators: [audit_references]
+  - id: G2.5
+    text: "Fully constrained sketches: run the sketch benchmark, read verify_sketch reports"
+    pass_rule: "FullyConstrained == True in >=90% (AD-8 pass signal; redundants warn only)"
+    cited_validators: [verify_sketch]
+  - id: G2.6
+    text: "Skills + ablation harness: shape-check 6 newly drafted skills; run ablation with declared subsets"
+    pass_rule: "Harness reports per-skill paired deltas in AD-14 format"
+    cited_validators: []

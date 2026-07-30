@@ -1,0 +1,13 @@
+id: g2-dev-021-hole
+gate: g2
+criterion: G2.1
+op_type: hole
+# pi*3^2*30 = 848.230 mm^3 removed through the 30 mm Z extent
+spec: "Drill a 6 mm diameter hole through the block at the centre of the top face."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 5151.77, tol: {rel: 0.001}}
+    - {fn: count_cylindrical_holes, expect: 1}

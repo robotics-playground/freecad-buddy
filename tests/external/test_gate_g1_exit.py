@@ -423,8 +423,9 @@ def test_dev_actor_run_never_touches_heldout(tmp_path, monkeypatch):
     assert before == after, "dev --actor-run must not write into heldout/"
 
 
-def test_seal_only_gate_g1(tmp_path, monkeypatch):
+def test_seal_rejects_a_gate_with_no_sealed_split(tmp_path, monkeypatch):
+    """G0's suites are open by design, so sealing it is a usage error."""
     _isolated_benchmarks(tmp_path, monkeypatch)
     monkeypatch.setenv("FREECAD_BUDDY_UNSEAL_KEY", KEY)
-    with pytest.raises(runner.UsageError, match="only defined for gate G1"):
+    with pytest.raises(runner.UsageError, match="only defined for gates"):
         runner.seal_command("G0")

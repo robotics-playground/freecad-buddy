@@ -1,0 +1,13 @@
+id: g2-dev-032-pattern
+gate: g2
+criterion: G2.1
+op_type: pattern
+# 2x2 = 4 occurrences including the original, at 15 mm in both directions
+spec: "Pattern the hole into a 2 by 2 rectangular array with 15 mm spacing."
+inputs:
+  document: ../../../g0/golden-models/box40-hole-r5.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: count_cylindrical_holes, expect: 4}
+    - {fn: hole_spacing, pattern: rect, expect: [15.0, 15.0], tol: {abs: 0.05}}

@@ -1,0 +1,12 @@
+id: g2-dev-009-pad
+gate: g2
+criterion: G2.1
+op_type: pad
+# equilateral area = sqrt(3)/4 * 6^2 = 15.588; times 3 mm = 46.765 mm^3
+spec: "Pad the triangle sketch 3 mm along its normal."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 1617.5617, tol: {rel: 0.001}}

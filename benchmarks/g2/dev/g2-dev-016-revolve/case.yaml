@@ -1,0 +1,13 @@
+id: g2-dev-016-revolve
+gate: g2
+criterion: G2.1
+op_type: revolve
+# a full revolve of a closed profile offset from the axis yields one valid solid
+spec: "Revolve the rectangular profile 360 degrees about the Z axis."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_solid_count, expect: 1}
+    - {fn: expect_is_valid_solid, expect: true}

@@ -100,6 +100,40 @@ def _declared_export_file(case_yaml: Path) -> str | None:
     return None
 
 
+def _reuses_an_existing_document(case_yaml: Path) -> bool:
+    """Whether a case carries no local fixture because it runs against a committed document.
+
+    A G2 command case names an existing golden model in ``inputs.document`` and mutates it, so
+    duplicating that model into the case directory would fork the reference geometry. The
+    referenced file must exist: a case pointing at a missing document is still flagged.
+    """
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return False
+    if not isinstance(data, dict):
+        return False
+    document = (data.get("inputs") or {}).get("document")
+    if not isinstance(document, str):
+        return False
+    return (case_yaml.parent / document).is_file()
+
+
+def _declares_pending_fixture(case_yaml: Path) -> bool:
+    """Whether a case explicitly declares ``fixture: pending`` — an entry-gate case.
+
+    An entry gate lands its benchmark BEFORE the runtime that can plant the fixtures (AD-19),
+    so a G2 fault case specifies a fault that only becomes buildable once the mutation runtime
+    exists. The exemption requires the pending state to be *declared*: a case that simply omits
+    its fixture is still flagged, so a forgotten fixture cannot hide behind this.
+    """
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return False
+    return isinstance(data, dict) and data.get("fixture") == "pending"
+
+
 def _is_text_case(case_yaml: Path) -> bool:
     """Whether a case is a text case (a planted answer the grader judges), carrying no fixture.
 
@@ -133,7 +167,11 @@ def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
         parts = case_yaml.relative_to(benchmarks_root).parts
         if any(part in _EXCLUDED_DIRS for part in parts):
             continue
-        if _is_text_case(case_yaml):
+        if (
+            _is_text_case(case_yaml)
+            or _declares_pending_fixture(case_yaml)
+            or _reuses_an_existing_document(case_yaml)
+        ):
             continue
         rel = case_yaml.parent.relative_to(benchmarks_root).as_posix()
         export_file = _declared_export_file(case_yaml)

@@ -1,0 +1,13 @@
+id: g2-dev-030-dressup
+gate: g2
+criterion: G2.1
+op_type: dressup
+# an all-edge fillet is the classic dress-up stress case; it must stay one valid solid
+spec: "Fillet every edge of the block with a 1 mm radius."
+inputs:
+  document: ../../../g0/golden-models/box-10-20-30.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: expect_solid_count, expect: 1}

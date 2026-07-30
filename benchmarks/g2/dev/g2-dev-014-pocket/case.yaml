@@ -1,0 +1,12 @@
+id: g2-dev-014-pocket
+gate: g2
+criterion: G2.1
+op_type: pocket
+# removes pi*3^2*2 = 56.549 mm^3 from the cylinder
+spec: "Pocket a 2 mm deep recess into the top circular face, 6 mm in diameter."
+inputs:
+  document: ../../../g0/golden-models/cylinder-r5-h20.FCStd
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: expect_volume, expect: 1514.2477, tol: {rel: 0.001}}

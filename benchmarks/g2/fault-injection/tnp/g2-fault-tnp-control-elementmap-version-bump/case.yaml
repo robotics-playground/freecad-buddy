@@ -1,0 +1,14 @@
+id: g2-fault-tnp-control-elementmap-version-bump
+gate: g2
+criterion: G2.4
+targets_validator: audit_references@usecases.verify.audit_references
+fault:
+  kind: clean_control
+  description: >-
+    ElementMapVersion changes; entries re-baseline rather than failing.
+  expectation: PASS_CLEAN
+expected:
+  expected_verdict: "RE-BASELINED"
+# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
+# benchmark is authored first), so the fixture is declared pending rather than absent.
+fixture: pending
