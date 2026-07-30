@@ -284,7 +284,8 @@ resolution: Already resolved — `_trimesh_checks` now asserts `euler % 2 == 0` 
 origin: migrated from legacy ledger ("Deferred from: spec-1-7-exports-paired-verification.md"), 2026-07-23
 location: validators.yaml
 reason: The export fault suites are small — `verify_export_step` n=2, `verify_export_stl`/`verify_export_3mf` n=3 — so the ≥95 %/≤5 % gate passes but the Wilson lower bound (0.34–0.44) gives weak statistical confidence in the sensitivity claim. NFR2 cites ≥10 cases per validator. Add planted cases toward that target: more STEP faults (scaled shape, degenerate face); STL duplicated-shell, coordinate-truncation; 3MF missing-`3dmodel.model`, malformed transform matrix. Fixtures build under FreeCADCmd via `build_export_fault_fixtures.py`; the scorer already merges `validators.yaml`.
-status: open
+status: done 2026-07-30
+resolution: already resolved: Resolved by commit 00a88ff 'feat(benchmarks): expand the export-fault suite to ten cases per format'. benchmarks/_registry/validators.yaml:20-62 now records n=10 for all three export validators (verify_export_stl :32, verify_export_3mf :47, verify_export_step :62) at sensitivity 1.0 / false_alarm 0.0 with wilson_ci.low 0.7225 — up from the n=2/n=3 and 0.34-0.44 lower bound the entry describes, and at the NFR2 >=10-cases-per-validator target the entry names. 33 case.yaml files now live under benchmarks/g0/export-fault-injection/. The entry's separate 'same-geometry STEP unit-lie fixture' suggestion was already independently investigated and closed as not-actionable under DW-42 (premise disproven: a STEP file-unit annotation is round-trip-neutral, so a unit value cannot be exercised as a volume fault).
 
 ### DW-36: `adapters/export_oracle.py` `_read_ascii_stl_facets` silently drops a facet whose `endfacet` block has ≠3 vertices (a truncated ASCII facet) — a fail-open in the stdlib STL parser.
 
