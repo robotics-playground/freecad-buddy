@@ -214,3 +214,7 @@ Whole-tree `ruff check src tests` fails on 1 pre-existing E501 in `tests/externa
 - Each timed-out exec leaks one parked daemon thread, with no cap and no counter. Acceptable for an operator-only bring-up tool, but it degrades silently.
 - The suspect gate is now duplicated between `mcp_server.py` and `rpc_listener.py`, and their operator-facing messages already differ. Ledgered as a consolidation task.
 - The doc-less suspect slot is cleared by any successful doc-less read, including `query_capabilities`, which confirms nothing. Mirrors existing `RpcListener` behavior; ledgered so both hosts can be fixed together.
+
+### Follow-up review: not performed
+
+The recommended independent pass was launched and did not complete: the Blind Hunter and Edge Case Hunter subagents were dispatched with the full diff and re-prompted three times over roughly 35 minutes, reporting themselves idle but never delivering findings. No triage was produced and no code was changed. The implementation above is unmodified and its verification stands. `followup_review_recommended` remains `true`; this diff has not received an independent adversarial review.

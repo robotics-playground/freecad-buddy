@@ -175,7 +175,8 @@ resolution: resolved by sweep bundle dw-capability-probe-hardening
 origin: migrated from legacy ledger ("Deferred from: spec-1-4-document-lifecycle-headless-host-mcp-surface.md"), 2026-07-23
 location: n/a
 reason: `debug_exec` runs its `exec(code)` body inline (single-process `InlineExecutor`), so the marshal `timeout_s` never fires; an infinite or long-running operator body hangs the whole headless server with no `TIMEOUT` and no interrupt. `Marshal.call` with `InlineExecutor` runs `fn()` synchronously and `done.wait()` returns immediately after completion, so the timeout path is dead on the inline host. Operator-only + Phase-0 bring-up makes this low-risk now; a real bounded/interruptible exec needs an out-of-thread execution mechanism, which arrives with the GUI/RPC threaded marshal (story 1.8).
-status: open
+status: done 2026-07-30
+resolution: resolved by sweep bundle dw-headless-bounded-debug-exec
 decision: 2026-07-29 Thread-based bounded exec — Give the headless host a bounded exec path so the declared debug_exec timeout is real: run the exec body on a worker thread and have Marshal.call's existing done.wait(timeout_s) actually block, so exceeding the budget returns a TIMEOUT envelope instead of hanging the server. Because a Python thread cannot be forcibly killed, the abandoned body may still be running, so the timeout must mark the session document-suspect exactly as MarshalTimeout's docstring specifies (no blind retry) and the TIMEOUT envelope must say so. Keep the GUI/RPC host's marshal semantics unchanged, and add an external test that a sleeping/looping exec body yields TIMEOUT rather than blocking.
 
 ### DW-23: `document_recompute` reports per-object errors only when `"Invalid"` is present in `obj.State`; an object left `"Touched"` / not-recomputed after a recompute (silent skip) is reported as clean, so the per-object error set can under-report.
