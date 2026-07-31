@@ -21,7 +21,7 @@ import Part
 import Sketcher
 
 from freecad_buddy.hosts.tool_catalog import preview_op_table
-from freecad_buddy.usecases import preview, queries, shim
+from freecad_buddy.usecases import confirm, preview, queries, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 SQUARE = 10.0
@@ -60,6 +60,9 @@ class _PreviewFixture(unittest.TestCase):
 
     def setUp(self):
         self._leftovers_before = _leftovers()
+        # Deliberately left fail-closed: a preview must reach its own operation without a
+        # confirm, because it is what mints the token an apply presents.
+        self._posture = confirm.set_auto_approve(False)
         self.registry = DocumentRegistry()
         created = self.registry.document_create("preview_live")
         self.handle = created["structured_content"]["doc"]
@@ -68,6 +71,7 @@ class _PreviewFixture(unittest.TestCase):
         self._build()
 
     def tearDown(self):
+        confirm.set_auto_approve(self._posture)
         for name in list(App.listDocuments().keys()):
             App.closeDocument(name)
         for path in _leftovers() - self._leftovers_before:

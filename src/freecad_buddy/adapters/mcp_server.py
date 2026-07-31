@@ -23,7 +23,12 @@ from mcp.server.lowlevel import Server
 
 from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
-from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
+from freecad_buddy.usecases import confirm
+from freecad_buddy.usecases.capabilities import (
+    Capabilities,
+    auto_approve_enabled,
+    exec_registered,
+)
 
 __all__ = ["Capabilities", "exec_registered", "build_server", "configure_stderr_logging"]
 
@@ -153,6 +158,11 @@ def build_server(
     """Wire the low-level MCP ``Server``: ``tools/list`` and ``tools/call`` over the registry."""
     if exec_registered(caps):
         logger.warning("SECURITY: debug_exec ENABLED by operator flag")
+    if auto_approve_enabled(caps):
+        logger.warning("SECURITY: mutation auto-approve ENABLED by operator flag")
+    # The mutation gate writes its approval records through this sink; the handlers the registry
+    # holds take no sink argument of their own.
+    confirm.set_approval_sink(audit)
 
     server: Server = Server(name)
     suspect = _SuspectDocuments()

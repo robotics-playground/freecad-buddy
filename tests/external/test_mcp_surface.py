@@ -43,6 +43,7 @@ EXPECTED_DOCUMENT_TOOLS = {
     "document_close",
     "document_list",
     "document_recompute",
+    "document_undo",
 }
 
 EXPECTED_QUERY_TOOLS = {

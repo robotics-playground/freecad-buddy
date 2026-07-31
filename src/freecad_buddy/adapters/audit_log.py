@@ -2,8 +2,9 @@
 
 Every lifecycle mutation and every ``debug_exec`` call appends one record before execution and
 one after. Lifecycle operations use ``event:"mutation"`` and ``debug_exec`` uses
-``event:"exec"``. The file is opened in append mode; this sink never truncates, rotates, or
-reads it.
+``event:"exec"``. An authorized geometry mutation additionally appends one ``event:"approval"``
+record naming what the approval covered. The file is opened in append mode; this sink never
+truncates, rotates, or reads it.
 """
 
 from __future__ import annotations
@@ -80,6 +81,23 @@ class AuditSink:
         """
         record = self._record(event, tool, doc, params)
         record["fingerprint_before"] = fingerprint_before
+        self._write(record)
+
+    def approval(
+        self, tool: str, doc: str | None, approval: dict, params: dict | None = None
+    ) -> None:
+        """Append the record for an authorized mutation, carrying what the approval covered.
+
+        ``approval`` is the gate's own record: how the call was approved, and the argument digest
+        and document fingerprint that approval was bound to.
+
+        ``params`` are the tool's own parameters, digested into ``params_digest`` so this line
+        carries the same digest as the ``before``/``after`` lines of the mutation it authorized —
+        without it an auditor cannot tell which approval covered which call.
+        """
+        record = self._record("approval", tool, doc, dict(approval) if params is None else params)
+        record["fingerprint_before"] = approval.get("fingerprint_before")
+        record["approval"] = dict(approval)
         self._write(record)
 
     def after(

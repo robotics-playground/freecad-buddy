@@ -53,6 +53,20 @@ def summarize_document_close(sc: dict) -> str:
     return f"Closed {sc.get('name', '?')} (doc={sc.get('doc', '?')})."
 
 
+def summarize_document_undo(sc: dict) -> str:
+    """One-line summary of a document_undo result: what was undone and whether it restored."""
+    matches = sc.get("matches_pre_op")
+    if matches is None:
+        verdict = "no pre-op digest supplied to compare against"
+    else:
+        verdict = "restored the pre-op state" if matches else "did NOT restore the pre-op state"
+    return (
+        f"Undid {sc.get('undone')!r} on {sc.get('name', '?')}: {verdict} "
+        f"({str(sc.get('fingerprint_before'))[:12]} -> "
+        f"{str(sc.get('fingerprint_after'))[:12]})."
+    )
+
+
 def summarize_document_recompute(sc: dict) -> str:
     """One-line summary of a document_recompute result."""
     errors = sc.get("errors") or []
@@ -263,6 +277,109 @@ class DocumentRegistry:
             if errors:
                 return _recompute_error_envelope(structured, errors)
             return _ok_envelope(structured, summarize_document_recompute(structured))
+
+    def document_undo(
+        self, doc: str | None = None, expect_fingerprint: str | None = None
+    ) -> ResultEnvelope:
+        """Undo the last committed transaction, recompute, and report the fingerprint comparison.
+
+        Refuses when the build reports undo unavailable on the document, and when the undo stack
+        is empty — ``Document.undo()`` is a silent no-op in both cases, so an unchecked call would
+        report a successful undo that never happened. ``UndoCount`` is read here rather than
+        inside a mutation bracket, where it would also count the open transaction.
+
+        The recompute after the undo is mandatory: undo replays property deltas and leaves the
+        objects it touched dirty without recomputing them, so a fingerprint taken before it would
+        read stale shapes.
+
+        Restoration is reported, never assumed. ``fingerprint_before`` is the state this call
+        found, ``fingerprint_after`` the state it left. When the caller supplies
+        ``expect_fingerprint`` — the digest the document carried before the mutation being undone
+        — ``matches_pre_op`` states whether the undo actually reached it; without one it is
+        ``None``, because this call never saw the pre-mutation state.
+
+        ``restored_objects`` reports the object set the undo left, so a digest mismatch caused by
+        OCCT re-serializing an untouched shape can be told apart from one caused by an object the
+        undo failed to remove or restore.
+
+        The mandatory recompute is swept for error states exactly as ``document_recompute`` sweeps
+        its own: an undo that left an object invalid is ``RECOMPUTE_ERROR``, never an ``OK`` whose
+        digest happens not to match.
+
+        :param expect_fingerprint: the pre-mutation digest to compare the result against.
+        :raises ValidationError: ``doc`` is missing or stale, ``expect_fingerprint`` is not a
+            digest string, undo is unavailable on the document, or there is nothing to undo.
+        """
+        from freecad_buddy.usecases import shim
+        from freecad_buddy.usecases.fingerprint import fingerprint
+
+        # A non-string expectation can never equal a digest, so accepting one would report
+        # matches_pre_op: false — "the undo did not restore" — for what is a caller type error.
+        if expect_fingerprint is not None and not isinstance(expect_fingerprint, str):
+            raise ValidationError(
+                "expect_fingerprint must be a fingerprint digest string, got "
+                f"{type(expect_fingerprint).__name__}"
+            )
+
+        with self._lock:
+            handle, document = self._resolve(doc)
+            if not shim.enable_undo(document):
+                raise ValidationError(
+                    f"undo is unavailable on {document.Name}: the document reports UndoMode 0"
+                )
+            # An open transaction (one the GUI, a macro, or another workbench left running —
+            # this bridge always closes its own) makes both readings wrong: getAvailableUndoNames
+            # prepends it (Document.cpp:318-330) and getAvailableUndos counts it
+            # (Document.cpp:791-794), while undo() commits it first and then reverts the
+            # transaction *below* it (Document.cpp:188-195). Undoing here would revert a
+            # different transaction than the one reported. Refuse instead of guessing.
+            if getattr(document, "HasPendingTransaction", False):
+                raise ValidationError(
+                    f"{document.Name} has an open transaction; undo would commit it and revert "
+                    "the transaction beneath it. Commit or abort it first."
+                )
+            # UndoNames is most-recent-first, so the transaction undo() reverts is names[0].
+            names = list(getattr(document, "UndoNames", None) or [])
+            if int(getattr(document, "UndoCount", 0) or 0) < 1:
+                raise ValidationError(
+                    f"nothing to undo on {document.Name}: the undo stack is empty"
+                )
+
+            before = fingerprint(document)
+            document.undo()
+            document.recompute()
+            after = fingerprint(document)
+
+            # The recompute after the undo can leave objects invalid, and this call reports
+            # restoration as a measured result. Reporting OK for that would present a broken
+            # document as an undo whose digest merely happened not to match, so the same sweep
+            # document_recompute runs decides the status here too.
+            errors = [
+                {"name": obj.Name, "error": state}
+                for obj in document.Objects
+                for state in [list(getattr(obj, "State", None) or [])]
+                if _recompute_error_state(state)
+            ]
+
+            structured = {
+                "doc": handle,
+                "name": document.Name,
+                "undone": names[0] if names else None,
+                "fingerprint_before": before["digest"],
+                "fingerprint_after": after["digest"],
+                "matches_pre_op": (
+                    None if expect_fingerprint is None else after["digest"] == expect_fingerprint
+                ),
+                # Read from the document, not from the fingerprint: fingerprint() skips every
+                # shape-less object (an Origin, a Body, a datum, an empty Sketch), and those are
+                # exactly the ones a caller asks this list about after an undo.
+                "restored_objects": [obj.Name for obj in document.Objects],
+                "undo_count": int(getattr(document, "UndoCount", 0) or 0),
+                "errors": errors,
+            }
+            if errors:
+                return _recompute_error_envelope(structured, errors)
+            return _ok_envelope(structured, summarize_document_undo(structured))
 
     def document_list(self) -> ResultEnvelope:
         """List every open FreeCAD document with handle, name, label, and transient flag.

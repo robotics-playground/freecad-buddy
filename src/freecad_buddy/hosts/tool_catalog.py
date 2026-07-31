@@ -25,6 +25,7 @@ from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import RenderPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
 from freecad_buddy.usecases import (
+    confirm,
     exports,
     features,
     preview,
@@ -33,7 +34,11 @@ from freecad_buddy.usecases import (
     sketches,
     verify,
 )
-from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
+from freecad_buddy.usecases.capabilities import (
+    Capabilities,
+    auto_approve_enabled,
+    exec_registered,
+)
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
 
@@ -224,8 +229,29 @@ _SUBELEMENT_SELECTOR_SCHEMA = {
     "required": ["kind", "object"],
     "additionalProperties": False,
 }
-# Accepted and recorded in the audit params, not enforced.
-_CONFIRM_SCHEMA = {"type": "object"}
+# The confirm gate's wire shape. `autoApprove` is deliberately absent: the posture is an
+# operator-set environment flag carried on the capability record, and a client that could ask for
+# it on the wire would be self-approving its own mutation.
+_CONFIRM_SCHEMA = {
+    "type": "object",
+    "description": (
+        "required: this mutation is refused without it. Call preview_dry_run for the same tool "
+        "and arguments on the same document, then pass back the preview_id it returned. Omit "
+        "only against a host running the operator auto-approve posture."
+    ),
+    "properties": {
+        "preview_id": {
+            "type": "string",
+            "description": "the signed token preview_dry_run returned for this exact operation",
+        },
+        "elicitation_action": {
+            "enum": ["accept"],
+            "description": "recorded outcome; decline/cancel never reach a mutation tool",
+        },
+    },
+    "required": ["preview_id"],
+    "additionalProperties": False,
+}
 _GEOMETRY_SPEC_SCHEMA = {
     "type": "object",
     "properties": {
@@ -289,7 +315,12 @@ _CONSTRAINT_REF_SCHEMA = {
 
 
 def _sketch_schema(properties, required):
-    """A sketch tool input schema: doc handle, the tool's own fields, and confirm passthrough."""
+    """A sketch tool input schema: doc handle, the tool's own fields, and the confirm gate.
+
+    ``confirm`` is not in ``required``: it is mandatory for a client, but a host running the
+    operator auto-approve posture accepts a call without one, and the specs are built before the
+    capability record is read. The gate's requirement is stated in ``_CONFIRM_SCHEMA`` instead.
+    """
     return {
         "type": "object",
         "properties": {"doc": _DOC_SCHEMA, **properties, "confirm": _CONFIRM_SCHEMA},
@@ -449,7 +480,12 @@ def _sketch_specs():
 
 
 def _feature_schema(properties, required):
-    """A feature tool input schema: doc handle, the tool's own fields, and confirm passthrough."""
+    """A feature tool input schema: doc handle, the tool's own fields, and the confirm gate.
+
+    ``confirm`` is not in ``required``: it is mandatory for a client, but a host running the
+    operator auto-approve posture accepts a call without one, and the specs are built before the
+    capability record is read. The gate's requirement is stated in ``_CONFIRM_SCHEMA`` instead.
+    """
     return {
         "type": "object",
         "properties": {"doc": _DOC_SCHEMA, **properties, "confirm": _CONFIRM_SCHEMA},
@@ -959,6 +995,27 @@ def tool_specs() -> list[ToolSpec]:
             mutating=True,
         ),
         _doc_method(
+            "document_undo",
+            120.0,
+            {
+                "type": "object",
+                "properties": {
+                    "doc": _DOC_SCHEMA,
+                    "expect_fingerprint": {
+                        "type": "string",
+                        "description": "the pre-mutation fingerprint digest to compare the "
+                        "result against; without it matches_pre_op is null",
+                    },
+                },
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            "Undo the last committed transaction, recompute, and report the before/after "
+            "fingerprints. Refuses when the undo stack is empty or undo is unavailable; "
+            "restoration is reported as a measured comparison, never assumed.",
+            mutating=True,
+        ),
+        _doc_method(
             "document_list",
             30.0,
             {"type": "object", "properties": {}, "additionalProperties": False},
@@ -1153,6 +1210,7 @@ def build_inline_handlers(
     caps: Capabilities,
     marshal: Marshal | None,
     render_port: RenderPort | None = None,
+    apply_posture: bool = True,
 ) -> MethodRegistry:
     """Build a ``MethodRegistry`` from the shared catalog.
 
@@ -1163,7 +1221,15 @@ def build_inline_handlers(
 
     With a ``marshal``, ``debug_exec`` alone gets an inner bounded marshal so its body runs on a
     worker thread and its budget is enforced; every other tool stays on the calling thread.
+
+    The auto-approve posture is applied to the process here rather than closed into each mutation
+    handler: it describes the host, not the tool, and the mutation use cases read it at the point
+    they gate. ``apply_posture`` is False for a registry built as a component of another one (the
+    read-only profile), because the posture belongs to the host that serves calls, not to every
+    registry construction — a second build must never re-arm or disarm the gate for the first.
     """
+    if apply_posture:
+        confirm.set_auto_approve(auto_approve_enabled(caps))
     port = render_port if render_port is not None else OffscreenRenderPort()
     methods = MethodRegistry()
     bounded = Marshal(ThreadExecutor()) if marshal is not None else None
@@ -1243,8 +1309,13 @@ def build_readonly_profile(
     allow-list. Every geometry-mutation tool is absent because it is not in the allow-list —
     ``debug_exec`` is excluded even when exec is enabled. The returned registry is the same shape
     the MCP server consumes, so the assistant drives the identical tool surface (no private path).
+
+    The auto-approve posture is not applied: this build is a means of wiring handlers, not a host
+    taking over the process, and every mutation tool is filtered out of the result anyway.
     """
-    full = build_inline_handlers(doc_registry, export_registry, caps, marshal, render_port)
+    full = build_inline_handlers(
+        doc_registry, export_registry, caps, marshal, render_port, apply_posture=False
+    )
     profile = MethodRegistry()
     for method in full.methods():
         if method.name in READ_ONLY_PROFILE:

@@ -6,6 +6,7 @@ Single import surface for the data contract types and helpers.
 from freecad_buddy.contracts.assertions import AnchorFrame
 from freecad_buddy.contracts.audit import AuditRecord
 from freecad_buddy.contracts.capabilities import CapabilityBanner
+from freecad_buddy.contracts.confirm import ApprovalRecord, Confirm, PreviewTokenPayload
 from freecad_buddy.contracts.diff import (
     BBoxDelta,
     ComDelta,
@@ -90,11 +91,13 @@ from freecad_buddy.contracts.status import ErrorDetail, JobState, TerminalStatus
 
 __all__ = [
     "AnchorFrame",
+    "ApprovalRecord",
     "AuditRecord",
     "BBoxDelta",
     "CapabilityBanner",
     "Check",
     "ComDelta",
+    "Confirm",
     "ConstraintRef",
     "ConstraintSpec",
     "ConstraintType",
@@ -125,6 +128,7 @@ __all__ = [
     "PatternKind",
     "PointPos",
     "PostVerifyBlock",
+    "PreviewTokenPayload",
     "Quantity",
     "RecomputeError",
     "RefFinding",

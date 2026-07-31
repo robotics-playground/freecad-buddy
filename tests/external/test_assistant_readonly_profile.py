@@ -60,6 +60,7 @@ GEOMETRY_MUTATION_TOOLS = {
     "document_create",
     "document_save",
     "document_recompute",
+    "document_undo",
     "export_step",
     "export_stl",
     "export_3mf",

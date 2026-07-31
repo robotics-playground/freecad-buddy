@@ -19,7 +19,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import features, transaction
+from freecad_buddy.usecases import confirm, features, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 _SNAPSHOT_GLOB = os.path.join(tempfile.gettempdir(), "FCB_TMP_snap_*")
@@ -87,11 +87,15 @@ class _FeatureFixture(unittest.TestCase):
             for name in os.listdir(path):
                 os.remove(os.path.join(path, name))
             os.rmdir(path)
+        # These tests call the use cases directly, with no host to read the operator flag, so the
+        # posture is set here. The gate itself is covered in test_confirm_gate.py.
+        self._posture = confirm.set_auto_approve(True)
         self.registry = DocumentRegistry()
         created = self.registry.document_create("feature_tools")
         self.handle = created["structured_content"]["doc"]
 
     def tearDown(self):
+        confirm.set_auto_approve(self._posture)
         for name in list(App.listDocuments().keys()):
             App.closeDocument(name)
 

@@ -25,15 +25,15 @@ from freecad_buddy.contracts import (
     TnpAuditBlock,
     massprops_equal,
 )
-from freecad_buddy.usecases import shim
+from freecad_buddy.usecases import confirm, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 from freecad_buddy.usecases.queries import shape_metrics
 
 _TEMPDOC_PREFIX = "FCB_TMP_prev_"
 
-# The advertised lifetime of a returned ``preview_id``. Nothing enforces it: the token is
-# stateless and the TempDoc it was measured on is already closed when the id is minted.
+# The lifetime of a returned ``preview_id``: it is carried inside the signed token as well as
+# advertised on the envelope, so the deadline the caller reads is the one the gate enforces.
 _PREVIEW_TTL_SECONDS = 900
 
 # A datum plane, line or local coordinate system is modelled as an unbounded shape: FreeCAD gives
@@ -455,6 +455,7 @@ def preview_dry_run(
 
     path = _tempdoc_path()
     temp_handle: str | None = None
+    gated_args_digest: str | None = None
     try:
         live.saveCopy(path)
         opened = registry.document_open(path)
@@ -465,7 +466,12 @@ def preview_dry_run(
         # The op runs OUTSIDE registry.with_document: the registry lock is non-reentrant, so
         # calling a mutation use case (which resolves its own document) from inside a callback
         # holding it self-deadlocks even though the two handles name different documents.
-        op_envelope = op_fn(registry, doc=temp_handle, **args)
+        # The confirm gate is exempted for exactly this call: it runs against the throwaway copy,
+        # and it is what mints the token a live apply of the same op must present. The exemption
+        # reports the argument digest the gate computed, which is what the token is signed over.
+        with confirm.preview_exemption() as exemption:
+            op_envelope = op_fn(registry, doc=temp_handle, **args)
+        gated_args_digest = exemption.args_digest
 
         copy = registry.with_document(temp_handle, lambda h, d: d)
         after = document_metrics(copy)
@@ -501,12 +507,27 @@ def preview_dry_run(
         _audit(audit_sink, "after", tool, doc, params, "SPEC_FAILED")
         return _failed_envelope(message)
 
+    # One deadline drives both the advertised `expires_at` and the expiry the gate enforces.
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=_PREVIEW_TTL_SECONDS)
+    # An operation that returned without passing the gate leaves no digest an apply could be
+    # checked against, so no token is issued rather than one that would match nothing. The diff
+    # is still reported: measuring the change and authorizing it are separate answers.
     structured = {
-        "preview_id": f"fcb-preview:{secrets.token_urlsafe(16)}",
+        "preview_id": (
+            None
+            if gated_args_digest is None
+            else confirm.mint_preview_token(
+                {
+                    "doc": handle,
+                    "tool": tool,
+                    "args_digest": gated_args_digest,
+                    "fingerprint_before": fp_before["digest"],
+                    "exp": int(expires_at.timestamp()),
+                }
+            )
+        ),
         "diff": diff,
-        "expires_at": (
-            datetime.now(timezone.utc) + timedelta(seconds=_PREVIEW_TTL_SECONDS)
-        ).isoformat(),
+        "expires_at": expires_at.isoformat(),
     }
     _audit(audit_sink, "after", tool, doc, params, "OK")
     return {

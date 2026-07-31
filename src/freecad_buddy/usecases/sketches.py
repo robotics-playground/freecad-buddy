@@ -20,7 +20,7 @@ import math
 from typing import Callable
 
 from freecad_buddy.contracts import ResultEnvelope
-from freecad_buddy.usecases import shim, transaction, verify
+from freecad_buddy.usecases import confirm, shim, transaction, verify
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 # Sketcher GeoEnum: -1 is the horizontal axis (pos=none) and the root point (pos=start),
@@ -535,13 +535,17 @@ def _sketch_mutation(
     :param op: applies the typed operation and returns the names of the objects it touched.
     :param precheck: validates the request against the resolved document before the bracket
         opens, so a malformed request raises ``ValidationError`` without writing a snapshot.
+    :raises ValidationError: the call carries no confirm authorizing it, or the request is
+        malformed; neither writes a snapshot nor opens a transaction.
     """
 
     rebound: list = []
 
     def call(handle: str, document: object):
+        approval = confirm.gate_mutation(document, handle, tool, params)
         if precheck is not None:
             precheck(document)
+        confirm.audit_approval(audit_sink, approval, params)
         result = transaction.run_mutation(
             document, handle, label, op, audit_sink=audit_sink, tool=tool, params=params
         )
