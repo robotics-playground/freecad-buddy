@@ -327,6 +327,7 @@ def _mutation_block(
     verdict: TerminalStatus,
     snapshot_path: str | None,
     params_digest: str | None = None,
+    touched: list[str] | None = None,
 ) -> MutationBlock:
     return {
         "schema": "fcb.mutation/1",
@@ -339,6 +340,7 @@ def _mutation_block(
         "snapshot_path": snapshot_path,
         "verify_verdict": verdict,
         "params_digest": params_digest,
+        "touched": list(touched or []),
     }
 
 
@@ -472,6 +474,7 @@ def run_mutation(
     document.saveCopy(snapshot_path)
 
     document.openTransaction(f"buddy: {label}")
+    touched: list[str] = []
     try:
         touched = list(op(document) or [])
         # Read the references the op leaves behind before recompute runs, so the audit can tell
@@ -490,7 +493,9 @@ def run_mutation(
         # and can raise, and the snapshot is the only pre-mutation copy until it succeeds.
         fp_after = fingerprint(document)
         _delete_snapshot(snapshot_path)
-        block = _mutation_block(fp_before, fp_after, report, False, None, "OK", None, params_digest)
+        block = _mutation_block(
+            fp_before, fp_after, report, False, None, "OK", None, params_digest, touched
+        )
         _audit(audit_sink, "after", tool, handle, params, block, fp_before, "OK")
         return document, _envelope(block, "OK", summarize_mutation(block))
 
@@ -516,6 +521,7 @@ def run_mutation(
             "SPEC_FAILED",
             snapshot_path,
             params_digest,
+            touched,
         )
         _audit(audit_sink, "after", tool, handle, params, block, fp_before, "SPEC_FAILED")
         return document, _envelope(block, "SPEC_FAILED", summarize_mutation(block))
@@ -531,6 +537,7 @@ def run_mutation(
         status,
         snapshot_path if proof == "rolled_back_via_snapshot" else None,
         params_digest,
+        touched,
     )
     _audit(audit_sink, "after", tool, handle, params, block, fp_before, status)
     return document, _envelope(block, status, summarize_mutation(block))

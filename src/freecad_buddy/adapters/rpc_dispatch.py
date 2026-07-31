@@ -42,6 +42,24 @@ class RpcMethod:
     internal: bool = False
 
 
+# Tools whose calls are audited despite carrying ``mutating=False``. ``preview_dry_run`` mutates
+# only a throwaway copy, so it is not a mutation, yet AD-10 requires every preview to be recorded.
+_AUDITED_NON_MUTATING_EVENTS = frozenset({"preview"})
+
+
+def is_audited(method: RpcMethod) -> bool:
+    """Whether a call to ``method`` writes before/after audit records.
+
+    Every mutating tool is audited, plus ``debug_exec`` and every tool whose ``audit_event`` names
+    a non-mutating event the audit log must still carry.
+    """
+    return bool(
+        method.mutating
+        or method.name == "debug_exec"
+        or method.audit_event in _AUDITED_NON_MUTATING_EVENTS
+    )
+
+
 def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False) -> ResultEnvelope:
     tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     # A client error (INVALID_INPUT — unknown handle/object/path, bad param) is expected traffic,

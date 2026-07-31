@@ -284,6 +284,12 @@
         }
       ]
     },
+    "touched": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "transaction_id": {
       "type": "string"
     },

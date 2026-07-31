@@ -125,7 +125,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
         | EXPECTED_EXPORT_TOOLS
         | EXPECTED_SKETCH_TOOLS
         | EXPECTED_FEATURE_TOOLS
-        | {"query_capabilities", "query_screenshot"}
+        | {"query_capabilities", "query_screenshot", "preview_dry_run"}
     )
 
 

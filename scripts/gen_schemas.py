@@ -103,6 +103,24 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "MassProps": ["volume", "area", "bbox", "com", "principal_moments", "quantum"],
     "GeometricSelector": ["kind", "object", "element_type"],
     "MappedNameSelector": ["kind", "object", "mapped_name", "element_map_version"],
+    # GeometryDiff's nested blocks. Every one carries a required list: a $def without one
+    # validates `{}`, which lets the preview emit any shape and the schema still pass.
+    "ScalarDelta": ["before", "after", "delta", "units"],
+    "CountDelta": ["before", "after", "delta"],
+    "BBoxDelta": ["before", "after", "center_shift", "units"],
+    "ComDelta": ["before", "after", "shift", "units"],
+    "DiffDeltas": ["volume", "area", "bbox", "com"],
+    "DiffCounts": ["faces", "edges", "vertices", "solids"],
+    "RecomputeError": ["object", "error"],
+    "DiffValidity": [
+        "is_valid",
+        "recompute_clean",
+        "recompute_errors",
+        "pre_existing_errors",
+        "status",
+        "explanation",
+    ],
+    "DiffRender": ["available", "reason"],
     # The grading fields are present only when `readable` is true; a sketch a rollback
     # destroyed reports `readable: false` and carries no grade.
     "SketchState": ["schema", "sketch", "readable"],

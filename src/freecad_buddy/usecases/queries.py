@@ -116,6 +116,53 @@ def _quantity(value: float, unit: str) -> dict:
     return {"value": number if math.isfinite(number) else None, "unit": unit}
 
 
+def shape_metrics(shape: object) -> dict:
+    """Read a shape's volume, area, bbox, centre and topology counts as plain summable floats.
+
+    Values are in internal units (mm) with no ``Quantity`` wrapping, so a caller can sum them
+    across objects. ``volume`` is ``0.0`` for a shape enclosing no volume and ``com`` falls back
+    to the bounding-box centre when ``CenterOfMass`` is unreadable.
+
+    :param shape: a non-null ``Part.Shape``.
+    :returns: ``{solid, com_readable, volume, area, bbox, com, counts}`` where ``solid`` records
+        whether the shape encloses volume, ``com_readable`` whether ``CenterOfMass`` could be
+        read, ``bbox`` is ``[xmin, ymin, zmin, xmax, ymax, zmax]``, ``com`` an ``[x, y, z]``
+        triple, and ``counts`` holds ``faces``/``edges``/``vertices``/``solids``.
+    """
+    bbox = shape.BoundBox
+    center = getattr(shape, "CenterOfMass", None)
+    com_readable = center is not None
+    if com_readable:
+        com = [float(center.x), float(center.y), float(center.z)]
+    else:
+        com = [
+            float(bbox.XMin + bbox.XMax) / 2,
+            float(bbox.YMin + bbox.YMax) / 2,
+            float(bbox.ZMin + bbox.ZMax) / 2,
+        ]
+    return {
+        "solid": len(shape.Solids) > 0,
+        "com_readable": com_readable,
+        "volume": float(shape.Volume),
+        "area": float(shape.Area),
+        "bbox": [
+            float(bbox.XMin),
+            float(bbox.YMin),
+            float(bbox.ZMin),
+            float(bbox.XMax),
+            float(bbox.YMax),
+            float(bbox.ZMax),
+        ],
+        "com": com,
+        "counts": {
+            "faces": len(shape.Faces),
+            "edges": len(shape.Edges),
+            "vertices": len(shape.Vertexes),
+            "solids": len(shape.Solids),
+        },
+    }
+
+
 _CLEAN_STATUS = {"", "Valid", "Touched"}
 
 
@@ -396,37 +443,36 @@ def query_mass_properties(
         is_null = getattr(shape, "isNull", None)
         if shape is None or (is_null is not None and is_null()):
             raise ValidationError(f"object has no queryable shape: {object}")
-        bbox = shape.BoundBox
-        is_solid = len(shape.Solids) > 0
+        metrics = shape_metrics(shape)
+        is_solid = metrics["solid"]
+        xmin, ymin, zmin, xmax, ymax, zmax = metrics["bbox"]
         # CenterOfMass is meaningful only for a volumetric solid (and is unavailable on some shape
         # types, e.g. Part.Compound). Report null volume/com for a non-solid so an area/length
-        # centroid is never presented as volumetric mass; bbox/area/counts stay valid.
-        com = getattr(shape, "CenterOfMass", None) if is_solid else None
+        # centroid is never presented as volumetric mass; bbox/area/counts stay valid. The com
+        # branch keys on whether CenterOfMass was readable, not on `solid`: a compound of solids
+        # is a solid that has none, and the bbox-centre fallback must not be published as one.
+        com = metrics["com"] if (is_solid and metrics["com_readable"]) else None
         structured = {
             "name": obj.Name,
             "solid": is_solid,
-            "volume": _quantity(shape.Volume, "mm^3") if is_solid else None,
-            "area": _quantity(shape.Area, "mm^2"),
+            "volume": _quantity(metrics["volume"], "mm^3") if is_solid else None,
+            "area": _quantity(metrics["area"], "mm^2"),
             "bbox": {
-                "xmin": _quantity(bbox.XMin, "mm"),
-                "xmax": _quantity(bbox.XMax, "mm"),
-                "ymin": _quantity(bbox.YMin, "mm"),
-                "ymax": _quantity(bbox.YMax, "mm"),
-                "zmin": _quantity(bbox.ZMin, "mm"),
-                "zmax": _quantity(bbox.ZMax, "mm"),
+                "xmin": _quantity(xmin, "mm"),
+                "xmax": _quantity(xmax, "mm"),
+                "ymin": _quantity(ymin, "mm"),
+                "ymax": _quantity(ymax, "mm"),
+                "zmin": _quantity(zmin, "mm"),
+                "zmax": _quantity(zmax, "mm"),
             },
             "com": None
             if com is None
             else {
-                "x": _quantity(com.x, "mm"),
-                "y": _quantity(com.y, "mm"),
-                "z": _quantity(com.z, "mm"),
+                "x": _quantity(com[0], "mm"),
+                "y": _quantity(com[1], "mm"),
+                "z": _quantity(com[2], "mm"),
             },
-            "counts": {
-                "faces": len(shape.Faces),
-                "edges": len(shape.Edges),
-                "solids": len(shape.Solids),
-            },
+            "counts": dict(metrics["counts"]),
         }
         return _ok_envelope(structured, summarize_mass_properties(structured))
 

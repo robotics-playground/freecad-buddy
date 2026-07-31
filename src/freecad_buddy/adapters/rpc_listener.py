@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Callable
 
 from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout
-from freecad_buddy.adapters.rpc_dispatch import MethodRegistry
+from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.contracts.rpc import (
     RPC_ERROR_NO_HANDSHAKE,
@@ -317,7 +317,7 @@ class RpcListener:
                 "run a query_* read to confirm state before mutating"
             )
 
-        audited = method is not None and (method.mutating or method.name == "debug_exec")
+        audited = method is not None and is_audited(method)
         event = method.audit_event if method is not None else "mutation"
         doc_str = doc if isinstance(doc, str) else None
         if audited and self._audit is not None:

@@ -22,7 +22,7 @@ from mcp import types
 from mcp.server.lowlevel import Server
 
 from freecad_buddy.adapters.audit_log import AuditSink
-from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
+from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 
 __all__ = ["Capabilities", "exec_registered", "build_server", "configure_stderr_logging"]
@@ -175,7 +175,7 @@ def build_server(
 
         method = registry.get(tool_name)
         mutating = bool(method is not None and method.mutating)
-        audited = method is not None and (method.mutating or method.name == "debug_exec")
+        audited = method is not None and is_audited(method)
         event = method.audit_event if method is not None else "mutation"
 
         if doc is not None and not isinstance(doc, str):

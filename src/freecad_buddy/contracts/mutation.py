@@ -61,3 +61,4 @@ class MutationBlock(TypedDict, total=False):
     snapshot_path: str | None
     verify_verdict: TerminalStatus | None
     params_digest: str | None
+    touched: list[str]  # Names the op reported creating or modifying

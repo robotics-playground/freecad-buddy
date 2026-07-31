@@ -33,6 +33,10 @@ EXCLUDED_READ_ONLY_TOOLS = {
     "verify_export_step",
     "verify_export_stl",
     "verify_export_3mf",
+    # `preview_dry_run` leaves the live document untouched — it mutates a saveCopy'd TempDoc and
+    # closes it — so it is correctly `mutating=False`. It is excluded because it previews a
+    # Phase-2 sketch_/feature_ mutation, which the Phase-1 read-only assistant cannot issue.
+    "preview_dry_run",
 }
 
 EXPECTED_ALLOW_LIST = {

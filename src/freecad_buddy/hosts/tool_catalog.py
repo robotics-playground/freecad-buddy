@@ -24,7 +24,15 @@ from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capa
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import RenderPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
-from freecad_buddy.usecases import exports, features, queries, screenshot, sketches, verify
+from freecad_buddy.usecases import (
+    exports,
+    features,
+    preview,
+    queries,
+    screenshot,
+    sketches,
+    verify,
+)
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
@@ -774,6 +782,79 @@ def _screenshot_spec():
 # `_stl`/`_3mf` require an `export_id` from a prior export (a mutation the read-only assistant
 # cannot perform, so they are inert here), and `query_screenshot` is a render the text-QA
 # assistant does not need under the G1.3 latency budget.
+_PREVIEW_INPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "doc": _DOC_SCHEMA,
+        "operation": {
+            "type": "object",
+            "properties": {
+                "tool": {
+                    "type": "string",
+                    "description": "a registered sketch_/feature_ mutation tool",
+                },
+                "args": {
+                    "type": "object",
+                    "description": "that tool's input, minus doc/confirm",
+                },
+            },
+            "required": ["tool", "args"],
+            "additionalProperties": False,
+        },
+        "render": {"enum": ["auto", "off"], "default": "auto"},
+        "view": _SCREENSHOT_INPUT_SCHEMA["properties"]["view"],
+    },
+    "required": ["doc", "operation"],
+    "additionalProperties": False,
+}
+
+
+def preview_op_table() -> dict:
+    """The ``{tool name: use-case function}`` table ``preview_dry_run`` may run.
+
+    Derived from the catalog's own ``sketch_*``/``feature_*`` spec lists intersected with the
+    matching module-level use-case functions, so a tool registered without becoming previewable
+    (or the reverse) is a mismatch the tests catch rather than a hand-maintained name list that
+    drifts. ``debug_exec`` is excluded structurally: it is in neither spec list and carries
+    neither name prefix.
+
+    The entries are the bare use-case functions, not the wired handlers: the handlers close over
+    the live registry, while the preview must supply its own document handle at call time.
+    """
+    table = {}
+    for spec in (*_sketch_specs(), *_feature_specs()):
+        module = sketches if spec.name.startswith("sketch_") else features
+        fn = getattr(module, spec.name, None)
+        if fn is not None:
+            table[spec.name] = fn
+    return table
+
+
+def _preview_spec():
+    """The ``preview_dry_run`` spec, closing over the op table built here.
+
+    The table is built inside this factory rather than being threaded through
+    ``HandlerFactory``: widening that signature would touch every other spec factory for one
+    consumer.
+    """
+    op_table = preview_op_table()
+
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+        return lambda **p: preview.preview_dry_run(doc_registry, op_table, render_port, **p)
+
+    return ToolSpec(
+        name="preview_dry_run",
+        make_handler=make,
+        input_schema=_PREVIEW_INPUT_SCHEMA,
+        description="Run a proposed sketch_/feature_ mutation on a throwaway copy of the "
+        "document and return a structured geometry diff plus a preview_id. The live "
+        "document is never mutated.",
+        timeout_s=180.0,
+        mutating=False,
+        audit_event="preview",
+    )
+
+
 READ_ONLY_PROFILE = frozenset(
     {
         "query_capabilities",
@@ -1062,6 +1143,7 @@ def tool_specs() -> list[ToolSpec]:
         ),
         *_sketch_specs(),
         *_feature_specs(),
+        _preview_spec(),
     ]
 
 
