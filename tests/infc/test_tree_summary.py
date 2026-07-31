@@ -21,6 +21,7 @@ class TreeSummaryTest(unittest.TestCase):
         self.link.LinkedObject = self.body
         self.feature = self.doc.addObject("Part::Feature", "Plate")
         import Part
+
         self.feature.Shape = Part.makeBox(10, 10, 1)
         self.doc.recompute()
 
@@ -50,8 +51,8 @@ class TreeSummaryTest(unittest.TestCase):
         grp_node = sc["tree"][0]
         link_names = [n["name"] for n in grp_node.get("links", [])]
         child_names = [n["name"] for n in grp_node.get("children", [])]
-        self.assertIn("pcb", link_names)         # App::Link -> links
-        self.assertIn("Plate", child_names)      # Part::Feature -> children
+        self.assertIn("pcb", link_names)  # App::Link -> links
+        self.assertIn("Plate", child_names)  # Part::Feature -> children
         self.assertNotIn("pcb", child_names)
 
     def test_visible_only_filter_drops_hidden(self):
@@ -89,8 +90,9 @@ class TreeSummaryTest(unittest.TestCase):
         return out
 
     def _count(self, nodes):
-        return sum(1 + self._count(n.get("children", [])) + self._count(n.get("links", []))
-                   for n in nodes)
+        return sum(
+            1 + self._count(n.get("children", [])) + self._count(n.get("links", [])) for n in nodes
+        )
 
     def test_link_target_still_a_root(self):
         # A standalone Body that an App::Link also targets must remain a top-level root
@@ -100,8 +102,25 @@ class TreeSummaryTest(unittest.TestCase):
         self.doc.recompute()
         sc = self._tree(depth=1)
         names = [n["name"] for n in sc["tree"]]
-        self.assertIn("Body", names)   # standalone Body still a root
+        self.assertIn("Body", names)  # standalone Body still a root
         self.assertIn("BodyLink", names)  # the link is also a root
+
+    def test_a_child_linked_from_two_properties_appears_once(self):
+        # getOutList walks every link property and appends each target, so an object reachable
+        # through two of them comes back twice (DocumentObject.cpp getOutListProp). A real
+        # PartDesign::Pad does exactly this: Profile and ReferenceAxis both point at its sketch.
+        pad = self.doc.addObject("PartDesign::Pad", "Pad")
+        sketch = self.doc.addObject("Sketcher::SketchObject", "PadProfile")
+        pad.Profile = sketch
+        pad.ReferenceAxis = (sketch, ["N_Axis"])
+        self.doc.recompute()
+
+        raw = [o.Name for o in pad.OutList]
+        self.assertEqual(raw.count("PadProfile"), 2, "fixture must reproduce the duplicate")
+
+        deps = queries.query_dependencies(self.registry, doc=self.handle, object="Pad")
+        out = deps["structured_content"]["out_list"]
+        self.assertEqual(out.count("PadProfile"), 1, f"duplicate survived: {out}")
 
     def test_text_is_summary_not_json_dump(self):
         env = queries.query_tree_summary(self.registry, doc=self.handle, depth=1)

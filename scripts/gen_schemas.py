@@ -43,6 +43,7 @@ from freecad_buddy.contracts.diff import GeometryDiff
 from freecad_buddy.contracts.envelope import ResultEnvelope
 from freecad_buddy.contracts.fingerprint import FingerprintRecord
 from freecad_buddy.contracts.job import JobStatus
+from freecad_buddy.contracts.mutation import MutationBlock
 from freecad_buddy.contracts.report import ValidationReport
 
 # Wire roots: (filename stem, TypedDict). One schema file each.
@@ -54,6 +55,7 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("geometry-diff", GeometryDiff),
     ("fingerprint", FingerprintRecord),
     ("capability-banner", CapabilityBanner),
+    ("mutation", MutationBlock),
 ]
 
 # Required-field manifest (type name -> required field names).
@@ -74,8 +76,19 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "render",
         "exec_enabled",
     ],
+    "MutationBlock": [
+        "transaction_id",
+        "fingerprint_before",
+        "fingerprint_after",
+        "post_verify",
+        "rolled_back",
+        "rollback_proven",
+    ],
     # embedded $defs
     "ErrorDetail": ["message"],
+    "PostVerifyBlock": ["recompute_clean", "is_valid", "fully_constrained", "tnp_audit", "passed"],
+    "TnpAuditBlock": ["status", "element_map_version", "findings"],
+    "RefFinding": ["owner", "prop", "verdict", "layer"],
     "ReportBanner": ["freecad_version", "element_map_version"],
     "Check": ["passed"],
     "WilsonCI": ["rate", "low", "high", "n", "r"],

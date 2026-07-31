@@ -22,6 +22,15 @@ from freecad_buddy.contracts.fingerprint import (
     massprops_equal,
 )
 from freecad_buddy.contracts.job import JobStatus
+from freecad_buddy.contracts.mutation import (
+    MutationBlock,
+    PostVerifyBlock,
+    RefFinding,
+    RefVerdict,
+    RollbackProof,
+    TnpAuditBlock,
+    TnpStatus,
+)
 from freecad_buddy.contracts.render import (
     FocusSpec,
     RenderPort,
@@ -69,11 +78,16 @@ __all__ = [
     "MappedNameSelector",
     "MassProps",
     "MeasuredKind",
+    "MutationBlock",
     "ObjectFingerprint",
+    "PostVerifyBlock",
+    "RefFinding",
+    "RefVerdict",
     "RenderPort",
     "RenderResult",
     "ReportBanner",
     "ResultEnvelope",
+    "RollbackProof",
     "RpcError",
     "RpcErrorData",
     "RpcErrorFrame",
@@ -88,6 +102,8 @@ __all__ = [
     "Selector",
     "StyleSpec",
     "TerminalStatus",
+    "TnpAuditBlock",
+    "TnpStatus",
     "ValidationReport",
     "WilsonCI",
     "derive_verdict",

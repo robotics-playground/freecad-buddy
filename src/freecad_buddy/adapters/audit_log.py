@@ -64,17 +64,44 @@ class AuditSink:
                 record["code"] = code
         return record
 
-    def before(self, event: str, tool: str, doc: str | None, params: dict) -> None:
-        """Append the pre-execution record for a mutation or exec call."""
+    def before(
+        self,
+        event: str,
+        tool: str,
+        doc: str | None,
+        params: dict,
+        fingerprint_before: str | None = None,
+    ) -> None:
+        """Append the pre-execution record for a mutation or exec call.
+
+        ``fingerprint_before`` is the pre-mutation fingerprint digest; a caller that has not
+        fingerprinted the document (a lifecycle op, or ``debug_exec``) omits it and the field
+        records ``None``.
+        """
         record = self._record(event, tool, doc, params)
-        record["fingerprint_before"] = None
+        record["fingerprint_before"] = fingerprint_before
         self._write(record)
 
     def after(
-        self, event: str, tool: str, doc: str | None, params: dict, verdict: str | None
+        self,
+        event: str,
+        tool: str,
+        doc: str | None,
+        params: dict,
+        verdict: str | None,
+        fingerprint_before: str | None = None,
+        fingerprint_after: str | None = None,
+        rollback: dict | None = None,
     ) -> None:
-        """Append the post-execution record, carrying the resulting envelope status."""
+        """Append the post-execution record, carrying the resulting envelope status.
+
+        ``fingerprint_before``/``fingerprint_after`` are the mutation's real digests and
+        ``rollback`` the rollback outcome block (``{rolled_back, rollback_proven, explanation}``);
+        a caller that ran no mutation bracket omits them and the fields record ``None``.
+        """
         record = self._record(event, tool, doc, params)
-        record["fingerprint_after"] = None
+        record["fingerprint_before"] = fingerprint_before
+        record["fingerprint_after"] = fingerprint_after
         record["verify_verdict"] = verdict  # type: ignore[typeddict-item]
+        record["rollback"] = rollback
         self._write(record)

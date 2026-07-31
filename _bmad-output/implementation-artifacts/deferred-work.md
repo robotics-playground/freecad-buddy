@@ -705,3 +705,83 @@ severity_note: distinct from DW-65, which records the destructive G0 export *gen
 reason: DW-65 filed the surviving argv heuristic in the G0 export generator on the grounds that it overwrites committed fixtures, and set the other three copies aside as scorers/collectors without destructive consequence. This pass verified something DW-65 did not record: two of those three modules are imported by `tests/infc` test modules that run inside the same `FreeCADCmd tests/run_tests.py` process, whose `sys.argv[1]` is `tests/run_tests.py`. The module-level guard therefore evaluates on every suite run and fails to fire only because that argv value happens not to match those files' paths — exactly the accidental coupling DW-60 was filed to remove, now demonstrated live in the suite rather than argued in the abstract. Any change to how the runner is invoked (a wrapper passing a different `argv[1]`, direct `FreeCADCmd benchmarks/g0/fault-injection/score_verify_shape.py`, or a future harness importing these for their parsers) flips a guard that no test covers. `grep -rn "_is_top_level_script"` confirms five surviving copies repo-wide including `tests/run_tests.py` itself, which spec DW-60 **Never** places out of scope. Fix: convert the two suite-imported copies to the same explicit env-flag opt-in and add import-safety coverage, or — if their module-level bodies are genuinely non-destructive — replace the heuristic with a plain `if __name__ == "__main__"` plus a documented `FreeCADCmd -c` entry point, so no argv coupling remains anywhere in `benchmarks/`.
 status: done 2026-07-31
 resolution: resolved by commit 69372c4 together with DW-65. Reachability was confirmed rather than assumed: reverting `score_verify_shape.py` to the argv guard fails the new import-safety test with a *changed* `validators.yaml` digest, so the suite run really did rewrite the registry. All four modules now use per-module env opt-ins.
+
+### DW-70: TNP guard produces only BROKEN — REPOINTED, DROPPED, RE_BASELINED and per-reference PASS are unreachable
+origin: review-adversarial-general, review-edge-case-hunter
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: high
+location: src/freecad_buddy/usecases/tnp_guard.py (`audit_references`), src/freecad_buddy/contracts/mutation.py (`RefVerdict`)
+reason: Story 3.2 deliberately scopes the guard to Layer 0 (its spec **Never** section assigns Layer 1 mapped-name diff and Layer 2 `getElementHistory` to Story 3.5), and the closed `RefVerdict` enum ships all six members now because the wire vocabulary is contracts-owned. The consequence a reader will not expect: on the supported path the audit compares nothing against its `snapshot` argument, so a mutation that repoints `Pad.Profile` from a mapped name to a different element leaves every object `isValid()`, the audit returns `CLEAN`, and `post_verify` commits it. The `RE_BASELINED` exclusion in `post_verify`'s failing-finding filter and the `ElementMapVersion` re-baseline rule (verification-design §3.4) are likewise inert because nothing emits that verdict. This pass added a missing-element sweep so `?`-marked unresolved references are caught, which closes the loudest hole, but silent re-points remain invisible until 3.5. Fix: Story 3.5 implements the per-entry comparison; until then no caller should read a `CLEAN` TNP verdict as evidence that references survived a mutation.
+status: open
+
+### DW-71: `run_mutation`'s snapshot-restore path returns a new document object that no registry rebinds
+origin: review-edge-case-hunter
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: high
+location: src/freecad_buddy/usecases/transaction.py (`_restore_from_snapshot`, `run_mutation` return), src/freecad_buddy/usecases/documents.py (`DocumentRegistry._by_handle`)
+reason: The snapshot restore closes the original document and reopens it from the `saveCopy`, minting a new object (and a new immutable `Name`). `run_mutation` returns `(document, envelope)` precisely so the call site can rebind, but `DocumentRegistry` has no rebind method, so `_by_handle[handle]` still maps to the closed object. No caller exists yet — Story 3.2 ships the runtime, not the tools — so nothing is broken today; the first `sketch_*`/`feature_*` tool (Stories 3.3/3.4) inherits a live footgun where every post-rollback call on that handle touches a deleted document. `_restore_from_snapshot` also re-points `restored.FileName` at the user's original path, so a later `document_save` would write snapshot content over the user's file. Fix: add `DocumentRegistry.rebind(handle, document)` and make it the documented obligation of every mutation tool call site, and decide whether `FileName` should be cleared instead of preserved.
+status: open
+
+### DW-72: No G2 fault scorer or criteria collector is wired, so nothing scores the mutation runtime
+origin: review-adversarial-general
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: medium
+location: benchmarks/runner.py (`_FAULT_SCORERS` lines 75-77, `_collect_report` line 318), benchmarks/_registry/validators.yaml
+reason: `_FAULT_SCORERS` has no `G2` entry, so `runner faults G2` still raises `UsageError`, and all six G2 criteria fall through `_collect_report` to `not_collected_report`. There is also no `run_mutation` or `assertions` row in `validators.yaml` and no `_VALIDATOR_SOURCES` entry, so the rollback and assertion validators cannot produce a citable sensitivity/false-alarm figure and editing them will not stale any score — the exact protection the registry exists to give (NFR2). Story 3.2's task list did not name these files, and G2.1/G2.2 cannot be scored end-to-end until an actor can drive a mutation tool, so this is correctly later work rather than a gap in this story. Fix: wire a G2 scorer plus registry rows when Stories 3.3/3.4 land the first driveable mutation tools, before any G2 pass rate is quoted.
+status: open
+
+### DW-73: The four rollback-boundary `planted_op` identifiers are implemented nowhere and validated by nothing
+origin: review-adversarial-general, review-edge-case-hunter
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: medium
+location: benchmarks/g2/fault-injection/rollback-boundary/*/case.yaml (`planted_op`)
+reason: Materializing the fixtures required naming the op that plants each fault (`nested_open_transaction_then_raise`, `sketch_on_datum_plane_then_raise`, `add_solid_then_raise`, `add_solid`); none resolves to a callable anywhere in the repo, and no test asserts they do. Because the fixtures are now committed, `check_provenance`'s pending exemption no longer applies and the cases *look* complete, trading a declared-and-gate-checked gap (`fixture: pending`) for an unchecked one. Fix: land the ops with the G2 scorer (DW-72) and add a test asserting every `planted_op` resolves, mirroring how G0/G1 pin their `targets_validator` values.
+status: open
+
+### DW-74: `g2-fault-rollback-6031-sketch-on-plane` expectation was re-pointed to measured behaviour, weakening the suite
+origin: review-adversarial-general
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: medium
+location: benchmarks/g2/fault-injection/rollback-boundary/g2-fault-rollback-6031-sketch-on-plane/case.yaml
+reason: The case was authored expecting `rolled_back_via_snapshot`; measured against the real runtime on FreeCAD 1.1.1 abort *does* restore the sketch, so it yields `rolled_back_verified`. The implementation recorded the measured value and added an `expected_path_by_build` map holding both outcomes rather than faking the fault — the honest handling — but the result is a `planted_defect` whose expected outcome is now the clean fast path, behaviourally identical to its own `PASS_CLEAN` control, which inflates sensitivity if scored naively. `expected_path_by_build` is read by no scorer or test. Contributing cause worth checking first: the fixture generator creates a PartDesign Body via `addObject` only, and Origin datum planes are created by the GUI command, so the sketch-on-plane op may have had no datum plane to attach to — i.e. the measurement may be a fixture artifact rather than a build property. Fix: verify the fixture carries Origin planes, then either author an op that reproduces the #6031 boundary on 1.1.x or mark the case unreachable on this build. Human decision at G2.2 scoring time.
+status: open
+
+### DW-75: `hole_through` compares a hole wall's extent to the whole solid's extent, not the material thickness at the hole
+origin: review-adversarial-general
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: medium
+location: benchmarks/harness/assertions.py (`_measure_hole_through`, `_extent_along`)
+reason: The primitive tests `wall >= solid - tol` where `solid` is every vertex of the shape projected onto the hole axis. On a stepped, filleted or otherwise non-prismatic part the solid's axial extent exceeds the local thickness the hole must clear, so a correctly through-drilled hole grades blind; conversely a blind hole in a thin local boss on a thick part can pass as through. `_extent_along` also returns `0.0` for fewer than two points, so a seamless full-cylinder wall with no vertices reads as blind. The two dev cases using it (`g2-dev-013-pocket`, `g2-dev-023-hole`) target flat plates where the approximation holds, so nothing is mis-graded today. Fix: measure thickness along the hole axis at the hole (ray/section against the solid) before any non-prismatic case uses this primitive; `verification-design.md` §7.2 owns the `hole_through` definition, so the reconcile belongs there.
+status: open
+
+### DW-76: `_is_hole_wall`'s radial probe collapses four distinct failures into `False` and misses thin walls
+origin: review-adversarial-general, review-edge-case-hunter
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: medium
+location: benchmarks/harness/assertions.py (`_is_hole_wall`)
+reason: The probe steps up to 0.5 mm radially outward and asks `shape.isInside`, so a hole within ~0.5 mm of a part edge probes outside the material and is not counted — `count_cylindrical_holes` then under-reports and the case fails with no diagnostic. The same bare `False` is returned when `valueAt` raises, when `ParameterRange` is short, and when `isInside` is unsupported, so an operator cannot distinguish a wrong actor from a grader limitation. A near-zero `Radius` also collapses the step toward 0 and leaves the probe on the surface. Fix: scale the step to the local wall thickness, clamp it away from zero, and return a distinguishable "ungradeable" outcome rather than a geometry verdict.
+status: open
+
+### DW-77: `run_mutation` leaves the bracket unguarded outside the `op`/`recompute`/`post_verify` try
+origin: review-adversarial-general, review-edge-case-hunter
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: medium
+location: src/freecad_buddy/usecases/transaction.py (`run_mutation`, `_prove_rollback`)
+reason: Only `op()`, `recompute()` and `post_verify()` run inside the `try`. Six calls that can raise sit outside it: `saveCopy` (disk full, unwritable temp), the pre-bracket and post-commit `fingerprint()` (raises `SerializerUnavailable` on a shape exposing neither exporter), `commitTransaction`, the post-abort `abortTransaction`/`recompute`, and the `fingerprint()` inside `_prove_rollback`. Each escapes `run_mutation` raw: the caller gets a bare exception with no `MutationBlock`, the `before` audit line is already written with no matching `after`, and the `FCB_TMP_snap_*` directory leaks. The post-commit case is the worst — the document is already permanently mutated when it fires. Not reachable through any current caller (Stories 3.3–3.7 own the typed ops that could produce such a shape) and no I/O-matrix row covers it, so it is a hardening gap rather than a live defect. Fix: wrap the bracket so every exit path returns an envelope and deletes or reports the snapshot, and add matrix rows for snapshot-unavailable and fingerprint-unavailable.
+status: open
+
+### DW-78: `post_verify` reports `is_valid`/`fully_constrained` as assertions on short-circuit paths
+origin: review-adversarial-general
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: low
+location: src/freecad_buddy/usecases/transaction.py (`post_verify`, `_block`)
+reason: On the `verify_sketch` failure paths `_block(True, True, ...)` hardcodes `is_valid=True`, and on every `verify_shape` failure path `fully_constrained` is passed `None`. `PostVerifyBlock` documents `fully_constrained: None ⇔ no sketch involved`, so a mutation whose pad failed `verify_shape` before the sketch loop ran reports "no sketch involved" when one was touched; likewise an op touching only a sketch reports `is_valid=true` without any shape having been graded. Both are unmeasured values presented as measurements, which the module docstring says it never does. Consequence is confined to how a consumer reads a block that already carries `passed=false` plus a naming `explanation`, so no verdict changes. Fix: add an explicit not-measured encoding distinct from `None`-means-no-sketch, which needs a contracts change and therefore a spec decision.
+status: open
+
+### DW-79: `MutationBlock` is `total=False` while its JSON Schema marks six fields required
+origin: review-adversarial-general, review-edge-case-hunter
+source_spec: `spec-3-2-mutation-protocol-runtime.md`
+severity: low
+location: src/freecad_buddy/contracts/mutation.py, src/freecad_buddy/contracts/jsonschema/mutation.schema.json
+reason: Every field of `MutationBlock`, `PostVerifyBlock`, `TnpAuditBlock` and `RefFinding` is optional to the type checker (`total=False`, with `# required` only as a comment), while the generated schema lists six as `required`. A producer omitting `rollback_proven` type-checks clean and fails only at wire validation; the same split is why `params_digest` could be declared and pinned by a test yet never populated until this pass. The schema also sets no `additionalProperties: false`, so a misspelled field validates while the real one silently defaults. Fix: split the required keys into a `total=True` base class per block and close the schema objects — a contracts-wide change affecting the other generated schemas, so it wants one deliberate pass rather than a drive-by.
+status: open

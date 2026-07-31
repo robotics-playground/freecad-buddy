@@ -97,13 +97,20 @@ def test_command_case_targets_a_committed_golden_model(case: Path):
 
 
 @pytest.mark.parametrize("case", FAULT_CASES, ids=lambda p: p.parent.name)
-def test_fault_case_declares_its_fixture_pending(case: Path):
-    """AD-19 lands the benchmark first, so the fixture is declared pending, never just absent.
+def test_fault_case_declares_its_fixture_pending_or_carries_it(case: Path):
+    """A fault case either declares its fixture pending or carries it with a provenance manifest.
 
-    ``check_provenance`` exempts a case only when the pending state is explicit, so a fixture
-    forgotten once the mutation runtime exists is still flagged.
+    AD-19 lands the benchmark before the runtime that can plant the fixtures, so ``pending`` is a
+    legitimate declared state. Once materialized, the ``.FCStd`` and its manifest must both be
+    present: ``check_provenance`` exempts a case only while the pending state is explicit, so a
+    fixture forgotten after materialization cannot hide.
     """
-    assert _load(case)["fixture"] == "pending"
+    data = _load(case)
+    fixture = data["fixture"]
+    if fixture == "pending":
+        return
+    assert (case.parent / fixture).is_file()
+    assert (case.parent / data["provenance"]).resolve().is_file()
 
 
 def test_all_five_fault_suites_are_present():

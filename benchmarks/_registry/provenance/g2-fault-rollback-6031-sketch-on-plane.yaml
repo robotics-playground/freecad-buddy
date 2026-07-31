@@ -1,0 +1,8 @@
+artifact: g2/fault-injection/rollback-boundary/g2-fault-rollback-6031-sketch-on-plane/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+  generator: benchmarks/g2/fault-injection/rollback-boundary/build_rollback_fixtures.py
+real_world_basis: "Pre-mutation input for the #6031 sketch-on-plane rollback boundary: an empty PartDesign Body with its Origin datum planes"
+license_checked: {by: TanNT, date: 2026-07-31}

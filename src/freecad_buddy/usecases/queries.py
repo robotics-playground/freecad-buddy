@@ -322,9 +322,28 @@ def query_tree_summary(
     return registry.with_document(doc, read)
 
 
+def _dedup_by_name(objects) -> list:
+    """Drop repeated objects, keeping first-seen order.
+
+    ``getOutList`` walks every link property and appends each target it finds, so an object
+    reachable through two properties (a Pad's ``Profile`` and its Body ``Group`` membership)
+    is returned twice. The duplicates are an artefact of the traversal, not distinct children.
+    """
+    seen: set[str] = set()
+    unique = []
+    for obj in objects:
+        name = getattr(obj, "Name", None)
+        if name in seen:
+            continue
+        if name is not None:
+            seen.add(name)
+        unique.append(obj)
+    return unique
+
+
 def _out_list(obj: object) -> list:
-    """The object's direct children (``OutList``), empty when absent."""
-    return list(getattr(obj, "OutList", []) or [])
+    """The object's distinct direct children (``OutList``), empty when absent."""
+    return _dedup_by_name(getattr(obj, "OutList", []) or [])
 
 
 def _is_link(obj: object) -> bool:
@@ -439,14 +458,12 @@ def query_dependencies(
             obj = _resolve_object(document, object)
             structured = {
                 "object": obj.Name,
-                "in_list": [dep.Name for dep in getattr(obj, "InList", []) or []],
-                "out_list": [dep.Name for dep in getattr(obj, "OutList", []) or []],
+                "in_list": [dep.Name for dep in _dedup_by_name(getattr(obj, "InList", []) or [])],
+                "out_list": [dep.Name for dep in _out_list(obj)],
             }
             return _ok_envelope(structured, summarize_dependencies(structured))
         edges = [
-            {"from": obj.Name, "to": dep.Name}
-            for obj in document.Objects
-            for dep in getattr(obj, "OutList", []) or []
+            {"from": obj.Name, "to": dep.Name} for obj in document.Objects for dep in _out_list(obj)
         ]
         total_edges = len(edges)
         structured = {

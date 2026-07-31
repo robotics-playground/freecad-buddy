@@ -114,6 +114,21 @@ def element_map_version() -> int | None:
         return None
 
 
+def enable_undo(doc: object) -> bool:
+    """Turn on ``doc``'s undo stack when the build honours the switch; report whether it is on.
+
+    ``Document.UndoMode`` is ``0`` (no undo) on a headless document, so ``abortTransaction`` would
+    silently restore nothing. Some builds hardcode the getter to ``1`` and ignore the setter, so
+    the result is read back rather than assumed: the return value is what the document reports
+    after the write, never what was requested.
+    """
+    try:
+        doc.UndoMode = 1
+    except Exception:  # noqa: BLE001 - a build that rejects the write leaves undo as it was
+        pass
+    return bool(getattr(doc, "UndoMode", 0))
+
+
 @lru_cache(maxsize=1)
 def freecad_version() -> str:
     """The running FreeCAD version as ``major.minor.patch``, or ``unknown`` when absent."""

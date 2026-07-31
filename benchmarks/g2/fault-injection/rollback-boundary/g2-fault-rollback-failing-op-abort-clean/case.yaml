@@ -1,15 +1,17 @@
 id: g2-fault-rollback-failing-op-abort-clean
 gate: g2
 criterion: G2.2
-targets_validator: run_mutation@usecases.mutation.run_mutation
+targets_validator: run_mutation@usecases.transaction.run_mutation
 fault:
   kind: clean_control
   description: >-
     An ordinary failing op whose abort restores the exact pre-state; the fast path is correct and no snapshot escalation is needed.
   expectation: PASS_CLEAN
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation input and
+# the op named here fails without provoking the rollback boundary.
+planted_op: add_solid_then_raise
 expected:
   expected_path: "abort"
   expected_rollback: "rolled_back_verified"
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-rollback-failing-op-abort-clean.yaml

@@ -48,9 +48,11 @@ Three do **not** exist in that vocabulary and are a declared G2 extension, not a
 | `expect_sketch_fully_constrained` | G2.5 grades `FullyConstrained` (AD-8), which no §7.2 primitive reads. |
 | `expect_sketch_geometry_count` | A sketch command's result is geometry, not a solid, so no shape-measuring primitive applies. |
 
-Whoever implements the grader must either add these three to the vocabulary or reconcile the
-cases against primitives that already exist. `test_assertion_fns_are_declared` pins the split, so
-a fourth name cannot appear unnoticed.
+The reconcile kept all eight names: `benchmarks/harness/assertions.py` implements the five §7.2
+primitives plus these three extensions, so no case was renamed and the vocabulary grew by exactly
+the three documented above. `test_assertion_fns_are_declared` pins the split, so a fourth name
+cannot appear unnoticed, and `test_assertions_grade_every_declared_g2_fn` pins that the grader
+covers every one of them.
 
 ## Fault suites
 
@@ -77,5 +79,11 @@ Two cases exist specifically to defeat a shallow guard, and say so in `must_not_
 uv run python -m benchmarks.runner run G2 --run <run-id>
 ```
 
-Until Stories 3.2–3.7 land, every criterion fails honestly with `INVALID_INPUT` — there is no
-mutation tool to grade. That failure is the Story 3.1 acceptance signal, not a defect.
+Until Stories 3.3–3.7 land, every criterion fails honestly with `INVALID_INPUT` — there is no
+mutation *tool* for an actor to drive, even though the mutation runtime and the grader now exist.
+That failure is the entry-gate acceptance signal, not a defect.
+
+The `rollback-boundary/` fixtures are materialized (Story 3.2): each is the pre-mutation input
+document, rebuilt by `rollback-boundary/build_rollback_fixtures.py`, and each `case.yaml` names the
+op that plants its fault in `planted_op`. The other four suites' fixtures remain `pending` until
+the tools that can plant them land.

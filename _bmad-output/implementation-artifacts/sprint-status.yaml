@@ -81,7 +81,7 @@ development_status:
   epic-2-retrospective: optional
   epic-3: in-progress
   3-1-entry-gate-g2e-benchmark-fault-suites: done
-  3-2-mutation-protocol-runtime: backlog
+  3-2-mutation-protocol-runtime: done
   3-3-sketch-tools: backlog
   3-4-feature-tools: backlog
   3-5-tnp-guard-layers-1-2: backlog

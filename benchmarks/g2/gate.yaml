@@ -28,14 +28,14 @@ actor:
   profile: confirmed-mutation
 
 # Deterministic validators, re-executed by the runner. Agent claims are never echoed as results.
-# The implementation does not exist yet — it lands with the mutation runtime (Story 3.2+), which
-# is why every criterion currently fails INVALID_INPUT. The path is where it MUST land, not a
-# claim that it is present; the assertion `fn` names used by the dev cases are reconciled with
-# the verification-design §7.2 vocabulary as part of that story.
+# `assertions.evaluate` grades the eight `fn` names the dev cases use: five are
+# verification-design §7.2 primitives and three are the declared G2 extensions (see
+# benchmarks/g2/README.md). The mutation tools the criteria drive land in Stories 3.3-3.7, so the
+# command criteria still fail until an actor can issue a command.
 grader:
   model: deterministic-geometry-assertions
   context: independent-grader
-  implementation: benchmarks/harness/assertions.py  # planned, Story 3.2+
+  implementation: benchmarks/harness/assertions.py
 
 # Gate-level required human tokens (validation-harness-design.md §7), checked for PRESENCE at
 # exit (Story 3.8), not here.

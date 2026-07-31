@@ -1,14 +1,17 @@
 id: g2-fault-rollback-successful-op-no-rollback
 gate: g2
 criterion: G2.2
-targets_validator: run_mutation@usecases.mutation.run_mutation
+targets_validator: run_mutation@usecases.transaction.run_mutation
 fault:
   kind: clean_control
   description: >-
     A succeeding op commits; no rollback path runs at all.
   expectation: PASS_CLEAN
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation input and
+# the op named here succeeds, so the bracket commits.
+planted_op: add_solid
 expected:
+  expected_path: "commit"
   expected_rollback: null
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-rollback-successful-op-no-rollback.yaml
