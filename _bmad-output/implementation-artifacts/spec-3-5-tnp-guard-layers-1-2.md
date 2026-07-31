@@ -4,7 +4,7 @@ type: 'feature'
 epic: 3
 story: '3-5-tnp-guard-layers-1-2'
 created: '2026-07-31'
-status: 'in-review'
+status: 'done'
 baseline_revision: '36bd870'
 review_loop_iteration: 1
 followup_review_recommended: false

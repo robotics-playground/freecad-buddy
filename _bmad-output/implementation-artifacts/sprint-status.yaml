@@ -84,7 +84,7 @@ development_status:
   3-2-mutation-protocol-runtime: done
   3-3-sketch-tools: done
   3-4-feature-tools: done
-  3-5-tnp-guard-layers-1-2: backlog
+  3-5-tnp-guard-layers-1-2: done
   3-6-preview-dry-run-diff: backlog
   3-7-confirmation-flow-verified-undo: backlog
   3-8-gate-g2-exit: backlog
