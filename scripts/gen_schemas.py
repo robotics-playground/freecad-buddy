@@ -41,6 +41,7 @@ from freecad_buddy.contracts.audit import AuditRecord
 from freecad_buddy.contracts.capabilities import CapabilityBanner
 from freecad_buddy.contracts.diff import GeometryDiff
 from freecad_buddy.contracts.envelope import ResultEnvelope
+from freecad_buddy.contracts.feature import FeatureState
 from freecad_buddy.contracts.fingerprint import FingerprintRecord
 from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.mutation import MutationBlock
@@ -58,6 +59,7 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("capability-banner", CapabilityBanner),
     ("mutation", MutationBlock),
     ("sketch-state", SketchState),
+    ("feature-state", FeatureState),
 ]
 
 # Required-field manifest (type name -> required field names).
@@ -77,6 +79,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "varset_backend",
         "render",
         "sketcher_available",
+        "partdesign_available",
         "exec_enabled",
     ],
     "MutationBlock": [
@@ -104,6 +107,19 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     # destroyed reports `readable: false` and carries no grade.
     "SketchState": ["schema", "sketch", "readable"],
     "ConstraintRef": ["id"],
+    # The shape summary is present only when `readable` is true; a feature a rollback removed
+    # reports `readable: false` and carries no summary.
+    "FeatureState": ["schema", "feature", "readable"],
+    "ShapeSummary": [
+        "volume",
+        "area",
+        "bbox",
+        "solid_count",
+        "face_count",
+        "edge_count",
+        "vertex_count",
+        "is_valid",
+    ],
 }
 
 # Conditional manifest (wire-root type name -> conditional spec). Each entry binds

@@ -80,6 +80,19 @@ EXPECTED_SKETCH_TOOLS = {
     "sketch_add_external_geometry",
 }
 
+EXPECTED_FEATURE_TOOLS = {
+    "feature_pad",
+    "feature_pocket",
+    "feature_revolve",
+    "feature_hole",
+    "feature_fillet",
+    "feature_chamfer",
+    "feature_pattern",
+    "feature_mirror",
+    "feature_datum",
+    "feature_set_parameters",
+}
+
 
 def _load_schema(name: str) -> dict:
     return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
@@ -101,6 +114,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
     assert EXPECTED_VERIFY_TOOLS <= names
     assert EXPECTED_EXPORT_TOOLS <= names
     assert EXPECTED_SKETCH_TOOLS <= names
+    assert EXPECTED_FEATURE_TOOLS <= names
     assert "query_capabilities" in names
     assert "query_screenshot" in names
     assert "debug_exec" not in names
@@ -110,6 +124,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
         | EXPECTED_VERIFY_TOOLS
         | EXPECTED_EXPORT_TOOLS
         | EXPECTED_SKETCH_TOOLS
+        | EXPECTED_FEATURE_TOOLS
         | {"query_capabilities", "query_screenshot"}
     )
 

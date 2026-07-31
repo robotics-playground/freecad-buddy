@@ -9,9 +9,11 @@ probe that cannot run returns a conservative default rather than raising.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
+from typing import Callable, Literal, TypeVar
 
 from freecad_buddy.contracts import CapabilityBanner
+
+T = TypeVar("T")
 
 _STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
 _STEP_SCHEMES = frozenset({"AP203", "AP214", "AP242"})
@@ -131,6 +133,80 @@ def sketcher_available() -> bool:
     return True
 
 
+@lru_cache(maxsize=1)
+def partdesign_available() -> bool:
+    """Whether the running build can create the PartDesign objects the feature tools drive.
+
+    True when a throwaway document accepts a ``PartDesign::Body`` and a ``PartDesign::Pad``;
+    a build without either cannot run any feature mutation.
+    """
+    try:
+        import FreeCAD
+    except ImportError:
+        return False
+    try:
+        doc = FreeCAD.newDocument("FCB_TMP_partdesign_probe")
+    except Exception:  # noqa: BLE001 - cannot open a probe document; assume unavailable
+        return False
+    try:
+        body = doc.addObject("PartDesign::Body", "FCB_TMP_body")
+        pad = doc.addObject("PartDesign::Pad", "FCB_TMP_pad")
+        return body is not None and pad is not None
+    except Exception:  # noqa: BLE001 - any failure means the workbench is unavailable
+        return False
+    finally:
+        FreeCAD.closeDocument(doc.Name)
+
+
+def probe_object(type_id: str, read: Callable[[object], T]) -> T:
+    """Create ``type_id`` on a scratch document, run ``read`` against it, and return the result.
+
+    The scratch document is closed on every path, including when ``read`` raises. No document the
+    caller owns is written.
+
+    :param type_id: the FreeCAD type id to instantiate, such as ``"PartDesign::Pad"``.
+    :param read: receives the probe object and returns whatever the caller needs from it.
+    :raises RuntimeError: FreeCAD is unavailable, or the scratch document cannot be opened.
+    """
+    try:
+        import FreeCAD
+    except ImportError as exc:
+        raise RuntimeError("FreeCAD is unavailable; cannot probe object properties") from exc
+    doc = FreeCAD.newDocument("FCB_TMP_type_probe")
+    try:
+        return read(doc.addObject(type_id, "FCB_TMP_probe"))
+    finally:
+        FreeCAD.closeDocument(doc.Name)
+
+
+def enum_values(obj: object, prop: str) -> list[str]:
+    """Return the live enumeration of ``obj.prop``, or ``[]`` when it exposes none.
+
+    Several PartDesign enumerations differ in spelling, ordering and length between the
+    supported FreeCAD builds, and ``Hole`` re-populates four of them whenever ``ThreadType``
+    changes, so every value is checked against this reading rather than a hardcoded list.
+    """
+    getter = getattr(obj, "getEnumerationsOfProperty", None)
+    if not callable(getter):
+        return []
+    try:
+        return [str(value) for value in getter(prop)]
+    except Exception:  # noqa: BLE001 - a property with no enumeration offers no values
+        return []
+
+
+def extrude_symmetric(obj: object, on: bool) -> None:
+    """Make an extrude straddle its profile plane by writing ``Midplane``.
+
+    A freshly created extrude already extrudes to one side, so only ``on=True`` writes the
+    property.
+
+    :raises AttributeError: the build does not expose the ``Midplane`` property.
+    """
+    if on:
+        obj.Midplane = True
+
+
 # SketchObject::execute() returns this exact message prefix, and only it, when solve() reports
 # -2 (redundant constraints) — a code distinct from conflicting (-3), over-constrained (-4) and
 # malformed (-5). It is therefore a reliable discriminator for redundancy alone.
@@ -204,6 +280,7 @@ def warm_capability_probes() -> None:
     element_map_available()
     element_map_version()
     sketcher_available()
+    partdesign_available()
     freecad_version()
 
 
@@ -246,4 +323,5 @@ def capability_banner(
         "varset_backend": varset_backend(),
         "render": render,
         "sketcher_available": sketcher_available(),
+        "partdesign_available": partdesign_available(),
     }

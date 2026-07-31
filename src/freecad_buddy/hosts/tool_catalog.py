@@ -24,7 +24,7 @@ from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capa
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import RenderPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
-from freecad_buddy.usecases import exports, queries, screenshot, sketches, verify
+from freecad_buddy.usecases import exports, features, queries, screenshot, sketches, verify
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
@@ -440,6 +440,235 @@ def _sketch_specs():
     ]
 
 
+def _feature_schema(properties, required):
+    """A feature tool input schema: doc handle, the tool's own fields, and confirm passthrough."""
+    return {
+        "type": "object",
+        "properties": {"doc": _DOC_SCHEMA, **properties, "confirm": _CONFIRM_SCHEMA},
+        "required": ["doc", *required],
+        "additionalProperties": False,
+    }
+
+
+def _feature_method(name, fn, schema, description):
+    """A ``ToolSpec`` for a feature mutation use case.
+
+    ``reversed`` is a wire field whose name shadows a builtin, so the handler forwards the raw
+    keyword dict rather than binding it positionally.
+    """
+
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+        return lambda **p: fn(doc_registry, **p)
+
+    return ToolSpec(
+        name=name,
+        make_handler=make,
+        input_schema=schema,
+        description=description,
+        timeout_s=120.0,
+        mutating=True,
+    )
+
+
+_EDGE_SELECTOR_LIST_SCHEMA = {
+    "type": "array",
+    "items": _SUBELEMENT_SELECTOR_SCHEMA,
+    "minItems": 1,
+    "description": "edges on the base feature; an edge FreeCAD would silently drop is rejected",
+}
+_FEATURE_NAME_SCHEMA = {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name",
+}
+_EXTRUDE_PROPERTIES = {
+    "body": {"type": "string", "description": "target PartDesign Body Name"},
+    "profile": {"type": "string", "description": "sketch Name"},
+    "name": _FEATURE_NAME_SCHEMA,
+    "length": _QUANTITY_SCHEMA,
+    "second_length": _QUANTITY_SCHEMA,
+    "up_to": {"type": "string", "description": "extrude Type; validated against the live enum"},
+    "up_to_face": _SUBELEMENT_SELECTOR_SCHEMA,
+    "reversed": {"type": "boolean", "default": False},
+    "midplane": {"type": "boolean", "default": False},
+    "taper_angle": _QUANTITY_SCHEMA,
+}
+
+
+def _feature_specs():
+    """The ten ``feature_*`` mutation specs, in catalog order."""
+    return [
+        _feature_method(
+            "feature_pad",
+            features.feature_pad,
+            _feature_schema(_EXTRUDE_PROPERTIES, ["body", "profile", "name"]),
+            "Pad a sketch profile into a Body. up_to defaults to 'Length', which requires a "
+            "positive length; midplane straddles the profile plane instead of moving the solid.",
+        ),
+        _feature_method(
+            "feature_pocket",
+            features.feature_pocket,
+            _feature_schema(_EXTRUDE_PROPERTIES, ["body", "profile", "name"]),
+            "Cut a pocket from a sketch profile. up_to='ThroughAll' cuts the whole body; the "
+            "value is checked against this build's live Pocket Type enumeration.",
+        ),
+        _feature_method(
+            "feature_revolve",
+            features.feature_revolve,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "profile": {"type": "string"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "axis": {
+                        **_SUBELEMENT_SELECTOR_SCHEMA,
+                        "description": "the profile sketch's V_Axis/H_Axis/N_Axis, or an edge",
+                    },
+                    "angle": _QUANTITY_SCHEMA,
+                    "second_angle": _QUANTITY_SCHEMA,
+                    "up_to": {"type": "string"},
+                    "reversed": {"type": "boolean", "default": False},
+                    "midplane": {"type": "boolean", "default": False},
+                },
+                ["body", "profile", "name", "axis"],
+            ),
+            "Revolve a sketch profile about an axis. The axis sets ReferenceAxis, from which "
+            "FreeCAD computes the read-only Base/Axis. Angles are in degrees.",
+        ),
+        _feature_method(
+            "feature_hole",
+            features.feature_hole,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "profile": {"type": "string"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "diameter": _QUANTITY_SCHEMA,
+                    "depth": _QUANTITY_SCHEMA,
+                    "depth_type": {"type": "string", "description": "Dimension or ThroughAll"},
+                    "thread_type": {"type": "string"},
+                    "cut_type": {"type": "string"},
+                    "cut_diameter": _QUANTITY_SCHEMA,
+                    "cut_depth": _QUANTITY_SCHEMA,
+                    "reversed": {"type": "boolean", "default": False},
+                },
+                ["body", "profile", "name"],
+            ),
+            "Drill a PartDesign Hole from a sketch profile. thread_type is applied first because "
+            "FreeCAD re-populates the legal cut_type set from it.",
+        ),
+        _feature_method(
+            "feature_fillet",
+            features.feature_fillet,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "base": {"type": "string", "description": "feature carrying the edges"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "edges": _EDGE_SELECTOR_LIST_SCHEMA,
+                    "radius": _QUANTITY_SCHEMA,
+                },
+                ["body", "base", "name", "edges", "radius"],
+            ),
+            "Fillet named edges. An edge without exactly two adjacent faces, or whose faces meet "
+            "tangentially, is rejected — FreeCAD would drop it and commit a smaller fillet.",
+        ),
+        _feature_method(
+            "feature_chamfer",
+            features.feature_chamfer,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "base": {"type": "string"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "edges": _EDGE_SELECTOR_LIST_SCHEMA,
+                    "size": _QUANTITY_SCHEMA,
+                    "second_size": _QUANTITY_SCHEMA,
+                    "angle": _QUANTITY_SCHEMA,
+                    "chamfer_type": {"type": "string"},
+                },
+                ["body", "base", "name", "edges", "size"],
+            ),
+            "Chamfer named edges. chamfer_type is checked against the live enumeration; the same "
+            "silent-drop edge check as feature_fillet applies.",
+        ),
+        _feature_method(
+            "feature_pattern",
+            features.feature_pattern,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "kind": {"enum": ["linear", "polar"]},
+                    "originals": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "feature Names; defaults to the Body Tip",
+                    },
+                    "direction": _SUBELEMENT_SELECTOR_SCHEMA,
+                    "axis": _SUBELEMENT_SELECTOR_SCHEMA,
+                    "length": _QUANTITY_SCHEMA,
+                    "angle": _QUANTITY_SCHEMA,
+                    "occurrences": {"type": "integer", "minimum": 2},
+                    "mode": {"type": "string"},
+                    "reversed": {"type": "boolean", "default": False},
+                },
+                ["body", "name", "kind", "occurrences"],
+            ),
+            "Linear or polar pattern. occurrences counts the original. A polar pattern over a "
+            "full turn steps by angle/occurrences, not angle/(occurrences-1).",
+        ),
+        _feature_method(
+            "feature_mirror",
+            features.feature_mirror,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "mirror_plane": _SUBELEMENT_SELECTOR_SCHEMA,
+                    "originals": {"type": "array", "items": {"type": "string"}},
+                },
+                ["body", "name", "mirror_plane"],
+            ),
+            "Mirror features across a datum plane, base plane or planar face; originals default "
+            "to the Body Tip.",
+        ),
+        _feature_method(
+            "feature_datum",
+            features.feature_datum,
+            _feature_schema(
+                {
+                    "body": {"type": "string"},
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "kind": {"enum": ["plane", "axis", "point", "cs"]},
+                    "attachment": _SUBELEMENT_SELECTOR_SCHEMA,
+                    "map_mode": {"type": "string", "default": "FlatFace"},
+                    "offset": _QUANTITY_SCHEMA,
+                },
+                ["body", "name", "kind", "attachment"],
+            ),
+            "Create a datum plane/axis/point/coordinate system attached via AttachmentSupport "
+            "and MapMode, offset along its local Z.",
+        ),
+        _feature_method(
+            "feature_set_parameters",
+            features.feature_set_parameters,
+            _feature_schema(
+                {
+                    "feature": {"type": "string"},
+                    "parameters": {
+                        "type": "object",
+                        "description": "property name -> Quantity, number, boolean or enum "
+                        "string; validated against the live feature",
+                    },
+                },
+                ["feature", "parameters"],
+            ),
+            "Edit a feature's driving properties and re-verify the solid in the same "
+            "transaction. Unknown, read-only or wrong-unit values are rejected before it opens.",
+        ),
+    ]
+
+
 def _doc_method(attr, timeout, schema, description, *, mutating):
     """A ``ToolSpec`` whose handler forwards straight to a ``DocumentRegistry`` method."""
 
@@ -832,6 +1061,7 @@ def tool_specs() -> list[ToolSpec]:
             "Verify a written 3MF: lib3mf + trimesh + FreeCAD self-read merged.",
         ),
         *_sketch_specs(),
+        *_feature_specs(),
     ]
 
 

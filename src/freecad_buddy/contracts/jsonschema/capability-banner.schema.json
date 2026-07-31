@@ -11,6 +11,9 @@
     "freecad_version": {
       "type": "string"
     },
+    "partdesign_available": {
+      "type": "boolean"
+    },
     "render": {
       "enum": [
         "gui_constructed",
@@ -41,6 +44,7 @@
     "varset_backend",
     "render",
     "sketcher_available",
+    "partdesign_available",
     "exec_enabled"
   ],
   "title": "CapabilityBanner",

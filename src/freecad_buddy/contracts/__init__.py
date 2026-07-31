@@ -14,6 +14,13 @@ from freecad_buddy.contracts.document import (
     Selector,
 )
 from freecad_buddy.contracts.envelope import ImageRef, ResultEnvelope, mirror_text, summary_text
+from freecad_buddy.contracts.feature import (
+    DatumKind,
+    ExtrudeType,
+    FeatureState,
+    PatternKind,
+    ShapeSummary,
+)
 from freecad_buddy.contracts.fingerprint import (
     FingerprintRecord,
     MassProps,
@@ -79,8 +86,11 @@ __all__ = [
     "ConstraintSpec",
     "ConstraintType",
     "CountDelta",
+    "DatumKind",
     "DocHandle",
     "ErrorDetail",
+    "ExtrudeType",
+    "FeatureState",
     "FingerprintRecord",
     "FocusSpec",
     "GeometricSelector",
@@ -95,6 +105,7 @@ __all__ = [
     "MeasuredKind",
     "MutationBlock",
     "ObjectFingerprint",
+    "PatternKind",
     "PointPos",
     "PostVerifyBlock",
     "Quantity",
@@ -117,6 +128,7 @@ __all__ = [
     "ScalarDelta",
     "SceneSpec",
     "Selector",
+    "ShapeSummary",
     "SketchState",
     "StyleSpec",
     "TerminalStatus",

@@ -12,4 +12,5 @@ class CapabilityBanner(TypedDict, total=False):
     varset_backend: Literal["varset", "spreadsheet"]  # required
     render: Literal["gui_constructed", "offscreen", "none"]  # required
     sketcher_available: bool  # required
+    partdesign_available: bool  # required
     exec_enabled: bool  # required

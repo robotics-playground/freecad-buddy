@@ -1,0 +1,75 @@
+{
+  "$defs": {
+    "ShapeSummary": {
+      "properties": {
+        "area": {
+          "type": "number"
+        },
+        "bbox": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "edge_count": {
+          "type": "integer"
+        },
+        "face_count": {
+          "type": "integer"
+        },
+        "is_valid": {
+          "type": "boolean"
+        },
+        "solid_count": {
+          "type": "integer"
+        },
+        "vertex_count": {
+          "type": "integer"
+        },
+        "volume": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "volume",
+        "area",
+        "bbox",
+        "solid_count",
+        "face_count",
+        "edge_count",
+        "vertex_count",
+        "is_valid"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.feature-state/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "body": {
+      "type": "string"
+    },
+    "feature": {
+      "type": "string"
+    },
+    "is_tip": {
+      "type": "boolean"
+    },
+    "readable": {
+      "type": "boolean"
+    },
+    "schema": {
+      "const": "fcb.feature-state/1"
+    },
+    "shape_summary": {
+      "$ref": "#/$defs/ShapeSummary"
+    }
+  },
+  "required": [
+    "schema",
+    "feature",
+    "readable"
+  ],
+  "title": "FeatureState",
+  "type": "object"
+}
