@@ -5,7 +5,7 @@ created: '2026-07-31'
 status: 'in-progress'
 baseline_revision: 'd067a73'
 review_loop_iteration: 1
-followup_review_recommended: false
+followup_review_recommended: true
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md'
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/data-contracts-design.md'
