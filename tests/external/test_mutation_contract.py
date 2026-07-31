@@ -9,6 +9,7 @@ in-FreeCAD in ``tests/infc/test_mutation_protocol.py``.
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 import sys
@@ -29,7 +30,7 @@ from freecad_buddy.contracts import (  # noqa: E402
     TnpAuditBlock,
     TnpStatus,
 )
-from freecad_buddy.usecases import tnp_guard, transaction  # noqa: E402
+from freecad_buddy.usecases import shim, tnp_guard, transaction  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_DIR = REPO_ROOT / "src" / "freecad_buddy" / "contracts" / "jsonschema"
@@ -146,7 +147,128 @@ def test_tnp_guard_uses_the_source_verified_element_name_prefixes():
 )
 def test_split_subname_separates_the_mapped_and_indexed_halves(subname, mapped, indexed, missing):
     entry = tnp_guard._split_subname(subname)
-    assert entry == {"mapped": mapped, "indexed": indexed, "missing": missing}
+    assert entry == {
+        "mapped": mapped,
+        "indexed": indexed,
+        "missing": missing,
+        "witness": None,
+        "history": None,
+    }
+
+
+def test_audit_references_accepts_the_op_written_reference_reading():
+    params = inspect.signature(tnp_guard.audit_references).parameters
+    assert list(params) == ["doc", "snapshot", "written"]
+    assert params["written"].default is None
+
+
+def test_post_verify_threads_the_written_reading_into_the_audit():
+    params = inspect.signature(transaction.post_verify).parameters
+    assert "refs_written" in params
+    source = inspect.getsource(transaction.post_verify)
+    assert "audit_references(document, refs_before, refs_written)" in source
+
+
+def test_run_mutation_captures_the_written_references_before_recompute():
+    """The capture must sit between the op returning and recompute, or it reads FreeCAD's edit."""
+    source = inspect.getsource(transaction.run_mutation)
+    op_line = source.index("touched = list(op(document)")
+    capture_line = source.index("refs_written = tnp_guard.snapshot_references(document)")
+    recompute_line = source.index("document.recompute()")
+    assert op_line < capture_line < recompute_line
+
+
+def test_the_owner_level_exemption_is_absent_from_the_guard():
+    """The reverted design exempted `record["owner"] in touched`, disabling the DROPPED check."""
+    source = inspect.getsource(tnp_guard)
+    assert "in touched" not in source
+    assert "touched" not in inspect.signature(tnp_guard.audit_references).parameters
+
+
+def test_the_guard_never_uses_hash_code_as_the_witness():
+    """ShapeMapHasher.h hashes the TShape pointer plus Location, so it moves on every rebuild."""
+    assert "hashCode" not in inspect.getsource(tnp_guard)
+
+
+def test_get_element_is_called_positionally_because_silent_is_positional_only():
+    """TopoShapePyImp.cpp: PyArg_ParseTuple(args, "s|O") — getElement takes no keyword args."""
+    source = inspect.getsource(tnp_guard._resolve_element)
+    assert "silent=" not in source
+    assert "getter(name, True)" in source
+
+
+def test_the_witness_is_type_plus_bounding_box_and_excludes_centre_of_mass():
+    """Part.Vertex raises AttributeError for CenterOfMass, so a CoM witness cannot be captured."""
+    source = inspect.getsource(tnp_guard._witness)
+    assert "BoundBox" in source
+    assert "ShapeType" in source
+    assert "CenterOfMass" not in source
+
+
+def test_the_witness_comparison_is_tolerant_rather_than_exact():
+    source = inspect.getsource(tnp_guard._witness_moved)
+    assert "tolerance" in source
+    assert "==" not in source.split('"""')[-1]
+
+
+def test_layer_two_compares_only_the_source_pair():
+    """getElementHistory's intermediates are rebuild-order sensitive, so they must not be kept."""
+    source = inspect.getsource(tnp_guard._history)
+    assert "record[0]" in source and "record[1]" in source
+    assert "record[2]" not in source
+
+
+def test_the_record_key_includes_the_target_object():
+    """A PropertyLinkSubList emits one record per (target, subs) pair; omitting the target
+    collapses a multi-target property onto its last pair."""
+    records = [
+        {"owner": "S", "prop": "AttachmentSupport", "target": "BoxA", "entries": []},
+        {"owner": "S", "prop": "AttachmentSupport", "target": "BoxB", "entries": []},
+    ]
+    keyed = tnp_guard._keyed(records)
+    assert len(keyed) == 2
+    assert {key[2] for key in keyed} == {"BoxA", "BoxB"}
+
+
+def test_the_record_key_disambiguates_a_property_linking_one_target_twice():
+    records = [
+        {"owner": "S", "prop": "ExternalGeometry", "target": "BoxA", "entries": []},
+        {"owner": "S", "prop": "ExternalGeometry", "target": "BoxA", "entries": []},
+    ]
+    keyed = tnp_guard._keyed(records)
+    assert len(keyed) == 2
+    assert {key[3] for key in keyed} == {0, 1}
+
+
+def test_the_re_baseline_branch_does_not_short_circuit_the_record():
+    """RE_BASELINED is filtered as non-failing, so an early return hides a concurrent drop."""
+    source = inspect.getsource(tnp_guard._grade_record)
+    head, _, tail = source.partition('"RE_BASELINED"')
+    assert "DROPPED" in tail, "the entry-count comparison must still run after a re-baseline"
+
+
+def test_the_exemption_runs_the_same_per_entry_grading_as_an_unexempt_record():
+    """The exemption excuses the entry-count comparison and nothing else."""
+    source = inspect.getsource(tnp_guard._grade_record)
+    assert source.count("_grade_entries(doc, record") == 2
+
+
+def test_the_element_map_version_probes_keep_both_declared_wire_types():
+    hints = get_type_hints(shim.element_map_version)
+    assert hints["return"] == (int | None)
+    assert get_type_hints(shim.element_map_version_string)["return"] == (str | None)
+
+
+def test_both_element_map_probes_are_warmed():
+    source = inspect.getsource(shim.warm_capability_probes)
+    assert "element_map_version_string()" in source
+    assert "element_map_version()" in source
+
+
+def test_the_audit_banner_reads_the_verbatim_version_string():
+    """TnpAuditBlock types element_map_version str | None; the int probe would truncate it."""
+    assert "element_map_version_string" in inspect.getsource(tnp_guard._element_map_version_banner)
+    assert "element_map_version_string" in inspect.getsource(transaction._unrun_tnp_audit)
 
 
 @pytest.mark.parametrize(

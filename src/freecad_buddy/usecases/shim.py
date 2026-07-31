@@ -94,12 +94,11 @@ def element_map_available() -> bool:
 
 
 @lru_cache(maxsize=1)
-def element_map_version() -> int | None:
-    """The topological element-map version as an int, or ``None`` when unexposed.
+def element_map_version_string() -> str | None:
+    """The topological element-map version verbatim, or ``None`` when unexposed.
 
-    Probes ``TopoShape.ElementMapVersion`` on a box; returns the integer version where the
-    build cleanly exposes one, else ``None``. This is the report-banner value; the coarser
-    availability bool stays in ``element_map_available``.
+    Probes ``TopoShape.ElementMapVersion`` on a box and returns whatever the build reports
+    without narrowing it; the value is a dotted string such as ``"15.70200.5"``.
     """
     try:
         import Part
@@ -108,10 +107,22 @@ def element_map_version() -> int | None:
     except Exception:  # noqa: BLE001 - a probe that cannot run means the feature is unavailable
         return None
     raw = getattr(shape, "ElementMapVersion", None)
+    return None if raw is None else str(raw)
+
+
+@lru_cache(maxsize=1)
+def element_map_version() -> int | None:
+    """The topological element-map version as an int, or ``None`` when unexposed.
+
+    Narrows ``element_map_version_string`` to its leading dotted component, so a build
+    reporting ``"15.70200.5"`` yields ``15``. Returns ``None`` when the build exposes no
+    version or its leading component is not integral.
+    """
+    raw = element_map_version_string()
     if raw is None:
         return None
     try:
-        return int(raw)
+        return int(raw.split(".")[0])
     except (TypeError, ValueError):
         return None
 
@@ -278,6 +289,7 @@ def warm_capability_probes() -> None:
     varset_backend()
     varset_available()
     element_map_available()
+    element_map_version_string()
     element_map_version()
     sketcher_available()
     partdesign_available()

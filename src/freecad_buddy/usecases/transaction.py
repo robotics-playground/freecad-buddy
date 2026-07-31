@@ -181,10 +181,9 @@ def _block(
 
 def _unrun_tnp_audit() -> TnpAuditBlock:
     """An audit block for a post_verify that short-circuited before the TNP step ran."""
-    raw = shim.element_map_version()
     return {
         "status": "UNSUPPORTED" if not shim.element_map_available() else "CLEAN",
-        "element_map_version": None if raw is None else str(raw),
+        "element_map_version": shim.element_map_version_string(),
         "findings": [],
     }
 
@@ -194,6 +193,7 @@ def post_verify(
     handle: str,
     touched: list[str],
     refs_before: list,
+    refs_written: list | None = None,
 ) -> PostVerifyBlock:
     """Run the mutation checklist in order, short-circuiting on the first hard failure.
 
@@ -207,6 +207,8 @@ def post_verify(
     :param handle: the caller's document handle, threaded through to the verify reports.
     :param touched: names of the objects the op created or modified.
     :param refs_before: the pre-mutation ``snapshot_references`` result.
+    :param refs_written: the post-op, pre-recompute ``snapshot_references`` result, which tells the
+        audit which references carry the value the op itself assigned.
     """
     registry = _ResolvedRegistry(handle, document)
 
@@ -239,8 +241,8 @@ def post_verify(
         # Every sketch the op touched must be constrained, so the block reports the conjunction
         # rather than whichever sketch the loop happened to inspect last.
         constrained = bool(subject.get("fully_constrained"))
-        fully_constrained = constrained if fully_constrained is None else (
-            fully_constrained and constrained
+        fully_constrained = (
+            constrained if fully_constrained is None else (fully_constrained and constrained)
         )
         if not _passed(envelope):
             detail = envelope.get("detail") or {}
@@ -250,7 +252,7 @@ def post_verify(
             )
             return _block(True, True, fully_constrained, _unrun_tnp_audit(), False, explanation)
 
-    audit = tnp_guard.audit_references(document, refs_before)
+    audit = tnp_guard.audit_references(document, refs_before, refs_written)
     failing = [f for f in audit["findings"] if f["verdict"] not in ("PASS", "RE_BASELINED")]
     if audit["status"] == "FLAGGED" and failing:
         explanation = "TNP audit flagged {} reference(s): {}".format(
@@ -436,8 +438,9 @@ def run_mutation(
 
     Outside the transaction: enable the document's undo stack (headless leaves it off, which makes
     ``abortTransaction`` restore nothing), fingerprint the document, snapshot its references, write
-    a ``saveCopy`` snapshot. Then open one transaction named ``label``, apply ``op``, recompute, and
-    run ``post_verify``. On pass: commit, delete the snapshot, return an ``OK`` envelope carrying
+    a ``saveCopy`` snapshot. Then open one transaction named ``label``, apply ``op``, re-read the
+    references it wrote, recompute, and run ``post_verify``. On pass: commit, delete the snapshot,
+    return an ``OK`` envelope carrying
     the after-fingerprint. On failure or exception: abort, recompute (mandatory — undo skips
     recompute, so verifying first reads stale state), and prove restoration by re-hashing,
     escalating to a snapshot restore on mismatch. The snapshot is deleted only after commit or
@@ -471,8 +474,11 @@ def run_mutation(
     document.openTransaction(f"buddy: {label}")
     try:
         touched = list(op(document) or [])
+        # Read the references the op leaves behind before recompute runs, so the audit can tell
+        # what the op wrote from what FreeCAD changed underneath it.
+        refs_written = tnp_guard.snapshot_references(document)
         document.recompute()
-        report = post_verify(document, handle, touched, refs_before)
+        report = post_verify(document, handle, touched, refs_before, refs_written)
     except Exception as exc:  # noqa: BLE001 - any op failure maps to the proven-rollback path
         report = _block(
             True, False, None, _unrun_tnp_audit(), False, f"{type(exc).__name__}: {exc}"
@@ -484,9 +490,7 @@ def run_mutation(
         # and can raise, and the snapshot is the only pre-mutation copy until it succeeds.
         fp_after = fingerprint(document)
         _delete_snapshot(snapshot_path)
-        block = _mutation_block(
-            fp_before, fp_after, report, False, None, "OK", None, params_digest
-        )
+        block = _mutation_block(fp_before, fp_after, report, False, None, "OK", None, params_digest)
         _audit(audit_sink, "after", tool, handle, params, block, fp_before, "OK")
         return document, _envelope(block, "OK", summarize_mutation(block))
 

@@ -4,9 +4,9 @@ type: 'feature'
 epic: 3
 story: '3-5-tnp-guard-layers-1-2'
 created: '2026-07-31'
-status: 'ready-for-dev'
-baseline_revision: 'f750095'
-review_loop_iteration: 0
+status: 'in-review'
+baseline_revision: '36bd870'
+review_loop_iteration: 1
 followup_review_recommended: false
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/verification-design.md'
@@ -87,12 +87,47 @@ warnings: [oversized]
 
 **As landed:**
 
-- `src/freecad_buddy/usecases/tnp_guard.py` -- `RefEntry` gains `witness` and `history`. New capture helpers `_resolve_element` / `_witness` / `_element_tolerance` / `_witness_moved` / `_history` / `_shape_of` / `_mapped_name` / `_capture_entry` / `_entry`; new grading helpers `_live_records` / `_finding` / `_entry_name` / `_grade_entry` (Layer 1) / `_grade_ancestry` (Layer 2) / `_grade_record` / `_reference_findings`. `audit_references` takes `touched: list[str] | None = None` and appends the Layer-1/2 findings to the Layer-0 sweep; `FLAGGED` counts only verdicts outside `PASS`/`RE_BASELINED`. `Witness` type alias and `_WITNESS_EPSILON = 1e-7` added beside the existing prefix constants.
-- `src/freecad_buddy/usecases/shim.py` -- `element_map_version_string()` added (verbatim `str | None`, feeds the TNP audit banner); `element_map_version()` keeps its `int | None` contract by narrowing to the leading dotted component. Both warmed in `warm_capability_probes`.
-- `src/freecad_buddy/usecases/transaction.py` -- `post_verify` passes `touched` to `audit_references`; `_unrun_tnp_audit` reads the string probe. The `RE_BASELINED` filter and the step-4 position are unchanged.
-- `tests/infc/test_tnp_guard.py` -- new, 30 cases: `SnapshotWitnessTest`, `LayerOneTest`, `LayerTwoTest`, `NoMappedHalfTest`, `WholeObjectLinkTest`, `CapabilityGateTest`, `WitnessReadFailureTest`.
-- `tests/external/test_mutation_contract.py` -- `_split_subname` dict assertions extended for the two new fields; added the `touched` signature check, the `post_verify` threading check, the `RE_BASELINED` filter check, the `hashCode`-is-banned check, the tolerance-parameter check and the two-probe typing check.
-- `_bmad-output/implementation-artifacts/deferred-work.md` -- DW-70 closed with its resolution; DW-72 and DW-93 reassessed with measured counts.
+- `src/freecad_buddy/usecases/tnp_guard.py` -- `RefEntry` gains `witness` and `history`; module gains the `Witness`
+  and `RecordKey` type aliases and `_WITNESS_EPSILON = 1e-7`. New capture helpers `_shape_of` / `_resolve_element` /
+  `_mapped_name` / `_witness` / `_element_tolerance` / `_witness_moved` / `_history` / `_capture_entry`; new grading
+  helpers `_keyed` / `_position` / `_pair_records` / `_entry_name` / `_entry_values` / `_finding` / `_grade_ancestry`
+  (Layer 2) / `_live_element` / `_grade_resolution` / `_grade_entry` (Layer 1) / `_grade_entries` / `_grade_record` /
+  `_reference_findings`. Record identity is `(owner, prop, target, occurrence)`; `_pair_records` matches a snapshot
+  record to its live counterpart by exact key, falling back to the ordinal position within the `(owner, prop)` group
+  so a link re-pointed to another object pairs with its replacement rather than reading as a vanished owner.
+  `_grade_record`'s order is: owner absent -> `BROKEN` (returns alone); target changed -> `REPOINTED` (returns alone);
+  `ElementMapVersion` drift -> a `RE_BASELINED` **annotation** that does not return; then the written-value exemption,
+  which suppresses the entry-count comparison and nothing else; then the count comparison; then `_grade_entries`.
+  Both the exempt and unexempt paths call `_grade_entries`, so an exempt record runs the identical per-entry diff
+  against the value the op wrote. `snapshot_references` wraps `_capture_entry` inside the per-property `try`, so one
+  unreadable shape skips that property rather than aborting the walk. `audit_references(doc, snapshot, written=None)`
+  computes the live snapshot **once** and threads it to both `_missing_element_findings` and `_reference_findings`.
+  `FLAGGED` counts only verdicts outside `PASS`/`RE_BASELINED`. `_element_map_version_banner` reads the verbatim
+  string probe.
+- `src/freecad_buddy/usecases/shim.py` -- `element_map_version_string()` added (verbatim `str | None`, feeds the TNP
+  audit banner); `element_map_version()` keeps its `int | None` contract by narrowing to the leading dotted component.
+  Both warmed in `warm_capability_probes`.
+- `src/freecad_buddy/usecases/transaction.py` -- `run_mutation` captures `refs_written = snapshot_references(document)`
+  between `op(document)` returning and `document.recompute()`; `post_verify` gains `refs_written` and passes it to
+  `audit_references`. `_unrun_tnp_audit` reads the string probe. The `RE_BASELINED` filter and the step-4 position are
+  unchanged. `touched` keeps its shape and its reporting role and is **not** consulted for the exemption.
+- `tests/infc/test_tnp_guard.py` -- new, 44 cases: `SnapshotWitnessTest`, `LayerOneTest`, `WrittenValueExemptionTest`,
+  `LayerTwoTest`, `NoMappedHalfTest`, `TargetIdentityTest`, `WholeObjectLinkTest`, `CapabilityGateTest`,
+  `WitnessReadFailureTest`, `MutationRollbackTest`, plus the `_DroppingDocument` proxy that plants a silent edge drop
+  in the post-capture window. `TargetIdentityTest` covers a genuine multi-target `PropertyLinkSubList` in three
+  directions (unchanged -> CLEAN, one target swapped -> one PASS + one REPOINTED, targets reordered -> CLEAN);
+  `WrittenValueExemptionTest` covers the exemption failing to cover a moved witness, a changed mapped name and a
+  divergent Layer-2 ancestry; `LayerOneTest` covers a re-baseline concurrent with an entry drop.
+- `tests/external/test_mutation_contract.py` -- `_split_subname` dict assertions extended for the two new fields, plus
+  16 new contract tests: the `written` signature, the `post_verify` threading, the capture-point ordering inside
+  `run_mutation`, the **absence** of any `in touched` exemption, the `hashCode` ban, the positional `getElement` form,
+  the bounding-box witness excluding `CenterOfMass`, the tolerant witness comparison, Layer 2 dropping the
+  intermediates, the record key carrying the target, the key disambiguating a repeated target, the re-baseline branch
+  not short-circuiting, the exemption reaching the same per-entry grader, the two-probe typing, both probes being
+  warmed, and the verbatim banner.
+- `_bmad-output/implementation-artifacts/deferred-work.md` -- DW-70 closed with a resolution describing the landed
+  written-value design; DW-72 and DW-93 reassessed with measured counts (28 cases, 24 pending); DW-94 added recording
+  the re-triage of the six previously-deferred review findings (four fixed, one fixed after measurement, one open).
 
 ## Tasks & Acceptance
 
@@ -131,6 +166,43 @@ warnings: [oversized]
 
 **7. The third acceptance criterion had no executable coverage until the orchestrator's verification pass.** The guard's 30 unit tests grade `audit_references` directly and stop there; `test_mutation_protocol.py`'s rollback cases are driven by other failure modes. So "a `REPOINTED`/`DROPPED` finding yields a non-`OK` envelope with proven rollback and an explanation naming owner, prop and verdict" was observed manually but asserted nowhere. Added `MutationRollbackTest` to `tests/infc/test_tnp_guard.py`: an op that silently truncates the fillet's `Base` `LinkSubList` is driven through `run_mutation`, and the test asserts `SPEC_FAILED`, `rolled_back`, a non-null `rollback_proven`, a fingerprint equal to the pre-op hash, and an explanation containing `Fillet`, `Base` and `DROPPED`. The handle is minted by `registry.document_create` and rebound onto the fixture document — `DocumentRegistry` exposes `rebind`, not a `bind`.
 
+**8. The exemption is keyed to the written value, so `audit_references` takes `written`, not `touched` (decision 014).** Supersedes the `<intent-contract>`'s owner-level wording wherever the two conflict, per the human resolution recorded in `docs/decisions/014-tnp-intended-target-is-what-the-op-wrote.md` and now inline in `verification-design.md §3.2`. `run_mutation` captures `refs_written = tnp_guard.snapshot_references(document)` between the op returning and `document.recompute()` — measured readable at that point: a `Fillet.Base` written to three entries reads back as three before any recompute. The `op` callable signature is unchanged, so Stories 3.3 and 3.4 stay closed and no `feature_*` or `sketch_*` tool was touched. `touched` keeps its meaning for reporting in `post_verify` and is not passed to the guard; a contract test pins that neither the `touched` parameter nor an `in touched` test survives anywhere in `tnp_guard.py`.
+
+**9. The written-value exemption must be bounded to the count check, or it re-introduces the blindness it was meant to remove.** Caught by test, not by review: a first cut returned one record-level `PASS` as soon as `live == written`, which skipped the per-entry loop entirely — so an intended-target reference that had stopped resolving graded `PASS`, failing `test_the_exemption_never_covers_an_unwritten_reference_on_a_written_owner` with `'BROKEN' not found in ['PASS']`. `_grade_resolution` now runs per entry even on an exempt record, and only the entry-count comparison is excused. The Design Notes' "the exemption is bounded" rule is therefore load-bearing at record level too, not only at entry level.
+
+**10. FreeCAD 1.1.1 marks an unresolvable dressup entry `?missing` rather than removing it, so a genuine count drop cannot be provoked from the Python API.** Measured across four attempts: shrinking the pad under a chamfer yields `Base == ['?Edge1', '?Edge2', 'Edge3', 'Edge4']` with `isValid() == False` (a Layer-0 `BROKEN`, not a `DROPPED`); deleting a sketch line under a fillet leaves `Base` at four entries and the fillet `Valid`; a forced `touch()` + recompute re-maps names but keeps the count. The entry count only ever falls when something writes the property. `MutationRollbackTest` therefore plants the drop with a `_DroppingDocument` proxy that rewrites `Fillet.Base` on the first `recompute` — inside the window `run_mutation` opens between its post-op capture and `post_verify`, which is exactly where a drop the op did not write would land. The planted-drop framing is what the acceptance check requires; it is not a workaround for a guard limitation.
+
+**11. A forced `pad.touch()` + recompute is a real mapped-name re-point, not a Layer-2 fixture.** A test asserting that `touch()` exercises the ancestry path measured `FLAGGED != CLEAN`: `Fillet.Base` entry `Edge1` moved from `#f:1;:G;XTR;:H48c:7,E` to `#35:2;:G;XTR;:H48c:7,E` and entry `Edge2` likewise, so Layer 1 correctly reported `REPOINTED` and the entries never reached Layer 2. The Design Notes' claim that a mapped name is "unchanged across a forced `pad.touch()` rebuild" holds for `getElementMappedName("Face6")` read directly off the pad, but not for a dressup's stored `Base` entries, whose shadows are re-resolved against the rebuilt map. Layer 2's intermediates rule is pinned by a direct `getElementHistory` comparison instead.
+
+**12. `PartDesign::Body.Origin.OriginFeatures` is ordered axes-then-planes, so index 1 is `Y_Axis`, not a plane.** Measured: `[X_Axis, Y_Axis, Z_Axis, XY_Plane, XZ_Plane, YZ_Plane, Origin001]`. A `FlatFace` attachment to `OriginFeatures[1]` fails with "No planar face in AttachEngine3D::calculateAttachedPlacement()", leaving the datum invalid and producing a legitimate Layer-0 `BROKEN` that masks the whole-object-link row under test. The fixture selects the plane by `TypeId == "App::Plane"` rather than by index.
+
+**13. A `Fillet.Base` is a `PropertyLinkSub`, not a `PropertyLinkSubList`.** Measured: `fillet.getTypeIdOfProperty("Base")` returns `App::PropertyLinkSub` and the value reads `(<PartDesign::Pad>, ['Edge1', ...])`. The design doc and the `dressup-drop` fault cases describe the dressup edge list as a LinkSubList; `_link_sub_entries` already normalizes both shapes to `[(target, subs)]`, so the count comparison works either way, but a reader looking for a `PropertyLinkSubList` on a fillet will not find one.
+
+**14. Five of the six previously-deferred review findings were resolved during re-derivation rather than re-deferred.** Fixed with tests: the unchecked entry *gain* (now `REPOINTED`, `test_a_gained_entry_is_flagged_rather_than_passing_silently`), the NaN witness grading `PASS` (comparison written `not (delta <= tol)`), the one-sided witness skipping the check (a missing side now counts as moved), and `snapshot_references` running three times per audit (the live snapshot is computed once in `audit_references` and threaded to both consumers, so one document walk replaces three). The target-identity gap was **measured before fixing**: two `Part::Box` objects with identical geometry both report `mapped: None` and `history: None`, so re-pointing a `Sketcher` `AttachmentSupport` from one to the other graded `PASS layer 2 | Face1 has no comparable element history`; `_grade_record` now compares `record["target"]` against `live["target"]` and grades a change `REPOINTED` at layer 1, ordered *before* the `ElementMapVersion` branch so a re-point onto a differently-versioned object cannot report `RE_BASELINED` instead. Only the per-record (rather than per-entry) `?`-dedup remains open, recorded as DW-94 — a record holding one `?` entry alongside a genuinely re-pointed entry would have the re-point suppressed with it. That case was not reproduced on a live document, so it is recorded as a code-reading observation rather than a measured defect.
+
+
+**15. The exemption's falsifiability was proven by mutation testing, not asserted.** The reverted run shipped a fully green suite around a blind exemption, so "the tests cover it" is not evidence here. Three mutations were injected into `_grade_record` and the suite re-run under `FreeCADCmd` each time. (a) `intended = True` — the reverted owner-blind behaviour, where every record is exempt: **12 failures**, including `test_a_drop_the_op_did_not_write_is_dropped_even_when_the_op_wrote_the_property` and the end-to-end `MutationRollbackTest.test_a_drop_the_op_never_wrote_rolls_the_mutation_back_with_a_proven_restore`. This is the check the previous implementation structurally could not fail. (b) Dropping `_grade_resolution` from the exempt path — the unbounded exemption of change-log entry 9: **1 failure**, `test_the_exemption_never_covers_a_reference_that_stopped_resolving`. (c) The same mutation against that test's *first* form, which asserted only `assertIn("BROKEN", verdicts)`: **0 failures** — the test was insensitive, because an op-written unresolvable entry also invalidates its owner and Layer 0 emits a `BROKEN` for the same property regardless. The test now asserts a Layer-**1** `BROKEN` specifically and names the offending element; that is what makes it bite. Any future change to the exemption should be re-checked with mutation (a), since it is the one the story exists to prevent.
+
+**16. The new mutation tests made a pre-existing racy snapshot cleanup in three other fixtures fail intermittently, and the fix belongs in this suite.** Observed as 344-test runs alternating between `OK (skipped=1)` and `FAILED (failures=12, errors=4)` with the failures landing in `test_sketch_tools`, not in the guard's own cases. Root cause: `_SketchFixture.setUp` (and the equivalents in `test_mutation_protocol.py` and `test_feature_tools.py`) glob `FCB_TMP_snap_*` and then `os.listdir` each hit, which raises `FileNotFoundError: [WinError 3]` when the directory is removed between the two calls. That cleanup is pre-existing and untouched by this story, but it never fired before because no earlier suite left a snapshot behind: `MutationRollbackTest` is the first fixture outside those three to call `run_mutation`, and `_BodyFixture` had no snapshot sweep, so its leftovers raced the alphabetically-later `test_sketch_tools`. **Verified pre-existing-but-not-triggered rather than assumed:** the baseline at `36bd870` ran green 6/6 while the working tree alternated. Fixed inside this story's own file — `_BodyFixture` now clears the reserved prefix with `shutil.rmtree(..., ignore_errors=True)` in both `setUp` and `tearDown`, which is also race-tolerant. Confirmed stable 8/8 consecutive runs afterwards. The three pre-existing fixtures still carry the racy `os.listdir` form; that is left alone per the surgical-changes rule and is worth hardening the next time one of them is edited.
+
+**17. Record identity is `(owner, prop, target)`, never `(owner, prop)` — a link property may hold several targets.** Triggering finding: `_record_key` returned `(owner, prop)` while `snapshot_references` emits one record per `(target, subs)` pair (`:317-326`), so `_reference_findings`' `live_by_key` / `written_by_key` dicts silently overwrote all but the last target and graded every snapshot record against it. Reproduced on an *unchanged* document: two `AttachmentSupport` targets (`BoxA/Face1`, `BoxB/Face2`) produced `REPOINTED | now links a different object: BoxA -> BoxB`, which fails `post_verify` and rolls back a valid mutation; the other N-1 references are never graded at all. Reachable through the shipped `sketch_add_external_geometry` (`sketches.py:1067` calls `addExternal`, appending a pair), and both `SketchObject.h:103` (`ExternalGeometry`) and `AttachExtension.h:92` (`AttachmentSupport`) are `App::PropertyLinkSubList`. Known-bad state to avoid: any record-identity tuple that omits the target. The re-derivation must also cover a multi-target link in the tests — the previous `TargetIdentityTest` used a single-target list and so could not fail.
+
+**18. The written-value exemption excuses the entry-count comparison and nothing else.** Triggering finding: the exempt branch returned after `_grade_resolution` only, so the mapped-name check, the witness check and the Layer-2 ancestry check were all skipped for the property the op wrote — while the function's own docstring asserted "Every entry still runs the per-entry diff". Reproduced: an op writes `["Edge1","Edge2","Edge3"]`, the geometry those names bind to then moves 99 mm, and all three entries grade `PASS`. Change-log entry 9 records an earlier cut of this same branch being caught skipping the per-entry loop and repaired by adding `_grade_resolution` — resolution is a liveness check (`getElement` returns non-null), not the diff, so the repair was incomplete and the docstring was updated to claim more than the code did. Known-bad state to avoid: an exempt path that returns without running the same per-entry grading an unexempt record runs. The correct shape is to compute the per-entry verdicts exactly as normal and suppress only the record-level count verdict; `test_the_exemption_never_covers_a_reference_that_stopped_resolving` is necessary but not sufficient, because resolution is the one check the broken version did run.
+
+**19. An `ElementMapVersion` re-baseline annotates the record; it must not short-circuit the other record-level checks.** Triggering finding: the version branch `return`ed a lone `RE_BASELINED`, and since `post_verify` filters that verdict as non-failing (`transaction.py:256`), drift concurrent with an entry drop reported `CLEAN` and committed. Reproduced: version `15.70200.5 -> 16.70200.5` with `Base` falling from four entries to one yields exactly one `RE_BASELINED` finding and zero failing findings. This is reachable rather than theoretical — `GeoFeature.cpp:261-262` populates `_ElementMapVersion` from an empty default on first geometry computation, so any object whose geometry first computes *during* the audited mutation transitions `"" -> "15.70200.5"` and takes the branch. (This does not contradict the KEEP note that a freshly created Pad reports a version immediately: the snapshot is taken *before* the op runs, so the record's snapshot value is the pre-creation one.) AD-7's rule is that a version bump never *fails* the audit, not that it suppresses grading; the entry-count and target checks must still run and still report, with the re-baseline recorded alongside them. Known-bad state to avoid: an early `return` from the version branch.
+
+**20. Making the target part of the record key makes the `target != live["target"]` branch unreachable by exact lookup, so pairing needs a positional fallback.** Change-log entry 17 requires the target in the record identity; doing only that regressed two tests to `['BROKEN'] != ['REPOINTED']` and `['PASS', 'BROKEN'] != ['PASS', 'REPOINTED']`. Mechanism: a re-point *changes the key*, so the snapshot key `(Attached, AttachmentSupport, BoxA, 0)` has no live counterpart, `_grade_record` takes its `live is None` branch and reports "no longer present in the document" instead of "now links a different object". Resolution: `_pair_records` matches by exact key first, then pairs each leftover snapshot record with the live record holding the same ordinal position within its `(owner, prop)` group. Exact-match-first is what keeps the fallback safe — see entry 21.
+
+**21. Target-keyed pairing and positional pairing disagree on a reordered multi-target link, and the target must win.** Measured: `AttachmentSupport = [(BoxA, ('Face1',)), (BoxB, ('Face1',))]` rewritten as `[(BoxB, ('Face1',)), (BoxA, ('Face1',))]` reads back in the written order, so both references still exist and the correct verdict is `CLEAN`. Pairing by position alone yields `REPOINTED | BoxA -> BoxB` and `REPOINTED | BoxB -> BoxA` — two false failures on a document whose reference set did not change. This is the case that makes the target component of the key falsifiable: dropping the target while keeping the occurrence counter (entry 17's weaker form) passes every other test, because snapshot and live iterate in the same order and occurrence 0 accidentally pairs with occurrence 0. `test_a_reordered_multi_target_link_pairs_each_target_with_itself` is the test that fails under that mutation and only that test.
+
+**22. The exempt path is graded against the written entries, not the snapshot entries.** `_grade_record`'s exempt branch calls `_grade_entries(doc, record, written["entries"], live["entries"])` while the unexempt branch calls it with `record["entries"]`. The two lists are the same length by construction (the exemption's own condition is `_entry_values(live) == _entry_values(written)`), and the written reading is the correct baseline: it is the value the op assigned, which is what the live state must still hold. Grading an exempt record against the *snapshot* would re-introduce the count mismatch the exemption exists to excuse. `_grade_entries` also handles the empty-entry record with a single `PASS`, which is what `Pad.Profile` (measured: zero entries) produces.
+
+**23. The `?`-missing dedup now keys off the paired live record rather than a separate key set.** `_reference_findings` previously built a `reported` set of live keys and skipped any snapshot record whose key was in it. With `_pair_records` in place the paired record is already in hand, so the skip reads `paired is not None and any(entry["missing"] ...)`. Same behaviour, one less lookup, and it stays correct when the pairing came from the positional fallback rather than an exact key match. DW-94's open per-record-versus-per-entry dedup observation is unchanged by this.
+
+**24. Four mutations were injected and every one was caught; one first attempt was insensitive and the test was strengthened rather than the result accepted.** Run under `FreeCADCmd` against the full suite each time. (a) *Record key omits the target, occurrence counter kept* — first attempt: **0 failures**, because snapshot and live iterate in the same order so occurrence 0 pairs with occurrence 0. The test was insensitive, not the mutation harmless; `test_a_reordered_multi_target_link_pairs_each_target_with_itself` was added from the measurement in entry 21 and the same mutation then produced **1 failure**, that test alone. (b) *Record key is run 2's exact `(owner, prop)` plain-dict overwrite* — **2 failures**: `test_a_multi_target_link_property_audits_clean_when_nothing_changed` and `test_a_multi_target_link_grades_each_target_against_its_own_snapshot`. (c) *Exempt branch returns after `_grade_resolution` only* (run 2's defect 2 verbatim) — **3 failures**, one per skipped check: `..._a_witness_that_moved_under_an_op_written_name`, `..._a_mapped_name_that_changed`, `..._a_divergent_ancestry_at_layer_two`. (d) *Version branch returns a lone `RE_BASELINED`* — **1 failure**: `test_a_re_baseline_annotates_the_record_without_hiding_a_concurrent_drop`. (e) The run-2 regression mutation `intended = True` (the owner-blind exemption) — **11 failures**, including the end-to-end `MutationRollbackTest.test_a_drop_the_op_never_wrote_rolls_the_mutation_back_with_a_proven_restore`.
+
+**25. `_history`'s conversions moved inside its `try`, and `_capture_entry` moved inside `snapshot_references`' per-property `try`.** Two of the findings the deferred ledger recorded against the reverted code were cheap to close while writing the same lines and are closed here rather than re-deferred. `_history` previously ran `int(record[0])`/`str(record[1])` outside the `try` guarding `getter(mapped)`, so a build returning an unexpected history shape would raise out of `snapshot_references` and be rendered to the operator as a failed mutation; the conversions are now inside it, matching every sibling probe helper. `snapshot_references` previously closed its per-property `try` before the `_link_sub_entries` loop, so a raise inside `_capture_entry` (which touches `getElementMappedName`, `getElement`, `BoundBox` and `getElementHistory`) escaped the whole walk instead of skipping the one unreadable property; the loop is now inside the same `try`, preserving the documented "a property that cannot be read is skipped, never raised" contract.
+
 ## Review Triage Log
 
 ### 2026-07-31 — Review pass
@@ -141,6 +213,17 @@ warnings: [oversized]
 - reject: 13: (high 1, medium 7, low 5)
 - addressed_findings:
   - none
+
+### 2026-07-31 — Review pass (re-derivation)
+- intent_gap: 0
+- bad_spec: 3: (high 2, medium 1, low 0)
+- patch: 0
+- defer: 3: (high 0, medium 2, low 1)
+- reject: 22: (high 0, medium 9, low 13)
+- addressed_findings:
+  - `[high]` `[bad_spec]` `_record_key` is `(owner, prop)` while `snapshot_references` emits one record per `(target, subs)` pair, so a multi-target `PropertyLinkSubList` collapses to one key. Reproduced on unchanged input: two `AttachmentSupport` targets yield a false `REPOINTED BoxA -> BoxB`, which fails `post_verify` and rolls back a valid mutation, and leaves N-1 references ungraded. Reachable through the shipped `sketch_add_external_geometry` (`sketches.py:1067` `addExternal`); both `SketchObject.h:103` and `AttachExtension.h:92` are `PropertyLinkSubList`. Spec amended to make record identity include the target.
+  - `[high]` `[bad_spec]` The written-value exemption returns after `_grade_resolution` only (`tnp_guard.py:651-668`), so the mapped-name, witness and Layer-2 ancestry checks are all skipped on the exempt record — while the same function's docstring claims "Every entry still runs the per-entry diff". Change-log entry 9 shows an earlier cut was caught skipping the loop and was repaired with resolution alone, which is a liveness check, not the diff. Spec amended to define the exemption as excusing the entry-count comparison and nothing else.
+  - `[medium]` `[bad_spec]` The `ElementMapVersion` branch returns a lone `RE_BASELINED` (`tnp_guard.py:634-648`), which `post_verify` filters as non-failing, so drift concurrent with an entry drop reports `CLEAN` and commits. Reproduced: version bump plus 3-of-4 edges dropped yields 0 failing findings. `GeoFeature.cpp:261-262` populates `_ElementMapVersion` from empty on first geometry computation, so an object first computed during the audited mutation takes this path. Spec amended so a re-baseline annotates rather than short-circuits the record-level checks.
 
 ## Design Notes
 
@@ -164,9 +247,43 @@ Two consequences the implementation must not get wrong: the guard's own test fix
 
 **Layer ordering inside Layer 1, and what makes an entry "ambiguous".** The per-entry order is: empty subname (whole-object link) -> `PASS`; missing marker or null `getElement` -> `BROKEN`; mapped name differs -> `REPOINTED`; witness moved beyond tolerance -> `REPOINTED`. Only an entry that survives all four reaches Layer 2, which is exactly the design's "resolves, entry count intact, mapped name and witness both unchanged" definition of ambiguous. Entry-count and `ElementMapVersion` are record-level checks and run before the per-entry loop, because a re-baseline supersedes every entry verdict under that owner and a count drop is a property-level fact rather than an entry-level one.
 
-**`touched` exempts, and the exemption is bounded.** A `touched` owner is exempt from the mapped-name change, the witness move, the entry-count drop and the whole-record deletion — but never from the resolution check: an intended-target reference that stops resolving is still `BROKEN`. This is what separates `g2-fault-dressup-intended-edge-removal` (count drop on a touched owner -> `PASS`) from `g2-fault-dressup-silent-edge-drop` (same drop, untouched -> `DROPPED`).
+**The written value exempts, and the exemption is bounded.** Superseded from the reverted run: the exemption is keyed to the value the op wrote, never to `touched` (decision 014). `run_mutation` reads every reference after the op returns and before `recompute()`; a record whose live entry names equal that reading is graded against the written value rather than against the snapshot, so the entry count the op itself chose is not a drop. The exemption excuses the count comparison only — every entry still runs `_grade_resolution`, so an intended-target reference that stops resolving is still `BROKEN`. This is what separates `g2-fault-dressup-intended-edge-removal` (the op wrote the shorter list -> `PASS`) from `g2-fault-dressup-silent-edge-drop` (the op wrote four, three came back -> `DROPPED`), and unlike an owner test it is falsifiable: `MutationRollbackTest` plants a drop the op never wrote and the guard must fail it.
 
 **`Pad.Profile` snapshots zero entries.** Measured: `Profile` is a `PropertyLinkSub` holding a whole-object link to the sketch with an empty subname list, so it contributes a record with `entries == []`. That is correct and not a capture failure — there is no sub-element to grade. The spec's problem statement describes a re-point of `Pad.Profile` to "a different element"; on the measured build a profile link carries no element, so that particular scenario is graded by the record-level target/deletion checks rather than by the per-entry diff.
+
+**The exemption's granularity is the record, its scope is per entry.** `_grade_record` decides *whether* a record is
+exempt by comparing the whole live entry-name list against the whole written one — a record is exempt or it is not,
+there is no partially-exempt record. But an exempt record is still graded *per entry* for resolution, so the exemption
+suppresses the count, mapped-name, witness and ancestry comparisons without suppressing `BROKEN`. Getting this
+backwards (a single aggregate `PASS` for the record) is what Spec Change Log entry 9 records.
+
+**Record-level checks and their order.** They run before the per-entry loop because each supersedes every entry
+verdict under that owner: owner absent -> `BROKEN`; target object changed -> `REPOINTED`; `ElementMapVersion` drift ->
+`RE_BASELINED`; then the written-value exemption; then the entry-count comparison. Target identity must be checked
+before the element-map version, or a re-point onto an object with a different map version would report
+`RE_BASELINED` and never fail.
+
+**Why the capture point cannot move.** `refs_written` must be read after `op(document)` returns and before
+`document.recompute()`. Reading it earlier misses what the op wrote; reading it after recompute reads FreeCAD's edit as
+if the op had made it, which restores exactly the blindness decision 014 removed.
+`test_run_mutation_captures_the_written_references_before_recompute` asserts the three source positions in order, so a
+later refactor that moves the call cannot pass silently.
+
+**`written=None` means "no exemption", not "exempt everything".** `audit_references` defaults `written` to `None` so a
+direct audit outside a mutation bracket grades every reference. The guard against `_entry_values(None) == []`
+accidentally exempting an empty record is the explicit `written is not None` test ordered first in the conjunction.
+
+**Test fixtures need a PartDesign body.** A `Part::Box` has `ElementMapSize == 0`, so a document built from boxes has
+`mapped is None` and `history is None` on every entry and exercises neither layer. `_BodyFixture` builds
+sketch -> pad -> fillet; the pad carries 30 element-map entries. The `Part::Box` path is still covered deliberately, by
+`NoMappedHalfTest` (a reference with no mapped half is graded, never `BROKEN`) and by `TargetIdentityTest` (two boxes
+are the case where only target identity can tell a re-point apart).
+
+**`OriginFeatures` ordering.** A `PartDesign::Body` origin exposes `X_Axis`, `Y_Axis`, `Z_Axis` at indices 0-2 and
+`XY_Plane`, `XZ_Plane`, `YZ_Plane` at 3-5, with `Origin001` (an `App::Point`) at 6. Indexing `[1]` for a plane yields
+`Y_Axis`, and attaching a datum plane to it with `MapMode = "FlatFace"` fails at recompute with "No planar face in
+AttachEngine3D::calculateAttachedPlacement()" — which the guard then correctly reports as a Layer-0 `BROKEN`. The
+fixture filters by `TypeId == "App::Plane"` rather than indexing.
 
 ## Verification
 
