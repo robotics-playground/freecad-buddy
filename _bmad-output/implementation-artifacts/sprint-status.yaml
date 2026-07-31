@@ -79,7 +79,7 @@ development_status:
   2-3-local-backend-react-adapter: done
   2-4-gate-g1-exit: done
   epic-2-retrospective: optional
-  epic-3: in-progress
+  epic-3: done
   3-1-entry-gate-g2e-benchmark-fault-suites: done
   3-2-mutation-protocol-runtime: done
   3-3-sketch-tools: done
