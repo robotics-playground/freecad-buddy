@@ -2,7 +2,7 @@
 title: 'Story 3.6: Preview Dry-Run & Structured Diff'
 type: 'feature'
 created: '2026-07-31'
-status: 'in-progress'
+status: 'done'
 baseline_revision: 'd067a73'
 review_loop_iteration: 1
 followup_review_recommended: true
