@@ -165,6 +165,16 @@ Run after mutate → recompute, in order:
   - otherwise **PASS**.
 - **Layer 2 — history cross-check (only where Layer 1 is ambiguous).** `TopoShape.getElementHistory(mapped)` — the current element must descend from the same source tag/element as pre-mutation. Divergent history on an unchanged reference = REPOINTED even when witnesses coincide.
 
+**"The mutation's intended target" means the reference the op itself assigned — not every
+reference owned by an object the op touched.** The guard captures each reference's value
+immediately after the op returns and before `recompute()`, and exempts a reference only when its
+post-op value is the one the op wrote. Object identity must never be the exemption test: a
+mutation tool reports the feature it created in its touched set, so an owner-level exemption
+would clear every reference that feature owns — including ones the op never wrote. That would
+disable the DROPPED count comparison for `feature_fillet`, whose `Base` LinkSubList is owned by
+the very feature the op reports, and the count comparison is the only detector for the silent-drop
+trap it is meant to catch.
+
 ### 3.3 Verdict shape
 
 Per reference: `{owner, prop, mapped_before, state_after, verdict: PASS|BROKEN|REPOINTED|DROPPED|UNSUPPORTED, layer: 0|1|2, detail}`. Aggregate verdict feeds `post_verify` (§1.3): any non-PASS (other than re-baselined, below) → mutation fails and rolls back. Every audit report records the `ElementMapVersion` banner (spine conventions).
