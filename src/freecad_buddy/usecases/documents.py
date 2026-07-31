@@ -124,6 +124,22 @@ class DocumentRegistry:
             handle, document = self._resolve(doc)
             return fn(handle, document)
 
+    def rebind(self, doc: str | None, document: object) -> None:
+        """Point ``doc`` at ``document``, replacing whatever object the handle held.
+
+        The snapshot-restore rollback path closes the original document and reopens it from the
+        snapshot, so the object a handle holds can be dead by the time a mutation returns. Every
+        mutation tool call site rebinds the document ``run_mutation`` returned. Rebinding to the
+        object the handle already holds is a no-op.
+
+        :raises ValidationError: ``doc`` is missing, unknown, or stale.
+        """
+        with self._lock:
+            handle, existing = self._resolve(doc)
+            if existing is document:
+                return
+            self._by_handle[handle] = document
+
     def _handle_for(self, document: object) -> str | None:
         """Return an existing handle already bound to ``document``, or ``None``."""
         for handle, existing in self._by_handle.items():

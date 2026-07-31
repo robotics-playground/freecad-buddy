@@ -1,0 +1,77 @@
+{
+  "$defs": {
+    "ConstraintRef": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.sketch-state/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "conflicting": {
+      "items": {
+        "$ref": "#/$defs/ConstraintRef"
+      },
+      "type": "array"
+    },
+    "constraint_count": {
+      "type": "integer"
+    },
+    "dof": {
+      "type": "integer"
+    },
+    "fully_constrained": {
+      "type": "boolean"
+    },
+    "geometry_count": {
+      "type": "integer"
+    },
+    "malformed": {
+      "items": {
+        "$ref": "#/$defs/ConstraintRef"
+      },
+      "type": "array"
+    },
+    "partially_redundant": {
+      "items": {
+        "$ref": "#/$defs/ConstraintRef"
+      },
+      "type": "array"
+    },
+    "readable": {
+      "type": "boolean"
+    },
+    "redundant": {
+      "items": {
+        "$ref": "#/$defs/ConstraintRef"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "fcb.sketch-state/1"
+    },
+    "sketch": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "sketch",
+    "readable"
+  ],
+  "title": "SketchState",
+  "type": "object"
+}

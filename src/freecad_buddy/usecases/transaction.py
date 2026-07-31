@@ -141,11 +141,20 @@ def _sketches(document: object, names: list[str]) -> list[str]:
     ]
 
 
-def _invalid_objects(document: object) -> list[tuple[str, str]]:
-    """Return ``(name, status)`` for every object failing ``isValid()``."""
+def _invalid_objects(document: object, touched: list[str]) -> list[tuple[str, str]]:
+    """Return ``(name, status)`` for every object failing ``isValid()``.
+
+    A sketch the op touched whose sole invalidity is redundant constraints is not reported:
+    FreeCAD marks it invalid, while redundancy is only a warning, so the sketch check below owns
+    that verdict. The deferral is limited to touched sketches — an untouched invalid object must
+    still block the commit, because no later step grades it.
+    """
     invalid = []
+    graded = set(touched)
     for obj in sorted(document.Objects, key=lambda o: o.Name):
         if obj.isValid():
+            continue
+        if obj.Name in graded and shim.redundant_only_sketch(obj):
             continue
         getter = getattr(obj, "getStatusString", None)
         invalid.append((obj.Name, str(getter()) if callable(getter) else ""))
@@ -201,7 +210,7 @@ def post_verify(
     """
     registry = _ResolvedRegistry(handle, document)
 
-    invalid = _invalid_objects(document)
+    invalid = _invalid_objects(document, touched)
     if invalid:
         explanation = "recompute left {} object(s) invalid: {}".format(
             len(invalid), "; ".join(f"{name}: {status}" for name, status in invalid)

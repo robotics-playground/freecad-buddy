@@ -69,6 +69,17 @@ EXPECTED_EXPORT_TOOLS = {
     "export_3mf",
 }
 
+EXPECTED_SKETCH_TOOLS = {
+    "sketch_create",
+    "sketch_add_geometry",
+    "sketch_remove_geometry",
+    "sketch_add_constraint",
+    "sketch_remove_constraint",
+    "sketch_set_datum",
+    "sketch_toggle_construction",
+    "sketch_add_external_geometry",
+}
+
 
 def _load_schema(name: str) -> dict:
     return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
@@ -89,6 +100,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
     assert EXPECTED_QUERY_TOOLS <= names
     assert EXPECTED_VERIFY_TOOLS <= names
     assert EXPECTED_EXPORT_TOOLS <= names
+    assert EXPECTED_SKETCH_TOOLS <= names
     assert "query_capabilities" in names
     assert "query_screenshot" in names
     assert "debug_exec" not in names
@@ -97,6 +109,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
         | EXPECTED_QUERY_TOOLS
         | EXPECTED_VERIFY_TOOLS
         | EXPECTED_EXPORT_TOOLS
+        | EXPECTED_SKETCH_TOOLS
         | {"query_capabilities", "query_screenshot"}
     )
 

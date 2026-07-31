@@ -114,6 +114,55 @@ def element_map_version() -> int | None:
         return None
 
 
+@lru_cache(maxsize=1)
+def sketcher_available() -> bool:
+    """Whether the Sketcher module exposes the constraint constructor the sketch tools drive.
+
+    True when ``Sketcher`` imports and ``Sketcher.Constraint`` accepts the verified
+    ``(type, geoId, value)`` form; a build without a usable constructor cannot run any sketch
+    mutation.
+    """
+    try:
+        import Sketcher
+
+        Sketcher.Constraint("Radius", 0, 1.0)
+    except Exception:  # noqa: BLE001 - a probe that cannot run means the feature is unavailable
+        return False
+    return True
+
+
+# SketchObject::execute() returns this exact message prefix, and only it, when solve() reports
+# -2 (redundant constraints) — a code distinct from conflicting (-3), over-constrained (-4) and
+# malformed (-5). It is therefore a reliable discriminator for redundancy alone.
+_REDUNDANT_SKETCH_STATUS = "Sketch with redundant constraints"
+
+
+def redundant_only_sketch(obj: object) -> bool:
+    """Whether ``obj`` is a sketch whose sole invalidity is redundant constraints.
+
+    FreeCAD marks such a sketch invalid and gives it no shape, while redundancy is only a
+    warning; the generic validity sweeps use this to leave the verdict to the sketch grader.
+    """
+    if not str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
+        return False
+    getter = getattr(obj, "getStatusString", None)
+    if not callable(getter):
+        return False
+    return str(getter()).startswith(_REDUNDANT_SKETCH_STATUS)
+
+
+def set_attachment(obj: object, support: list, map_mode: str) -> None:
+    """Attach ``obj`` to ``support`` under ``map_mode``.
+
+    ``support`` is a ``PropertyLinkSubList`` value: a list of ``(object, [subelement])`` pairs.
+    ``map_mode`` is an ``AttachEngine`` mode name such as ``"FlatFace"`` or ``"ObjectXY"``.
+
+    :raises AttributeError: the build does not expose the ``AttachmentSupport`` property.
+    """
+    obj.AttachmentSupport = support
+    obj.MapMode = map_mode
+
+
 def enable_undo(doc: object) -> bool:
     """Turn on ``doc``'s undo stack when the build honours the switch; report whether it is on.
 
@@ -154,6 +203,7 @@ def warm_capability_probes() -> None:
     varset_available()
     element_map_available()
     element_map_version()
+    sketcher_available()
     freecad_version()
 
 
@@ -195,4 +245,5 @@ def capability_banner(
         "serializer": serializer_tag(),
         "varset_backend": varset_backend(),
         "render": render,
+        "sketcher_available": sketcher_available(),
     }

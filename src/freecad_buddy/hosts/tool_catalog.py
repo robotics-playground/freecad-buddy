@@ -24,7 +24,7 @@ from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capa
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import RenderPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
-from freecad_buddy.usecases import exports, queries, screenshot, verify
+from freecad_buddy.usecases import exports, queries, screenshot, sketches, verify
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
@@ -191,6 +191,253 @@ _SCREENSHOT_INPUT_SCHEMA = {
     "required": ["doc"],
     "additionalProperties": False,
 }
+
+
+_QUANTITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "value": {"type": "number"},
+        "unit": {"type": "string", "description": "explicit unit, e.g. mm or deg"},
+    },
+    "required": ["value", "unit"],
+    "additionalProperties": False,
+}
+# The contracts Selector (contracts/document.py); sketch tools resolve the mapped_name variant.
+_SUBELEMENT_SELECTOR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "kind": {"enum": ["mapped_name", "geometric"]},
+        "object": {"type": "string", "description": "immutable object Name"},
+        "mapped_name": {"type": "string"},
+        "element_map_version": {"type": "integer"},
+        "element_type": {"enum": ["face", "edge", "vertex"]},
+        "query": {"type": "object"},
+    },
+    "required": ["kind", "object"],
+    "additionalProperties": False,
+}
+# Accepted and recorded in the audit params, not enforced.
+_CONFIRM_SCHEMA = {"type": "object"}
+_GEOMETRY_SPEC_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "kind": {"enum": ["line_segment", "circle", "arc_of_circle", "point"]},
+        "start": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
+        "end": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
+        "center": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
+        "radius": _QUANTITY_SCHEMA,
+        "start_angle": _QUANTITY_SCHEMA,
+        "end_angle": _QUANTITY_SCHEMA,
+        "construction": {"type": "boolean", "default": False},
+    },
+    "required": ["kind"],
+    "additionalProperties": False,
+}
+_CONSTRAINT_SPEC_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "type": {
+            "enum": [
+                "Coincident",
+                "Horizontal",
+                "Vertical",
+                "Parallel",
+                "Perpendicular",
+                "Tangent",
+                "Equal",
+                "Symmetric",
+                "PointOnObject",
+                "Block",
+                "Distance",
+                "DistanceX",
+                "DistanceY",
+                "Radius",
+                "Diameter",
+                "Angle",
+            ]
+        },
+        "first": {"type": "integer", "description": "sketch geo_id; -1 HAxis, -2 VAxis"},
+        "first_pos": {
+            "enum": [0, 1, 2, 3],
+            "description": "PointPos: 0 none, 1 start, 2 end, 3 mid",
+        },
+        "second": {"type": "integer"},
+        "second_pos": {"enum": [0, 1, 2, 3]},
+        "third": {"type": "integer"},
+        "third_pos": {"enum": [0, 1, 2, 3]},
+        "value": _QUANTITY_SCHEMA,
+        "name": {"type": "string", "description": "intent-bearing constraint name"},
+        "driving": {"type": "boolean", "default": True},
+    },
+    "required": ["type", "first"],
+    "additionalProperties": False,
+}
+_CONSTRAINT_REF_SCHEMA = {
+    "anyOf": [
+        {"type": "integer", "minimum": 1, "description": "1-based solver id"},
+        {"type": "string", "description": "constraint Name"},
+    ]
+}
+
+
+def _sketch_schema(properties, required):
+    """A sketch tool input schema: doc handle, the tool's own fields, and confirm passthrough."""
+    return {
+        "type": "object",
+        "properties": {"doc": _DOC_SCHEMA, **properties, "confirm": _CONFIRM_SCHEMA},
+        "required": ["doc", *required],
+        "additionalProperties": False,
+    }
+
+
+def _sketch_method(name, fn, schema, description):
+    """A ``ToolSpec`` for a sketch mutation use case.
+
+    The handler passes no ``audit_sink``: ``HandlerFactory`` has no sink parameter, and the MCP
+    server already writes a before/after record for every ``mutating`` tool.
+    """
+
+    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+        return lambda **p: fn(doc_registry, **p)
+
+    return ToolSpec(
+        name=name,
+        make_handler=make,
+        input_schema=schema,
+        description=description,
+        timeout_s=120.0,
+        mutating=True,
+    )
+
+
+def _sketch_specs():
+    """The eight ``sketch_*`` mutation specs, in catalog order."""
+    return [
+        _sketch_method(
+            "sketch_create",
+            sketches.sketch_create,
+            _sketch_schema(
+                {
+                    "name": {"type": "string"},
+                    "plane": {"enum": ["XY", "XZ", "YZ"]},
+                    "face": _SUBELEMENT_SELECTOR_SCHEMA,
+                },
+                ["name"],
+            ),
+            "Create a sketch on a base plane (XY/XZ/YZ) or attached to a planar face. "
+            "A new sketch is empty, so it commits fully constrained.",
+        ),
+        _sketch_method(
+            "sketch_add_geometry",
+            sketches.sketch_add_geometry,
+            _sketch_schema(
+                {
+                    "sketch": {"type": "string"},
+                    "geometry": {
+                        "type": "array",
+                        "items": _GEOMETRY_SPEC_SCHEMA,
+                        "minItems": 1,
+                    },
+                    "constraints": {
+                        "type": "array",
+                        "items": _CONSTRAINT_SPEC_SCHEMA,
+                        "description": "applied in the same transaction as the geometry",
+                    },
+                },
+                ["sketch", "geometry"],
+            ),
+            "Add typed geometry; returns 0-based geo_ids. Geometry alone leaves the sketch "
+            "under-constrained, which post-verify rolls back (geometry included) — send the "
+            "constraints that pin it in the same call.",
+        ),
+        _sketch_method(
+            "sketch_remove_geometry",
+            sketches.sketch_remove_geometry,
+            _sketch_schema(
+                {
+                    "sketch": {"type": "string"},
+                    "geo_ids": {
+                        "type": "array",
+                        "items": {"type": "integer", "minimum": 0},
+                        "minItems": 1,
+                    },
+                },
+                ["sketch", "geo_ids"],
+            ),
+            "Remove sketch geometry by 0-based geo_id; FreeCAD drops its dependent constraints.",
+        ),
+        _sketch_method(
+            "sketch_add_constraint",
+            sketches.sketch_add_constraint,
+            _sketch_schema(
+                {
+                    "sketch": {"type": "string"},
+                    "constraints": {
+                        "type": "array",
+                        "items": _CONSTRAINT_SPEC_SCHEMA,
+                        "minItems": 1,
+                    },
+                },
+                ["sketch", "constraints"],
+            ),
+            "Add typed constraints; returns 1-based solver ids. A conflicting or malformed set "
+            "rolls back with the offending ids named; redundant constraints warn only.",
+        ),
+        _sketch_method(
+            "sketch_remove_constraint",
+            sketches.sketch_remove_constraint,
+            _sketch_schema(
+                {
+                    "sketch": {"type": "string"},
+                    "constraints": {
+                        "type": "array",
+                        "items": _CONSTRAINT_REF_SCHEMA,
+                        "minItems": 1,
+                    },
+                },
+                ["sketch", "constraints"],
+            ),
+            "Remove constraints named by 1-based solver id or by name.",
+        ),
+        _sketch_method(
+            "sketch_set_datum",
+            sketches.sketch_set_datum,
+            _sketch_schema(
+                {
+                    "sketch": {"type": "string"},
+                    "constraint": _CONSTRAINT_REF_SCHEMA,
+                    "value": _QUANTITY_SCHEMA,
+                },
+                ["sketch", "constraint", "value"],
+            ),
+            "Change a driving dimensional constraint's value; mm for lengths, deg for angles.",
+        ),
+        _sketch_method(
+            "sketch_toggle_construction",
+            sketches.sketch_toggle_construction,
+            _sketch_schema(
+                {
+                    "sketch": {"type": "string"},
+                    "geo_ids": {
+                        "type": "array",
+                        "items": {"type": "integer", "minimum": 0},
+                        "minItems": 1,
+                    },
+                },
+                ["sketch", "geo_ids"],
+            ),
+            "Toggle construction mode on the named 0-based sketch geometry.",
+        ),
+        _sketch_method(
+            "sketch_add_external_geometry",
+            sketches.sketch_add_external_geometry,
+            _sketch_schema(
+                {"sketch": {"type": "string"}, "edge": _SUBELEMENT_SELECTOR_SCHEMA},
+                ["sketch", "edge"],
+            ),
+            "Project a model edge into a sketch as external geometry, addressed by a selector.",
+        ),
+    ]
 
 
 def _doc_method(attr, timeout, schema, description, *, mutating):
@@ -584,6 +831,7 @@ def tool_specs() -> list[ToolSpec]:
             "3mf",
             "Verify a written 3MF: lib3mf + trimesh + FreeCAD self-read merged.",
         ),
+        *_sketch_specs(),
     ]
 
 

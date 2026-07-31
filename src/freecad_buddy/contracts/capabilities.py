@@ -11,4 +11,5 @@ class CapabilityBanner(TypedDict, total=False):
     serializer: Literal["exportBinary", "exportBrep"]  # required
     varset_backend: Literal["varset", "spreadsheet"]  # required
     render: Literal["gui_constructed", "offscreen", "none"]  # required
+    sketcher_available: bool  # required
     exec_enabled: bool  # required

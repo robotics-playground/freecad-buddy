@@ -45,6 +45,7 @@ from freecad_buddy.contracts.fingerprint import FingerprintRecord
 from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.mutation import MutationBlock
 from freecad_buddy.contracts.report import ValidationReport
+from freecad_buddy.contracts.sketch import SketchState
 
 # Wire roots: (filename stem, TypedDict). One schema file each.
 WIRE_ROOTS: list[tuple[str, Any]] = [
@@ -56,6 +57,7 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("fingerprint", FingerprintRecord),
     ("capability-banner", CapabilityBanner),
     ("mutation", MutationBlock),
+    ("sketch-state", SketchState),
 ]
 
 # Required-field manifest (type name -> required field names).
@@ -74,6 +76,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "serializer",
         "varset_backend",
         "render",
+        "sketcher_available",
         "exec_enabled",
     ],
     "MutationBlock": [
@@ -97,6 +100,10 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "MassProps": ["volume", "area", "bbox", "com", "principal_moments", "quantum"],
     "GeometricSelector": ["kind", "object", "element_type"],
     "MappedNameSelector": ["kind", "object", "mapped_name", "element_map_version"],
+    # The grading fields are present only when `readable` is true; a sketch a rollback
+    # destroyed reports `readable: false` and carries no grade.
+    "SketchState": ["schema", "sketch", "readable"],
+    "ConstraintRef": ["id"],
 }
 
 # Conditional manifest (wire-root type name -> conditional spec). Each entry binds

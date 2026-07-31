@@ -351,6 +351,25 @@ def _getattr_list(obj: object, name: str) -> list:
         return [value]
 
 
+def constraint_refs(sketch_obj: object, solver_ids: list) -> list[dict]:
+    """Map 1-based solver ids to ``{id, name, type}`` refs naming ``Constraints[id-1]``.
+
+    An id outside the constraint list (a diagnostic naming a constraint the solver has already
+    dropped) yields a ref carrying only its id.
+    """
+    constraints = list(getattr(sketch_obj, "Constraints", []) or [])
+    refs = []
+    for raw in solver_ids:
+        solver_id = int(raw)
+        ref: dict = {"id": solver_id}
+        if 1 <= solver_id <= len(constraints):
+            constraint = constraints[solver_id - 1]
+            ref["name"] = str(getattr(constraint, "Name", "") or "")
+            ref["type"] = str(getattr(constraint, "Type", "") or "")
+        refs.append(ref)
+    return refs
+
+
 def verify_sketch(
     registry: DocumentRegistry, doc: str | None = None, sketch: str | None = None
 ) -> ResultEnvelope:
@@ -424,6 +443,12 @@ def verify_sketch(
                 "sketch": obj.Name,
                 "dof": dof,
                 "fully_constrained": fully_constrained,
+                "geometry_count": int(getattr(obj, "GeometryCount", 0) or 0),
+                "constraint_count": int(getattr(obj, "ConstraintCount", 0) or 0),
+                "conflicting": constraint_refs(obj, conflicting),
+                "malformed": constraint_refs(obj, malformed),
+                "redundant": constraint_refs(obj, redundant),
+                "partially_redundant": constraint_refs(obj, partially_redundant),
             },
             "checks": checks,
             "warnings": warnings,

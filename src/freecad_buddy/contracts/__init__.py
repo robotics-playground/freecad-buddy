@@ -58,6 +58,16 @@ from freecad_buddy.contracts.rpc import (
     RpcRequest,
     RpcSuccess,
 )
+from freecad_buddy.contracts.sketch import (
+    ConstraintRef,
+    ConstraintSpec,
+    ConstraintType,
+    GeometryKind,
+    GeometrySpec,
+    PointPos,
+    Quantity,
+    SketchState,
+)
 from freecad_buddy.contracts.status import ErrorDetail, JobState, TerminalStatus
 
 __all__ = [
@@ -65,6 +75,9 @@ __all__ = [
     "AuditRecord",
     "CapabilityBanner",
     "Check",
+    "ConstraintRef",
+    "ConstraintSpec",
+    "ConstraintType",
     "CountDelta",
     "DocHandle",
     "ErrorDetail",
@@ -72,6 +85,8 @@ __all__ = [
     "FocusSpec",
     "GeometricSelector",
     "GeometryDiff",
+    "GeometryKind",
+    "GeometrySpec",
     "ImageRef",
     "JobState",
     "JobStatus",
@@ -80,7 +95,9 @@ __all__ = [
     "MeasuredKind",
     "MutationBlock",
     "ObjectFingerprint",
+    "PointPos",
     "PostVerifyBlock",
+    "Quantity",
     "RefFinding",
     "RefVerdict",
     "RenderPort",
@@ -100,6 +117,7 @@ __all__ = [
     "ScalarDelta",
     "SceneSpec",
     "Selector",
+    "SketchState",
     "StyleSpec",
     "TerminalStatus",
     "TnpAuditBlock",
