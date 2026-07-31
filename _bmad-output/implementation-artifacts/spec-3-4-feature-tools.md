@@ -4,10 +4,11 @@ type: 'feature'
 epic: 3
 story: '3-4-feature-tools'
 created: '2026-07-31'
-status: 'in-review'
+status: 'done'
 baseline_revision: 'b8fe6f5'
+final_revision: 'ca87352'
 review_loop_iteration: 0
-followup_review_recommended: false
+followup_review_recommended: true
 context:
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md'
   - '{project-root}/_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/verification-design.md'
@@ -167,3 +168,43 @@ warnings: [oversized]
 
 **Manual checks (if no CLI):**
 - Drive `g2-dev-006-pad` (5 mm pad on `box-10-20-30`) through the tools under `FreeCADCmd` and read `verify_shape` directly: the solid must be valid with the case's expected volume, and the audit log must carry one mutation record per tool call with both fingerprint digests.
+
+## Auto Run Result
+
+Status: done
+
+The dev session timed out (`"status": "timeout"`, `expired_clock: "both"`) after 90 minutes
+and 2.44M weighted tokens, pausing for manual rollback with nothing committed. The tree it left
+held 3,556 coherent lines across `contracts/feature.py`, `usecases/features.py`, the
+feature-state schema and both test legs, with one failing test, so the work was verified and
+finished by hand rather than discarded.
+
+### The one failure, and how it was decided
+
+`test_the_same_cut_type_becomes_legal_once_its_thread_type_is_set` passed `diameter` together
+with `thread_type`, which `feature_hole`'s precheck rejects — a contradiction inside the
+timed-out session's own output.
+
+Measured on FreeCAD 1.1.1 rather than argued: `Diameter` is **not** made read-only
+(`FeatureHole.cpp` carries no `Diameter.setReadOnly` call), and assigning it alongside
+`ThreadType=ISOMetricProfile` succeeds with the value persisting as `6.0 mm`. But the geometry
+ignores it — the same hole bores `ThreadSize M1x0.25`. The guard's conclusion is therefore
+correct and its stated reason was wrong; the message was corrected to say the diameter is
+stored but never reaches the geometry, and the test now asserts the rejection.
+
+### Verification
+
+- `FreeCADCmd tests/run_tests.py` — `Ran 307 tests ... OK (skipped=1)` (143 before this epic)
+- `uv run pytest tests/external` — `715 passed`
+- `python scripts/check_imports.py` — `check_imports OK`
+- `uv run python scripts/check_provenance.py` — `check_provenance OK`
+- `ruff check` / `ruff format --check` — clean
+
+### Residual risk
+
+- `followup_review_recommended: true` — the story timed out before its review pass, so the ten
+  feature tools have had **no independent adversarial review**. They pass every executable gate;
+  nothing has read the diff for defects the tests do not cover.
+- The hole-diameter guard is now the only place encoding the thread-sizing rule. If a future
+  FreeCAD build lets `Diameter` drive a threaded bore, the guard becomes wrong in the opposite
+  direction and the measurement above should be re-run.
