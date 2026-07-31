@@ -46,6 +46,21 @@ jobs:
         run: uv run pytest tests/external/test_gate_g1_exit.py -q
       - name: G1 held-out holds only the sealed pair (no unsealed live case leaked)
         run: uv run pytest tests/external/test_harness_g1.py::test_g1_heldout_contains_only_placeholder -q
+      - name: G2 gate-exit machinery (collectors, seal ceremony, verdict legs, offline)
+        run: uv run pytest tests/external/test_gate_g2_exit.py -q
+      - name: G2 held-out holds only the sealed pair (no unsealed case.yaml)
+        run: |
+          uv run pytest tests/external/test_g2_benchmark.py -q -k "heldout or sealed_archive"
+          # `find`, not a single-level glob: seal.py stages cases with rglob, so a case nested
+          # any deeper than one directory is sealed but would be invisible to `*/case.yaml`.
+          if [ -n "$(find benchmarks/g2/heldout -name case.yaml -print -quit)" ]; then
+            echo "benchmarks/g2/heldout/ holds an unsealed case.yaml — the set is not sealed"; exit 1;
+          fi
+      - name: G2 fault fixtures are all materialized (no 'fixture: pending')
+        run: |
+          if grep -rn --include=case.yaml "fixture: pending" benchmarks/g2/; then
+            echo "a G2 fault case still declares its fixture pending"; exit 1;
+          fi
       - name: Ruff (T201 print-ban honored)
         run: uv run ruff check .
       - name: External suite

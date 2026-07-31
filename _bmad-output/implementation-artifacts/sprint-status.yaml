@@ -87,7 +87,7 @@ development_status:
   3-5-tnp-guard-layers-1-2: done
   3-6-preview-dry-run-diff: done
   3-7-confirmation-flow-verified-undo: done
-  3-8-gate-g2-exit: backlog
+  3-8-gate-g2-exit: done
   epic-3-retrospective: optional
   epic-4: backlog
   4-1-entry-gate-g3e-specs-judge-techdraw: backlog

@@ -1,0 +1,8 @@
+artifact: g2/fault-injection/coincidental-hash/g2-fault-coincidental-genuine-match/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+  generator: benchmarks/g2/fault-injection/coincidental-hash/build_coincidental_fixtures.py
+real_world_basis: "Pre-mutation input: two congruent boxes fused, so a re-point keeps the witness"
+license_checked: {by: TanNT, date: 2026-07-31}

@@ -1,0 +1,8 @@
+artifact: g2/fault-injection/dressup-drop/g2-fault-dressup-all-edges-retained/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+  generator: benchmarks/g2/fault-injection/dressup-drop/build_dressup_fixtures.py
+real_world_basis: "Pre-mutation input: a box whose fillet names four vertical edges in one LinkSubList"
+license_checked: {by: TanNT, date: 2026-07-31}

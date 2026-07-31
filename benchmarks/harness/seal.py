@@ -90,13 +90,17 @@ def read_manifest(heldout_dir: Path) -> dict | None:
     return data
 
 
-def seal_heldout(heldout_dir: Path, *, sealed_by: str, sealed_at: str, key: str) -> dict:
+def seal_heldout(
+    heldout_dir: Path, *, sealed_by: str, sealed_at: str, key: str, gate: str = "G1"
+) -> dict:
     """Seal the staged held-out cases into ``heldout.tar.enc`` + ``SEAL.json``; return the manifest.
 
     Tars every staged case dir (an empty archive when none are staged — ``case_count: 0`` is a
     valid placeholder seal, not an error), encrypts it with the ``key``-derived keystream, writes
     the pair, and records ``archive_sha256`` over the encrypted bytes. ``sealed_at``/``sealed_by``
     are injected by the caller.
+
+    :param gate: the gate the sealed set belongs to, recorded in the manifest.
     """
     heldout_dir.mkdir(parents=True, exist_ok=True)
     case_dirs = _staged_case_dirs(heldout_dir)
@@ -105,7 +109,7 @@ def seal_heldout(heldout_dir: Path, *, sealed_by: str, sealed_at: str, key: str)
     (heldout_dir / ARCHIVE_NAME).write_bytes(encrypted)
 
     manifest = {
-        "gate": "G1",
+        "gate": gate,
         "sealed_at": sealed_at,
         "sealed_by": sealed_by,
         "case_count": len(case_dirs),

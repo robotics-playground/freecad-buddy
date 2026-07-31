@@ -23,6 +23,10 @@ STUB_NOT_IMPLEMENTED_CODE = "invalid_input.not_implemented"
 # Honest "evidence absent" code for a criterion whose external evidence file never landed.
 NOT_COLLECTED_CODE = "invalid_input.evidence_not_collected"
 
+# The gate ids a criterion id may name. An id outside this set falls back to G0 rather than
+# inventing a gate the schema does not know.
+KNOWN_GATE_IDS = frozenset({"G0", "G1", "G2", "G3", "G4", "G5"})
+
 
 def stub_outcome() -> dict:
     """The structured "not implemented" a StubBridge returns for every tool call."""
@@ -65,12 +69,23 @@ def build_report(criterion: dict, outcome: dict) -> ValidationReport:
     return report
 
 
+def _gate_of(criterion: str) -> str:
+    """The gate a criterion id belongs to (``"G2.4"`` -> ``"G2"``), or ``"G0"`` when unrecognized.
+
+    :param criterion: a criterion id, conventionally ``<gate>.<index>``.
+    """
+    head = (criterion or "").split(".", 1)[0]
+    return head if head in KNOWN_GATE_IDS else "G0"
+
+
 def evidence_report(criterion: str, checks: list, banner: dict | None = None) -> ValidationReport:
     """Assemble a ``ValidationReport`` for ``criterion`` from real measured ``checks``.
 
     The verdict is DERIVED from ``checks`` via ``derive_verdict`` — any incoming ``verdict``
     on a source artifact is ignored, so an evidence file can never self-grade. ``banner``
-    defaults to a headless stub banner when the caller has no measured banner.
+    defaults to a headless stub banner when the caller has no measured banner. The report's
+    ``subject.gate`` is read from the criterion id, so an auditor sorting an evidence bundle by
+    gate files each report under the gate that produced it.
     """
     report_banner: ReportBanner = (
         dict(banner)
@@ -84,7 +99,7 @@ def evidence_report(criterion: str, checks: list, banner: dict | None = None) ->
     report: ValidationReport = {
         "schema": "fcb.validation-report/1",
         "banner": report_banner,
-        "subject": {"criterion": criterion, "gate": "G0"},
+        "subject": {"criterion": criterion, "gate": _gate_of(criterion)},
         "checks": list(checks),
     }
     report["verdict"] = derive_verdict(report)

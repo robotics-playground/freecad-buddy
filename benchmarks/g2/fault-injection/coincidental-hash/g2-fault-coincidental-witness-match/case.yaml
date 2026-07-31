@@ -1,7 +1,7 @@
 id: g2-fault-coincidental-witness-match
 gate: g2
 criterion: G2.4
-targets_validator: audit_references@usecases.verify.audit_references
+targets_validator: audit_references@usecases.tnp_guard.audit_references
 fault:
   kind: planted_defect
   description: >-
@@ -11,6 +11,8 @@ expected:
   expected_verdict: "REPOINTED"
   expected_layer: 2
   must_not_be_caught_by: "layer_1_witness_comparison"
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation
+# input and the op named here plants the defect through the production mutation path.
+planted_op: repoint_reference_to_congruent_twin
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-coincidental-witness-match.yaml

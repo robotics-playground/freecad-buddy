@@ -1,7 +1,7 @@
 id: g2-fault-tnp-b-attachment-support-deleted
 gate: g2
 criterion: G2.4
-targets_validator: audit_references@usecases.verify.audit_references
+targets_validator: audit_references@usecases.tnp_guard.audit_references
 fault:
   kind: planted_defect
   description: >-
@@ -12,6 +12,8 @@ expected:
   provoking_mutation: "datum/face deletion under an attachment"
   expected_verdict: "BROKEN"
   expected_layer: 0
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation
+# input and the op named here plants the defect through the production mutation path.
+planted_op: delete_attachment_support
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-tnp-b-attachment-support-deleted.yaml

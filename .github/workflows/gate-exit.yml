@@ -1,6 +1,6 @@
 name: gate-exit
 
-# Manually-dispatched Gate G1 exit surface (design §1.1, Story 2.4). This workflow proves the
+# Manually-dispatched Gate G1 and G2 exit surface (design §1.1). This workflow proves the
 # exit MACHINERY offline — the seal -> unseal -> burn ceremony, the leg-c R>=10 + gap math, and
 # the --exit refusal without the key. It does NOT assert the live pass-rate and holds NO unseal
 # key: the real exit is an operator ceremony run locally with the human-held FREECAD_BUDDY_UNSEAL_KEY
@@ -26,3 +26,28 @@ jobs:
           fi
       - name: Held-out holds only the sealed pair (no unsealed live case)
         run: uv run pytest tests/external/test_harness_g1.py::test_g1_heldout_contains_only_placeholder -q
+      - name: G2 seal/exit machinery self-test (collectors, ceremony, verdict legs)
+        run: uv run pytest tests/external/test_gate_g2_exit.py -q
+      - name: G2 --exit refuses without the operator key (exit-2, no traceback)
+        env:
+          FREECAD_BUDDY_UNSEAL_KEY: ""
+        run: |
+          set +e
+          out=$(uv run python benchmarks/runner.py run G2 --exit --run gate-exit-ci 2>&1)
+          code=$?
+          set -e
+          echo "$out"
+          if [ "$code" -eq 0 ]; then
+            echo "run G2 --exit unexpectedly succeeded without the operator key"; exit 1;
+          fi
+          case "$out" in
+            *FREECAD_BUDDY_UNSEAL_KEY*) ;;
+            *) echo "refused, but not by the key gate — the key check may have been removed"; exit 1;;
+          esac
+      - name: G2 held-out holds only the sealed pair (no unsealed case.yaml)
+        run: |
+          # `find`, not a single-level glob: seal.py stages cases with rglob, so a case nested
+          # any deeper than one directory is sealed but would be invisible to `*/case.yaml`.
+          if [ -n "$(find benchmarks/g2/heldout -name case.yaml -print -quit)" ]; then
+            echo "benchmarks/g2/heldout/ holds an unsealed case.yaml — the set is not sealed"; exit 1;
+          fi

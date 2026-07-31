@@ -1,0 +1,8 @@
+artifact: g2/fault-injection/tnp/g2-fault-tnp-control-intended-target/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+  generator: benchmarks/g2/fault-injection/tnp/build_tnp_fixtures.py
+real_world_basis: "Pre-mutation input carrying the reference the TNP scenario breaks"
+license_checked: {by: TanNT, date: 2026-07-31}

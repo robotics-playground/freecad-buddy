@@ -6,6 +6,7 @@ golden model, and each fault suite mixes planted defects with clean controls so 
 false alarm are both measurable.
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -35,7 +36,8 @@ def _fault_cases() -> list[Path]:
 
 
 DEV_CASES = _cases(G2 / "dev")
-HELDOUT_CASES = _cases(G2 / "heldout")
+# The held-out split is sealed (story 3.8): its cases are unreadable outside `--exit`, so the
+# structural checks below cover the dev split only and the seal is asserted separately.
 FAULT_CASES = _fault_cases()
 
 
@@ -64,19 +66,32 @@ def test_dev_split_partitions_evenly_across_the_eight_op_types():
     assert set(counts.values()) == {CASES_PER_OP_TYPE}
 
 
-def test_heldout_split_covers_every_op_type():
-    op_types = {_load(case)["op_type"] for case in HELDOUT_CASES}
-    assert op_types == OP_TYPES
+def test_heldout_holds_only_the_sealed_pair():
+    """After the G2 seal no readable case may sit in ``heldout/`` — the manifest attests the set.
+
+    Reading a held-out command is what the seal exists to prevent, so the op-type coverage and
+    dev-disjointness this suite used to assert over the plaintext are now attested by the
+    manifest's ``case_count`` and re-checked only inside the ``--exit`` unseal path.
+    """
+    heldout = G2 / "heldout"
+    present = sorted(p.name for p in heldout.iterdir())
+    assert present == ["SEAL.json", "heldout.tar.enc"]
+
+    manifest = json.loads((heldout / "SEAL.json").read_text(encoding="utf-8"))
+    assert manifest["gate"] == "G2"
+    assert manifest["case_count"] == len(OP_TYPES)
+    assert manifest["archive_sha256"]
 
 
-def test_heldout_commands_are_disjoint_from_dev_commands():
-    """A held-out command the agent already iterated on is not held out."""
-    dev = {_load(case)["spec"] for case in DEV_CASES}
-    heldout = {_load(case)["spec"] for case in HELDOUT_CASES}
-    assert not (dev & heldout)
+def test_the_sealed_archive_is_not_readable_plaintext():
+    """A sealed archive that still spelled its cases in the clear would seal nothing."""
+    blob = (G2 / "heldout" / "heldout.tar.enc").read_bytes()
+
+    assert b"g2-heldout" not in blob
+    assert b"op_type" not in blob
 
 
-@pytest.mark.parametrize("case", DEV_CASES + HELDOUT_CASES, ids=lambda p: p.parent.name)
+@pytest.mark.parametrize("case", DEV_CASES, ids=lambda p: p.parent.name)
 def test_command_case_is_well_formed(case: Path):
     data = _load(case)
     assert data["gate"] == "g2"
@@ -90,27 +105,45 @@ def test_command_case_is_well_formed(case: Path):
         assert "expect" in check
 
 
-@pytest.mark.parametrize("case", DEV_CASES + HELDOUT_CASES, ids=lambda p: p.parent.name)
+@pytest.mark.parametrize("case", DEV_CASES, ids=lambda p: p.parent.name)
 def test_command_case_targets_a_committed_golden_model(case: Path):
     document = Path(_load(case)["inputs"]["document"])
     assert (case.parent / document).resolve().is_file()
 
 
 @pytest.mark.parametrize("case", FAULT_CASES, ids=lambda p: p.parent.name)
-def test_fault_case_declares_its_fixture_pending_or_carries_it(case: Path):
-    """A fault case either declares its fixture pending or carries it with a provenance manifest.
+def test_fault_case_carries_its_materialized_fixture(case: Path):
+    """Every fault fixture is materialized, with its ``.FCStd`` and provenance manifest present.
 
-    AD-19 lands the benchmark before the runtime that can plant the fixtures, so ``pending`` is a
-    legitimate declared state. Once materialized, the ``.FCStd`` and its manifest must both be
-    present: ``check_provenance`` exempts a case only while the pending state is explicit, so a
-    fixture forgotten after materialization cannot hide.
+    ``check_provenance`` exempts a case only while a ``fixture: pending`` state is explicit, so a
+    fixture forgotten after materialization cannot hide behind the exemption.
     """
     data = _load(case)
     fixture = data["fixture"]
-    if fixture == "pending":
-        return
+    assert fixture != "pending", "every fixture is materialized as of story 3.8"
     assert (case.parent / fixture).is_file()
     assert (case.parent / data["provenance"]).resolve().is_file()
+
+
+def test_no_fault_case_still_declares_a_pending_fixture():
+    """A benchmark that grades validators cannot leave a suite unbuilt and still be cited."""
+    pending = [c.parent.name for c in FAULT_CASES if _load(c)["fixture"] == "pending"]
+    assert pending == []
+
+
+@pytest.mark.parametrize("case", FAULT_CASES, ids=lambda p: p.parent.name)
+def test_materialized_fault_case_names_the_op_that_plants_it(case: Path):
+    """The fixture is a pre-mutation input; ``planted_op`` names what turns it into the defect.
+
+    Without it a fixture is just a document, and the defect it is meant to carry is unstated.
+    """
+    assert str(_load(case).get("planted_op") or "").strip()
+
+
+@pytest.mark.parametrize("case", FAULT_CASES, ids=lambda p: p.parent.name)
+def test_fault_case_declares_the_validator_it_targets(case: Path):
+    """The scorer routes a case to its validator by this key, never by a hardcoded suite map."""
+    assert str(_load(case).get("targets_validator") or "").strip()
 
 
 def test_all_five_fault_suites_are_present():
@@ -174,7 +207,7 @@ def test_assertion_fns_are_declared():
     """
     used = {
         check["fn"]
-        for case in DEV_CASES + HELDOUT_CASES
+        for case in DEV_CASES
         for check in _load(case)["assertions"]["checks"]
     }
     assert used <= VOCABULARY_FNS | G2_EXTENSION_FNS

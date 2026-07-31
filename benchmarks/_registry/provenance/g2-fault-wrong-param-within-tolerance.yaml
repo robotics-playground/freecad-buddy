@@ -1,0 +1,8 @@
+artifact: g2/fault-injection/wrong-parameter/g2-fault-wrong-param-within-tolerance/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+  generator: benchmarks/g2/fault-injection/wrong-parameter/build_wrong_parameter_fixtures.py
+real_world_basis: "Pre-mutation input for a wrong-parameter mutation run"
+license_checked: {by: TanNT, date: 2026-07-31}

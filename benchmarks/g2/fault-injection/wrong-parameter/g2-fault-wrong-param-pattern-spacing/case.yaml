@@ -11,6 +11,8 @@ expected:
   declared: "10 mm pitch"
   actual: "12 mm"
   clean_recompute: true
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation
+# input and the op named here plants the defect through the production mutation path.
+planted_op: pattern_with_wrong_spacing
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-wrong-param-pattern-spacing.yaml

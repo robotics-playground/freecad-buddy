@@ -1,7 +1,7 @@
 id: g2-fault-tnp-control-unchanged-references
 gate: g2
 criterion: G2.4
-targets_validator: audit_references@usecases.verify.audit_references
+targets_validator: audit_references@usecases.tnp_guard.audit_references
 fault:
   kind: clean_control
   description: >-
@@ -9,6 +9,8 @@ fault:
   expectation: PASS_CLEAN
 expected:
   expected_verdict: "PASS"
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation
+# input and the op named here plants the defect through the production mutation path.
+planted_op: recompute_without_reference_change
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-tnp-control-unchanged-references.yaml

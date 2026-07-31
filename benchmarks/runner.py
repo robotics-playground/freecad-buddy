@@ -74,7 +74,14 @@ _EXIT_REPEATS = 10
 # Per-gate fault scorer routed by `faults <gate>` (relative to the repo root).
 _FAULT_SCORERS = {
     "G1": Path("benchmarks") / "g1" / "fault-injection" / "score_grader.py",
+    "G2": Path("benchmarks") / "g2" / "fault-injection" / "score_g2_validators.py",
 }
+
+# The repeats a G2 dev run drives each command at (R=5, the G2.1 criterion's declared R).
+_G2_DEV_REPEATS = 5
+# The splits a dev `run G2` drives. The command benchmark and the fault suite both feed the same
+# outcome list; each collector selects its own population from it. `heldout/` is never here.
+_G2_DEV_SPLITS = ("dev", "fault-injection")
 
 # Criteria whose evidence is dropped by an external in-FreeCAD/CI collector into evidence/.
 _INGESTED_CRITERIA = {"G0.1", "G0.3", "G0.5"}
@@ -100,10 +107,27 @@ _VALIDATOR_SOURCES = {
         _REPO_ROOT / "benchmarks" / "g1" / "grader.py",
         _REPO_ROOT / "benchmarks" / "g1" / "rubric.md",
     ),
+    # The five validators the G2 criteria cite. Each hashes its source plus the G2 fault cases
+    # that target it, matching score_g2_validators.py's `_validator_sha` byte for byte so a clean
+    # working tree reads as CURRENT rather than stale.
+    "assertions": (_REPO_ROOT / "benchmarks" / "harness" / "assertions.py",),
+    "run_mutation": (_SRC / "usecases" / "transaction.py",),
+    "fingerprint": (_SRC / "usecases" / "fingerprint.py",),
+    "audit_references": (_SRC / "usecases" / "tnp_guard.py",),
+    "verify_sketch": (_SRC / "usecases" / "verify.py",),
 }
 
 # The G1 fault suite whose `case.yaml` set is folded into the `grader` hash.
 _GRADER_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g1" / "fault-injection"
+
+# The G2 fault suite whose `case.yaml` set is folded into each G2 validator's hash.
+_G2_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g2" / "fault-injection"
+
+# The G2 validators, whose suite fold-in selects only the cases declaring that validator in
+# `targets_validator` — a validator with no cases folds in an explicit empty-suite marker.
+_G2_VALIDATORS = frozenset(
+    {"assertions", "run_mutation", "fingerprint", "audit_references", "verify_sketch"}
+)
 
 
 class UsageError(Exception):
@@ -226,16 +250,46 @@ def _validator_src_hasher(name: str) -> str:
         suite = _grader_suite_sources()
         if not suite:
             return ""
-        for identity, path in suite:
-            try:
-                content = path.read_bytes()
-            except OSError:
-                return ""
-            hasher.update(len(identity).to_bytes(4, "big"))
-            hasher.update(identity)
-            hasher.update(len(content).to_bytes(8, "big"))
-            hasher.update(content)
+    elif name in _G2_VALIDATORS:
+        suite = _g2_suite_sources(name)
+        if not suite:
+            hasher.update(b"\x00no-fault-suite")
+            return hasher.hexdigest()
+    else:
+        return hasher.hexdigest()
+    for identity, path in suite:
+        try:
+            content = path.read_bytes()
+        except OSError:
+            return ""
+        hasher.update(len(identity).to_bytes(4, "big"))
+        hasher.update(identity)
+        hasher.update(len(content).to_bytes(8, "big"))
+        hasher.update(content)
     return hasher.hexdigest()
+
+
+def _g2_suite_sources(validator: str) -> list[tuple[bytes, Path]]:
+    """The G2 fault cases targeting ``validator``, as (identity prefix, path) pairs.
+
+    Ordered by suite-relative POSIX path to match score_g2_validators.py's ordering. Only cases
+    whose ``targets_validator`` names this validator are folded in, so an edit to another
+    validator's suite does not stale this one.
+    """
+    cases = sorted(
+        (p for p in _G2_SUITE_ROOT.rglob("case.yaml") if p.name == "case.yaml"),
+        key=lambda p: p.relative_to(_G2_SUITE_ROOT).as_posix(),
+    )
+    selected = []
+    for path in cases:
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            continue
+        declared = data.get("targets_validator") if isinstance(data, dict) else None
+        if isinstance(declared, str) and declared.split("@", 1)[0] == validator:
+            selected.append((path.relative_to(_G2_SUITE_ROOT).as_posix().encode("utf-8"), path))
+    return selected
 
 
 def _run_dir(gate: str, run_id: str) -> Path:
@@ -315,8 +369,12 @@ def _g0_4_leg_check(leg: str, path: Path) -> Check:
     }
 
 
-def _collect_report(criterion: dict, run_dir: Path):
-    """Collect one criterion's ``ValidationReport`` for the ``run`` command."""
+def _collect_report(criterion: dict, run_dir: Path, live_outcomes=None):
+    """Collect one criterion's ``ValidationReport`` for the ``run`` command.
+
+    ``live_outcomes`` carries the driven case results the G2 collectors measure; it is ``None``
+    when no live driver ran, which every G2 collector reports as an honest uncollected failure.
+    """
     criterion_id = criterion["id"]
     if criterion_id == "G0.2":
         from freecad_buddy.hosts.tool_catalog import tool_specs
@@ -326,23 +384,174 @@ def _collect_report(criterion: dict, run_dir: Path):
         return _ingest_g0_4(run_dir)
     if criterion_id in _INGESTED_CRITERIA:
         return ingest_report(criterion_id, run_dir / "evidence" / f"{criterion_id}.json")
+    collector = _G2_COLLECTORS.get(criterion_id)
+    if collector is not None:
+        return collector(criterion, live_outcomes or [])
     return not_collected_report(criterion_id, f"no collector for {criterion_id}")
+
+
+def _collect_g2_4(criterion: dict, outcomes: list):
+    """Collect G2.4 after probing element-map availability, which gates the whole criterion."""
+    from benchmarks.harness import g2_collect
+
+    return g2_collect.collect_g2_4(
+        criterion, outcomes, element_map_available=_element_map_available()
+    )
+
+
+def _element_map_available() -> bool | None:
+    """Whether the running build exposes an element map, or ``None`` outside FreeCAD.
+
+    The probe needs the FreeCAD API, so outside it the answer is unknown rather than ``False`` —
+    and unknown is not "available", so G2.4 still refuses to report clean.
+    """
+    try:
+        from freecad_buddy.usecases import shim
+    except ImportError:
+        return None
+    try:
+        return bool(shim.element_map_available())
+    except Exception:  # noqa: BLE001 - a probe that cannot run is unknown, never "available"
+        return None
+
+
+_G2_COLLECTORS = {}
+
+
+def _install_g2_collectors() -> None:
+    """Register the G2 criterion collectors, keyed by criterion id.
+
+    Registered lazily so importing the runner does not import the collectors (and through them
+    the contracts) before the repo root is on ``sys.path``.
+    """
+    from benchmarks.harness import g2_collect
+
+    _G2_COLLECTORS.update(
+        {
+            "G2.1": g2_collect.collect_g2_1,
+            "G2.2": g2_collect.collect_g2_2,
+            "G2.3": g2_collect.collect_g2_3,
+            "G2.4": _collect_g2_4,
+            "G2.5": g2_collect.collect_g2_5,
+            "G2.6": lambda criterion, _outcomes: g2_collect.collect_g2_6(criterion),
+        }
+    )
 
 
 def run_command(gate: str, run_id: str) -> int:
     """Collect + write one report per criterion into the run dir; exit on re-derived verdicts."""
     gate_def = _load_gate_def(gate)
     run_dir = _run_dir(gate, run_id)
+    _refuse_exit_run_dir(gate, run_id)
     reports_dir = run_dir / "reports"
+    _install_g2_collectors()
+    live_outcomes = _drive_live_cases(gate, run_dir)
     reports: list[dict] = []
     for criterion in gate_def["criteria"]:
-        report = _collect_report(criterion, run_dir)
+        report = _collect_report(criterion, run_dir, live_outcomes)
         _atomic_write_json(reports_dir / f"{criterion['id']}.json", report)
         reports.append(report)
 
     all_ok = all(report["verdict"] == "OK" for report in reports)
     _print_run_summary(gate, reports)
     return _EXIT_OK if all_ok else _EXIT_FAIL
+
+
+def _drive_live_cases(gate: str, run_dir: Path, splits: tuple[str, ...] = _G2_DEV_SPLITS) -> list:
+    """Drive ``gate``'s cases through the live mutation path; return one outcome per repeat.
+
+    Returns an empty list for a gate with no live driver, outside FreeCAD, or when no command
+    resolver is wired — each of which the collectors report as an honest uncollected criterion
+    rather than a pass. The resolver is what translates a case's natural-language ``spec`` into a
+    tool call; no offline resolver exists, so an unattended run measures nothing and says so.
+
+    Both the command benchmark and the fault suite are driven, because the criteria read different
+    populations off the same outcome list: G2.1/G2.5 grade the command cases, G2.4 grades only the
+    fault-declaring ones, and G2.2's rule spans the failing ops the fault suite is the only source
+    of. Driving ``dev/`` alone leaves G2.4 with no population at all.
+
+    :param gate: the gate whose cases are driven.
+    :param run_dir: the run directory the audit log is written beside.
+    :param splits: the split directory names under the gate's benchmark dir.
+    """
+    if gate != "G2":
+        return []
+    try:
+        from benchmarks.g2 import case_run
+    except ImportError:
+        return []
+    resolver = _command_resolver()
+    if resolver is None:
+        return [
+            case_run.CaseOutcome(
+                case_id=case.get("id", "?"),
+                op_type=case.get("op_type", "?"),
+                status=case_run.UNRESOLVED,
+                error=(
+                    "no command resolver: translating a natural-language command into a tool "
+                    "call needs the MCP-client actor (operator ceremony, decisions 010/011)"
+                ),
+                fault_kind=_declared_fault_kind(case),
+            )
+            for split in splits
+            for case in _load_g2_cases(gate, split)
+        ]
+    audit_sink = _audit_sink_for(run_dir)
+    outcomes: list = []
+    for split in splits:
+        outcomes.extend(
+            case_run.run_split(
+                BENCHMARKS_ROOT / KNOWN_GATES[gate] / split,
+                resolver,
+                repeats=_G2_DEV_REPEATS,
+                audit_sink=audit_sink,
+            )
+        )
+    return outcomes
+
+
+def _declared_fault_kind(case: dict) -> str | None:
+    """The case's declared ``fault.kind``, or ``None`` when it is a command case."""
+    fault = case.get("fault")
+    return fault.get("kind") if isinstance(fault, dict) else None
+
+
+def _load_g2_cases(gate: str, split: str) -> list[dict]:
+    """Load the gate's split cases without needing FreeCAD (for the unresolved-outcome list).
+
+    Recursive to match ``case_run.load_cases``: a fault split nests its cases one level deeper
+    than ``dev/``, and a one-level glob would report zero cases for it.
+    """
+    split_dir = BENCHMARKS_ROOT / KNOWN_GATES[gate] / split
+    cases: list[dict] = []
+    for case_yaml in sorted(split_dir.rglob("case.yaml")):
+        try:
+            data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            continue
+        if isinstance(data, dict):
+            cases.append(data)
+    return cases
+
+
+def _command_resolver():
+    """The callable translating a case's command into a tool call, or ``None`` when unwired.
+
+    A G2 case carries a natural-language ``spec`` and its geometry assertions, never a tool name
+    or arguments — translating one into a call is the copilot under test doing its job. Wiring a
+    scripted resolver here would grade a lookup table instead of the actor, so the offline runner
+    has none and reports the criteria uncollected.
+    """
+    return None
+
+
+def _audit_sink_for(run_dir: Path):
+    """An ``AuditSink`` writing beside the run, so mutation lines carry real fingerprints."""
+    try:
+        from freecad_buddy.adapters.audit_log import AuditSink
+    except ImportError:
+        return None
+    return AuditSink(run_dir / "audit.jsonl", actor="benchmark")
 
 
 def _print_run_summary(gate: str, reports: list[dict]) -> None:
@@ -510,6 +719,7 @@ def seal_command(gate: str) -> int:
         sealed_by=os.environ.get("USER") or os.environ.get("USERNAME") or "operator",
         sealed_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
         key=key,
+        gate=gate,
     )
     print(
         f"seal {gate}: wrote {seal.MANIFEST_NAME} + {seal.ARCHIVE_NAME} "
@@ -557,6 +767,63 @@ def _majority_report(case) -> dict:
     return case.reports[0]
 
 
+def _g1_exit_eval(extract_dir: Path, run_dir: Path):  # noqa: ARG001 - the seam's fixed signature
+    """Run G1's held-out eval; return (per-case reports, dev rate, tier).
+
+    Offline this drives the scripted ReAct double at R>=10, which is a labelled machinery dry-run
+    and never the operator pass-rate.
+    """
+    from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
+    from benchmarks.harness.actor import Actor
+    from benchmarks.harness.react_backend import ReactBackend, ScriptedChat
+
+    scripts = {case["id"]: _scripted_react_turns_for(case) for case in _load_broken_cases()}
+    backend = ReactBackend(ScriptedChat(scripts).for_case)
+    actor = Actor(_offline_profile_registry())
+    result = run_actor_eval(actor, backend, repeats=_EXIT_REPEATS)
+    tier = result.n30 if result.escalated else result.n10
+    dev_rate = result.n10.passed_count / len(result.n10.cases)
+    return _exit_case_reports(result, tier), dev_rate, tier
+
+
+def _g2_exit_eval(extract_dir: Path, run_dir: Path):
+    """Run G2's held-out eval over the unsealed set; return (per-case reports, dev rate, tier).
+
+    Driving a held-out command needs the MCP-client actor that translates it into a tool call, so
+    without a wired resolver this produces no case reports and the caller fails the exit honestly
+    rather than scoring an undriven set. The unsealed case content is never read here beyond the
+    driver's own use of it.
+    """
+    raise UsageError("G2 exit evaluation is not reachable without a command resolver")
+
+
+def _g2_exit_precondition() -> None:
+    """Refuse a G2 exit that cannot be evaluated, before anything unseals the held-out set.
+
+    Gating this on the resolver alone would still spend an unseal once a resolver is wired but
+    the evaluator is not, so the evaluator's own reachability is checked here too: whatever makes
+    ``_g2_exit_eval`` raise must refuse before the set is decrypted, never after.
+
+    :raises UsageError: when no command resolver is wired, or when the eval is still the stub.
+    """
+    if _command_resolver() is None:
+        raise UsageError(
+            "G2 --exit needs the MCP-client actor to translate each held-out command into a "
+            "tool call; no command resolver is wired (operator ceremony, decisions 010/011)"
+        )
+    if _EXIT_EVALUATORS.get("G2") is _g2_exit_eval:
+        raise UsageError(
+            "G2 --exit has a command resolver but no held-out evaluator: _g2_exit_eval is the "
+            "unimplemented stub, so the set would be unsealed for a run that measures nothing"
+        )
+
+
+_EXIT_EVALUATORS = {"G1": _g1_exit_eval, "G2": _g2_exit_eval}
+
+# Checked before the unseal: an exit that cannot be evaluated must not spend an unseal event.
+_EXIT_PRECONDITIONS = {"G2": _g2_exit_precondition}
+
+
 def run_exit_command(gate: str, run_id: str) -> int:
     """Unseal the held-out set, run the R>=10 eval, verdict it (leg-c), burn on FAIL.
 
@@ -566,18 +833,25 @@ def run_exit_command(gate: str, run_id: str) -> int:
     always deletes the temp extraction. Offline this is a labelled machinery dry-run over the
     scripted double, NOT the operator pass-rate (decision 010).
     """
-    if gate != "G1":
-        raise UsageError(f"--exit is only defined for gate G1, got {gate!r}")
     gate_def = _load_gate_def(gate)
+    if gate_def.get("verdict", {}).get("heldout") != "sealed":
+        raise UsageError(
+            f"--exit is only defined for a gate declaring verdict.heldout: sealed, "
+            f"got {gate!r}"
+        )
+    evaluate = _EXIT_EVALUATORS.get(gate)
+    if evaluate is None:
+        raise UsageError(f"no exit evaluator wired for gate {gate!r}")
     _preflight_actor_grader(gate)
     key = _require_unseal_key()
+    precondition = _EXIT_PRECONDITIONS.get(gate)
+    if precondition is not None:
+        precondition()
+    _refuse_reused_run_dir(gate, run_id)
 
     import shutil
 
-    from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
     from benchmarks.harness import seal
-    from benchmarks.harness.actor import Actor
-    from benchmarks.harness.react_backend import ReactBackend, ScriptedChat
 
     try:
         extract_dir = seal.unseal_heldout(
@@ -592,21 +866,14 @@ def run_exit_command(gate: str, run_id: str) -> int:
 
     try:
         print(
-            f"run {gate} --exit: unsealed held-out set (machinery dry-run over the scripted "
-            f"double at R={_EXIT_REPEATS}; NOT the operator pass-rate — decisions 010/011)"
+            f"run {gate} --exit: unsealed held-out set (machinery dry-run at "
+            f"R={_EXIT_REPEATS}; NOT the operator pass-rate — decisions 010/011)"
         )
-        scripts = {case["id"]: _scripted_react_turns_for(case) for case in _load_broken_cases()}
-        backend = ReactBackend(ScriptedChat(scripts).for_case)
-        actor = Actor(_offline_profile_registry())
-        result = run_actor_eval(actor, backend, repeats=_EXIT_REPEATS)
-        tier = result.n30 if result.escalated else result.n10
-
         run_dir = _run_dir(gate, run_id)
-        reports = _exit_case_reports(result, tier)
+        reports, dev_rate, tier = evaluate(extract_dir, run_dir)
         for report in reports:
             case_id = report["subject"].get("case", report["subject"]["criterion"])
             _atomic_write_json(run_dir / "reports" / f"{case_id}.json", report)
-        dev_rate = result.n10.passed_count / len(result.n10.cases)
         _atomic_write_json(run_dir / "dev_rate.json", {"dev_rate": dev_rate})
 
         from freecad_buddy.contracts.report import derive_verdict
@@ -630,6 +897,46 @@ def run_exit_command(gate: str, run_id: str) -> int:
         return _EXIT_OK if passed else _EXIT_FAIL
     finally:
         shutil.rmtree(extract_dir, ignore_errors=True)
+
+
+def _refuse_reused_run_dir(gate: str, run_id: str) -> None:
+    """Refuse an exit run whose run dir already holds criterion reports from a dev run.
+
+    ``_load_exit_reports`` globs every ``reports/*.json``, so a dev run's per-criterion reports
+    left in the same run dir would join the held-out case reports and be scored as held-out
+    evidence — polluting the gap math and burning the set over contamination.
+
+    The glob matches what ``_load_exit_reports`` reads — every ``*.json``, not just the
+    criterion-shaped names — because any stored report it would fold into the gap math is
+    contamination, whatever it is called.
+
+    :raises UsageError: when the run dir already holds any stored report.
+    """
+    reports_dir = _run_dir(gate, run_id) / "reports"
+    existing = sorted(p.name for p in reports_dir.glob("*.json"))
+    if existing:
+        raise UsageError(
+            f"run id {run_id!r} already holds reports ({', '.join(existing)}); "
+            f"use a fresh run id for the exit ceremony"
+        )
+
+
+def _refuse_exit_run_dir(gate: str, run_id: str) -> None:
+    """Refuse a dev run whose run dir belongs to a completed exit ceremony.
+
+    The contamination runs both ways. ``_refuse_reused_run_dir`` stops an exit ceremony from
+    reusing a dev run's id; this stops the reverse — a dev ``run`` writing its six criterion
+    reports into an exit run dir, where ``dev_rate.json`` routes ``verdict``/``attest`` through
+    ``_load_exit_reports``, which globs every stored report and would fold the dev criteria into
+    the held-out gap math.
+
+    :raises UsageError: when the run dir already holds an exit run's ``dev_rate.json``.
+    """
+    if (_run_dir(gate, run_id) / "dev_rate.json").is_file():
+        raise UsageError(
+            f"run id {run_id!r} belongs to an exit ceremony (dev_rate.json present); "
+            f"use a fresh run id for a dev run"
+        )
 
 
 def _load_exit_reports(run_dir: Path) -> list[dict]:

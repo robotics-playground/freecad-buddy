@@ -83,7 +83,24 @@ Until Stories 3.3–3.7 land, every criterion fails honestly with `INVALID_INPUT
 mutation *tool* for an actor to drive, even though the mutation runtime and the grader now exist.
 That failure is the entry-gate acceptance signal, not a defect.
 
-The `rollback-boundary/` fixtures are materialized (Story 3.2): each is the pre-mutation input
-document, rebuilt by `rollback-boundary/build_rollback_fixtures.py`, and each `case.yaml` names the
-op that plants its fault in `planted_op`. The other four suites' fixtures remain `pending` until
-the tools that can plant them land.
+Every fixture is now materialized (Story 3.8 completed what Story 3.2 began for
+`rollback-boundary/`). Each is the pre-mutation **input** document rebuilt by its suite's
+generator — `build_rollback_fixtures.py`, `build_tnp_fixtures.py`, `build_dressup_fixtures.py`,
+`build_coincidental_fixtures.py`, `build_wrong_parameter_fixtures.py` — and each `case.yaml` names
+the op that plants its fault in `planted_op`. No suite is left in the pending state.
+
+The fixture is the input, never a defect carved into a shape: a guard is only validated by a
+defect the production mutation path actually produced. Detection therefore requires running each
+`planted_op` through `run_mutation` inside FreeCAD, and those callables do not exist yet, so
+`faults G2` currently scores every validator at `sensitivity: 0.0` and fails its bars honestly.
+
+## Held-out set
+
+`heldout/` holds the sealed pair (`SEAL.json` + `heldout.tar.enc`) and no readable `case.yaml`.
+Only `run G2 --exit` unseals it, key-gated on `FREECAD_BUDDY_UNSEAL_KEY`.
+
+**The seal is weaker for G2 than for G1, and it must not be read as stronger.** G1 sealed an empty
+placeholder, so nothing was ever exposed. G2's 8 cases were committed as plaintext `case.yaml`
+files by Story 3.1 and remain readable in git history. Sealing prevents further casual reading and
+makes the ceremony enforceable, but it cannot restore the property that no one has seen them.
+Anyone weighing a G2 exit result should discount the held-out split accordingly (DW-99).

@@ -1,7 +1,7 @@
 id: g2-fault-tnp-c-external-geometry-source-changed
 gate: g2
 criterion: G2.4
-targets_validator: audit_references@usecases.verify.audit_references
+targets_validator: audit_references@usecases.tnp_guard.audit_references
 fault:
   kind: planted_defect
   description: >-
@@ -12,6 +12,8 @@ expected:
   provoking_mutation: "external-geometry source topology change"
   expected_verdict: "BROKEN"
   expected_layer: 1
-# The mutation runtime that can plant this fault lands in Story 3.2 (AD-19: the
-# benchmark is authored first), so the fixture is declared pending rather than absent.
-fixture: pending
+# The fault is a runtime path, not defective geometry: the fixture is the pre-mutation
+# input and the op named here plants the defect through the production mutation path.
+planted_op: change_external_geometry_source
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-tnp-c-external-geometry-source-changed.yaml
