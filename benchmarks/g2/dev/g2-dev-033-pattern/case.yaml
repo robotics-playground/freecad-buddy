@@ -9,5 +9,5 @@ inputs:
 assertions:
   anchor_frame: {kind: largest_planar_face, ref: null}
   checks:
-    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: is_valid_solid, expect: true}
     - {fn: expect_volume, expect: 1231.5043, tol: {rel: 0.001}}

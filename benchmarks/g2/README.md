@@ -35,6 +35,23 @@ The reference models are the G0 golden models, whose volumes are themselves hand
 `benchmarks/g0/golden-models/expected.yaml`. Commands are dimensioned to fit their target model —
 a 6 mm hole through the 10 mm width of `box-10-20-30`, not a 12 mm one.
 
+## Assertion vocabulary
+
+Five of the `fn` names come from the closed Phase-3 vocabulary in `verification-design.md` §7.2:
+`is_valid_solid`, `count_cylindrical_holes`, `hole_spacing`, `hole_through`, `expect_volume`.
+
+Three do **not** exist in that vocabulary and are a declared G2 extension, not a silent fork:
+
+| `fn` | Why G2 needs it |
+| --- | --- |
+| `expect_solid_count` | A mutation can sever a body or leave a stray lump; §7.2 has no primitive that counts solids, and volume alone cannot distinguish one solid from two. |
+| `expect_sketch_fully_constrained` | G2.5 grades `FullyConstrained` (AD-8), which no §7.2 primitive reads. |
+| `expect_sketch_geometry_count` | A sketch command's result is geometry, not a solid, so no shape-measuring primitive applies. |
+
+Whoever implements the grader must either add these three to the vocabulary or reconcile the
+cases against primitives that already exist. `test_assertion_fns_are_declared` pins the split, so
+a fourth name cannot appear unnoticed.
+
 ## Fault suites
 
 Each suite mixes planted defects with clean controls: sensitivity = detected/planted (bar

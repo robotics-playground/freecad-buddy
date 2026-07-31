@@ -10,4 +10,4 @@ assertions:
   anchor_frame: {kind: largest_planar_face, ref: null}
   checks:
     - {fn: expect_solid_count, expect: 1}
-    - {fn: expect_is_valid_solid, expect: true}
+    - {fn: is_valid_solid, expect: true}

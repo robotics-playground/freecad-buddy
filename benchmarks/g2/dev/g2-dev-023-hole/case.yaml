@@ -10,4 +10,4 @@ assertions:
   anchor_frame: {kind: largest_planar_face, ref: null}
   checks:
     - {fn: count_cylindrical_holes, expect: 1}
-    - {fn: expect_through, expect: true}
+    - {fn: hole_through, expect: true}

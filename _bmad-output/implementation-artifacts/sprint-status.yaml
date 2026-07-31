@@ -54,7 +54,7 @@
 #   with Epic 7 (authored now as ablation-ready drafts; ablated when GS infra + Epic-7 tools exist).
 
 generated: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-31
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -79,8 +79,8 @@ development_status:
   2-3-local-backend-react-adapter: done
   2-4-gate-g1-exit: done
   epic-2-retrospective: optional
-  epic-3: backlog
-  3-1-entry-gate-g2e-benchmark-fault-suites: backlog
+  epic-3: in-progress
+  3-1-entry-gate-g2e-benchmark-fault-suites: done
   3-2-mutation-protocol-runtime: backlog
   3-3-sketch-tools: backlog
   3-4-feature-tools: backlog

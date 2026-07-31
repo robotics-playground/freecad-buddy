@@ -149,3 +149,26 @@ def test_layer_defeating_faults_declare_what_must_not_catch_them():
     }
     assert declared, "no fault pins a layer, so a Layer-0-only guard would score 100%"
     assert set(declared.values()) <= {"layer_0_error_sweep", "layer_1_witness_comparison"}
+
+
+VOCABULARY_FNS = frozenset(
+    {"is_valid_solid", "count_cylindrical_holes", "hole_spacing", "hole_through", "expect_volume"}
+)
+G2_EXTENSION_FNS = frozenset(
+    {"expect_solid_count", "expect_sketch_fully_constrained", "expect_sketch_geometry_count"}
+)
+
+
+def test_assertion_fns_are_declared():
+    """Every fn is either a verification-design 7.2 primitive or a declared G2 extension.
+
+    A near-miss rename (expect_through for hole_through) silently forks the vocabulary, and a
+    new name added without a decision leaves the grader with nothing to implement against.
+    """
+    used = {
+        check["fn"]
+        for case in DEV_CASES + HELDOUT_CASES
+        for check in _load(case)["assertions"]["checks"]
+    }
+    assert used <= VOCABULARY_FNS | G2_EXTENSION_FNS
+    assert used & G2_EXTENSION_FNS <= G2_EXTENSION_FNS
