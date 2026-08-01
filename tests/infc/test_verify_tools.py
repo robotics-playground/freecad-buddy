@@ -7,6 +7,8 @@ stability/sensitivity/cross-tag, ``verify_shape`` golden-pass / defect-fail / nu
 broken-object report + banner, and the bad-handle ``INVALID_INPUT`` boundary.
 """
 
+import os
+import tempfile
 import unittest
 
 import FreeCAD as App
@@ -98,6 +100,36 @@ class FingerprintTest(_DocFixture):
         names = {entry["name"] for entry in record["objects"]}
         self.assertIn("Box", names)
         self.assertNotIn("Empty", names)
+
+    def test_infinite_datum_planes_are_skipped(self):
+        # A PartDesign Body auto-creates an App::Origin whose App::Plane children are infinite:
+        # XZ_Plane.Area is 8.000000000000003e+100. Hashing them makes rollback unprovable, and
+        # they carry no model geometry.
+        self.document.addObject("PartDesign::Body", "Body")
+        self.document.recompute()
+        names = {entry["name"] for entry in fingerprint.fingerprint(self.document)["objects"]}
+        for datum in ("XY_Plane", "XZ_Plane", "YZ_Plane", "X_Axis", "Y_Axis", "Z_Axis"):
+            self.assertNotIn(datum, names, f"{datum} must not be hashed")
+
+    def test_a_body_survives_a_save_reload_round_trip(self):
+        """The snapshot-restore rollback path re-hashes after saveCopy + reopen.
+
+        An infinite plane's 1e100-magnitude coordinates lose their low-order bits through that
+        round trip, so hashing one makes every rollback on a Body-bearing document fail its own
+        proof.
+        """
+        self.document.addObject("PartDesign::Body", "Body")
+        self.document.recompute()
+        before = fingerprint.fingerprint(self.document)
+
+        snapshot = os.path.join(tempfile.gettempdir(), "FCB_TMP_roundtrip_probe.FCStd")
+        self.addCleanup(lambda: os.path.exists(snapshot) and os.remove(snapshot))
+        self.document.saveCopy(snapshot)
+        reopened = App.openDocument(snapshot)
+        try:
+            self.assertEqual(before["digest"], fingerprint.fingerprint(reopened)["digest"])
+        finally:
+            App.closeDocument(reopened.Name)
 
 
 class VerifyShapeTest(_DocFixture):

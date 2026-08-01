@@ -125,16 +125,33 @@ def _massprops(shape: object) -> MassProps:
     }
 
 
+# Datum features carry construction geometry, not model shape. They are excluded because an
+# App::Plane is INFINITE: a PartDesign Body's auto-created XZ_Plane spans +/-1e100 with
+# Area == 8.000000000000003e+100, and a float of that magnitude loses its low-order bits through
+# saveCopy + reopen. Hashing one makes the snapshot-restore rollback proof fail on any document
+# holding a Body, because the re-hash after the restore can never match. The same four types are
+# excluded from the tree summary and the default render set.
+_DATUM_TYPE_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Point")
+
+
+def _is_datum(obj: object) -> bool:
+    """Whether ``obj`` is a datum feature rather than model geometry."""
+    return str(getattr(obj, "TypeId", "")).startswith(_DATUM_TYPE_PREFIXES)
+
+
 def fingerprint(doc: object) -> FingerprintRecord:
     """Return the ``FingerprintRecord`` for ``doc``.
 
     Iterates ``doc.Objects`` in immutable ``Name`` order, skipping objects with a null or
-    absent ``Shape``. Each surviving object contributes ``{name, brep_sha256, massprops}``; the
-    record ``digest`` is the SHA-256 over the repr of the ordered entries. The serializer tag
-    is shim-probed once and stamped on the record.
+    absent ``Shape`` and every datum feature (see ``_DATUM_TYPE_PREFIXES``). Each surviving
+    object contributes ``{name, brep_sha256, massprops}``; the record ``digest`` is the SHA-256
+    over the repr of the ordered entries. The serializer tag is shim-probed once and stamped on
+    the record.
     """
     entries: list[dict] = []
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
+        if _is_datum(obj):
+            continue
         shape = getattr(obj, "Shape", None)
         is_null = getattr(shape, "isNull", None)
         if shape is None or (is_null is not None and is_null()):

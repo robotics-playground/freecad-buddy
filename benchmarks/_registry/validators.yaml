@@ -81,10 +81,10 @@ assertions:
   suite: g2/fault-injection/
   validator_sha: "a954c3eb73f99bd1a87c6b845df598c97a812659b3a1da0524a159cd233766d8"
   last_run:
-    run_id: g2-2026-07-31-1
+    run_id: g2-2026-08-01-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-07-31
+    date: 2026-08-01
     not_scored: planted_op requires a live in-FreeCAD mutation run; not driven by this out-of-FreeCAD scorer
     wilson_ci:
       rate: 0.0
@@ -97,10 +97,10 @@ audit_references:
   suite: g2/fault-injection/
   validator_sha: "6020b0a802150ce25f3506d38a83fd5debf85d7af8b864f8e266aa79a37d5a0c"
   last_run:
-    run_id: g2-2026-07-31-1
+    run_id: g2-2026-08-01-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-07-31
+    date: 2026-08-01
     not_scored: planted_op requires a live in-FreeCAD mutation run; not driven by this out-of-FreeCAD scorer
     wilson_ci:
       rate: 0.0
@@ -111,12 +111,12 @@ audit_references:
 
 fingerprint:
   suite: g2/fault-injection/
-  validator_sha: "fe72cdec6a4180a96cd47a0b7b71b45cebb4152df1dc9b19ec3388d82b4712b6"
+  validator_sha: "f3eab29e826a6508044c14e644d19f34ee25840e832bd55591ba80a2e263fba7"
   last_run:
-    run_id: g2-2026-07-31-1
+    run_id: g2-2026-08-01-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-07-31
+    date: 2026-08-01
     not_scored: no fault case targets this validator
     wilson_ci:
       rate: 0.0
@@ -129,10 +129,10 @@ run_mutation:
   suite: g2/fault-injection/
   validator_sha: "6c20326972569e7e5001a1bfc7147df8dfa2e44b7f76165465473a90c158e99f"
   last_run:
-    run_id: g2-2026-07-31-1
+    run_id: g2-2026-08-01-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-07-31
+    date: 2026-08-01
     not_scored: planted_op requires a live in-FreeCAD mutation run; not driven by this out-of-FreeCAD scorer
     wilson_ci:
       rate: 0.0
@@ -145,10 +145,10 @@ verify_sketch:
   suite: g2/fault-injection/
   validator_sha: "6ca1ca9728ede1e0559188d973c6ccd44e62503f40712c7b1d5d8fd5aa650c65"
   last_run:
-    run_id: g2-2026-07-31-1
+    run_id: g2-2026-08-01-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-07-31
+    date: 2026-08-01
     not_scored: no fault case targets this validator
     wilson_ci:
       rate: 0.0
