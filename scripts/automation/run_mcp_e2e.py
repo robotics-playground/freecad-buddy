@@ -111,8 +111,15 @@ async def _sweep(session: ClientSession, rep: Report) -> None:
             rep.record(f"open:{name}", False, str(_payload(opened)), _status(opened))
             continue
         handle = _payload(opened)["doc"]
+        # The nested tree lives under "tree"; it was "nodes" when this harness was written and
+        # the rename went unnoticed because a None object name fails the checks rather than the
+        # call, so every downstream measurement reported a tool defect that did not exist.
         obj = _payload(await session.call_tool("query_tree_summary", {"doc": handle}))
-        obj_name = obj["nodes"][0]["name"] if obj.get("nodes") else None
+        tree = obj.get("tree") or []
+        obj_name = tree[0]["name"] if tree else None
+        if obj_name is None:
+            rep.record(f"tree_summary:{name}", False, f"no root node in {sorted(obj)}", "NO_ROOT")
+            continue
 
         # query_mass_properties — real volume within 0.1 %
         mp = await session.call_tool(

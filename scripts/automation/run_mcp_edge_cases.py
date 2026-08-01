@@ -44,8 +44,10 @@ async def _open_golden(session, name: str) -> str | None:
 
 
 async def _sole_object(session, handle: str) -> str | None:
+    # The nested tree lives under "tree"; it was "nodes" when this harness was written, and the
+    # rename went unnoticed because a None object name fails the checks rather than the call.
     tree = _payload(await session.call_tool("query_tree_summary", {"doc": handle}))
-    nodes = tree.get("nodes") or []
+    nodes = tree.get("tree") or []
     return nodes[0]["name"] if nodes else None
 
 
@@ -60,11 +62,30 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
         r = await session.call_tool("query_object", {"doc": handle, "object": "NoSuchObject"})
         rep.record("unknown_object_name", _status(r) == "INVALID_INPUT", "", _status(r))
 
-        # --- P1 boundary: max_nodes=0 -> OK, empty nodes, truncated flag ----------------------
+        # --- P1 boundary: an unknown parameter is refused at the input-schema gate ------------
+        # query_tree_summary carried max_nodes/truncated when this harness was written; the tool
+        # now bounds by depth and sets additionalProperties: False, so the boundary worth
+        # asserting is that the retired parameter is rejected rather than silently ignored.
+        # Rejected at the input-schema gate, so there is no envelope to read a status from —
+        # asserted the same way as export_missing_path_schema above.
         r = await session.call_tool("query_tree_summary", {"doc": handle, "max_nodes": 0})
+        rep.record(
+            "retired_max_nodes_rejected",
+            r.isError and r.structuredContent is None,
+            "additionalProperties: False rejects the retired parameter",
+            "SCHEMA_ERROR",
+        )
+
+        # --- P1 boundary: depth bounds the walk without dropping the root --------------------
+        r = await session.call_tool("query_tree_summary", {"doc": handle, "depth": 1})
         p = _payload(r)
-        ok = _status(r) == "OK" and p.get("nodes") == [] and p.get("truncated") is True
-        rep.record("max_nodes_zero", ok, f"nodes={len(p.get('nodes', []))} truncated={p.get('truncated')}", _status(r))
+        ok = _status(r) == "OK" and p.get("returned_nodes") == len(p.get("tree", []))
+        rep.record(
+            "depth_one_returns_roots_only",
+            ok,
+            f"returned_nodes={p.get('returned_nodes')} roots={len(p.get('tree', []))}",
+            _status(r),
+        )
 
         # --- P1 error: export missing a schema-REQUIRED field -> MCP protocol rejection --------
         # A missing required property is rejected at the input-schema gate (isError, no envelope),
