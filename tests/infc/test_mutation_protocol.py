@@ -181,6 +181,123 @@ class RollbackProofTest(_MutationFixture):
         del document
 
 
+class _FailingDocument:
+    """Delegates to a real document, raising ``_PlantedFailure`` from one named method.
+
+    Injects an I/O or kernel failure at a single bracket step without touching the module under
+    test, so the wrapper sees a document whose ``saveCopy``/``commitTransaction`` behaves like a
+    full disk or a kernel refusal.
+    """
+
+    def __init__(self, inner, method):
+        object.__setattr__(self, "_inner", inner)
+        object.__setattr__(self, "_method", method)
+
+    def __getattr__(self, item):
+        if item == object.__getattribute__(self, "_method"):
+            raise _PlantedFailure(f"planted {item} failure")
+        return getattr(object.__getattribute__(self, "_inner"), item)
+
+    def __setattr__(self, item, value):
+        setattr(object.__getattribute__(self, "_inner"), item, value)
+
+
+class _PlantedFailure(RuntimeError):
+    """The failure the bracket-guard tests inject."""
+
+
+class BracketGuardTest(_MutationFixture):
+    """Every step of the bracket that can raise must still return a terminal envelope.
+
+    Covers the calls outside the op/recompute/post_verify try: the ``saveCopy`` snapshot write,
+    the fingerprints on both sides of the bracket, and the commit. Each must close the
+    transaction (R5), release or report the snapshot (R6) and hand the caller an envelope.
+    """
+
+    def _assert_closed_failure(self, envelope, document):
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+        self.assertIsNotNone(envelope["detail"])
+        self.assertFalse(document.HasPendingTransaction)
+        block = envelope["structured_content"]["mutation"]
+        self.assertFalse(block["post_verify"]["passed"])
+        self.assertIn("planted", block["post_verify"]["explanation"])
+        return block
+
+    def test_a_failing_savecopy_returns_an_envelope_and_leaks_no_snapshot(self):
+        document, envelope = self._run(
+            "unwritable snapshot",
+            _add_cylinder,
+            document=_FailingDocument(self.document, "saveCopy"),
+        )
+
+        self._assert_closed_failure(envelope, self.document)
+        self.assertEqual(_snapshot_leftovers(), [])
+        self.assertNotIn("Cyl", [obj.Name for obj in self.document.Objects])
+        del document
+
+    def test_a_failing_post_commit_fingerprint_is_reported_rather_than_raised(self):
+        """The commit already happened, so the envelope must report it, not claim a rollback."""
+        before = fingerprint(self.document)
+        real = transaction.fingerprint
+        calls = {"n": 0}
+
+        def _fail_after_the_first(document):
+            calls["n"] += 1
+            if calls["n"] >= 2:
+                raise _PlantedFailure("planted post-commit fingerprint failure")
+            return real(document)
+
+        transaction.fingerprint = _fail_after_the_first
+        try:
+            document, envelope = self._run("post-commit hash", _add_cylinder)
+        finally:
+            transaction.fingerprint = real
+
+        block = self._assert_closed_failure(envelope, document)
+        # The mutation is committed and cannot be undone from here, so it must not be reported
+        # as rolled back, and the after-fingerprint it could not take stays absent.
+        self.assertFalse(block["rolled_back"])
+        self.assertIsNone(block["rollback_proven"])
+        self.assertIsNone(block["fingerprint_after"])
+        self.assertEqual(block["fingerprint_before"]["digest"], before["digest"])
+        self.assertIn("Cyl", [obj.Name for obj in document.Objects])
+        # R6: the document diverged from the snapshot's state, so the snapshot is kept and named.
+        self.assertIsNotNone(block["snapshot_path"])
+        self.assertTrue(os.path.isfile(block["snapshot_path"]))
+
+    def test_a_failing_pre_bracket_fingerprint_returns_an_envelope_and_opens_no_transaction(self):
+        real = transaction.fingerprint
+
+        def _always_fails(document):
+            raise _PlantedFailure("planted pre-bracket fingerprint failure")
+
+        transaction.fingerprint = _always_fails
+        try:
+            document, envelope = self._run("pre-bracket hash", _add_cylinder)
+        finally:
+            transaction.fingerprint = real
+
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+        self.assertFalse(document.HasPendingTransaction)
+        self.assertEqual(_snapshot_leftovers(), [])
+        self.assertNotIn("Cyl", [obj.Name for obj in document.Objects])
+
+    def test_a_failing_commit_closes_the_transaction_and_rolls_back(self):
+        """R5: a commit that raises must not leave the transaction open for the next one to eat."""
+        before = fingerprint(self.document)
+        document, envelope = self._run(
+            "failing commit",
+            _add_cylinder,
+            document=_FailingDocument(self.document, "commitTransaction"),
+        )
+
+        self._assert_closed_failure(envelope, self.document)
+        self.assertTrue(fingerprints_equal(fingerprint(self.document), before))
+        self.assertNotIn("Cyl", [obj.Name for obj in self.document.Objects])
+        self.assertEqual(_snapshot_leftovers(), [])
+        del document
+
+
 class PostVerifyFailureTest(_MutationFixture):
     def test_an_object_failing_isvalid_fails_post_verify_and_rolls_back(self):
         before = fingerprint(self.document)

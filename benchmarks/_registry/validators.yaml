@@ -126,7 +126,7 @@ fingerprint:
 
 run_mutation:
   suite: g2/fault-injection/
-  validator_sha: "6c20326972569e7e5001a1bfc7147df8dfa2e44b7f76165465473a90c158e99f"
+  validator_sha: "550ea83c7d658521c539768b8e090d8b7ea2b23c7602e954cc3b50685360441a"
   last_run:
     run_id: g2-2026-08-01-1
     sensitivity: 0.0

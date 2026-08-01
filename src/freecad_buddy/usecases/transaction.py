@@ -344,6 +344,51 @@ def _mutation_block(
     }
 
 
+def _setup_failed_envelope(exc: Exception, params_digest: str) -> ResultEnvelope:
+    """Report a pre-bracket failure. Nothing was mutated and no transaction was opened.
+
+    ``fingerprint_before`` is absent because the failure is what stopped it being taken.
+    """
+    report = _block(True, True, None, _unrun_tnp_audit(), False, f"{type(exc).__name__}: {exc}")
+    block = _mutation_block(None, None, report, False, None, "SPEC_FAILED", None, params_digest, [])
+    return _envelope(block, "SPEC_FAILED", summarize_mutation(block))
+
+
+def _commit_failed_envelope(
+    exc: Exception,
+    fp_before: FingerprintRecord,
+    snapshot_path: str,
+    params_digest: str,
+    touched: list[str],
+) -> ResultEnvelope:
+    """Report a failed ``commitTransaction`` after the bracket has been aborted."""
+    report = _block(True, True, None, _unrun_tnp_audit(), False, f"{type(exc).__name__}: {exc}")
+    _delete_snapshot(snapshot_path)
+    block = _mutation_block(
+        fp_before, None, report, True, None, "SPEC_FAILED", None, params_digest, touched
+    )
+    return _envelope(block, "SPEC_FAILED", summarize_mutation(block))
+
+
+def _unhashable_commit_envelope(
+    exc: Exception,
+    fp_before: FingerprintRecord,
+    snapshot_path: str,
+    params_digest: str,
+    touched: list[str],
+) -> ResultEnvelope:
+    """Report a commit that landed but could not be fingerprinted.
+
+    The document is permanently changed, so ``rolled_back`` is False and the snapshot is kept
+    and named: it is the only pre-mutation copy, and restoring is an operator decision.
+    """
+    report = _block(True, True, None, _unrun_tnp_audit(), False, f"{type(exc).__name__}: {exc}")
+    block = _mutation_block(
+        fp_before, None, report, False, None, "SPEC_FAILED", snapshot_path, params_digest, touched
+    )
+    return _envelope(block, "SPEC_FAILED", summarize_mutation(block))
+
+
 def _envelope(block: MutationBlock, status: TerminalStatus, text: str) -> ResultEnvelope:
     detail = (
         None
@@ -467,11 +512,21 @@ def run_mutation(
     params = params or {}
     params_digest = _params_digest(params)
     undo_enabled = shim.enable_undo(document)
-    fp_before = fingerprint(document)
-    _audit(audit_sink, "before", tool, handle, params, None, fp_before, None)
-    refs_before = tnp_guard.snapshot_references(document)
-    snapshot_path = temp_snapshot_path(document)
-    document.saveCopy(snapshot_path)
+
+    # Setup runs before any transaction is open, so a failure here has mutated nothing. It still
+    # has to return an envelope rather than escape: `fingerprint` raises SerializerUnavailable on
+    # a shape exposing neither exporter, and `saveCopy` raises on an unwritable temp dir.
+    snapshot_path = None
+    try:
+        fp_before = fingerprint(document)
+        _audit(audit_sink, "before", tool, handle, params, None, fp_before, None)
+        refs_before = tnp_guard.snapshot_references(document)
+        snapshot_path = temp_snapshot_path(document)
+        document.saveCopy(snapshot_path)
+    except Exception as exc:  # noqa: BLE001 - setup failure must not escape as a raw exception
+        if snapshot_path is not None:
+            _delete_snapshot(snapshot_path)
+        return document, _setup_failed_envelope(exc, params_digest)
 
     document.openTransaction(f"buddy: {label}")
     touched: list[str] = []
@@ -488,10 +543,27 @@ def run_mutation(
         )
 
     if report["passed"]:
-        document.commitTransaction()
+        try:
+            document.commitTransaction()
+        except Exception as exc:  # noqa: BLE001 - a failed commit must not leave the bracket open
+            # R5: never leave a transaction open. abortTransaction no-ops when there is no active
+            # transaction (App/Document.cpp:622-639), so it is safe whether the commit got far
+            # enough to close one or not.
+            document.abortTransaction()
+            document.recompute()
+            return document, _commit_failed_envelope(
+                exc, fp_before, snapshot_path, params_digest, touched
+            )
         # The after-fingerprint is taken while the snapshot still exists: it serializes every shape
         # and can raise, and the snapshot is the only pre-mutation copy until it succeeds.
-        fp_after = fingerprint(document)
+        try:
+            fp_after = fingerprint(document)
+        except Exception as exc:  # noqa: BLE001 - the commit already landed; report, never raise
+            # The mutation IS committed and the document permanently changed, so this is not a
+            # rollback: the snapshot is kept and named so an operator can restore deliberately.
+            return document, _unhashable_commit_envelope(
+                exc, fp_before, snapshot_path, params_digest, touched
+            )
         _delete_snapshot(snapshot_path)
         block = _mutation_block(
             fp_before, fp_after, report, False, None, "OK", None, params_digest, touched
