@@ -1111,12 +1111,38 @@ def test_an_unscored_validator_records_that_it_was_not_measured():
     """A zero score beside a date, a run id and an n=0 interval reads as a measurement.
 
     ``n: 0`` yields the interval [0, 1], which a leg-b reader can take as evidence rather than as
-    its absence, so the block must say why no measurement happened.
+    its absence, so a block that was not measured must say why. A validator that WAS measured
+    carries its rate and no reason; the two states must stay distinguishable, and a bare zero with
+    neither is the one thing that must never appear.
     """
     registry = yaml.safe_load(
         (BENCHMARKS / "_registry" / "validators.yaml").read_text(encoding="utf-8")
     )
     for name in ("assertions", "run_mutation", "fingerprint", "audit_references", "verify_sketch"):
         last_run = registry[name]["last_run"]
-        assert last_run["sensitivity"] == 0.0, "no G2 validator is live-scored yet"
-        assert last_run.get("not_scored"), f"{name} records a zero score with no reason"
+        if last_run.get("not_scored"):
+            assert last_run["sensitivity"] == 0.0, (
+                f"{name} carries a not_scored reason beside a non-zero rate"
+            )
+            continue
+        assert last_run["sensitivity"] > 0.0, (
+            f"{name} records a zero score with no reason saying why it was not measured"
+        )
+        assert last_run["wilson_ci"]["n"] > 0, (
+            f"{name} reports a scored rate over an empty population"
+        )
+
+
+def test_a_scored_g2_validator_measured_a_real_population():
+    """The suite exists to produce a number; at least one validator must actually carry one."""
+    registry = yaml.safe_load(
+        (BENCHMARKS / "_registry" / "validators.yaml").read_text(encoding="utf-8")
+    )
+    scored = [
+        name
+        for name in ("assertions", "run_mutation", "fingerprint", "audit_references",
+                     "verify_sketch")
+        if not registry[name]["last_run"].get("not_scored")
+    ]
+
+    assert scored, "no G2 validator is scored; the fault suite measured nothing"

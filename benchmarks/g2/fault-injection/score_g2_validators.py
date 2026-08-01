@@ -1,25 +1,25 @@
-"""External-process fault scorer for the five validators the G2 criteria cite (run under uv).
+"""External-process structural checker for the G2 fault suite (run under uv).
 
-Scores ``assertions``, ``run_mutation``, ``fingerprint``, ``audit_references`` and
-``verify_sketch`` against the fault suites that target them, computing sensitivity / false alarm
-with ``usecases/stats.py`` and merge-writing each block into ``_registry/validators.yaml`` with
-its ``validator_sha``. Each suite is routed to its validator by the ``targets_validator`` key its
-cases declare, so a case moved between suites follows its validator rather than a hardcoded map.
+Validates the suite's shape without scoring it: that every case parses, declares a validator, pairs
+``fault.kind`` with ``fault.expectation``, names a ``planted_op`` that resolves to a callable, and
+carries a materialized fixture. It computes each validator's ``validator_sha`` over its sources and
+the cases targeting it, so the registry's currency check has a value to compare against.
 
-Every case's defect is planted by running its ``planted_op`` through the production mutation path,
-which needs a live FreeCAD document and a driving actor. This scorer runs outside FreeCAD, so it
-scores what it can measure without one and reports the rest as uncollected — a validator that
-could not be exercised is written with a zero sensitivity and fails its bar honestly rather than
-being credited with a score no run produced.
+It does NOT produce sensitivity or false-alarm numbers, and never writes a ``last_run`` block.
+Planting a fault means running its ``planted_op`` through the production mutation path, which needs
+a live FreeCAD document; this process runs outside FreeCAD and has none. Reporting a rate from here
+would mean reporting a number no run produced, so the scoring path refuses and names the scorer
+that can do it:
 
-Exits non-zero when any scored validator misses sensitivity >=0.95 / false_alarm <=0.05, or when
-any cited validator could not be scored at all.
+    FREECAD_BUDDY_RUN_FAULT_SCORER=1 FreeCADCmd benchmarks/g2/fault-injection/score_g2_infc.py
+
+Exits 0 when the suite is structurally sound, 1 when it is not.
 """
 
 from __future__ import annotations
 
-import datetime
 import hashlib
+import re
 import sys
 from pathlib import Path
 
@@ -30,17 +30,8 @@ REPO_ROOT = HERE.parents[2]
 SRC = REPO_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
-_EXPORT_SCORER_DIR = REPO_ROOT / "benchmarks" / "g0" / "export-fault-injection"
-if str(_EXPORT_SCORER_DIR) not in sys.path:
-    sys.path.insert(0, str(_EXPORT_SCORER_DIR))
-
-from freecad_buddy.usecases import stats  # noqa: E402
-from score_export_verify import merge_validators_yaml  # noqa: E402
 
 VALIDATORS_YAML = REPO_ROOT / "benchmarks" / "_registry" / "validators.yaml"
-
-SENSITIVITY_BAR = 0.95
-FALSE_ALARM_BAR = 0.05
 
 # The source files whose bytes make up each validator's ``validator_sha``. A score stales the
 # moment any of them changes, so a citation can never outlive the code it was measured over.
@@ -52,12 +43,6 @@ VALIDATOR_SOURCES = {
     "audit_references": (_USECASES / "tnp_guard.py",),
     "verify_sketch": (_USECASES / "verify.py",),
 }
-
-_HEADER = (
-    "# Per-validator fault-suite binding (validation-harness-design.md §6).\n"
-    "# A score is citable only while validator_sha matches the working tree "
-    "(edit the validator to stale it).\n"
-)
 
 
 class SuiteError(SystemExit):
@@ -144,9 +129,9 @@ def _partition(cases: list[dict]) -> tuple[list[dict], list[dict]]:
             raise SuiteError(f"case {case.get('id', '<no id>')!r}: 'fault' must be a mapping")
         kind = fault.get("kind")
         expectation = fault.get("expectation")
-        if (kind == "planted_defect") != (expectation == "DETECT") or (
-            kind == "clean_control"
-        ) != (expectation == "PASS_CLEAN"):
+        if (kind == "planted_defect") != (expectation == "DETECT") or (kind == "clean_control") != (
+            expectation == "PASS_CLEAN"
+        ):
             raise SuiteError(
                 f"case {case.get('id', '<no id>')!r}: fault.kind {kind!r} disagrees with "
                 f"expectation {expectation!r} (planted_defect<->DETECT, clean_control<->PASS_CLEAN)"
@@ -164,20 +149,31 @@ def _fixture_materialized(case: dict) -> bool:
     return (case["dir"] / fixture).is_file()
 
 
-def score() -> dict[str, dict]:
-    """Score every cited validator over the cases that target it.
+def _op_names() -> set[str]:
+    """The ``planted_op`` names that resolve to a callable.
 
-    Returns ``{validator: result}``. Each result carries the planted/control counts, how many
-    cases are materialized, the detected/flagged tallies and the resulting rates. Detection
-    requires driving each case's ``planted_op`` through the live mutation path, which this
-    out-of-FreeCAD process cannot do, so ``detected`` stays 0 and the validator fails its bar
-    rather than being credited with an unmeasured score.
+    ``planted_ops`` imports FreeCAD, which this process does not have, so the registry's keys are
+    read from its source rather than by importing it. The in-FreeCAD scorer resolves the same names
+    through the real module; this check exists so a case naming an op nobody implemented is caught
+    without FreeCAD.
+    """
+    source = (HERE / "planted_ops.py").read_text(encoding="utf-8")
+    body = source.partition("REGISTRY = {")[2].partition("}")[0]
+    return set(re.findall(r'^\s*"([^"]+)":', body, re.MULTILINE))
+
+
+def check_suite() -> dict[str, dict]:
+    """Check every cited validator's suite structurally; return ``{validator: result}``.
+
+    Each result carries the planted/control counts, how many cases carry a materialized fixture,
+    and any ``problems`` found. No rate is computed: see the module docstring.
     """
     by_validator: dict[str, list[dict]] = {}
     for case_yaml in _suite_case_files():
         case = _load_case(case_yaml)
         by_validator.setdefault(_validator_name(case), []).append(case)
 
+    known_ops = _op_names()
     results: dict[str, dict] = {}
     for name in sorted(VALIDATOR_SOURCES):
         cases = by_validator.get(name, [])
@@ -186,119 +182,66 @@ def score() -> dict[str, dict]:
                 "planted": 0,
                 "controls": 0,
                 "materialized": 0,
-                "detected": 0,
-                "flagged": 0,
-                "sensitivity": 0.0,
-                "false_alarm": 0.0,
-                "wilson_ci": stats.wilson_ci(0, 0),
-                "reason": "no fault case targets this validator",
+                "problems": ["no fault case targets this validator"],
             }
             continue
         planted, controls = _partition(cases)
-        materialized = sum(1 for case in cases if _fixture_materialized(case))
-        detected = 0
-        flagged = 0
+        problems: list[str] = []
+        for case in cases:
+            case_id = case.get("id", "<no id>")
+            op = case.get("planted_op")
+            if not isinstance(op, str) or not op:
+                problems.append(f"{case_id}: names no planted_op")
+            elif op not in known_ops:
+                problems.append(f"{case_id}: planted_op {op!r} resolves to no callable")
+            if not _fixture_materialized(case):
+                problems.append(f"{case_id}: fixture is not materialized")
         results[name] = {
             "planted": len(planted),
             "controls": len(controls),
-            "materialized": materialized,
-            "detected": detected,
-            "flagged": flagged,
-            "sensitivity": stats.sensitivity(detected, len(planted)),
-            "false_alarm": stats.false_alarm(flagged, len(controls)),
-            "wilson_ci": stats.wilson_ci(detected, len(planted)),
-            "reason": (
-                "planted_op requires a live in-FreeCAD mutation run; not driven by this "
-                "out-of-FreeCAD scorer"
-            ),
+            "materialized": sum(1 for case in cases if _fixture_materialized(case)),
+            "problems": problems,
         }
     return results
 
 
-def _render_block(name: str, sha: str, run: dict, suite: str) -> str:
-    """Render one validator's ``validators.yaml`` block for the shared merge-writer.
-
-    A validator whose score was not measured carries ``not_scored`` naming why. Without it the
-    block is indistinguishable from a real measurement: a zero sensitivity beside a date, a run id
-    and a Wilson interval reads as "measured and scored zero", and an ``n: 0`` interval spanning
-    ``[0, 1]`` reads as evidence rather than as its absence.
-    """
-    wilson = run["wilson_ci"]
-    block = (
-        f"{name}:\n"
-        f"  suite: {suite}\n"
-        f'  validator_sha: "{sha}"\n'
-        "  last_run:\n"
-        f"    run_id: {run['run_id']}\n"
-        f"    sensitivity: {run['sensitivity']}\n"
-        f"    false_alarm: {run['false_alarm']}\n"
-        f"    date: {run['date']}\n"
-    )
-    if run.get("not_scored"):
-        block += f"    not_scored: {run['not_scored']}\n"
-    return block + (
-        "    wilson_ci:\n"
-        f"      rate: {wilson['rate']}\n"
-        f"      low: {wilson['low']}\n"
-        f"      high: {wilson['high']}\n"
-        f"      n: {wilson['n']}\n"
-        f"      r: {wilson['r']}\n"
-    )
+_IN_FREECAD_SCORER = (
+    "FREECAD_BUDDY_RUN_FAULT_SCORER=1 FreeCADCmd benchmarks/g2/fault-injection/score_g2_infc.py"
+)
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Score the five G2 validators; write their blocks unless ``--check`` is passed.
+    """Check the G2 fault suite's structure and refuse to score it.
 
-    ``--check`` computes and asserts the bars WITHOUT writing ``validators.yaml``, so CI verifies
-    the committed scores against the current suites while the working tree stays clean.
+    Prints the per-validator case counts and any structural problem, then names the in-FreeCAD
+    scorer that produces the actual rates. Returns 1 when any validator's suite is malformed.
     """
     argv = sys.argv[1:] if argv is None else argv
-    check_only = "--check" in argv
-    results = score()
+    results = check_suite()
 
-    today = datetime.date.today().isoformat()
-    rendered: dict[str, str] = {}
     failed = False
     for name, result in results.items():
         sys.stderr.write(
             f"  {name:18s} planted={result['planted']:2d} controls={result['controls']:2d} "
-            f"materialized={result['materialized']:2d} detected={result['detected']:2d} "
-            f"sensitivity={result['sensitivity']:.3f} false_alarm={result['false_alarm']:.3f}\n"
+            f"materialized={result['materialized']:2d}\n"
         )
-        if result.get("reason"):
-            sys.stderr.write(f"  {'':18s} NOT SCORED: {result['reason']}\n")
-        wilson = result["wilson_ci"]
-        run = {
-            "run_id": f"g2-{today}-1",
-            "sensitivity": round(result["sensitivity"], 4),
-            "false_alarm": round(result["false_alarm"], 4),
-            "date": today,
-            "not_scored": result.get("reason") or "",
-            "wilson_ci": {
-                "rate": round(wilson["rate"], 4),
-                "low": round(wilson["low"], 4),
-                "high": round(wilson["high"], 4),
-                "n": wilson["n"],
-                "r": wilson["r"],
-            },
-        }
-        rendered[name] = _render_block(name, _validator_sha(name), run, "g2/fault-injection/")
-        if result["sensitivity"] < SENSITIVITY_BAR or result["false_alarm"] > FALSE_ALARM_BAR:
+        for problem in result["problems"]:
+            sys.stderr.write(f"  {'':18s} {problem}\n")
+        # A validator with no suite is a real gap in the benchmark, but it is not a malformed
+        # case, so it is reported without failing the structural check.
+        if [p for p in result["problems"] if not p.startswith("no fault case targets")]:
             failed = True
 
-    if not check_only:
-        existing = (
-            VALIDATORS_YAML.read_text(encoding="utf-8") if VALIDATORS_YAML.exists() else _HEADER
-        )
-        VALIDATORS_YAML.write_text(
-            merge_validators_yaml(existing, rendered), encoding="utf-8"
-        )
-        sys.stderr.write(f"  wrote {VALIDATORS_YAML}\n")
-    else:
-        sys.stderr.write("  --check: validators.yaml not written\n")
+    sys.stderr.write(
+        "\n  NOT SCORED HERE: planting a fault means running its planted_op through the "
+        "production\n  mutation path, which needs a live FreeCAD document. This process has none, "
+        "so no\n  sensitivity, false_alarm or wilson_ci is computed and validators.yaml is not "
+        "written.\n"
+        f"  Run the in-FreeCAD scorer for the real numbers:\n    {_IN_FREECAD_SCORER}\n"
+    )
 
     if failed:
-        sys.stderr.write("  BARS NOT MET: sensitivity<0.95 or false_alarm>0.05\n")
+        sys.stderr.write("\n  SUITE MALFORMED: see the problems listed above\n")
         return 1
     return 0
 

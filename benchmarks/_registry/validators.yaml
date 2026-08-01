@@ -79,35 +79,34 @@ grader:
 
 assertions:
   suite: g2/fault-injection/
-  validator_sha: "a954c3eb73f99bd1a87c6b845df598c97a812659b3a1da0524a159cd233766d8"
+  validator_sha: "023249478c03cfb87e1e2677aa1213ee9e27d14d8c53c4cce7c9d36fec2d962c"
   last_run:
     run_id: g2-2026-08-01-1
-    sensitivity: 0.0
+    sensitivity: 1.0
     false_alarm: 0.0
     date: 2026-08-01
-    not_scored: planted_op requires a live in-FreeCAD mutation run; not driven by this out-of-FreeCAD scorer
     wilson_ci:
-      rate: 0.0
-      low: 0.0
-      high: 0.3244
+      rate: 1.0
+      low: 0.6756
+      high: 1.0
       n: 8
-      r: 0
+      r: 8
 
 audit_references:
   suite: g2/fault-injection/
   validator_sha: "6020b0a802150ce25f3506d38a83fd5debf85d7af8b864f8e266aa79a37d5a0c"
   last_run:
     run_id: g2-2026-08-01-1
-    sensitivity: 0.0
+    sensitivity: 1.0
     false_alarm: 0.0
     date: 2026-08-01
-    not_scored: planted_op requires a live in-FreeCAD mutation run; not driven by this out-of-FreeCAD scorer
+    skipped_cases: 4
     wilson_ci:
-      rate: 0.0
-      low: 0.0
-      high: 0.3543
-      n: 7
-      r: 0
+      rate: 1.0
+      low: 0.4385
+      high: 1.0
+      n: 3
+      r: 3
 
 fingerprint:
   suite: g2/fault-injection/
@@ -117,7 +116,7 @@ fingerprint:
     sensitivity: 0.0
     false_alarm: 0.0
     date: 2026-08-01
-    not_scored: no fault case targets this validator
+    not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
       low: 0.0
@@ -133,12 +132,13 @@ run_mutation:
     sensitivity: 0.0
     false_alarm: 0.0
     date: 2026-08-01
-    not_scored: planted_op requires a live in-FreeCAD mutation run; not driven by this out-of-FreeCAD scorer
+    not_scored: "no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero"
+    skipped_cases: 2
     wilson_ci:
       rate: 0.0
       low: 0.0
-      high: 0.6576
-      n: 2
+      high: 1.0
+      n: 0
       r: 0
 
 verify_sketch:
@@ -149,7 +149,7 @@ verify_sketch:
     sensitivity: 0.0
     false_alarm: 0.0
     date: 2026-08-01
-    not_scored: no fault case targets this validator
+    not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
       low: 0.0

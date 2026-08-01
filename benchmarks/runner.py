@@ -655,9 +655,17 @@ def attest_command(gate: str, run_id: str, token_type: str, outcome: str) -> int
 def faults_command(gate: str) -> int:
     """Route ``faults <gate>`` to the gate's fault scorer as a subprocess; forward its exit code.
 
-    The scorer (``score_grader.py`` for G1) grades the planted suite with the independent
-    validator, computes sensitivity/FA + Wilson CI, and merge-writes the validator block. An
-    unknown gate or a gate with no scorer is a clean usage error (exit 2), never a traceback.
+    G1's ``score_grader.py`` grades the planted suite with the independent validator, computes
+    sensitivity/FA + Wilson CI, and merge-writes the validator block.
+
+    G2's suite plants each fault by running its ``planted_op`` through the production mutation
+    path, which needs a live FreeCAD document. The runner is FreeCAD-free, so the process it
+    starts here checks the suite's structure and refuses to score it, naming the in-FreeCAD
+    scorer (``score_g2_infc.py``) that produces the rates. That scorer is run by the operator
+    under ``FreeCADCmd``, the same way G0's ``score_verify_shape.py`` is — the runner never
+    spawns a FreeCAD interpreter.
+
+    An unknown gate or a gate with no scorer is a clean usage error (exit 2), never a traceback.
     """
     if gate not in KNOWN_GATES:
         raise UsageError(f"unknown gate '{gate}' (known: {', '.join(sorted(KNOWN_GATES))})")
