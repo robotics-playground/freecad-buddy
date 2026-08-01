@@ -1547,6 +1547,47 @@ class ReviewPatchTest(_SketchFixture):
             constraints=[""],
         )
 
+    def test_a_name_already_on_the_sketch_is_rejected_before_the_bracket_opens(self):
+        # SketchObjectPyImp.cpp:538-545 raises ValueError("Duplicate constraint not allowed") from
+        # renameConstraint, which runs inside the transaction — so without a pre-bracket check the
+        # caller pays a snapshot and a rollback for input the I/O matrix rejects as INVALID_INPUT.
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+        named = sketches.sketch_add_constraint(
+            self.registry,
+            doc=self.handle,
+            sketch="Rect",
+            constraints=[{"type": "Distance", "first": 0, "name": "width", "value": mm(16.0)}],
+        )
+        self.assertEqual(named["status"], "OK", named.get("detail"))
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_add_constraint,
+            self.registry,
+            doc=self.handle,
+            sketch="Rect",
+            constraints=[{"type": "Distance", "first": 1, "name": "width", "value": mm(8.0)}],
+        )
+
+    def test_a_name_repeated_within_one_request_is_rejected_before_the_bracket_opens(self):
+        # The collision is between two specs in the same list, so neither is on the sketch when
+        # the request is validated; only comparing the request against itself catches it.
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_add_constraint,
+            self.registry,
+            doc=self.handle,
+            sketch="Rect",
+            constraints=[
+                {"type": "Distance", "first": 0, "name": "span", "value": mm(16.0)},
+                {"type": "Distance", "first": 1, "name": "span", "value": mm(8.0)},
+            ],
+        )
+
     def test_a_rolled_back_constraint_add_reports_no_constraint_ids(self):
         # A rollback removes the constraints, so reporting the ids held mid-transaction would name
         # constraints the caller cannot address.

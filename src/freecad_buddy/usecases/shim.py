@@ -276,6 +276,49 @@ def set_attachment(obj: object, support: list, map_mode: str) -> None:
     obj.MapMode = map_mode
 
 
+_NOT_IMPLEMENTED_SUFFIX = " is not implemented."
+
+
+@lru_cache(maxsize=8)
+def implemented_map_modes(type_id: str) -> frozenset[str] | None:
+    """The ``MapMode`` values ``type_id``'s attach engine implements, or ``None`` when unprobeable.
+
+    ``MapMode``'s enumeration is the union across every ``AttachEngine``, so a mode a datum
+    advertises is not necessarily one its own engine implements: ``PartDesign::Line`` advertises
+    all 55 and implements 18. The engine reports an unimplemented one through
+    ``AttachEngine::throwWrongMode`` (``Attacher.cpp:1074-1090``), whose message this probe
+    matches, and it does so only once the datum has references — an unreferenced datum never
+    evaluates its mode and recomputes clean — so the probe attaches each mode to a throwaway box
+    face before reading the verdict.
+
+    A mode the engine implements but that this probe's single face reference cannot satisfy
+    reports a different message from ``calculateAttachedPlacement`` and is counted as
+    implemented, because the fault is the reference rather than the kind. The result is therefore
+    the set that is not excluded *by kind alone*, which is exactly what a caller can be told
+    before its own references are resolved.
+    """
+    try:
+        import FreeCAD
+
+        doc = FreeCAD.newDocument("fcb_mapmode_probe", hidden=True)
+        try:
+            box = doc.addObject("Part::Box", "ProbeBox")
+            doc.recompute()
+            obj = doc.addObject(type_id, "Probe")
+            implemented = set()
+            for mode in obj.getEnumerationsOfProperty("MapMode"):
+                obj.AttachmentSupport = [(box, ["Face1"])]
+                obj.MapMode = mode
+                doc.recompute()
+                if not str(obj.getStatusString()).endswith(_NOT_IMPLEMENTED_SUFFIX):
+                    implemented.add(mode)
+        finally:
+            FreeCAD.closeDocument(doc.Name)
+    except Exception:  # noqa: BLE001 - a probe that cannot run leaves the mode unchecked
+        return None
+    return frozenset(implemented)
+
+
 def enable_undo(doc: object) -> bool:
     """Turn on ``doc``'s undo stack when the build honours the switch; report whether it is on.
 

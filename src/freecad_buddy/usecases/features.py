@@ -999,6 +999,36 @@ def _dressup_base(
     return base_obj.Name, subelements
 
 
+def _check_dressed_every_edge(feature: object, subelements: list[str], base_faces: int) -> None:
+    """Raise when the built dress-up covered fewer edges than were requested.
+
+    Each dressed edge becomes one new face, so a clean dress-up of ``n`` edges adds exactly ``n``
+    faces. ``getContinuousEdges`` drops an edge it will not dress without an error and without a
+    return value, leaving the feature ``Valid`` and ``Up-to-date``, so the face count is the only
+    signal that the committed feature is thinner than the request.
+
+    This counts what FreeCAD actually did rather than predicting it, so it holds for every reason
+    an edge is dropped, including the face-to-face continuity Python cannot read. It runs inside
+    the transaction, so the enclosing bracket rolls the feature back and proves it.
+
+    A feature whose recompute failed is left alone: it carries no usable shape, and the bracket's
+    own validity sweep reports that failure with the engine's message. Counting faces there would
+    replace a ``RECOMPUTE_ERROR`` with a misleading dropped-edge verdict.
+
+    :raises ValidationError: fewer faces were added than edges requested.
+    """
+    if not feature.isValid():
+        return
+    added = len(feature.Shape.Faces) - base_faces
+    if added >= len(subelements):
+        return
+    raise ValidationError(
+        f"{feature.Name} dressed {added} of the {len(subelements)} requested edge(s) "
+        f"{subelements}: FreeCAD silently drops an edge it will not dress, so the feature would "
+        "have committed smaller than the request"
+    )
+
+
 def _dressup_tool(
     type_id: str,
     tool: str,
@@ -1025,9 +1055,13 @@ def _dressup_tool(
     def op(document: object) -> list[str]:
         body_obj = _resolve_body(document, body)
         base_name, subelements = _dressup_base(document, body_obj, base, edges)
+        base_obj = document.getObject(base_name)
+        before = len(base_obj.Shape.Faces)
         feature = _add_feature(document, body_obj, type_id, name)
-        feature.Base = (document.getObject(base_name), subelements)
+        feature.Base = (base_obj, subelements)
         apply_sizes(feature)
+        document.recompute()
+        _check_dressed_every_edge(feature, subelements, before)
         return [feature.Name, body_obj.Name]
 
     return _feature_mutation(
@@ -1443,6 +1477,27 @@ def feature_mirror(
 # --------------------------------------------------------------------------------------------
 
 
+def _check_map_mode(type_id: str, kind: str, mode: str) -> None:
+    """Reject a ``map_mode`` the datum kind's own attach engine does not implement.
+
+    The ``MapMode`` enumeration is the union across every attach engine, so the value being
+    advertised does not mean this kind can use it. An unimplemented mode is only reported at
+    recompute, which is inside the bracket, so an unchecked one costs a snapshot and a rollback
+    instead of the pre-bracket rejection unresolvable attachment input is specified to get.
+
+    A build whose engine cannot be probed leaves the mode unchecked rather than guessing.
+
+    :raises ValidationError: ``mode`` is advertised but unimplemented for ``kind``.
+    """
+    implemented = shim.implemented_map_modes(type_id)
+    if implemented is None or mode in implemented:
+        return
+    raise ValidationError(
+        f"map_mode {mode!r} is not implemented for kind {kind!r}; "
+        f"{kind} accepts {sorted(implemented)}"
+    )
+
+
 def feature_datum(
     registry: DocumentRegistry,
     doc: str | None = None,
@@ -1477,6 +1532,7 @@ def feature_datum(
         _resolve_body(document, body)
         _name_available(document, name)
         _resolve_object(document, target_name, "attachment")
+        _check_map_mode(type_id, kind, mode)
         if offset is not None:
             _length_mm(offset, "offset")
 

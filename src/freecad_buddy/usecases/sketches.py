@@ -673,6 +673,30 @@ def _check_constraint_specs(sketch_obj: object, constraints: list | None, pendin
     target = _PendingGeometry(sketch_obj, pending) if pending else sketch_obj
     for index, spec in enumerate(constraints):
         _constraint_args(spec, index, target)
+    _check_constraint_names(sketch_obj, constraints)
+
+
+def _check_constraint_names(sketch_obj: object, constraints: list) -> None:
+    """Reject a requested constraint name that collides with an existing one or with the request.
+
+    ``renameConstraint`` raises on a duplicate, and it runs inside the transaction, so an
+    unchecked collision costs a snapshot and a rollback instead of the pre-bracket rejection
+    malformed input is specified to get. An empty name is not a collision: FreeCAD leaves such a
+    constraint unnamed, and any number of constraints may be unnamed.
+
+    :raises ValidationError: a name is already on the sketch or repeats within ``constraints``.
+    """
+    taken = {c.Name for c in getattr(sketch_obj, "Constraints", []) if c.Name}
+    for index, spec in enumerate(constraints):
+        name = spec.get("name")
+        if not name:
+            continue
+        name = str(name)
+        if name in taken:
+            raise ValidationError(
+                f"constraint {index} requests the name {name!r}, which is already in use"
+            )
+        taken.add(name)
 
 
 def _apply_constraints(sketch_obj: object, constraints: list, collected: list[int]) -> None:

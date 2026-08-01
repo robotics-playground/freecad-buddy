@@ -842,6 +842,38 @@ class DressUpDropTest(_FeatureFixture):
         self.assertEqual(list(both.State), ["Up-to-date"])
         self.assertAlmostEqual(both.Shape.Volume, one_volume, places=9)
 
+    def test_the_in_bracket_face_count_catches_a_drop_the_pre_bracket_guard_missed(self):
+        """The pre-bracket guard predicts the drop; this one counts what FreeCAD actually did.
+
+        The prediction reimplements ``getContinuousEdges``, whose continuity leg reads a stored
+        OCC flag Python cannot see, so it can only approximate that condition with a normal
+        comparison. The face count needs no prediction: a dressed edge always adds exactly one
+        face, so a shortfall is the drop itself. Driven here with the prediction disabled, which
+        is the only way to show the second guard carries the case on its own.
+        """
+        body, base, seam, keepers = self._cylinder_body()
+        real_predictor = features._dropped_dressup_edges
+        features._dropped_dressup_edges = lambda shape, subelements: []
+        try:
+            envelope = features.feature_chamfer(
+                self.registry,
+                doc=self.handle,
+                body="Body",
+                base=base,
+                name="Backstop",
+                edges=[sub(base, seam), sub(base, keepers[0])],
+                size=mm(0.5),
+            )
+        finally:
+            features._dropped_dressup_edges = real_predictor
+
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assertIn("dressed 1 of the 2", envelope["detail"]["message"])
+        mutation = envelope["structured_content"]["mutation"]
+        self.assertTrue(mutation["rolled_back"])
+        self.assertEqual(mutation["rollback_proven"], "rolled_back_verified")
+        self.assertIsNone(self.document().getObject("Backstop"))
+
 
 class DressUpTest(_FeatureFixture):
     def test_a_fillet_on_the_vertical_block_edges_removes_the_corner_material(self):
@@ -1319,6 +1351,44 @@ class DatumTest(_FeatureFixture):
             kind="plane",
             attachment=whole("NoSuchObject"),
         )
+
+    def test_a_mode_the_kinds_engine_does_not_implement_is_rejected_before_the_bracket(self):
+        # Measured on FreeCAD 1.1.1: every kind advertises all 55 MapMode values, but the axis
+        # engine implements 19 and rejects FlatFace at recompute — inside the bracket — so the
+        # caller paid a snapshot and a rollback for input the I/O matrix rejects as INVALID_INPUT.
+        _, base = self.block()
+
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_datum,
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="Bad",
+            kind="axis",
+            attachment=sub(base, "Face1"),
+            map_mode="FlatFace",
+        )
+
+    def test_a_mode_rejected_only_by_its_references_still_reaches_the_bracket(self):
+        # The guard excludes by kind alone. Translate is implemented for a plane and fails on a
+        # face reference because it needs a vertex, which is a reference fault the precheck
+        # cannot see — it must surface as a rolled-back RECOMPUTE_ERROR, not a pre-bracket
+        # rejection, or the guard would be rejecting valid kind/mode pairs.
+        _, base = self.block()
+
+        envelope = features.feature_datum(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="RefFault",
+            kind="plane",
+            attachment=sub(base, "Face1"),
+            map_mode="Translate",
+        )
+
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
 
 
 class SetParametersTest(_FeatureFixture):
