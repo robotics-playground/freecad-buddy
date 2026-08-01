@@ -78,7 +78,96 @@ Auto-Clarity: drop caveman for security warnings, irreversible actions, user con
 
 Boundaries: code/commits/PRs written normal.
 
-## 6. Skill catelog
+## 6. Explaining Issues
+
+**Goal: reader understands problem + options fast, decides correctly.** Speed matters. Correctness matters more — never drop fact or caveat to shorten. Sentence not helping reader decide → cut.
+
+**Short form default.** Triggers: "short explain", "what is the issue", "explain briefly", asking again after long answer. ~10-15 lines.
+
+Five parts, this order:
+
+- **Background** — what we do, how it should work. Include competing requirement if exists. Real numbers and names.
+- **Issue** — what goes wrong. 1-2 lines.
+- **Cause** — why. Show real code or values. Name symbol, cite `file:line`. State: design wrong or code wrong.
+- **Options** — table: `Option | What it does | Cost`.
+- **Recommended** — which, one sentence why.
+
+**Whole explanation must stand out.** Chat window full of text. Wrap it:
+
+1. Open `---` then `## 🔍 <short title>`. Title names the thing.
+2. Each part own `### ` heading + icon:
+   - `### 📋 Background`
+   - `### ⚠️ Issue`
+   - `### 🔬 Cause`
+   - `### ❓ Decision needed` (holds Options + Recommended)
+3. Under Decision needed: options table, then bold **Recommended: X** + one sentence why, then bold **Reply `A`, `B`, or `C`.**
+4. Close `---`.
+
+Nothing after closing rule. Question is last thing on screen.
+
+Icons and headings exact as listed — same marks every time = scannable. No icons elsewhere in reply.
+
+No long version first. No summary after options. Asked twice → second answer shorter, never longer.
+
+**Always show real code, real values, concrete example.** Reader understands rule from what it *does*, not from description. Quote real line. Show value before and after. Shape or format → show small sample. 5-line trace beats 5-sentence description. Describing code in prose = the mistake.
+
+Worked example:
+
+> ---
+>
+> ## 🔍 TNP guard skips the check it exists for
+>
+> ### 📋 Background
+>
+> FreeCAD sometimes removes an edge from a fillet with no error. The guard catches this by counting: 4 edges before, 3 after → report it.
+>
+> But when you edit the fillet yourself, its edges change too. That is not a bug, so the guard must stay quiet. The design solved this with one rule: if the operation changed an object, do not check that object's references.
+>
+> ### ⚠️ Issue
+>
+> The guard never reports a dropped edge on a fillet — the exact case it was built for.
+>
+> ### 🔬 Cause
+>
+> The fillet operation says it changed `Fillet` (`features.py:1571`). The edge list belongs to `Fillet`. So the rule skips every reference on `Fillet`, including the edge count:
+>
+> ```
+> touched      = ["Fillet", "Body"]
+> record.owner = "Fillet"        →  intended = True  →  PASS
+> Fillet.Base  = 4 entries → 3   →  never compared
+> ```
+>
+> The design is wrong, not the code. `verification-design.md:163` skips checks per *object*, but this needs to skip per *property*. The code matched the spec exactly, and all 339 tests passed.
+>
+> ### ❓ Decision needed
+>
+> | Option | What it does | Cost |
+> | --- | --- | --- |
+> | **A** | Guard records what the operation actually wrote, skips only that | Changes stay inside the mutation runtime |
+> | **B** | Each operation names the object *and* the property it changed | Touches 18 tools, reopens finished stories 3-3 and 3-4 |
+> | **C** | Never skip the edge count | Reports an error when you delete an edge on purpose |
+>
+> **Recommended: A** — fixes the real cause without reopening work that is already done.
+>
+> **Reply `A`, `B`, or `C`.**
+>
+> ---
+
+**Long form** — same five headings, more detail each. Use only when reader asks, or decision needs full trace. Background adds starting state + real values. Issue numbers the failing steps. Cause quotes code at each step. Options sketch how each works. Recommended stays one sentence.
+
+## 7. Plain English
+
+**Write for reader fluent in domain, not native English speaker.** Difficulty comes from problem, never from wording. Positive form of no-idioms rule.
+
+- Common word wins: *use* not *leverage*, *start* not *kick off*, *find* not *surface*, *stop* not *halt*, *about* not *regarding*, *so* not *hence*.
+- Short sentences, one clause deep. Split rather than join with semicolon or dash.
+- Active voice, named actor: "the guard skips the check", not "the check is skipped".
+- Cut hedges (*arguably*, *somewhat*, *it seems*) and intensifiers (*quite*, *fairly*, *rather*) — length, no information.
+- No rare vocabulary (*ostensibly*, *notwithstanding*, *ergo*), no obscure phrasal verbs (*bear out*, *paper over*, *chalk up to*), no cultural/sporting/military metaphors.
+- **Technical content never simplified.** API names, code, error strings, `file:line`, standard acronyms (HTTP, JSON, CI) stay verbatim. Simpler English never means dropped caveat or vaguer claim.
+- Term of art with no plain equivalent → use it, define once in short clause: "the element map (FreeCAD's table linking a shape's faces to stable names)".
+
+## 8. Skill catelog
 
 | Task Type                               | Required Skill                     | Load Command                                     |
 | --------------------------------------- | ---------------------------------- | ------------------------------------------------ |
@@ -96,7 +185,7 @@ Boundaries: code/commits/PRs written normal.
 | Research specific technology or library | `bmad-technical-research`          | `skill(name="bmad-technical-research")`          |
 | Write/review/execute/debug manual test  | `manual-testing`                   | `skill(name="manual-testing")`                   |
 
-## 7. Project Operating Model
+## 9. Project Operating Model
 
 **Workspace coordinates. Service repositories implement.**
 
@@ -111,7 +200,7 @@ Boundaries: code/commits/PRs written normal.
 - Never auto commit without approve from user
 - Never include CoAuthor to commit message
 
-## 8. Brainstorm
+## 10. Brainstorm
 
 **Understand problem before designing solution.**
 
@@ -122,7 +211,7 @@ Boundaries: code/commits/PRs written normal.
 - Prefer smallest solution that satisfies current need.
 - Get agreement on direction before architecture or implementation. Simple task may need only short design, but still needs explicit shared understanding.
 
-## 9. Architect
+## 11. Architect
 
 **Design against intended contracts and actual code.**
 
@@ -133,7 +222,7 @@ Boundaries: code/commits/PRs written normal.
 - Follow existing Clean Architecture, NestJS, CQRS, dependency-injection, and service patterns unless documented evidence supports change.
 - Record decisions and trade-offs. Make design implementation-ready: no hidden choices left for developer.
 
-## 10. Develop
+## 12. Develop
 
 **Implement approved intent with smallest verifiable change.**
 
@@ -146,7 +235,7 @@ Boundaries: code/commits/PRs written normal.
 - Run relevant tests, then `npm run lint`, `npm run format`, and `npm run typecheck` in each changed service. Missing script or unrelated failure → report precisely; never claim success.
 - Approved implementation changes a design contract → update authoritative design artifact in same work.
 
-## 11. Critical Guardrails
+## 13. Critical Guardrails
 
 ### Verification
 
@@ -198,7 +287,7 @@ Every story MUST include this as the **last task**:
   - [ ] Run `npm run typecheck` - Ensure type safety
 ```
 
-## 12. Running the MCP Bridge (GUI mode)
+## 14. Running the MCP Bridge (GUI mode)
 
 **Opening FreeCAD is the only step — the addon starts everything.**
 
@@ -212,7 +301,7 @@ Every story MUST include this as the **last task**:
 - **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
 - Headless automation (CI, the `run_mcp_*` sweeps) is unaffected: it uses the single-process H1 stdio host, not this proxy.
 
-## 13. Repo Structure
+## 15. Repo Structure
 
 Single installable package, four Clean Architecture rings (AD-1). Imports cross ring boundaries **inward only**: `contracts/` ← `usecases/` ← `adapters/` ← `hosts/`. `check_imports.py` enforces it; don't fight it, fix the placement.
 
@@ -229,7 +318,7 @@ Single installable package, four Clean Architecture rings (AD-1). Imports cross 
 - `docs/decisions/` — Phase 0 decision notes; `docs/references/` — FreeCAD source/wiki, freecad-mcp, text-to-cad.
 - `_bmad-output/` — planning artifacts (spine, design docs, epics, sprint-status); `_automation/` — live MCP manual harness.
 
-## 14. Authoritative References
+## 16. Authoritative References
 
 - [Development standards](.knowledge-base/technical/standards/index.md)
 - [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md)
