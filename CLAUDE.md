@@ -202,6 +202,8 @@ No long version first. No summary after options. Asked twice → second answer s
 - Inspect actual artifact: code diff, rendered UI, logs, emitted event, API response, or persisted data as applicable.
 - Treat another agent's “done” report as hypothesis. Re-run or re-inspect material result independently.
 - State what was verified and what remains unverified.
+- **Verify the running process, not just the disk.** A fix on disk is not a fix in the process. Before claiming live behaviour changed: confirm which file the process actually loaded (force an error and read the paths in the traceback frames), and compare source mtime against process start time — mtime later than start means the process holds stale code. Long-lived hosts (the FreeCAD GUI) cache imports at startup, so a restart is required, not optional. Passing tests prove the source is right; they say nothing about what a running process imported.
+- **Bisect by log or history before theorising.** When a defect has a record — an append-only log, git history, CI runs — find the exact boundary between working and failing first. "It always did this" is a claim to check, not a premise: a run of clean entries followed by failure-on-every-run gives a time window that names the culprit commit directly, and costs one `grep` against hours of hypothesising.
 
 ### Git Safety
 
