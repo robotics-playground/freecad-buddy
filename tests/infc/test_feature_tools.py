@@ -19,7 +19,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import confirm, features, transaction
+from freecad_buddy.usecases import confirm, features, fingerprint, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 _SNAPSHOT_GLOB = os.path.join(tempfile.gettempdir(), "FCB_TMP_snap_*")
@@ -1389,6 +1389,87 @@ class DatumTest(_FeatureFixture):
 
         self.assertNotEqual(envelope["status"], "OK")
         self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
+
+
+class BodyCreateTest(_FeatureFixture):
+    """The Body creator: every feature_* tool needs a Body no other tool could make.
+
+    _FeatureFixture.empty_body builds one with document.addObject directly, which is why the
+    gap never surfaced in these tests — nothing here went through the tool surface.
+    """
+
+    def test_a_created_body_is_an_empty_partdesign_body(self):
+        envelope = features.feature_body_create(
+            self.registry, doc=self.handle, name="Bracket"
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        body = self.document().getObject("Bracket")
+        self.assertIsNotNone(body)
+        self.assertEqual(body.TypeId, "PartDesign::Body")
+        self.assertEqual(body.Label, "Bracket")
+        self.assertIsNone(body.Tip)
+        self.assertEqual(list(body.Group), [])
+
+    def test_a_pad_succeeds_against_a_body_this_tool_created(self):
+        # The end-to-end proof that the gap is closed: before this tool existed, no MCP caller
+        # could reach feature_pad at all, because nothing could produce its 'body' argument.
+        created = features.feature_body_create(
+            self.registry, doc=self.handle, name="Bracket"
+        )
+        self.assertEqual(created["status"], "OK", created.get("detail"))
+        body = self.document().getObject("Bracket")
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 8.0, 16.0)
+
+        envelope = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Bracket",
+            profile="Profile",
+            name="Block",
+            length=mm(5.0),
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        pad = self.document().getObject("Block")
+        self.assertTrue(pad.isValid())
+        self.assertAlmostEqual(pad.Shape.Volume, 8.0 * 16.0 * 5.0, places=6)
+
+    def test_a_name_already_in_use_is_rejected_before_the_bracket(self):
+        # FreeCAD uniquifies a duplicate to "Bracket001" rather than raising, so an unchecked
+        # collision would hand back an object under a name the caller never asked for.
+        first = features.feature_body_create(self.registry, doc=self.handle, name="Bracket")
+        self.assertEqual(first["status"], "OK", first.get("detail"))
+
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_body_create,
+            self.registry,
+            doc=self.handle,
+            name="Bracket",
+        )
+
+    def test_a_name_freecad_would_rewrite_is_rejected_before_the_bracket(self):
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_body_create,
+            self.registry,
+            doc=self.handle,
+            name="1Bracket",
+        )
+
+    def test_the_bodys_origin_children_stay_out_of_the_fingerprint(self):
+        # A Body brings App::Origin plus its Plane/Line/Point children. They are datum features,
+        # which fingerprint() already skips; asserted here so a later change cannot let the
+        # infinite-extent planes back into the digest.
+        features.feature_body_create(self.registry, doc=self.handle, name="Bracket")
+        document = self.document()
+
+        origin_types = {o.TypeId for o in document.Objects if o.TypeId.startswith("App::")}
+        self.assertTrue(origin_types, "a Body must bring its Origin children")
+        record = fingerprint.fingerprint(document)
+
+        self.assertEqual([entry["name"] for entry in record["objects"]], [])
 
 
 class SetParametersTest(_FeatureFixture):

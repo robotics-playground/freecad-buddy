@@ -1564,6 +1564,48 @@ def feature_datum(
     )
 
 
+def feature_body_create(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    name: str | None = None,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Create an empty PartDesign Body, the container every feature tool builds into.
+
+    The new Body carries no solid: its ``Tip`` is unset and its ``Shape`` is null until a
+    feature is added, which FreeCAD reports as valid and up to date. It brings an ``App::Origin``
+    and that origin's plane, line and point children, all of which the fingerprint and the render
+    set already exclude as datum features.
+
+    :raises ValidationError: the name is missing, already in use, or one FreeCAD would rewrite.
+    """
+    _require_partdesign()
+
+    def precheck(document: object) -> None:
+        _name_available(document, name)
+
+    def op(document: object) -> list[str]:
+        body = document.addObject(_BODY_TYPE, name)
+        if body.Name != name:
+            raise ValidationError(f"{name} is not a usable FreeCAD object name")
+        body.Label = name
+        return [body.Name]
+
+    params = {"doc": doc, "name": name, "confirm": confirm}
+    return _feature_mutation(
+        registry,
+        doc,
+        name,
+        f"create body {name}",
+        "feature_body_create",
+        params,
+        op,
+        audit_sink,
+        precheck,
+    )
+
+
 def _parameter_writes(feature: object, parameters: object) -> list[tuple[str, object]]:
     """Return the validated ``(property, value)`` writes a parameter edit will apply.
 
