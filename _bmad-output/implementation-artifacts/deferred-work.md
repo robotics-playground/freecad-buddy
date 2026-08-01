@@ -759,7 +759,8 @@ source_spec: `spec-3-2-mutation-protocol-runtime.md`
 severity: medium
 location: benchmarks/harness/assertions.py (`_measure_hole_through`, `_extent_along`)
 reason: The primitive tests `wall >= solid - tol` where `solid` is every vertex of the shape projected onto the hole axis. On a stepped, filleted or otherwise non-prismatic part the solid's axial extent exceeds the local thickness the hole must clear, so a correctly through-drilled hole grades blind; conversely a blind hole in a thin local boss on a thick part can pass as through. `_extent_along` also returns `0.0` for fewer than two points, so a seamless full-cylinder wall with no vertices reads as blind. The two dev cases using it (`g2-dev-013-pocket`, `g2-dev-023-hole`) target flat plates where the approximation holds, so nothing is mis-graded today. Fix: measure thickness along the hole axis at the hole (ray/section against the solid) before any non-prismatic case uses this primitive; `verification-design.md` §7.2 owns the `hole_through` definition, so the reconcile belongs there.
-status: open
+status: done 2026-08-01
+resolution: resolved by commit 7eea236. `_local_material_extent` intersects the hole's own cylindrical surface with the solid via `Shape.common()` and measures the axial span that survives, so the comparison is against local material rather than the whole solid's projection. Measured on a 40x40x30 block fused to a 40x40x5 ledge: the through bore read wall=5 against solid=30 and graded blind; it now reads a 5 mm local span. The hole AXIS line cannot be used — `common()` on it returns 0 edges because the axis runs inside the bore. `_extent_along` now returns None rather than 0.0 for fewer than two points.
 
 ### DW-76: `_is_hole_wall`'s radial probe collapses four distinct failures into `False` and misses thin walls
 origin: review-adversarial-general, review-edge-case-hunter
@@ -767,7 +768,8 @@ source_spec: `spec-3-2-mutation-protocol-runtime.md`
 severity: medium
 location: benchmarks/harness/assertions.py (`_is_hole_wall`)
 reason: The probe steps up to 0.5 mm radially outward and asks `shape.isInside`, so a hole within ~0.5 mm of a part edge probes outside the material and is not counted — `count_cylindrical_holes` then under-reports and the case fails with no diagnostic. The same bare `False` is returned when `valueAt` raises, when `ParameterRange` is short, and when `isInside` is unsupported, so an operator cannot distinguish a wrong actor from a grader limitation. A near-zero `Radius` also collapses the step toward 0 and leaves the probe on the surface. Fix: scale the step to the local wall thickness, clamp it away from zero, and return a distinguishable "ungradeable" outcome rather than a geometry verdict.
-status: open
+status: done 2026-08-01
+resolution: resolved by commit 7eea236. The probe samples 9 angular positions (odd, so no tie) and requires a majority, so a hole within 0.5 mm of an edge is still counted. Each of the four conditions that previously returned a bare False — `valueAt` raising, a short `ParameterRange`, `isInside` unsupported, a genuine boss — is now distinguished, and the first three raise `UnmeasurableGeometry`, which `evaluate` maps to an INVALID_INPUT check so a grading failure is reported rather than counted as 'not a hole'.
 
 ### DW-77: `run_mutation` leaves the bracket unguarded outside the `op`/`recompute`/`post_verify` try
 origin: review-adversarial-general, review-edge-case-hunter
