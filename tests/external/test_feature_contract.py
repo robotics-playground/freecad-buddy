@@ -35,6 +35,7 @@ FEATURE_TOOLS = {
     "feature_mirror",
     "feature_datum",
     "feature_set_parameters",
+    "feature_body_create",
 }
 
 
@@ -193,7 +194,7 @@ def test_the_capability_banner_carries_the_partdesign_probe():
 # --------------------------------------------------------------------------- #
 
 
-def test_all_ten_feature_tools_are_registered_as_mutating():
+def test_every_feature_tool_is_registered_as_mutating():
     specs = _specs_by_name()
     assert FEATURE_TOOLS <= set(specs)
     for name in FEATURE_TOOLS:
@@ -201,7 +202,7 @@ def test_all_ten_feature_tools_are_registered_as_mutating():
         assert specs[name].audit_event == "mutation", name
 
 
-def test_the_catalog_registers_exactly_ten_feature_tools():
+def test_the_catalog_registers_exactly_the_expected_feature_tools():
     registered = {spec.name for spec in tool_specs() if spec.name.startswith("feature_")}
     assert registered == FEATURE_TOOLS
 
@@ -240,6 +241,15 @@ def test_no_feature_tool_entered_the_read_only_profile():
     # The Phase-1 assistant profile's G1.6 guarantee is zero mutation tools.
     assert not (FEATURE_TOOLS & READ_ONLY_PROFILE)
     assert not any(name.startswith("feature_") for name in READ_ONLY_PROFILE)
+
+
+def test_feature_body_create_takes_only_a_name():
+    """The Body creator needs no body argument — it is what produces one."""
+    schema = _specs_by_name()["feature_body_create"].input_schema
+
+    assert set(schema["properties"]) == {"doc", "name", "confirm"}
+    assert schema["required"] == ["doc", "name"]
+    assert "body" not in schema["properties"]
 
 
 def test_the_dress_up_tools_take_a_selector_list_for_their_edges():

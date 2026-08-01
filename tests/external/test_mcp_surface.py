@@ -92,6 +92,7 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_mirror",
     "feature_datum",
     "feature_set_parameters",
+    "feature_body_create",
 }
 
 

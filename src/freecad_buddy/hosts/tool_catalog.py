@@ -694,6 +694,16 @@ def _feature_specs():
             "and MapMode, offset along its local Z.",
         ),
         _feature_method(
+            "feature_body_create",
+            features.feature_body_create,
+            _feature_schema(
+                {"name": _FEATURE_NAME_SCHEMA},
+                ["name"],
+            ),
+            "Create an empty PartDesign Body, the container every feature_* tool builds into. "
+            "It holds no solid until a feature is added.",
+        ),
+        _feature_method(
             "feature_set_parameters",
             features.feature_set_parameters,
             _feature_schema(
