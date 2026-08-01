@@ -1155,3 +1155,17 @@ source_spec: `spec-3-8-gate-g2-exit.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260731-184817-b11e; this entry preserves the lingering recommendation for a deliberate later review.
 status: open
+
+### DW-102: `sketch_create` leaves the sketch at document level, so a pad over MCP warns that its profile is out of scope
+origin: final whole-branch review of feature_body_create, 2026-08-01
+severity: low
+location: src/freecad_buddy/usecases/sketches.py (`sketch_create`)
+reason: `sketch_create` adds the sketch with `document.addObject` and never calls `body.addObject(sketch)`, so a sketch consumed as a pad profile lives outside the Body that pads it. FreeCAD then emits `PartDesign::Pad: Link(s) to object(s) 'Profile' go out of the allowed scope 'Block'. Instead, the linked object(s) reside within 'N/A'.` The pad still succeeds and the solid is valid, so the consequence today is a warning rather than a wrong result, which is why this is recorded rather than patched. Confirmed pre-existing, not introduced by `feature_body_create`: the identical warning reproduces on the pre-branch path with a Body created directly through `addObject`. What changed is reachability — before `feature_body_create` existed no MCP client could obtain a Body, so no client could reach the warning at all. The in-FreeCAD fixture helper `_sketch` (`tests/infc/test_feature_tools.py:152`) does call `body.addObject(sketch)`, which is why the test suite never showed it. Fix: give `sketch_create` an optional `body` argument that adopts the sketch into that Body, or have the extrude tools adopt an out-of-scope profile inside the bracket. The first is the smaller change and matches how a user builds in the GUI.
+status: open
+
+### DW-103: 35 of the 40 G2 dev cases cannot be driven for want of a Body
+origin: phase validation sweep, 2026-08-01
+severity: medium
+location: benchmarks/g2/dev/, benchmarks/g0/golden-models/
+reason: Every G2 dev case opens a golden model as its input document, and all five golden models contain only `Part::Feature` — none holds a `PartDesign::Body`. The five `sketch` cases do not need one; the other 35 (pad, pocket, revolve, hole, dressup, pattern, mirror) each name a `body` that their fixture does not contain, so they cannot run even once a command resolver exists. This sits behind the blocker G2.1 already reports (`no command resolver`) and is not visible from it. `feature_body_create` does not resolve this on its own: it creates an EMPTY Body, while these cases expect to operate on the fixture's existing solid. Fix needs a decision between rebuilding the golden models to carry a Body, having each case call `feature_body_create` first and build its own geometry, or giving the tool the `BaseFeature` adoption that the design deliberately excluded.
+status: open
