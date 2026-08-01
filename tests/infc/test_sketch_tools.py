@@ -1310,6 +1310,97 @@ class RegistryRebindTest(_SketchFixture):
         with self.assertRaises(ValidationError):
             self.registry.rebind("fcb-doc:missing", self.document())
 
+
+class NoTransactionLeftOpenTest(_SketchFixture):
+    """AD-5 asserted behaviourally: no sketch tool leaves a transaction open on any exit path.
+
+    ``test_sketch_contract.py`` greps the module source for ``openTransaction`` and friends, which
+    a ``getattr(document, "open" + "Transaction")()`` would walk straight past. ``Document``'s
+    ``HasPendingTransaction`` reads the real thing: it is True while an opened transaction holds
+    changes and False once it has been committed or aborted, so a leak is directly observable.
+    """
+
+    def assert_no_pending(self, tag):
+        self.assertFalse(
+            self.document().HasPendingTransaction,
+            f"{tag} left a transaction open holding changes",
+        )
+
+    def test_no_sketch_tool_leaves_a_transaction_open_on_its_success_path(self):
+        self.create("Rect", plane="XY")
+        self.assert_no_pending("sketch_create")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+        self.assert_no_pending("sketch_add_geometry")
+
+        calls = (
+            (
+                "sketch_add_constraint",
+                lambda: sketches.sketch_add_constraint(
+                    self.registry,
+                    doc=self.handle,
+                    sketch="Rect",
+                    constraints=[{"type": "Horizontal", "first": 1}],
+                ),
+            ),
+            (
+                "sketch_set_datum",
+                lambda: sketches.sketch_set_datum(
+                    self.registry,
+                    doc=self.handle,
+                    sketch="Rect",
+                    constraint=10,
+                    value=mm(20.0),
+                ),
+            ),
+            (
+                "sketch_toggle_construction",
+                lambda: sketches.sketch_toggle_construction(
+                    self.registry, doc=self.handle, sketch="Rect", geo_ids=[0]
+                ),
+            ),
+            (
+                "sketch_remove_constraint",
+                lambda: sketches.sketch_remove_constraint(
+                    self.registry, doc=self.handle, sketch="Rect", constraints=[11]
+                ),
+            ),
+        )
+        for tag, call in calls:
+            with self.subTest(tool=tag):
+                call()
+                self.assert_no_pending(tag)
+
+    def test_a_rolled_back_op_leaves_no_transaction_open(self):
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+
+        envelope = sketches.sketch_add_constraint(
+            self.registry,
+            doc=self.handle,
+            sketch="Rect",
+            constraints=[distance_x(0, 1, 0, 2, 99.0)],
+        )
+
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
+        self.assert_no_pending("a rolled-back sketch_add_constraint")
+
+    def test_an_op_that_raised_inside_the_bracket_leaves_no_transaction_open(self):
+        # The raising path is the one that would leak: the tool never reaches its own commit, so
+        # only the bracket's abort closes the transaction.
+        self.create("Keep", plane="XY")
+
+        def op(document):
+            document.addObject("Sketcher::SketchObject", "Ghost")
+            raise RuntimeError("planted failure inside the bracket")
+
+        envelope = sketches._sketch_mutation(
+            self.registry, self.handle, "Keep", "planted", "test", {}, op
+        )
+
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assert_no_pending("an op that raised inside the bracket")
+
     def test_a_raise_after_the_snapshot_restore_still_rebinds_the_handle(self):
         """The rebind runs in a ``finally``, so it survives a raise on the way out of the bracket.
 
@@ -1568,6 +1659,47 @@ class ReviewPatchTest(_SketchFixture):
             doc=self.handle,
             sketch="Rect",
             constraints=[{"type": "Distance", "first": 1, "name": "width", "value": mm(8.0)}],
+        )
+
+    def test_a_third_on_a_type_that_cannot_consume_it_is_rejected_rather_than_dropped(self):
+        # Only Symmetric and the Angle/Tangent/Perpendicular via-point forms take a third
+        # geometry. For the rest it was range-checked and then discarded, so the tool accepted a
+        # request describing a constraint it did not build.
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+
+        for spec in (
+            {"type": "Parallel", "first": 0, "second": 2, "third": 1},
+            {"type": "Equal", "first": 0, "second": 2, "third": 1},
+            {"type": "Radius", "first": 0, "value": mm(5.0), "third": 1},
+            {"type": "Horizontal", "first": 0, "third": 1},
+            {"type": "PointOnObject", "first": 0, "first_pos": 1, "second": 2, "third": 1},
+        ):
+            with self.subTest(constraint=spec["type"]):
+                self.assert_rejected_pre_bracket(
+                    self.geometry_count,
+                    sketches.sketch_add_constraint,
+                    self.registry,
+                    doc=self.handle,
+                    sketch="Rect",
+                    constraints=[spec],
+                )
+
+    def test_a_second_pos_on_point_on_object_is_rejected_rather_than_dropped(self):
+        # PointOnObject binds a point to a whole edge; its constructor takes no second position,
+        # so a supplied one was validated and then dropped.
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_add_constraint,
+            self.registry,
+            doc=self.handle,
+            sketch="Rect",
+            constraints=[
+                {"type": "PointOnObject", "first": 0, "first_pos": 1, "second": 2, "second_pos": 2}
+            ],
         )
 
     def test_a_name_repeated_within_one_request_is_rejected_before_the_bracket_opens(self):

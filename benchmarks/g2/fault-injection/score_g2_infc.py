@@ -41,13 +41,13 @@ the small fixed ``case.yaml`` shape itself.
 
 from __future__ import annotations
 
-import datetime
 import hashlib
 import os
 import re
 import sys
 import traceback
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -413,7 +413,7 @@ def main(argv: list[str] | None = None) -> int:
     check_only = "--check" in argv
     results = score()
 
-    today = datetime.date.today().isoformat()
+    today = date.today().isoformat()
     rendered: dict[str, str] = {}
     failed = False
     cases = load_cases()

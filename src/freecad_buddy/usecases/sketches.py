@@ -48,6 +48,9 @@ _LENGTH_UNITS = frozenset({"mm"})
 # them; a request that matches none of its type's forms is rejected before the bracket opens.
 _GEO_ONLY_PAIR = frozenset({"Parallel", "Equal"})
 _VALUE_ON_GEO = frozenset({"Radius", "Diameter"})
+# The only types whose constructor takes a third geometry: Symmetric's mirror element, and the
+# Angle/Tangent/Perpendicular via-point forms. Every other type would have it silently dropped.
+_THIRD_TYPES = frozenset({"Symmetric", "Angle", "Tangent", "Perpendicular"})
 _ANGLE_TYPES = frozenset({"Angle"})
 _LENGTH_TYPES = frozenset({"Distance", "DistanceX", "DistanceY", "Radius", "Diameter"})
 _DIMENSIONAL = _LENGTH_TYPES | _ANGLE_TYPES
@@ -293,6 +296,8 @@ def _constraint_args(spec: object, index: int, sketch_obj: object) -> tuple:
         if spec.get("third") is not None
         else None
     )
+    if third is not None and constraint_type not in _THIRD_TYPES:
+        raise ValidationError(f"{what} {constraint_type} takes no 'third'")
 
     if constraint_type == "Coincident":
         if second is None or spec.get("first_pos") is None or spec.get("second_pos") is None:
@@ -354,6 +359,10 @@ def _constraint_args(spec: object, index: int, sketch_obj: object) -> tuple:
     if constraint_type == "PointOnObject":
         if second is None or spec.get("first_pos") is None or has_value:
             raise ValidationError(f"{what} PointOnObject requires first, first_pos and second")
+        if spec.get("second_pos") is not None:
+            raise ValidationError(
+                f"{what} PointOnObject constrains a point to a whole edge and takes no second_pos"
+            )
         return (
             "PointOnObject",
             first,
