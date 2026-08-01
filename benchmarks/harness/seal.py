@@ -101,9 +101,21 @@ def seal_heldout(
     are injected by the caller.
 
     :param gate: the gate the sealed set belongs to, recorded in the manifest.
+    :raises SealError: ``heldout_dir`` holds a populated seal and nothing is staged. The ceremony
+        deletes the staged plaintext once sealed, so a re-run stages nothing and would otherwise
+        overwrite the real archive with an empty one — losing the cases at exit 0. Re-sealing a
+        ``case_count: 0`` placeholder is allowed (it holds nothing to lose), and so is re-sealing
+        over a populated seal WITH cases staged, which is the sanctioned post-burn recovery.
     """
     heldout_dir.mkdir(parents=True, exist_ok=True)
     case_dirs = _staged_case_dirs(heldout_dir)
+    existing = read_manifest(heldout_dir)
+    if not case_dirs and existing is not None and existing.get("case_count"):
+        raise SealError(
+            f"{heldout_dir} is already sealed with case_count={existing['case_count']} and no "
+            "cases are staged; re-sealing would replace the archive with an empty one. Stage the "
+            "cases to re-seal, or delete SEAL.json and the archive deliberately."
+        )
     plain = _build_tar_bytes(heldout_dir, case_dirs)
     encrypted = _xor(plain, key)
     (heldout_dir / ARCHIVE_NAME).write_bytes(encrypted)

@@ -429,3 +429,36 @@ def test_seal_rejects_a_gate_with_no_sealed_split(tmp_path, monkeypatch):
     monkeypatch.setenv("FREECAD_BUDDY_UNSEAL_KEY", KEY)
     with pytest.raises(runner.UsageError, match="only defined for gates"):
         runner.seal_command("G0")
+
+
+def test_resealing_a_populated_set_refuses_instead_of_emptying_it(tmp_path):
+    """A second seal must not overwrite a populated seal with an empty archive.
+
+    The ceremony deletes the staged plaintext after sealing, so a re-run finds no case dirs.
+    Treating that as the `case_count: 0` placeholder would replace the real archive with an
+    empty one and lose the cases, at exit 0 with no error.
+    """
+    heldout = tmp_path / "heldout"
+    _stage_case(heldout, "case-a")
+    _stage_case(heldout, "case-b")
+    sealed = seal.seal_heldout(heldout, sealed_by="op", sealed_at="2026-01-01", key=KEY)
+    assert sealed["case_count"] == 2
+
+    for case_yaml in list(heldout.glob("*/case.yaml")):
+        shutil.rmtree(case_yaml.parent)
+
+    with pytest.raises(seal.SealError, match="already sealed"):
+        seal.seal_heldout(heldout, sealed_by="op", sealed_at="2026-01-02", key=KEY)
+
+    kept = seal.read_manifest(heldout)
+    assert kept["case_count"] == 2
+    assert kept["archive_sha256"] == sealed["archive_sha256"]
+
+
+def test_resealing_a_placeholder_seal_is_still_allowed(tmp_path):
+    """A `case_count: 0` placeholder holds nothing, so re-sealing it loses nothing."""
+    heldout = tmp_path / "heldout"
+    seal.seal_heldout(heldout, sealed_by="op", sealed_at="2026-01-01", key=KEY)
+    _stage_case(heldout, "case-a")
+    manifest = seal.seal_heldout(heldout, sealed_by="op", sealed_at="2026-01-02", key=KEY)
+    assert manifest["case_count"] == 1
