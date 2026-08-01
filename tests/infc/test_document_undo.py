@@ -14,6 +14,8 @@ transaction (``App/Document.cpp:792-795``) so ``UndoCount`` is only meaningful o
 import unittest
 
 import FreeCAD as App
+import Part
+import Sketcher
 
 from freecad_buddy.usecases import confirm, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
@@ -211,9 +213,7 @@ class UndoRestoresTest(_UndoFixture):
 
         self.registry.document_undo(doc=self.handle)
 
-        self.assertAlmostEqual(
-            self.document.getObject("Box").Shape.Volume, BOX_VOLUME, places=6
-        )
+        self.assertAlmostEqual(self.document.getObject("Box").Shape.Volume, BOX_VOLUME, places=6)
 
     def test_the_undo_recomputes_so_the_reported_state_is_not_stale(self):
         """``Document::undo`` never recomputes; without one the shape read back is the old one."""
@@ -232,9 +232,9 @@ class UndoRestoresTest(_UndoFixture):
         self.run_mutation("resize box", _resize_box)
         self.assertNotEqual(fingerprint(self.document)["digest"], pre_op)
 
-        structured = self.registry.document_undo(
-            doc=self.handle, expect_fingerprint=pre_op
-        )["structured_content"]
+        structured = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)[
+            "structured_content"
+        ]
 
         self.assertTrue(
             structured["matches_pre_op"],
@@ -393,3 +393,86 @@ def _resize_box(document):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExpectFingerprintRecordTest(_UndoFixture):
+    """`expect_fingerprint` accepting a whole record, so restoration can be judged by geometry."""
+
+    def test_a_record_expectation_matches_when_the_digest_matches(self):
+        self.add_box()
+        pre_op = fingerprint(self.document)
+        self.run_mutation("resize box", _resize_box)
+
+        structured = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)[
+            "structured_content"
+        ]
+
+        self.assertTrue(structured["matches_pre_op"], structured)
+
+    def test_a_record_expectation_matches_on_geometry_when_the_bytes_differ(self):
+        """Consuming a sketch as a profile makes OCCT store the edge several ways.
+
+        Undo removes the feature but leaves the extra representations, so the BRep bytes differ
+        while volume, area, centre of mass and principal moments are unchanged. A digest-only
+        expectation reports that as a failed restore; a record expectation does not.
+        """
+        body = self.document.addObject("PartDesign::Body", "Body")
+        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
+        body.addObject(sketch)
+        sketch.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 5.0), False)
+        sketch.addConstraint(Sketcher.Constraint("Radius", 0, 5.0))
+        self.document.recompute()
+        pre_op = fingerprint(self.document)
+
+        def _pad(document):
+            pad = document.addObject("PartDesign::Pad", "Pad")
+            document.getObject("Body").addObject(pad)
+            pad.Profile = document.getObject("Sketch")
+            pad.Length = 10.0
+            return ["Pad"]
+
+        self.run_mutation("pad the sketch", _pad)
+        self.assertNotEqual(fingerprint(self.document)["digest"], pre_op["digest"])
+
+        structured = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)[
+            "structured_content"
+        ]
+
+        self.assertNotEqual(
+            structured["fingerprint_after"],
+            pre_op["digest"],
+            "fixture must reproduce the byte divergence",
+        )
+        self.assertTrue(
+            structured["matches_pre_op"],
+            f"geometry was restored but the record expectation reported otherwise: {structured}",
+        )
+
+    def test_a_record_expectation_still_reports_a_real_geometry_change(self):
+        """The cross-oracle must not turn every mismatch into a pass."""
+        self.add_box()
+        pre_op = fingerprint(self.document)
+        self.run_mutation("add cylinder", _add_cylinder)
+
+        structured = self.registry.document_undo(
+            doc=self.handle, expect_fingerprint=_mutated_record(pre_op)
+        )["structured_content"]
+
+        self.assertFalse(structured["matches_pre_op"], structured)
+
+    def test_a_malformed_expectation_is_still_refused(self):
+        self.add_box()
+        self.run_mutation("add cylinder", _add_cylinder)
+        for bad in (12345, ["not", "a", "record"], {"no": "objects key"}):
+            with self.assertRaises(ValidationError, msg=repr(bad)):
+                self.registry.document_undo(doc=self.handle, expect_fingerprint=bad)
+
+
+def _mutated_record(record: dict) -> dict:
+    """Return ``record`` with one object's volume changed, so it cannot match the document."""
+    clone = {**record, "objects": [dict(entry) for entry in record["objects"]]}
+    massprops = dict(clone["objects"][0]["massprops"])
+    massprops["volume"] = massprops["volume"] + 1000.0
+    clone["objects"][0] = {**clone["objects"][0], "massprops": massprops}
+    clone["digest"] = "0" * 64
+    return clone

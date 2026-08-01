@@ -11,7 +11,7 @@ import secrets
 import threading
 from typing import Callable, TypeVar
 
-from freecad_buddy.contracts import ResultEnvelope, summary_text
+from freecad_buddy.contracts import ResultEnvelope, massprops_equal, summary_text
 
 T = TypeVar("T")
 
@@ -85,6 +85,22 @@ _RECOMPUTE_ERROR_STATES = frozenset({"Invalid", "Error", "Touched"})
 def _recompute_error_state(state: list) -> bool:
     """Whether an object's post-recompute ``State`` list indicates it did not compute cleanly."""
     return any(token in _RECOMPUTE_ERROR_STATES for token in state)
+
+
+def _matches_pre_op(after: dict, expected: str | dict | None) -> bool | None:
+    """Whether ``after`` reaches ``expected``; ``None`` when the caller supplied no expectation.
+
+    A digest string is compared byte-exactly. A whole ``FingerprintRecord`` also passes when the
+    per-object geometric invariants match, because consuming a shape as a profile makes OCCT
+    store its edges several ways and an undo removes the feature without dropping the extra
+    representations — the bytes then differ while volume, area, centre of mass and principal
+    moments do not.
+    """
+    if expected is None:
+        return None
+    if isinstance(expected, str):
+        return after["digest"] == expected
+    return after["digest"] == expected.get("digest") or massprops_equal(after, expected)
 
 
 def _recompute_error_envelope(structured: dict, errors: list) -> ResultEnvelope:
@@ -279,7 +295,7 @@ class DocumentRegistry:
             return _ok_envelope(structured, summarize_document_recompute(structured))
 
     def document_undo(
-        self, doc: str | None = None, expect_fingerprint: str | None = None
+        self, doc: str | None = None, expect_fingerprint: str | dict | None = None
     ) -> ResultEnvelope:
         """Undo the last committed transaction, recompute, and report the fingerprint comparison.
 
@@ -306,19 +322,31 @@ class DocumentRegistry:
         its own: an undo that left an object invalid is ``RECOMPUTE_ERROR``, never an ``OK`` whose
         digest happens not to match.
 
-        :param expect_fingerprint: the pre-mutation digest to compare the result against.
-        :raises ValidationError: ``doc`` is missing or stale, ``expect_fingerprint`` is not a
-            digest string, undo is unavailable on the document, or there is nothing to undo.
+        :param expect_fingerprint: the pre-mutation digest string, or the whole
+            ``FingerprintRecord``, to compare the result against. A record also matches on the
+            per-object geometric invariants, so an op that changed a shape's serialization
+            without changing its geometry still reports the undo as restoring.
+        :raises ValidationError: ``doc`` is missing or stale, ``expect_fingerprint`` is neither a
+            digest string nor a record carrying an ``objects`` list, undo is unavailable on the
+            document, or there is nothing to undo.
         """
         from freecad_buddy.usecases import shim
         from freecad_buddy.usecases.fingerprint import fingerprint
 
-        # A non-string expectation can never equal a digest, so accepting one would report
-        # matches_pre_op: false — "the undo did not restore" — for what is a caller type error.
-        if expect_fingerprint is not None and not isinstance(expect_fingerprint, str):
+        # An expectation of any other type can never equal a digest and carries no comparable
+        # geometry, so accepting one would report matches_pre_op: false — "the undo did not
+        # restore" — for what is a caller type error.
+        if expect_fingerprint is not None and not isinstance(expect_fingerprint, (str, dict)):
             raise ValidationError(
-                "expect_fingerprint must be a fingerprint digest string, got "
-                f"{type(expect_fingerprint).__name__}"
+                "expect_fingerprint must be a fingerprint digest string or a FingerprintRecord, "
+                f"got {type(expect_fingerprint).__name__}"
+            )
+        if isinstance(expect_fingerprint, dict) and not isinstance(
+            expect_fingerprint.get("objects"), list
+        ):
+            raise ValidationError(
+                "expect_fingerprint record must carry an 'objects' list; got keys "
+                f"{sorted(expect_fingerprint)}"
             )
 
         with self._lock:
@@ -367,9 +395,7 @@ class DocumentRegistry:
                 "undone": names[0] if names else None,
                 "fingerprint_before": before["digest"],
                 "fingerprint_after": after["digest"],
-                "matches_pre_op": (
-                    None if expect_fingerprint is None else after["digest"] == expect_fingerprint
-                ),
+                "matches_pre_op": _matches_pre_op(after, expect_fingerprint),
                 # Read from the document, not from the fingerprint: fingerprint() skips every
                 # shape-less object (an Origin, a Body, a datum, an empty Sketch), and those are
                 # exactly the ones a caller asks this list about after an undo.

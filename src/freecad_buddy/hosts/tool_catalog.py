@@ -1002,9 +1002,12 @@ def tool_specs() -> list[ToolSpec]:
                 "properties": {
                     "doc": _DOC_SCHEMA,
                     "expect_fingerprint": {
-                        "type": "string",
-                        "description": "the pre-mutation fingerprint digest to compare the "
-                        "result against; without it matches_pre_op is null",
+                        "type": ["string", "object"],
+                        "description": "the pre-mutation fingerprint to compare the result "
+                        "against; without it matches_pre_op is null. A digest string matches "
+                        "byte-exactly. A whole FingerprintRecord also matches on the per-object "
+                        "geometric invariants, which an op that consumed a shape as a profile "
+                        "changes the serialization of without changing the geometry",
                     },
                 },
                 "required": ["doc"],
