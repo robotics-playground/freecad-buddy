@@ -17,11 +17,11 @@ the rest; the union is covered across the uv and FreeCADCmd legs.
 
 from __future__ import annotations
 
-import datetime
 import hashlib
 import os
 import sys
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -338,7 +338,7 @@ def main() -> int:
         return 1
 
     sha = _validator_sha()
-    today = datetime.date.today().isoformat()
+    today = date.today().isoformat()
     rendered: dict[str, str] = {}
     failed = False
 
