@@ -275,7 +275,13 @@ class LayerOneTest(_BodyFixture):
         self.assertIn("no longer resolves", layer_one[0]["detail"])
 
     def test_a_missing_marked_entry_is_reported_once_rather_than_by_both_layers(self):
-        """FreeCAD marks an invalidated link '?Edge1'; Layer 0 owns that verdict alone."""
+        """FreeCAD marks an invalidated link '?Edge1'; Layer 0 owns that entry's verdict alone.
+
+        Measured on this fixture: shrinking the pad leaves Edge1 and Edge2 missing while Edge3 and
+        Edge4 survive. Only the missing pair belongs to Layer 0, so the assertion is that neither
+        is re-graded above it — not that the record produces Layer-0 findings exclusively, which
+        would also hold if a surviving entry's verdict were being suppressed.
+        """
         self._add_fillet()
         snapshot = tnp_guard.snapshot_references(self.document)
         self.pad.Length = 1.0
@@ -286,9 +292,78 @@ class LayerOneTest(_BodyFixture):
             r for r in live if r["owner"] == "Fillet" and any(e["missing"] for e in r["entries"])
         ]
         self.assertTrue(marked, "shrinking the pad below the fillet radius invalidates its links")
+        missing = [e["indexed"] for e in marked[0]["entries"] if e["missing"]]
 
         findings = self._findings(self._audit(snapshot), "Fillet", "Base")
+        for name in missing:
+            layers = {f["layer"] for f in findings if name in f["detail"]}
+            self.assertEqual(layers, {0}, f"{name} must be reported by Layer 0 alone")
+
+    def test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record(self):
+        """The Layer-0 skip is per entry, so a mixed record still has its re-point graded.
+
+        Suppressing the whole record traded a double count for a missed finding: the missing entry
+        is Layer 0's to report, but the entry beside it that moved is Layer 1's, and only a
+        per-entry skip reports each once.
+        """
+        self._add_fillet()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = 1.0
+        self.document.recompute()
+
+        live = tnp_guard.snapshot_references(self.document)
+        marked = [
+            r for r in live if r["owner"] == "Fillet" and any(e["missing"] for e in r["entries"])
+        ]
+        self.assertTrue(marked, "shrinking the pad below the fillet radius invalidates its links")
+        surviving = [i for i, e in enumerate(marked[0]["entries"]) if not e["missing"]]
+        self.assertTrue(surviving, "the fixture needs one entry that is not missing")
+
+        # Move the witness of an entry FreeCAD did NOT mark missing, so the record carries both.
+        index = surviving[0]
+        for record in snapshot:
+            if record["owner"] == "Fillet" and len(record["entries"]) > index:
+                witness = record["entries"][index]["witness"]
+                if witness is not None:
+                    record["entries"][index]["witness"] = (witness[0],) + tuple(
+                        value + 500.0 for value in witness[1:]
+                    )
+
+        findings = self._findings(self._audit(snapshot), "Fillet", "Base")
+        self.assertIn(0, {f["layer"] for f in findings}, "Layer 0 still reports the missing entry")
+        self.assertIn(
+            "REPOINTED",
+            [f["verdict"] for f in findings],
+            "the moved entry beside the missing one must still be graded",
+        )
+
+    def test_a_record_whose_every_entry_is_missing_is_left_to_layer_zero(self):
+        # Grading the empty remainder would emit a "names no element" PASS for a record Layer 0
+        # has already reported in full. Driven by marking every live entry missing, because the
+        # pad-shrink fixture invalidates only two of the fillet's four edges.
+        fillet = self._add_fillet()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = 1.0
+        self.document.recompute()
+
+        real_snapshot = tnp_guard.snapshot_references
+
+        def all_missing(document):
+            records = real_snapshot(document)
+            for record in records:
+                if record["owner"] == fillet.Name:
+                    for entry in record["entries"]:
+                        entry["missing"] = True
+            return records
+
+        tnp_guard.snapshot_references = all_missing
+        try:
+            findings = self._findings(self._audit(snapshot), "Fillet", "Base")
+        finally:
+            tnp_guard.snapshot_references = real_snapshot
+
         self.assertEqual({f["layer"] for f in findings}, {0})
+        self.assertNotIn("PASS", [f["verdict"] for f in findings])
 
     def test_a_deleted_snapshot_owner_is_broken_at_layer_one(self):
         self._add_fillet()

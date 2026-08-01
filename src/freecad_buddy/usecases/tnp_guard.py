@@ -759,10 +759,15 @@ def _reference_findings(
     live: list[RefRecord],
     written: list[RefRecord],
 ) -> list[RefFinding]:
-    """Run the Layer-1/2 diff over every snapshotted record, skipping the ones Layer 0 reported.
+    """Run the Layer-1/2 diff over every snapshotted record, skipping the entries Layer 0 reported.
 
     An entry FreeCAD already marked missing is reported once, by the Layer-0 sweep; re-grading it
-    here would double-count one broken reference in the operator-facing failure count.
+    here would double-count one broken reference in the operator-facing failure count. The skip is
+    per entry rather than per record, so a record holding a missing entry alongside a re-pointed
+    one still has the re-point graded instead of being suppressed with it.
+
+    A record whose every entry is missing is skipped outright: Layer 0 has reported all of it, and
+    grading the empty remainder would emit a spurious "names no element" PASS.
     """
     live_by_key = _pair_records(snapshot, live)
     written_by_key = _pair_records(snapshot, written)
@@ -771,9 +776,34 @@ def _reference_findings(
     for key, record in _keyed(snapshot).items():
         paired = live_by_key.get(key)
         if paired is not None and any(entry["missing"] for entry in paired["entries"]):
-            continue
+            record, paired = _without_missing_entries(record, paired)
+            if paired is None:
+                continue
         findings.extend(_grade_record(doc, record, paired, written_by_key.get(key)))
     return findings
+
+
+def _without_missing_entries(
+    record: RefRecord, live: RefRecord
+) -> tuple[RefRecord, RefRecord | None]:
+    """Drop the entries Layer 0 already reported, from both sides at the same positions.
+
+    ``_grade_entries`` pairs the two entry lists positionally, so removing an entry from the live
+    side alone would shift every later pair and grade one reference against another's snapshot.
+    Filtering by index keeps the pairing intact. Entry counts that already differ are left
+    untouched, because the count comparison is itself the finding.
+
+    :return: the record and live pair to grade, with ``None`` for live when nothing remains.
+    """
+    if len(record["entries"]) != len(live["entries"]):
+        return record, live
+    keep = [i for i, entry in enumerate(live["entries"]) if not entry["missing"]]
+    if not keep:
+        return record, None
+    return (
+        {**record, "entries": [record["entries"][i] for i in keep]},
+        {**live, "entries": [live["entries"][i] for i in keep]},
+    )
 
 
 def _missing_element_findings(live: list[RefRecord]) -> list[RefFinding]:
