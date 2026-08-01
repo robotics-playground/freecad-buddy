@@ -88,8 +88,12 @@ def start_bridge() -> RpcListener:
     caps = Capabilities.from_env(dict(os.environ))
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)
+    # Called directly, never through the marshal: start_bridge already runs on the Qt main
+    # thread, and QtMainThreadExecutor.submit posts an event only that thread's event loop can
+    # deliver. Marshaling here queued an event and then blocked the one thread able to dispatch
+    # it, so the warm-up burned its whole budget and the probes never ran.
     try:
-        marshal.call(shim.warm_capability_probes, 30.0)
+        shim.warm_capability_probes()
     except Exception:  # noqa: BLE001 - warm-up is best-effort; degrade to lazy probing
         logger.warning("capability-probe warm-up failed; probing lazily", exc_info=True)
     doc_registry = DocumentRegistry()
