@@ -35,6 +35,14 @@ _MISSING_PREFIX = "?"
 _LINK_SUB_TYPES = frozenset({"App::PropertyLinkSub", "App::PropertyLinkSubList"})
 _EXPRESSION_ENGINE_TYPE = "App::PropertyExpressionEngine"
 
+# Sketch axes are pseudo-elements: FeatureSketchBased.cpp:1322-1340 resolves them through
+# Part2DObject::getAxis, and they have no representation in the sketch's shape, so getElement
+# reports them unresolvable however healthy the reference is. The named three plus the indexed
+# construction axes ("Axis0", "Axis1", ...) are the four forms that file accepts.
+_SKETCH_AXIS_NAMES = frozenset({"V_Axis", "H_Axis", "N_Axis"})
+_SKETCH_AXIS_PREFIX = "Axis"
+_SKETCH_TYPE_PREFIX = "Sketcher::"
+
 # Floor for the per-component witness comparison, used when the element reports no tolerance of
 # its own. Part.Shape.getTolerance(1) measures 1.0000000000000002e-07 on a padded solid.
 _WITNESS_EPSILON = 1e-7
@@ -582,6 +590,27 @@ def _live_element(doc: object, record: RefRecord, name: str) -> object | None:
     return _resolve_element(shape, name) if shape is not None else None
 
 
+def _is_sketch_axis(doc: object, record: RefRecord, name: str) -> bool:
+    """Whether ``name`` is a sketch-axis pseudo-element on ``record``'s target.
+
+    ``FeatureSketchBased.cpp:1322-1340`` accepts four forms — ``V_Axis``, ``H_Axis``, ``N_Axis``
+    and the indexed ``Axis<N>`` construction axes — and resolves each through
+    ``Part2DObject::getAxis``. None has a shape representation, measured on FreeCAD 1.1.1:
+    ``getElement`` returns a null shape for all four while ``Edge1`` resolves normally.
+
+    Scoped to a ``Sketcher::`` target, so an element that merely shares one of these names on
+    another object is still resolved and graded.
+    """
+    target = doc.getObject(record["target"]) if record["target"] else None
+    if target is None:
+        return False
+    if not str(getattr(target, "TypeId", "")).startswith(_SKETCH_TYPE_PREFIX):
+        return False
+    if name in _SKETCH_AXIS_NAMES:
+        return True
+    return name.startswith(_SKETCH_AXIS_PREFIX) and name[len(_SKETCH_AXIS_PREFIX) :].isdigit()
+
+
 def _grade_resolution(doc: object, record: RefRecord, entry: RefEntry) -> RefFinding | None:
     """Return a ``BROKEN`` finding when ``entry`` no longer names a resolvable element, else None.
 
@@ -593,9 +622,17 @@ def _grade_resolution(doc: object, record: RefRecord, entry: RefEntry) -> RefFin
     FreeCAD marking the owner invalid — which for a ``FeatureDressUp`` is the silent case this
     guard exists to cover. A target that is present but carries no shape stays unchecked, because
     a shapeless object has no elements to resolve against and never did.
+
+    A sketch axis is exempt from the resolution test: it is a pseudo-element with no shape
+    representation, so ``getElement`` reports it unresolvable however healthy the reference is.
+    Grading it by shape resolution flagged an ``Up-to-date`` Pad's ``ReferenceAxis`` as ``BROKEN``,
+    and ``post_verify`` fails on a flagged audit, so the false positive rolled back correct
+    mutations on any document whose pad carries a reference axis.
     """
     name = _entry_name(entry)
     if not name:
+        return None
+    if _is_sketch_axis(doc, record, name):
         return None
     if record["target"] and doc.getObject(record["target"]) is None:
         return _finding(

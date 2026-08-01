@@ -94,7 +94,7 @@ assertions:
 
 audit_references:
   suite: g2/fault-injection/
-  validator_sha: "0637ec5e09ac06b6e663f79035a9fe4d455ee747ed08a315a80ae3eec1ef436f"
+  validator_sha: "674475a4f5cc44cc5d81826d4617088696896c9e40bc72e69ab4f626abd52ccb"
   last_run:
     run_id: g2-2026-08-01-1
     sensitivity: 1.0

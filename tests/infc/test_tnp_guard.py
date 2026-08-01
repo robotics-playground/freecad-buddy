@@ -365,6 +365,68 @@ class LayerOneTest(_BodyFixture):
         self.assertEqual({f["layer"] for f in findings}, {0})
         self.assertNotIn("PASS", [f["verdict"] for f in findings])
 
+    def test_a_sketch_axis_reference_passes_rather_than_reading_as_unresolvable(self):
+        """A sketch axis is a pseudo-element, so ``getElement`` cannot resolve it.
+
+        ``PartDesign::Pad.ReferenceAxis`` normally holds ``(Sketch, ['N_Axis'])``, which
+        ``FeatureSketchBased.cpp:1322-1340`` resolves through ``getAxis``, never ``getElement``.
+        Grading it by shape resolution reported ``BROKEN`` on a healthy, ``Up-to-date`` Pad, and
+        because ``post_verify`` fails on a flagged audit that false positive rolled back correct
+        mutations on any document whose pad carries a reference axis.
+        """
+        self.pad.ReferenceAxis = (self.sketch, ["N_Axis"])
+        self.document.recompute()
+        self.assertTrue(self.pad.isValid())
+        self.assertEqual(list(self.pad.State), ["Up-to-date"])
+
+        snapshot = tnp_guard.snapshot_references(self.document)
+        findings = self._findings(self._audit(snapshot), "Pad", "ReferenceAxis")
+
+        self.assertTrue(findings, "the reference must still be graded, not skipped entirely")
+        self.assertEqual({f["verdict"] for f in findings}, {"PASS"})
+
+    def test_every_named_sketch_axis_form_is_exempt_from_shape_resolution(self):
+        """The exemption covers all three named axes, not just the N_Axis that exposed it.
+
+        Asserted on the predicate rather than on an audit verdict, because padding along the
+        in-plane V/H axes is geometrically degenerate: FreeCAD fails the recompute and Layer 0
+        reports that genuine error, which would mask what this test is about. ``Axis<N>`` is
+        covered by ``test_an_indexed_construction_axis_is_exempt_when_the_sketch_has_one``.
+        """
+        record = {"owner": "Pad", "prop": "ReferenceAxis", "target": self.sketch.Name}
+        for axis in ("V_Axis", "H_Axis", "N_Axis"):
+            with self.subTest(axis=axis):
+                self.assertIsNone(
+                    tnp_guard._resolve_element(self.sketch.Shape, axis),
+                    f"{axis} must be unresolvable, or this test proves nothing",
+                )
+                self.assertTrue(tnp_guard._is_sketch_axis(self.document, record, axis))
+
+    def test_an_indexed_construction_axis_is_exempt_when_the_sketch_has_one(self):
+        # FeatureSketchBased.cpp:1334-1340 also accepts "Axis<N>" for the sketch's construction
+        # axes. The predicate is asserted directly: this fixture's sketch carries no construction
+        # geometry, so FreeCAD rejects the reference itself with "Invalid shape name Axis0".
+        record = {"owner": "Pad", "prop": "ReferenceAxis", "target": self.sketch.Name}
+
+        self.assertTrue(tnp_guard._is_sketch_axis(self.document, record, "Axis0"))
+        self.assertTrue(tnp_guard._is_sketch_axis(self.document, record, "Axis12"))
+        self.assertFalse(tnp_guard._is_sketch_axis(self.document, record, "AxisFoo"))
+        self.assertFalse(tnp_guard._is_sketch_axis(self.document, record, "Axis"))
+
+    def test_an_axis_name_on_a_non_sketch_target_is_still_resolved(self):
+        # The exemption is scoped to Sketcher:: targets; an element that merely shares the name
+        # on another object must still be graded, or the fix would blind the guard.
+        record = {"owner": "Pad", "prop": "ReferenceAxis", "target": self.pad.Name}
+
+        self.assertFalse(tnp_guard._is_sketch_axis(self.document, record, "N_Axis"))
+
+    def test_an_unresolvable_non_axis_subelement_on_a_sketch_is_still_broken(self):
+        # The exemption is scoped to the axis forms; an ordinary element name that stops
+        # resolving must still be caught, or the fix would blind the guard on sketch targets.
+        record = {"owner": "Pad", "prop": "ReferenceAxis", "target": self.sketch.Name}
+
+        self.assertFalse(tnp_guard._is_sketch_axis(self.document, record, "Edge9999"))
+
     def test_a_reference_whose_target_object_is_gone_is_broken_rather_than_passing(self):
         """The resolution check used to read a missing target as "nothing to compare".
 
