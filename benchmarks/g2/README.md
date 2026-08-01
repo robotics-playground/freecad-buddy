@@ -99,8 +99,18 @@ defect the production mutation path actually produced. Detection therefore requi
 `heldout/` holds the sealed pair (`SEAL.json` + `heldout.tar.enc`) and no readable `case.yaml`.
 Only `run G2 --exit` unseals it, key-gated on `FREECAD_BUDDY_UNSEAL_KEY`.
 
-**The seal is weaker for G2 than for G1, and it must not be read as stronger.** G1 sealed an empty
-placeholder, so nothing was ever exposed. G2's 8 cases were committed as plaintext `case.yaml`
-files by Story 3.1 and remain readable in git history. Sealing prevents further casual reading and
-makes the ceremony enforceable, but it cannot restore the property that no one has seen them.
+**The split was replaced because the first one was exposed (DW-99).** Story 3.1 committed its 8
+cases as plaintext `case.yaml` files, which stay readable in git history. Those 8 commands are
+retired — they are no longer the held-out set and may be reused as dev cases. The current set is
+8 freshly authored commands that were sealed before they were ever committed, so no plaintext of
+them exists in history.
+
+**One limit, stated so it is not read as stronger than it is.** The replacement cases were
+authored by an agent, and the key that seals them is machine-generated (see below) rather than
+human-held. So the set is protected against casual reading and against the actor that runs the
+exit, but it is not protected against whoever holds the key. G1's seal, which used an operator-held
+key on an empty placeholder, is stronger on that axis.
+
+The unseal key lives at `~/.freecad-buddy-g2-unseal.key`, outside the repository. It is not in git
+and not in CI. Losing it makes the sealed set unrecoverable — the cases exist nowhere else.
 Anyone weighing a G2 exit result should discount the held-out split accordingly (DW-99).
