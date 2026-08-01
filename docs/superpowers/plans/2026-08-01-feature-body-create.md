@@ -390,7 +390,9 @@ Expected: the process start time is **later** than the file mtime.
 Using the `mcp__freecad-buddy__*` tools:
 
 1. `document_create(label="body_tool_check")`
-2. `preview_dry_run(doc, operation={"tool": "feature_body_create", "args": {"name": "Bracket"}}, render="off")` → expect `status: OK`, `new: ["Bracket"]`, all volume/face deltas `0`.
+2. `preview_dry_run(doc, operation={"tool": "feature_body_create", "args": {"name": "Bracket"}}, render="off")` → expect `status: OK` and all volume/face deltas `0`.
+
+   `new` lists **nine** objects, not one: a single `addObject("PartDesign::Body")` also creates the Origin and its children — `Bracket`, `Origin`, `Origin001` (the origin point), `X_Axis`, `Y_Axis`, `Z_Axis`, `XY_Plane`, `XZ_Plane`, `YZ_Plane`. That is FreeCAD's own behaviour, not a defect, and it is why the fingerprint's datum skip matters.
 3. `feature_body_create(doc, name="Bracket", confirm={"preview_id": <from step 2>, "elicitation_action": "accept"})` → expect `status: OK`.
 4. `query_object(doc, object="Bracket")` → expect `type: PartDesign::Body`, `error: null`.
 5. `document_close(doc)`.
