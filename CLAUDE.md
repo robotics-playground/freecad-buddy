@@ -111,48 +111,6 @@ No long version first. No summary after options. Asked twice → second answer s
 
 **Always show real code, real values, concrete example.** Reader understands rule from what it *does*, not from description. Quote real line. Show value before and after. Shape or format → show small sample. 5-line trace beats 5-sentence description. Describing code in prose = the mistake.
 
-Worked example:
-
-> ---
->
-> ## 🔍 TNP guard skips the check it exists for
->
-> ### 📋 Background
->
-> FreeCAD sometimes removes an edge from a fillet with no error. The guard catches this by counting: 4 edges before, 3 after → report it.
->
-> But when you edit the fillet yourself, its edges change too. That is not a bug, so the guard must stay quiet. The design solved this with one rule: if the operation changed an object, do not check that object's references.
->
-> ### ⚠️ Issue
->
-> The guard never reports a dropped edge on a fillet — the exact case it was built for.
->
-> ### 🔬 Cause
->
-> The fillet operation says it changed `Fillet` (`features.py:1571`). The edge list belongs to `Fillet`. So the rule skips every reference on `Fillet`, including the edge count:
->
-> ```
-> touched      = ["Fillet", "Body"]
-> record.owner = "Fillet"        →  intended = True  →  PASS
-> Fillet.Base  = 4 entries → 3   →  never compared
-> ```
->
-> The design is wrong, not the code. `verification-design.md:163` skips checks per *object*, but this needs to skip per *property*. The code matched the spec exactly, and all 339 tests passed.
->
-> ### ❓ Decision needed
->
-> | Option | What it does | Cost |
-> | --- | --- | --- |
-> | **A** | Guard records what the operation actually wrote, skips only that | Changes stay inside the mutation runtime |
-> | **B** | Each operation names the object *and* the property it changed | Touches 18 tools, reopens finished stories 3-3 and 3-4 |
-> | **C** | Never skip the edge count | Reports an error when you delete an edge on purpose |
->
-> **Recommended: A** — fixes the real cause without reopening work that is already done.
->
-> **Reply `A`, `B`, or `C`.**
->
-> ---
-
 **Long form** — same five headings, more detail each. Use only when reader asks, or decision needs full trace. Background adds starting state + real values. Issue numbers the failing steps. Cause quotes code at each step. Options sketch how each works. Recommended stays one sentence.
 
 ## 7. Plain English
