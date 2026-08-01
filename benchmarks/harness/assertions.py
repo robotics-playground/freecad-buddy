@@ -9,7 +9,8 @@ Eight ``fn`` names are supported. Five are ``verification-design.md`` §7.2 prim
 ``expect_volume``); three are the declared G2 extensions (``expect_solid_count``,
 ``expect_sketch_fully_constrained``, ``expect_sketch_geometry_count``) documented in
 ``benchmarks/g2/README.md``. An unsupported ``fn`` yields a failing ``INVALID_INPUT`` check, never
-a silent pass.
+a silent pass, as does a measurement that cannot be taken at all — a grading failure is reported
+as one rather than folded into a negative verdict.
 
 FreeCAD-free to import: the module holds no FreeCAD import, and every measurement reads only
 attributes off the document/shape objects it is handed. Runs in-FreeCAD (where the shapes live).
@@ -18,6 +19,7 @@ attributes off the document/shape objects it is handed. Runs in-FreeCAD (where t
 from __future__ import annotations
 
 import math
+import sys as _sys
 
 # Default tolerances (verification-design.md §8): a linear dimension bands at 0.05 mm absolute and
 # a volume at 1 % relative unless the case declares its own.
@@ -32,6 +34,11 @@ _COAXIAL_OFFSET_TOL = 0.01
 # A full circle sweeps 2*pi; a fillet wall is a partial arc and is excluded from a hole count.
 _FULL_TURN = 2.0 * math.pi
 _ARC_TOL = 1e-6
+
+# The hole/boss probe samples the wall at this many angular positions and takes the majority, so a
+# hole whose wall runs close to a part edge is not misread from the one sample backed by void. An
+# odd count leaves no tie.
+_WALL_PROBE_SAMPLES = 9
 
 _INVALID_INPUT = "invalid_input.unsupported_assertion"
 
@@ -177,41 +184,62 @@ def _distance(point_a, point_b) -> float:
     return math.sqrt(sum((point_b[i] - point_a[i]) ** 2 for i in range(3)))
 
 
+class UnmeasurableGeometry(Exception):
+    """A measurement could not be taken at all, as opposed to yielding a negative verdict."""
+
+
+def _probe_is_inside(shape, point) -> bool:
+    """Whether ``point`` lies in ``shape``'s material.
+
+    :raises UnmeasurableGeometry: the shape does not support a membership test.
+    """
+    try:
+        return bool(shape.isInside(point, _COAXIAL_OFFSET_TOL, True))
+    except Exception as exc:
+        raise UnmeasurableGeometry(f"isInside is unavailable on this shape: {exc}") from exc
+
+
 def _is_hole_wall(shape, face) -> bool:
     """Whether a cylindrical face is a hole wall rather than a boss (§7.3 rule 1).
 
-    Material lies outside a hole's cylinder and inside a boss's. The test samples a point on the
-    wall and steps radially *away* from the axis: on a hole that lands in the material, on a boss
-    it lands in the void. Face orientation is not consulted — the radial direction is derived from
-    the cylinder's own axis and centre, which no orientation flag can flip.
+    Material lies outside a hole's cylinder and inside a boss's. The test samples the wall at
+    several angular positions, steps radially *away* from the axis at each, and takes the
+    majority verdict: a hole bored close to a part edge has some of its wall backed by void, so a
+    single sample would misread it as a boss. Face orientation is not consulted — the radial
+    direction is derived from the cylinder's own axis and centre, which no orientation flag can
+    flip.
+
+    :raises UnmeasurableGeometry: the face cannot be sampled, carries no usable parameter range,
+        or the shape does not support a membership test — none of which is a boss verdict.
     """
-    surface = face.Surface
-    radius = float(surface.Radius)
+    radius = float(face.Surface.Radius)
     span = getattr(face, "ParameterRange", None)
     if not span or len(span) < 4:
-        return False
-    u = (float(span[0]) + float(span[1])) / 2.0
+        raise UnmeasurableGeometry(f"cylindrical face carries no 4-value ParameterRange: {span!r}")
+    u_min, u_max = float(span[0]), float(span[1])
     v = (float(span[2]) + float(span[3])) / 2.0
-    try:
-        point = face.valueAt(u, v)
-    except Exception:  # noqa: BLE001 - a face that cannot be sampled is not counted as a hole
-        return False
-
     axis, origin = _axis_of(face)
-    delta = (point.x - origin[0], point.y - origin[1], point.z - origin[2])
-    along = delta[0] * axis[0] + delta[1] * axis[1] + delta[2] * axis[2]
-    radial = [delta[i] - along * axis[i] for i in range(3)]
-    length = math.sqrt(sum(component**2 for component in radial))
-    if length <= 0.0:
-        return False
     step = min(radius / 2.0, _DEFAULT_LINEAR_ABS * 10)
-    # ``point.add`` returns a Base.Vector without this module importing FreeCAD: the vector class
-    # comes from the shape the caller handed in.
-    probe = point.add(point.__class__(*(component / length * step for component in radial)))
-    try:
-        return bool(shape.isInside(probe, _COAXIAL_OFFSET_TOL, True))
-    except Exception:  # noqa: BLE001 - an unsupported membership test is not a hole verdict
-        return False
+
+    inside = 0
+    for index in range(_WALL_PROBE_SAMPLES):
+        u = u_min + (u_max - u_min) * (index + 0.5) / _WALL_PROBE_SAMPLES
+        try:
+            point = face.valueAt(u, v)
+        except Exception as exc:
+            raise UnmeasurableGeometry(f"cylindrical face cannot be sampled: {exc}") from exc
+        delta = (point.x - origin[0], point.y - origin[1], point.z - origin[2])
+        along = delta[0] * axis[0] + delta[1] * axis[1] + delta[2] * axis[2]
+        radial = [delta[i] - along * axis[i] for i in range(3)]
+        length = math.sqrt(sum(component**2 for component in radial))
+        if length <= 0.0:
+            raise UnmeasurableGeometry("a wall sample landed on the cylinder's own axis")
+        # ``point.add`` returns a Base.Vector without this module importing FreeCAD: the vector
+        # class comes from the shape the caller handed in.
+        probe = point.add(point.__class__(*(component / length * step for component in radial)))
+        if _probe_is_inside(shape, probe):
+            inside += 1
+    return inside * 2 > _WALL_PROBE_SAMPLES
 
 
 def _logical_holes(shape) -> list:
@@ -220,6 +248,8 @@ def _logical_holes(shape) -> list:
     Applies the §7.3 disambiguation rules in order: keep only full-circle walls (excluding
     fillets' partial arcs), keep only walls with material outside the cylinder (hole, not boss),
     then merge faces sharing an axis direction and a collinear centre line into one hole.
+
+    :raises UnmeasurableGeometry: a candidate wall could not be classified either way.
     """
     walls = [
         face
@@ -357,9 +387,7 @@ def _measure_hole_spacing(document, check) -> dict:
         pitch for pitch in expected if not any(abs(gap - pitch) <= bands[pitch] for gap in nearest)
     ]
     stray_gaps = [
-        gap
-        for gap in nearest
-        if not any(abs(gap - pitch) <= bands[pitch] for pitch in expected)
+        gap for gap in nearest if not any(abs(gap - pitch) <= bands[pitch] for pitch in expected)
     ]
     passed = not unmatched_pitches and not stray_gaps
     detail = f"nearest-neighbour gaps {nearest} vs declared {expected}"
@@ -378,10 +406,12 @@ def _measure_hole_spacing(document, check) -> dict:
 
 
 def _measure_hole_through(document, check) -> dict:
-    """Grade whether every logical hole exits both sides of the solid.
+    """Grade whether every logical hole exits both sides of the material it passes through.
 
-    A through hole's wall spans the solid's full extent along its own axis, so the wall's axial
-    extent is compared against the solid's extent projected onto that axis.
+    A through hole's wall spans the whole thickness of material its own axis crosses. That local
+    thickness is measured, not the solid's overall extent: on a stepped or filleted part the two
+    differ, and comparing against the overall extent grades a through hole in a thin section as
+    blind and a blind hole in a thin boss as through.
     """
     shape = _graded_shape(document)
     if shape is None:
@@ -397,16 +427,51 @@ def _measure_hole_through(document, check) -> dict:
     for group in groups:
         axis, _ = _axis_of(group[0])
         wall = _extent_along(_group_vertexes(group), axis)
-        solid = _extent_along(_shape_vertexes(shape), axis)
-        per_hole.append(wall >= solid - _DEFAULT_LINEAR_ABS)
+        if wall is None:
+            raise UnmeasurableGeometry("a hole wall carries too few vertexes to measure")
+        material = _local_material_extent(shape, group)
+        per_hole.append(wall >= material - _DEFAULT_LINEAR_ABS)
     measured = all(per_hole)
     return _check(
         "assert.hole_through",
         measured,
         expected,
         measured == expected,
-        f"{sum(per_hole)}/{len(per_hole)} hole(s) span the solid's axial extent",
+        f"{sum(per_hole)}/{len(per_hole)} hole(s) span the material their axis crosses",
     )
+
+
+def _local_material_extent(shape, group) -> float:
+    """The thickness of material a logical hole's axis crosses, measured along that axis.
+
+    The hole's own cylindrical surface, extended past both ends of the shape, is intersected with
+    the solid. What survives is the material standing against the wall, whose axial span is the
+    thickness the hole must clear to be through. The axis line itself cannot be used: it runs
+    inside the bore, where there is no material to intersect.
+
+    :raises UnmeasurableGeometry: the intersection cannot be built or yields nothing.
+    """
+    part = _sys.modules.get(type(shape).__module__)
+    if part is None or not hasattr(part, "makeCylinder"):
+        raise UnmeasurableGeometry("the shape's module offers no makeCylinder to probe with")
+    axis, centre = _axis_of(group[0])
+    radius = float(group[0].Surface.Radius)
+    vector = type(shape.BoundBox.Center)
+    reach = float(shape.BoundBox.DiagonalLength) * 2.0 or 1.0
+    base = vector(*(centre[i] - axis[i] * reach for i in range(3)))
+    try:
+        wall = next(
+            face
+            for face in part.makeCylinder(radius, 2.0 * reach, base, vector(*axis)).Faces
+            if type(face.Surface).__name__ == "Cylinder"
+        )
+        material = shape.common(wall)
+    except Exception as exc:
+        raise UnmeasurableGeometry(f"the hole's wall could not be intersected: {exc}") from exc
+    extent = _extent_along(_shape_vertexes(material), axis)
+    if extent is None:
+        raise UnmeasurableGeometry("no material stands against the hole's wall")
+    return extent
 
 
 def _group_vertexes(group) -> list:
@@ -423,10 +488,13 @@ def _shape_vertexes(shape) -> list:
     return [vertex.Point for vertex in getattr(shape, "Vertexes", ()) or ()]
 
 
-def _extent_along(points, axis) -> float:
-    """The span of ``points`` projected onto ``axis``; ``0.0`` for fewer than two points."""
+def _extent_along(points, axis):
+    """The span of ``points`` projected onto ``axis``; ``None`` when fewer than two points.
+
+    ``None`` distinguishes an unmeasurable extent from a genuine zero-thickness one.
+    """
     if len(points) < 2:
-        return 0.0
+        return None
     projections = [p.x * axis[0] + p.y * axis[1] + p.z * axis[2] for p in points]
     return max(projections) - min(projections)
 
@@ -531,6 +599,8 @@ def evaluate(document, checks) -> list[dict]:
             continue
         try:
             results.append(measurement(document, entry))
+        except UnmeasurableGeometry as exc:
+            results.append(_invalid(f"assert.{fn}", f"measurement could not be taken: {exc}"))
         except Exception as exc:  # noqa: BLE001 - a measurement failure is a failing check
             results.append(
                 _check(
