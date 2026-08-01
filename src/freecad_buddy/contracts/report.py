@@ -142,6 +142,35 @@ def _rate_check_ids(report: Mapping) -> list[str]:
     return list(dict.fromkeys(ids))
 
 
+def _non_rate_measured_ids(report: Mapping) -> list[str]:
+    """Collect the ids of ``measured_kind: "rate"`` checks whose ``measured`` is not a rate.
+
+    ``measured_kind`` is the sole signal that the wilson_ci rule applies, and it is declared
+    independently of ``measured``'s type, so a check can claim to measure a rate while carrying a
+    string or a value outside ``[0, 1]``. Booleans are rejected explicitly: ``bool`` is a subclass
+    of ``int``, so ``True`` would otherwise read as the rate 1.0.
+
+    Reads the same containers as ``_rate_check_ids`` and with the same tolerance for malformed
+    entries. Ids are de-duplicated in first-seen order.
+    """
+    ids: list[str] = []
+    for key in ("checks", "warnings"):
+        container = report.get(key)
+        if not isinstance(container, Sequence) or isinstance(container, str | bytes):
+            continue
+        for check in container:
+            if not isinstance(check, Mapping) or check.get("measured_kind") != "rate":
+                continue
+            measured = check.get("measured")
+            if isinstance(measured, bool) or not isinstance(measured, (int, float)):
+                ids.append(_check_label(check))
+                continue
+            value = float(measured)
+            if value != value or not 0.0 <= value <= 1.0:
+                ids.append(_check_label(check))
+    return list(dict.fromkeys(ids))
+
+
 def _mistyped_wilson_ci_keys(wilson_ci: Mapping) -> list[str]:
     """Return the ``WilsonCI`` keys whose value is not of the declared type.
 
@@ -200,7 +229,8 @@ def require_wilson_ci_for_rates(report: Any) -> None:
         ``[0, 1]``, bounds not ordered ``low <= rate <= high``, ``n`` not
         positive, or ``r`` outside ``[0, n]``) — the message names the offending
         check ids — or a check declares a ``measured_kind`` outside
-        ``MeasuredKind``.
+        ``MeasuredKind``, or a check declares ``measured_kind: "rate"`` while its
+        ``measured`` value is not a number in ``[0, 1]``.
     """
     if not isinstance(report, Mapping):
         return
@@ -208,6 +238,13 @@ def require_wilson_ci_for_rates(report: Any) -> None:
     rate_ids = _rate_check_ids(report)
     if not rate_ids:
         return
+
+    non_rates = _non_rate_measured_ids(report)
+    if non_rates:
+        raise ValueError(
+            "a check declares measured_kind 'rate' but its measured value is not a "
+            f"number in [0, 1]; offending check id(s): {non_rates}"
+        )
 
     banner = report.get("banner")
     wilson_ci = banner.get("wilson_ci") if isinstance(banner, Mapping) else None

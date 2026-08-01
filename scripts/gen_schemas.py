@@ -312,10 +312,13 @@ def _conditional(name: str, properties: dict, defs: dict[str, dict]) -> dict | N
         return defs.get(ref.rsplit("/", 1)[-1], {}).get("properties", {})
 
     def _non_null(fragment: dict) -> dict:
-        """Return ``fragment`` with any ``anyOf`` null branch dropped."""
+        """Return ``fragment`` with any ``anyOf`` null branch dropped.
+
+        A fragment whose only branch was the null one would leave nothing to require, which no
+        conditional can express; the caller's field is optional-and-nullable, so at least one
+        non-null branch always survives.
+        """
         branches = [b for b in fragment.get("anyOf", ()) if b != {"type": "null"}]
-        if not branches:
-            return {"not": {"type": "null"}, **fragment}
         if len(branches) == 1:
             return branches[0]
         return {"anyOf": branches}

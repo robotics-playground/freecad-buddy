@@ -675,7 +675,10 @@ resolution: the recommended independent review was performed directly (two blind
 origin: review-adversarial-general, review-edge-case-hunter (DW-64 review), 2026-07-31
 location: src/freecad_buddy/contracts/report.py
 reason: `Check.measured` is typed `float | str | bool | list | None` and `measured_kind` is declared independently, so a check with `measured: "not-a-number"` and `measured_kind: "rate"` passes both the schema and the runtime guard. Both reviewers confirmed this by probe. The discriminator is the sole load-bearing signal of the rate/wilson_ci rule, so leaving it unconstrained means a producer can satisfy the letter of the rule while describing something that is not a rate. Fix: constrain the schema so `measured_kind: "rate"` implies a numeric `measured` in `[0, 1]`, and mirror it in the guard.
-status: open
+status: done 2026-08-01
+resolution: `_non_rate_measured_ids` runs in `require_wilson_ci_for_rates` and raises when a check declares `measured_kind: "rate"` while its `measured` is not a number in `[0, 1]`. Booleans are rejected explicitly, because `bool` subclasses `int` and `True` would otherwise read as the rate 1.0; `nan` and the infinities are rejected by the same range test. The constraint is scoped to the rate discriminator, so a count or text check may still measure a string or a list.
+
+Covered by four tests, two of them falsified by stubbing the helper to return no offenders: a non-numeric `measured` (string, None, list, True, False), one outside the unit interval (-0.1, 1.1, nan, inf), the inclusive bounds 0 and 1, and a non-rate discriminator carrying an arbitrary value. The schema half of the entry's fix is not done — the runtime guard now rejects what the schema still admits.
 
 ### DW-68: A report with two distinct rate checks is satisfied by one banner-level `wilson_ci`, so the second rate silently inherits the first's interval.
 origin: review-adversarial-general, review-edge-case-hunter (DW-64 review), 2026-07-31
@@ -687,7 +690,12 @@ status: open
 origin: review-adversarial-general (DW-64 review), 2026-07-31
 location: scripts/gen_schemas.py
 reason: `CONDITIONALS` plus the `_conditional` builder, `_ref_props`, `_non_null`, and `_enum_members` exist to emit one `if`/`then` for `ValidationReport`. `_non_null`'s empty-`branches` fallback is unreachable at the only live call site and incoherent in both directions it could be reached from (redundant `not` when there was no `anyOf`; an unsatisfiable schema when the fragment was null-only). `test_generator_conditional_guard_raises_on_clobbering_root_key` monkeypatches `_conditional` to return a hijacked dict, so it proves only that a hand-written lambda trips the clash guard the real builder cannot trip. CLAUDE.md §2 forbids single-use abstractions and error handling for impossible scenarios. Fix: delete the unreachable fallback and the mock-only test; consider collapsing the framework to a literal conditional unless a second entry is imminent.
-status: open
+status: done 2026-08-01
+resolution: `_non_null`'s empty-`branches` fallback is deleted, and `test_generator_conditional_guard_raises_on_clobbering_root_key` — which monkeypatched `_conditional` to return a hijacked dict and so proved only that a hand-written lambda trips a guard the real builder cannot trip — is removed.
+
+Unreachability was confirmed against the generated artifact rather than by reading: the one live call site passes `ReportBanner.properties.wilson_ci`, whose fragment is `anyOf: [{$ref: WilsonCI}, {type: null}]`, so exactly one branch survives the null filter and `len(branches) == 1` always holds. Re-running `gen_schemas.py` after the deletion produces byte-identical output for every schema, which is what proves the removed code was dead.
+
+The entry's third suggestion — collapsing the five-key `CONDITIONALS` framework to a literal conditional — is not done. It is a larger change to the generator's shape, and unlike the two deletions it is not provable by a no-op diff.
 
 ### DW-65: build_export_fault_fixtures.py still carries the argv-based rebuild-on-import hazard DW-60 removed from the G1 generator
 origin: review-adversarial-general, review-edge-case-hunter

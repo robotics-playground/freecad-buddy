@@ -714,6 +714,46 @@ def test_guard_degrades_on_malformed_containers():
     assert require_wilson_ci_for_rates({}) is None
 
 
+def test_a_rate_discriminator_over_a_non_numeric_measured_is_rejected():
+    # measured_kind is the sole load-bearing signal of the wilson_ci rule and is declared
+    # independently of measured's type, so without this a check satisfies the letter of the rule
+    # while describing something that is not a rate.
+    for measured in ("not-a-number", None, [0.9], True, False):
+        report = _report(
+            checks=[dict(_rate_ck(), measured=measured)],
+            banner_extra={"wilson_ci": _WILSON_CI},
+        )
+        with pytest.raises(ValueError, match="gate.pass_rate"):
+            require_wilson_ci_for_rates(report)
+
+
+def test_a_rate_measured_outside_the_unit_interval_is_rejected():
+    for measured in (-0.1, 1.1, float("nan"), float("inf")):
+        report = _report(
+            checks=[dict(_rate_ck(), measured=measured)],
+            banner_extra={"wilson_ci": _WILSON_CI},
+        )
+        with pytest.raises(ValueError, match=r"not a number in \[0, 1\]"):
+            require_wilson_ci_for_rates(report)
+
+
+def test_the_unit_interval_bounds_are_inclusive_for_a_rate():
+    for measured in (0, 1, 0.0, 1.0):
+        report = _report(
+            checks=[dict(_rate_ck(), measured=measured)],
+            banner_extra={"wilson_ci": _WILSON_CI},
+        )
+        assert require_wilson_ci_for_rates(report) is None
+
+
+def test_a_non_rate_discriminator_may_carry_any_measured_value():
+    # The constraint is scoped to the rate discriminator; a count or a text check is free to
+    # measure a string or a list.
+    for kind in ("quantity", "count", "flag", "text"):
+        report = _report(checks=[dict(_rate_ck(kind=kind), measured="anything")])
+        assert require_wilson_ci_for_rates(report) is None
+
+
 def test_guard_reports_unnamed_rate_check_without_id():
     report = _report(checks=[{"passed": True, "measured_kind": "rate"}])
     with pytest.raises(ValueError, match="<unnamed>"):
@@ -988,17 +1028,6 @@ def test_generator_conditional_guard_raises_on_inline_array_items(monkeypatch):
         ),
     )
     with pytest.raises(ValueError, match="items of 'touched', which is not a \\$ref"):
-        gen_schemas.generate()
-
-
-def test_generator_conditional_guard_raises_on_clobbering_root_key(monkeypatch):
-    """A conditional must never silently overwrite a key the root already carries."""
-    monkeypatch.setattr(
-        gen_schemas,
-        "_conditional",
-        lambda name, properties, defs: {"title": "hijacked"},
-    )
-    with pytest.raises(ValueError, match=r"would overwrite existing schema key\(s\): \['title'\]"):
         gen_schemas.generate()
 
 
