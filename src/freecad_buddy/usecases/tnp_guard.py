@@ -586,10 +586,29 @@ def _grade_resolution(doc: object, record: RefRecord, entry: RefEntry) -> RefFin
     """Return a ``BROKEN`` finding when ``entry`` no longer names a resolvable element, else None.
 
     An entry naming no element (a whole-object link) has nothing to resolve and yields no finding.
+
+    A named target the document no longer holds is unresolved rather than unchecked: the object is
+    gone, so the element it carried is gone with it. Reading a missing object as "nothing to
+    compare" graded that reference ``PASS``, and whether anything else caught it depended on
+    FreeCAD marking the owner invalid — which for a ``FeatureDressUp`` is the silent case this
+    guard exists to cover. A target that is present but carries no shape stays unchecked, because
+    a shapeless object has no elements to resolve against and never did.
     """
     name = _entry_name(entry)
     if not name:
         return None
+    if record["target"] and doc.getObject(record["target"]) is None:
+        return _finding(
+            record,
+            entry,
+            "BROKEN",
+            1,
+            (
+                f"{record['owner']}.{record['prop']} entry {name} names an element on "
+                f"{record['target']}, which is no longer in the document"
+            ),
+            state_after=name,
+        )
     target = doc.getObject(record["target"]) if record["target"] else None
     shape = _shape_of(target) if target is not None else None
     unresolved = shape is not None and _resolve_element(shape, name) is None

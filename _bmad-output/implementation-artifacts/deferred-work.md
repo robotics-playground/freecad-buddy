@@ -945,8 +945,14 @@ reason: The first Story 3.5 implementation was reverted on an intent gap, and it
 
 The entry recorded this as a code reading rather than a measured defect. It is now measured, and the mixed record it needed already existed in the test fixture: shrinking the pad below the fillet radius leaves `Edge1`/`Edge2` missing and `Edge3`/`Edge4` surviving, and `Edge4`'s witness genuinely moves. The per-record skip was hiding that real REPOINTED verdict. `test_a_missing_marked_entry_is_reported_once_rather_than_by_both_layers` asserted `{layers} == {0}` over the whole record, which held only because the finding was suppressed; it now asserts per missing entry that no layer above 0 re-reports it, which is the contract it was written for. Covered additionally by `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (falsified by reverting the fix) and `test_a_record_whose_every_entry_is_missing_is_left_to_layer_zero`.
 
-The second finding below (a deleted target grading PASS) stays open.
-status: open
+**The three sub-findings below are also resolved 2026-08-01, closing DW-94.**
+
+*Deleted target grading PASS* — fixed. `_grade_resolution` now grades a named target the document no longer holds as `BROKEN` at layer 1, instead of reading the absent object as "nothing to compare". Measured before fixing: called with a record naming an absent object, the helper returned `None` — no finding. Deleting the real Pad was not a reproduction, because FreeCAD cascades the delete and removes the Fillet with it, which the vanished-owner check already catches; the gap needs the target name to survive on a live owner. A target that is present but shapeless deliberately stays unchecked, pinned by `test_a_target_that_is_present_but_shapeless_stays_unchecked`, because a shapeless object has no elements to resolve against and never did.
+
+*`_history` converting outside its `try`* — already fixed in an earlier pass, verified against the current source: `int(record[0])`/`str(record[1])` are inside the guarded block.
+
+*`_capture_entry` outside the per-property `try`* — already fixed in an earlier pass, verified against the current source: the call sits inside the `try` that closes with `except Exception: continue`.
+status: done 2026-08-01
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-3-5-tnp-guard-layers-1-2.md`
   summary: A reference whose target object was deleted grades PASS rather than BROKEN, because the resolution check short-circuits when `getObject` returns `None`.

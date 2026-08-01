@@ -365,6 +365,43 @@ class LayerOneTest(_BodyFixture):
         self.assertEqual({f["layer"] for f in findings}, {0})
         self.assertNotIn("PASS", [f["verdict"] for f in findings])
 
+    def test_a_reference_whose_target_object_is_gone_is_broken_rather_than_passing(self):
+        """The resolution check used to read a missing target as "nothing to compare".
+
+        ``_grade_resolution`` resolved the target and only graded when a shape came back, so a
+        record whose target name is unchanged but whose object no longer exists produced no
+        finding at all. Whether anything else caught it depended on FreeCAD marking the owner
+        invalid, which for a ``FeatureDressUp`` is the silent case this guard exists to cover.
+        """
+        self._add_fillet()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        record = next(r for r in snapshot if r["owner"] == "Fillet")
+        absent = {**record, "target": "NoSuchObject"}
+        self.assertIsNone(self.document.getObject("NoSuchObject"))
+
+        finding = tnp_guard._grade_resolution(self.document, absent, record["entries"][0])
+
+        self.assertIsNotNone(finding, "a reference to a deleted object must not grade PASS")
+        self.assertEqual(finding["verdict"], "BROKEN")
+        self.assertEqual(finding["layer"], 1)
+        self.assertIn("no longer in the document", finding["detail"])
+
+    def test_a_target_that_is_present_but_shapeless_stays_unchecked(self):
+        # A shapeless object has no elements to resolve against and never did, so the widened
+        # guard must not turn that into a BROKEN verdict.
+        self._add_fillet()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        record = next(r for r in snapshot if r["owner"] == "Fillet")
+        shapeless = self.document.addObject("App::FeaturePython", "Shapeless")
+        self.document.recompute()
+        self.assertIsNone(getattr(shapeless, "Shape", None))
+
+        finding = tnp_guard._grade_resolution(
+            self.document, {**record, "target": "Shapeless"}, record["entries"][0]
+        )
+
+        self.assertIsNone(finding)
+
     def test_a_deleted_snapshot_owner_is_broken_at_layer_one(self):
         self._add_fillet()
         snapshot = tnp_guard.snapshot_references(self.document)
