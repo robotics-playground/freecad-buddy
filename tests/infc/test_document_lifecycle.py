@@ -4,9 +4,13 @@ Run via ``FreeCADCmd tests/run_tests.py``. Validates the ``DocumentRegistry`` ro
 explicit-handle enforcement through the dispatch boundary, and the live shim probes.
 """
 
+import builtins
+import math
 import unittest
 
 import FreeCAD as App
+import Part
+import Sketcher
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.usecases import queries, shim
@@ -160,6 +164,133 @@ class CapabilityProbeTest(unittest.TestCase):
         shim.varset_available.cache_clear()
         shim.warm_capability_probes()
         self.assertNotIn("FCB_TMP_varset_probe", App.listDocuments())
+
+
+class SketcherProbeRecoveryTest(unittest.TestCase):
+    """The Sketcher probe must not let one failed import disable sketching for the process."""
+
+    def setUp(self):
+        self._real_import = builtins.__import__
+        shim._sketcher_probed_ok = False
+
+    def tearDown(self):
+        builtins.__import__ = self._real_import
+        shim._sketcher_probed_ok = False
+
+    def _fail_sketcher_import(self):
+        """Make ``import Sketcher`` raise the way a partially-initialised module would."""
+
+        def guard(name, *args, **kwargs):
+            if name == "Sketcher":
+                raise ImportError("Sketcher is not fully initialised yet")
+            return self._real_import(name, *args, **kwargs)
+
+        builtins.__import__ = guard
+
+    def test_a_transient_import_failure_does_not_disable_sketching_for_the_process(self):
+        self._fail_sketcher_import()
+        self.assertFalse(shim.sketcher_available())
+
+        builtins.__import__ = self._real_import
+        self.assertTrue(shim.sketcher_available())
+
+    def test_warming_the_probes_through_a_failed_import_still_recovers(self):
+        self._fail_sketcher_import()
+        shim.warm_capability_probes()
+        self.assertFalse(shim.sketcher_available())
+
+        builtins.__import__ = self._real_import
+        self.assertTrue(shim.sketcher_available())
+        self.assertTrue(shim.capability_banner()["sketcher_available"])
+
+    def test_the_success_is_cached_so_the_hot_path_does_not_reimport(self):
+        self.assertTrue(shim.sketcher_available())
+
+        self._fail_sketcher_import()
+        self.assertTrue(shim.sketcher_available())
+
+
+class RedundantOnlySketchTest(unittest.TestCase):
+    """``redundant_only_sketch`` must read the sketch's own state, not the recompute log."""
+
+    def setUp(self):
+        self.doc = App.newDocument("FCB_redundant_probe")
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _right_angle_sketch(self, name):
+        """A sketch whose only fault is redundancy: horizontal + vertical + a 90-degree angle.
+
+        The angle repeats what the two orientation constraints already fix, so ``solve()``
+        reports ``-2`` and FreeCAD writes the ``Sketch with redundant constraints`` log line.
+        Returns the sketch and the index of the redundant angle constraint.
+        """
+        sketch = self.doc.addObject("Sketcher::SketchObject", name)
+        first = sketch.addGeometry(
+            Part.LineSegment(App.Vector(0, 0, 0), App.Vector(10, 0, 0)), False
+        )
+        second = sketch.addGeometry(
+            Part.LineSegment(App.Vector(0, 0, 0), App.Vector(0, 10, 0)), False
+        )
+        sketch.addConstraint(Sketcher.Constraint("Coincident", first, 1, second, 1))
+        sketch.addConstraint(Sketcher.Constraint("Horizontal", first))
+        sketch.addConstraint(Sketcher.Constraint("Vertical", second))
+        angle = sketch.addConstraint(
+            Sketcher.Constraint("Angle", first, 1, second, 1, math.pi / 2.0)
+        )
+        self.doc.recompute()
+        return sketch, angle
+
+    def test_a_genuinely_redundant_sketch_is_reported(self):
+        sketch, _ = self._right_angle_sketch("Redundant")
+
+        self.assertFalse(sketch.isValid())
+        self.assertTrue(shim.redundant_only_sketch(sketch))
+
+    def test_a_conflicting_sketch_is_not_reported(self):
+        sketch = self.doc.addObject("Sketcher::SketchObject", "Conflicting")
+        edge = sketch.addGeometry(
+            Part.LineSegment(App.Vector(0, 0, 0), App.Vector(10, 0, 0)), False
+        )
+        sketch.addConstraint(Sketcher.Constraint("DistanceX", edge, 1, edge, 2, 10.0))
+        sketch.addConstraint(Sketcher.Constraint("DistanceX", edge, 1, edge, 2, 20.0))
+        self.doc.recompute()
+
+        self.assertFalse(sketch.isValid())
+        self.assertFalse(shim.redundant_only_sketch(sketch))
+
+    def test_a_stale_redundant_log_does_not_mask_the_current_fault(self):
+        """The log keeps the redundant prefix after the redundancy itself is gone.
+
+        The recompute log is written per recompute and only refreshed when the object
+        recomputes again, so a sketch edited into a different fault still reports the old
+        message. The probe must read the sketch's live solver state instead.
+        """
+        sketch, angle = self._right_angle_sketch("Stale")
+        self.assertTrue(str(sketch.getStatusString()).startswith("Sketch with redundant"))
+
+        # Drop the redundant angle, then over-constrain the sketch a different way. Solving
+        # refreshes the sketch's own diagnostics but leaves the recompute log untouched.
+        sketch.delConstraint(angle)
+        third = sketch.addGeometry(
+            Part.LineSegment(App.Vector(0, 0, 0), App.Vector(5, 5, 0)), False
+        )
+        sketch.addConstraint(Sketcher.Constraint("Coincident", third, 1, 0, 1))
+        sketch.addConstraint(Sketcher.Constraint("Angle", 0, 1, third, 1, math.radians(80.0)))
+        sketch.addConstraint(Sketcher.Constraint("Horizontal", third))
+        sketch.solve()
+
+        self.assertTrue(str(sketch.getStatusString()).startswith("Sketch with redundant"))
+        self.assertEqual(list(sketch.RedundantConstraints), [])
+        self.assertFalse(shim.redundant_only_sketch(sketch))
+
+    def test_a_non_sketch_object_is_never_reported(self):
+        box = self.doc.addObject("Part::Box", "Box")
+        self.doc.recompute()
+
+        self.assertFalse(shim.redundant_only_sketch(box))
 
 
 if __name__ == "__main__":
