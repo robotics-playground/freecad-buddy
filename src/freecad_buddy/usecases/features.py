@@ -1,4 +1,4 @@
-"""The ten ``feature_*`` mutation use cases.
+"""The ``feature_*`` mutation use cases.
 
 Each tool validates its typed input, then executes one closure through
 ``transaction.run_mutation`` and rebinds the document that call returns into the registry. The

@@ -539,7 +539,7 @@ _EXTRUDE_PROPERTIES = {
 
 
 def _feature_specs():
-    """The ten ``feature_*`` mutation specs, in catalog order."""
+    """The ``feature_*`` mutation specs, in catalog order."""
     return [
         _feature_method(
             "feature_pad",
