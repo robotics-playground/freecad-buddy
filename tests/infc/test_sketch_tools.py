@@ -1311,6 +1311,99 @@ class RegistryRebindTest(_SketchFixture):
             self.registry.rebind("fcb-doc:missing", self.document())
 
 
+class BodyAdoptionTest(_SketchFixture):
+    """A profile sketch belongs inside the Body that consumes it.
+
+    Without adoption the sketch sits at document root and PartDesign reports the pad's profile
+    link as out of the allowed scope, because those link properties are LinkScope::Child.
+    """
+
+    def geometry_count(self):
+        sketch = self.document().getObject("Prof")
+        return None if sketch is None else int(sketch.GeometryCount)
+
+    def make_body(self, name="Bracket"):
+        document = self.document()
+        body = document.addObject("PartDesign::Body", name)
+        document.recompute()
+        return body
+
+    def test_a_sketch_created_with_a_body_is_adopted_into_it(self):
+        body = self.make_body()
+
+        envelope = sketches.sketch_create(
+            self.registry, doc=self.handle, name="Prof", plane="XY", body="Bracket"
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIn("Prof", [obj.Name for obj in body.Group])
+
+    def test_a_sketch_created_without_a_body_stays_at_document_root(self):
+        body = self.make_body()
+
+        envelope = sketches.sketch_create(
+            self.registry, doc=self.handle, name="Prof", plane="XY"
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertNotIn("Prof", [obj.Name for obj in body.Group])
+
+    def test_a_face_attached_sketch_is_adopted_too(self):
+        # The two creation branches return separately, so a fix applied to the base-plane path
+        # alone would leave this one unadopted.
+        body = self.make_body()
+        document = self.document()
+        box = document.addObject("Part::Box", "Box")
+        document.recompute()
+
+        envelope = sketches.sketch_create(
+            self.registry,
+            doc=self.handle,
+            name="Prof",
+            face={"kind": "mapped_name", "object": "Box", "mapped_name": "Face1"},
+            body="Bracket",
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIn("Prof", [obj.Name for obj in body.Group])
+
+    def test_adopting_a_sketch_leaves_the_body_tip_unset(self):
+        # Body.addObject advances Tip for a solid feature; a sketch is not one.
+        body = self.make_body()
+
+        sketches.sketch_create(
+            self.registry, doc=self.handle, name="Prof", plane="XY", body="Bracket"
+        )
+
+        self.assertIsNone(body.Tip)
+
+    def test_an_unknown_body_is_rejected_before_the_bracket(self):
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_create,
+            self.registry,
+            doc=self.handle,
+            name="Prof",
+            plane="XY",
+            body="NoSuchBody",
+        )
+
+    def test_a_body_naming_a_non_body_object_is_rejected_before_the_bracket(self):
+        document = self.document()
+        document.addObject("Part::Box", "Box")
+        document.recompute()
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_create,
+            self.registry,
+            doc=self.handle,
+            name="Prof",
+            plane="XY",
+            body="Box",
+        )
+
+
 class NoTransactionLeftOpenTest(_SketchFixture):
     """AD-5 asserted behaviourally: no sketch tool leaves a transaction open on any exit path.
 

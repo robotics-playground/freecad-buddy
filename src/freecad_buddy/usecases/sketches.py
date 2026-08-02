@@ -40,6 +40,8 @@ _BASE_PLANES = {
     "YZ": (0.5, 0.5, 0.5, 0.5),
 }
 
+_BODY_TYPE = "PartDesign::Body"
+
 _ANGLE_UNITS = frozenset({"deg"})
 _LENGTH_UNITS = frozenset({"mm"})
 
@@ -573,12 +575,27 @@ def _sketch_mutation(
     return envelope
 
 
+def _resolve_body(document: object, name: str) -> object:
+    """Return the ``PartDesign::Body`` named ``name``, or raise ``ValidationError``.
+
+    Kept local rather than imported from the feature tools: this module does not otherwise
+    depend on them, and one predicate is not worth coupling the two tool families.
+    """
+    obj = document.getObject(name)
+    if obj is None:
+        raise ValidationError(f"unknown object in body: {name}")
+    if str(getattr(obj, "TypeId", "")) != _BODY_TYPE:
+        raise ValidationError(f"object is not a PartDesign Body: {name}")
+    return obj
+
+
 def sketch_create(
     registry: DocumentRegistry,
     doc: str | None = None,
     name: str | None = None,
     plane: str | None = None,
     face: dict | None = None,
+    body: str | None = None,
     confirm: dict | None = None,
     audit_sink: object = None,
 ) -> ResultEnvelope:
@@ -589,8 +606,13 @@ def sketch_create(
     placement; a face-attached sketch is attached through ``AttachmentSupport`` with
     ``MapMode="FlatFace"``. The new sketch is empty, so it commits with ``DoF == 0``.
 
+    ``body`` optionally names a ``PartDesign::Body`` to adopt the new sketch into, so a profile
+    consumed by a feature lives inside the Body that consumes it. Omitted, the sketch is created
+    at document level.
+
     :raises ValidationError: no or both targets given, an unknown plane, a name already in use,
-        or a face selector that does not name a planar face.
+        a face selector that does not name a planar face, or ``body`` naming an object that is
+        not a ``PartDesign::Body``.
     """
     _require_sketcher()
     if not name:
@@ -604,6 +626,8 @@ def sketch_create(
     def precheck(document: object) -> None:
         if document.getObject(name) is not None:
             raise ValidationError(f"an object named {name} already exists")
+        if body is not None:
+            _resolve_body(document, body)
         if support is not None:
             target = document.getObject(support[0])
             if target is None:
@@ -616,6 +640,8 @@ def sketch_create(
         sketch = document.addObject("Sketcher::SketchObject", name)
         if sketch.Name != name:
             raise ValidationError(f"{name} is not a usable FreeCAD object name")
+        if body is not None:
+            _resolve_body(document, body).addObject(sketch)
         if support is None:
             sketch.Placement = FreeCAD.Placement(
                 FreeCAD.Vector(0, 0, 0), FreeCAD.Rotation(*_BASE_PLANES[plane])
@@ -628,7 +654,14 @@ def sketch_create(
         shim.set_attachment(sketch, [(target, [support[1]])], "FlatFace")
         return [name]
 
-    params = {"doc": doc, "name": name, "plane": plane, "face": face, "confirm": confirm}
+    params = {
+        "doc": doc,
+        "name": name,
+        "plane": plane,
+        "face": face,
+        "body": body,
+        "confirm": confirm,
+    }
     return _sketch_mutation(
         registry,
         doc,
