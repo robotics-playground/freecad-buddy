@@ -760,7 +760,14 @@ source_spec: `spec-3-2-mutation-protocol-runtime.md`
 severity: medium
 location: benchmarks/g2/fault-injection/rollback-boundary/g2-fault-rollback-6031-sketch-on-plane/case.yaml
 reason: The case was authored expecting `rolled_back_via_snapshot`; measured against the real runtime on FreeCAD 1.1.1 abort *does* restore the sketch, so it yields `rolled_back_verified`. The implementation recorded the measured value and added an `expected_path_by_build` map holding both outcomes rather than faking the fault — the honest handling — but the result is a `planted_defect` whose expected outcome is now the clean fast path, behaviourally identical to its own `PASS_CLEAN` control, which inflates sensitivity if scored naively. `expected_path_by_build` is read by no scorer or test. Contributing cause worth checking first: the fixture generator creates a PartDesign Body via `addObject` only, and Origin datum planes are created by the GUI command, so the sketch-on-plane op may have had no datum plane to attach to — i.e. the measurement may be a fixture artifact rather than a build property. Fix: verify the fixture carries Origin planes, then either author an op that reproduces the #6031 boundary on 1.1.x or mark the case unreachable on this build. Human decision at G2.2 scoring time.
-status: open
+status: done 2026-08-02
+resolution: ruled by the operator — mark the case unreachable on this build rather than author a replacement fault.
+
+**The entry's contributing-cause hypothesis is disproved.** It suspected the measurement was a fixture artifact: that the generator built the Body with `addObject` only, leaving no Origin datum plane for the sketch to attach to. Opened the committed `fixture.FCStd` and read its object list — it carries `Origin`, `XY_Plane`, `XZ_Plane`, `YZ_Plane`, the three axes and the origin point. The fixture is complete, so the measurement is a genuine property of FreeCAD 1.1.x, not a missing datum.
+
+No code change was needed: both #6031 ops are already in `planted_ops.UNDRIVEABLE` with their measured reasons, so the scorer excludes them from the population and reports `run_mutation` as `not_scored` rather than counting them as misses. That is what keeps the sensitivity honest — the concern the entry raised about naive scoring does not apply to the scorer as built.
+
+Authoring a replacement fault was rejected: it would mean planting a defect this build does not have, which grades the guard against a fiction. If a future FreeCAD reintroduces the #6031 boundary, the case and its `expected_path_by_build` map are already in place to score it.
 
 ### DW-75: `hole_through` compares a hole wall's extent to the whole solid's extent, not the material thickness at the hole
 origin: review-adversarial-general
@@ -1079,7 +1086,12 @@ source_spec: `spec-3-8-gate-g2-exit.md`
 severity: medium
 location: benchmarks/g2/dev/*/case.yaml, benchmarks/g2/case_run.py (`_command_resolver`), benchmarks/runner.py (`_drive_live_cases`)
 reason: Story 3.8 shipped the live case driver (`case_run.run_case`: preview -> confirm -> apply -> undo -> grade, proven end to end under FreeCAD 1.1.1 by `tests/infc/test_g2_driver.py`), but it cannot be pointed at the benchmark unattended. Every one of the 40 dev cases carries a natural-language `spec` ("Pad the profile 5 mm in the positive Z direction.") and its geometry assertions, and **none carries a `tool` or `args` key** — verified: `grep -rl "tool:" benchmarks/g2/dev/` and `grep -rl "args:" benchmarks/g2/dev/` both return nothing, and the full key set across all 40 is `{id, gate, criterion, op_type, spec, inputs, assertions}`. The held-out split has the same shape (key names only were read; content stays sealed). Translating a command into a tool call is precisely what the copilot under test does, so a scripted resolver in the runner would grade a lookup table instead of the actor — which is why `_command_resolver()` returns `None` and every G2 criterion reports an honest `not_collected` naming the missing actor. This is the same posture decisions 010/011 fixed for G1. Fix: the operator runs the exit with a real MCP-client actor supplying the resolver; no code change is required to accept one, only a wired backend.
-status: open
+status: done 2026-08-02
+resolution: ruled by the operator — accept that G2.1 stays operator-run with a real MCP-client actor. This is the intended posture, not a gap to close in code.
+
+Adding `tool`/`args` to the dev cases and building a resolver in the runner were both rejected for the same reason: translating a natural-language command into a tool call is precisely the behaviour the copilot under test performs, so either option would grade a lookup table instead of the actor and make the G2.1 pass rate meaningless. The current state is correct — `_command_resolver()` returns `None` and every G2 criterion reports an honest `not_collected` naming the missing actor, rather than a number nobody should trust.
+
+No code change. The runner already accepts a resolver; the exit needs a wired actor backend at the time it is run.
 
 ### DW-97: G2.3 cannot be met for sketch-consuming ops — the AD-6 digest is byte-identity, not geometric identity
 origin: story-3-8-gate-g2-exit implementation
