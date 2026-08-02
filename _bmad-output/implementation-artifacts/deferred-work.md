@@ -1175,4 +1175,13 @@ origin: phase validation sweep, 2026-08-01
 severity: medium
 location: benchmarks/g2/dev/, benchmarks/g0/golden-models/
 reason: Every G2 dev case opens a golden model as its input document, and all five golden models contain only `Part::Feature` — none holds a `PartDesign::Body`. The five `sketch` cases do not need one; the other 35 (pad, pocket, revolve, hole, dressup, pattern, mirror) each name a `body` that their fixture does not contain, so they cannot run even once a command resolver exists. This sits behind the blocker G2.1 already reports (`no command resolver`) and is not visible from it. `feature_body_create` does not resolve this on its own: it creates an EMPTY Body, while these cases expect to operate on the fixture's existing solid. Fix needs a decision between rebuilding the golden models to carry a Body, having each case call `feature_body_create` first and build its own geometry, or giving the tool the `BaseFeature` adoption that the design deliberately excluded.
-status: open
+status: done 2026-08-02
+resolution: the fixture blocker is removed by commits ae232a4 (use case + 7 tests) and 51b33d6 (wire schema). `feature_body_create` takes an optional `base_feature`; given, the new Body adopts that solid, so later features modify it rather than building from nothing.
+
+**Rebuilding the golden models was considered and rejected on measured cost.** `tests/infc/test_golden_models.py:73` asserts each fixture holds exactly one object, and a Body brings eleven (Body, Origin, three axes, three planes, the origin point, and the `PartDesign::FeatureBase`). Six files consume those fixtures, including the E2E sweep, which reads the document root positionally. `base_feature` unblocks the same 35 cases without touching any of it.
+
+The precheck owns validation FreeCAD does not perform. Measured on 1.1.1: a sketch and a shapeless object are both accepted silently, leaving the Body with a null shape and status `Touched`, and a solid a second Body adopts is also accepted, leaving both Bodies reporting the same geometry. Adoption is detected from the candidate's `InList`, where an adopted object gains a `PartDesign::FeatureBase` entry that a merely referenced object (a `Part::Cut` operand, say) does not — verified against `Body.cpp:445-473`.
+
+Verified over live MCP against the real `box-10-20-30.FCStd`: the adopted Body reports the fixture's 6000.0, and a 6x12x5 pad on its top face yields 6360.0 with the bbox growing to [10, 20, 35]. The fixture was closed without saving.
+
+**This removes the fixture blocker only; it does not make the 35 cases run.** They still need the command resolver G2.1 reports, and their `case.yaml` files carry no `tool`/`args` for a driver to execute (DW-96).
