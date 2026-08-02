@@ -1353,7 +1353,7 @@ class BodyAdoptionTest(_SketchFixture):
         # alone would leave this one unadopted.
         body = self.make_body()
         document = self.document()
-        box = document.addObject("Part::Box", "Box")
+        document.addObject("Part::Box", "Box")
         document.recompute()
 
         envelope = sketches.sketch_create(
@@ -1368,13 +1368,20 @@ class BodyAdoptionTest(_SketchFixture):
         self.assertIn("Prof", [obj.Name for obj in body.Group])
 
     def test_adopting_a_sketch_leaves_the_body_tip_unset(self):
-        # Body.addObject advances Tip for a solid feature; a sketch is not one.
+        """Adoption must place the sketch in the Body without promoting it to the Tip.
+
+        ``Body::addObject`` advances ``Tip`` only when ``isSolidFeature`` holds, and that
+        requires a ``PartDesign::Feature`` (``Body.cpp:176-194``), which a sketch is not. The
+        adoption is asserted alongside it: ``Tip is None`` holds even when nothing was adopted
+        at all, so on its own it would pass against a completely broken adoption path.
+        """
         body = self.make_body()
 
         sketches.sketch_create(
             self.registry, doc=self.handle, name="Prof", plane="XY", body="Bracket"
         )
 
+        self.assertIn("Prof", [obj.Name for obj in body.Group])
         self.assertIsNone(body.Tip)
 
     def test_an_unknown_body_is_rejected_before_the_bracket(self):
