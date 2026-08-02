@@ -702,11 +702,17 @@ def _feature_specs():
             "feature_body_create",
             features.feature_body_create,
             _feature_schema(
-                {"name": _FEATURE_NAME_SCHEMA},
+                {
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "base_feature": {
+                        "type": "string",
+                        "description": "existing solid Name for the Body to adopt",
+                    },
+                },
                 ["name"],
             ),
-            "Create an empty PartDesign Body, the container every feature_* tool builds into. "
-            "It holds no solid until a feature is added.",
+            "Create a PartDesign Body, the container every feature_* tool builds into. Empty by "
+            "default; pass 'base_feature' to adopt an existing solid so later features modify it.",
         ),
         _feature_method(
             "feature_set_parameters",

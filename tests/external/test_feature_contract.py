@@ -243,12 +243,13 @@ def test_no_feature_tool_entered_the_read_only_profile():
     assert not any(name.startswith("feature_") for name in READ_ONLY_PROFILE)
 
 
-def test_feature_body_create_takes_only_a_name():
+def test_feature_body_create_takes_a_name_and_an_optional_base_feature():
     """The Body creator needs no body argument — it is what produces one."""
     schema = _specs_by_name()["feature_body_create"].input_schema
 
-    assert set(schema["properties"]) == {"doc", "name", "confirm"}
+    assert set(schema["properties"]) == {"doc", "name", "base_feature", "confirm"}
     assert schema["required"] == ["doc", "name"]
+    assert schema["properties"]["base_feature"]["type"] == "string"
     assert "body" not in schema["properties"]
 
 

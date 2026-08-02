@@ -1486,8 +1486,8 @@ class BodyCreateTest(_FeatureFixture):
         self.assertAlmostEqual(body.Shape.Volume, 10.0 * 10.0 * 10.0, places=6)
 
     def test_a_pad_on_an_adopted_body_adds_to_the_adopted_solid(self):
-        # The arithmetic the 35 blocked G2 dev cases encode: the expected volume is the
-        # fixture's solid plus the feature, not the feature alone.
+        # A feature on an adopted Body adds to the adopted solid, so the resulting volume is
+        # the solid plus the feature, never the feature alone.
         document = self.document()
         document.addObject("Part::Box", "Box")
         document.recompute()
