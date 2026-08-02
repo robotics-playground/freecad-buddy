@@ -1161,7 +1161,14 @@ origin: final whole-branch review of feature_body_create, 2026-08-01
 severity: low
 location: src/freecad_buddy/usecases/sketches.py (`sketch_create`)
 reason: `sketch_create` adds the sketch with `document.addObject` and never calls `body.addObject(sketch)`, so a sketch consumed as a pad profile lives outside the Body that pads it. FreeCAD then emits `PartDesign::Pad: Link(s) to object(s) 'Profile' go out of the allowed scope 'Block'. Instead, the linked object(s) reside within 'N/A'.` The pad still succeeds and the solid is valid, so the consequence today is a warning rather than a wrong result, which is why this is recorded rather than patched. Confirmed pre-existing, not introduced by `feature_body_create`: the identical warning reproduces on the pre-branch path with a Body created directly through `addObject`. What changed is reachability — before `feature_body_create` existed no MCP client could obtain a Body, so no client could reach the warning at all. The in-FreeCAD fixture helper `_sketch` (`tests/infc/test_feature_tools.py:152`) does call `body.addObject(sketch)`, which is why the test suite never showed it. Fix: give `sketch_create` an optional `body` argument that adopts the sketch into that Body, or have the extrude tools adopt an out-of-scope profile inside the bracket. The first is the smaller change and matches how a user builds in the GUI.
-status: open
+status: done 2026-08-02
+resolution: resolved by commits 9aefa5b (use case + tests), 8e79981 (test hardening) and d6d2566 (wire schema). `sketch_create` takes an optional `body`; given, the new sketch is adopted with `Body.addObject`. Applied to BOTH creation branches, since the base-plane path returns early and a fix on that path alone would leave a face-attached sketch unadopted. Omitted, the sketch is created at document level exactly as before, so no existing caller changed.
+
+The entry called this cosmetic; measured before fixing, that is right and the fix is scoped accordingly. Geometry is identical either way — same volume, both valid and `Up-to-date`, and the unadopted case survives save and reopen with its profile link still resolving. The real cost is the tree.
+
+**The warning itself is not the acceptance criterion, because it is not observable.** Measured on FreeCAD 1.1.1: it never reaches the addon log, `getStatusString()` or `State` — PartDesign emits it to the GUI Report View only. A first draft of the plan had the live check grep the addon log for it, which would have passed vacuously; every test asserts `Body.Group` membership instead. Confirming the Report View is clear needs a human looking at it.
+
+Verified over live MCP by contrast: with `body`, `query_tree_summary` shows `Prof` as a direct child of `Bracket`; without it, `Prof` appears only as the Pad's profile reference and never as a Body child. Pad volume 500.0 in both.
 
 ### DW-103: 35 of the 40 G2 dev cases cannot be driven for want of a Body
 origin: phase validation sweep, 2026-08-01
