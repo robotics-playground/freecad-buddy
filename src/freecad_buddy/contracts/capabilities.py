@@ -13,4 +13,5 @@ class CapabilityBanner(TypedDict, total=False):
     render: Literal["gui_constructed", "offscreen", "none"]  # required
     sketcher_available: bool  # required
     partdesign_available: bool  # required
+    enums: dict[str, dict[str, list[str]]]  # required; {type_id: {property: [value, ...]}}
     exec_enabled: bool  # required

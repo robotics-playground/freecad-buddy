@@ -138,6 +138,57 @@ class CapabilityProbeTest(unittest.TestCase):
         envelope = queries.query_capabilities(exec_enabled=True)
         self.assertTrue(envelope["structured_content"]["exec_enabled"])
 
+    def test_every_validated_property_reports_its_live_enumeration(self):
+        enums = shim.property_enums()
+
+        for type_id, prop in (
+            ("PartDesign::Pad", "Type"),
+            ("PartDesign::Pocket", "Type"),
+            ("PartDesign::Revolution", "Type"),
+            ("PartDesign::Hole", "ThreadType"),
+            ("PartDesign::Hole", "HoleCutType"),
+            ("PartDesign::Hole", "DepthType"),
+            ("PartDesign::Chamfer", "ChamferType"),
+            ("PartDesign::LinearPattern", "Mode"),
+            ("PartDesign::LinearPattern", "TransformMode"),
+            ("PartDesign::PolarPattern", "Mode"),
+        ):
+            with self.subTest(type_id=type_id, prop=prop):
+                self.assertIn(type_id, enums)
+                self.assertIn(prop, enums[type_id])
+                self.assertTrue(enums[type_id][prop])
+
+    def test_the_reported_values_match_the_live_reading(self):
+        """Asserted against the live probe, never a hardcoded list.
+
+        The values differ between supported builds — a linear pattern's Mode is
+        ``{"length", "offset"}`` on 1.0.x and ``["Extent", "Spacing"]`` on 1.1.x — so hardcoding
+        either spelling would fail the other leg and reintroduce the coupling this removes.
+        """
+        import FreeCAD
+
+        document = FreeCAD.newDocument("enum_probe", hidden=True)
+        try:
+            probe = document.addObject("PartDesign::LinearPattern", "Probe")
+            live = list(probe.getEnumerationsOfProperty("Mode"))
+        finally:
+            FreeCAD.closeDocument(document.Name)
+
+        self.assertEqual(shim.property_enums()["PartDesign::LinearPattern"]["Mode"], live)
+
+    def test_a_disabled_marker_value_is_reported_unfiltered(self):
+        # Pad.Type carries '?TwoLengths' on this build. Measured: assigning it succeeds and it
+        # reads back unchanged, so it is a legal value rather than a member to filter away.
+        values = shim.property_enums()["PartDesign::Pad"]["Type"]
+
+        self.assertTrue(
+            any(value.startswith("?") for value in values),
+            f"expected a '?'-prefixed member in {values}",
+        )
+
+    def test_the_banner_carries_the_enums_block(self):
+        self.assertIn("enums", shim.capability_banner())
+
     def test_shim_probes_never_raise(self):
         # probes must resolve on the live build without version-string branching.
         self.assertIsInstance(shim.element_map_available(), bool)

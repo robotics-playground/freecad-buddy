@@ -80,6 +80,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "render",
         "sketcher_available",
         "partdesign_available",
+        "enums",
         "exec_enabled",
     ],
     "MutationBlock": [

@@ -273,6 +273,7 @@ def test_capability_banner_positive_and_vocab_rejection():
         "render": "none",
         "sketcher_available": True,
         "partdesign_available": True,
+        "enums": {},
         "exec_enabled": False,
     }
     assert v.is_valid(good)
@@ -308,6 +309,7 @@ EXPECTED_REQUIRED = {
         "render",
         "sketcher_available",
         "partdesign_available",
+        "enums",
         "exec_enabled",
     },
     # The grading fields are present only when `readable` is true.

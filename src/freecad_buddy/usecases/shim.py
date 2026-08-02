@@ -18,6 +18,22 @@ T = TypeVar("T")
 _STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
 _STEP_SCHEMES = frozenset({"AP203", "AP214", "AP242"})
 
+# The (type_id, property) pairs the feature tools validate against a live enumeration. The
+# spellings differ between supported builds, so a caller cannot know the legal set without
+# reading it from the running one.
+_ENUM_PROPERTIES = (
+    ("PartDesign::Pad", "Type"),
+    ("PartDesign::Pocket", "Type"),
+    ("PartDesign::Revolution", "Type"),
+    ("PartDesign::Hole", "ThreadType"),
+    ("PartDesign::Hole", "HoleCutType"),
+    ("PartDesign::Hole", "DepthType"),
+    ("PartDesign::Chamfer", "ChamferType"),
+    ("PartDesign::LinearPattern", "Mode"),
+    ("PartDesign::LinearPattern", "TransformMode"),
+    ("PartDesign::PolarPattern", "Mode"),
+)
+
 _sketcher_probed_ok = False
 
 
@@ -319,6 +335,35 @@ def implemented_map_modes(type_id: str) -> frozenset[str] | None:
     return frozenset(implemented)
 
 
+@lru_cache(maxsize=1)
+def property_enums() -> dict[str, dict[str, list[str]]]:
+    """The live enumeration of every property the feature tools validate, by type and property.
+
+    Values are reported verbatim in FreeCAD's own order. A ``?``-prefixed member is kept: it is
+    assignable and reads back unchanged, so filtering it would hide a value a caller may use.
+
+    A pair the build cannot probe is omitted rather than reported empty, so a consumer can tell
+    an absent enumeration from one offering no values. A build that cannot run the probe at all
+    reports an empty mapping.
+    """
+    try:
+        import FreeCAD
+
+        document = FreeCAD.newDocument("fcb_enum_probe", hidden=True)
+        try:
+            found: dict[str, dict[str, list[str]]] = {}
+            for index, (type_id, prop) in enumerate(_ENUM_PROPERTIES):
+                obj = document.addObject(type_id, f"Probe{index}")
+                values = enum_values(obj, prop)
+                if values:
+                    found.setdefault(type_id, {})[prop] = values
+        finally:
+            FreeCAD.closeDocument(document.Name)
+    except Exception:  # noqa: BLE001 - a probe that cannot run reports nothing
+        return {}
+    return found
+
+
 def enable_undo(doc: object) -> bool:
     """Turn on ``doc``'s undo stack when the build honours the switch; report whether it is on.
 
@@ -405,4 +450,5 @@ def capability_banner(
         "render": render,
         "sketcher_available": sketcher_available(),
         "partdesign_available": partdesign_available(),
+        "enums": property_enums(),
     }

@@ -5,6 +5,9 @@
     "element_map_available": {
       "type": "boolean"
     },
+    "enums": {
+      "type": "object"
+    },
     "exec_enabled": {
       "type": "boolean"
     },
@@ -45,6 +48,7 @@
     "render",
     "sketcher_available",
     "partdesign_available",
+    "enums",
     "exec_enabled"
   ],
   "title": "CapabilityBanner",
