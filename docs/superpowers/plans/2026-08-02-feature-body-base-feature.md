@@ -279,7 +279,9 @@ Expected: `Ran 586 tests`, `OK (skipped=1)` — the 579 baseline plus these 7.
 
 Two separate checks, because they guard different things:
 
-1. Temporarily delete the two lines `if base_feature is not None: body.BaseFeature = ...` from `op`. Re-run. Expected: **exactly two** failures — `test_a_body_adopts_an_existing_solid_as_its_base_feature` and `test_a_pad_on_an_adopted_body_adds_to_the_adopted_solid`. Restore.
+1. Temporarily delete the two lines `if base_feature is not None: body.BaseFeature = ...` from `op`. Re-run. Expected: **exactly three** failures — `test_a_body_adopts_an_existing_solid_as_its_base_feature`, `test_a_pad_on_an_adopted_body_adds_to_the_adopted_solid`, and `test_a_solid_another_body_already_adopted_is_rejected`. Restore.
+
+   The third is not a coupling defect. That test creates a first Body over `Box` and then asserts a second is refused; with the assignment gone, the first Body never marks `Box` as adopted, so allowing the second is the correct behaviour for that broken build. The test necessarily depends on both halves — the `op` assignment that establishes adoption, and the `precheck` that detects it.
 2. Temporarily delete the two lines `if base_feature is not None: _resolve_base_feature(...)` from `precheck`. Re-run. Expected: **exactly four** failures — the four `_rejected` tests. Restore.
 
 If either check produces a different count, stop and report — a test is not guarding what it claims.
