@@ -324,3 +324,11 @@ def test_every_sketch_tool_rebinds_the_document_through_the_one_bracket_helper()
     assert source.count("run_mutation(") == 1
     for name in SKETCH_TOOLS:
         assert f"def {name}(" in source
+
+
+def test_sketch_create_takes_an_optional_body():
+    """A profile sketch can name the Body that will consume it; omitting it is still valid."""
+    schema = {spec.name: spec for spec in tool_specs()}["sketch_create"].input_schema
+
+    assert schema["properties"]["body"]["type"] == "string"
+    assert "body" not in schema["required"]

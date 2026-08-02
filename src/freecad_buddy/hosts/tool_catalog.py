@@ -360,11 +360,16 @@ def _sketch_specs():
                     "name": {"type": "string"},
                     "plane": {"enum": ["XY", "XZ", "YZ"]},
                     "face": _SUBELEMENT_SELECTOR_SCHEMA,
+                    "body": {
+                        "type": "string",
+                        "description": "PartDesign Body Name to adopt the sketch into",
+                    },
                 },
                 ["name"],
             ),
             "Create a sketch on a base plane (XY/XZ/YZ) or attached to a planar face. "
-            "A new sketch is empty, so it commits fully constrained.",
+            "A new sketch is empty, so it commits fully constrained. Pass 'body' to place it "
+            "inside the Body that will consume it.",
         ),
         _sketch_method(
             "sketch_add_geometry",
