@@ -28,6 +28,7 @@ _ANGLE_UNITS = frozenset({"deg"})
 _LENGTH_UNITS = frozenset({"mm"})
 
 _BODY_TYPE = "PartDesign::Body"
+_FEATURE_BASE_TYPE = "PartDesign::FeatureBase"
 
 # FreeCAD rewrites any character outside this set when it names an object, so a name failing the
 # pattern would silently become a different object name than the caller asked for.
@@ -1564,10 +1565,34 @@ def feature_datum(
     )
 
 
+def _resolve_base_feature(document: object, name: str) -> object:
+    """Return the object ``name`` for adoption as a Body's ``BaseFeature``.
+
+    FreeCAD accepts an unusable target silently — a sketch or a shapeless object leaves the Body
+    with a null shape, and a solid a second Body already adopted leaves both Bodies reporting the
+    same geometry — so each is rejected here rather than committed.
+
+    Adoption is read from the candidate's ``InList``: an adopted object gains a
+    ``PartDesign::FeatureBase`` entry there, which a merely referenced object does not.
+
+    :raises ValidationError: the object is unknown, carries no usable shape, or is already
+        adopted by another Body.
+    """
+    target = _resolve_object(document, name, "base_feature")
+    shape = getattr(target, "Shape", None)
+    if shape is None or shape.isNull():
+        raise ValidationError(f"base_feature {name} carries no shape to adopt")
+    owners = [str(getattr(obj, "TypeId", "")) for obj in target.InList]
+    if _FEATURE_BASE_TYPE in owners:
+        raise ValidationError(f"base_feature {name} is already adopted by a Body")
+    return target
+
+
 def feature_body_create(
     registry: DocumentRegistry,
     doc: str | None = None,
     name: str | None = None,
+    base_feature: str | None = None,
     confirm: dict | None = None,
     audit_sink: object = None,
 ) -> ResultEnvelope:
@@ -1578,21 +1603,29 @@ def feature_body_create(
     and that origin's plane, line and point children, all of which the fingerprint and the render
     set already exclude as datum features.
 
-    :raises ValidationError: the name is missing, already in use, or one FreeCAD would rewrite.
+    ``base_feature`` optionally names an existing solid for the Body to adopt, so later features
+    modify that solid instead of building from nothing.
+
+    :raises ValidationError: the name is missing, already in use, or one FreeCAD would rewrite;
+        or ``base_feature`` is unknown, carries no shape, or is already adopted by another Body.
     """
     _require_partdesign()
 
     def precheck(document: object) -> None:
         _name_available(document, name)
+        if base_feature is not None:
+            _resolve_base_feature(document, base_feature)
 
     def op(document: object) -> list[str]:
         body = document.addObject(_BODY_TYPE, name)
         if body.Name != name:
             raise ValidationError(f"{name} is not a usable FreeCAD object name")
         body.Label = name
+        if base_feature is not None:
+            body.BaseFeature = _resolve_base_feature(document, base_feature)
         return [body.Name]
 
-    params = {"doc": doc, "name": name, "confirm": confirm}
+    params = {"doc": doc, "name": name, "base_feature": base_feature, "confirm": confirm}
     return _feature_mutation(
         registry,
         doc,

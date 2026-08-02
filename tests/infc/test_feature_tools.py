@@ -1471,6 +1471,116 @@ class BodyCreateTest(_FeatureFixture):
 
         self.assertEqual([entry["name"] for entry in record["objects"]], [])
 
+    def test_a_body_adopts_an_existing_solid_as_its_base_feature(self):
+        document = self.document()
+        document.addObject("Part::Box", "Box")
+        document.recompute()
+
+        envelope = features.feature_body_create(
+            self.registry, doc=self.handle, name="Bracket", base_feature="Box"
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        body = document.getObject("Bracket")
+        self.assertIsNotNone(body.Tip)
+        self.assertAlmostEqual(body.Shape.Volume, 10.0 * 10.0 * 10.0, places=6)
+
+    def test_a_pad_on_an_adopted_body_adds_to_the_adopted_solid(self):
+        # The arithmetic the 35 blocked G2 dev cases encode: the expected volume is the
+        # fixture's solid plus the feature, not the feature alone.
+        document = self.document()
+        document.addObject("Part::Box", "Box")
+        document.recompute()
+        created = features.feature_body_create(
+            self.registry, doc=self.handle, name="Bracket", base_feature="Box"
+        )
+        self.assertEqual(created["status"], "OK", created.get("detail"))
+        body = document.getObject("Bracket")
+        self.rect_sketch(body, "Profile", 2.0, 2.0, 4.0, 4.0, z=10.0)
+
+        envelope = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Bracket",
+            profile="Profile",
+            name="Block",
+            length=mm(5.0),
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        pad = document.getObject("Block")
+        self.assertAlmostEqual(pad.Shape.Volume, 1000.0 + 4.0 * 4.0 * 5.0, places=6)
+
+    def test_omitting_base_feature_still_creates_an_empty_body(self):
+        envelope = features.feature_body_create(
+            self.registry, doc=self.handle, name="Bracket"
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        body = self.document().getObject("Bracket")
+        self.assertIsNone(body.Tip)
+        self.assertTrue(body.Shape.isNull())
+
+    def test_a_sketch_as_base_feature_is_rejected_before_the_bracket(self):
+        # FreeCAD accepts this silently and leaves the Body with a null shape and status
+        # 'Touched', so nothing downstream would report it.
+        document = self.document()
+        document.addObject("Sketcher::SketchObject", "Sketchy")
+        document.recompute()
+
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_body_create,
+            self.registry,
+            doc=self.handle,
+            name="Bracket",
+            base_feature="Sketchy",
+        )
+
+    def test_a_shapeless_object_as_base_feature_is_rejected_before_the_bracket(self):
+        document = self.document()
+        document.addObject("App::FeaturePython", "NoShape")
+        document.recompute()
+
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_body_create,
+            self.registry,
+            doc=self.handle,
+            name="Bracket",
+            base_feature="NoShape",
+        )
+
+    def test_a_solid_another_body_already_adopted_is_rejected(self):
+        # Measured: FreeCAD permits this and leaves BOTH Bodies reporting the same volume,
+        # which no later check in this bridge would catch.
+        document = self.document()
+        document.addObject("Part::Box", "Box")
+        document.recompute()
+        first = features.feature_body_create(
+            self.registry, doc=self.handle, name="First", base_feature="Box"
+        )
+        self.assertEqual(first["status"], "OK", first.get("detail"))
+
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_body_create,
+            self.registry,
+            doc=self.handle,
+            name="Second",
+            base_feature="Box",
+        )
+
+    def test_an_unknown_base_feature_is_rejected_before_the_bracket(self):
+        self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_body_create,
+            self.registry,
+            doc=self.handle,
+            name="Bracket",
+            base_feature="NoSuchObject",
+        )
+
 
 class SetParametersTest(_FeatureFixture):
     def _padded_body(self):
