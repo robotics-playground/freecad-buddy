@@ -28,9 +28,14 @@ Saved and reopened, the unadopted case still recomputes clean, the profile link 
 and the volume is unchanged.
 
 So this is **not** a geometry defect. The cost is structural: the sketch sits at document root
-rather than nested in the Body, which is not the tree a user expects, and every extrude over MCP
-emits a warning. It is worth fixing because `feature_body_create` made this path reachable by an
-MCP client for the first time — before it, no client could obtain a Body at all.
+rather than nested in the Body, which is not the tree a user expects. It is worth fixing because
+`feature_body_create` made this path reachable by an MCP client for the first time — before it,
+no client could obtain a Body at all.
+
+**The warning itself is not assertable, so it is not the acceptance criterion.** Measured on
+FreeCAD 1.1.1: it does not reach the addon log, `getStatusString()` or `State` — PartDesign emits
+it to the GUI Report View only. Every test here therefore asserts `Body.Group` membership, which
+is the observable consequence of the same change.
 
 ## Scope
 
