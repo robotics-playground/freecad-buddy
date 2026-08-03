@@ -332,3 +332,52 @@ def test_sketch_create_takes_an_optional_body():
 
     assert schema["properties"]["body"]["type"] == "string"
     assert "body" not in schema["required"]
+
+
+def test_a_length_field_accepts_only_millimetres():
+    schema = _specs_by_name()["sketch_add_geometry"].input_schema
+    radius = schema["properties"]["geometry"]["items"]["properties"]["radius"]
+
+    assert radius["properties"]["unit"]["enum"] == ["mm"]
+
+
+def test_an_angle_field_accepts_only_degrees():
+    schema = _specs_by_name()["sketch_add_geometry"].input_schema
+    start = schema["properties"]["geometry"]["items"]["properties"]["start_angle"]
+
+    assert start["properties"]["unit"]["enum"] == ["deg"]
+
+
+def test_a_constraint_value_accepts_either_unit():
+    """The dimension depends on the constraint's type, resolved at call time.
+
+    ``_ANGLE_TYPES`` takes degrees and ``_LENGTH_TYPES`` millimetres, so narrowing this field to
+    one unit would refuse a call the use case accepts.
+    """
+    schema = _specs_by_name()["sketch_set_datum"].input_schema
+
+    assert sorted(schema["properties"]["value"]["properties"]["unit"]["enum"]) == ["deg", "mm"]
+
+
+def test_no_quantity_field_leaves_its_unit_unconstrained():
+    """Walks every tool spec rather than a hand-listed set, so a new field cannot skip the rule."""
+    offenders = []
+
+    def walk(node, path):
+        if not isinstance(node, dict):
+            return
+        properties = node.get("properties")
+        if isinstance(properties, dict):
+            unit = properties.get("unit")
+            if isinstance(unit, dict) and "enum" not in unit:
+                offenders.append(path)
+            for key, child in properties.items():
+                walk(child, f"{path}.{key}")
+        items = node.get("items")
+        if isinstance(items, dict):
+            walk(items, f"{path}[]")
+
+    for spec in tool_specs():
+        walk(spec.input_schema, spec.name)
+
+    assert offenders == []

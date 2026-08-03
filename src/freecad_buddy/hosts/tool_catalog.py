@@ -206,15 +206,28 @@ _SCREENSHOT_INPUT_SCHEMA = {
 }
 
 
-_QUANTITY_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "value": {"type": "number"},
-        "unit": {"type": "string", "description": "explicit unit, e.g. mm or deg"},
-    },
-    "required": ["value", "unit"],
-    "additionalProperties": False,
-}
+def _quantity_schema(units: list[str]) -> dict:
+    """A ``{value, unit}`` quantity whose unit is restricted to ``units``.
+
+    The use cases accept millimetres for lengths and degrees for angles, so the boundary carries
+    the same restriction rather than advertising an open string it will later refuse.
+    """
+    return {
+        "type": "object",
+        "properties": {
+            "value": {"type": "number"},
+            "unit": {"enum": units, "description": "explicit unit"},
+        },
+        "required": ["value", "unit"],
+        "additionalProperties": False,
+    }
+
+
+_LENGTH_QUANTITY_SCHEMA = _quantity_schema(["mm"])
+_ANGLE_QUANTITY_SCHEMA = _quantity_schema(["deg"])
+# The dimension of a constraint datum depends on the target constraint's type, resolved at call
+# time, so this one field legitimately takes either unit.
+_QUANTITY_SCHEMA = _quantity_schema(["mm", "deg"])
 # The contracts Selector (contracts/document.py); sketch tools resolve the mapped_name variant.
 _SUBELEMENT_SELECTOR_SCHEMA = {
     "type": "object",
@@ -259,9 +272,9 @@ _GEOMETRY_SPEC_SCHEMA = {
         "start": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
         "end": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
         "center": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
-        "radius": _QUANTITY_SCHEMA,
-        "start_angle": _QUANTITY_SCHEMA,
-        "end_angle": _QUANTITY_SCHEMA,
+        "radius": _LENGTH_QUANTITY_SCHEMA,
+        "start_angle": _ANGLE_QUANTITY_SCHEMA,
+        "end_angle": _ANGLE_QUANTITY_SCHEMA,
         "construction": {"type": "boolean", "default": False},
     },
     "required": ["kind"],
@@ -533,13 +546,13 @@ _EXTRUDE_PROPERTIES = {
     "body": {"type": "string", "description": "target PartDesign Body Name"},
     "profile": {"type": "string", "description": "sketch Name"},
     "name": _FEATURE_NAME_SCHEMA,
-    "length": _QUANTITY_SCHEMA,
-    "second_length": _QUANTITY_SCHEMA,
+    "length": _LENGTH_QUANTITY_SCHEMA,
+    "second_length": _LENGTH_QUANTITY_SCHEMA,
     "up_to": {"type": "string", "description": "extrude Type; validated against the live enum"},
     "up_to_face": _SUBELEMENT_SELECTOR_SCHEMA,
     "reversed": {"type": "boolean", "default": False},
     "midplane": {"type": "boolean", "default": False},
-    "taper_angle": _QUANTITY_SCHEMA,
+    "taper_angle": _ANGLE_QUANTITY_SCHEMA,
 }
 
 
@@ -572,8 +585,8 @@ def _feature_specs():
                         **_SUBELEMENT_SELECTOR_SCHEMA,
                         "description": "the profile sketch's V_Axis/H_Axis/N_Axis, or an edge",
                     },
-                    "angle": _QUANTITY_SCHEMA,
-                    "second_angle": _QUANTITY_SCHEMA,
+                    "angle": _ANGLE_QUANTITY_SCHEMA,
+                    "second_angle": _ANGLE_QUANTITY_SCHEMA,
                     "up_to": {"type": "string"},
                     "reversed": {"type": "boolean", "default": False},
                     "midplane": {"type": "boolean", "default": False},
@@ -591,13 +604,13 @@ def _feature_specs():
                     "body": {"type": "string"},
                     "profile": {"type": "string"},
                     "name": _FEATURE_NAME_SCHEMA,
-                    "diameter": _QUANTITY_SCHEMA,
-                    "depth": _QUANTITY_SCHEMA,
+                    "diameter": _LENGTH_QUANTITY_SCHEMA,
+                    "depth": _LENGTH_QUANTITY_SCHEMA,
                     "depth_type": {"type": "string", "description": "Dimension or ThroughAll"},
                     "thread_type": {"type": "string"},
                     "cut_type": {"type": "string"},
-                    "cut_diameter": _QUANTITY_SCHEMA,
-                    "cut_depth": _QUANTITY_SCHEMA,
+                    "cut_diameter": _LENGTH_QUANTITY_SCHEMA,
+                    "cut_depth": _LENGTH_QUANTITY_SCHEMA,
                     "reversed": {"type": "boolean", "default": False},
                 },
                 ["body", "profile", "name"],
@@ -614,7 +627,7 @@ def _feature_specs():
                     "base": {"type": "string", "description": "feature carrying the edges"},
                     "name": _FEATURE_NAME_SCHEMA,
                     "edges": _EDGE_SELECTOR_LIST_SCHEMA,
-                    "radius": _QUANTITY_SCHEMA,
+                    "radius": _LENGTH_QUANTITY_SCHEMA,
                 },
                 ["body", "base", "name", "edges", "radius"],
             ),
@@ -630,9 +643,9 @@ def _feature_specs():
                     "base": {"type": "string"},
                     "name": _FEATURE_NAME_SCHEMA,
                     "edges": _EDGE_SELECTOR_LIST_SCHEMA,
-                    "size": _QUANTITY_SCHEMA,
-                    "second_size": _QUANTITY_SCHEMA,
-                    "angle": _QUANTITY_SCHEMA,
+                    "size": _LENGTH_QUANTITY_SCHEMA,
+                    "second_size": _LENGTH_QUANTITY_SCHEMA,
+                    "angle": _ANGLE_QUANTITY_SCHEMA,
                     "chamfer_type": {"type": "string"},
                 },
                 ["body", "base", "name", "edges", "size"],
@@ -655,8 +668,9 @@ def _feature_specs():
                     },
                     "direction": _SUBELEMENT_SELECTOR_SCHEMA,
                     "axis": _SUBELEMENT_SELECTOR_SCHEMA,
-                    "length": _QUANTITY_SCHEMA,
-                    "angle": _QUANTITY_SCHEMA,
+                    "length": _LENGTH_QUANTITY_SCHEMA,
+                    "angle": _ANGLE_QUANTITY_SCHEMA,
+                    "offset": _QUANTITY_SCHEMA,
                     "occurrences": {"type": "integer", "minimum": 2},
                     "mode": {"type": "string"},
                     "reversed": {"type": "boolean", "default": False},
@@ -691,7 +705,7 @@ def _feature_specs():
                     "kind": {"enum": ["plane", "axis", "point", "cs"]},
                     "attachment": _SUBELEMENT_SELECTOR_SCHEMA,
                     "map_mode": {"type": "string", "default": "FlatFace"},
-                    "offset": _QUANTITY_SCHEMA,
+                    "offset": _LENGTH_QUANTITY_SCHEMA,
                 },
                 ["body", "name", "kind", "attachment"],
             ),
