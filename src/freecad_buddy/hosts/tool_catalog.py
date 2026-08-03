@@ -225,8 +225,8 @@ def _quantity_schema(units: list[str]) -> dict:
 
 _LENGTH_QUANTITY_SCHEMA = _quantity_schema(["mm"])
 _ANGLE_QUANTITY_SCHEMA = _quantity_schema(["deg"])
-# The dimension of a constraint datum depends on the target constraint's type, resolved at call
-# time, so this one field legitimately takes either unit.
+# For fields whose dimension is chosen at call time: a constraint datum's, from the target
+# constraint's type, and a pattern's offset, from the pattern kind.
 _QUANTITY_SCHEMA = _quantity_schema(["mm", "deg"])
 # The contracts Selector (contracts/document.py); sketch tools resolve the mapped_name variant.
 _SUBELEMENT_SELECTOR_SCHEMA = {

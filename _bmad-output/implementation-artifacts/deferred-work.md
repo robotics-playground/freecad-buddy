@@ -1227,3 +1227,13 @@ The operator's principle, now recorded in CLAUDE.md: a field FreeCAD accepts as 
 
 Not a blanket drop. "FreeCAD has a default" does not always mean "the caller should omit it" — a pad with no `length` is legal to FreeCAD and useless as an instruction, and an intent-bearing `name` has no FreeCAD counterpart at all. Each list needs a per-field ruling against the measured default, and each drop is a wire-contract change that may touch existing tests and callers, which is why this is its own pass rather than folded into DW-79. Fix: probe each tool's target type for its defaults, compare against the declared `required` list, and rule per field.
 status: open
+
+### DW-105: `feature_pattern`'s `offset` was absent from the wire schema, making offset-mode patterns unreachable
+origin: DW-82 implementation, 2026-08-03
+severity: medium
+location: src/freecad_buddy/hosts/tool_catalog.py (`feature_pattern` schema)
+reason: `feature_pattern` implements two spacing behaviours — an extent mode that spreads occurrences across a total `length`/`angle`, and an offset mode that steps by a fixed `offset` (`_PATTERN_OFFSET_MODES`, `features.py:63`). The use case reads an `offset` argument and validates it as a length for a linear pattern and an angle for a polar one (`features.py:1356`/`1358`). The wire schema declared `length`, `angle` and `mode` but **never declared `offset`**, and the schema sets `additionalProperties: False`, so any caller sending it was refused at the input-schema gate. The offset-mode half of the tool was therefore unreachable over MCP, exactly as the whole feature surface was before `feature_body_create` existed.
+status: done 2026-08-03
+resolution: closed by commit df811c7, which added `"offset": _QUANTITY_SCHEMA` while splitting the quantity schemas for DW-82. Found by the implementer while executing that plan: the plan's mapping table named a row for the field, and there was nothing to retarget because the key did not exist. The wide schema is correct for it — the dimension is chosen at runtime by `kind`, so narrowing it to millimetres would refuse every polar pattern that steps by offset.
+
+Recorded as its own entry rather than folded into DW-82 because it is a different defect: DW-82 was a field whose declared type was too permissive, this was a field that was never declared at all.
