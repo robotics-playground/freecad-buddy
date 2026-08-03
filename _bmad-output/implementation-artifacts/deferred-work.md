@@ -843,7 +843,14 @@ source_spec: `spec-3-3-sketch-tools.md`
 severity: low
 location: src/freecad_buddy/usecases/sketches.py (`_LENGTH_UNITS`, `_quantity_value`), src/freecad_buddy/hosts/tool_catalog.py (`_QUANTITY_SCHEMA`)
 reason: The catalog types `unit` as a bare `{"type": "string", "description": "explicit unit, e.g. mm or deg"}` with no enum, so `cm`, `in` and `m` validate at the MCP boundary and are then rejected by the use case. An agent working a project configured in inches will reasonably send `in` and get a rejection the schema gave it no way to anticipate. The minimal-contract choice (mm only, no conversion) is defensible and matches the internal-units convention, but the schema should carry the enum so the boundary rejects what the use case rejects. Fix: put `enum: ["mm"]` / `enum: ["deg"]` on the length and angle quantity schemas, which means splitting the shared `_QUANTITY_SCHEMA` in two, or accept and convert the other units via `Base.Quantity`. A wire-schema change, so it wants a deliberate pass.
-status: open
+status: done 2026-08-03
+resolution: resolved by commit df811c7. `_QUANTITY_SCHEMA` splits into three by dimension: `enum: ["mm"]` for lengths, `enum: ["deg"]` for angles, and both for the three fields whose dimension is chosen at call time — a sketch constraint's `value`, `sketch_set_datum`'s `value`, and `feature_pattern`'s `offset` (a length for a linear pattern, an angle for a polar one).
+
+Conversion was available and declined: `Base.Quantity` converts natively (`1 in -> 25.4 mm`, `1.5708 rad -> 90.0002 deg`), but it would convert silently at 20 call sites and needs its own rounding decision — note the radian case does not land on exactly 90.
+
+Verified over live MCP on a direct tool call: `feature_pad` with `unit: "mm"` reaches the use case and returns an envelope, while `"in"` and `"deg"` are both refused at the input-schema gate with no envelope at all. The `deg`-on-a-length case is a gain beyond the reported defect — that call previously passed the boundary and failed later.
+
+**One limit found while verifying, worth knowing before relying on the gate.** The enum binds a DIRECT tool call. It does not bind a call routed through `preview_dry_run`, whose `operation.args` is typed as a generic object, so the inner tool's schema is not applied to it: a preview carrying `unit: "in"` reaches the use case and is refused there instead. The rejection still happens, one layer later and as an `INVALID_INPUT` envelope rather than a protocol error. Tightening that would mean `preview_dry_run` validating `args` against the named tool's schema, which is its own change.
 
 ### DW-83: Every sketch tool recomputes the document outside the mutation bracket
 origin: review-adversarial-general
