@@ -885,10 +885,18 @@ source_spec: `spec-3-3-sketch-tools.md`
 severity: low
 location: src/freecad_buddy/usecases/sketches.py (`sketch_set_datum`, `_DIMENSIONAL`)
 reason: The tool rejects any target whose `constraint_type` is outside `_DIMENSIONAL`, but `SketchObjectConstraints.cpp:197-198` admits two more: `if (!vals[ConstrId]->isDimensional() && type != Tangent && type != Perpendicular) return -1;`. The comment directly above it documents the semantics — for tangency, `value == 0` is autodecide, `Pi/2` external and `-Pi/2` internal — so a datum on those types selects a tangency sense rather than a size. The tool therefore makes a real, source-documented capability unreachable. This is plausibly a deliberate scope cut (the story enumerates dimensional datums only, and the sense-selection semantics need their own wire vocabulary and validation rather than the length/angle quantity the tool accepts today), which is why it is deferred rather than patched: widening it silently would ship a datum path whose units mean something different from every other datum. Fix: decide whether the tangency-sense datum is in scope; if it is, give it an explicit enum-shaped input rather than reusing the `Quantity`, and document the three-value semantics on the tool.
-status: open
+status: done 2026-08-04
 ruling 2026-08-03: fix as option A — expose the capability rather than document the refusal. The operator's direction is to follow FreeCAD and reach all of its functionality, so a datum FreeCAD accepts must not stay unreachable.
 
 The sense is expressed as a NAMED enum (`autodecide` / `external` / `internal`), not as the shared `{value, unit}` angle. `SketchObjectConstraints.cpp:195` documents the mapping — `0` autodecide, `+Pi/2` external, `-Pi/2` internal — and the tool performs it. Reusing the quantity field would make one input mean a size on every other datum type and a three-way sense here, which is the inconsistency this entry warned about; a named enum cannot be confused with a measurement.
+
+resolution: resolved by commits cccea73 (use case + tests, see the note below), 8b64e19 (fixture) and 4184d38 (wire schema). `sketch_set_datum` takes an optional `sense` — `autodecide`, `external` or `internal` — mapped in the use case to the radian value `SketchObjectConstraints.cpp:196` documents: 0, +Pi/2, -Pi/2. Exactly one of `value` and `sense` applies, enforced in the use case as `sketch_create` already does for its `plane`/`face` pair. The driving check moved above the type branch so it guards both kinds.
+
+Verified over live MCP on FreeCAD 1.1.1: `sense="external"` on a Tangent between two pinned circles commits `OK`, and a direct call with `sense="sideways"` is refused at the input-schema gate with no envelope.
+
+**What this does not prove.** The tests establish that each of the three senses is ACCEPTED and commits, not that each produces DIFFERENT geometry: collapsing all three to 0.0 still passes, because every value is legal. Distinguishing them needs a geometric assertion on the resulting tangency, which is its own piece of work and was deliberately left undone rather than claimed.
+
+Two process notes so the history is readable. The implementation landed under commit cccea73, whose message describes only a plan correction — the controller ran `git add -A` while fixing the plan mid-task and swept up the implementer's in-progress work. The code is correct and reviewed; only the commit boundary is wrong, and it is left as-is rather than rewriting shared history. Separately, the first fixture draft was under-constrained: a Tangent between two free circles leaves DoF=5 while `post_verify` requires a committed sketch to be fully constrained, so it failed for a reason unrelated to the datum. The implementer diagnosed that and stopped rather than redesign the brief.
 
 ### DW-87: Several constraint types validate a supplied `third` or position and then discard it
 origin: review-edge-case-hunter
