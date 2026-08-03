@@ -84,8 +84,15 @@ In-FreeCAD:
 3. A `?`-prefixed value survives into the block unfiltered.
 4. A pair the build cannot probe is absent, not empty.
 
-External: `CapabilityBanner` carries `enums`; the generated schema types it as an object of
-objects of string arrays; `gen_schemas --check` reports no drift.
+External: `CapabilityBanner` carries `enums` and `gen_schemas --check` reports no drift.
+
+The generated schema types `enums` as a bare `{"type": "object"}`, not as an object of objects of
+string arrays. That is a pre-existing limitation of the generator — `_schema_for` maps every
+`dict[...]` annotation to `{"type": "object"}` with no key or value typing, and several existing
+contract fields are already emitted that way. Narrowing it would mean teaching the generator to
+emit `additionalProperties` for parameterised dicts, which is its own change and is not in scope
+here. The wire value is still validated by the required-field check; only its interior shape is
+unconstrained.
 
 ## What this does not do
 

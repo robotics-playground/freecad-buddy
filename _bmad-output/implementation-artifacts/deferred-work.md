@@ -936,7 +936,20 @@ source_spec: `spec-3-4-feature-tools.md`
 severity: medium
 location: src/freecad_buddy/usecases/features.py (`feature_pattern`), src/freecad_buddy/hosts/tool_catalog.py (`feature_pattern` schema)
 reason: The pattern `Mode` enumeration is spelled differently on the two blocking legs, not merely ordered differently. Verified: FreeCAD 1.0.0 `FeatureLinearPattern.cpp` declares `ModeEnums[] = {"length", "offset"}` and `FeaturePolarPattern.cpp` declares `{"angle", "offset"}`; FreeCAD 1.1.1 (probed live) reports `['Extent', 'Spacing']` for both, the values having moved to `Part/App/LinearPatternExtension.cpp:50` and `PolarPatternExtension.cpp:51`. `TransformMode` diverges the same way: `{"Transform tool shapes", ...}` on 1.0.0 versus `['Features', 'Whole shape']` on 1.1.1. The tool handles this correctly — it validates against `getEnumerationsOfProperty` at call time and leaves `Mode` unset when the caller omits it, so the FreeCAD default applies and both legs work — but it means no literal `mode` string a caller sends is valid on both legs, and the tool's JSON schema types `mode` as a bare `{"type": "string"}` with no enum, so a client cannot discover the legal set without a live call. An agent that learns `mode: "Extent"` against 1.1.x gets `INVALID_INPUT` on the 1.0.x leg. This also contradicts the "probed identical across legs" claim for `Mode`/`TransformMode` in `spec-3-4-feature-tools.md`'s Design Notes, which was read from the vendored 1.2-dev checkout rather than from tag 1.0.0. Fix: either expose the live enumeration through `query_capabilities` so a client can read the legal set for the running build, or add a shim accessor mapping a leg-independent wire vocabulary onto whichever spelling the build exposes, the way `extrude_symmetric` already hides the `Midplane`/`SideType` divergence.
-status: open
+status: done 2026-08-03
+resolution: resolved by commit 9abc722. `query_capabilities` now carries an `enums` block reporting the live `getEnumerationsOfProperty` reading for the ten `(type_id, property)` pairs the feature tools validate, so a client can discover the legal set for the build it is talking to.
+
+Widened past the single property this entry names: `_checked_enum` guards six fixed properties across ten pairs, all with the same discoverability gap, and covering them cost the same machinery as covering one. `feature_set_parameters` is excluded because it validates whatever property the caller names, so its set is open.
+
+Values are reported verbatim in FreeCAD's own order, including the `?`-prefixed member `Pad.Type` carries. Measured before deciding: assigning `?TwoLengths` succeeds and it reads back unchanged, so it is a legal value on this build rather than a disabled member to filter away.
+
+The values are deliberately NOT baked into the tools' JSON schemas. A JSON Schema `enum` is static while these are build-dependent, so hardcoding one would state as fixed the very thing that varies — which is the defect, not the fix.
+
+Verified over live MCP on FreeCAD 1.1.1 by contrast rather than by presence: the block reports `['Extent', 'Spacing']` for a linear pattern's `Mode`; driving `feature_pattern` with the reported `Extent` returns OK, while the 1.0.x spelling `length` is refused `INVALID_INPUT: mode 'length' is not one of ['Extent', 'Spacing']`. The rejection quotes the same list the block reports, so the block is authoritative rather than decorative.
+
+**This does not make one literal value work on both legs** — nothing can, because the two FreeCAD versions genuinely disagree on the spelling. It lets a client learn the legal set for the build in front of it, which is the most that is true. The 1.0.x spelling cannot be checked from a 1.1.1 host; that leg is covered by CI.
+
+One limitation recorded so it is not read as stronger than it is: the generated schema types `enums` as a bare `{"type": "object"}` with no inner structure. That is a pre-existing generator limitation — `_schema_for` maps every `dict[...]` annotation that way and several existing contract fields are already emitted so — not something this change introduced.
 
 ### DW-93: The G2 fault scorer stays blocked on the TNP guard and the unresolved `planted_op` callables
 origin: story-3-4-feature-tools implementation
