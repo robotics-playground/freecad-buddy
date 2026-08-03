@@ -813,6 +813,9 @@ severity: low
 location: src/freecad_buddy/contracts/mutation.py, src/freecad_buddy/contracts/jsonschema/mutation.schema.json
 reason: Every field of `MutationBlock`, `PostVerifyBlock`, `TnpAuditBlock` and `RefFinding` is optional to the type checker (`total=False`, with `# required` only as a comment), while the generated schema lists six as `required`. A producer omitting `rollback_proven` type-checks clean and fails only at wire validation; the same split is why `params_digest` could be declared and pinned by a test yet never populated until this pass. The schema also sets no `additionalProperties: false`, so a misspelled field validates while the real one silently defaults. Fix: split the required keys into a `total=True` base class per block and close the schema objects — a contracts-wide change affecting the other generated schemas, so it wants one deliberate pass rather than a drive-by.
 status: open
+ruling 2026-08-03: fix as option A — split the required keys into a `total=True` base class per block and close the schema with `additionalProperties: false`. The type/schema split is proven, not argued: an empty `MutationBlock` type-checks clean while the schema rejects it with `'transaction_id' is a required property`, and `additionalProperties` is measurably absent, so a misspelled field is accepted and the real one silently defaults.
+
+The operator's wider principle — the wire contract mirrors FreeCAD's own optionality — does not apply to these four blocks: `MutationBlock`, `PostVerifyBlock`, `TnpAuditBlock` and `RefFinding` have no FreeCAD counterpart, and `transaction_id`/`rollback_proven` are bridge-invented. By that principle they are ours to decide, so the required set stays as the schema already declares it. The principle is recorded in CLAUDE.md and audited separately by DW-104.
 
 ### DW-80: `sketcher_available()` caches a transient import failure for the process lifetime
 origin: review-adversarial-general
@@ -876,6 +879,9 @@ severity: low
 location: src/freecad_buddy/usecases/sketches.py (`sketch_set_datum`, `_DIMENSIONAL`)
 reason: The tool rejects any target whose `constraint_type` is outside `_DIMENSIONAL`, but `SketchObjectConstraints.cpp:197-198` admits two more: `if (!vals[ConstrId]->isDimensional() && type != Tangent && type != Perpendicular) return -1;`. The comment directly above it documents the semantics — for tangency, `value == 0` is autodecide, `Pi/2` external and `-Pi/2` internal — so a datum on those types selects a tangency sense rather than a size. The tool therefore makes a real, source-documented capability unreachable. This is plausibly a deliberate scope cut (the story enumerates dimensional datums only, and the sense-selection semantics need their own wire vocabulary and validation rather than the length/angle quantity the tool accepts today), which is why it is deferred rather than patched: widening it silently would ship a datum path whose units mean something different from every other datum. Fix: decide whether the tangency-sense datum is in scope; if it is, give it an explicit enum-shaped input rather than reusing the `Quantity`, and document the three-value semantics on the tool.
 status: open
+ruling 2026-08-03: fix as option A — expose the capability rather than document the refusal. The operator's direction is to follow FreeCAD and reach all of its functionality, so a datum FreeCAD accepts must not stay unreachable.
+
+The sense is expressed as a NAMED enum (`autodecide` / `external` / `internal`), not as the shared `{value, unit}` angle. `SketchObjectConstraints.cpp:195` documents the mapping — `0` autodecide, `+Pi/2` external, `-Pi/2` internal — and the tool performs it. Reusing the quantity field would make one input mean a size on every other datum type and a three-way sense here, which is the inconsistency this entry warned about; a named enum cannot be confused with a measurement.
 
 ### DW-87: Several constraint types validate a supplied `third` or position and then discard it
 origin: review-edge-case-hunter
@@ -1210,3 +1216,14 @@ The precheck owns validation FreeCAD does not perform. Measured on 1.1.1: a sket
 Verified over live MCP against the real `box-10-20-30.FCStd`: the adopted Body reports the fixture's 6000.0, and a 6x12x5 pad on its top face yields 6360.0 with the bbox growing to [10, 20, 35]. The fixture was closed without saving.
 
 **This removes the fixture blocker only; it does not make the 35 cases run.** They still need the command resolver G2.1 reports, and their `case.yaml` files carry no `tool`/`args` for a driver to execute (DW-96).
+
+### DW-104: The tools' required-field lists were never audited against FreeCAD's own optionality
+origin: operator ruling on DW-79, 2026-08-03
+severity: medium
+location: src/freecad_buddy/hosts/tool_catalog.py (17 `required` lists across the sketch and feature tools)
+reason: The wire schemas impose required fields the application does not. Measured on FreeCAD 1.1.1: a bare `PartDesign::LinearPattern` defaults `Occurrences=2`, `Length=100.0 mm`, `Mode='Extent'`, `Reversed=False` and `TransformMode='Features'` — none is required — yet `feature_pattern` lists `occurrences` as required, so the bridge refuses a call FreeCAD would accept and fill in. Seventeen `required` lists exist across the sketch and feature tools and none has been checked against the underlying defaults.
+
+The operator's principle, now recorded in CLAUDE.md: a field FreeCAD accepts as optional is optional on the wire, a field it requires is required, and fields the bridge invents are ours to decide.
+
+Not a blanket drop. "FreeCAD has a default" does not always mean "the caller should omit it" — a pad with no `length` is legal to FreeCAD and useless as an instruction, and an intent-bearing `name` has no FreeCAD counterpart at all. Each list needs a per-field ruling against the measured default, and each drop is a wire-contract change that may touch existing tests and callers, which is why this is its own pass rather than folded into DW-79. Fix: probe each tool's target type for its defaults, compare against the declared `required` list, and rule per field.
+status: open

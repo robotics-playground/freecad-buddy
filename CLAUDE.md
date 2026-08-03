@@ -8,6 +8,8 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 - **Any FreeCAD enum value, preference key, parameter name, or API semantic MUST be confirmed against the source under `docs/references/FreeCAD/` before you write code — never assume ordering/naming/values from memory.** FreeCAD enums are often non-sequential (e.g. `AntiAliasing::MSAA8x = 4`, `MSAA6x = 5`). See [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md).
+- **The wire contract mirrors FreeCAD's own optionality.** A field FreeCAD accepts as optional is optional here; a field FreeCAD requires is required here. Do not invent a stricter contract than the application has — a bare `PartDesign::LinearPattern` defaults `Occurrences=2`, `Length=100mm` and `Mode='Extent'`, so requiring `occurrences` on the wire refuses a call FreeCAD would accept. Fields the bridge invents and FreeCAD has no counterpart for (`transaction_id`, `rollback_proven`, `params_digest`) are ours to decide; state which kind a field is when you add it.
+- **Expose FreeCAD's capability, do not narrow it silently.** Where FreeCAD supports something the tool refuses, that is a gap to close or a scope cut to document — never an unexplained refusal. When the underlying value means something different from its neighbours (a tangency datum's `±Pi/2` selects a *sense*, not a size), give it its own named input rather than overloading the shared one.
 
 ## 2. Simplicity First
 
