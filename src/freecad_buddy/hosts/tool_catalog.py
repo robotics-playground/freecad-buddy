@@ -464,10 +464,16 @@ def _sketch_specs():
                     "sketch": {"type": "string"},
                     "constraint": _CONSTRAINT_REF_SCHEMA,
                     "value": _QUANTITY_SCHEMA,
+                    "sense": {
+                        "enum": ["autodecide", "external", "internal"],
+                        "description": "tangency for a Tangent or Perpendicular constraint",
+                    },
                 },
-                ["sketch", "constraint", "value"],
+                ["sketch", "constraint"],
             ),
-            "Change a driving dimensional constraint's value; mm for lengths, deg for angles.",
+            "Change a driving constraint's datum: 'value' for a dimensional constraint (mm for "
+            "lengths, deg for angles), or 'sense' for a Tangent or Perpendicular. Exactly one "
+            "applies.",
         ),
         _sketch_method(
             "sketch_toggle_construction",

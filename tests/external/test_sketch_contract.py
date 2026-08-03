@@ -381,3 +381,13 @@ def test_no_quantity_field_leaves_its_unit_unconstrained():
         walk(spec.input_schema, spec.name)
 
     assert offenders == []
+
+
+def test_sketch_set_datum_takes_a_value_or_a_sense():
+    """Exactly one applies, which the use case enforces — the schema requires neither."""
+    schema = _specs_by_name()["sketch_set_datum"].input_schema
+
+    assert schema["properties"]["sense"]["enum"] == ["autodecide", "external", "internal"]
+    assert "value" not in schema["required"]
+    assert "sense" not in schema["required"]
+    assert schema["required"] == ["doc", "sketch", "constraint"]
