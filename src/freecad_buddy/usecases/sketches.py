@@ -56,6 +56,11 @@ _THIRD_TYPES = frozenset({"Symmetric", "Angle", "Tangent", "Perpendicular"})
 _ANGLE_TYPES = frozenset({"Angle"})
 _LENGTH_TYPES = frozenset({"Distance", "DistanceX", "DistanceY", "Radius", "Diameter"})
 _DIMENSIONAL = _LENGTH_TYPES | _ANGLE_TYPES
+# SketchObjectConstraints.cpp:194-197 admits a datum on these two alongside the dimensional
+# types, where the value selects the tangency rather than a size.
+_SENSE_TYPES = frozenset({"Tangent", "Perpendicular"})
+# The radian value each named sense maps to, from the same source line.
+_SENSE_VALUES = {"autodecide": 0.0, "external": math.pi / 2, "internal": -math.pi / 2}
 # Datum sign rules verified against SketchObjectConstraints.cpp:200-204: setDatum refuses a
 # non-positive Radius/Diameter/Weight and a zero Distance, and constrains no other type.
 _POSITIVE_DATUM_TYPES = frozenset({"Radius", "Diameter", "Weight"})
@@ -983,6 +988,7 @@ def sketch_set_datum(
     sketch: str | None = None,
     constraint: object = None,
     value: dict | None = None,
+    sense: str | None = None,
     confirm: dict | None = None,
     audit_sink: object = None,
 ) -> ResultEnvelope:
@@ -991,24 +997,39 @@ def sketch_set_datum(
     ``value`` is a ``{value, unit}`` quantity: ``mm`` for a length constraint, ``deg`` for an
     angle. Angles are converted to radians because ``setDatum`` reads a bare float as radians.
 
-    :raises ValidationError: the sketch or constraint is unknown, the target is not a driving
-        dimensional constraint, or the unit does not match the constraint's dimension.
+    ``sense`` sets the tangency of a ``Tangent`` or ``Perpendicular`` constraint instead:
+    ``autodecide``, ``external`` or ``internal``. Exactly one of ``value`` and ``sense`` applies.
+
+    :raises ValidationError: the sketch or constraint is unknown, the target is not driving,
+        neither or both of ``value`` and ``sense`` were given, ``sense`` names an unknown
+        tangency, or the target's type does not accept the kind of datum given.
     """
     _require_sketcher()
-    if value is None:
-        raise ValidationError("sketch_set_datum requires a 'value' quantity")
+    if (value is None) == (sense is None):
+        raise ValidationError("sketch_set_datum requires exactly one of 'value' and 'sense'")
+    if sense is not None and sense not in _SENSE_VALUES:
+        raise ValidationError(
+            f"sense must be one of {sorted(_SENSE_VALUES)}, got {sense!r}"
+        )
 
     def _target(document: object) -> tuple[object, int, float]:
         sketch_obj = _resolve_sketch(document, sketch)
         index = _resolve_constraint_index(sketch_obj, constraint)
         target = sketch_obj.Constraints[index]
         constraint_type = str(getattr(target, "Type", ""))
+        if not bool(getattr(target, "Driving", True)):
+            raise ValidationError(f"constraint {index + 1} is not driving; its datum is read-only")
+        if sense is not None:
+            if constraint_type not in _SENSE_TYPES:
+                raise ValidationError(
+                    f"constraint {index + 1} is a {constraint_type}; a sense applies only to "
+                    f"{sorted(_SENSE_TYPES)}"
+                )
+            return sketch_obj, index, _SENSE_VALUES[sense]
         if constraint_type not in _DIMENSIONAL:
             raise ValidationError(
                 f"constraint {index + 1} is a {constraint_type}, not a dimensional constraint"
             )
-        if not bool(getattr(target, "Driving", True)):
-            raise ValidationError(f"constraint {index + 1} is not driving; its datum is read-only")
         datum = _positive_datum(constraint_type, value, f"constraint {index + 1}")
         return sketch_obj, index, datum
 
@@ -1025,6 +1046,7 @@ def sketch_set_datum(
         "sketch": sketch,
         "constraint": constraint,
         "value": value,
+        "sense": sense,
         "confirm": confirm,
     }
     return _sketch_mutation(

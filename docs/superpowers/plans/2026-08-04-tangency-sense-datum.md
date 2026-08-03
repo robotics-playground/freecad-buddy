@@ -43,8 +43,14 @@ if (!vals[ConstrId]->isDimensional() && type != Tangent && type != Perpendicular
     return -1;
 ```
 
-Confirmed live on FreeCAD 1.1.1 against a `Tangent` between two circles: `setDatum` accepts `0.0`,
-`+pi/2` and `-pi/2`, and the sketch stays valid after each.
+Confirmed live on FreeCAD 1.1.1 against a **fully constrained** `Tangent` between two circles:
+`setDatum` accepts `0.0`, `+pi/2` and `-pi/2`, and after each the sketch reports
+`isValid=True`, `DoF=0`, `FullyConstrained=True`.
+
+The "fully constrained" part is load-bearing and was missed in a first draft of this plan.
+`post_verify` requires it on every commit, and a Tangent between two otherwise-free circles leaves
+`DoF=5` — so an unpinned fixture fails the commit with `SPEC_FAILED` for a reason that has nothing
+to do with the datum being tested. The fixture below pins both circles.
 
 ---
 
@@ -86,7 +92,12 @@ class TangencySenseTest(_SketchFixture):
         return None if sketch is None else int(sketch.GeometryCount)
 
     def tangent_sketch(self):
-        """A sketch holding two circles and the Tangent between them, returning its 1-based id."""
+        """A fully constrained sketch with a Tangent between two circles; returns its 1-based id.
+
+        The circles are pinned as well as made tangent. ``post_verify`` requires every committed
+        sketch to be fully constrained, and a Tangent alone leaves five degrees of freedom, so an
+        unpinned pair would fail the commit for a reason unrelated to the datum under test.
+        """
         import Part
         import Sketcher
 
@@ -100,7 +111,12 @@ class TangencySenseTest(_SketchFixture):
             Part.Circle(App.Vector(12, 0, 0), App.Vector(0, 0, 1), 4.0), False
         )
         index = sketch.addConstraint(Sketcher.Constraint("Tangent", 0, 1))
+        sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 3, -1, 1))
+        sketch.addConstraint(Sketcher.Constraint("Radius", 0, 5.0))
+        sketch.addConstraint(Sketcher.Constraint("Radius", 1, 4.0))
+        sketch.addConstraint(Sketcher.Constraint("PointOnObject", 1, 3, -1))
         document.recompute()
+        self.assertEqual(sketch.DoF, 0, "the fixture must be fully constrained")
         return index + 1
 
     def test_each_sense_commits_on_a_tangent_constraint(self):

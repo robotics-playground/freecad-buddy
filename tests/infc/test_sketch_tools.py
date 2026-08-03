@@ -1411,6 +1411,120 @@ class BodyAdoptionTest(_SketchFixture):
         )
 
 
+class TangencySenseTest(_SketchFixture):
+    """FreeCAD admits a datum on Tangent and Perpendicular, where it selects a sense.
+
+    SketchObjectConstraints.cpp:194-197 accepts those two alongside the dimensional types, and
+    the value chooses the tangency: 0 autodecide, +Pi/2 external, -Pi/2 internal.
+    """
+
+    def geometry_count(self):
+        sketch = self.document().getObject("Circles")
+        return None if sketch is None else int(sketch.GeometryCount)
+
+    def tangent_sketch(self):
+        """A sketch holding two circles and the Tangent between them, returning its 1-based id."""
+        import Part
+        import Sketcher
+
+        self.create("Circles", plane="XY")
+        document = self.document()
+        sketch = document.getObject("Circles")
+        sketch.addGeometry(
+            Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 5.0), False
+        )
+        sketch.addGeometry(
+            Part.Circle(App.Vector(12, 0, 0), App.Vector(0, 0, 1), 4.0), False
+        )
+        index = sketch.addConstraint(Sketcher.Constraint("Tangent", 0, 1))
+        document.recompute()
+        return index + 1
+
+    def test_each_sense_commits_on_a_tangent_constraint(self):
+        # All three are asserted, not just the first: a mapping that sent every sense to the
+        # same radian value would pass a single-sense test.
+        for sense in ("autodecide", "external", "internal"):
+            with self.subTest(sense=sense):
+                constraint_id = self.tangent_sketch()
+
+                envelope = sketches.sketch_set_datum(
+                    self.registry,
+                    doc=self.handle,
+                    sketch="Circles",
+                    constraint=constraint_id,
+                    sense=sense,
+                )
+
+                self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+                self.assertTrue(self.document().getObject("Circles").isValid())
+                self.document().removeObject("Circles")
+                self.document().recompute()
+
+    def test_a_value_on_a_tangent_is_rejected_before_the_bracket(self):
+        constraint_id = self.tangent_sketch()
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_set_datum,
+            self.registry,
+            doc=self.handle,
+            sketch="Circles",
+            constraint=constraint_id,
+            value=mm(5.0),
+        )
+
+    def test_a_sense_on_a_dimensional_constraint_is_rejected_before_the_bracket(self):
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+
+        self.assert_rejected_pre_bracket(
+            lambda: int(self.document().getObject("Rect").GeometryCount),
+            sketches.sketch_set_datum,
+            self.registry,
+            doc=self.handle,
+            sketch="Rect",
+            constraint=10,
+            sense="external",
+        )
+
+    def test_neither_value_nor_sense_is_rejected(self):
+        constraint_id = self.tangent_sketch()
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_set_datum,
+            self.registry,
+            doc=self.handle,
+            sketch="Circles",
+            constraint=constraint_id,
+        )
+
+    def test_both_value_and_sense_is_rejected(self):
+        constraint_id = self.tangent_sketch()
+
+        self.assert_rejected_pre_bracket(
+            self.geometry_count,
+            sketches.sketch_set_datum,
+            self.registry,
+            doc=self.handle,
+            sketch="Circles",
+            constraint=constraint_id,
+            value=mm(5.0),
+            sense="external",
+        )
+
+    def test_a_dimensional_datum_still_commits_with_a_value(self):
+        # Pins that widening the tool did not disturb the path that already worked.
+        self.create("Rect", plane="XY")
+        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+
+        envelope = sketches.sketch_set_datum(
+            self.registry, doc=self.handle, sketch="Rect", constraint=10, value=mm(20.0)
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+
+
 class NoTransactionLeftOpenTest(_SketchFixture):
     """AD-5 asserted behaviourally: no sketch tool leaves a transaction open on any exit path.
 
