@@ -28,10 +28,13 @@ Split the shared `_QUANTITY_SCHEMA` into three, by dimension:
 | `_ANGLE_QUANTITY_SCHEMA` | `enum: ["deg"]` | start_angle, end_angle, taper_angle, angle, … |
 | `_QUANTITY_SCHEMA` | `enum: ["mm", "deg"]` | the two dimension-ambiguous fields below |
 
-**Two fields legitimately accept either**, and must keep the wider enum rather than being forced into one:
+**Three fields legitimately accept either**, and must keep the wider enum rather than being forced into one:
 
 - `sketch_add_constraint` / `sketch_add_geometry` `constraints[].value` — the dimension depends on the constraint's *type*, decided at runtime: `_ANGLE_TYPES = {"Angle"}` takes degrees, `_LENGTH_TYPES = {Distance, DistanceX, DistanceY, Radius, Diameter}` takes millimetres.
 - `sketch_set_datum` `value` — same, resolved from the target constraint.
+- `feature_pattern` `offset` — a length for a linear pattern, an angle for a polar one, chosen at runtime by `kind`. `features.py:1356` calls `_positive_length` and `:1358` calls `_bounded_angle` on the same field. Narrowing it to `mm` would refuse every polar pattern that steps by offset.
+
+`feature_datum`'s `offset` shares the name but is a length only, and takes the narrow schema.
 
 Narrowing either to one unit would refuse a call the code accepts, which is the mirror of the defect being fixed.
 
