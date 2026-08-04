@@ -114,21 +114,51 @@ def test_mutation_block_schemas_are_closed(name):
     assert body["additionalProperties"] is False
 
 
-def test_a_misspelled_mutation_field_is_rejected():
-    schema = _load("mutation")
-    block = {
+def _valid_mutation_block() -> dict:
+    """A block that satisfies every required key, so a test can introduce exactly one defect."""
+    return {
         "transaction_id": "0",
-        "fingerprint_before": {},
+        "fingerprint_before": {
+            "schema": "fcb.fingerprint/1",
+            "serializer": "exportBinary",
+            "objects": [],
+            "digest": "d",
+        },
         "fingerprint_after": None,
-        "post_verify": {},
+        "post_verify": {
+            "recompute_clean": True,
+            "is_valid": True,
+            "fully_constrained": None,
+            "tnp_audit": {"status": "CLEAN", "element_map_version": None, "findings": []},
+            "passed": True,
+        },
         "rolled_back": False,
         "rollback_proven": None,
-        "roled_back": True,
     }
 
+
+def test_a_valid_mutation_block_is_accepted():
+    """Guards the fixture itself: if this fails, the misspelling test proves nothing."""
+    jsonschema.Draft202012Validator(_load("mutation")).validate(_valid_mutation_block())
+
+
+def test_a_misspelled_mutation_field_is_rejected():
+    block = _valid_mutation_block()
+    block["roled_back"] = True
+
     with pytest.raises(jsonschema.ValidationError):
-        jsonschema.Draft202012Validator(schema).validate(block)
+        jsonschema.Draft202012Validator(_load("mutation")).validate(block)
 ```
+
+**The nested blocks must be fully populated, and this is the point of the test.** A first draft
+used `fingerprint_before: {}` and `post_verify: {}`. Those fail their own nested `required` checks,
+so the block was rejected whether or not `MutationBlock` was closed — the test passed for the wrong
+reason and could not falsify the closure. Measured: with valid nested blocks the typo alone is
+rejected when the root is closed and **accepted** when it is open, which is what makes the Step 7
+check meaningful.
+
+`test_a_valid_mutation_block_is_accepted` exists to catch that class of mistake directly: if the
+fixture stops being valid, it fails loudly instead of quietly weakening its neighbour.
 
 `pytest`, `gen_schemas` and `_load` are already available in this file. `jsonschema` is NOT imported by name — the file imports `Draft202012Validator` directly — so add `import jsonschema` for the test code above to run.
 
@@ -267,7 +297,11 @@ A producer inside this repo that omits a now-required key will surface here as a
 
 - [ ] **Step 7: Verify the tests can fail (falsifiability)**
 
-Remove `"MutationBlock"` from `CLOSED_TYPES`, regenerate, re-run the external suite. Expected: **exactly two** failures — the closure test for `MutationBlock` and the misspelling test. Restore, regenerate, confirm green.
+Remove `"MutationBlock"` from `CLOSED_TYPES`, regenerate, re-run the external suite. Expected: **exactly two** failures — `test_mutation_block_schemas_are_closed[MutationBlock]` and `test_a_misspelled_mutation_field_is_rejected`.
+
+`test_a_valid_mutation_block_is_accepted` must still PASS: opening the root cannot make a valid block invalid. If it fails, the fixture is wrong, not the closure.
+
+Restore, regenerate, confirm green.
 
 - [ ] **Step 8: Commit**
 
