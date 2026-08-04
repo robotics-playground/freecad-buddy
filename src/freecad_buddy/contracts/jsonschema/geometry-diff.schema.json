@@ -243,6 +243,7 @@
       "type": "object"
     },
     "RefFinding": {
+      "additionalProperties": false,
       "properties": {
         "detail": {
           "anyOf": [
@@ -326,6 +327,7 @@
       "type": "object"
     },
     "TnpAuditBlock": {
+      "additionalProperties": false,
       "properties": {
         "element_map_version": {
           "anyOf": [

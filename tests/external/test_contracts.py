@@ -7,6 +7,7 @@ import typing
 from pathlib import Path
 from types import MappingProxyType
 
+import jsonschema
 import pytest
 from jsonschema import Draft202012Validator
 
@@ -1189,3 +1190,69 @@ def test_guard_coherence_only_applies_when_a_rate_is_declared():
         banner_extra={"wilson_ci": {**_WILSON_CI, "r": 99}},
     )
     assert require_wilson_ci_for_rates(report) is None
+
+
+# --------------------------------------------------------------------------- #
+# mutation blocks: required keys and closed schemas
+# --------------------------------------------------------------------------- #
+
+MUTATION_BLOCKS = ("MutationBlock", "PostVerifyBlock", "TnpAuditBlock", "RefFinding")
+
+
+@pytest.mark.parametrize("name", MUTATION_BLOCKS)
+def test_mutation_block_required_keys_match_the_manifest(name):
+    """The TypedDict states what is required; the manifest must agree, or they drift.
+
+    A `# required` comment is prose the type checker cannot read, which is how a producer could
+    omit a mandatory field, type-check clean, and fail only at wire validation.
+    """
+    from freecad_buddy.contracts import mutation
+
+    block = getattr(mutation, name)
+
+    assert set(block.__required_keys__) == set(gen_schemas.REQUIRED_FIELDS[name])
+
+
+@pytest.mark.parametrize("name", MUTATION_BLOCKS)
+def test_mutation_block_schemas_are_closed(name):
+    """A misspelled field must be rejected, not silently defaulted."""
+    schema = _load("mutation")
+    body = schema if name == "MutationBlock" else schema["$defs"][name]
+
+    assert body["additionalProperties"] is False
+
+
+def _valid_mutation_block() -> dict:
+    """A block that satisfies every required key, so a test can introduce exactly one defect."""
+    return {
+        "transaction_id": "0",
+        "fingerprint_before": {
+            "schema": "fcb.fingerprint/1",
+            "serializer": "exportBinary",
+            "objects": [],
+            "digest": "d",
+        },
+        "fingerprint_after": None,
+        "post_verify": {
+            "recompute_clean": True,
+            "is_valid": True,
+            "fully_constrained": None,
+            "tnp_audit": {"status": "CLEAN", "element_map_version": None, "findings": []},
+            "passed": True,
+        },
+        "rolled_back": False,
+        "rollback_proven": None,
+    }
+
+
+def test_a_valid_mutation_block_is_accepted():
+    """Guards the fixture itself: if this fails, the misspelling test proves nothing."""
+    jsonschema.Draft202012Validator(_load("mutation")).validate(_valid_mutation_block())
+
+
+def test_a_misspelled_mutation_field_is_rejected():
+    block = _valid_mutation_block()
+    block["roled_back"] = True
+
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.Draft202012Validator(_load("mutation")).validate(block)

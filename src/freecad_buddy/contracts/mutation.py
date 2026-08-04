@@ -25,39 +25,52 @@ TnpStatus = Literal["CLEAN", "FLAGGED", "UNSUPPORTED"]
 RollbackProof = Literal["rolled_back_verified", "rolled_back_via_snapshot"]
 
 
-class RefFinding(TypedDict, total=False):
-    owner: str  # required
-    prop: str  # required
+class _RefFindingRequired(TypedDict):
+    owner: str
+    prop: str
+    verdict: RefVerdict
+    layer: int
+
+
+class RefFinding(_RefFindingRequired, total=False):
     mapped_before: str | None
     state_after: str | None
-    verdict: RefVerdict  # required
-    layer: int  # required
     detail: str | None
 
 
-class TnpAuditBlock(TypedDict, total=False):
-    status: TnpStatus  # required
-    element_map_version: str | None  # required; None ⇔ no element map
-    findings: list[RefFinding]  # required
+class _TnpAuditRequired(TypedDict):
+    status: TnpStatus
+    element_map_version: str | None  # None ⇔ no element map
+    findings: list[RefFinding]
 
 
-class PostVerifyBlock(TypedDict, total=False):
-    recompute_clean: bool  # required
-    is_valid: bool  # required
+class TnpAuditBlock(_TnpAuditRequired, total=False):
+    pass
+
+
+class _PostVerifyRequired(TypedDict):
+    recompute_clean: bool
+    is_valid: bool
     fully_constrained: bool | None  # None ⇔ no sketch involved
-    tnp_audit: TnpAuditBlock  # required
-    passed: bool  # required
+    tnp_audit: TnpAuditBlock
+    passed: bool
+
+
+class PostVerifyBlock(_PostVerifyRequired, total=False):
     explanation: str | None
 
 
-class MutationBlock(TypedDict, total=False):
+class _MutationRequired(TypedDict):
+    transaction_id: str
+    fingerprint_before: FingerprintRecord
+    fingerprint_after: FingerprintRecord | None
+    post_verify: PostVerifyBlock
+    rolled_back: bool
+    rollback_proven: RollbackProof | None  # None ⇔ no rollback ran
+
+
+class MutationBlock(_MutationRequired, total=False):
     schema: Literal["fcb.mutation/1"]
-    transaction_id: str  # required
-    fingerprint_before: FingerprintRecord  # required
-    fingerprint_after: FingerprintRecord | None  # required
-    post_verify: PostVerifyBlock  # required
-    rolled_back: bool  # required
-    rollback_proven: RollbackProof | None  # required; None ⇔ no rollback ran
     snapshot_path: str | None
     verify_verdict: TerminalStatus | None
     params_digest: str | None

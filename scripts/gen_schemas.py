@@ -141,6 +141,13 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     ],
 }
 
+# Types emitted with ``additionalProperties: false``. A closed type rejects an unknown field
+# rather than silently defaulting the real one, which is a breaking change for any producer
+# sending an extra key — so closure is opt-in per type rather than a blanket default.
+CLOSED_TYPES: frozenset[str] = frozenset(
+    {"MutationBlock", "PostVerifyBlock", "TnpAuditBlock", "RefFinding"}
+)
+
 # Conditional manifest (wire-root type name -> conditional spec). Each entry binds
 # "some entry of an array field carries a discriminator value" to "a field of a nested
 # object is required and non-null", emitted as a Draft-2020-12 ``if``/``then`` pair.
@@ -283,6 +290,8 @@ def _register_def(tp: Any, defs: dict[str, dict]) -> None:
     body: dict = {"type": "object", "properties": properties}
     if required:
         body["required"] = required
+    if name in CLOSED_TYPES:
+        body["additionalProperties"] = False
     defs[name] = body
 
 
@@ -421,6 +430,8 @@ def build_schema(stem: str, tp: Any) -> dict:
     }
     if required:
         schema["required"] = required
+    if tp.__name__ in CLOSED_TYPES:
+        schema["additionalProperties"] = False
     conditional = _conditional(tp.__name__, properties, defs)
     if conditional:
         clash = sorted(schema.keys() & conditional.keys())

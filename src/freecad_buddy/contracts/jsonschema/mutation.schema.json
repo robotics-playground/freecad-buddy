@@ -89,6 +89,7 @@
       "type": "object"
     },
     "PostVerifyBlock": {
+      "additionalProperties": false,
       "properties": {
         "explanation": {
           "anyOf": [
@@ -133,6 +134,7 @@
       "type": "object"
     },
     "RefFinding": {
+      "additionalProperties": false,
       "properties": {
         "detail": {
           "anyOf": [
@@ -193,6 +195,7 @@
       "type": "object"
     },
     "TnpAuditBlock": {
+      "additionalProperties": false,
       "properties": {
         "element_map_version": {
           "anyOf": [
@@ -228,6 +231,7 @@
   },
   "$id": "fcb.mutation/1",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
   "properties": {
     "fingerprint_after": {
       "anyOf": [
