@@ -804,7 +804,13 @@ source_spec: `spec-3-2-mutation-protocol-runtime.md`
 severity: low
 location: src/freecad_buddy/usecases/transaction.py (`post_verify`, `_block`)
 reason: On the `verify_sketch` failure paths `_block(True, True, ...)` hardcodes `is_valid=True`, and on every `verify_shape` failure path `fully_constrained` is passed `None`. `PostVerifyBlock` documents `fully_constrained: None ⇔ no sketch involved`, so a mutation whose pad failed `verify_shape` before the sketch loop ran reports "no sketch involved" when one was touched; likewise an op touching only a sketch reports `is_valid=true` without any shape having been graded. Both are unmeasured values presented as measurements, which the module docstring says it never does. Consequence is confined to how a consumer reads a block that already carries `passed=false` plus a naming `explanation`, so no verdict changes. Fix: add an explicit not-measured encoding distinct from `None`-means-no-sketch, which needs a contracts change and therefore a spec decision.
-status: open
+status: done 2026-08-04
+
+resolution: resolved by commit af15cb8. `PostVerifyBlock.is_valid` and `fully_constrained` gain an explicit `"not_measured"` value, distinct from `None`, applied at the four short-circuit sites where the grading loop never ran.
+
+Four sites, not the three the entry describes. The `if invalid:` gate at `transaction.py:220` also returns above both loops, so its `fully_constrained` is equally unmeasured — while its `recompute_clean=False` and `is_valid=False` stay real, because `_invalid_objects` measured them. At the `verify_sketch` raise both fields become `"not_measured"`, since no shape was graded either. The measured paths are untouched.
+
+The boundary held. Three pre-existing tests read `fully_constrained` and two use `assertFalse`, which passes for `None` but fails for a truthy string; all three drive the path where the value is the measured conjunction. None was modified — editing them would have hidden a sentinel leaking onto a path that did measure, and the review checked for exactly that.
 
 ### DW-79: `MutationBlock` is `total=False` while its JSON Schema marks six fields required
 origin: review-adversarial-general, review-edge-case-hunter
@@ -812,10 +818,20 @@ source_spec: `spec-3-2-mutation-protocol-runtime.md`
 severity: low
 location: src/freecad_buddy/contracts/mutation.py, src/freecad_buddy/contracts/jsonschema/mutation.schema.json
 reason: Every field of `MutationBlock`, `PostVerifyBlock`, `TnpAuditBlock` and `RefFinding` is optional to the type checker (`total=False`, with `# required` only as a comment), while the generated schema lists six as `required`. A producer omitting `rollback_proven` type-checks clean and fails only at wire validation; the same split is why `params_digest` could be declared and pinned by a test yet never populated until this pass. The schema also sets no `additionalProperties: false`, so a misspelled field validates while the real one silently defaults. Fix: split the required keys into a `total=True` base class per block and close the schema objects — a contracts-wide change affecting the other generated schemas, so it wants one deliberate pass rather than a drive-by.
-status: open
+status: done 2026-08-04
 ruling 2026-08-03: fix as option A — split the required keys into a `total=True` base class per block and close the schema with `additionalProperties: false`. The type/schema split is proven, not argued: an empty `MutationBlock` type-checks clean while the schema rejects it with `'transaction_id' is a required property`, and `additionalProperties` is measurably absent, so a misspelled field is accepted and the real one silently defaults.
 
 The operator's wider principle — the wire contract mirrors FreeCAD's own optionality — does not apply to these four blocks: `MutationBlock`, `PostVerifyBlock`, `TnpAuditBlock` and `RefFinding` have no FreeCAD counterpart, and `transaction_id`/`rollback_proven` are bridge-invented. By that principle they are ours to decide, so the required set stays as the schema already declares it. The principle is recorded in CLAUDE.md and audited separately by DW-104.
+
+resolution: resolved by commit f4df065. The four blocks split into `total=True` bases carrying their required keys plus `total=False` subclasses for the optional ones, so the type states what a `# required` comment only claimed: `MutationBlock` 6 required, `PostVerifyBlock` 5, `TnpAuditBlock` 3, `RefFinding` 4. A parametrized test pins each against `gen_schemas.REQUIRED_FIELDS` so the two cannot drift.
+
+The schemas also close with `additionalProperties: false`, which the generator had no support for. Closure is opt-in via a `CLOSED_TYPES` manifest rather than a blanket default, because closing a type is a breaking change for any producer sending an extra field. Both object-body builders needed it — `_register_def` for `$defs` and `build_schema` for the wire root, which never calls `_register_def`; changing only the first would have left `MutationBlock` open as its own root, the one place it matters.
+
+`geometry-diff.schema.json` closes too, and that is correct rather than collateral: `GeometryDiff.tnp_precheck` is a `TnpAuditBlock` filled by the same producer, so a misspelled field is rejected in both wire paths.
+
+A third disagreement surfaced while planning and is fixed by the same change: `PostVerifyBlock.fully_constrained` was already required by the manifest and the schema while carrying no `# required` comment. That is the argument for stating requiredness in the type rather than fixing instances.
+
+One test defect worth recording. The misspelling test first used `{}` for its nested blocks, which fail their own `required` checks, so it was rejected whether or not the root was closed — it passed for the wrong reason and could not falsify the closure. Measured both ways: with valid nested blocks the typo alone is rejected when closed and accepted when open. A `test_a_valid_mutation_block_is_accepted` guard now fails loudly if the fixture stops being valid.
 
 ### DW-80: `sketcher_available()` caches a transient import failure for the process lifetime
 origin: review-adversarial-general
