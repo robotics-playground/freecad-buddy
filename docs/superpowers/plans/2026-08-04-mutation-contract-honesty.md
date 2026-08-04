@@ -69,6 +69,7 @@ A producer omitting `rollback_proven` type-checks clean and fails at wire valida
 | `tests/external/test_contracts.py` | contract/manifest agreement | Modify — extend the anti-drift guard, add schema tests |
 | `tests/infc/test_mutation_protocol.py` | in-FreeCAD behaviour | Modify — add the not-measured tests |
 | `src/freecad_buddy/contracts/jsonschema/mutation.schema.json` | generated | Regenerated, never hand-edited |
+| `src/freecad_buddy/contracts/jsonschema/geometry-diff.schema.json` | generated | Regenerated — it `$ref`s `TnpAuditBlock`, so it closes too |
 
 ---
 
@@ -129,7 +130,7 @@ def test_a_misspelled_mutation_field_is_rejected():
         jsonschema.Draft202012Validator(schema).validate(block)
 ```
 
-`pytest`, `jsonschema`, `gen_schemas` and `_load` are already available in this file — add no imports.
+`pytest`, `gen_schemas` and `_load` are already available in this file. `jsonschema` is NOT imported by name — the file imports `Draft202012Validator` directly — so add `import jsonschema` for the test code above to run.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -241,7 +242,13 @@ git diff --stat src/freecad_buddy/contracts/jsonschema/
 git diff src/freecad_buddy/contracts/jsonschema/mutation.schema.json | head -40
 ```
 
-Expected: only `mutation.schema.json` changes, adding `additionalProperties: false` in five places (the root and four `$defs` — note `MutationBlock` appears only as the root). If any other schema file changes, stop and report: the closure leaked to a type not in the manifest.
+Expected: **two** schema files change.
+
+`mutation.schema.json` gains `additionalProperties: false` on the root plus the `PostVerifyBlock`, `TnpAuditBlock` and `RefFinding` `$defs` — note `MutationBlock` is the root, not a `$def`.
+
+`geometry-diff.schema.json` also gains it, in two places, and that is **correct rather than a leak**. `GeometryDiff.tnp_precheck` is typed `TnpAuditBlock` (`contracts/diff.py:86`), which embeds `RefFinding`, and `_register_def` registers `$defs` by type name — so closing a type closes it everywhere it is referenced. Both schemas describe the same block produced by the same code (`preview._tnp_precheck` returns a `TnpAuditBlock`), so a misspelled field should be rejected in both. Closing it in one and not the other would be the defect.
+
+If a schema changes that carries NEITHER a type from `CLOSED_TYPES` nor a `$ref` to one, stop and report — that would be a real leak.
 
 - [ ] **Step 6: Run everything**
 
