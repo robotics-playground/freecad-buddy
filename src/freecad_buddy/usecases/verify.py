@@ -302,42 +302,56 @@ def verify_shape(
     document's first object is measured. Never recomputes. An unknown object, a null ``Shape``,
     or an unknown assertion ``fn`` raises ``ValidationError``.
     """
+    return registry.with_document(
+        doc, lambda _h, document: read_shape(document, object, checks)
+    )
 
-    def read(_handle: str, document: object) -> ResultEnvelope:
-        if object:
-            obj = _resolve_object(document, object)
-        else:
-            objects = list(document.Objects)
-            if not objects:
-                raise ValidationError("document has no objects to verify")
-            obj = objects[0]
-        shape = _require_shape(obj, obj.Name)
 
-        report: dict = {"subject": {"object": obj.Name}}
-        if not checks:
-            report["checks"] = _measured_facts(shape)
-            report["schema"] = "fcb.validation-report/1"
-            report["banner"] = _banner()
-            report["verdict"] = derive_verdict(report)
-            return _report_envelope(report, summarize_shape(report))
+def read_shape(
+    document: object, object: str | None = None, checks: list | None = None
+) -> ResultEnvelope:
+    """Measure ``object``'s shape on an already-resolved ``document``, holding no registry lock.
 
-        floor = _shape_floor(shape)
-        built = []
-        for check in checks:
-            if not isinstance(check, dict):
-                raise ValidationError(f"check must be an object, got {check!r}")
-            fn = check.get("fn")
-            builder = _ASSERTIONS.get(fn)
-            if builder is None:
-                raise ValidationError(f"unknown assertion fn: {fn!r}")
-            built.append(builder(shape, check.get("expect"), check.get("tol"), floor))
-        report["checks"] = built
+    The registry lock is not reentrant, so a caller already inside ``with_document`` — a mutation
+    reporting the state it just produced — must reach the measurement this way rather than
+    through :func:`verify_shape`, which would deadlock.
+
+    :raises ValidationError: the object is unknown, its ``Shape`` is null, or an assertion ``fn``
+        is outside the closed vocabulary.
+    """
+    if object:
+        obj = _resolve_object(document, object)
+    else:
+        objects = list(document.Objects)
+        if not objects:
+            raise ValidationError("document has no objects to verify")
+        obj = objects[0]
+    shape = _require_shape(obj, obj.Name)
+
+    report: dict = {"subject": {"object": obj.Name}}
+    if not checks:
+        report["checks"] = _measured_facts(shape)
         report["schema"] = "fcb.validation-report/1"
         report["banner"] = _banner()
         report["verdict"] = derive_verdict(report)
         return _report_envelope(report, summarize_shape(report))
 
-    return registry.with_document(doc, read)
+    floor = _shape_floor(shape)
+    built = []
+    for check in checks:
+        if not isinstance(check, dict):
+            raise ValidationError(f"check must be an object, got {check!r}")
+        fn = check.get("fn")
+        builder = _ASSERTIONS.get(fn)
+        if builder is None:
+            raise ValidationError(f"unknown assertion fn: {fn!r}")
+        built.append(builder(shape, check.get("expect"), check.get("tol"), floor))
+    report["checks"] = built
+    report["schema"] = "fcb.validation-report/1"
+    report["banner"] = _banner()
+    report["verdict"] = derive_verdict(report)
+    return _report_envelope(report, summarize_shape(report))
+
 
 
 def _getattr_list(obj: object, name: str) -> list:
@@ -380,82 +394,92 @@ def verify_sketch(
     any degenerate geometry. Redundant / partially-redundant constraints are WARN only (never
     fail, never auto-removed). A non-sketch object raises ``ValidationError``.
     """
+    return registry.with_document(doc, lambda _h, document: read_sketch(document, sketch))
 
-    def read(_handle: str, document: object) -> ResultEnvelope:
-        obj = _resolve_object(document, sketch)
-        if not str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
-            raise ValidationError(f"object is not a sketch: {sketch}")
 
-        document.recompute()
+def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
+    """Grade ``sketch`` on an already-resolved ``document``, holding no registry lock.
 
-        dof = int(getattr(obj, "DoF", getattr(obj, "DoFs", 0)) or 0)
-        fully_constrained = bool(getattr(obj, "FullyConstrained", False))
-        conflicting = _getattr_list(obj, "ConflictingConstraints")
-        malformed = _getattr_list(obj, "MalformedConstraints")
-        redundant = _getattr_list(obj, "RedundantConstraints")
-        partially_redundant = _getattr_list(obj, "PartiallyRedundantConstraints")
+    The registry lock is not reentrant, so a caller already inside ``with_document`` — a
+    mutation reporting the state it just produced — must reach the grading this way rather than
+    through :func:`verify_sketch`, which would deadlock.
 
-        # evaluateConstraints() detects invalid-index constraints, but on FreeCAD 1.1 it returns
-        # True even for a healthy sketch; MalformedConstraints is the authoritative signal, so the
-        # method only counts when malformed constraints are actually present.
-        evaluate = getattr(obj, "evaluateConstraints", None)
-        evaluate_bad = bool(malformed) and (bool(evaluate()) if callable(evaluate) else False)
+    :raises ValidationError: ``sketch`` names no object, or names one that is not a sketch.
+    """
 
-        detect = getattr(obj, "detectDegeneratedGeometries", None)
-        degenerate_count = int(detect(1e-7)) if callable(detect) else 0
+    obj = _resolve_object(document, sketch)
+    if not str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
+        raise ValidationError(f"object is not a sketch: {sketch}")
 
-        checks = [
-            {
-                "id": "sketch.fully_constrained",
-                "measured": fully_constrained,
-                "expected": True,
-                "passed": fully_constrained
-                and dof == 0
-                and not conflicting
-                and not malformed
-                and not evaluate_bad
-                and degenerate_count == 0,
-                "detail": {
-                    "message": (
-                        f"dof={dof}, conflicting={len(conflicting)}, malformed={len(malformed)}, "
-                        f"evaluate_bad={evaluate_bad}, degenerate={degenerate_count}"
-                    )
-                },
-            }
-        ]
+    document.recompute()
 
-        warnings = []
-        if redundant or partially_redundant:
-            warnings.append(
-                {
-                    "id": "sketch.redundant",
-                    "measured": {
-                        "redundant": [int(i) for i in redundant],
-                        "partially_redundant": [int(i) for i in partially_redundant],
-                    },
-                    "passed": False,
-                    "detail": {"message": "redundant constraints present (warning only)"},
-                }
-            )
+    dof = int(getattr(obj, "DoF", getattr(obj, "DoFs", 0)) or 0)
+    fully_constrained = bool(getattr(obj, "FullyConstrained", False))
+    conflicting = _getattr_list(obj, "ConflictingConstraints")
+    malformed = _getattr_list(obj, "MalformedConstraints")
+    redundant = _getattr_list(obj, "RedundantConstraints")
+    partially_redundant = _getattr_list(obj, "PartiallyRedundantConstraints")
 
-        report = {
-            "subject": {
-                "sketch": obj.Name,
-                "dof": dof,
-                "fully_constrained": fully_constrained,
-                "geometry_count": int(getattr(obj, "GeometryCount", 0) or 0),
-                "constraint_count": int(getattr(obj, "ConstraintCount", 0) or 0),
-                "conflicting": constraint_refs(obj, conflicting),
-                "malformed": constraint_refs(obj, malformed),
-                "redundant": constraint_refs(obj, redundant),
-                "partially_redundant": constraint_refs(obj, partially_redundant),
+    # evaluateConstraints() detects invalid-index constraints, but on FreeCAD 1.1 it returns
+    # True even for a healthy sketch; MalformedConstraints is the authoritative signal, so the
+    # method only counts when malformed constraints are actually present.
+    evaluate = getattr(obj, "evaluateConstraints", None)
+    evaluate_bad = bool(malformed) and (bool(evaluate()) if callable(evaluate) else False)
+
+    detect = getattr(obj, "detectDegeneratedGeometries", None)
+    degenerate_count = int(detect(1e-7)) if callable(detect) else 0
+
+    checks = [
+        {
+            "id": "sketch.fully_constrained",
+            "measured": fully_constrained,
+            "expected": True,
+            "passed": fully_constrained
+            and dof == 0
+            and not conflicting
+            and not malformed
+            and not evaluate_bad
+            and degenerate_count == 0,
+            "detail": {
+                "message": (
+                    f"dof={dof}, conflicting={len(conflicting)}, malformed={len(malformed)}, "
+                    f"evaluate_bad={evaluate_bad}, degenerate={degenerate_count}"
+                )
             },
-            "checks": checks,
-            "warnings": warnings,
         }
-        return _finish(report)
+    ]
 
-    return registry.with_document(doc, read)
+    warnings = []
+    if redundant or partially_redundant:
+        warnings.append(
+            {
+                "id": "sketch.redundant",
+                "measured": {
+                    "redundant": [int(i) for i in redundant],
+                    "partially_redundant": [int(i) for i in partially_redundant],
+                },
+                "passed": False,
+                "detail": {"message": "redundant constraints present (warning only)"},
+            }
+        )
+
+    report = {
+        "subject": {
+            "sketch": obj.Name,
+            "dof": dof,
+            "fully_constrained": fully_constrained,
+            "geometry_count": int(getattr(obj, "GeometryCount", 0) or 0),
+            "constraint_count": int(getattr(obj, "ConstraintCount", 0) or 0),
+            "conflicting": constraint_refs(obj, conflicting),
+            "malformed": constraint_refs(obj, malformed),
+            "redundant": constraint_refs(obj, redundant),
+            "partially_redundant": constraint_refs(obj, partially_redundant),
+        },
+        "checks": checks,
+        "warnings": warnings,
+    }
+    return _finish(report)
+
 
 
 def verify_recompute(registry: DocumentRegistry, doc: str | None = None) -> ResultEnvelope:

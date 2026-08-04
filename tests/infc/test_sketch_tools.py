@@ -232,6 +232,53 @@ class _SketchFixture(unittest.TestCase):
         return box
 
 
+class StateCoherenceTest(_SketchFixture):
+    """The reported ``sketch_state`` is read in the lock window that produced it.
+
+    Reading it after the mutation's window closed lets a concurrent mutation land between the
+    two, leaving ``sketch_state`` describing a document generation the ``mutation`` block did
+    not create. Counted by lock acquisition rather than asserted on values, because the two
+    windows agree whenever nothing races -- which is every single-threaded test.
+    """
+
+    def _acquisitions_during(self, call):
+        real_lock = self.registry._lock
+        count = []
+
+        class _Counting:
+            def __enter__(self):
+                count.append(1)
+                return real_lock.__enter__()
+
+            def __exit__(self, *exc):
+                return real_lock.__exit__(*exc)
+
+        self.registry._lock = _Counting()
+        try:
+            call()
+        finally:
+            self.registry._lock = real_lock
+        return len(count)
+
+    def test_a_sketch_mutation_reads_its_reported_state_in_one_window(self):
+        self.create("Prof", plane="XY")
+
+        acquisitions = self._acquisitions_during(
+            lambda: self.add("Prof", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
+        )
+
+        # Two windows are expected and correct: the mutation's own, which now also reads the
+        # state it reports, and `rebind`, which cannot run until the bracket has returned the
+        # document it may have reopened. A third means the state was read in a window of its
+        # own, which is what lets a concurrent mutation land between the two.
+        self.assertEqual(
+            acquisitions,
+            2,
+            "sketch_state was read in a lock window of its own, so a concurrent mutation could "
+            "land between the mutation and the state it reports",
+        )
+
+
 class SketchCreateTest(_SketchFixture):
     def test_base_plane_sketch_commits_empty_and_fully_constrained(self):
         envelope = self.create("Base", plane="XY")

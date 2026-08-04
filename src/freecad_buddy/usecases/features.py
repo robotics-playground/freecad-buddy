@@ -303,7 +303,7 @@ def _unreadable_state(feature: str) -> dict:
     return {"schema": "fcb.feature-state/1", "feature": feature, "readable": False}
 
 
-def _feature_state(registry: DocumentRegistry, doc: str | None, feature: str) -> dict:
+def _feature_state(document: object, feature: str) -> dict:
     """Read the post-op feature summary, gated on ``verify_shape`` being able to grade it.
 
     A feature a rollback removed, or whose shape is null or unreadable for any reason, reports
@@ -312,13 +312,13 @@ def _feature_state(registry: DocumentRegistry, doc: str | None, feature: str) ->
     failure to read the state discards the mutation's own envelope.
     """
     try:
-        graded = verify.verify_shape(registry, doc=doc, object=feature)
+        graded = verify.read_shape(document, feature)
     except Exception:  # noqa: BLE001 - an ungradeable feature is reported, never raised
         return _unreadable_state(feature)
     if graded.get("status") != "OK":
         return _unreadable_state(feature)
 
-    def read(_handle: str, document: object) -> dict:
+    try:
         obj = document.getObject(feature)
         summary = _shape_summary(obj) if obj is not None else None
         if summary is None:
@@ -333,9 +333,6 @@ def _feature_state(registry: DocumentRegistry, doc: str | None, feature: str) ->
             "is_tip": tip is not None and str(getattr(tip, "Name", "")) == feature,
             "shape_summary": summary,
         }
-
-    try:
-        return registry.with_document(doc, read)
     except Exception:  # noqa: BLE001 - an unreadable document is reported, never raised
         return _unreadable_state(feature)
 
@@ -379,6 +376,16 @@ def _feature_mutation(
             document, handle, label, op, audit_sink=audit_sink, tool=tool, params=params
         )
         rebound.append(result[0])
+        # The reported state is read here, in the window that produced it: reading it after this
+        # one closed would let a concurrent mutation land in between and leave `feature_state`
+        # describing a document generation the `mutation` block did not create. `run_mutation`
+        # may have reopened the document, so the state is read off what it returned.
+        content = result[1].get("structured_content")
+        if not isinstance(content, dict):
+            content = {}
+            result[1]["structured_content"] = content
+        content["feature"] = feature
+        content["feature_state"] = _feature_state(result[0], feature)
         return result
 
     try:
@@ -389,12 +396,6 @@ def _feature_mutation(
                 registry.rebind(doc, rebound[-1])
             except Exception:  # noqa: BLE001 - a failed rebind must not mask the real outcome
                 pass
-    content = envelope.get("structured_content")
-    if not isinstance(content, dict):
-        content = {}
-        envelope["structured_content"] = content
-    content["feature"] = feature
-    content["feature_state"] = _feature_state(registry, doc, feature)
     return envelope
 
 

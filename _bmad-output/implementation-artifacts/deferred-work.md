@@ -684,7 +684,12 @@ Covered by four tests, two of them falsified by stubbing the helper to return no
 origin: review-adversarial-general, review-edge-case-hunter (DW-64 review), 2026-07-31
 location: src/freecad_buddy/contracts/report.py, data-contracts-design §12.2
 reason: `banner.wilson_ci` is a single object but the rate antecedent fires on any rate-marked entry across `checks` and `warnings`. Two rate checks with different denominators are both "covered" by one arbitrary interval and both surfaces call that correct; `_rate_check_ids` even de-duplicates the ids. Not reachable today (only one rate producer exists), but the contract cannot express the second rate it encounters. Fix needs a design decision: either a per-check CI, or an explicit rule that the banner CI describes the tier and checks may not each carry their own rate.
-status: open
+status: done 2026-08-04
+resolution: ruled by the operator — the banner CI describes one rate, and a report may declare at most one rate check. `require_wilson_ci_for_rates` now refuses a report carrying more.
+
+Counted by occurrence, not over `_rate_check_ids`, which de-duplicates: two checks sharing an id are still two rates and one interval, and a rule counting distinct ids would let that pair through. Pinned by its own test.
+
+Re-verified the entry's "not reachable today" claim before acting, because this session changed rate producers: `g2_collect.py:51` remains the only `measured_kind: "rate"` producer and each `_rate_report` carries exactly one rate check — G2.2's second check is a `_failed_check`, not rate-marked. The full suite passes unchanged with the rule in place, which is the evidence that no real producer violates it.
 
 ### DW-69: The `CONDITIONALS` schema-generator framework is a five-key generic mechanism serving one entry, with an unreachable `_non_null` fallback and a test that exercises a monkeypatched mock.
 origin: review-adversarial-general (DW-64 review), 2026-07-31
@@ -874,7 +879,18 @@ source_spec: `spec-3-3-sketch-tools.md`
 severity: medium
 location: src/freecad_buddy/usecases/sketches.py (`_sketch_mutation`), src/freecad_buddy/usecases/verify.py (`verify_sketch`)
 reason: `_sketch_mutation` attaches `sketch_state` after `registry.with_document` has returned, so `verify_sketch` reacquires the registry lock and calls `document.recompute()` in a second, separate critical section. The recompute itself is safe — it re-locks rather than running unlocked, and every `verify_*` tool has always done a read-refresh recompute — but it means the committed state a tool reports is read in a different lock window than the one that produced it, so a concurrent mutation between the two windows makes `sketch_state` describe a document generation the `mutation` block did not create. AD-5's "no recompute outside `run_mutation`" is about geometry writes, and a read-refresh is not one, which is why this is a coherence question rather than a protocol violation. Pre-existing in shape: the same two-window pattern governs every verify-embedding tool, so fixing it in the sketch layer alone would diverge from its siblings. Fix wants one decision for all of them — either read the state inside the mutation's own `with_document` call, or document the two-window read as the contract.
-status: open
+status: done 2026-08-04
+resolution: ruled by the operator — read the reported state inside the mutation's own window. Applied to both verify-embedding families, not the sketch layer alone.
+
+`verify_sketch` and `verify_shape` were each a `read(handle, document)` closure plus one `with_document`; the closure is now the public `read_sketch(document, sketch)` / `read_shape(document, object, checks)` and the original functions are thin wrappers. `_sketch_state` and `_feature_state` take a resolved document and are called inside `call`, off the document `run_mutation` returned — which matters because a snapshot restore reopens it.
+
+The lock is `threading.Lock`, not `RLock`, so this was not optional: measured directly, re-entering `with_document` from inside it **deadlocks** (still blocked after 5s). That is why the fix needed a lock-free read path rather than simply moving the existing call.
+
+The entry described two windows; measured, a sketch mutation took **three** — the mutation, `rebind`, and the state read. Two is the achievable floor, since `rebind` cannot run until the bracket returns the document it may have reopened. The test asserts 2 and fails at 3.
+
+`features.py` cost two extra windows rather than one, because `_feature_state` called `verify_shape` AND its own `with_document`. Both are gone.
+
+Verified by counting lock acquisitions rather than asserting on values: the two windows agree whenever nothing races, which is every single-threaded test, so a value assertion could not falsify this. Reverting to the post-bracket read fails the test at 3 != 2.
 
 ### DW-84: `redundant_only_sketch` decides from the recompute log, which can lag the object's state
 origin: review-adversarial-general, review-edge-case-hunter

@@ -159,15 +159,15 @@ def test_an_ungradeable_feature_reports_unreadable_rather_than_a_null_summary(mo
 
     monkeypatch.setattr(
         features.verify,
-        "verify_shape",
-        lambda registry, doc=None, object=None: {  # noqa: A002 - the verify_shape parameter name
+        "read_shape",
+        lambda document, object=None, checks=None: {  # noqa: A002 - the read_shape parameter name
             "schema": "fcb.result-envelope/1",
             "status": "SPEC_FAILED",
             "structured_content": {},
         },
     )
 
-    state = features._feature_state(object(), "doc", "Gone")
+    state = features._feature_state(object(), "Gone")
 
     assert state["readable"] is False
     assert "shape_summary" not in state

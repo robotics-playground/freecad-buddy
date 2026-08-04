@@ -141,15 +141,15 @@ def test_a_subject_without_grading_fields_reports_unreadable(monkeypatch):
 
     monkeypatch.setattr(
         sketches.verify,
-        "verify_sketch",
-        lambda registry, doc=None, sketch=None: {
+        "read_sketch",
+        lambda document, sketch=None: {
             "schema": "fcb.result-envelope/1",
             "status": "SPEC_FAILED",
             "structured_content": {},
         },
     )
 
-    state = sketches._sketch_state(object(), "doc", "Rect")
+    state = sketches._sketch_state(object(), "Rect")
 
     assert state["readable"] is False
     assert "dof" not in state

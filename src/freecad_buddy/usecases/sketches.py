@@ -473,8 +473,8 @@ def _resolve_constraint_index(sketch_obj: object, reference: object) -> int:
     raise ValidationError(f"constraint must be a 1-based id or a name, got {reference!r}")
 
 
-def _sketch_state(registry: DocumentRegistry, doc: str, sketch: str) -> dict:
-    """Read the post-op sketch summary through ``verify_sketch``.
+def _sketch_state(document: object, sketch: str) -> dict:
+    """Read the post-op sketch summary through ``verify.read_sketch``.
 
     Returns the ``verify_sketch`` subject fields as a ``fcb.sketch-state/1`` block. A sketch the
     op deleted or rolled back out of existence cannot be graded, so the block reports
@@ -485,7 +485,7 @@ def _sketch_state(registry: DocumentRegistry, doc: str, sketch: str) -> dict:
     """
     unreadable = {"schema": "fcb.sketch-state/1", "sketch": sketch, "readable": False}
     try:
-        envelope = verify.verify_sketch(registry, doc=doc, sketch=sketch)
+        envelope = verify.read_sketch(document, sketch)
     except ValidationError:
         return unreadable
     subject = (envelope.get("structured_content") or {}).get("subject") or {}
@@ -567,6 +567,13 @@ def _sketch_mutation(
             document, handle, label, op, audit_sink=audit_sink, tool=tool, params=params
         )
         rebound.append(result[0])
+        # The reported state is read here, in the window that produced it: reading it after this
+        # one closed would let a concurrent mutation land in between and leave `sketch_state`
+        # describing a document generation the `mutation` block did not create. `run_mutation`
+        # may have reopened the document, so the state is read off what it returned.
+        envelope = result[1]
+        envelope["structured_content"]["sketch"] = sketch
+        envelope["structured_content"]["sketch_state"] = _sketch_state(result[0], sketch)
         return result
 
     try:
@@ -576,8 +583,6 @@ def _sketch_mutation(
         # document, so the handle is rebound from whatever the bracket last reached.
         if rebound:
             registry.rebind(doc, rebound[-1])
-    envelope["structured_content"]["sketch"] = sketch
-    envelope["structured_content"]["sketch_state"] = _sketch_state(registry, doc, sketch)
     return envelope
 
 
