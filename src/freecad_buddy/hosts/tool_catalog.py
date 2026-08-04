@@ -503,19 +503,35 @@ def _sketch_specs():
     ]
 
 
-def _feature_schema(properties, required):
+def _feature_schema(properties, required, conditional=None):
     """A feature tool input schema: doc handle, the tool's own fields, and the confirm gate.
 
     ``confirm`` is not in ``required``: it is mandatory for a client, but a host running the
     operator auto-approve posture accepts a call without one, and the specs are built before the
     capability record is read. The gate's requirement is stated in ``_CONFIRM_SCHEMA`` instead.
+
+    ``conditional`` maps a value of a discriminating field to the fields that value makes
+    mandatory, for a tool whose requirements depend on which variant is being built. It is
+    expressed as ``allOf``/``if``/``then`` because a flat ``required`` list cannot say "this
+    field is needed only for that kind", and listing such a field unconditionally would refuse
+    every call of the other kind.
     """
-    return {
+    schema = {
         "type": "object",
         "properties": {"doc": _DOC_SCHEMA, **properties, "confirm": _CONFIRM_SCHEMA},
         "required": ["doc", *required],
         "additionalProperties": False,
     }
+    if conditional:
+        field, branches = conditional
+        schema["allOf"] = [
+            {
+                "if": {"properties": {field: {"const": value}}, "required": [field]},
+                "then": {"required": list(needed)},
+            }
+            for value, needed in branches.items()
+        ]
+    return schema
 
 
 def _feature_method(name, fn, schema, description):
@@ -684,6 +700,7 @@ def _feature_specs():
                     "reversed": {"type": "boolean", "default": False},
                 },
                 ["body", "name", "kind"],
+                ("kind", {"linear": ["direction"], "polar": ["axis"]}),
             ),
             "Linear or polar pattern. occurrences counts the original; omitted, it takes FreeCAD's "
             "own — 2 for linear, 3 for polar. A polar pattern over a full turn steps by "

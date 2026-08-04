@@ -363,3 +363,39 @@ def test_a_field_freecad_needs_stays_required_on_the_wire():
         ("feature_chamfer", "edges"),
     ):
         assert field in specs[tool].input_schema["required"], f"{tool}.{field} is not required"
+
+
+def test_feature_pattern_states_the_selector_its_kind_requires():
+    """Both layers demand it, so the boundary must declare it.
+
+    Measured on FreeCAD 1.1.1: LinearPattern.Direction and PolarPattern.Axis both default to
+    None and the feature then recomputes Invalid with no shape, and `_resolve_direction` raises
+    on None. Which one is needed depends on `kind`, which a flat `required` list cannot say.
+    """
+    schema = _specs_by_name()["feature_pattern"].input_schema
+    branches = {
+        rule["if"]["properties"]["kind"]["const"]: rule["then"]["required"]
+        for rule in schema["allOf"]
+    }
+
+    assert branches["linear"] == ["direction"]
+    assert branches["polar"] == ["axis"]
+    # The unconditional list must not demand either, or one kind is refused outright.
+    assert "direction" not in schema["required"]
+    assert "axis" not in schema["required"]
+
+
+def test_feature_patterns_conditional_schema_accepts_and_refuses_the_right_calls():
+    """Validated with a real JSON Schema implementation, not by reading the keywords."""
+    import jsonschema
+
+    schema = _specs_by_name()["feature_pattern"].input_schema
+    validator = jsonschema.Draft202012Validator(schema)
+    base = {"doc": "fcb-doc:x", "body": "Body", "name": "Row"}
+    # A selector carries its own `kind`, distinct from the pattern's.
+    selector = {"kind": "mapped_name", "object": "Pad", "mapped_name": "Edge1"}
+
+    assert validator.is_valid({**base, "kind": "linear", "direction": selector})
+    assert validator.is_valid({**base, "kind": "polar", "axis": selector})
+    assert not validator.is_valid({**base, "kind": "linear"}), "a linear pattern needs direction"
+    assert not validator.is_valid({**base, "kind": "polar"}), "a polar pattern needs axis"
