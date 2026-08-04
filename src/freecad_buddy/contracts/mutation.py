@@ -24,6 +24,11 @@ TnpStatus = Literal["CLEAN", "FLAGGED", "UNSUPPORTED"]
 
 RollbackProof = Literal["rolled_back_verified", "rolled_back_via_snapshot"]
 
+# A field whose step never ran. Distinct from None, which means the step ran and found the
+# question inapplicable — no sketch was involved.
+NotMeasured = Literal["not_measured"]
+NOT_MEASURED: NotMeasured = "not_measured"
+
 
 class _RefFindingRequired(TypedDict):
     owner: str
@@ -50,8 +55,8 @@ class TnpAuditBlock(_TnpAuditRequired, total=False):
 
 class _PostVerifyRequired(TypedDict):
     recompute_clean: bool
-    is_valid: bool
-    fully_constrained: bool | None  # None ⇔ no sketch involved
+    is_valid: bool | NotMeasured
+    fully_constrained: bool | None | NotMeasured  # None ⇔ no sketch involved
     tnp_audit: TnpAuditBlock
     passed: bool
 

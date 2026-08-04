@@ -107,12 +107,22 @@
               "type": "boolean"
             },
             {
+              "const": "not_measured"
+            },
+            {
               "type": "null"
             }
           ]
         },
         "is_valid": {
-          "type": "boolean"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "not_measured"
+            }
+          ]
         },
         "passed": {
           "type": "boolean"

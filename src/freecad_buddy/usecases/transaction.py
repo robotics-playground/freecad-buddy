@@ -21,8 +21,10 @@ import tempfile
 from typing import Callable
 
 from freecad_buddy.contracts import (
+    NOT_MEASURED,
     FingerprintRecord,
     MutationBlock,
+    NotMeasured,
     PostVerifyBlock,
     ResultEnvelope,
     RollbackProof,
@@ -163,8 +165,8 @@ def _invalid_objects(document: object, touched: list[str]) -> list[tuple[str, st
 
 def _block(
     recompute_clean: bool,
-    is_valid: bool,
-    fully_constrained: bool | None,
+    is_valid: bool | NotMeasured,
+    fully_constrained: bool | None | NotMeasured,
     tnp_audit: TnpAuditBlock,
     passed: bool,
     explanation: str | None,
@@ -217,18 +219,18 @@ def post_verify(
         explanation = "recompute left {} object(s) invalid: {}".format(
             len(invalid), "; ".join(f"{name}: {status}" for name, status in invalid)
         )
-        return _block(False, False, None, _unrun_tnp_audit(), False, explanation)
+        return _block(False, False, NOT_MEASURED, _unrun_tnp_audit(), False, explanation)
 
     for name in _shape_bearing(document, touched):
         try:
             envelope = verify.verify_shape(registry, doc=handle, object=name)
         except ValidationError as exc:
             explanation = f"verify_shape could not grade {name}: {exc}"
-            return _block(True, False, None, _unrun_tnp_audit(), False, explanation)
+            return _block(True, False, NOT_MEASURED, _unrun_tnp_audit(), False, explanation)
         if not _passed(envelope):
             detail = envelope.get("detail") or {}
             explanation = f"verify_shape failed on {name}: {detail.get('message', '')}"
-            return _block(True, False, None, _unrun_tnp_audit(), False, explanation)
+            return _block(True, False, NOT_MEASURED, _unrun_tnp_audit(), False, explanation)
 
     fully_constrained: bool | None = None
     for name in _sketches(document, touched):
@@ -236,7 +238,7 @@ def post_verify(
             envelope = verify.verify_sketch(registry, doc=handle, sketch=name)
         except ValidationError as exc:
             explanation = f"verify_sketch could not grade {name}: {exc}"
-            return _block(True, True, None, _unrun_tnp_audit(), False, explanation)
+            return _block(True, NOT_MEASURED, NOT_MEASURED, _unrun_tnp_audit(), False, explanation)
         subject = (envelope.get("structured_content") or {}).get("subject") or {}
         # Every sketch the op touched must be constrained, so the block reports the conjunction
         # rather than whichever sketch the loop happened to inspect last.

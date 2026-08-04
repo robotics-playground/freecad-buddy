@@ -42,7 +42,9 @@ from freecad_buddy.contracts.fingerprint import (
 )
 from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.mutation import (
+    NOT_MEASURED,
     MutationBlock,
+    NotMeasured,
     PostVerifyBlock,
     RefFinding,
     RefVerdict,
@@ -124,6 +126,8 @@ __all__ = [
     "MassProps",
     "MeasuredKind",
     "MutationBlock",
+    "NOT_MEASURED",
+    "NotMeasured",
     "ObjectFingerprint",
     "PatternKind",
     "PointPos",

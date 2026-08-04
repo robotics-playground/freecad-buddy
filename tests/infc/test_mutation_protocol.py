@@ -16,8 +16,8 @@ import FreeCAD as App
 import Part
 
 from freecad_buddy.contracts import fingerprints_equal
-from freecad_buddy.usecases import shim, tnp_guard, transaction
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases import shim, tnp_guard, transaction, verify
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 
 BOX_L = 10.0
@@ -343,6 +343,81 @@ class PostVerifyFailureTest(_MutationFixture):
         self.assertFalse(
             envelope["structured_content"]["mutation"]["post_verify"]["recompute_clean"]
         )
+
+
+class NotMeasuredTest(_MutationFixture):
+    def _block_from_failed_shape_with_a_touched_sketch(self):
+        """Drive the ``verify_shape`` raise path with a sketch also in ``touched``.
+
+        The op touches both a shape-bearing object and a sketch. ``verify_shape`` is made to
+        raise, so the block returns before the sketch loop runs.
+        """
+
+        def op(document):
+            cylinder = document.addObject("Part::Cylinder", "Cyl")
+            cylinder.Radius = CYL_R
+            cylinder.Height = CYL_H
+            document.addObject("Sketcher::SketchObject", "Untouched")
+            return ["Cyl", "Untouched"]
+
+        real = verify.verify_shape
+
+        def _always_fails(*args, **kwargs):
+            raise ValidationError("planted verify_shape failure")
+
+        verify.verify_shape = _always_fails
+        try:
+            _, envelope = self._run("shape raises", op)
+        finally:
+            verify.verify_shape = real
+
+        return envelope["structured_content"]["mutation"]
+
+    def _block_from_raised_verify_sketch(self):
+        """Drive the ``verify_sketch`` raise path so no shape is graded on that step."""
+
+        def op(document):
+            document.addObject("Sketcher::SketchObject", "Ungraded")
+            return ["Ungraded"]
+
+        real = verify.verify_sketch
+
+        def _always_fails(*args, **kwargs):
+            raise ValidationError("planted verify_sketch failure")
+
+        verify.verify_sketch = _always_fails
+        try:
+            _, envelope = self._run("sketch raises", op)
+        finally:
+            verify.verify_sketch = real
+
+        return envelope["structured_content"]["mutation"]
+
+    def _block_from_successful_mutation(self):
+        _, envelope = self._run("add cylinder", _add_cylinder)
+        return envelope["structured_content"]["mutation"]
+
+    def test_a_shape_failure_reports_the_sketch_grade_as_not_measured(self):
+        """The sketch loop never ran, so its verdict is unmeasured rather than inapplicable.
+
+        ``None`` means no sketch was involved. Reporting it here would claim a measurement of a
+        sketch the op touched but never graded.
+        """
+        block = self._block_from_failed_shape_with_a_touched_sketch()
+
+        self.assertEqual(block["post_verify"]["fully_constrained"], "not_measured")
+
+    def test_a_sketch_grading_failure_reports_validity_as_not_measured(self):
+        block = self._block_from_raised_verify_sketch()
+
+        self.assertEqual(block["post_verify"]["is_valid"], "not_measured")
+
+    def test_a_successful_mutation_reports_real_booleans(self):
+        # Pins the boundary: the sentinel must not leak onto a path that did measure.
+        block = self._block_from_successful_mutation()
+
+        self.assertIsInstance(block["post_verify"]["is_valid"], bool)
+        self.assertIsInstance(block["post_verify"]["fully_constrained"], (bool, type(None)))
 
 
 class SerializerTagTest(_MutationFixture):
