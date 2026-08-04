@@ -1128,7 +1128,8 @@ origin: review-budget-followup
 source_spec: `spec-3-7-confirmation-flow-verified-undo.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260731-184817-b11e; this entry preserves the lingering recommendation for a deliberate later review.
-status: open
+status: done 2026-08-04
+resolution: the recommended follow-up review was performed. It measured a replay claim an earlier pass had recorded as explicitly unmeasured, and found a second defect the earlier passes could not see. Filed as DW-110 (one token accepted six times when the mutation leaves the digest unmoved), DW-111 (a preview alone writes an `approval` audit line for a mutation that never happened) and DW-112 (the three tests guarding DW-111 filter out the record that would fail them). DW-111 was reproduced independently with a real sink and no apply; DW-110's absence of any nonce or single-use marker was confirmed by reading the gate. One Minor was also reported and not filed: `documents.py:407` labels a `document_undo` RECOMPUTE_ERROR envelope with `summarize_document_recompute`, so the human-facing text reads as a recompute summary while the structured content stays correct.
 
 ### DW-96: The live G2.1 pass-rate stays an operator ceremony — no dev case names a tool call
 origin: story-3-8-gate-g2-exit implementation
@@ -1216,7 +1217,8 @@ origin: review-budget-followup
 source_spec: `spec-3-8-gate-g2-exit.md`
 severity: low
 reason: The follow-up-review damping cap (limits.max_followup_reviews = 1) was spent with the story finalized (status: done, verify green) while the review pass still recommended an independent follow-up. The work was committed by bmad-loop run 20260731-184817-b11e; this entry preserves the lingering recommendation for a deliberate later review.
-status: open
+status: done 2026-08-04
+resolution: the recommended follow-up review was performed. It found four defects the original passes missed, each filed as its own entry and each confirmed by execution rather than by reading: DW-106 (G2.2/G2.3 measure a population that excludes every case they judge), DW-107 (three tests build a status combination production cannot emit, which is why DW-106 survived three reviews), DW-108 (G2.4 counts non-TNP fault cases against the TNP guard) and DW-109 (G2.1's rate counts the fault suites its rule excludes). DW-106 was verified against the producer directly — `transaction.py` emits `"OK"` only on the commit path — and DW-107 was falsified by patching one fixture to its real status and watching the assertion stop being reached. Two Criticals in a gate that reports green over an unmeasured population is a material result; the review was worth running.
 
 ### DW-102: `sketch_create` leaves the sketch at document level, so a pad over MCP warns that its profile is out of scope
 origin: final whole-branch review of feature_body_create, 2026-08-01
@@ -1268,3 +1270,69 @@ status: done 2026-08-03
 resolution: closed by commit df811c7, which added `"offset": _QUANTITY_SCHEMA` while splitting the quantity schemas for DW-82. Found by the implementer while executing that plan: the plan's mapping table named a row for the field, and there was nothing to retarget because the key did not exist. The wide schema is correct for it — the dimension is chosen at runtime by `kind`, so narrowing it to millimetres would refuse every polar pattern that steps by offset.
 
 Recorded as its own entry rather than folded into DW-82 because it is a different defect: DW-82 was a field whose declared type was too permissive, this was a field that was never declared at all.
+
+### DW-106: G2.2's rollback clause and G2.3's snapshot path measure a population that structurally excludes every case they judge
+origin: DW-101 follow-up review of 3-8-gate-g2-exit, 2026-08-04
+source_spec: `spec-3-8-gate-g2-exit.md`
+severity: high
+location: benchmarks/harness/g2_collect.py (`_applied` at :97, consumed at :224 and :236 and :300)
+reason: `_applied()` keeps only outcomes whose `status == "OK"`, but a failed post-verify never carries that status, so G2.2's second clause and G2.3's snapshot-restore check both iterate a list from which every case they exist to judge has already been removed. Verified independently of the reporting review by reading the producer: `usecases/transaction.py` emits `"OK"` at exactly one place (`:571-574`), on the commit path, reached only when `report["passed"]` is True; every rollback path returns `SPEC_FAILED` (`:595`) or `_rollback_status(report)` (`:269-275`), which returns only `RECOMPUTE_ERROR` or `SPEC_FAILED`. So `status == "OK"` and `post_verify.passed is False` cannot co-occur. Consequence: G2.2's rollback criterion reports `passed=True` over a population it never inspected, and G2.3 prints `snapshot-restore path taken by: none` even when the path was taken. The `(N driven case(s) executed no op: ...)` note also misdescribes those rows — they executed, mutated, and rolled back. Fix: `_applied()` must keep outcomes that carry a `mutation` block regardless of terminal status, and keep excluding only the `INVALID_INPUT` rows that genuinely executed nothing.
+status: done 2026-08-04
+resolution: the reported fix — widen `_applied()` to keep anything carrying a mutation block — was measured before adopting and **rejected**: over 20 committed plus 5 rolled-back ops it corrected the snapshot count (0 -> 5) but drove the undo rate 1.0 -> 0.8 and raised a spurious `G2.3.expectation` failure. Cause: `case_run.py:178` skips `document_undo` for a rolled-back op, so those rows carry no `undo` record and a single widened population counts each as an undo that failed to match.
+
+The root cause is one concept doing two jobs, so the fix splits it. `_executed()` selects rows carrying a `mutation` block — the discriminator `case_run._apply` already provides, since both its `INVALID_INPUT` returns emit an empty `structured_content`. `_committed()` keeps the old status predicate. G2.2 grades both clauses over `_executed`; G2.3 grades its undo rate over `_committed` and its snapshot-restore report over `_executed`. Falsified after fixing: reverting `_executed` to the status predicate fails exactly the four tests that cover it.
+
+### DW-107: Three G2.2 rollback tests build a status/post_verify combination production cannot emit, so they cannot falsify what they guard
+origin: DW-101 follow-up review of 3-8-gate-g2-exit, 2026-08-04
+source_spec: `spec-3-8-gate-g2-exit.md`
+severity: medium
+location: tests/external/test_gate_g2_exit.py (:290, :313, :331)
+reason: `test_g2_2_fails_a_failed_verify_whose_rollback_is_unproven`, `test_g2_2_fails_a_rollback_with_no_human_readable_explanation` and `test_g2_2_passes_a_proven_rollback_carrying_its_reason` each construct a `FakeOutcome` taking the dataclass default `status="OK"` together with `post_verify.passed=False` — the combination DW-106 shows is unreachable. Falsified directly rather than argued: setting `status="SPEC_FAILED"` on the first test makes it fail immediately with `no driven case executed an op: nothing to measure post-verify over`, proving the assertion never reached the unproven-rollback check it names. The file was restored afterwards; the working tree is unchanged. These three tests are why DW-106 stayed invisible through three review passes — they exercise the collector only along a path production never produces. Fix with DW-106, in the same change: the fixtures must carry the terminal status their scenario really produces.
+status: done 2026-08-04
+resolution: the three fixtures now carry the terminal status their scenario really produces (`SPEC_FAILED`), and three tests were added for the population split — a rolled-back op graded rather than filtered out, a snapshot restore reported, and an undo rate that ignores a rolled-back op. One of the new tests was itself found unable to falsify on first writing: it asserted `"c2" in json.dumps(report)`, which matched an unrelated mention of the same case id in the unexecuted-note, so it was tightened to assert the check's `measured` count. Verified by reverting the collector and confirming each test fails.
+
+### DW-108: G2.4's population is every fault-declaring case, not the cases targeting the validator it cites
+origin: DW-101 follow-up review of 3-8-gate-g2-exit, 2026-08-04
+source_spec: `spec-3-8-gate-g2-exit.md`
+severity: high
+location: benchmarks/harness/g2_collect.py (`collect_g2_4` at :360), benchmarks/g2/case_run.py (`CaseOutcome`, :44-65)
+reason: `collect_g2_4` selects every case declaring a `fault.kind`, but only the 8 `tnp/` cases target `audit_references`, the validator G2.4 cites. The 8 `wrong-parameter` planted defects (geometry errors) and the 2 `rollback-boundary` ones (transaction aborts) also declare a planted defect, and a correctly-working TNP guard leaves them `CLEAN` — which the collector then files as `false_clean`. A perfect guard therefore fails G2.4, with the report naming ten false-cleans that never occurred. `CaseOutcome` carries no suite or `targets_validator` field, so the collector has nothing to filter on and the fix needs a new field carried from the case file. Same class as a defect a prior pass already patched once (dev cases -> fault-declaring cases); that patch stopped one step short of the cited validator.
+status: done 2026-08-04
+resolution: the entry's own cost estimate was wrong, and so were the reviewer's counts. **`targets_validator` already exists in all 28 G2 fault case files** — no new field was invented, only threaded through `CaseOutcome` (which read `fault.kind` and dropped it). The real distribution: `audit_references` 13 (tnp 8, dressup-drop 3, coincidental-hash 2), `assertions` 11, `run_mutation` 4. So G2.4's correct population is 13, not the 8 reported, and the contamination is 15, not 10.
+
+`collect_g2_4` now selects the cases whose declared `targets_validator` names one of the criterion's own `cited_validators`, read from `gate.yaml` rather than hardcoded. Eight pre-existing test fixtures declared no validator and were given the declaration real `tnp/` cases carry; verified they still pass with the filter reverted, so updating them weakened nothing.
+
+### DW-109: G2.1's pass rate counts the fault suites its own rule says never count
+origin: DW-101 follow-up review of 3-8-gate-g2-exit, 2026-08-04
+source_spec: `spec-3-8-gate-g2-exit.md`
+severity: low
+location: benchmarks/harness/g2_collect.py (`collect_g2_1` at :199)
+reason: `benchmarks/g2/gate.yaml:15` and `benchmarks/g2/README.md:11` both state the fault suites "never count toward the G2.1 pass rate", and the spec repeats it as a Never clause, but `collect_g2_1` measures over the whole unfiltered outcome list. Since this commit made a dev `run G2` drive `fault-injection/` into the same list `dev/` feeds (`benchmarks/runner.py:84`), the planted defects now enter the rate. A perfect copilot — 40/40 dev cases passing, 17 planted defects failing their assertions exactly as designed, 11 controls passing — measures 0.75 against a 0.85 bar. Low severity because it fails closed: it cannot turn a red gate green, only make G2.1 unpassable. The number reported is still not the rate the rule names. Depends on the same missing suite field as DW-108.
+status: done 2026-08-04
+resolution: same one-field fix as DW-108. `collect_g2_1` excluded nothing at all — it called `_majority_passed(outcomes)` on the raw list, while `runner.py:82-83` states the contract every other collector honours: "both feed the same outcome list; each collector selects its own population from it". It now drops fault cases before measuring, and reports `not_collected` if a run holds only fault cases rather than dividing by zero. Measured before fixing with real suite sizes: 20 passing dev cases plus 11 planted defects gave 0.6452 against the 0.85 bar.
+
+### DW-110: A preview token replays without limit when the mutation leaves the document digest unchanged
+origin: DW-95 follow-up review of 3-7-confirmation-flow-verified-undo, 2026-08-04
+source_spec: `spec-3-7-confirmation-flow-verified-undo.md`
+severity: medium
+location: src/freecad_buddy/usecases/confirm.py (`:195-200`)
+reason: Promotes an earlier review note that recorded this as explicitly **not measured end-to-end**. It is now measured. The gate performs five checks — expiry, doc, tool, `args_digest`, and `fingerprint_before` — and carries no nonce store and no single-use marker (grep for `nonce|jti|single_use|consumed|_used` over `confirm.py` returns 0). So the only replay defence is the digest comparison at `:197`, and any committed mutation that does not move the digest leaves its token verifying until expiry. Measured under FreeCAD 1.1.1: one `preview_dry_run` token for `feature_set_parameters` writing a property the value it already holds was accepted **six times**, `UndoCount` 1 -> 7, every call `status: OK` with `rolled_back: False`, the digest `b909aea3eea2f4e0` before and after. Reachable on destructive tools too: `sketch_remove_geometry` on a construction edge (excluded from the sketch Shape) left the digest at `bbafb0fc7051d705`, so the gate accepted the replayed token and only the tool's own index-bound precheck refused it — an accidental guard that does not generalise to a tool whose target identity survives its first application. The contract overstates the guarantee: the spec's I/O matrix (`:60`) promises `INVALID_INPUT` for "Replay after apply" with "no separate nonce store", and the design note (`:221`) says replay "falls out for free, because the fingerprint has moved". Both assume the digest always moves; it moves only for shape-changing ops. Fix: either add a single-use marker, or correct the design note and the I/O matrix to state the condition.
+status: open
+
+### DW-111: `preview_dry_run` writes an `approval` audit record for a mutation that never happened
+origin: DW-95 follow-up review of 3-7-confirmation-flow-verified-undo, 2026-08-04
+source_spec: `spec-3-7-confirmation-flow-verified-undo.md`
+severity: medium
+location: src/freecad_buddy/usecases/confirm.py (`:241-249`), src/freecad_buddy/usecases/features.py (`:375`), src/freecad_buddy/usecases/sketches.py (`:546`)
+reason: `gate_mutation`'s exemption branch returns a `preview_copy` `ApprovalRecord`, and both mutation use cases pass every record — that one included — to `confirm.audit_approval`. Because a preview runs the op use case on its throwaway copy, the exemption branch fires and an `approval` line lands in the production audit log for an operation that was never authorized and never applied. Reproduced independently of the reporting review, with a real sink and **only** a `preview_dry_run` and no apply: `approval records written by a preview alone: 1`, `mode='preview_copy'`, `fingerprint_before=None`, and the recorded handle was the temp copy's (`fcb-doc:azPwFiYxk6TuK3BQ-CU85g`) while the live document was `fcb-doc:Lrz3cvKnBlVpg4kYDB6MUQ` — so the line names a document `_discard_tempdoc` destroys before the envelope is built. This contradicts the sink's stated contract verbatim (`adapters/audit_log.py:5-6`: "An **authorized geometry mutation** additionally appends one `event:"approval"` record"); a preview is neither authorized nor a mutation. Fix: do not audit the `preview_copy` mode, or have the preview pass no sink.
+status: done 2026-08-04
+resolution: the suppression signal was already present and simply unread. `audit_approval` wrote any record handed to it and never inspected `approval["mode"]`, while `preview.py:472` calls the op with no `audit_sink`, so the write fell through to the module-global production sink at `confirm.py:325`. `audit_approval` now returns without writing for the `preview_copy` mode. Falsified after fixing: removing the two-line guard fails exactly the two tests that cover it.
+
+### DW-112: The three approval-record tests filter out the very record that would fail them
+origin: DW-95 follow-up review of 3-7-confirmation-flow-verified-undo, 2026-08-04
+source_spec: `spec-3-7-confirmation-flow-verified-undo.md`
+severity: medium
+location: tests/infc/test_confirm_gate.py (`:405`, `:422`, `:428`)
+reason: Why DW-111 was invisible. `test_an_accepted_token_writes_an_approval_record_naming_the_token_mode` (`:405`) and `test_an_auto_approved_call_records_that_it_was_automatic_and_what_it_covered` (`:422`) both filter `self.sink.records` by `mode == "preview_token"` / `"auto_approve"` **before** asserting `len(approvals) == 1`, so the spurious `preview_copy` record is removed from the population the assertion counts and both pass whether or not it is written. `test_a_refused_call_writes_no_approval_record` (`:428`) does assert `records == []`, but calls `self.pad(None)` with no preview, so the exemption branch never runs — the one test whose assertion could catch it uses the one fixture that cannot produce it. `preview_copy` appears nowhere under `tests/` (grep returns nothing). Fix with DW-111: assert the total record count, not a filtered subset, and add a preview-only case.
+status: done 2026-08-04
+resolution: the two filtered assertions now check the total record count before filtering by mode, so a spurious record fails them instead of being removed from the population they count. A `test_a_preview_writes_no_approval_record` case was added — the preview-only fixture the existing tests lacked. Both were confirmed to fail against the unfixed code.
