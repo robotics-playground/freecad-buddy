@@ -1218,6 +1218,131 @@ class PatternTest(_FeatureFixture):
         )
 
 
+class FreeCADDefaultTest(_FeatureFixture):
+    """A field FreeCAD fills in is optional here: omitting it takes the application's default.
+
+    Each case also sends an explicit value, so an implementation that ignored the argument
+    entirely would fail rather than pass the omission cases by accident.
+    """
+
+    def test_a_fillet_with_no_radius_takes_freecads_own(self):
+        body, base = self.block()
+        shape = self.document().getObject(base).Shape
+        edge = next(
+            f"Edge{i}"
+            for i, e in enumerate(shape.Edges, 1)
+            if abs(e.Vertexes[0].Point.z - e.Vertexes[-1].Point.z) > 1e-9
+        )
+
+        envelope = features.feature_fillet(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            base=base,
+            name="Soft",
+            edges=[sub(base, edge)],
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertAlmostEqual(self.document().getObject("Soft").Radius.Value, 1.0, places=6)
+
+    def test_a_fillet_still_honours_an_explicit_radius(self):
+        body, base = self.block()
+        shape = self.document().getObject(base).Shape
+        edge = next(
+            f"Edge{i}"
+            for i, e in enumerate(shape.Edges, 1)
+            if abs(e.Vertexes[0].Point.z - e.Vertexes[-1].Point.z) > 1e-9
+        )
+
+        features.feature_fillet(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            base=base,
+            name="Soft",
+            edges=[sub(base, edge)],
+            radius=mm(2.0),
+        )
+
+        self.assertAlmostEqual(self.document().getObject("Soft").Radius.Value, 2.0, places=6)
+
+    def test_a_chamfer_with_no_size_takes_freecads_own(self):
+        body, base = self.block()
+        shape = self.document().getObject(base).Shape
+        edge = next(
+            f"Edge{i}"
+            for i, e in enumerate(shape.Edges, 1)
+            if abs(e.Vertexes[0].Point.z - e.Vertexes[-1].Point.z) > 1e-9
+        )
+
+        envelope = features.feature_chamfer(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            base=base,
+            name="Bevel",
+            edges=[sub(base, edge)],
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertAlmostEqual(self.document().getObject("Bevel").Size.Value, 1.0, places=6)
+
+    def test_a_linear_pattern_with_no_occurrences_takes_freecads_two(self):
+        body, base = self.plate()
+        self.circle_sketch(body, "Centre", (8.0, 20.0), 2.0, z=PLATE_H)
+        features.feature_hole(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Centre",
+            name="Bore",
+            diameter=mm(4.0),
+            depth_type="ThroughAll",
+        )
+
+        envelope = features.feature_pattern(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="Row",
+            kind="linear",
+            originals=["Bore"],
+            direction=sub(base, "Edge1"),
+            length=mm(24.0),
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.document().getObject("Row").Occurrences, 2)
+
+    def test_a_polar_pattern_with_no_occurrences_takes_freecads_three(self):
+        """FreeCAD defaults polar patterns to 3, not to the linear default of 2."""
+        body, base = self.plate()
+        self.circle_sketch(body, "Centre", (8.0, 20.0), 2.0, z=PLATE_H)
+        features.feature_hole(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Centre",
+            name="Bore",
+            diameter=mm(4.0),
+            depth_type="ThroughAll",
+        )
+
+        envelope = features.feature_pattern(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="Ring",
+            kind="polar",
+            originals=["Bore"],
+            axis=sub("Centre", "N_Axis"),
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.document().getObject("Ring").Occurrences, 3)
+
+
 class MirrorTest(_FeatureFixture):
     def test_a_mirror_across_a_bisecting_plane_doubles_the_hole(self):
         # The plate spans 0..40 in X, so the plane through x=20 bisects it; a bore 8 mm from one

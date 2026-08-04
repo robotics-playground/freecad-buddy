@@ -1094,10 +1094,12 @@ def feature_fillet(
     """
 
     def validate_sizes(_probe: object) -> None:
-        _positive_length(radius, "radius")
+        if radius is not None:
+            _positive_length(radius, "radius")
 
     def apply_sizes(feature: object) -> None:
-        feature.Radius = _positive_length(radius, "radius")
+        if radius is not None:
+            feature.Radius = _positive_length(radius, "radius")
 
     params = {
         "doc": doc,
@@ -1150,7 +1152,8 @@ def feature_chamfer(
     """
 
     def validate_sizes(probe: object) -> None:
-        _positive_length(size, "size")
+        if size is not None:
+            _positive_length(size, "size")
         if second_size is not None:
             _positive_length(second_size, "second_size")
         if angle is not None:
@@ -1163,7 +1166,8 @@ def feature_chamfer(
             feature.ChamferType = _checked_enum(
                 feature, "ChamferType", chamfer_type, "chamfer_type"
             )
-        feature.Size = _positive_length(size, "size")
+        if size is not None:
+            feature.Size = _positive_length(size, "size")
         if second_size is not None:
             feature.Size2 = _positive_length(second_size, "second_size")
         if angle is not None:
@@ -1318,7 +1322,7 @@ def feature_pattern(
     if kind not in _PATTERN_TYPES:
         raise ValidationError(f"kind must be one of {sorted(_PATTERN_TYPES)}, got {kind!r}")
     type_id = _PATTERN_TYPES[kind]
-    if (
+    if occurrences is not None and (
         not isinstance(occurrences, int)
         or isinstance(occurrences, bool)
         or not 2 <= occurrences <= _MAX_OCCURRENCES
@@ -1393,7 +1397,8 @@ def feature_pattern(
             feature.Length = resolve_extent()
         elif angle is not None:
             feature.Angle = resolve_extent()
-        feature.Occurrences = int(occurrences)
+        if occurrences is not None:
+            feature.Occurrences = int(occurrences)
         feature.Reversed = bool(reversed)
         return [feature.Name, body_obj.Name]
 

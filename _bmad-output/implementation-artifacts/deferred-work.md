@@ -1259,7 +1259,20 @@ reason: The wire schemas impose required fields the application does not. Measur
 The operator's principle, now recorded in CLAUDE.md: a field FreeCAD accepts as optional is optional on the wire, a field it requires is required, and fields the bridge invents are ours to decide.
 
 Not a blanket drop. "FreeCAD has a default" does not always mean "the caller should omit it" — a pad with no `length` is legal to FreeCAD and useless as an instruction, and an intent-bearing `name` has no FreeCAD counterpart at all. Each list needs a per-field ruling against the measured default, and each drop is a wire-contract change that may touch existing tests and callers, which is why this is its own pass rather than folded into DW-79. Fix: probe each tool's target type for its defaults, compare against the declared `required` list, and rule per field.
-status: open
+status: done 2026-08-04
+resolution: audited all 17 lists against measured FreeCAD 1.1.1 behaviour; spec at `docs/superpowers/specs/2026-08-04-required-field-parity-design.md`. Three fields drop — `feature_fillet.radius`, `feature_chamfer.size`, `feature_pattern.occurrences` — and everything else stays, each for a stated reason.
+
+**The entry's own premise was half wrong.** `Occurrences` defaults to 2 for a linear pattern but **3 for a polar one**, so "defaults `Occurrences=2`" holds only for the linear kind and no single wire default would be right for both. Both values are pinned by their own test.
+
+**A property having a default does not mean FreeCAD accepts the omission.** `Revolution.ReferenceAxis`, `Mirrored.MirrorPlane` and every `Profile` all default to `None` and recompute `Touched, Invalid` with no shape. The test used throughout was whether the feature recomputes to a valid solid with the field left alone, not whether the property has a value.
+
+The drop was not schema-only: `_positive_length(radius, "radius")` raises on `None`, so removing the field from `required` alone would have moved the rejection one layer down without changing the answer. Use case and wire changed together, matching the pattern `feature_pattern` already followed for `angle`.
+
+`name` is kept required although FreeCAD auto-names, because it is bridge-invented: it sets both the `Label` and the object `Name`, and every downstream tool addresses objects by the name the caller chose. `feature_datum.attachment` is kept because the tool builds attached datums and its `map_mode` defaults to `FlatFace`; an unattached datum is a different object, not a defaulted one.
+
+The audit also found the inverse defect — a requirement both layers enforce and the wire never states — filed as DW-113.
+
+Verified by reverting: removing the use-case guards fails three of the five new in-FreeCAD tests. Each omission case is paired with an explicit-value case, so an implementation ignoring the argument entirely would fail rather than pass by accident.
 
 ### DW-105: `feature_pattern`'s `offset` was absent from the wire schema, making offset-mode patterns unreachable
 origin: DW-82 implementation, 2026-08-03
@@ -1345,3 +1358,10 @@ location: tests/infc/test_confirm_gate.py (`:405`, `:422`, `:428`)
 reason: Why DW-111 was invisible. `test_an_accepted_token_writes_an_approval_record_naming_the_token_mode` (`:405`) and `test_an_auto_approved_call_records_that_it_was_automatic_and_what_it_covered` (`:422`) both filter `self.sink.records` by `mode == "preview_token"` / `"auto_approve"` **before** asserting `len(approvals) == 1`, so the spurious `preview_copy` record is removed from the population the assertion counts and both pass whether or not it is written. `test_a_refused_call_writes_no_approval_record` (`:428`) does assert `records == []`, but calls `self.pad(None)` with no preview, so the exemption branch never runs — the one test whose assertion could catch it uses the one fixture that cannot produce it. `preview_copy` appears nowhere under `tests/` (grep returns nothing). Fix with DW-111: assert the total record count, not a filtered subset, and add a preview-only case.
 status: done 2026-08-04
 resolution: the two filtered assertions now check the total record count before filtering by mode, so a spurious record fails them instead of being removed from the population they count. A `test_a_preview_writes_no_approval_record` case was added — the preview-only fixture the existing tests lacked. Both were confirmed to fail against the unfixed code.
+
+### DW-113: `feature_pattern`'s direction and axis are demanded by both layers and declared by neither
+origin: DW-104 required-field audit, 2026-08-04
+severity: low
+location: src/freecad_buddy/hosts/tool_catalog.py (`feature_pattern` schema), src/freecad_buddy/usecases/features.py (`_resolve_direction`, :1244)
+reason: The inverse of the defect DW-104 fixed. `feature_pattern` names `direction` for a linear pattern and `axis` for a polar one, and `_resolve_direction` raises `ValidationError` on `None` for whichever the `kind` selects. Measured on FreeCAD 1.1.1: `LinearPattern.Direction` and `PolarPattern.Axis` both default to `None` and the feature then recomputes `Touched, Invalid` with no shape — so both FreeCAD and the use case demand the field, and the wire `required` list mentions neither. Which one is needed depends on `kind`, which a flat `required` list cannot express; JSON Schema states it with `if`/`then`, and **the catalog uses no conditional schema anywhere today** (`allOf`, `oneOf` and `"if"` all return nothing from `tool_catalog.py`). Low severity because the current behaviour is not wrong — a missing selector is refused with a clear message naming the field — but the boundary is silent about a requirement it enforces, which is the contract-honesty gap DW-104 set out to close. Fix: introduce the conditional schema, and decide at the same time whether the drift-checker and `preview_dry_run`'s generic `operation.args` need to understand it.
+status: open

@@ -330,3 +330,36 @@ def test_the_partdesign_probe_is_warmed_with_the_other_capability_probes():
     )
     warm = source.split("def warm_capability_probes")[1].split("def ")[0]
     assert "partdesign_available()" in warm
+
+
+def test_a_field_freecad_fills_in_is_not_required_on_the_wire():
+    """Measured on FreeCAD 1.1.1: each recomputes to a valid solid at its own default.
+
+    Fillet Radius is 1.0 mm, Chamfer Size is 1.0 mm, and Occurrences is 2 for a linear pattern
+    and 3 for a polar one. Requiring them would refuse a call the application accepts.
+    """
+    specs = _specs_by_name()
+    for tool, field in (
+        ("feature_fillet", "radius"),
+        ("feature_chamfer", "size"),
+        ("feature_pattern", "occurrences"),
+    ):
+        schema = specs[tool].input_schema
+        assert field not in schema["required"], f"{tool}.{field} is required"
+        # additionalProperties is False, so dropping the property as well as the requirement
+        # would make the field unsendable rather than optional.
+        assert field in schema["properties"], f"{tool}.{field} is no longer sendable"
+
+
+def test_a_field_freecad_needs_stays_required_on_the_wire():
+    """Without these the feature recomputes Invalid with no shape, so the wire demands them."""
+    specs = _specs_by_name()
+    for tool, field in (
+        ("feature_revolve", "axis"),
+        ("feature_mirror", "mirror_plane"),
+        ("feature_pad", "profile"),
+        ("feature_pocket", "profile"),
+        ("feature_fillet", "edges"),
+        ("feature_chamfer", "edges"),
+    ):
+        assert field in specs[tool].input_schema["required"], f"{tool}.{field} is not required"

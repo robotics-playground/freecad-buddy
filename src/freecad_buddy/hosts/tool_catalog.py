@@ -635,10 +635,11 @@ def _feature_specs():
                     "edges": _EDGE_SELECTOR_LIST_SCHEMA,
                     "radius": _LENGTH_QUANTITY_SCHEMA,
                 },
-                ["body", "base", "name", "edges", "radius"],
+                ["body", "base", "name", "edges"],
             ),
-            "Fillet named edges. An edge without exactly two adjacent faces, or whose faces meet "
-            "tangentially, is rejected — FreeCAD would drop it and commit a smaller fillet.",
+            "Fillet named edges. Omitting 'radius' takes FreeCAD's own 1 mm. An edge without "
+            "exactly two adjacent faces, or whose faces meet tangentially, is rejected — FreeCAD "
+            "would drop it and commit a smaller fillet.",
         ),
         _feature_method(
             "feature_chamfer",
@@ -654,10 +655,11 @@ def _feature_specs():
                     "angle": _ANGLE_QUANTITY_SCHEMA,
                     "chamfer_type": {"type": "string"},
                 },
-                ["body", "base", "name", "edges", "size"],
+                ["body", "base", "name", "edges"],
             ),
-            "Chamfer named edges. chamfer_type is checked against the live enumeration; the same "
-            "silent-drop edge check as feature_fillet applies.",
+            "Chamfer named edges. Omitting 'size' takes FreeCAD's own 1 mm. chamfer_type is "
+            "checked against the live enumeration; the same silent-drop edge check as "
+            "feature_fillet applies.",
         ),
         _feature_method(
             "feature_pattern",
@@ -681,10 +683,11 @@ def _feature_specs():
                     "mode": {"type": "string"},
                     "reversed": {"type": "boolean", "default": False},
                 },
-                ["body", "name", "kind", "occurrences"],
+                ["body", "name", "kind"],
             ),
-            "Linear or polar pattern. occurrences counts the original. A polar pattern over a "
-            "full turn steps by angle/occurrences, not angle/(occurrences-1).",
+            "Linear or polar pattern. occurrences counts the original; omitted, it takes FreeCAD's "
+            "own — 2 for linear, 3 for polar. A polar pattern over a full turn steps by "
+            "angle/occurrences, not angle/(occurrences-1).",
         ),
         _feature_method(
             "feature_mirror",
