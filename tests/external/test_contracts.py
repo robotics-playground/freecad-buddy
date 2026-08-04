@@ -1152,6 +1152,58 @@ def test_measured_kind_and_guard_are_package_exports():
     assert "require_wilson_ci_for_rates" in contracts_pkg.__all__
 
 
+def test_guard_rejects_a_second_rate_check_the_banner_interval_cannot_describe():
+    """One banner interval describes one rate. A second would silently inherit the first's.
+
+    The interval is measured over one population, so two checks with different denominators
+    cannot both be covered by it.
+    """
+    report = _report(
+        checks=[_rate_ck(check_id="gate.pass_rate"), _rate_ck(check_id="gate.detect_rate")],
+        banner_extra={"wilson_ci": _WILSON_CI},
+    )
+
+    with pytest.raises(ValueError, match="one rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_counts_rate_checks_across_checks_and_warnings():
+    """A rate in warnings is as uncovered as one in checks."""
+    report = _report(
+        checks=[_rate_ck(check_id="gate.pass_rate")],
+        warnings=[_rate_ck(check_id="gate.warn_rate")],
+        banner_extra={"wilson_ci": _WILSON_CI},
+    )
+
+    with pytest.raises(ValueError, match="one rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_rejects_two_rate_checks_that_share_an_id():
+    """Counted by occurrence, not by distinct id — two checks sharing an id are still two."""
+    report = _report(
+        checks=[_rate_ck(check_id="same"), _rate_ck(check_id="same")],
+        banner_extra={"wilson_ci": _WILSON_CI},
+    )
+
+    with pytest.raises(ValueError, match="one rate"):
+        require_wilson_ci_for_rates(report)
+
+
+def test_guard_accepts_a_single_rate_check_alongside_non_rate_checks():
+    """The rule bounds rate checks only; other checks are unaffected."""
+    report = _report(
+        checks=[
+            _rate_ck(check_id="gate.pass_rate"),
+            {"id": "gate.other", "passed": True, "measured": 7},
+            _rate_ck(kind=None, check_id="gate.unmarked"),
+        ],
+        banner_extra={"wilson_ci": _WILSON_CI},
+    )
+
+    assert require_wilson_ci_for_rates(report) is None
+
+
 @pytest.mark.parametrize(
     ("wilson_ci", "reason"),
     [

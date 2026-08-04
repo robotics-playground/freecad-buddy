@@ -142,6 +142,25 @@ def _rate_check_ids(report: Mapping) -> list[str]:
     return list(dict.fromkeys(ids))
 
 
+def _rate_check_count(report: Mapping) -> int:
+    """Count the rate-measuring checks, including repeats of one id.
+
+    Distinct from ``len(_rate_check_ids(report))``: that de-duplicates, so two checks sharing an
+    id would read as one rate although they are two, each needing its own interval.
+    """
+    total = 0
+    for key in ("checks", "warnings"):
+        container = report.get(key)
+        if not isinstance(container, Sequence) or isinstance(container, str | bytes):
+            continue
+        total += sum(
+            1
+            for check in container
+            if isinstance(check, Mapping) and check.get("measured_kind") == "rate"
+        )
+    return total
+
+
 def _non_rate_measured_ids(report: Mapping) -> list[str]:
     """Collect the ids of ``measured_kind: "rate"`` checks whose ``measured`` is not a rate.
 
@@ -222,6 +241,10 @@ def require_wilson_ci_for_rates(report: Any) -> None:
     type. Returns ``None`` when no rate check exists, when ``banner.wilson_ci`` is
     a complete interval, or when ``report`` is not a mapping.
 
+    A report may declare at most one rate check, because ``banner.wilson_ci`` is a single
+    interval measured over a single population and cannot describe a second rate with a
+    different denominator.
+
     :param report: ValidationReport-shaped mapping.
     :raises ValueError: A rate check is present and ``banner.wilson_ci`` is
         absent, ``None``, not a mapping, carries a missing or mistyped key, or
@@ -230,7 +253,8 @@ def require_wilson_ci_for_rates(report: Any) -> None:
         positive, or ``r`` outside ``[0, n]``) — the message names the offending
         check ids — or a check declares a ``measured_kind`` outside
         ``MeasuredKind``, or a check declares ``measured_kind: "rate"`` while its
-        ``measured`` value is not a number in ``[0, 1]``.
+        ``measured`` value is not a number in ``[0, 1]``, or the report declares
+        more than one rate check.
     """
     if not isinstance(report, Mapping):
         return
@@ -238,6 +262,18 @@ def require_wilson_ci_for_rates(report: Any) -> None:
     rate_ids = _rate_check_ids(report)
     if not rate_ids:
         return
+
+    # `banner.wilson_ci` is one interval measured over one population, so it can describe exactly
+    # one rate. A report carrying two would have the second silently inherit the first's interval
+    # and both surfaces would call that covered. Counted by occurrence rather than over `rate_ids`,
+    # which de-duplicates: two checks sharing an id are still two rates and one interval.
+    rate_count = _rate_check_count(report)
+    if rate_count > 1:
+        raise ValueError(
+            "banner.wilson_ci describes one rate, but the report declares "
+            f"{rate_count} rate checks; split them across reports or measure one rate. "
+            f"Offending check id(s): {rate_ids}"
+        )
 
     non_rates = _non_rate_measured_ids(report)
     if non_rates:
