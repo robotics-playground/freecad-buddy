@@ -85,16 +85,49 @@ def _rate_report(
     return report
 
 
-def _applied(outcomes: list) -> list:
-    """The outcomes whose apply committed — a refused apply executed no op.
+def _executed(outcomes: list) -> list:
+    """The outcomes that ran an op, whether it committed or rolled back.
 
     ``case_run._apply`` returns an ``INVALID_INPUT`` envelope carrying no ``mutation`` block for
     an unresolvable tool name or a confirm the gate refused, and ``run_case`` then skips the undo.
     Such a row is driven but executed nothing, so counting it against a rule reading "100 % of
     **executed** ops" measures the wrong population: it makes a benchmark performing exactly at
     G2.1's >=85 % bar structurally unable to pass G2.2 or G2.3.
+
+    The mutation block is the discriminator rather than the terminal status. A rolled-back op
+    executed and carries a full block, but ``run_mutation`` emits ``"OK"`` only on the commit
+    path, so selecting by status would drop every op whose verify failed — which is exactly the
+    population G2.2's rollback clause and G2.3's snapshot-restore check exist to judge.
+    """
+    return [o for o in _driven(outcomes) if isinstance(getattr(o, "mutation", None), dict)]
+
+
+def _committed(outcomes: list) -> list:
+    """The outcomes whose op committed, which are the only ones there is anything to undo for.
+
+    Narrower than :func:`_executed` by exactly the rolled-back ops: ``run_case`` skips
+    ``document_undo`` for them, so they carry no ``undo`` record and counting them in an undo
+    rate would report a missing expectation as a failed undo.
     """
     return [o for o in _driven(outcomes) if getattr(o, "status", None) == "OK"]
+
+
+def _targets(outcome: object, validators: list) -> bool:
+    """Whether the case's declared ``targets_validator`` names one of ``validators``.
+
+    A case declares it as ``<name>@<module path>``; the name before the ``@`` is what a
+    criterion's ``cited_validators`` lists. A case declaring nothing targets nothing, which keeps
+    a fault suite out of a criterion's population until it says which validator it is aimed at.
+    """
+    declared = getattr(outcome, "targets_validator", None)
+    if not isinstance(declared, str):
+        return False
+    return declared.split("@", 1)[0] in validators
+
+
+def _is_fault(outcome: object) -> bool:
+    """Whether the outcome came from a fault case rather than the command benchmark."""
+    return getattr(outcome, "fault_kind", None) is not None
 
 
 def _unexecuted_note(driven: list, applied: list) -> str:
@@ -196,7 +229,16 @@ def collect_g2_1(criterion: dict, outcomes: list) -> ValidationReport:
             criterion["id"],
             "command benchmark not driven: " + ("; ".join(unresolved) or "no case outcomes"),
         )
-    majority = _majority_passed(outcomes)
+    # The fault suites validate validators and never count toward this pass rate (`gate.yaml`,
+    # and validation-harness-design.md §1). A dev `run G2` drives them into the same outcome
+    # list, and a planted defect is designed to fail its assertions — counting one here would
+    # report the benchmark as failing commands it never ran.
+    commands = [o for o in outcomes if not _is_fault(o)]
+    if not commands:
+        return not_collected_report(
+            criterion["id"], "command benchmark not driven: the run holds only fault cases"
+        )
+    majority = _majority_passed(commands)
     passing = sum(1 for passed in majority.values() if passed)
     rate = passing / len(majority)
     return _rate_report(
@@ -221,7 +263,7 @@ def collect_g2_2(criterion: dict, outcomes: list) -> ValidationReport:
     if undriven is not None:
         return undriven
     driven = _driven(outcomes)
-    applied = _applied(outcomes)
+    applied = _executed(outcomes)
     if not applied:
         return not_collected_report(
             criterion["id"], "no driven case executed an op: nothing to measure post-verify over"
@@ -284,18 +326,23 @@ def collect_g2_3(criterion: dict, outcomes: list) -> ValidationReport:
     if undriven is not None:
         return undriven
     driven = _driven(outcomes)
-    applied = _applied(outcomes)
+    # Two populations, not one. Only a committed op has anything to undo, while the snapshot
+    # restore only ever accompanies a rollback — so grading both over one list would either
+    # hide the restores or count each rolled-back op as an undo that failed to match.
+    applied = _committed(outcomes)
     if not applied:
         return not_collected_report(
             criterion["id"], "no driven case executed an op: nothing to undo"
         )
 
     missing_expectation: list[str] = []
-    via_snapshot: list[str] = []
     for outcome in applied:
         undo = outcome.undo if isinstance(outcome.undo, dict) else {}
         if undo.get("matches_pre_op") is None:
             _note(missing_expectation, outcome.case_id)
+
+    via_snapshot: list[str] = []
+    for outcome in _executed(outcomes):
         mutation = outcome.mutation if isinstance(outcome.mutation, dict) else {}
         if mutation.get("rollback_proven") == "rolled_back_via_snapshot":
             _note(via_snapshot, outcome.case_id)
@@ -353,11 +400,13 @@ def collect_g2_4(
     required = flagged_bar(criterion.get("pass_rule", ""))
     if required is None:
         return not_collected_report(criterion["id"], "pass_rule declares no flagged count")
-    # The criterion grades the TNP fault suite, not the command benchmark. A dev command case
-    # declares no `fault.kind`, so scoring one here would class every ordinary command as a
-    # planted defect and report the guard's silence on it as a false-clean — a failure naming a
-    # cause that never happened. Only cases carrying a fault declaration are the population.
-    driven = [o for o in _driven(outcomes) if getattr(o, "fault_kind", None) is not None]
+    # The criterion grades the TNP fault suite, not the command benchmark and not the other
+    # fault suites. A dev command case declares no `fault.kind`, and a defect planted for a
+    # different validator is one this guard is right to leave CLEAN — scoring either here would
+    # report a false-clean naming a cause that never happened. The population is the cases whose
+    # declared `targets_validator` names the validator this criterion cites.
+    cited = criterion.get("cited_validators") or []
+    driven = [o for o in _driven(outcomes) if _is_fault(o) and _targets(o, cited)]
     if not driven:
         return not_collected_report(
             criterion["id"],

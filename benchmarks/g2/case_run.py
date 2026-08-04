@@ -53,6 +53,8 @@ class CaseOutcome:
     :param error: the reason this case could not be driven, or ``None``.
     :param fault_kind: a fault case's declared ``fault.kind``, or ``None`` for a command case.
         ``clean_control`` marks a case that must not be flagged; anything else is a planted defect.
+    :param targets_validator: a fault case's declared ``targets_validator``, naming the validator
+        the planted defect is aimed at, or ``None`` for a command case.
     """
 
     case_id: str
@@ -63,6 +65,7 @@ class CaseOutcome:
     undo: dict | None = None
     error: str | None = None
     fault_kind: str | None = None
+    targets_validator: str | None = None
 
     @property
     def passed(self) -> bool:
@@ -107,6 +110,7 @@ def _unresolved(case: dict, reason: str) -> CaseOutcome:
         status=UNRESOLVED,
         error=reason,
         fault_kind=_fault_kind(case),
+        targets_validator=case.get("targets_validator"),
     )
 
 
@@ -190,6 +194,7 @@ def run_case(case: dict, resolver, *, audit_sink=None) -> CaseOutcome:
             mutation=mutation,
             undo=undo_content,
             fault_kind=_fault_kind(case),
+            targets_validator=case.get("targets_validator"),
         )
     finally:
         if audit_sink:

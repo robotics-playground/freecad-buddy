@@ -58,6 +58,7 @@ class FakeOutcome:
     undo: dict | None = None
     error: str | None = None
     fault_kind: str | None = None
+    targets_validator: str | None = None
 
     @property
     def passed(self) -> bool:
@@ -292,6 +293,7 @@ def test_g2_2_fails_a_failed_verify_whose_rollback_is_unproven():
     outcomes = [
         FakeOutcome(
             case_id="c1",
+            status="SPEC_FAILED",
             mutation=_mutation(
                 post_verify={
                     "passed": False,
@@ -314,6 +316,7 @@ def test_g2_2_fails_a_rollback_with_no_human_readable_explanation():
     outcomes = [
         FakeOutcome(
             case_id="c1",
+            status="SPEC_FAILED",
             mutation=_mutation(
                 post_verify={"passed": False, "explanation": "", "tnp_audit": {}},
                 rolled_back=True,
@@ -332,6 +335,7 @@ def test_g2_2_passes_a_proven_rollback_carrying_its_reason():
     outcomes = [
         FakeOutcome(
             case_id="c1",
+            status="SPEC_FAILED",
             mutation=_mutation(
                 post_verify={
                     "passed": False,
@@ -347,6 +351,70 @@ def test_g2_2_passes_a_proven_rollback_carrying_its_reason():
     report = g2_collect.collect_g2_2(CRITERIA["G2.2"], outcomes)
 
     assert derive_verdict(report) == "OK"
+
+
+def test_g2_2_grades_a_rolled_back_op_rather_than_filtering_it_out():
+    """A rolled-back op executed, so its post_verify record is in scope.
+
+    Its terminal status is never ``OK`` — ``run_mutation`` emits that only on the commit path —
+    so a population selected by status holds none of the ops this criterion exists to judge.
+    """
+    outcomes = [
+        FakeOutcome(
+            case_id="c1",
+            status="SPEC_FAILED",
+            mutation={"rolled_back": True, "rollback_proven": "rolled_back_verified"},
+        )
+    ]
+
+    report = g2_collect.collect_g2_2(CRITERIA["G2.2"], outcomes)
+
+    assert derive_verdict(report) != "OK"
+    assert "no post_verify" in json.dumps(report)
+
+
+def test_g2_3_reports_a_snapshot_restore_taken_by_a_rolled_back_op():
+    """The snapshot path accompanies a failed verify, so it never carries an ``OK`` status."""
+    outcomes = [
+        FakeOutcome(case_id="c1", mutation=_mutation(), undo={"matches_pre_op": True}),
+        FakeOutcome(
+            case_id="c2",
+            status="RECOMPUTE_ERROR",
+            mutation=_mutation(
+                post_verify={"passed": False, "explanation": "invalid", "tnp_audit": {}},
+                rolled_back=True,
+                rollback_proven="rolled_back_via_snapshot",
+            ),
+        ),
+    ]
+
+    report = g2_collect.collect_g2_3(CRITERIA["G2.3"], outcomes)
+
+    snapshot = [c for c in report["checks"] if c["id"] == "G2.3.snapshot_path"][0]
+    assert snapshot["measured"] == 1, "the snapshot-restore path was taken but not counted"
+    assert "c2" in snapshot["detail"]["message"]
+
+
+def test_g2_3_undo_rate_ignores_an_op_that_rolled_back():
+    """A rolled-back op committed nothing, so it is not an undo that failed to match."""
+    outcomes = [
+        FakeOutcome(case_id="c1", mutation=_mutation(), undo={"matches_pre_op": True}),
+        FakeOutcome(
+            case_id="c2",
+            status="SPEC_FAILED",
+            mutation=_mutation(
+                post_verify={"passed": False, "explanation": "invalid", "tnp_audit": {}},
+                rolled_back=True,
+                rollback_proven="rolled_back_verified",
+            ),
+            undo=None,
+        ),
+    ]
+
+    report = g2_collect.collect_g2_3(CRITERIA["G2.3"], outcomes)
+
+    undo = [c for c in report["checks"] if c["id"] == "G2.3.undo"][0]
+    assert undo["measured"] == 1.0, "the rolled-back op was counted as a failed undo"
 
 
 def test_g2_3_requires_matches_pre_op_on_every_op():
@@ -417,6 +485,7 @@ def test_g2_4_requires_every_declared_scenario_flagged():
         FakeOutcome(
             case_id=f"tnp-{i}",
             fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
             mutation=_mutation(
                 post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}
             ),
@@ -429,11 +498,66 @@ def test_g2_4_requires_every_declared_scenario_flagged():
     assert derive_verdict(report) == "OK"
 
 
+def test_g2_4_ignores_a_fault_case_aimed_at_another_validator():
+    """A planted defect targeting a different validator is not a TNP false-clean.
+
+    Every G2 fault case declares ``targets_validator``; only the suites naming
+    ``audit_references`` are the guard's own population. A geometry defect the TNP guard
+    correctly leaves CLEAN must not be counted against it.
+    """
+    outcomes = [
+        FakeOutcome(
+            case_id=f"tnp-{i}",
+            fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
+            mutation=_mutation(
+                post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}
+            ),
+        )
+        for i in range(5)
+    ] + [
+        FakeOutcome(
+            case_id=f"wp-{i}",
+            fault_kind="planted_defect",
+            targets_validator="assertions@harness.assertions.evaluate",
+            mutation=_mutation(post_verify={"passed": True, "tnp_audit": {"status": "CLEAN"}}),
+        )
+        for i in range(11)
+    ]
+
+    report = g2_collect.collect_g2_4(CRITERIA["G2.4"], outcomes, element_map_available=True)
+
+    assert derive_verdict(report) == "OK", "a correctly-clean non-TNP defect failed G2.4"
+    assert "wp-0" not in json.dumps(report)
+
+
+def test_g2_1_excludes_the_fault_suites_from_its_pass_rate():
+    """``gate.yaml`` states the fault suites never count toward the G2.1 pass rate."""
+    outcomes = [
+        FakeOutcome(case_id=f"dev-{i}", checks=[{"passed": True}]) for i in range(20)
+    ] + [
+        FakeOutcome(
+            case_id=f"wp-{i}",
+            fault_kind="planted_defect",
+            targets_validator="assertions@harness.assertions.evaluate",
+            status="SPEC_FAILED",
+            checks=[{"passed": False}],
+        )
+        for i in range(11)
+    ]
+
+    report = g2_collect.collect_g2_1(CRITERIA["G2.1"], outcomes)
+
+    rate = [c for c in report["checks"] if c["id"] == "G2.1.rate"][0]
+    assert rate["measured"] == 1.0, "planted defects were counted in the command pass rate"
+
+
 def test_g2_4_fails_a_false_clean_scenario():
     outcomes = [
         FakeOutcome(
             case_id=f"tnp-{i}",
             fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
             mutation=_mutation(
                 post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}
             ),
@@ -443,6 +567,7 @@ def test_g2_4_fails_a_false_clean_scenario():
         FakeOutcome(
             case_id="tnp-4",
             fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
             mutation=_mutation(post_verify={"passed": True, "tnp_audit": {"status": "CLEAN"}}),
         )
     ]
@@ -458,6 +583,7 @@ def test_g2_4_fails_a_control_that_was_flagged():
         FakeOutcome(
             case_id=f"tnp-{i}",
             fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
             mutation=_mutation(
                 post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}
             ),
@@ -467,6 +593,7 @@ def test_g2_4_fails_a_control_that_was_flagged():
         FakeOutcome(
             case_id="control-1",
             fault_kind="clean_control",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
             mutation=_mutation(
                 post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}
             ),
@@ -908,6 +1035,7 @@ def test_g2_4_counts_distinct_scenarios_not_driven_repeats():
             checks=_passing_checks(),
             mutation=_mutation(post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}),
             fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
         )
         for _ in range(5)
     ]
@@ -931,6 +1059,7 @@ def test_g2_4_does_not_credit_a_falsely_flagged_control_toward_the_bar():
             checks=_passing_checks(),
             mutation=_mutation(post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}),
             fault_kind="planted_defect",
+            targets_validator="audit_references@usecases.tnp_guard.audit_references",
         )
         for name in ("a", "b", "c", "d")
     ]
@@ -939,6 +1068,7 @@ def test_g2_4_does_not_credit_a_falsely_flagged_control_toward_the_bar():
         checks=_passing_checks(),
         mutation=_mutation(post_verify={"passed": True, "tnp_audit": {"status": "FLAGGED"}}),
         fault_kind="clean_control",
+        targets_validator="audit_references@usecases.tnp_guard.audit_references",
     )
 
     report = g2_collect.collect_g2_4(
