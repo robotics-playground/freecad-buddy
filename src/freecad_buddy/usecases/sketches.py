@@ -561,6 +561,7 @@ def _sketch_mutation(
         approval = confirm.gate_mutation(document, handle, tool, params)
         if precheck is not None:
             precheck(document)
+        confirm.spend_confirm(approval, params)
         confirm.audit_approval(audit_sink, approval, params)
         result = transaction.run_mutation(
             document, handle, label, op, audit_sink=audit_sink, tool=tool, params=params

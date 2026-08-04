@@ -372,6 +372,7 @@ def _feature_mutation(
         approval = confirm.gate_mutation(document, handle, tool, params)
         if precheck is not None:
             precheck(document)
+        confirm.spend_confirm(approval, params)
         confirm.audit_approval(audit_sink, approval, params)
         rebound.append(document)
         result = transaction.run_mutation(

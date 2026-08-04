@@ -198,6 +198,71 @@ def _isoformat_to_epoch(text):
     return datetime.fromisoformat(text).timestamp()
 
 
+class SpentTokenTest(_GateFixture):
+    """A token authorizes one mutation, not every mutation that leaves the digest still."""
+
+    def test_a_token_accepted_once_is_refused_the_second_time(self):
+        token = self.preview_pad()["preview_id"]
+        self.assertEqual(self.pad({"preview_id": token})["status"], "OK")
+
+        with self.assertRaises(ValidationError) as caught:
+            self.pad({"preview_id": token})
+
+        self.assertIn("already", str(caught.exception))
+
+    def test_a_replay_is_refused_even_when_the_mutation_left_the_digest_unmoved(self):
+        """The state check cannot see this replay: it compares equal on both attempts.
+
+        A mutation writing a property the value it already holds commits without moving the
+        document digest, so the fingerprint the token signs still matches. Only the spent-token
+        record refuses the second call.
+        """
+        pad = self.pad({"preview_id": self.preview_pad()["preview_id"]})
+        self.assertEqual(pad["status"], "OK")
+        args = {"feature": "Pad", "parameters": {"Length": {"value": PAD_LENGTH, "unit": "mm"}}}
+        envelope = preview.preview_dry_run(
+            self.registry,
+            preview_op_table(),
+            None,
+            doc=self.handle,
+            operation={"tool": "feature_set_parameters", "args": args},
+            render="off",
+        )
+        token = envelope["structured_content"]["preview_id"]
+        digest_before = fingerprint(self.document)["digest"]
+
+        first = features.feature_set_parameters(
+            self.registry, doc=self.handle, confirm={"preview_id": token}, **args
+        )
+
+        self.assertEqual(first["status"], "OK", first.get("detail"))
+        self.assertEqual(
+            fingerprint(self.document)["digest"],
+            digest_before,
+            "this fixture only tests replay if the mutation leaves the digest unmoved",
+        )
+        with self.assertRaises(ValidationError):
+            features.feature_set_parameters(
+                self.registry, doc=self.handle, confirm={"preview_id": token}, **args
+            )
+
+    def test_a_refused_mutation_does_not_spend_its_token(self):
+        """The token is spent by an authorized mutation, not by a call that failed after it."""
+        token = self.preview_pad()["preview_id"]
+        with self.assertRaises(ValidationError):
+            self.pad({"preview_id": token}, name="")
+
+        self.assertEqual(self.pad({"preview_id": token})["status"], "OK")
+
+    def test_two_previews_of_the_same_op_mint_distinct_tokens(self):
+        """Without a unique id per token the two are byte-identical, so spending one would
+        pre-spend the other."""
+        first = self.preview_pad()["preview_id"]
+        second = self.preview_pad()["preview_id"]
+
+        self.assertNotEqual(first, second)
+
+
 class RejectionTest(_GateFixture):
     def test_a_missing_confirm_is_refused_and_nothing_is_created(self):
         message = self.assert_refused_without_touching_the_document(self.pad, None)
@@ -334,9 +399,11 @@ class RejectionTest(_GateFixture):
         with self.assertRaises(ValidationError) as excinfo:
             self.pad({"preview_id": token})
 
-        # The fingerprint moved with the apply, so the replay falls out of the state check with
-        # no separate nonce store.
-        self.assertIn("changed since the preview", str(excinfo.exception))
+        # Two independent reasons refuse this call: the token is spent, and the fingerprint moved
+        # with the apply. The spent check runs first, so it is the one that reports. A replay
+        # whose mutation left the digest unmoved is covered by SpentTokenTest, where the state
+        # check compares equal and the spent record is the only thing refusing.
+        self.assertIn("already authorized", str(excinfo.exception))
 
 
 class ClientSuppliedAutoApproveTest(_GateFixture):

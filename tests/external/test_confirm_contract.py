@@ -48,6 +48,7 @@ def _mutation_schemas() -> dict:
 
 def _token(**overrides) -> str:
     payload = {
+        "jti": confirm.new_token_id(),
         "doc": DOC,
         "tool": TOOL,
         "args_digest": confirm.args_digest(ARGS),
@@ -308,3 +309,40 @@ def test_usecases_confirm_imports_nothing_outward_and_nothing_third_party():
             or module.startswith("freecad_buddy.")
             or root in {"FreeCAD", "Part", "Sketcher", "PartDesign", "Mesh", "MeshPart"}
         ), f"usecases/confirm.py imports third-party {module}"
+
+
+def test_a_token_carrying_no_jti_is_refused():
+    """A payload without an id cannot be spent, so it must not verify at all."""
+    payload = {
+        "doc": DOC,
+        "tool": TOOL,
+        "args_digest": confirm.args_digest(ARGS),
+        "fingerprint_before": FINGERPRINT,
+        "exp": int(time.time()) + 900,
+    }
+
+    with pytest.raises(ValidationError, match="jti"):
+        confirm.decode_preview_token(confirm.mint_preview_token(payload))
+
+
+def test_two_previews_of_the_same_operation_mint_distinct_tokens():
+    """Without the id the two payloads are equal and sign identically."""
+    assert _token() != _token()
+
+
+def test_spending_a_token_drops_the_entries_already_past_their_own_expiry():
+    """The spent set is bounded by expiry, so a stale entry cannot accumulate."""
+    now = time.time()
+    confirm.spend_token("stale", now - 1.0, now=now)
+    confirm.spend_token("live", now + 900.0, now=now)
+
+    assert "stale" not in confirm._SPENT_TOKENS
+    assert "live" in confirm._SPENT_TOKENS
+
+
+def test_an_expired_token_is_refused_as_expired_rather_than_consulting_the_spent_set():
+    """The order matters: it is what lets the spent set be swept by expiry alone."""
+    token = _token(exp=int(time.time()) - 1)
+
+    with pytest.raises(ValidationError, match="expired"):
+        _verify(token)

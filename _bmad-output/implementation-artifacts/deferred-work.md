@@ -1317,7 +1317,16 @@ source_spec: `spec-3-7-confirmation-flow-verified-undo.md`
 severity: medium
 location: src/freecad_buddy/usecases/confirm.py (`:195-200`)
 reason: Promotes an earlier review note that recorded this as explicitly **not measured end-to-end**. It is now measured. The gate performs five checks — expiry, doc, tool, `args_digest`, and `fingerprint_before` — and carries no nonce store and no single-use marker (grep for `nonce|jti|single_use|consumed|_used` over `confirm.py` returns 0). So the only replay defence is the digest comparison at `:197`, and any committed mutation that does not move the digest leaves its token verifying until expiry. Measured under FreeCAD 1.1.1: one `preview_dry_run` token for `feature_set_parameters` writing a property the value it already holds was accepted **six times**, `UndoCount` 1 -> 7, every call `status: OK` with `rolled_back: False`, the digest `b909aea3eea2f4e0` before and after. Reachable on destructive tools too: `sketch_remove_geometry` on a construction edge (excluded from the sketch Shape) left the digest at `bbafb0fc7051d705`, so the gate accepted the replayed token and only the tool's own index-bound precheck refused it — an accidental guard that does not generalise to a tool whose target identity survives its first application. The contract overstates the guarantee: the spec's I/O matrix (`:60`) promises `INVALID_INPUT` for "Replay after apply" with "no separate nonce store", and the design note (`:221`) says replay "falls out for free, because the fingerprint has moved". Both assume the digest always moves; it moves only for shape-changing ops. Fix: either add a single-use marker, or correct the design note and the I/O matrix to state the condition.
-status: open
+status: done 2026-08-04
+resolution: ruled by the operator — add the single-use marker rather than correcting the design note. `PreviewTokenPayload` carries a `jti`, and `verify_confirm` refuses a token whose id an authorized mutation already spent.
+
+Keying the spent set on the token string was measured and rejected: two previews of the same operation on an unchanged document produce byte-identical tokens, because `exp` is whole seconds and every other payload field is equal, so spending one would pre-spend the other. `jti` also makes the two distinguishable.
+
+The set is bounded by the expiry it stores rather than by a size cap. `verify_confirm` refuses an expired token BEFORE consulting the spent set, so an entry past its own deadline can never authorize anything again and is swept on the next write — keeping the set proportional to the tokens live in one TTL window, not to the tokens ever issued.
+
+Spent by `spend_confirm` at the same point as the approval audit, after any precheck, so a call refused before it runs leaves its token usable and the caller can correct the arguments and re-send rather than re-preview. Only the token path spends: an auto-approved call presented no token, and a preview authorized nothing.
+
+`test_replaying_an_accepted_token_after_the_apply_is_refused` asserted the mechanism ("no separate nonce store") rather than the behaviour, so it was updated to assert the refusal. The state-check path keeps its own coverage in the test at `:391`. The spec's I/O matrix row and design note both stated the guarantee unconditionally and were corrected in the same change.
 
 ### DW-111: `preview_dry_run` writes an `approval` audit record for a mutation that never happened
 origin: DW-95 follow-up review of 3-7-confirmation-flow-verified-undo, 2026-08-04

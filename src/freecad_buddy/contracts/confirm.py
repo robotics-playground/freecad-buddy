@@ -1,8 +1,10 @@
 """Confirmation shapes: the wire ``confirm`` object and the signed preview-token payload.
 
 ``Confirm`` is what a client sends on a mutation call. ``PreviewTokenPayload`` is what a
-``preview_id`` carries once decoded: the operation, document and document state the preview
-measured, plus the moment the token stops being accepted. Shapes only — the codec that signs and
+``preview_id`` carries once decoded: its own identity, the operation, document and document state
+the preview measured, plus the moment the token stops being accepted. ``jti`` is what makes two
+previews of the same operation on an unchanged document distinguishable — without it their
+payloads are equal and they sign to the same token. Shapes only — the codec that signs and
 verifies a token lives in ``usecases/confirm.py``.
 """
 
@@ -17,6 +19,7 @@ class Confirm(TypedDict, total=False):
 
 
 class PreviewTokenPayload(TypedDict):
+    jti: str
     doc: str
     tool: str
     args_digest: str

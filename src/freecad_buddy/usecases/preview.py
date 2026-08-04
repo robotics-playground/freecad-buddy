@@ -518,6 +518,7 @@ def preview_dry_run(
             if gated_args_digest is None
             else confirm.mint_preview_token(
                 {
+                    "jti": confirm.new_token_id(),
                     "doc": handle,
                     "tool": tool,
                     "args_digest": gated_args_digest,

@@ -2,8 +2,13 @@
 
 A ``preview_id`` is a self-authenticating token: ``preview_dry_run`` signs the operation, the
 document handle, a digest of the arguments and the document's fingerprint at the moment it
-measured them; the gate re-derives all four from the call it is asked to run and compares. No
-state is kept between the two calls.
+measured them; the gate re-derives all four from the call it is asked to run and compares.
+
+The one piece of state kept between the two calls is the set of token ids already spent. The
+comparison above proves the document is still in the state the preview measured, which is not the
+same as proving the token has not been used: a mutation writing a property the value it already
+holds commits without moving the fingerprint, so its token would otherwise keep verifying. A
+token authorizes one mutation.
 
 The signing secret is minted once per process. A token therefore only verifies in the process
 that issued it, which is the process that will run the mutation: the RPC listener and the
@@ -48,6 +53,20 @@ _APPROVAL_SINK: object = None
 # gate. A thread-local slot confines an abandoned exemption to the thread that leaked it.
 _EXEMPT_STATE = threading.local()
 
+# The ``jti`` of every token an authorized mutation has already spent, mapped to the token's own
+# expiry. A token is single-use: the state check refuses a REPLAY only when the mutation moved the
+# document digest, and an op that writes a property the value it already holds commits without
+# moving it, leaving the signed fingerprint still matching. Keyed on ``jti`` rather than on the
+# token string because two previews of the same operation on an unchanged document produce equal
+# payloads and therefore identical tokens, so spending one would pre-spend the other.
+#
+# The set is bounded by the expiry it stores rather than by a size cap: an entry past its own
+# deadline can never authorize anything again, since verify_confirm refuses an expired token
+# before it looks here. Sweeping on write keeps the set proportional to the tokens live in one
+# TTL window, not to the tokens ever issued.
+_SPENT_TOKENS: dict[str, float] = {}
+_SPENT_LOCK = threading.Lock()
+
 # The fields the wire ``confirm`` object declares; anything else is refused rather than ignored,
 # so a client-supplied ``autoApprove`` is a rejection and not a silently dropped key.
 _CONFIRM_FIELDS = frozenset(Confirm.__annotations__)
@@ -66,6 +85,54 @@ def args_digest(args: dict) -> str:
     """
     payload = json.dumps(args, sort_keys=True, ensure_ascii=False, default=repr).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def new_token_id() -> str:
+    """Return a fresh token id, distinguishing two previews that would otherwise sign alike."""
+    return secrets.token_urlsafe(16)
+
+
+def spend_confirm(approval: ApprovalRecord, params: dict) -> None:
+    """Consume the token that authorized this call, so it cannot authorize a second one.
+
+    Called once the mutation is going ahead — after any precheck — so a call refused before it
+    runs leaves its token usable and the caller can correct the arguments and re-send.
+
+    Only the token path spends anything: an auto-approved call presented no token, and a preview
+    runs against a throwaway copy and authorized nothing.
+    """
+    if approval["mode"] != "preview_token":
+        return
+    confirm_obj = params.get("confirm")
+    token = confirm_obj.get("preview_id") if isinstance(confirm_obj, dict) else None
+    try:
+        payload = decode_preview_token(token)
+    except ValidationError:
+        # Unreachable from the gate, which decoded the same token to authorize the call; a token
+        # that cannot be decoded also cannot be replayed, so there is nothing to record.
+        return
+    spend_token(payload["jti"], float(payload["exp"]))
+
+
+def _is_spent(jti: object, now: float) -> bool:
+    """Whether ``jti`` names a token an authorized mutation has already spent."""
+    with _SPENT_LOCK:
+        deadline = _SPENT_TOKENS.get(str(jti))
+    return deadline is not None and now <= deadline
+
+
+def spend_token(jti: object, expires_at: float, now: float | None = None) -> None:
+    """Record ``jti`` as spent until ``expires_at``, dropping entries already past their own.
+
+    Called once a mutation is authorized, so a refused call leaves its token usable: the caller
+    fixes what was wrong and re-sends rather than re-previewing.
+    """
+    moment = time.time() if now is None else now
+    with _SPENT_LOCK:
+        for spent, deadline in list(_SPENT_TOKENS.items()):
+            if moment > deadline:
+                del _SPENT_TOKENS[spent]
+        _SPENT_TOKENS[str(jti)] = expires_at
 
 
 def _b64encode(raw: bytes) -> str:
@@ -184,8 +251,15 @@ def verify_confirm(
     deadline = payload["exp"]
     if not isinstance(deadline, (int, float)) or isinstance(deadline, bool):
         raise ValidationError("confirm.preview_id carries no readable expiry")
-    if (time.time() if now is None else now) > float(deadline):
+    moment = time.time() if now is None else now
+    if moment > float(deadline):
         raise ValidationError("confirm.preview_id has expired; re-run preview_dry_run")
+    # Checked after the expiry so a token past its deadline is refused as expired and never
+    # consults the spent set, which is what lets that set be swept by expiry alone.
+    if _is_spent(payload["jti"], moment):
+        raise ValidationError(
+            "confirm.preview_id has already authorized a mutation; re-run preview_dry_run"
+        )
     if not hmac.compare_digest(str(payload["doc"]), doc_handle):
         raise ValidationError("confirm.preview_id was issued for a different document")
     if not hmac.compare_digest(str(payload["tool"]), tool):
