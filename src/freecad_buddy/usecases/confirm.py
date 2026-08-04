@@ -321,7 +321,13 @@ def audit_approval(
 
     A sink that cannot write must not convert an authorized mutation into a raised exception, so
     a write failure is swallowed here.
+
+    The ``preview_copy`` mode writes nothing: the record covers a preview's run against a
+    throwaway copy, which authorized no mutation and applied none, while the sink's contract is
+    one approval line per authorized geometry mutation.
     """
+    if approval["mode"] == "preview_copy":
+        return
     target = sink if sink is not None else _APPROVAL_SINK
     if target is None:
         return

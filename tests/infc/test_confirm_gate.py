@@ -402,6 +402,7 @@ class ApprovalAuditTest(_GateFixture):
 
         self.pad({"preview_id": token})
 
+        self.assertEqual(len(self.sink.records), 1, self.sink.records)
         approvals = [r for r in self.sink.records if r[2]["mode"] == "preview_token"]
         self.assertEqual(len(approvals), 1, self.sink.records)
         tool, doc, record, params = approvals[0]
@@ -419,11 +420,22 @@ class ApprovalAuditTest(_GateFixture):
 
         self.pad(None)
 
+        self.assertEqual(len(self.sink.records), 1, self.sink.records)
         approvals = [r for r in self.sink.records if r[2]["mode"] == "auto_approve"]
         self.assertEqual(len(approvals), 1, self.sink.records)
         record = approvals[0][2]
         self.assertEqual(record["tool"], "feature_pad")
         self.assertTrue(record["args_digest"], "the approval names no params digest")
+
+    def test_a_preview_writes_no_approval_record(self):
+        """A preview authorizes nothing and applies nothing, so it appends no approval line.
+
+        The sink's contract covers an authorized geometry mutation; a preview runs the op on a
+        throwaway copy that is discarded before the envelope is built.
+        """
+        self.preview_pad()
+
+        self.assertEqual(self.sink.records, [])
 
     def test_a_refused_call_writes_no_approval_record(self):
         self.assert_refused_without_touching_the_document(self.pad, None)
