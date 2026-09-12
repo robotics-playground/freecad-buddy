@@ -188,6 +188,10 @@ Code is written for the standards, never compressed:
 - `skill(name="manual-testing")`
 - `skill(name="cua-driver")`
 - Directory: `tests/uat`
+- FreeCAD GUI operations:
+  - Shutdown all FreeCAD instances before starting the tests. Verify that no FreeCAD processes are running.
+  - Ensure no documents are open in the FreeCAD GUI before running UAT tests.
+  - Use absolute paths for any file operations to avoid issues with FreeCAD's working directory.
 
 ### Commands
 
