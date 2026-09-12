@@ -7,7 +7,6 @@ Before implementing:
 - If multiple interpretations exist, present them - don't pick silently.
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
-- **Any FreeCAD enum value, preference key, parameter name, or API semantic MUST be confirmed against the source under `docs/references/FreeCAD/` before you write code — never assume ordering/naming/values from memory.** FreeCAD enums are often non-sequential (e.g. `AntiAliasing::MSAA8x = 4`, `MSAA6x = 5`). See [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md).
 
 ## 2. Simplicity First
 
@@ -37,9 +36,14 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-**Artifacts hold latest state, not history.** Architecture, PRD, design docs, and source files record what the system *is* — never progress notes, status updates, "Auto Run Result" sections, change logs, or decision narration. History lives in git and the sprint/ledger tooling, not in the artifact body.
+**Artifacts hold latest state, not history.** Intent, specs, plans, and source record what the
+system *is* — never progress notes, status updates, change logs, or decision narration. History
+lives in git.
 
-**Comments and docstrings are pure code documentation.** Describe only what the class/function does and its params, returns, and raised errors. No design rationale, no "because AD-x", no provenance ("for the external suite / static analysis"), no requirement-traceability tags — AD/NFR/story ids, spec-section citations (`§1.1`, `mcp-tools §2`), cross-doc pointers (`project-context FreeCAD API Traps`), or ring tags (`Ring: usecases/ (AD-1/AD-12)`). A code-to-AD/NFR/story relationship is not code documentation and is useless to a developer reading the code; if a decision needs explaining, put it in a decision note, not inline.
+**Comments explain a non-obvious why.** No obvious comments. No provenance, no ticket numbers, no
+"changed from X" notes. A tuned constant is the exception worth documenting: state the mechanism
+and the measurement that justified the value, because the next reader will otherwise retune it
+blind. [Reference](.knowledge-base/technical/standards/global/commenting.md).
 
 ## 4. Goal-Driven Execution
 
@@ -57,108 +61,88 @@ For multi-step tasks, state a brief plan:
 3. [Step] → verify: [check]
 ```
 
-## 5. Caveman Concise Communication
-
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## 5. Communication
+
+**Scope: this section governs chat replies AND every document you write.** Code follows section 9
+and the standards, not this section.
+
+| Output | Style |
+|--------|-------|
+| Chat replies, reports, plans, option lists | Caveman + ASD-STE100 |
+| Docs: PRD, architecture, designs, epics, stories, specs, README, knowledge-base | Caveman + ASD-STE100 |
+| Code, code comments, doc comments | `.knowledge-base/technical/standards/` + `typescript-clean-code` for TypeScript |
+| Commit messages, PR descriptions | Conventional Commits, normal prose |
+
+### Plain English
+
+**Write for a reader fluent in the domain, not a native English speaker.** Difficulty should come from the problem, never from the wording.
+
+- **Report and write documents in ASD-STE100 Simplified Technical English.** Approved plain words, active voice, and one instruction or idea per sentence. Small words, short sentences, short paragraphs. If a big word is unavoidable, explain it right after. This forbids idioms, figurative language, hedges, and rare vocabulary — say the literal thing.
+- **Technical content is never simplified.** API names, code, error strings, `file:line`, and standard acronyms (HTTP, JSON, CI) stay verbatim. Simpler English never means a dropped caveat or a vaguer claim.
+- A term of art with no plain equivalent: use it, define it once in a short clause.
+
+The rules in this section are the complete reporting style. There is no separate style file.
+
+### Caveman concise
 
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
 
-Rules:
-- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging
-- Drop idioms: No figurative or colloquial expressions — "cry wolf", "blast radius", "low-hanging fruit", "moving the needle", "boils down to". Say the literal thing: "produces false positives", "scope of the change", "cheapest fix". Idioms cost a reader who does not share the idiom, and they blur precision that plain terms keep.
+- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging.
 - Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
-- Pattern: [thing] [action] [reason]. [next step].
+- Pattern: `[thing] [action] [reason]. [next step].`
 - Not: "Sure! I'd be happy to help you with that."
 - Yes: "Bug in auth middleware. Fix:"
 
-Switch level: /caveman lite|full|ultra|wenyan
-Stop: "stop caveman" or "normal mode"
+Switch level: `/caveman lite|full|ultra`. Stop: "stop caveman" or "normal mode".
 
-Auto-Clarity: drop caveman for security warnings, irreversible actions, user confused. Resume after.
+Auto-clarity: drop caveman for security warnings, irreversible actions, or when the user is confused. Resume after.
 
-Boundaries: code/commits/PRs written normal.
+**Documents get caveman too**, with two limits that keep them usable months later:
+- Headings, tables, lists, links, code fences, and required field names keep their normal form.
+- Do not drop a word if that makes the sentence ambiguous. Clarity beats brevity in a document.
 
-## 6. Explaining Issues
+### Code style is not caveman
 
-**Goal: reader understands problem + options fast, decides correctly.** Speed matters. Correctness matters more — never drop fact or caveat to shorten. Sentence not helping reader decide → cut.
+Code is written for the standards, never compressed:
 
-**Short form default.** Triggers: "short explain", "what is the issue", "explain briefly", asking again after long answer. ~10-15 lines.
+- Follow `.knowledge-base/technical/standards/` — see the applicable backend, frontend, global, and testing files.
+- Load `typescript-clean-code` before you write or review TypeScript. It is reference-first:
+  read the `references/<topic>/rules.md` it points to before you give advice or write code, and
+  cite the rule you applied.
+- Identifiers stay full words. No invented short forms.
+- Code comments follow `.knowledge-base/technical/standards/global/commenting.md`, in normal prose.
+- Commit messages and PR descriptions stay normal prose.
 
-Five parts, this order:
+### Show real code, not descriptions
 
-- **Background** — what we do, how it should work. Include competing requirement if exists. Real numbers and names.
-- **Issue** — what goes wrong. 1-2 lines.
-- **Cause** — why. Show real code or values. Name symbol, cite `file:line`. State: design wrong or code wrong.
-- **Options** — table: `Option | What it does | Cost`.
-- **Recommended** — which, one sentence why.
+**The reader has not read this source.** Assume they can read code fluently but have never opened the file you are discussing.
 
-**Whole explanation must stand out.** Chat window full of text. Wrap it:
+- When you name code, give `file:line` and quote the line. A bare symbol name costs the reader a lookup.
+- Show the real value, before and after. A 5-line trace beats a 5-sentence description.
+- Describing code in prose when you could quote it is the mistake.
 
-1. Open `---` then `## 🔍 <short title>`. Title names the thing.
-2. Each part own `### ` heading + icon:
-   - `### 📋 Background`
-   - `### ⚠️ Issue`
-   - `### 🔬 Cause`
-   - `### ❓ Decision needed` (holds Options + Recommended)
-3. Under Decision needed: options table, then bold **Recommended: X** + one sentence why, then bold **Reply `A`, `B`, or `C`.**
-4. Close `---`.
+## 6. Project Operating Model
 
-Nothing after closing rule. Question is last thing on screen.
-
-Icons and headings exact as listed — same marks every time = scannable. No icons elsewhere in reply.
-
-No long version first. No summary after options. Asked twice → second answer shorter, never longer.
-
-**Always show real code, real values, concrete example.** Reader understands rule from what it *does*, not from description. Quote real line. Show value before and after. Shape or format → show small sample. 5-line trace beats 5-sentence description. Describing code in prose = the mistake.
-
-**Long form** — same five headings, more detail each. Use only when reader asks, or decision needs full trace. Background adds starting state + real values. Issue numbers the failing steps. Cause quotes code at each step. Options sketch how each works. Recommended stays one sentence.
-
-## 7. Plain English
-
-**Write for reader fluent in domain, not native English speaker.** Difficulty comes from problem, never from wording. Positive form of no-idioms rule.
-
-- Common word wins: *use* not *leverage*, *start* not *kick off*, *find* not *surface*, *stop* not *halt*, *about* not *regarding*, *so* not *hence*.
-- Short sentences, one clause deep. Split rather than join with semicolon or dash.
-- Active voice, named actor: "the guard skips the check", not "the check is skipped".
-- Cut hedges (*arguably*, *somewhat*, *it seems*) and intensifiers (*quite*, *fairly*, *rather*) — length, no information.
-- No rare vocabulary (*ostensibly*, *notwithstanding*, *ergo*), no obscure phrasal verbs (*bear out*, *paper over*, *chalk up to*), no cultural/sporting/military metaphors.
-- **Technical content never simplified.** API names, code, error strings, `file:line`, standard acronyms (HTTP, JSON, CI) stay verbatim. Simpler English never means dropped caveat or vaguer claim.
-- Term of art with no plain equivalent → use it, define once in short clause: "the element map (FreeCAD's table linking a shape's faces to stable names)".
-
-## 8. Skill catelog
-
-| Task Type                               | Required Skill                     | Load Command                                     |
-| --------------------------------------- | ---------------------------------- | ------------------------------------------------ |
-| Write/review unit tests                 | `typescript-unit-testing`          | `skill(name="typescript-unit-testing")`          |
-| Write/review E2E/integration tests      | `typescript-e2e-testing`           | `skill(name="typescript-e2e-testing")`           |
-| Debug failing tests                     | Load skill matching test type      | See above                                        |
-| Test quality review                     | Load BOTH testing skills           | Load both before review                          |
-| Write/review TypeScript code            | `typescript-clean-code`            | `skill(name="typescript-clean-code")`            |
-| Code review or refactoring              | `typescript-clean-code`            | `skill(name="typescript-clean-code")`            |
-| Fix bugs with test coverage             | `typescript-clean-code`            | `skill(name="typescript-clean-code")`            |
-| Follow TDD workflow                     | `typescript-clean-code`            | `skill(name="typescript-clean-code")`            |
-| Debug runtime issues                    | `superpowers:systematic-debugging` | `skill(name="superpowers:systematic-debugging")` |
-| Resolve complex problem                 | `ultrathink-protocol`              | `skill(name="ultrathink-protocol")`              |
-| Broadly research software topics        | `software-research`                | `skill(name="software-research")`                |
-| Research specific technology or library | `bmad-technical-research`          | `skill(name="bmad-technical-research")`          |
-| Write/review/execute/debug manual test  | `manual-testing`                   | `skill(name="manual-testing")`                   |
-
-## 9. Project Operating Model
-
-**Workspace coordinates. Service repositories implement.**
-
-- Workspace root holds planning artifacts, standards, shared tooling, and submodule pointers.
+- `main` stays clean. It holds shared tooling, docs, standards, and harness config only.
 - Before substantive work:
- 1. Read `.knowledge-base/technical/standards/index.md`.
- 2. Read `.knowledge-base/technical/application-design/index.md`.
- 3. Identify and read relevant PRD, architecture, UX, design, diagram, and wireframe documents under `.ai-artifacts/planning-artifacts/`.
- 4. Read instructions local to the target service.
- 5. Load skills applicable to the task and technology.
-- Design conflicts with code or requirements → stop, cite evidence, propose correction, and get agreement. Never silently diverge.
-- Never auto commit without approve from user
-- Never include CoAuthor to commit message
+  1. Read `.knowledge-base/technical/standards/index.md`.
+  2. Read `.knowledge-base/technical/application-design/index.md`.
+  3. Read the project branch's own `docs/` and `README.md` — they define the scope, and
+   they win any conflict about what the assistant should do.
+  4. Read the branch's `.knowledge-base/` research only when you need the *evidence*
+   behind a decision, or when touching a selector or endpoint.
+  5. Load skills applicable to the task and technology (see section 13).
+- BMAD writes generated artifacts to `.ai-artifacts/`. Planning artifacts go to
+  `.ai-artifacts/planning-artifacts/`, implementation records to
+  `.ai-artifacts/implementation-artifacts/`.
+- Design conflicts with code or requirements → stop, cite evidence, propose correction, and
+  get agreement. Never silently diverge.
+- Never auto commit without approval from the user.
+- Never include a `Co-Authored-By` trailer in a commit message.
 
-## 10. Brainstorm
+## 7. Brainstorm
 
 **Understand problem before designing solution.**
 
@@ -169,31 +153,81 @@ No long version first. No summary after options. Asked twice → second answer s
 - Prefer smallest solution that satisfies current need.
 - Get agreement on direction before architecture or implementation. Simple task may need only short design, but still needs explicit shared understanding.
 
-## 11. Architect
+## 8. Architect
 
 **Design against intended contracts and actual code.**
 
 - Treat PRD, architecture, UX, designs, diagrams, and wireframes as intended-system contract.
 - Compare intended contract with current implementation before deciding.
-- For structural code questions, query codebase knowledge graph first; verify findings against current source before acting.
+- For structural code questions, read the current source before deciding. Do not rely on memory of a previous branch.
 - Define module boundaries, interfaces, data flow, failure behavior, migration impact, security concerns, and test strategy.
-- Follow existing Clean Architecture, NestJS, CQRS, dependency-injection, and service patterns unless documented evidence supports change.
+- Follow the patterns the experiment already uses unless documented evidence supports a change. For a TypeScript service, that means the Clean Architecture and dependency-injection patterns in the knowledge base. 
 - Record decisions and trade-offs. Make design implementation-ready: no hidden choices left for developer.
 
-## 12. Develop
+## 9. Develop
 
-**Implement approved intent with smallest verifiable change.**
+### Testing standards
 
-- Read target repository instructions and existing implementation patterns.
-- Define acceptance checks first. Bug fix → reproduce failure. Feature → establish observable expected behavior.
-- Write or update appropriate unit and E2E tests following project testing standards.
-- Preserve public APIs and unrelated behavior unless requirement explicitly changes them.
-- Keep business logic framework-independent and respect established layer boundaries.
-- Remove only orphaned code created by your change. Leave pre-existing cleanup alone.
-- Run relevant tests, then `npm run lint`, `npm run format`, and `npm run typecheck` in each changed service. Missing script or unrelated failure → report precisely; never claim success.
-- Approved implementation changes a design contract → update authoritative design artifact in same work.
+- **Test naming:** `Should <expected outcome> When <condition>`.
+- **Test structure:** every body divided by `// Arrange`, `// Act`, `// Assert`, in that order. A phase that would be empty → hoist inputs into named variables so the phase is real. Throwing call → Act assigns the thunk (`const act = () => fn(input)`), Assert applies the matcher.
+- **Conventions:** the system under test is named `target`; mocks are `mockXxx`.
+- **Specs live beside their subject** as `*.spec.ts`.
+- **Pure functions get fixture-driven unit specs.** Fixture coverage is defined per
+  project branch; keep captures redacted.
+- Manual smoke test on the real site is the operator's job, never the agent's.
 
-## 13. Critical Guardrails
+**Detail:**
+- `.knowledge-base/technical/standards/testing/unit-testing.md`
+- `.knowledge-base/technical/standards/testing/e2e-testing.md`
+- `skill(name="typescript-unit-testing")`
+- `skill(name="typescript-e2e-testing")`
+
+### Commands
+
+`main` holds no code and no `package.json`. Build, test, and dev commands are defined by
+each service under `services/` on a `project/*` branch — read that service's
+`package.json` before running anything.
+
+Quality checks after any implementation or bug fix, in this order:
+
+```bash
+npm run lint
+npm run format
+npm run typecheck
+```
+
+## 10. Smell Check
+
+**Twelve guide words. Run them on your own diff before you say done.**
+
+Fowler's smells (*Refactoring*, 1999). You already know each one and its
+refactoring. The value is the checklist, not the definition: without names, a
+diff "looks fine"; with names, you find the shape.
+
+Shotgun Surgery · Feature Envy · Data Clumps · Long Method · Divergent Change ·
+Duplicated Code · Large Class · Long Parameter List · Primitive Obsession ·
+Message Chains · Dead Code · Speculative Generality
+
+### Rules of use
+
+- **When.** After tests pass, before the completion report. Also when reading
+  unfamiliar code, to judge whether a change is safe.
+- **How.** Read your own diff, one pass per smell. Answer yes or no.
+- **A yes is a question, not a verdict.** Some are correct on purpose. An
+  undefended yes is a defect.
+- **Named, not vague.** Report the smell name, `file:line`, and the quoted line.
+  "Feature Envy at `handler.ts:42`" is actionable. "Could be cleaner" is not.
+- **Scope stays surgical.** Section 3 wins. Fix smells your diff created. Name
+  pre-existing smells in the report; do not fix them unasked.
+- **Owner rules beat Fowler.** On conflict, `.knowledge-base/technical/standards/`
+  and `typescript-clean-code` (`references/smells/rules.md`) win. Three that
+  already decide cases here: models are classes (Data Clumps), delete do not
+  deprecate (Dead Code), no abstraction for a single caller (Speculative
+  Generality).
+- **Report what you found.** List the smells you fixed, and any you accepted
+  with the reason.
+
+## 11. Critical Guardrails
 
 ### Verification
 
@@ -205,61 +239,11 @@ No long version first. No summary after options. Asked twice → second answer s
 
 ### Git Safety
 
-- For branch, commit, push, sync, or submodule work, load and follow gitflow.
-- Before any Git write, check current branch in workspace and every affected service repository.
 - Never commit, merge, rebase, reset, or push directly to `main`, `master`, `develop`, `dev`, `stage`, `staging`, `release`, `test`, `uat`, `prod`, or `production` without explicit confirmation naming that branch and operation.
-- **bmad-loop exception:** when a spawned `bmad-dev-auto` dev/review session finalizes a story, its per-story commit to the current branch (`main` expected) is pre-approved — do not halt to ask. Scoped to that per-story commit only: no push, no force, no history rewrite, and it does not relax the rule for ordinary interactive sessions.
 - Commit messages and pull requests contain no AI attribution or `Co-Authored-By` trailer.
-- Use Conventional Commits.
-### User Story Creation
+- Use Conventional Commits. Keep workspace commit and service-repository commits separate.
 
-#### Pre-Work Template (MANDATORY)
-
-Every story MUST include this as the **first task**. This task is **never marked as done** — it must be re-executed at every stage (implement, testing, review, and bug fix) because the agent has no memory of prior sessions.
-
-```markdown
-**Pre-Work: Load Standards and Skills (MANDATORY — re-execute at every stage, do NOT mark done)**
-  - Read `.knowledge-base/technical/standards/index.md`
-  - Read `.knowledge-base/technical/application-design/index.md`
-  - Load `typescript-clean-code` skill **(always required)**
-  - Load `typescript-unit-testing` skill (if task involves unit tests)
-  - Load `typescript-e2e-testing` skill (if task involves E2E tests)
-  - Read `.knowledge-base/technical/standards/backend/error-handling.md` - NO try-catch in use cases, errors bubble
-  - Read `.knowledge-base/technical/standards/backend/coding-style.md` - Naming, SOLID, TypeScript
-  - Read `.knowledge-base/technical/standards/global/commenting.md` - Zero-tolerance for obvious comments
-  - Read `.knowledge-base/technical/standards/backend/logging.md` - Minimal logging only
-  - Read `.knowledge-base/technical/standards/backend/validation.md` - class-validator with ErrorCode
-  - Read `.knowledge-base/technical/standards/testing/unit-testing.md` - AAA pattern, @golevelup/ts-jest
-  - Read `.knowledge-base/technical/standards/testing/e2e-testing.md`
-  - (Add any other applicable standards for this story)
-```
-
-#### Final Task Template (MANDATORY)
-
-Every story MUST include this as the **last task**:
-
-```markdown
-- [ ] **Final Task: Quality Checks**
-  - [ ] Run `npm run lint` - Fix any linting issues
-  - [ ] Run `npm run format` - Verify code formatting
-  - [ ] Run `npm run typecheck` - Ensure type safety
-```
-
-## 14. Running the MCP Bridge (GUI mode)
-
-**Opening FreeCAD is the only step — the addon starts everything.**
-
-- On FreeCAD GUI start the addon (`gui_addon/bootstrap.start_bridge`) starts the in-FreeCAD **RPC listener** (stdlib, ephemeral localhost port) AND auto-spawns the **external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp` as a child process. Both are torn down on FreeCAD quit.
-- **Do NOT run `freecad-buddy serve --mode rpc` by hand** to talk to the live GUI, and do not hand-roll RPC sockets — just open FreeCAD, then use the connected `mcp__freecad-buddy__*` tools. The proxy is spawned for you.
-- `.mcp.json` is a plain HTTP entry — no `serve`/`rpc`/`command` in it:
-  ```json
-  { "mcpServers": { "freecad-buddy": { "type": "http", "url": "http://127.0.0.1:8765/mcp" } } }
-  ```
-- **Why the proxy is a separate process (AD-2/AD-12):** the MCP/FastMCP libs are third-party and may not be imported inside FreeCAD's bundled Python. The addon spawns the proxy in the **external project venv interpreter** (which has `mcp`); it never imports `mcp` itself.
-- **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
-- Headless automation (CI, the `run_mcp_*` sweeps) is unaffected: it uses the single-process H1 stdio host, not this proxy.
-
-## 15. Repo Structure
+## 12. Repo Structure
 
 Single installable package, four Clean Architecture rings (AD-1). Imports cross ring boundaries **inward only**: `contracts/` ← `usecases/` ← `adapters/` ← `hosts/`. `check_imports.py` enforces it; don't fight it, fix the placement.
 
@@ -276,14 +260,125 @@ Single installable package, four Clean Architecture rings (AD-1). Imports cross 
 - `docs/decisions/` — Phase 0 decision notes; `docs/references/` — FreeCAD source/wiki, freecad-mcp, text-to-cad.
 - `_bmad-output/` — planning artifacts (spine, design docs, epics, sprint-status); `_automation/` — live MCP manual harness.
 
-## 16. Authoritative References
+### Branch prefixes
 
-- [Development standards](.knowledge-base/technical/standards/index.md)
-- [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md)
-- [FreeCAD automation & verification](.knowledge-base/technical/standards/testing/freecad-automation-verification.md)
+Follow release-please patterns
+
+## 13. Skill Catalog
+
+Load the required skill BEFORE you start the task, not after.
+
+### By task type
+
+| Task type | Required skill |
+| --- | --- |
+| Implement any feature or bugfix | `bmad-build` |
+| Debug a bug, test failure, or odd runtime behavior | `bmad-build` + `ultrathink-protocol` |
+| A fix failed twice, or the cause is still unknown | `ultrathink-protocol` (verify cause before any fix) |
+| New feature or behavior change | `bmad-brainstorming` (before design) |
+| Turn an idea or notes into a spec | `bmad-spec` |
+| Design architecture across parts of a system | `bmad-architecture` |
+| Multi-step work from a spec | `bmad-spec` (break into stories), then `bmad-build` |
+| Execute an implementation plan | `bmad-build` or `bmad-build-auto` (unattended) |
+| Investigate an external system | `bmad-deep-recon` |
+| Claim work complete / fixed / passing | `bmad-review` |
+| Pre-merge or major-feature review | `bmad-code-review` |
+| Walk the user through a change for human review | `bmad-walkthrough` |
+| Run the whole implementation pipeline, or check status / resume | `bmad-auto` |
+
+### By technology
+
+| Task type | Required skill |
+| --- | --- |
+| Write or review TypeScript. Code design, refactoring, TDD, bug fix, PR review | `typescript-clean-code` |
+| Write or run unit tests | `typescript-unit-testing` |
+| Write or run end-to-end tests | `typescript-e2e-testing` |
+| Plan, write, or run manual tests | `manual-testing` |
+| Automate a browser | `playwright-cli` |
+
+Every other BMAD skill is installed but not catalogued here. Invoke one by name only when the
+user names it.
+
+## 14. Knowledge Base Catalog
+
+`.knowledge-base/index.json` holds the machine-readable catalog with tags and descriptions.
+Read `.knowledge-base/technical/standards/index.md` first — it maps standards to roles.
+
+### Global — applies to all work
+
+| Standard | Covers |
+|----------|--------|
+| [code-quality](.knowledge-base/technical/standards/global/code-quality.md) | Quality gates and review bar |
+| [commenting](.knowledge-base/technical/standards/global/commenting.md) | When a comment earns its place. See section 3 |
+| [conventions](.knowledge-base/technical/standards/global/conventions.md) | Naming and file conventions |
+| [security](.knowledge-base/technical/standards/global/security.md) | Security rules for code and requirements |
+| [tech-stack](.knowledge-base/technical/standards/global/tech-stack.md) | Approved stack and versions |
+
+### Backend
+
+| Standard | Covers |
+|----------|--------|
+| [coding-style](.knowledge-base/technical/standards/backend/coding-style.md) | Naming, SOLID, TypeScript, formatting |
+| [api](.knowledge-base/technical/standards/backend/api.md) | REST endpoint naming, versioning, status codes |
+| [error-handling](.knowledge-base/technical/standards/backend/error-handling.md) | Error handling patterns |
+| [error-codes](.knowledge-base/technical/standards/backend/error-codes.md) | Error code scheme |
+| [logging](.knowledge-base/technical/standards/backend/logging.md) | What and how to log |
+| [validation](.knowledge-base/technical/standards/backend/validation.md) | Input validation patterns |
+| [models](.knowledge-base/technical/standards/backend/models.md) | Model rules. Models are classes |
+| [usecases](.knowledge-base/technical/standards/backend/usecases.md) | Use-case layer rules |
+| [queries](.knowledge-base/technical/standards/backend/queries.md) | Query layer rules |
+| [migrations](.knowledge-base/technical/standards/backend/migrations.md) | Schema migration rules |
+| [domain-events](.knowledge-base/technical/standards/backend/domain-events.md) | Event structure, publishing, naming, anti-patterns |
+| [kafka](.knowledge-base/technical/standards/backend/kafka.md) | Kafka usage |
+| [telemetry](.knowledge-base/technical/standards/backend/telemetry.md) | Tracing and metrics |
+| [design-pattern-factory](.knowledge-base/technical/standards/backend/design-pattern-factory.md) | Factory with array injection, O(1) strategy lookup |
+| [design-pattern-factory-and-explorer](.knowledge-base/technical/standards/backend/design-pattern-factory-and-explorer.md) | Factory with decorator auto-discovery |
+| [design-pattern-chain-of-repository](.knowledge-base/technical/standards/backend/design-pattern-chain-of-repository.md) | Chain of Responsibility + Repository for data enrichment |
+
+### Frontend
+
+| Standard | Covers |
+|----------|--------|
+| [components](.knowledge-base/technical/standards/frontend/components.md) | Component structure |
+| [css](.knowledge-base/technical/standards/frontend/css.md) | CSS rules |
+| [responsive](.knowledge-base/technical/standards/frontend/responsive.md) | Responsive layout rules |
+| [accessibility](.knowledge-base/technical/standards/frontend/accessibility.md) | Accessibility requirements |
+
+### Testing
+
+| Standard | Covers |
+|----------|--------|
+| [unit-testing](.knowledge-base/technical/standards/testing/unit-testing.md) | Unit test structure and coverage |
+| [e2e-testing](.knowledge-base/technical/standards/testing/e2e-testing.md) | End-to-end test rules |
+
+### Application design
+
+| Document | Covers |
+|----------|--------|
+| [index](.knowledge-base/technical/application-design/index.md) | System design entry point |
+| [clean-architecture-nestjs](.knowledge-base/technical/application-design/clean-architecture-nestjs.md) | Clean Architecture layering for NestJS |
+
+## 15. Authoritative References
+
+- [Development standards](.knowledge-base/technical/standards/index.md) — standards by role
 - [System design](.knowledge-base/technical/application-design/index.md)
-- [Planning artifacts](.ai-artifacts/planning-artifacts/)
-- [FreeCAD Source Code](docs/references/FreeCAD/)
-- [FreeCAD Wiki](docs/references/FreeCAD-wiki/)
-- [FreeCAD MCP](docs/references/freecad-mcp/)
-- [Text to CAD](docs/references/text-to-cad/)
+- [Knowledge base catalog](.knowledge-base/index.json) — tags and descriptions for every standard
+- [README](README.md) — branching model and contribution rules
+- BMAD config: `_bmad/bmm/config.yaml`
+
+**Precedence when documents disagree:** the installed CODE wins over any document — verify,
+then propose a doc correction.
+
+## 16. Running the MCP Bridge (GUI mode)
+
+**Opening FreeCAD is the only step — the addon starts everything.**
+
+- On FreeCAD GUI start the addon (`gui_addon/bootstrap.start_bridge`) starts the in-FreeCAD **RPC listener** (stdlib, ephemeral localhost port) AND auto-spawns the **external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp` as a child process. Both are torn down on FreeCAD quit.
+- **Do NOT run `freecad-buddy serve --mode rpc` by hand** to talk to the live GUI, and do not hand-roll RPC sockets — just open FreeCAD, then use the connected `mcp__freecad-buddy__*` tools. The proxy is spawned for you.
+- `.mcp.json` is a plain HTTP entry — no `serve`/`rpc`/`command` in it:
+  ```json
+  { "mcpServers": { "freecad-buddy": { "type": "http", "url": "http://127.0.0.1:8765/mcp" } } }
+  ```
+- **Why the proxy is a separate process (AD-2/AD-12):** the MCP/FastMCP libs are third-party and may not be imported inside FreeCAD's bundled Python. The addon spawns the proxy in the **external project venv interpreter** (which has `mcp`); it never imports `mcp` itself.
+- **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
+- Headless automation (CI, the `run_mcp_*` sweeps) is unaffected: it uses the single-process H1 stdio host, not this proxy.
