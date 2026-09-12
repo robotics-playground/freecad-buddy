@@ -365,6 +365,13 @@ Read `.knowledge-base/technical/standards/index.md` first — it maps standards 
 - [Knowledge base catalog](.knowledge-base/index.json) — tags and descriptions for every standard
 - [README](README.md) — branching model and contribution rules
 - BMAD config: `_bmad/bmm/config.yaml`
+- [FreeCAD source-verify standard](.knowledge-base/technical/standards/freecad/source-verify.md)
+- [FreeCAD automation & verification](.knowledge-base/technical/standards/testing/freecad-automation-verification.md)
+- [Planning artifacts](_bmad-output/planning-artifacts/)
+- [FreeCAD Source Code](docs/references/FreeCAD/)
+- [FreeCAD Wiki](docs/references/FreeCAD-wiki/)
+- [FreeCAD MCP](docs/references/freecad-mcp/)
+- [Text to CAD](docs/references/text-to-cad/)
 
 **Precedence when documents disagree:** the installed CODE wins over any document — verify,
 then propose a doc correction.
