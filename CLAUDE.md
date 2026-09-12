@@ -184,6 +184,11 @@ Code is written for the standards, never compressed:
 - `skill(name="typescript-unit-testing")`
 - `skill(name="typescript-e2e-testing")`
 
+**UAT:**
+- `skill(name="manual-testing")`
+- `skill(name="cua-driver")`
+- Directory: `tests/uat`
+
 ### Commands
 
 `main` holds no code and no `package.json`. Build, test, and dev commands are defined by
