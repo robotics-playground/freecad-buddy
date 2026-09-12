@@ -192,6 +192,7 @@ Code is written for the standards, never compressed:
   - Shutdown all FreeCAD instances before starting the tests. Verify that no FreeCAD processes are running.
   - Ensure no documents are open in the FreeCAD GUI before running UAT tests.
   - Use absolute paths for any file operations to avoid issues with FreeCAD's working directory.
+  - Agent always needs to do the visual check, never trust automated verification alone or the MCP results.
 
 ### Commands
 
