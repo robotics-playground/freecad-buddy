@@ -276,3 +276,44 @@ def test_should_declare_the_framing_key_on_the_result_envelope_contract():
     assert envelope_contract.ResultEnvelope.__total__ is False, (
         "the key must be optional: an envelope without a viewport carries no framing block"
     )
+
+
+# ---- the calibrated near-miss tolerance ---------------------------------------------------------
+
+
+def test_should_keep_the_near_miss_tolerance_at_zero_so_every_miss_warns():
+    """AD-32 reserved this knob against "a hair-trigger warning on every call". Calibration found
+    nothing for it to suppress: ``fitAll`` frames the bounding *sphere* of the bbox
+    (``View3DInventorViewer.cpp:4571-4573``), so a fitted model lands at
+    ``largest_extent / space_diagonal`` — 0.58 for a cube, 0.99 for a 100x10x10 bar — and never
+    overflows. The only other candidate is one pixel of ``short`` rounding, and suppressing that
+    would also suppress a genuine one-pixel overflow, which AD-30 requires stay a miss."""
+    # Act
+    tolerance = envelope_contract.NEAR_MISS_TOLERANCE
+
+    # Assert
+    assert tolerance == 0.0
+
+
+def test_should_warn_on_a_miss_that_only_just_overflows_while_the_tolerance_is_zero():
+    # Arrange: ratio 1.001 — a hair over the viewport, and still a miss worth a sentence.
+    verdict = {"fits": False, "ratio": 1.001, "checked": "computed", "stale_reason": None}
+
+    # Act
+    sentence = framing_warning(verdict)
+
+    # Assert
+    assert sentence == SENTENCE
+
+
+def test_should_warn_when_the_ratio_is_unmeasurable_because_a_corner_was_discarded():
+    """``ratio: None`` means a coordinate wrapped the ``short`` cast — a gross overflow, the last
+    thing a tolerance should ever silence."""
+    # Arrange
+    verdict = {"fits": False, "ratio": None, "checked": "computed", "stale_reason": None}
+
+    # Act
+    sentence = framing_warning(verdict)
+
+    # Assert
+    assert sentence == SENTENCE

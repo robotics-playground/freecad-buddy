@@ -1366,20 +1366,29 @@ def _read_framing_quietly(
 
 
 def _geometry_proxy(envelope: dict) -> str | None:
-    """The mutation's own post-commit fingerprint digest, or ``None`` on the query path.
+    """The call's own post-commit fingerprint digest, or ``None`` when it published none.
 
-    Free and exact where it exists: ``run_mutation`` already computed it and stored it in the
-    envelope. It is never computed here — ``usecases/fingerprint.py`` serializes every shape and
-    would cost more than the projection the cache exists to avoid. Its absence on the query path
-    is not a gap: a query cannot change geometry, and the cached verdict names the component as
-    unverified rather than claiming a freshness the bridge cannot prove.
+    Free and exact where it exists: the call already computed it and stored it in the envelope. It
+    is never computed here — ``usecases/fingerprint.py`` serializes every shape and would cost more
+    than the projection the cache exists to avoid.
+
+    Two shapes carry it, and both must be read. ``run_mutation`` nests it as
+    ``mutation.fingerprint_after.digest``; the lifecycle tools that recompute or undo publish it as
+    a bare top-level string instead. Reading only the nested form left ``document_recompute`` and
+    ``document_undo`` — both of which change geometry — contributing ``None``, so two of them in a
+    row under a static camera produced an identical cache key and served the first call's
+    ``fits: true`` for a model that no longer fits.
     """
-    mutation = envelope.get("structured_content", {}).get("mutation")
-    if not isinstance(mutation, dict):
+    structured = envelope.get("structured_content", {})
+    if not isinstance(structured, dict):
         return None
-    after = mutation.get("fingerprint_after")
-    digest = after.get("digest") if isinstance(after, dict) else None
-    return digest if isinstance(digest, str) else None
+    mutation = structured.get("mutation")
+    if isinstance(mutation, dict):
+        after = mutation.get("fingerprint_after")
+        digest = after.get("digest") if isinstance(after, dict) else None
+        return digest if isinstance(digest, str) else None
+    after = structured.get("fingerprint_after")
+    return after if isinstance(after, str) else None
 
 
 def build_inline_handlers(

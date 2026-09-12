@@ -16,6 +16,27 @@ from freecad_buddy.contracts.render import FramingVerdict
 from freecad_buddy.contracts.status import ErrorDetail, TerminalStatus
 
 
+# Extra slack, as a fraction of the viewport extent, granted to a ``fits: False`` verdict before it
+# earns the warning sentence. AD-32 deferred this as a tuning knob against the risk of "a
+# hair-trigger warning on every call". Calibration says the knob is not needed, so it is zero — a
+# measured result, not an unconsidered default:
+#
+#   - A correct ``fitAll`` cannot trip the warning. ``fitAll`` frames the bounding *sphere* of the
+#     bounding box (FreeCAD states this at ``View3DInventorViewer.cpp:4571-4573``), so the model
+#     lands at ``largest_extent / space_diagonal`` of the viewport — 0.58 for a cube, 0.81 for a
+#     40x25x15 plate, 0.99 for a 100x10x10 bar, approaching but never reaching 1.0 as the part
+#     degenerates toward a line. A fit never overflows, so it never produces the false warning
+#     this tolerance was reserved for. That was the whole hair-trigger risk.
+#   - The only other candidate is one pixel of ``short`` rounding in ``getPointOnViewport``
+#     (``View3DInventorViewer.cpp:3821-3822``). Suppressing it needs at least 1/800 of an 800px
+#     viewport, and any such tolerance also suppresses a genuine one-pixel overflow — which story
+#     8.2 ruled is a miss, and AD-30 requires the containment test stay exact.
+#
+# So a non-zero value here would buy nothing and cost exactness. Raise it only against a measured
+# stream of false warnings, and record that measurement here.
+NEAR_MISS_TOLERANCE = 0.0
+
+
 class ImageRef(TypedDict, total=False):
     kind: Literal["resource_link", "inline"]
     uri: str
@@ -65,11 +86,19 @@ def framing_warning(framing: FramingVerdict | None) -> str | None:
     sentence, and ``None`` (``checked: "unavailable"``) is a measurement failure the structured
     block already states; turning it into prose would read as a framing problem it is not.
 
+    A miss whose ``ratio`` is within ``NEAR_MISS_TOLERANCE`` of exactly filling the viewport earns
+    no sentence. That tolerance is calibrated to zero, so today every miss warns; the check is the
+    seam a future measured tolerance turns on, not a live filter. A ``ratio`` of ``None`` always
+    warns — it means a coordinate was discarded as implausible, which is a gross overflow.
+
     This is the **only** place the sentence text exists. No tool's own summary function may
     append it: ``text`` is hand-written per tool, so a second copy is how two tools end up
     warning in two wordings an agent must both learn.
     """
     if framing is None or framing.get("fits") is not False:
+        return None
+    ratio = framing.get("ratio")
+    if NEAR_MISS_TOLERANCE and ratio is not None and ratio <= 1.0 + NEAR_MISS_TOLERANCE:
         return None
     return (
         "Warning: the model does not fully fit the live viewport, so the human is seeing only "

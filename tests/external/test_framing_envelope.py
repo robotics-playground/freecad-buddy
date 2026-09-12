@@ -545,3 +545,36 @@ def test_should_warn_on_the_very_call_whose_mutation_overflowed_the_viewport():
     # Assert
     assert result["framing"]["fits"] is False
     assert result["text"].endswith(framing_warning(result["framing"]))
+
+
+# ---- geometry proxy: both envelope shapes carry the digest --------------------------------
+
+
+def test_should_read_the_digest_when_a_lifecycle_tool_publishes_it_at_the_top_level():
+    # Arrange: document_recompute/document_undo change geometry but publish the digest as a bare
+    # top-level string, not as a nested mutation block. Reading only the nested form made them
+    # contribute None, so two in a row under a static camera shared a cache key and the second
+    # was served the first's stale `fits: true` with the warning suppressed.
+    lifecycle = {"structured_content": {"fingerprint_after": "abc123def456", "recomputed": 1}}
+    mutation = {
+        "structured_content": {"mutation": {"fingerprint_after": {"digest": "abc123def456"}}}
+    }
+
+    # Act
+    from_lifecycle = tool_catalog._geometry_proxy(lifecycle)
+    from_mutation = tool_catalog._geometry_proxy(mutation)
+
+    # Assert
+    assert from_lifecycle == "abc123def456"
+    assert from_mutation == "abc123def456"
+
+
+def test_should_report_no_digest_when_the_envelope_carries_none():
+    # Arrange
+    query = {"structured_content": {"objects": ["Pad"]}}
+
+    # Act
+    digest = tool_catalog._geometry_proxy(query)
+
+    # Assert
+    assert digest is None

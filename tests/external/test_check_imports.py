@@ -92,6 +92,21 @@ def test_qt_in_marshal_flagged(tmp_path):
     assert "Qt" in _rules(v) or "FreeCADGui" in _rules(v)
 
 
+def test_qt_violation_message_names_render_probe_as_the_sole_adapter_exemption(tmp_path):
+    # The message is the only place an implementer learns the exemption list. It named
+    # adapters/marshal.py long after that exemption was withdrawn, so a reader would have
+    # believed Qt was legal there. Both emitters are covered: the ring path and the non-ring path.
+    root = _make_tree(tmp_path, {
+        "adapters/marshal.py": "from PySide6 import QtCore\n",
+        "util.py": "import FreeCADGui\n",
+    })
+    v = check_imports.check_tree(root)
+    assert len(v) == 2, "expected one Qt violation from each emitter"
+    for violation in v:
+        assert "adapters/render_probe.py" in violation.rule
+        assert "marshal.py" not in violation.rule
+
+
 def test_qt_exempt_adapters_holds_exactly_render_probe():
     # AD-29: the live camera lives in hosts/gui_addon/, so this list must never grow a second
     # entry. Without this assertion the single-exemption rule is convention only.
@@ -304,6 +319,39 @@ def test_active_document_flagged_in_hosts_too(tmp_path):
     v = check_imports.check_tree(root)
     assert v, "ActiveDocument in hosts must still be flagged"
     assert "ActiveDocument" in _rules(v)
+
+
+def test_gui_active_document_flagged(tmp_path):
+    # Planted, because the shipped tree contains no such access: the only FreeCADGui.ActiveDocument
+    # mentions in src/ are docstring prose. Asserting "FreeCADGui" in FREECAD_MODULE_ALIASES would
+    # pass even if _check_active_document ignored the set, so only a fixture proves the gap closed.
+    root = _make_tree(tmp_path, {
+        "hosts/bad.py": "import FreeCADGui\nd = FreeCADGui.ActiveDocument\n",
+    })
+    v = check_imports.check_tree(root)
+    assert v, "FreeCADGui.ActiveDocument must be flagged"
+    assert "FreeCADGui.ActiveDocument" in _rules(v)
+    assert "banned" in _rules(v)
+
+
+def test_gui_set_active_document_flagged(tmp_path):
+    root = _make_tree(tmp_path, {
+        "hosts/bad.py": "import FreeCADGui\nFreeCADGui.setActiveDocument('n')\n",
+    })
+    v = check_imports.check_tree(root)
+    assert v, "FreeCADGui.setActiveDocument must be flagged"
+    assert "FreeCADGui.setActiveDocument" in _rules(v)
+
+
+def test_gui_active_document_not_flagged_through_an_import_alias(tmp_path):
+    # A stated limitation, pinned so it cannot change silently: _check_active_document matches the
+    # bound name, so ``import FreeCADGui as Gui`` evades the ban. hosts/gui_addon/InitGui.py uses
+    # exactly this form. Closing it needs import-binding tracking through the AST. If a future
+    # change closes the hole, this test fails and the docstring limitation must be deleted with it.
+    root = _make_tree(tmp_path, {
+        "hosts/aliased.py": "import FreeCADGui as Gui\nd = Gui.ActiveDocument\n",
+    })
+    assert check_imports.check_tree(root) == []
 
 
 def test_active_document_attr_on_other_object_not_flagged(tmp_path):

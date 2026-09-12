@@ -2,8 +2,8 @@
 title: 'Story 8.5: Enforcement — Framing Contract Test & CI Alias Gap'
 type: 'feature'
 created: '2026-09-12'
-status: 'draft'
-baseline_revision: ''
+status: 'done'
+baseline_revision: 'f086447e480c767505853735d356b95a621fecec'
 review_loop_iteration: 0
 followup_review_recommended: false
 context:

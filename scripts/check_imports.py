@@ -8,14 +8,21 @@ Rules enforced (dependencies point inward only):
                    Mesh, MeshPart} + firstparty inward (contracts). No third-party, no Qt.
   adapters/ ...... may import contracts/usecases + third-party; NOT hosts.
   hosts/ ......... top ring; may import anything inward.
-  Qt / FreeCADGui / PySide* allowed ONLY in hosts/**, adapters/marshal.py, adapters/render_probe.py.
+  Qt / FreeCADGui / PySide* allowed ONLY in hosts/** and adapters/render_probe.py.
   Raw pivy renderer . no ``pivy.coin.SoOffscreenRenderer`` anywhere (decision 003): the
                    offscreen render path must use ``FreeCADGui.SoQtOffscreenRenderer`` (#13356),
                    never the raw pivy renderer, which lacks FreeCAD's GL-context setup.
   ActiveDocument . no ``FreeCAD.ActiveDocument`` / ``App.ActiveDocument`` /
-                   ``setActiveDocument`` anywhere: every tool operates on an explicit doc handle,
-                   never the process-global active document (a screenshot/query keying on it
-                   would silently target the wrong document).
+                   ``FreeCADGui.ActiveDocument`` / ``setActiveDocument`` anywhere: every tool
+                   operates on an explicit doc handle, never the process-global active document
+                   (a screenshot/query keying on it would silently target the wrong document).
+
+                   **Reach of this ban.** The match is on the *bound* module name, so
+                   ``import FreeCADGui as Gui`` followed by ``Gui.ActiveDocument`` is NOT flagged
+                   — and ``hosts/gui_addon/InitGui.py`` uses exactly that alias form. Closing the
+                   hole needs import-binding tracking through the AST. Until then the ban covers
+                   the unaliased names only; do not read a clean run as proof that no implicit
+                   target exists.
 
 On any violation: print ``relpath:line -- <rule>`` to stdout and exit 1.
 Clean tree: exit 0 (prints "check_imports OK").
@@ -38,7 +45,11 @@ FREECAD_APP_WHITELIST = frozenset(
 )
 
 # Module names FreeCAD is bound to; ``<name>.ActiveDocument`` on any of these is the banned form.
-FREECAD_MODULE_ALIASES = frozenset({"FreeCAD", "App"})
+# ``FreeCADGui`` belongs here too: the Gui module carries its own ``ActiveDocument`` /
+# ``setActiveDocument``, and reading the on-screen document is the same implicit target the App
+# form is banned for. Only the bound name is matched — see the aliased-import limitation in the
+# module docstring.
+FREECAD_MODULE_ALIASES = frozenset({"FreeCAD", "App", "FreeCADGui"})
 ACTIVE_DOCUMENT_ATTRS = frozenset({"ActiveDocument", "setActiveDocument"})
 
 # Raw pivy renderer ban (decision 003): the offscreen path must go through
@@ -83,7 +94,7 @@ def _qt_allowed(ring: str | None, relpath: str) -> bool:
     if ring == "hosts":
         return True
     # Match the full package-relative path, not just the basename, so a nested
-    # adapters/sub/marshal.py cannot inherit the exemption.
+    # adapters/sub/render_probe.py cannot inherit the exemption.
     if ring == "adapters" and relpath in QT_EXEMPT_ADAPTERS:
         return True
     return False
@@ -248,7 +259,7 @@ def _check_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[Violat
                         Violation(
                             relpath, line,
                             f"Qt/FreeCADGui/PySide import '{mod}' allowed only in "
-                            f"hosts/**, adapters/marshal.py, adapters/render_probe.py",
+                            "hosts/** and adapters/render_probe.py",
                         )
                     )
                 continue
@@ -320,7 +331,7 @@ def _check_root_file(path: Path, relpath: str, stdlib: frozenset[str]) -> list[V
                     Violation(
                         relpath, line,
                         f"Qt/FreeCADGui/PySide import '{mod}' allowed only in "
-                        f"hosts/**, adapters/marshal.py, adapters/render_probe.py",
+                        "hosts/** and adapters/render_probe.py",
                     )
                 )
                 continue

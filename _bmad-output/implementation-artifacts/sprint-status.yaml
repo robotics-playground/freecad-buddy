@@ -130,12 +130,12 @@ development_status:
   7-4-part-sourcing-import-placement: backlog
   7-5-gate-g5robot-exit: backlog
   epic-7-retrospective: optional
-  epic-8: backlog
+  epic-8: done
   8-1-viewportport-contract-gui-host-impl: done
-  8-2-framing-read-exact-projection-test: backlog
-  8-3-view-fit-viewport-tool: backlog
-  8-4-framing-warning-on-tool-results: backlog
-  8-5-enforcement-framing-test-ci-alias-gap: backlog
+  8-2-framing-read-exact-projection-test: done
+  8-3-view-fit-viewport-tool: done
+  8-4-framing-warning-on-tool-results: done
+  8-5-enforcement-framing-test-ci-alias-gap: done
   epic-8-retrospective: optional
 
 action_items:

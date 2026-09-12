@@ -432,3 +432,64 @@ def test_should_name_neither_preview_id_nor_run_mutation():
 
     # Assert
     assert present == []
+
+
+# ---- the calibrated fit margin ------------------------------------------------------------------
+
+
+class _FactorRecordingView:
+    """A view whose ``fitAll`` accepts the optional factor, as the real ``View3DInventor`` does."""
+
+    def __init__(self, document):
+        self.Document = _FakeGuiDocument(document)
+        self.factors = []
+
+    def getCamera(self):  # noqa: N802 - FreeCAD API name
+        return CAMERA
+
+    def fitAll(self, factor=None):  # noqa: N802 - FreeCAD API name
+        self.factors.append(factor)
+
+
+def test_should_pass_the_calibrated_margin_factor_to_a_view_that_accepts_one():
+    """``fitAll(factor)`` scales the bbox before framing it, so the value reaching the view is what
+    decides how much of the viewport the human's model occupies."""
+    # Arrange
+    document = _FakeDocument()
+    view = _FactorRecordingView(document)
+    registry = _FakeRegistry(document)
+
+    # Act
+    envelope = view_fit_viewport(registry, _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert view.factors == [view_fit._FIT_MARGIN_FACTOR]
+
+
+def test_should_keep_the_margin_at_one_so_the_sphere_fit_is_not_compounded():
+    """``fitAll`` already frames the bounding *sphere* of the bbox
+    (``View3DInventorViewer.cpp:4571-4573``), leaving the model at
+    ``largest_extent / space_diagonal`` of the viewport — 0.58 for a cube, 0.81 for a 40x25x15
+    plate. A factor above 1.0 would inset it again; below 1.0 would crop it."""
+    # Act
+    factor = view_fit._FIT_MARGIN_FACTOR
+
+    # Assert
+    assert factor == 1.0
+
+
+def test_should_fall_back_to_the_bare_call_for_a_view_whose_fitAll_takes_no_factor():
+    """The view is duck-typed, so an older or stubbed one may accept no argument. At factor 1.0
+    the two calls frame identically, so the fallback loses nothing."""
+    # Arrange
+    document = _FakeDocument()
+    view = _FakeView(document)  # its fitAll takes no argument at all
+    registry = _FakeRegistry(document)
+
+    # Act
+    envelope = view_fit_viewport(registry, _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert view.fit_calls == 1

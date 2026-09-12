@@ -23,6 +23,18 @@ from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 _AUDIT_SINK: object = None
 
+# Passed to ``fitAll(factor)``, which scales the scene bounding box before framing it
+# (``View3DInventorViewer.cpp:4456-4490``). ``1.0`` is the calibrated value, not an unconsidered
+# default: ``fitAll`` frames the bounding *sphere* of that box, whose diameter is the box's space
+# diagonal — FreeCAD states this itself at ``View3DInventorViewer.cpp:4571-4573`` ("It uses a
+# sphere to surround the bounding box"). A model therefore already lands at
+# ``largest_extent / space_diagonal`` of the viewport: 0.58 for a cube, 0.81 for a 40x25x15 plate,
+# 0.99 for a 100x10x10 bar. The margin is the sphere's, and it is never smaller than the model.
+# Any factor above 1.0 would compound that inset and shrink the part the human asked to see;
+# a factor below 1.0 would crop it. Raise this only against a measured overflow, which the
+# sphere-fit geometry above makes impossible for a plain fit.
+_FIT_MARGIN_FACTOR = 1.0
+
 
 def set_audit_sink(sink: object) -> object:
     """Install the sink camera-move records are written to; return the one it replaced.
@@ -74,7 +86,7 @@ def view_fit_viewport(
 
         camera_before = _read_camera(view)
         try:
-            view.fitAll()
+            _fit_all(view)
         except Exception as exc:  # noqa: BLE001 - a view that refuses the fit is a stated reason
             return _failed_envelope(f"the view refused the fit: {type(exc).__name__}: {exc}")
 
@@ -82,6 +94,21 @@ def view_fit_viewport(
         return _fitted_envelope(_name_of(document), camera_before)
 
     return registry.with_document(doc, fit)
+
+
+def _fit_all(view: object) -> None:
+    """Fit the scene with the calibrated margin, falling back to the no-argument form.
+
+    ``fitAll`` takes an optional factor (``View3DPy.cpp:484-492``), but the view is duck-typed
+    here and an older or stubbed one may accept no argument at all. A ``TypeError`` from the
+    arity is retried bare rather than reported as a refused fit: at ``_FIT_MARGIN_FACTOR == 1.0``
+    the two calls frame identically (``viewAll(factor)`` delegates to ``viewAll()`` when the
+    factor is exactly 1.0), so the fallback loses nothing the caller asked for.
+    """
+    try:
+        view.fitAll(_FIT_MARGIN_FACTOR)
+    except TypeError:
+        view.fitAll()
 
 
 def _require_same_document(document: object, view: object) -> None:

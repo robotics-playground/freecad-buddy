@@ -107,7 +107,9 @@ def containment(
 
     Containment is **inclusive**: a corner at exactly ``x == width`` is the last visible pixel
     column, not the first invisible one, so a model framed perfectly to the edge reports
-    ``fits: True``.
+    ``fits: True``. The test is exact and carries no tolerance of its own (AD-30): one pixel
+    outside is outside. The near-miss tolerance lives on the *warning sentence*, not on this
+    verdict — see ``contracts.envelope.NEAR_MISS_TOLERANCE``.
 
     A coordinate whose magnitude exceeds ``_IMPLAUSIBLE_FACTOR`` times its viewport dimension
     wrapped through the ``short()`` cast and carries no usable value: its corner is outside and
@@ -196,7 +198,7 @@ def _cached_verdict(
 
     The projection is a GUI round trip per tool result, which the ≤15 s tool budget cannot
     afford on every call. The key is AD-32's four-tuple — geometry digest, camera string,
-    viewport size, active view id — and a component the process cannot read cheaply is never
+    viewport size, active view — and a component the process cannot read cheaply is never
     silently treated as unchanged: it is named in ``stale_reason`` on the served verdict.
 
     A *geometry-only* trigger is the specific mistake this shape avoids. A window resize or a
