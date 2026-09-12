@@ -23,6 +23,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - PrefectHQ `fastmcp` ≠ official SDK `FastMCP` class — distinct projects; the repo pins one, check before importing.
 - Export oracles: trimesh + lib3mf (required); admesh optional Linux-only secondary (dormant upstream).
 - Tooling: uv (external process deps only — never for in-FreeCAD code), pytest (external tests only), stdlib `unittest` (in-FreeCAD tests), ruff, hatchling.
+- `cua-driver`: host binary for manual GUI testing, invoked by the agent — not a package dependency and never imported by code. Absent on CI; nothing in the blocking gate may depend on it.
 - CI: GitHub Actions + `mamba-org/setup-micromamba` cached per FreeCAD pin; render leg = xvfb + `LIBGL_ALWAYS_SOFTWARE=1`, non-blocking.
 
 FreeCAD comes from the host (GUI install or conda env), never from pyproject. Interpreter version is per-leg, not global.
@@ -78,6 +79,7 @@ FreeCAD comes from the host (GUI install or conda env), never from pyproject. In
 - Round-trip fixtures are authored on FreeCAD 1.0 (1.1 core-datum files won't open in 1.0).
 - Fault-injection cases live beside dev/heldout, never inside them — they validate validators, never count toward pass rates.
 - Golden values in tests come from independent references (hand-computed, reference models), never captured from the implementation under test.
+- Manual GUI testing is agent work, driven with `cua-driver` (load `skill(name="cua-driver")` + its `WINDOWS.md` first). Snapshot the window, act through the fresh element token, verify the postcondition from fresh state — `unknown` is not success, and a tool call returning OK is not proof the application changed. Use it only for what the MCP bridge cannot reach (menus, dialogs, toolbars, tree view, the real viewport); model operations stay on `mcp__freecad-buddy__*`. Any visual claim needs a `cua-driver` screenshot of the real window, because the MCP render is a constructed scene (see the render rule above). Stop and report after 2–3 failed attempts; destructive GUI steps need operator approval.
 
 ### Wire & Schema Rules
 
