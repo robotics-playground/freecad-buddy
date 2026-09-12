@@ -48,11 +48,15 @@ _NON_RENDER_TYPE_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Poi
 _NON_RENDER_TYPES = frozenset({"PartDesign::Body", "Sketcher::SketchObject"})
 
 
-def _is_default_renderable(obj: object) -> bool:
+def is_default_renderable(obj: object) -> bool:
     """Whether ``obj`` is in the automatic render set: visible, has a shape, not a datum/container.
 
     The default (no-``include``) set mirrors the live viewport — an object hidden via its
     ``Visibility`` flag is omitted. An explicit ``include`` bypasses this and renders the object.
+
+    Public because the framing read measures exactly this set (AD-30): a second plausible
+    "visible shape-bearing" filter is how the render and the framing warning end up describing
+    different scenes.
     """
     type_id = str(getattr(obj, "TypeId", ""))
     if type_id in _NON_RENDER_TYPES or type_id.startswith(_NON_RENDER_TYPE_PREFIXES):
@@ -235,7 +239,7 @@ def _object_list(document: object, options: dict) -> list[str]:
     return [
         obj.Name
         for obj in document.Objects
-        if _is_default_renderable(obj) and obj.Name not in excluded
+        if is_default_renderable(obj) and obj.Name not in excluded
     ]
 
 
@@ -441,4 +445,4 @@ def _unavailable_envelope(reason: str | None) -> ResultEnvelope:
     }
 
 
-__all__ = ["query_screenshot"]
+__all__ = ["is_default_renderable", "query_screenshot"]

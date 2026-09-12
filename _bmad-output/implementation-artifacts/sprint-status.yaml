@@ -131,7 +131,7 @@ development_status:
   7-5-gate-g5robot-exit: backlog
   epic-7-retrospective: optional
   epic-8: backlog
-  8-1-viewportport-contract-gui-host-impl: backlog
+  8-1-viewportport-contract-gui-host-impl: done
   8-2-framing-read-exact-projection-test: backlog
   8-3-view-fit-viewport-tool: backlog
   8-4-framing-warning-on-tool-results: backlog
