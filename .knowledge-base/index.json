@@ -1,0 +1,227 @@
+{
+  "instructions": "# Agent Instructions\n\n## Critical: Pre-Work Requirements\n\nBefore starting ANY task, you MUST:\n\n1. **Read the Project Standards**: Read `.knowledge-base/technical/standards/index.md` to understand the coding standards, conventions, and best practices for this project.\n\n2. **Read the System Documentation**: Read `.knowledge-base/technical/application-design/index.md` to understand the system architecture, important rules, and technical guidelines.\n\nThese documents contain critical rules and context that must inform all work performed in this codebase.\n\n## Workflow\n\nFor every task:\n1. First, read both index files mentioned above\n2. Apply the standards and rules from those documents\n3. Proceed with the requested task while adhering to the project guidelines\n4. **Run quality checks after implementation** (see below)\n\nFailure to follow this workflow may result in work that doesn't comply with project standards.",
+  "knowledge_base": {
+    "backend": [
+      {
+        "title": "API Endpoint Standards",
+        "path": ".knowledge-base/technical/standards/backend/api.md",
+        "category": "backend",
+        "tags": ["api", "rest", "http", "endpoints", "conventions"],
+        "description": "Standards and conventions for designing RESTful API endpoints, including naming, versioning, and HTTP status codes"
+      },
+      {
+        "title": "Backend Coding Style Standards",
+        "path": ".knowledge-base/technical/standards/backend/coding-style.md",
+        "category": "backend",
+        "tags": ["typescript", "nestjs", "solid-principles", "naming-conventions", "code-quality"],
+        "description": "Comprehensive coding style guidelines for backend development including naming conventions, SOLID principles, TypeScript best practices, and formatting rules"
+      },
+      {
+        "title": "Chain of Responsibility Pattern with Repository Integration",
+        "path": ".knowledge-base/technical/standards/backend/design-pattern-chain-of-repository.md",
+        "category": "backend",
+        "tags": ["design-patterns", "chain-of-responsibility", "repository-pattern", "nestjs", "typescript", "cqrs", "dependency-injection"],
+        "description": "A comprehensive guide for implementing the Chain of Responsibility pattern combined with Repository pattern for sequential, composable data enrichment in NestJS applications."
+      },
+      {
+        "title": "Factory Pattern with Explorer (Auto-Discovery)",
+        "path": ".knowledge-base/technical/standards/backend/design-pattern-factory-and-explorer.md",
+        "category": "backend",
+        "tags": ["design-patterns", "factory-pattern", "nestjs", "typescript", "decorators", "dependency-injection", "auto-discovery"],
+        "description": "Comprehensive guide for implementing the Factory Pattern with Explorer for automatic handler discovery and registration using TypeScript decorators and NestJS reflection metadata."
+      },
+      {
+        "title": "Factory Pattern with Array Injection",
+        "path": ".knowledge-base/technical/standards/backend/design-pattern-factory.md",
+        "category": "backend",
+        "tags": ["nestjs", "factory-pattern", "design-patterns", "dependency-injection", "typescript", "strategy-pattern"],
+        "description": "A comprehensive guide to implementing the Factory pattern with NestJS Array Injection for dynamic strategy selection with O(1) lookup performance, including code examples, testing strategies, and common pitfalls."
+      },
+      {
+        "title": "Domain Event Standards",
+        "path": ".knowledge-base/technical/standards/backend/domain-events.md",
+        "category": "backend",
+        "tags": ["domain-events", "event-driven", "kafka", "nestjs", "cqrs", "event-sourcing"],
+        "description": "Standards and best practices for implementing domain events, including event structure, publishing patterns, naming conventions, and anti-patterns to avoid"
+      },
+      {
+        "title": "Error Code Standards",
+        "path": ".knowledge-base/technical/standards/backend/error-codes.md",
+        "category": "backend",
+        "tags": ["error-handling", "error-codes", "validation", "typescript", "standards"],
+        "description": "Defines mandatory error code standards including organization, naming conventions, ranges, and usage patterns for consistent error handling across the application"
+      },
+      {
+        "title": "Error Handling Standards",
+        "path": ".knowledge-base/technical/standards/backend/error-handling.md",
+        "category": "backend",
+        "tags": ["error-handling", "exceptions", "typescript", "nestjs", "best-practices"],
+        "description": "Guidelines for handling errors in backend applications, including when to catch exceptions, rollback patterns, exception types, and anti-patterns to avoid."
+      },
+      {
+        "title": "Kafka Consumer Standards",
+        "path": ".knowledge-base/technical/standards/backend/kafka.md",
+        "category": "backend",
+        "tags": ["kafka", "nestjs", "messaging", "event-driven", "consumers"],
+        "description": "Standards and best practices for implementing Kafka consumers in NestJS, including offset management, error handling patterns, and common anti-patterns to avoid"
+      },
+      {
+        "title": "Logging Standards",
+        "path": ".knowledge-base/technical/standards/backend/logging.md",
+        "category": "backend",
+        "tags": ["logging", "nestjs", "observability", "error-handling", "best-practices"],
+        "description": "Guidelines for minimal, effective logging in NestJS applications, covering log levels, what to log, anti-patterns, and rollback logging patterns"
+      },
+      {
+        "title": "Database Migration Best Practices",
+        "path": ".knowledge-base/technical/standards/backend/migrations.md",
+        "category": "backend",
+        "tags": ["database", "migrations", "schema", "devops", "best-practices"],
+        "description": "Guidelines for implementing safe, reversible, and maintainable database migrations including zero-downtime deployment strategies"
+      },
+      {
+        "title": "Database Model Best Practices",
+        "path": ".knowledge-base/technical/standards/backend/models.md",
+        "category": "backend",
+        "tags": ["database", "models", "data-integrity", "orm", "sql"],
+        "description": "Guidelines for designing robust database models including naming conventions, data types, constraints, indexing, and relationship management"
+      },
+      {
+        "title": "Database Query Best Practices",
+        "path": ".knowledge-base/technical/standards/backend/queries.md",
+        "category": "backend",
+        "tags": ["database", "sql", "performance", "security", "queries"],
+        "description": "Guidelines for writing secure, efficient, and maintainable database queries including SQL injection prevention, N+1 query avoidance, indexing strategies, and caching recommendations"
+      },
+      {
+        "title": "Telemetry Standards",
+        "path": ".knowledge-base/technical/standards/backend/telemetry.md",
+        "category": "backend",
+        "tags": ["telemetry", "metrics", "observability", "monitoring", "8ten-libs"],
+        "description": "Guidelines for implementing telemetry and custom metrics in backend services, emphasizing framework-provided telemetry over custom implementations"
+      },
+      {
+        "title": "Use Case Standards",
+        "path": ".knowledge-base/technical/standards/backend/usecases.md",
+        "category": "backend",
+        "tags": ["cqrs", "use-cases", "typescript", "nestjs", "clean-architecture", "design-patterns"],
+        "description": "Standards for implementing Use Cases following CQRS pattern with single responsibility, including return type conventions for queries and commands, transaction handling, and anti-patterns to avoid"
+      },
+      {
+        "title": "Validation Standards",
+        "path": ".knowledge-base/technical/standards/backend/validation.md",
+        "category": "backend",
+        "tags": ["validation", "class-validator", "dto", "nestjs", "error-handling", "typescript"],
+        "description": "Server-side validation standards using class-validator with ErrorCode context, covering DTO patterns, nested object validation, enum handling, and best practices for NestJS applications."
+      }
+    ],
+    "frontend": [
+      {
+        "title": "UI Accessibility Best Practices",
+        "path": ".knowledge-base/technical/standards/frontend/accessibility.md",
+        "category": "frontend",
+        "tags": ["accessibility", "a11y", "wcag", "semantic-html", "aria", "screen-readers"],
+        "description": "Guidelines and best practices for building accessible user interfaces, covering semantic HTML, keyboard navigation, color contrast, ARIA attributes, and screen reader compatibility."
+      },
+      {
+        "title": "UI Component Best Practices",
+        "path": ".knowledge-base/technical/standards/frontend/components.md",
+        "category": "frontend",
+        "tags": ["components", "ui", "best-practices", "react", "design-patterns"],
+        "description": "Guidelines for building maintainable, reusable, and well-structured UI components including principles of single responsibility, composability, and state management"
+      },
+      {
+        "title": "CSS Best Practices",
+        "path": ".knowledge-base/technical/standards/frontend/css.md",
+        "category": "frontend",
+        "tags": ["css", "styling", "design-system", "performance", "methodology"],
+        "description": "Guidelines for writing maintainable, consistent, and performant CSS including methodology choices, design systems, and optimization strategies"
+      },
+      {
+        "title": "Responsive Design Best Practices",
+        "path": ".knowledge-base/technical/standards/frontend/responsive.md",
+        "category": "frontend",
+        "tags": ["responsive-design", "mobile-first", "css", "breakpoints", "accessibility"],
+        "description": "Guidelines for implementing responsive web design including mobile-first development, fluid layouts, touch-friendly interfaces, and cross-device testing standards"
+      }
+    ],
+    "global": [
+      {
+        "title": "Code Quality Standards",
+        "path": ".knowledge-base/technical/standards/global/code-quality.md",
+        "category": "global",
+        "tags": ["typescript", "nestjs", "code-quality", "best-practices", "solid-principles"],
+        "description": "Mandatory code quality standards covering TypeScript, NestJS patterns, documentation, coding style, and review checklists for consistent development practices"
+      },
+      {
+        "title": "Code Commenting Standards",
+        "path": ".knowledge-base/technical/standards/global/commenting.md",
+        "category": "global",
+        "tags": ["code-quality", "comments", "jsdoc", "code-review", "best-practices"],
+        "description": "Comprehensive guidelines for code commenting, defining when comments are appropriate (business rules, security, non-obvious behavior) versus forbidden (describing what code does), including JSDoc requirements and code review rejection criteria."
+      },
+      {
+        "title": "General Development Conventions",
+        "path": ".knowledge-base/technical/standards/global/conventions.md",
+        "category": "global",
+        "tags": ["conventions", "best-practices", "development", "version-control", "documentation"],
+        "description": "Core development conventions covering project structure, documentation, version control, configuration, dependency management, code review, testing, and changelog practices"
+      },
+      {
+        "title": "Security Standards",
+        "path": ".knowledge-base/technical/standards/global/security.md",
+        "category": "global",
+        "tags": ["security", "owasp", "input-validation", "secrets-management", "vulnerability-prevention"],
+        "description": "Mandatory security standards covering input validation, secrets management, OWASP Top 10 protection, and security review checklists for all project code"
+      },
+      {
+        "title": "Tech Stack Reference",
+        "path": ".knowledge-base/technical/standards/global/tech-stack.md",
+        "category": "global",
+        "tags": ["tech-stack", "infrastructure", "frameworks", "tooling", "architecture"],
+        "description": "Template for defining and documenting the project's technical stack including frameworks, databases, testing tools, and deployment infrastructure"
+      }
+    ],
+    "testing": [
+      {
+        "title": "E2E Testing Standards",
+        "path": ".knowledge-base/technical/standards/testing/e2e-testing.md",
+        "category": "testing",
+        "tags": ["e2e", "nestjs", "jest", "supertest", "kafka", "mongodb", "test-isolation", "aaa-pattern"],
+        "description": "Comprehensive standards for end-to-end testing including NestJS setup patterns, Kafka async testing, MongoDB isolation, assertion rules, and debugging guidelines"
+      },
+      {
+        "title": "Unit Testing Standards",
+        "path": ".knowledge-base/technical/standards/testing/unit-testing.md",
+        "category": "testing",
+        "tags": ["unit-testing", "jest", "nestjs", "typescript", "mocking", "tdd", "mongodb", "postgresql"],
+        "description": "Comprehensive unit testing guidelines for NestJS applications including test structure, mocking patterns, repository testing with in-memory databases, and assertion best practices."
+      }
+    ],
+    "architecture": [
+      {
+        "title": "Clean Architecture with NestJS Application Design Guide",
+        "path": ".knowledge-base/technical/application-design/clean-architecture-nestjs.md",
+        "category": "architecture",
+        "tags": ["clean-architecture", "nestjs", "typescript", "cqrs", "domain-driven-design", "modular-architecture"],
+        "description": "Comprehensive guide for implementing Clean Architecture principles in NestJS applications, covering project structure, dependency injection patterns, CQRS commands/events, and best practices for maintainable and testable code."
+      }
+    ],
+    "indexes": [
+      {
+        "title": "System Documentation Index",
+        "path": ".knowledge-base/technical/application-design/index.md",
+        "category": "indexes",
+        "tags": ["clean-architecture", "nestjs", "dependency-injection", "cqrs", "system-design", "documentation-index"],
+        "description": "Index document guiding developers and AI agents through system architecture documentation, including Clean Architecture principles, NestJS patterns, CQRS, and component creation guidelines"
+      },
+      {
+        "title": "Development Standards Index",
+        "path": ".knowledge-base/technical/standards/index.md",
+        "category": "indexes",
+        "tags": ["development", "standards", "guidelines", "best-practices", "coding-standards", "team-roles"],
+        "description": "Comprehensive index of mandatory development standards organized by team role, covering backend, frontend, testing, and global standards with quick lookup references"
+      }
+    ]
+  }
+}
