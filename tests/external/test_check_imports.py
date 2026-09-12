@@ -29,7 +29,7 @@ def test_clean_tree_passes(tmp_path):
         "usecases/mod.py": (
             "import json\nimport FreeCAD\nfrom freecad_buddy.contracts import status\n"
         ),
-        "adapters/marshal.py": "from PySide6 import QtCore\n",
+        "adapters/marshal.py": "import threading\n",
         "hosts/main.py": "import argparse\nfrom freecad_buddy.usecases import shim\n",
     })
     assert check_imports.check_tree(root) == []
@@ -81,11 +81,15 @@ def test_third_party_in_usecases_flagged(tmp_path):
     assert "whitelist" in _rules(v)
 
 
-def test_qt_in_marshal_allowed(tmp_path):
+def test_qt_in_marshal_flagged(tmp_path):
+    # marshal.py holds no Qt: the pump lives in hosts/gui_addon/pump.py, so the
+    # adapters Qt carve-out is render_probe.py alone (AD-1).
     root = _make_tree(tmp_path, {
         "adapters/marshal.py": "from PySide6 import QtCore\n",
     })
-    assert check_imports.check_tree(root) == []
+    v = check_imports.check_tree(root)
+    assert v, "marshal.py must not be Qt-exempt"
+    assert "Qt" in _rules(v) or "FreeCADGui" in _rules(v)
 
 
 def test_qt_in_render_probe_allowed(tmp_path):

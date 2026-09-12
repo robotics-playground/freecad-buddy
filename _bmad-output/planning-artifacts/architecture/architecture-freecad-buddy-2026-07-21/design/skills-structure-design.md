@@ -48,7 +48,7 @@ Rules:
 
 ## 2. SKILL.md Template
 
-Frontmatter + exactly four H2 body sections in fixed order (AD-15). Body ≤1,500 words, CI-enforced (§6).
+Frontmatter + exactly four H2 body sections in fixed order (AD-15). Body ≤1,500 words; the `check_skill_shape.py` CI check that enforces this is **not yet built** (Story 6.1) — until it lands the cap is convention only (§6).
 
 ```markdown
 ---
@@ -110,8 +110,8 @@ Section-order and heading names are exact (`Scope`, `Decision Rules`, `Worked Ex
 Descriptions are the router's only input in production Level-1 state and drive native Claude activation. A vague description silently breaks selective loading — treat these rules as part of the skill's correctness, reviewed at GS.5.
 
 1. **Lead with "Use when …" in task terms** the agent will actually see in a spec or command: operation names, error text, artifact types ("diagnosing a recompute error", "adding a fillet", "DoF > 0"). Not topic labels ("about sketching").
-2. **State the negative boundary** with a pointer: "Do NOT use for X (see other-skill)". The description is the *primary* home for cross-skill routing (Level-1 metadata, so it never pollutes ablation deltas). A body **may also** name a sibling skill in prose as a routing pointer (AD-15, amended — all 12 skills ship together); keep such in-body pointers minimal and to disjoint-scope siblings so the coupling stays negligible.
-3. **Enumerate 3–6 concrete trigger phrases**, chosen to be disjoint across the 12 skills where possible; overlap is allowed only where co-loading is intended (e.g. `freecad-sketcher` + `sketch-strategy`).
+2. **State the negative boundary** with a pointer: "Do NOT use for X (see other-skill)". The description is the *primary* home for cross-skill routing (Level-1 metadata, so it never pollutes ablation deltas). A body **may also** name a sibling skill in prose as a routing pointer (AD-15, amended — all catalogued skills ship together); keep such in-body pointers minimal and to disjoint-scope siblings so the coupling stays negligible.
+3. **Enumerate 3–6 concrete trigger phrases**, chosen to be disjoint across the catalogue where possible; overlap is allowed only where co-loading is intended (e.g. `freecad-sketcher` + `sketch-strategy`).
 4. **No claims of quality or importance** ("essential", "comprehensive") — routers don't read marketing, and every wasted character crowds out a trigger term (<1,024-char hard cap).
 5. Description edits are version bumps: routing behavior is measurable behavior.
 
@@ -121,7 +121,7 @@ One loader component (`adapters/skills_loader` per the spine's structural seed �
 
 ### 4.1 Production mode — metadata-first router
 
-**Resident always:** the 12 `name` + `description` pairs (Level 1, ~1.2K tokens). **Routed per task:** 2–5 SKILL.md bodies, ≤~10K total skill budget (AD-15). The routed subset is logged on every run (AD-15: "routed subset logged") — this is what lets production quality issues be traced to "skill absent" vs "skill wrong".
+**Resident always:** one `name` + `description` pair per catalogued skill (12 at Phase 3, 15 after Phase 5; Level 1, ~1.2K tokens at 12). **Routed per task:** 2–5 SKILL.md bodies, ≤~10K total skill budget (AD-15). The routed subset is logged on every run (AD-15: "routed subset logged") — this is what lets production quality issues be traced to "skill absent" vs "skill wrong".
 
 Routing mechanism is per backend:
 
@@ -163,12 +163,14 @@ Rules match on task text; multiple matches union their subsets, capped at 5 bodi
 
 ## 6. CI Shape Check
 
-One script (external process, runs in the existing CI workflow), blocking on both matrix legs. It backs GS.E ("skill shape check wired into CI"), G1.5, and G2.6. Per SKILL.md:
+> **Status: `scripts/check_skill_shape.py` is NOT yet built** (Story 6.1, AD-15). Everything in this section is the specification *for* that script. Until it lands every rule below is convention only, held by review rather than by CI — including the word cap, which currently passes by luck (all 15 bodies measure well under it).
+
+One script (external process, to run in the existing CI workflow), blocking on both matrix legs. It backs GS.E ("skill shape check wired into CI"), G1.5, and G2.6. Per SKILL.md:
 
 | Check | Rule | Source |
 | --- | --- | --- |
 | Frontmatter | All §2 fields present; `name` == dir name; `description` <1,024 chars | format hard cap |
-| Body word count | ≤1,500 words (frontmatter excluded) | AD-15, CI-enforced |
+| Body word count | ≤1,500 words (frontmatter excluded) | AD-15 |
 | Four sections | Exactly the four H2s of §2, in order, each non-empty | AD-15 |
 | No cross-skill code deps | Body contains no path into another skill's directory (`references/` links resolve within own dir). A body **may** name a sibling skill in prose (AD-15 amended — routing pointer, not a dependency); the check does NOT flag sibling names. It still flags any `references/` link or file path that escapes the skill's own dir. | AD-15 |
 | Description shape | Contains "Use when" (case-insensitive) | §3.1, lint-level warn→error at GS.1 |
@@ -185,12 +187,12 @@ Planning figures from the research report (~100 tokens/description, ~2K tokens p
 | **Production routed (default)** | 12 descriptions + 2–5 bodies | ~5–10K | **≤~10K hard budget (AD-15)**; keeps total working context inside the ~32–64K practical local window |
 | Ablation `--skills none` | nothing | 0 | Baseline leg |
 | Ablation typical subset | declared 1–3 bodies | ~2–6K | Per-skill delta runs |
-| Ablation `--skills all` | 12 bodies | ~25K (cap-compliant) to ~40K (if bodies bloat) | Measurement only — never production (context-rot distractor cost); the §6 word cap is what keeps this at the ~25K end |
+| Ablation `--skills all` | all bodies (12 at Phase 3) | ~25K (cap-compliant) to ~40K (if bodies bloat) | Measurement only — never production (context-rot distractor cost); the §6 word cap is what keeps this at the ~25K end |
 
-Budget guard: the shape check's 1,500-word cap is the enforcement mechanism for every row — a skill that outgrows it moves content to `references/`, not past the cap.
+Budget guard: once built, the shape check's 1,500-word cap will be the enforcement mechanism for every row — a skill that outgrows it moves content to `references/`, not past the cap.
 
 ## 8. Conflicts & Notes
 
 - **No AD conflicts.** This design instantiates AD-15 directly and inherits AD-14 for all delta reporting.
 - **Deferred honored:** final router rules stay deferred per the spine; §5 is explicitly a starter seed.
-- **Intent.md nuance:** intent's SMART goal says skills are "loaded into context" — per AD-15 and the token-budget research, production loads a routed subset, never all 12; `--skills all` exists solely so the ablation harness can measure that regime.
+- **Intent.md nuance:** intent's SMART goal says skills are "loaded into context" — per AD-15 and the token-budget research, production loads a routed subset, never the whole catalogue; `--skills all` exists solely so the ablation harness can measure that regime.

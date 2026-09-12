@@ -8,7 +8,7 @@ spec-refs: ['_bmad-output/specs/spec-freecad-buddy/phase-gates.md']
 
 # Validation & Benchmark Harness Design
 
-The harness is the mechanical executor of `phase-gates.md`. It lives entirely in the **external process** (uv-managed, pytest-orchestrated — AD-12): `adapters/harness/` glue plus `benchmarks/` data. It drives FreeCAD only through the bridge's `document_*`/tool use cases (AD-20 — never raw `App.openDocument`), and it never lets the producing agent grade itself (AD-13).
+The harness is the mechanical executor of `phase-gates.md`. It lives entirely in the **external process** (uv-managed, pytest-orchestrated — AD-12): `benchmarks/runner.py` + `benchmarks/harness/` glue plus the `benchmarks/` data tree. It drives FreeCAD only through the bridge's `document_*`/tool use cases (AD-20 — never raw `App.openDocument`), and it never lets the producing agent grade itself (AD-13).
 
 ## 1. `benchmarks/` Layout
 
@@ -141,17 +141,22 @@ uv run gate seal g3                         # human ceremony: encrypt heldout, w
 
 1. **Preflight** — load gate definition (declarative mirror of the phase-gates tables, one YAML per gate); check `_registry/validators.yaml`: every validator cited by this gate must have a *current* fault-suite run (same validator version) at sensitivity ≥95 % / FA ≤5 %, else abort with `INVALID_INPUT` (protocol step 3b).
 2. **Spin bridge** — start headless FreeCADCmd bridge (or connect to the GUI listener for G0.1's HTTP leg); handshake records FreeCAD version + `ElementMapVersion` for the report banner.
-3. **Run cases ×R** — for each case, R independent repeats (fresh document per repeat via `document_*`; single-writer serialization per AD-20). Actor runs (Phases 1–3) drive the agent through the same MCP tool surface as production.
-4. **Re-verify** — the runner re-executes every assertion via deterministic `verify_*` calls against the produced artifact (AD-13/AD-17) and emits one contracts-owned `ValidationReport` per case×repeat, banner included (FreeCAD version, `ElementMapVersion`, validator sensitivity, Wilson CI where a rate is claimed).
-5. **Aggregate** — stats module (§4): majority-of-R per case, Wilson CI on the rate, per-repeat distribution attached.
-6. **Verdict** — gate = PASS iff all four legs of the global protocol hold:
+3. **Run cases ×R** — for each case, R independent repeats (fresh document per repeat via `document_*`; single-writer serialization per AD-20). Actor runs (Phases 1–3) drive the agent through the same MCP tool surface as production. **Timing capture (AD-24):** every case×repeat records one wall-clock measurement on the single AD-24 basis — tool-call entry to envelope return, model time included — carried on the `ValidationReport`. Phase 3 per-part timing spans all repair iterations including judge and TechDraw generation (AD-21 cadence).
+
+   **G1 tiered screen (decision 008, AD-14).** The G1 error-diagnosis gate does not run flat over the fixture set. Grade the first **n=10**; the base gate (G1.2) passes at **≥8/10** and the skill-loaded leg (GS.4, `freecad-troubleshooting`) at **≥9/10**. Escalate to the sealed **n=30** run only on a **10/10** first stage; below 10/10 the gate concludes at n=10 and the result is stamped **low-confidence**. Wilson CI is reported at whichever n concluded, and the concluding n travels with any citation. The AD-14 `R≥10` repeat rules govern ablation and pp-threshold claims, not this screen; the Phase 1 answer eval runs at R=3.
+4. **Re-verify** — the runner re-executes every assertion via deterministic `verify_*` calls against the produced artifact (AD-13/AD-17) and emits one contracts-owned `ValidationReport` per case×repeat, banner included (FreeCAD version, `ElementMapVersion`, validator sensitivity, Wilson CI where a rate is claimed, and **the AD-24 budget measured for this gate with its n**).
+5. **Aggregate** — stats module (§4): majority-of-R per case, Wilson CI on the rate, per-repeat distribution attached, plus the median of the captured wall-clock times for the gate's AD-24 budget.
+6. **Verdict** — gate = PASS iff all five legs of the global protocol hold:
    - (a) every non-human criterion passes its stated pass rule *evaluated on report fields* (never exit-code-0 or log absence);
    - (b) every cited validator's current fault run: sensitivity ≥95 % ∧ FA ≤5 %;
    - (c) exit legs ran on the sealed held-out set, R≥10, majority-of-R, and dev/held-out gap ≤15pp (AD-14 — gap >15pp = overfitting, no exit);
-   - (d) each required human token is present and bound to this run (§7).
+   - (d) each required human token is present and bound to this run (§7);
+   - (e) the gate's **AD-24 budget** is met at the stated n — G1 answer latency ≤15 s median, G3 per-part wall-clock ≤10 min median, G4 50-job soak with RSS growth <20 % and zero crash/hang. Budgets are pass/fail here, never advisory: a run that satisfies every assertion and blows its budget **fails the gate**.
    `gate verdict` is a pure function over stored `ValidationReport`s + token artifacts — re-runnable by anyone, including an auditing agent, without re-executing cases.
 
-## 4. Stats Module (`harness/stats.py`)
+## 4. Stats Module (`usecases/stats.py`)
+
+> Placement note: the AD-14 statistics live in the **use-case** ring, not under `harness/`. `usecases/stats.py` imports only `math`, so it stays AD-12-legal and is importable *inside* FreeCAD — which the in-FreeCAD G2 scorer needs. The external harness imports the same module, so both sides compute rates with one implementation.
 
 Pure functions, stdlib-only math, unit-tested against the research report's computed tables (the tables are the test fixtures).
 
@@ -262,7 +267,7 @@ Where judgment is needed (answer quality, error-diagnosis naming), pass/fail com
 - **Grader validation:** the grader is itself a validator in `_registry/validators.yaml` — its fault suite is the planted confident-wrong answer set (G1.E); its sensitivity/FA must clear the bar before G1.1/G1.2 scores are citable, and `rubric_review` human token covers rubric authorship.
 - The rubric is versioned; a rubric edit invalidates prior grader sensitivity runs (same hash-staleness rule as §6).
 
-**Visual judge (G3/G4, AD-21)** reuses this exact wiring: `g3/gate.yaml` declares `actor:` and `visual_judge:` (vision-capable model; preflight hard-fails on same-model-same-context); judge input = rendered standard/focus views + spec + checklist; output = structured `{pass, findings}` at temperature 0, mapped into the `ValidationReport` as check `visual.judge`. The judge registers in `_registry/validators.yaml` with its planted visually-wrong-part fault suite (mirrored, missing flange, wrong-face feature, wrong proportions + clean controls); checklist edits stale its sensitivity run. Part-done verdict in the runner = geometry checks ∧ `visual.judge` pass (AD-21 conjunction); `visual.unavailable` blocks done unless an audit-logged operator waiver is present.
+**Visual judge (G3/G4, AD-21)** reuses this exact wiring: `g3/gate.yaml` declares `actor:` and `visual_judge:` (vision-capable model; preflight hard-fails on same-model-same-context); judge input = the AD-21 standard visual set — 3D iso render + focus views **+ dimensioned TechDraw projections (front/top/right)**, generated on a TempDoc copy from the part's driving parameters and the spec's assertion set (`techdraw_for_judge`, verification-design §7a) — plus spec + checklist; output = structured `{pass, findings}` at temperature 0, mapped into the `ValidationReport` as check `visual.judge`. A judge dimension-callout mismatch is a blocking finding, re-checked against `verify_*` before rework — geometry stays authoritative. The judge registers in `_registry/validators.yaml` with its planted visually-wrong-part fault suite (mirrored, missing flange, wrong-face feature, wrong proportions + clean controls); checklist edits stale its sensitivity run. Part-done verdict in the runner = geometry checks ∧ `visual.judge` pass (AD-21 conjunction); `visual.unavailable` blocks done unless an audit-logged operator waiver is present.
 
 ## 9. Out of Scope / Deferred
 

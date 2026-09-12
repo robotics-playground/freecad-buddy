@@ -75,15 +75,16 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 
 | Component | Phase | Responsibility | Notes |
 | --- | --- | --- | --- |
-| `mcp_server.py` | P0 | FastMCP server + tool registry; one server object, transport run-flag `stdio\|http`, SSE never (AD-3); stderr-only logging; registers only typed tools (AD-4); read-only registry filter for Phase 1 (G1.6); MCP elicitation for confirmations, headless fail-closed unless `autoApprove` (AD-10). Runs in external uv-managed process (AD-12) | third-party deps live here |
+| `mcp_server.py` | P0 | MCP low-level `Server` + tool registry; one server object, transport run-flag `stdio\|http`, SSE never (AD-3); stderr-only logging; registers only typed tools (AD-4); read-only registry filter for Phase 1 (G1.6); MCP elicitation for confirmations, headless fail-closed unless `autoApprove` (AD-10). Runs in external uv-managed process (AD-12) | third-party deps live here |
 | `rpc_client.py` | P0 | External-process side of the bridge: encodes tool invocations as `rpc_protocol` frames, sends over localhost + per-session token (AD-3), maps replies to `ResultEnvelope` | used by `mcp_server` in GUI mode |
 | `rpc_listener.py` | P0 | In-FreeCAD RPC listener (AD-2): accepts frames off-thread, validates token + handshake, hands work to `marshal`. **Stdlib + FreeCAD only** (AD-12); CI no-`Gui`-import check applies (AD-1) | runs inside FreeCAD GUI process |
-| `marshal.py` | P0 | Main-thread marshal (AD-2): Mod/Web `postEvent` pattern — queue callable to Qt main thread, block for result. Headless degrade: direct inline call (no Qt loop). Imports QtCore only (no widgets/`FreeCADGui`; widgets/Gui remain hosts-only per AD-1) | research §2.3/§4.3 |
+| `marshal.py` | P0 | Main-thread marshal (AD-2): Mod/Web `postEvent` pattern — queue callable to Qt main thread, block for result. Headless degrade: direct inline call (no Qt loop). Holds **no Qt import** — the Qt event pump lives in `hosts/gui_addon/pump.py`, so this module needs no AD-1 exemption | research §2.3/§4.3 |
+| `rpc_dispatch.py` | P0 | The single AD-17 error boundary: maps use-case exceptions onto the closed status set (`INVALID_INPUT`, `RECOMPUTE_ERROR`, `TIMEOUT`; unexpected → `RECOMPUTE_ERROR` + `detail.unexpected`), attaches machine detail (exception class, message, truncated traceback), gates `debug_exec` registration (AD-4) | integration §3.5 |
 | `audit_log.py` | P0 | `AuditSink` implementation: append-only JSON-lines per job/session (AD-17, conventions) | injected into `transaction` |
-| `export_oracles.py` | P0 | External-side orchestration of `verify_export_*` (AD-9): STEP re-import round-trip, trimesh primary + second oracle (admesh or Phase 0-gate fallback) for STL, lib3mf + trimesh + in-FreeCAD self-read (via RPC) for 3MF; oracle disagreement = fail; mesh tolerance derived from deflection | third-party oracles |
-| `harness.py` | P0 | **Gate runner** core (AD-13, AD-14, AD-19): runs benchmarks/fault-injection suites via pytest, computes majority-of-R, Wilson CI, McNemar; emits contracts-owned `ValidationReport` with banner; verdict from report fields only. Thin CLI lives in `benchmarks/run_gate.py` (SPEC assumption) | external process only |
-| `skills_loader.py` | P1 (router) / GS.E (forced-subset) | **Skills loader** (AD-15): one store, two modes — production metadata-first router (12 descriptions resident, 2–5 bodies routed, ≤~10K tokens, subset logged) and ablation forced explicit-subset injection with auto-activation disabled; CI shape check (4 sections, ≤1,500 words) | `--skills <subset>` flag |
-| `render_probe.py` | P0 | Capability-gated render probe serving `query_screenshot` (P0) and preview images (P2): GUI `saveImage` / offscreen-Xvfb / omit; ≤1920 px, `resource_link` preferred — one of the two adapter Qt carve-outs (AD-1, AD-10) | optional payload only |
+| `export_oracle.py` + `export_verdict.py` | P0 | External-side orchestration of `verify_export_*` (AD-9): STEP re-import round-trip, trimesh primary + second oracle (admesh or Phase 0-gate fallback) for STL, lib3mf + trimesh + in-FreeCAD self-read (via RPC) for 3MF; oracle disagreement = fail; mesh tolerance derived from deflection | third-party oracles |
+| `benchmarks/runner.py` + `benchmarks/harness/` | P0 | **Gate runner** core (AD-13, AD-14, AD-19): runs benchmarks/fault-injection suites via pytest, computes majority-of-R, Wilson CI, McNemar; emits contracts-owned `ValidationReport` with banner; verdict from report fields only. Thin CLI lives in `benchmarks/runner.py` (`gate` console alias) | external process only |
+| `skills_loader.py` *(planned, Phase 1 — not yet built)* | P1 (router) / GS.E (forced-subset) | **Skills loader** (AD-15): one store, two modes — production metadata-first router (12 descriptions resident, 2–5 bodies routed, ≤~10K tokens, subset logged) and ablation forced explicit-subset injection with auto-activation disabled; CI shape check (4 sections, ≤1,500 words) — **checker unbuilt, Story 6.1** | `--skills <subset>` flag |
+| `render_probe.py` | P0 | Capability-gated render probe serving `query_screenshot` (P0) and preview images (P2): GUI `saveImage` / offscreen-Xvfb / omit; ≤1920 px, `resource_link` preferred — the single adapter Qt carve-out (AD-1, AD-10) | optional payload only |
 
 ## 4. Host ring — `src/freecad_buddy/hosts/` (imports adapters)
 
@@ -91,7 +92,7 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 | --- | --- | --- |
 | `gui_addon/InitGui.py` + `bootstrap.py` | P0 | GUI addon: waits for `FreeCAD.GuiUp`, defers via `QTimer.singleShot`, generates per-session RPC token, starts `rpc_listener`, then **auto-spawns the external MCP protocol server** as a child process (`serve --mode rpc --transport http`, `:8765`) so opening FreeCAD is the only step to reach the bridge. The addon never *imports* `mcp` — it only spawns the process in the project venv interpreter, auto-discovered from the addon's own install path (no env vars; AD-2, AD-3, AD-12). Qt/`FreeCADGui` legal here (AD-1) |
 | `headless.py` | P0 | Headless entry: single process where FreeCAD is importable (conda env); runs `mcp_server` on stdio, use-cases called inline through the marshal's degrade path (AD-2). Also the `FreeCADCmd run_tests.py` CI entry |
-| `phase4/supervisor.py` | P4 | Job API host (streamable HTTP, AD-3): never imports FreeCAD; `spawn` workers, `maxtasksperchild=1`, whole-tree kill; re-executes validation checks before reporting (AD-17, AD-18); `debug_exec` permanently disabled (AD-4) |
+| `phase4/supervisor.py` | P4 | Job API host (streamable HTTP, AD-3): never imports FreeCAD; `spawn` workers, `max_tasks_per_child=1` (`ProcessPoolExecutor`), whole-tree kill; re-executes validation checks before reporting (AD-17, AD-18); `debug_exec` permanently disabled (AD-4) |
 | `phase4/worker.py` | P4 | Sandboxed worker entry: imports FreeCAD, runs use-cases inline (headless path), network-free (AD-18); reuses `JobStatus`/`ValidationReport` from P0 (AD-17) |
 
 ## 5. Interaction flows
@@ -101,14 +102,14 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 ```mermaid
 sequenceDiagram
     participant C as MCP client
-    participant S as mcp_server (FastMCP, stdio)
+    participant S as mcp_server (MCP Server, stdio)
     participant M as marshal (inline path)
     participant U as usecase (queries.py)
     participant F as FreeCAD App (via shim)
-    C->>S: tools/call query_shape (JSON-RPC over stdio)
+    C->>S: tools/call query_object (JSON-RPC over stdio)
     S->>S: validate input vs tool_schemas
     S->>M: invoke(fn) — no Qt loop, direct call (AD-2)
-    M->>U: query_shape(doc_handle, selector)
+    M->>U: query_object(doc_handle, selector)
     U->>F: shim-mediated App reads
     F-->>U: shape data
     U-->>S: ResultEnvelope (AD-17)
@@ -121,7 +122,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant C as MCP client
-    participant S as mcp_server (FastMCP, HTTP, external process)
+    participant S as mcp_server (MCP Server, HTTP, external process)
     participant RC as rpc_client
     participant L as rpc_listener (in FreeCAD, off-thread)
     participant M as marshal
@@ -183,22 +184,22 @@ sequenceDiagram
 | Version shim | `usecases/shim.py` | usecases | Sole gateway from usecases to FreeCAD App (AD-11); capability probes, no version sniffing |
 | Fingerprint | `usecases/fingerprint.py` | usecases | AD-6 mandates exactly one implementation; used by transaction, undo proof, revision diffs |
 | TNP guard | `usecases/tnp_guard.py` | usecases | Invoked inside AD-5 post-verify; capability-gated via shim (AD-7) |
-| Skills loader | `adapters/skills_loader.py` | adapters | Serves the MCP process/harness, never runs in FreeCAD (AD-12, AD-15) |
-| Gate runner | `adapters/harness.py` + `benchmarks/run_gate.py` CLI | adapters | External process (pytest, stats deps); emits contracts-owned `ValidationReport` (AD-13, AD-14, AD-17, AD-19) |
+| Skills loader *(planned)* | `adapters/skills_loader.py` | adapters | Serves the MCP process/harness, never runs in FreeCAD (AD-12, AD-15) |
+| Gate runner | `benchmarks/runner.py` + `benchmarks/harness/` | benchmarks (outside the src rings) | External process (pytest, stats deps); emits contracts-owned `ValidationReport` (AD-13, AD-14, AD-17, AD-19) |
 | Audit log | `adapters/audit_log.py` (sink) / `contracts` (record type) | adapters/contracts | Append-only from Phase 0 (AD-17); usecases depend on the port, not the file format |
 
 ## 7. Phase availability summary
 
 | Phase | Components first shipped |
 | --- | --- |
-| P0 (G0) | All contracts; shim, fingerprint, tnp_guard (Layer 0), transaction, documents, queries, verify (shape/document), exports, debug_exec; mcp_server, rpc_client, rpc_listener, marshal, audit_log, export_oracles, harness; InitGui.py, headless.py. Entry gate G0.E artifacts (fault suite, golden benchmark) precede implementation (AD-19) |
+| P0 (G0) | All contracts; shim, fingerprint, tnp_guard (Layer 0), transaction, documents, queries, verify (shape/document), exports, debug_exec; mcp_server, rpc_client, rpc_listener, marshal, audit_log, export_oracle, export_verdict, react_adapter; gui_addon/{InitGui,bootstrap,pump}.py, gui_external/entry.py, headless/entry.py, main.py, tool_catalog.py. Entry gate G0.E artifacts (fault suite, golden benchmark) precede implementation (AD-19) |
 | P1 (G1) | skills_loader (router mode), read-only registry filter, large-tree summarized queries; skills `freecad-fundamentals`, `freecad-troubleshooting` |
-| GS.E | skills_loader forced-subset ablation mode + CI shape check |
+| GS.E | skills_loader forced-subset ablation mode + CI shape check (`check_skill_shape.py`, Story 6.1) |
 | P2 (G2) | sketches, features, preview, verify_sketch, render_probe, elicitation/confirm glue; tnp_guard Layers 1–2 + 5-scenario fault suite |
 | P3 (G3) | assertion compiler + spec-benchmark runner extensions in harness (designer loop is agent-side plan/execute over P2 tools — no new ring component) |
 | P4 (G4) | phase4/supervisor, phase4/worker, job API surface (schemas unchanged — owned by contracts since P0 per AD-17) |
-| P5 (G5-robot) | robot-description export use cases (`export_urdf`/`export_sdf` + paired `verify_export_*`) over the Assembly kinematic tree + native inertials; part sourcing/import use cases; external-side URDF/SDF schema/parse oracle (mirrors export_oracles); skills `urdf-export`, `sdf-export`, `part-sourcing`. Depends on a Phase-5 Assemblies capability (AD-22/AD-23; detail at the G5-robot gate) |
+| P5 (G5-robot) | robot-description export use cases (`export_urdf`/`export_sdf` + paired `verify_export_*`) over the Assembly kinematic tree + native inertials; part sourcing/import use cases; external-side URDF/SDF schema/parse oracle (mirrors export_oracle); skills `urdf-export`, `sdf-export`, `part-sourcing`. Depends on a Phase-5 Assemblies capability (AD-22/AD-23; detail at the G5-robot gate) |
 
 ## 8. Conflicts
 
-No conflicts with AD-1..AD-20 found. One clarifying reading (not a conflict): `adapters/marshal.py` imports Qt**Core** (`postEvent`/queued invoke) inside the GUI process. AD-1 restricts "Qt widgets" and `FreeCADGui` to `hosts/` (plus the adapters render probe); QtCore marshaling primitives are not widgets, and the spine's structural seed itself places "main-thread marshal" in adapters. The CI no-`Gui`-import check (AD-1) covers contracts, usecases, and `rpc_listener` — `marshal.py` stays out of that check's scope but is banned from widgets/`FreeCADGui` imports.
+No conflicts with AD-1..AD-28 found. `adapters/marshal.py` holds **no Qt import at all** — it carries the queue and the wait, while the Qt event pump lives in `hosts/gui_addon/pump.py` where Qt is legal without an exemption (AD-1, §3). That makes `render_probe.py` the single adapters Qt carve-out. The `check_imports.py` exemption list still names `adapters/marshal.py`; that entry is dead and is tracked for removal.

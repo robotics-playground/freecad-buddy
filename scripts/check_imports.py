@@ -76,7 +76,7 @@ def _ring_of(relparts: tuple[str, ...]) -> str | None:
     return head if head in RING_ORDER else None
 
 
-QT_EXEMPT_ADAPTERS = frozenset({"adapters/marshal.py", "adapters/render_probe.py"})
+QT_EXEMPT_ADAPTERS = frozenset({"adapters/render_probe.py"})
 
 
 def _qt_allowed(ring: str | None, relpath: str) -> bool:

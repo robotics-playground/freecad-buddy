@@ -34,15 +34,18 @@ Model-level sub-elements (faces/edges) are addressed by selector objects — nev
 { "$defs": {
   "Selector": { "oneOf": [
     { "type": "object", "properties": {
-        "by": { "const": "mapped_name" },
+        "kind": { "const": "mapped_name" },
         "object": { "type": "string", "description": "immutable object Name" },
-        "element": { "type": "string", "description": "TNP mapped element name" } },
-      "required": ["by", "object", "element"] },
+        "mapped_name": { "type": "string", "description": "TNP mapped element name" },
+        "element_map_version": { "type": "integer" } },
+      "required": ["kind", "object", "mapped_name", "element_map_version"] },
     { "type": "object", "properties": {
-        "by": { "const": "geo_query" },
+        "kind": { "const": "geometric" },
         "object": { "type": "string" },
-        "query": { "type": "object", "description": "geometric predicate: surface_type, radius{value,tol}, axis_dir, nearest_point…" } },
-      "required": ["by", "object", "query"] }
+        "element_type": { "enum": ["face", "edge", "vertex"] },
+        "query": { "type": "object", "description": "geometric predicate: surface_type, radius{value,tol}, axis_dir, nearest_point…" },
+        "expect": { "enum": ["one", "many"] } },
+      "required": ["kind", "object", "query"] }
   ]},
   "Quantity": { "type": "object",
     "properties": { "value": { "type": "number" }, "unit": { "type": "string", "description": "explicit, e.g. mm, deg" } },
@@ -101,6 +104,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 **Mut** = mutates the target document (drives AD-5 protocol + Phase 2 confirm gate). *(L)* = lifecycle op, confirm-exempt per §1.4.
 
+**Shipped** = present in `hosts/tool_catalog.py:tool_specs()` today. **planned** = specified here, not yet registered — a planned row is a design commitment, never evidence of a shipped tool. `tool_specs()` is the authority: if this table and that function disagree, the function wins and this table is the bug (AD-4 makes the typed tool list the entire AI mutation surface, so an unlisted shipped tool is an inventory defect).
+
 ### `document_` — lifecycle & targeting (AD-20)
 
 | Tool | Phase | Purpose | Mut |
@@ -112,7 +117,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `document_list` | 0 | List open documents with handles, labels, transient flags | no |
 | `document_recompute` | 0 | Full recompute; report touched objects + per-object error states | yes *(L)* |
 | `document_undo` | 2 | Bridge-owned undo of the last committed transaction; fingerprint-verified (G2.3) | yes *(L)* |
-| `document_object_delete` | 2 | Delete an object (and report orphaned dependents) under AD-5 | yes |
+| `document_object_delete` | 2 | Delete an object (and report orphaned dependents) under AD-5 — **planned** | yes |
 
 ### `query_` — read-only introspection (zero mutation; Phase 1 assistant surface, G1.6)
 
@@ -126,8 +131,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_placement` | 0 | Local + global placement of an object | no |
 | `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `debug_exec` state | no |
 | `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1920 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport; renders a document with a pending/broken recompute (`render.dirty_document: true`) rather than hard-failing. Reports unavailable when no GL — never fails hard | no |
-| `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns depth/root/filter navigation | no |
-| `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) | no |
+| `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns depth/root/filter navigation — **planned** | no |
+| `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) — **planned** | no |
 
 ### `export_` — artifact output (AD-9: each pairs with its `verify_export_*`)
 
@@ -144,12 +149,12 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `verify_shape` | 0 | Measure volume/bbox/counts/validity vs. expected bands (G0.3 golden models) | no |
 | `verify_recompute` | 0 | Assert no object left in error state after recompute | no |
 | `verify_sketch` | 0 | AD-8 pass signal: `FullyConstrained` + DoF + solver diagnostics (used by G2.5) | no |
-| `verify_fingerprint` | 0 | Compute/compare AD-6 document fingerprint (undo proof, G2.3) | no |
+| `verify_fingerprint` | 0 | Compute/compare AD-6 document fingerprint (undo proof, G2.3) — **planned**; `usecases/fingerprint.py` exists and is called internally, but no `verify_fingerprint` tool is registered | no |
 | `verify_export_step` | 0 | Re-import STEP; volume ±0.1 %, `isValid`, topology counts equal (G0.5) | no |
 | `verify_export_stl` | 0 | trimesh + second oracle (admesh or Phase 0 fallback); disagreement = fail | no |
 | `verify_export_3mf` | 0 | lib3mf + trimesh + FreeCAD self-read (self-read leg via RPC) | no |
-| `verify_references` | 2 | Standalone TNP reference audit (AD-7 Layers 0–2) between mutations | no |
-| `verify_visual` | 3 | AD-21 visual leg: standard visual set — iso render + focus views + **dimensioned TechDraw front/top/right projections** (auto-generated from driving params on a TempDoc via internal `techdraw_for_judge`; part doc never polluted) → **independent** VLM judge (never the actor) vs spec checklist; conjunctive with geometry assertions for part-done; fail-closed when render/drawing/judge unavailable. *(Phase 3 — outside the P0–P2 count table.)* | no |
+| `verify_references` | 2 | Standalone TNP reference audit (AD-7 Layers 0–2) between mutations — **planned**; the audit runs inside AD-5 today (`usecases/tnp_guard.py`), just not as a standalone tool | no |
+| `verify_visual` | 3 | AD-21 visual leg: standard visual set — iso render + focus views + **dimensioned TechDraw front/top/right projections** (auto-generated from driving params on a TempDoc via internal `techdraw_for_judge`; part doc never polluted) → **independent** VLM judge (never the actor) vs spec checklist; conjunctive with geometry assertions for part-done; fail-closed when render/drawing/judge unavailable. *(Phase 3 — **planned**, outside the P0–P2 count table. Blocked on the AD-21 ≥2048 px judge-image path: the render route caps at 1920 px today.)* | no |
 
 ### `sketch_` — sketch mutations (Phase 2; AI mutation path per AD-4)
 
@@ -168,6 +173,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
+| `feature_body_create` | 2 | Create a PartDesign Body — the container every later `feature_*` targets | yes |
 | `feature_pad` | 2 | Pad a sketch profile | yes |
 | `feature_pocket` | 2 | Pocket from a sketch profile | yes |
 | `feature_revolve` | 2 | Revolution from profile + axis | yes |
@@ -193,19 +199,25 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 ### Counts & G0.2
 
-| Namespace | P0 | P1 | P2 | Total |
-| --- | --- | --- | --- | --- |
-| `document_` | 6 | — | 2 | 8 |
-| `query_` | 8 | 2 | — | 10 |
-| `export_` | 3 | — | — | 3 |
-| `verify_` | 7 | — | 1 | 8 |
-| `sketch_` | — | — | 8 | 8 |
-| `feature_` | — | — | 10 | 10 |
-| `preview_` | — | — | 1 | 1 |
-| `debug_` | 1 | — | — | 1 |
-| **Total** | **25** | **2** | **22** | **49** |
+Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs()`.
 
-**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24** including `verify_` (excluding operator-only `debug_exec`, which is unregistered by default and does not count toward the AI-visible registry). Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule).
+| Namespace | P0 | P1 | P2 | P3 | Specified | Shipped |
+| --- | --- | --- | --- | --- | --- | --- |
+| `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
+| `query_` | 8 | 2 | — | — | 10 | 8 (`query_tree_children`, `query_parameters` planned) |
+| `export_` | 3 | — | — | — | 3 | 3 |
+| `verify_` | 7 | — | 1 | 1 | 9 | 6 (`verify_fingerprint`, `verify_references`, `verify_visual` planned) |
+| `sketch_` | — | — | 8 | — | 8 | 8 |
+| `feature_` | — | — | 11 | — | 11 | 11 |
+| `preview_` | — | — | 1 | — | 1 | 1 |
+| **AI-visible total** | | | | | **50** | **44** |
+| `debug_` (operator-only) | 1 | — | — | — | 1 | 1 |
+
+**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus operator-only `debug_exec` (unregistered by default, never counted in the AI-visible registry) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule).
+
+The six planned tools are Phase 1/2/3 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returning 44 + `DEBUG_EXEC_SPEC` = 45 registered specs is the current truth.
+
+Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
 ## 3. Load-Bearing Tool Schemas
 
@@ -495,7 +507,7 @@ A document with a pending or broken recompute (a `Touched`/`Invalid`/`Error` obj
   }, "required": ["render"] } }
 ```
 
-Typical agent patterns: *isolate* (`include: [Body]`), *context-ghost* (`styles: [{object: BasePlate, transparency: 85}]` while inspecting the flange), *element zoom* (`focus: {by: geo_query, object: Body, query: {surface_type: Cylinder, radius: {value: 2.5, tol: 0.2}}}` to frame one hole), *before/after fillet check* (`preview_dry_run` with `view.focus` on the target edge). AD-10 budgets and `audience:["user"]` annotation apply unchanged.
+Typical agent patterns: *isolate* (`include: [Body]`), *context-ghost* (`styles: [{object: BasePlate, transparency: 85}]` while inspecting the flange), *element zoom* (`focus: {kind: "geometric", object: Body, query: {surface_type: Cylinder, radius: {value: 2.5, tol: 0.2}}}` to frame one hole), *before/after fillet check* (`preview_dry_run` with `view.focus` on the target edge). AD-10 budgets and `audience:["user"]` annotation apply unchanged.
 
 ## 4. Confirmation Flow (AD-10) — `$defs.Confirm`
 
@@ -521,14 +533,14 @@ Phase 2 policy: mutation tool called without valid `confirm` in a confirm-requir
 ## 6. Registration & Phasing Rules
 
 - The tool registry is phase-profiled: the Phase 1 assistant profile registers `query_` + `verify_` + `document_list`/`document_open`(read-intent) only — zero mutation tools (G1.6). Phase 2 profile adds `sketch_`/`feature_`/`preview_`/remaining `document_` tools behind the confirm gate.
-- One FastMCP server object serves both transports (stdio headless, streamable HTTP in-GUI; SSE never) per AD-3; stderr-only logging on the server path.
+- One MCP low-level `Server` object serves both transports (stdio headless, streamable HTTP in-GUI; SSE never) per AD-3; stderr-only logging on the server path.
 - All schemas live in `contracts/` (stdlib-only, AD-1/AD-12); use-case implementations are host-agnostic (AD-2).
 
 ## 7. Conflicts & Design Decisions
 
 - **No AD conflicts identified.** Two deliberate interpretations, recorded per spine instructions:
   1. **Lifecycle-op exemption (§1.4):** `document_save/close/recompute/undo` are mutations for serialization/audit purposes but exempt from the AD-5 snapshot bracket and Phase 2 preview gate (no new geometric intent; `undo` is itself the AD-5 rollback mechanism, proven by AD-6 fingerprints per G2.3). AD-5's "every mutation" is read as "every geometry-intent mutation"; flagged for spine-owner confirmation.
-  2. **G0.2 counting:** the gate text counts `query_`/`document_`/`export_`; this catalog meets ≥15 (16) within those namespaces alone, so the stricter reading holds; with Phase 0 `verify_` the AI-visible count is 23.
+  2. **G0.2 counting:** the gate text counts `query_`/`document_`/`export_`; this catalog meets ≥15 (17: 8 `query_` + 6 `document_` + 3 `export_`) within those namespaces alone, so the stricter reading holds; with Phase 0 `verify_` the AI-visible count is 24.
 
 ## 8. Phase-5 tools (forward pointer — designed at the G5-robot gate)
 

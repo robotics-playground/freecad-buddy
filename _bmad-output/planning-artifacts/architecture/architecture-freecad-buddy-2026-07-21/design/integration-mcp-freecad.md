@@ -12,21 +12,21 @@ sources:
 
 # Integration Design: MCP <-> FreeCAD
 
-How the external FastMCP server reaches FreeCAD in both run modes, per **AD-2** (topology + main-thread marshaling), **AD-3** (transport + auth), **AD-11** (version shim), **AD-12** (stdlib-only in-FreeCAD). Governing rule (research, high confidence): *I/O may live on any thread; every call that reads or mutates FreeCAD state executes on the Qt main thread under the GIL.*
+How the external MCP server reaches FreeCAD in both run modes, per **AD-2** (topology + main-thread marshaling), **AD-3** (transport + auth), **AD-11** (version shim), **AD-12** (stdlib-only in-FreeCAD). Governing rule (research, high confidence): *I/O may live on any thread; every call that reads or mutates FreeCAD state executes on the Qt main thread under the GIL.*
 
 ## 1. Topology
 
 | Mode | Processes | FreeCAD call path |
 | --- | --- | --- |
-| **GUI** | External FastMCP process + FreeCAD GUI process (addon-hosted RPC listener) | RPC → listener accept thread → marshal → Qt main thread |
-| **Headless H1** (canonical, AD-2) | Single process: FastMCP + usecases + `import FreeCAD` as module (conda env) | Direct in-proc call, inline |
-| **Headless H2** (fallback host) | External FastMCP + `FreeCADCmd run_server.py` (same listener, inline dispatch) | RPC → single-threaded serve loop, main thread |
+| **GUI** | External MCP process + FreeCAD GUI process (addon-hosted RPC listener) | RPC → listener accept thread → marshal → Qt main thread |
+| **Headless H1** (canonical, AD-2) | Single process: MCP server + usecases + `import FreeCAD` as module (conda env) | Direct in-proc call, inline |
+| **Headless H2** (fallback host) | External MCP server + `FreeCADCmd run_server.py` (same listener, inline dispatch) | RPC → single-threaded serve loop, main thread |
 
 H2 exists for environments where the MCP process's interpreter cannot `import FreeCAD` (AppImage, interpreter mismatch). It is the GUI topology minus Qt — no marshal needed because `FreeCADCmd` has no Qt loop and the serve loop *is* the main thread. It does not contradict AD-2's "headless = single process" intent (which prevents asyncio-in-Qt fragility and off-thread FreeCAD calls); H2 has neither. Same use-case implementations in all three (AD-2).
 
-Per **AD-12**, everything that runs inside the FreeCAD process — `contracts/rpc_wire.py`, `adapters/rpc_listener.py`, `adapters/marshal.py`, `usecases/*`, `hosts/gui_addon/*`, `hosts/headless/run_server.py` — imports **stdlib + FreeCAD API only** (Qt via FreeCAD's bundled PySide, confined to `hosts/` per AD-1). FastMCP, trimesh, etc. exist only in the external uv-managed process.
+Per **AD-12**, everything that runs inside the FreeCAD process — `contracts/rpc.py`, `adapters/rpc_listener.py`, `adapters/marshal.py`, `usecases/*`, `hosts/gui_addon/*`, `hosts/headless/run_server.py` — imports **stdlib + FreeCAD API only** (Qt via FreeCAD's bundled PySide, confined to `hosts/` per AD-1). `mcp`, trimesh, etc. exist only in the external uv-managed process.
 
-## 2. RPC Wire Contract (`contracts/rpc_wire.py`, per AD-2)
+## 2. RPC Wire Contract (`contracts/rpc.py`, per AD-2)
 
 Both sides import this module; neither invents framing. Stdlib-encodable throughout (`json`, `dataclasses`).
 
@@ -133,7 +133,7 @@ def _deferred_start():
 QtCore.QTimer.singleShot(0, _deferred_start)
 ```
 
-`start_bridge()` (idempotent): create `QtMainThreadExecutor` (§3.3) on the main thread → build `MethodRegistry` from usecases → generate session token → start `RpcListener` accept thread → write connection file → **auto-spawn the external MCP HTTP proxy** (`freecad-buddy serve --mode rpc --transport http`, port 8765) as a child process so opening FreeCAD is the only step to reach the bridge over MCP. The proxy runs in the **external project venv** interpreter (it imports `mcp`/FastMCP, forbidden in-FreeCAD per AD-12), **auto-discovered from the addon's own install path** — walk from the package `__file__` to the repo root and run the sibling `.venv`/`venv` python's serve module directly, no env vars needed (`FREECAD_BUDDY_MCP_CMD` is an optional verbatim override; `FREECAD_BUDDY_REPO`+`uv` a legacy fallback). Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set or `:8765` is already served. The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
+`start_bridge()` (idempotent): create `QtMainThreadExecutor` (§3.3) on the main thread → build `MethodRegistry` from usecases → generate session token → start `RpcListener` accept thread → write connection file → **auto-spawn the external MCP HTTP proxy** (`freecad-buddy serve --mode rpc --transport http`, port 8765) as a child process so opening FreeCAD is the only step to reach the bridge over MCP. The proxy runs in the **external project venv** interpreter (it imports `mcp`, forbidden in-FreeCAD per AD-12), **auto-discovered from the addon's own install path** — walk from the package `__file__` to the repo root and run the sibling `.venv`/`venv` python's serve module directly, no env vars needed (`FREECAD_BUDDY_MCP_CMD` is an optional verbatim override; `FREECAD_BUDDY_REPO`+`uv` a legacy fallback). Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set or `:8765` is already served. The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
 
 ### 3.2 RPC listener (`adapters/rpc_listener.py`, stdlib only)
 
@@ -200,7 +200,7 @@ class QtMainThreadExecutor(QtCore.QObject):     # constructed ON the main thread
 ```mermaid
 sequenceDiagram
     participant C as MCP client
-    participant F as FastMCP server (external proc)
+    participant F as MCP server (external proc)
     participant L as RPC listener (accept thread)
     participant Q as Qt main thread (FreeCAD GUI)
     C->>F: tools/call feature_pad
@@ -216,13 +216,13 @@ sequenceDiagram
 
 ### 3.5 Error propagation
 
-Three layers, strictly separated: (1) use-case/domain outcome → `ResultEnvelope` status + detail (AD-17), produced at the `dispatch` boundary on the main thread, serialized back verbatim; (2) marshal timeout → envelope `TIMEOUT` built listener-side; (3) transport/protocol → JSON-RPC error codes (§2.3). The external FastMCP server maps envelopes 1:1 into MCP tool results — it never re-interprets or upgrades a status.
+Three layers, strictly separated: (1) use-case/domain outcome → `ResultEnvelope` status + detail (AD-17), produced at the `dispatch` boundary on the main thread, serialized back verbatim; (2) marshal timeout → envelope `TIMEOUT` built listener-side; (3) transport/protocol → JSON-RPC error codes (§2.3). The external MCP server maps envelopes 1:1 into MCP tool results — it never re-interprets or upgrades a status.
 
 ## 4. Headless Mode
 
 ### 4.1 H1 — single process (canonical, AD-2)
 
-The external process's interpreter is the conda-env Python matching the FreeCAD leg; `hosts/headless/entry.py` does path setup (`freecad` conda package; verify `import FreeCAD` — the feedstock `PYTHONPATH`/`.pth` wrinkle is a Phase 0 spike item) then wires `MethodRegistry` → FastMCP tools **directly**, no RPC, no listener, no token. `Marshal` is constructed with `InlineExecutor` so use cases are mode-agnostic. Transport to the MCP client: stdio (AD-3), stderr-only logging.
+The external process's interpreter is the conda-env Python matching the FreeCAD leg; `hosts/headless/entry.py` does path setup (`freecad` conda package; verify `import FreeCAD` — the feedstock `PYTHONPATH`/`.pth` wrinkle is a Phase 0 spike item) then wires `MethodRegistry` → MCP tools **directly**, no RPC, no listener, no token. `Marshal` is constructed with `InlineExecutor` so use cases are mode-agnostic. Transport to the MCP client: stdio (AD-3), stderr-only logging.
 
 ### 4.2 H2 — `FreeCADCmd` hosting (`hosts/headless/run_server.py`)
 
@@ -230,7 +230,7 @@ The external process's interpreter is the conda-env Python matching the FreeCAD 
 FreeCADCmd run_server.py            # or: xvfb-run -a FreeCADCmd run_server.py (render leg)
 ```
 
-`run_server.py` (stdlib + FreeCAD only, AD-12): build registry → `Marshal(InlineExecutor())` → `RpcListener(...).serve_forever_inline()` — a blocking single-threaded loop on the process main thread. No Qt loop exists in `FreeCADCmd` (research §4.1), so inline dispatch on the accept loop *is* main-thread execution; `MainThreadSignalConfig::isMainThread()` is trivially true. The external FastMCP process connects exactly as in GUI mode (connection file, token, handshake). Capability flags report `gui:false, qt_loop:false`.
+`run_server.py` (stdlib + FreeCAD only, AD-12): build registry → `Marshal(InlineExecutor())` → `RpcListener(...).serve_forever_inline()` — a blocking single-threaded loop on the process main thread. No Qt loop exists in `FreeCADCmd` (research §4.1), so inline dispatch on the accept loop *is* main-thread execution; `MainThreadSignalConfig::isMainThread()` is trivially true. The external MCP process connects exactly as in GUI mode (connection file, token, handshake). Capability flags report `gui:false, qt_loop:false`.
 
 ### 4.3 Capability flags (handshake `capabilities`, also `rpc_capabilities` method)
 
@@ -280,7 +280,7 @@ def capability_banner() -> dict:
 
 ## 6. Screenshot / Render Integration
 
-Render code runs where FreeCAD lives. The **capability probe** sits in `adapters/render.py` (the AD-1 carve-out); the two implementations live in `hosts/` behind a `RenderPort` protocol injected into the registry at host startup, keeping `usecases/` free of Gui imports.
+Render code runs where FreeCAD lives. The **capability probe** sits in `adapters/render_probe.py` (the AD-1 carve-out, whitelisted by exact path in `scripts/check_imports.py`); the two implementations live in `hosts/` behind a `RenderPort` protocol injected into the registry at host startup, keeping `usecases/` free of Gui imports.
 
 **Detection ladder** (run once per process, result cached → `render` capability flag):
 
@@ -296,7 +296,7 @@ Render code runs where FreeCAD lives. The **capability probe** sits in `adapters
 - **Camera presets:** iso/front/top/… map to fixed `SbRotation`s (iso = the `make_snapshot.py` axonometric quaternion); `custom` takes a quaternion.
 - GUI mode runs this on the main thread via the marshal (Coin is GUI-thread-affine); headless runs it inline.
 
-**Offscreen path** (`hosts/headless/offscreen_render.py`, adapted from FreeCAD's first-party `src/Tools/make_snapshot.py`):
+**Offscreen path** (`adapters/render_probe.py` — the AD-1 Qt carve-out; adapted from FreeCAD's first-party `src/Tools/make_snapshot.py`):
 
 ```python
 def render_offscreen(doc, out_path: str, width: int = 1920, height: int = 1920,

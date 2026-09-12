@@ -4,8 +4,9 @@ Separates the queue/blocking logic (here, stdlib-only) from the Qt pump. The hea
 uses ``InlineExecutor`` (no Qt loop, already on the main thread) so use cases go through
 ``Marshal.call`` regardless of host.
 
-QtCore may be imported here, but only inside functions at call time so the module import
-stays Qt-free for headless use.
+This module imports no Qt at all: the Qt event pump lives in ``hosts/gui_addon/pump.py``,
+where Qt is legal without an AD-1 adapters exemption. ``render_probe.py`` is therefore the
+single Qt carve-out in this ring.
 """
 
 from __future__ import annotations

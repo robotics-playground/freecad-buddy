@@ -22,7 +22,7 @@ Security stance (from the sandbox-policy research, adopted by AD-4/AD-18): the o
 
 **1. Env-flag gate.** Enabled only when the human operator sets `FREECAD_BUDDY_ALLOW_EXEC=1` in the *server process* environment before start. The flag is read once at server startup into an immutable capability record; no tool, RPC call, or config-reload path can set or change it at runtime. Any value other than exactly `"1"` is off (fail-closed).
 
-**2. Conditional tool registration — not runtime rejection.** When the flag is off, `debug_exec` is **not registered** with the FastMCP server at all: it never appears in `tools/list`, so a model cannot discover, request, or be prompt-injected toward it. Registration logic in `adapters/mcp_server`:
+**2. Conditional tool registration — not runtime rejection.** When the flag is off, `debug_exec` is **not registered** with the MCP server at all: it never appears in `tools/list`, so a model cannot discover, request, or be prompt-injected toward it. Registration logic in `adapters/mcp_server`:
 
 ```python
 def register_tools(server, caps: Capabilities):

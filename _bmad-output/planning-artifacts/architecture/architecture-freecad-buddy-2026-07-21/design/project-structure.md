@@ -31,67 +31,88 @@ freecad-buddy/
 │       │   ├── fingerprint.py        # FingerprintRecord (AD-6)
 │       │   ├── rpc.py                # JSON-RPC frame types + rpc_hello handshake, both sides import (AD-2)
 │       │   ├── assertions.py         # assertion vocabulary + anchor-frame derivation set (AD-13)
-│       │   └── jsonschema/           # generated per-tool/per-type schemas, drift-checked in CI
+│       │   ├── capabilities.py       # capability-map wire type
+│       │   ├── confirm.py            # preview_id confirm token (AD-10)
+│       │   ├── mutation.py           # shared mutation-request shapes
+│       │   ├── sketch.py             # sketch geometry/constraint wire types
+│       │   ├── feature.py            # feature parameter wire types
+│       │   ├── render.py             # ImageRef + view-control types (AD-10)
+│       │   └── jsonschema/           # generated per-tool/per-type schemas, drift-checked in CI (AD-28)
 │       ├── usecases/                 # stdlib + FreeCAD App via shim (AD-1, AD-12)
 │       │   ├── __init__.py
 │       │   ├── shim.py               # ALL version-sensitive calls; capability probes (AD-11)
 │       │   ├── fingerprint.py        # single fingerprint() impl, serializer-tagged (AD-6)
-│       │   ├── transactions.py       # AD-5 mutation protocol skeleton (Phase 0: stub + tests)
+│       │   ├── transaction.py        # AD-5 mutation protocol: run_mutation(), the only mutation path
 │       │   ├── tnp_guard.py          # snapshot/audit_references (AD-7; capability-gated via shim)
-│       │   ├── documents.py          # document_* lifecycle, explicit handles (AD-20)
+│       │   ├── documents.py          # document_* lifecycle, explicit handles (AD-20); owns the AD-25 session workdir
 │       │   ├── queries.py            # query_* (tree, object, shape props, recompute status)
+│       │   ├── sketches.py           # sketch_* typed mutations (AD-5 bracket)
+│       │   ├── features.py           # feature_* typed mutations incl. feature_body_create
 │       │   ├── exports.py            # export_step / export_stl / export_3mf; unit pinned per call
+│       │   ├── preview.py            # preview_dry_run on a FCB_TMP_ TempDoc (AD-10, AD-20)
+│       │   ├── screenshot.py         # constructed-scene render; _MAX_DIM = 1920 (AD-10)
+│       │   ├── capabilities.py       # runtime capability map surfaced by query_capabilities
+│       │   ├── confirm.py            # preview_id confirm-token issue/validate (AD-10)
+│       │   ├── debug_exec.py         # operator-only, off by default, audit-logged (AD-4)
+│       │   ├── stats.py              # Wilson/McNemar rate statistics (AD-14); stdlib-only so the
+│       │   │                         #   in-FreeCAD G2 scorer can import it too
 │       │   └── verify.py             # verify_shape, verify_sketch, in-FreeCAD leg of verify_export_* (AD-8, AD-9)
 │       ├── adapters/
 │       │   ├── __init__.py           # EMPTY — import discipline (§2.3)
-│       │   ├── mcp_server.py         # FastMCP server + tool registry; stdio/HTTP flag (AD-3) [ext-only]
+│       │   ├── mcp_server.py         # MCP low-level Server + tool registry; stdio/HTTP flag (AD-3) [ext-only]
 │       │   ├── rpc_listener.py       # in-FreeCAD listener; stdlib only; localhost + session token (AD-2/3)
-│       │   ├── marshal.py            # main-thread marshal (postEvent pattern; Qt at call time — §7)
+│       │   ├── marshal.py            # main-thread marshal (postEvent pattern; no Qt import — pump is in hosts/gui_addon/pump.py)
 │       │   ├── rpc_client.py         # external-side RPC client over contracts/rpc.py
-│       │   ├── render_probe.py       # render capability probe (sole Qt exception in adapters, AD-1)
-│       │   ├── skills_loader.py      # router + forced-subset modes (AD-15) [ext-only]
-│       │   ├── export_oracles.py     # trimesh / lib3mf / admesh checks (AD-9) [ext-only]
-│       │   └── harness.py            # benchmark-runner glue, ValidationReport emission [ext-only]
+│       │   ├── rpc_dispatch.py       # single AD-17 error boundary: exceptions → closed status set
+│       │   ├── render_probe.py       # render capability probe + SoQtOffscreenRenderer (sole Qt exception in adapters, AD-1)
+│       │   ├── audit_log.py          # append-only JSON-lines writer (AD-17)
+│       │   ├── export_oracle.py      # trimesh / lib3mf / admesh checks (AD-9) [ext-only]
+│       │   ├── export_verdict.py     # oracle-agreement verdict (disagreement = fail, AD-9) [ext-only]
+│       │   └── react_adapter.py      # ReAct/system-prompt-injection second harness; injected chat
+│       │                             #   transport, contracts + stdlib only (decision 011) [ext-only]
 │       └── hosts/
 │           ├── __init__.py           # EMPTY
-│           ├── InitGui.py            # addon entry source-of-truth; copied to addon root at build (§2.2)
-│           ├── gui_addon.py          # deferred start (GuiUp + QTimer.singleShot), listener wiring (AD-2)
-│           └── main.py               # CLI: serve --mode inline|rpc --transport stdio|http; headless entry
+│           ├── tool_catalog.py       # shared tool surface: schemas, timeouts, mutating flags, audit events
+│           ├── main.py               # CLI: serve --mode inline|rpc --transport stdio|http
+│           ├── gui_addon/
+│           │   ├── InitGui.py        # addon entry source-of-truth; copied to addon root at build (§2.2)
+│           │   ├── bootstrap.py      # start_bridge: deferred start (GuiUp + QTimer), listener + MCP auto-spawn (AD-2)
+│           │   └── pump.py           # Qt event pump — Qt lives here, not in adapters (AD-1)
+│           ├── gui_external/
+│           │   └── entry.py          # external GUI host
+│           └── headless/
+│               └── entry.py          # headless entry (FreeCADCmd / import FreeCAD)
 ├── addon/
 │   └── package.xml                   # Addon Manager metadata (§2.2)
-├── skills/                           # one dir per skill (AD-15); Phase 0: empty + shape check wired
+├── skills/                           # one dir per skill (AD-15); 15 present (12 Track A/B + 3 Phase-5)
 │   └── <skill-name>/
-│       ├── SKILL.md                  # 4 sections, ≤1,500 words (CI-enforced)
+│       ├── SKILL.md                  # 4 sections, ≤1,500 words (check_skill_shape.py — unbuilt, Story 6.1;
+│       │                             #   cap is convention only until it lands)
 │       └── references/
-├── benchmarks/
-│   ├── runner.py                     # gate runner CLI → contracts ValidationReport (SPEC assumption)
-│   ├── golden/                       # 5 reference models (G0.3): gNN_<name>/{model.FCStd, expected.json, PROVENANCE.md}
-│   │   ├── g01_plate/  … g05_bracket/
-│   ├── dev/                          # dev split (AD-13/16); per-phase subdirs (phase0/, phase2/ …)
-│   ├── heldout/                      # SEALED: sha256 MANIFEST + SEALED marker; runner refuses without --gate-exit
-│   └── fault-injection/
-│       └── verify_shape/             # G0.E: ≥10 planted-fault cases: fNN_<fault>/{model.FCStd, fault.json}
-├── tests/
-│   ├── run_tests.py                  # FreeCADCmd entry; one process, stdlib unittest only (conventions)
-│   ├── infc/                         # in-FreeCAD suites (stdlib unittest, AD-12)
-│   │   ├── test_shim.py
-│   │   ├── test_documents.py
-│   │   ├── test_queries.py
-│   │   ├── test_exports.py
-│   │   ├── test_verify.py
-│   │   ├── test_fingerprint.py
-│   │   └── test_rpc_listener.py      # listener loopback, no MCP deps
-│   └── external/                     # pytest, uv env; no FreeCAD needed except where marked
-│       ├── conftest.py
-│       ├── test_contracts.py
-│       ├── test_rpc_frames.py        # frame round-trip vs contracts/rpc.py
-│       ├── test_mcp_server.py        # tools/list, schema validity (G0.2 pre-check)
-│       └── test_export_oracles.py
+├── benchmarks/                       # per-gate layout, not a flat dev/heldout split
+│   ├── runner.py                     # gate runner CLI → contracts ValidationReport ( `gate` console alias)
+│   ├── harness/                      # actor, assertions, evidence, seal, verdict, report_build, react_backend …
+│   ├── g0/                           # each gate dir carries its own splits + gate.yaml
+│   │   ├── golden-models/            # 5 reference models (G0.3): {model.FCStd, expected.yaml, PROVENANCE.md}
+│   │   ├── dev/
+│   │   ├── heldout/                  # SEALED per gate; runner refuses without `gate run --exit`
+│   │   └── fault-injection/          # ≥10 planted-fault cases per validator (AD-13)
+│   ├── g1/  g2/                      # same shape
+│   ├── _registry/                    # validators.yaml + provenance/*.yaml (CI-gated, AD-16)
+│   └── gate-artifacts/               # <gate>/<run-id>/ — verdicts recomputed from these (AD-25 retention)
+├── tests/                            # two worlds that never mix; the split is the rule, not the file list
+│   ├── run_tests.py                  # FreeCADCmd entry; one process, stdlib unittest only (decision 002)
+│   ├── infc/                         # 22 in-FreeCAD suites (stdlib unittest, AD-12); never collected by pytest
+│   └── external/                     # 29 pytest suites, uv env; `testpaths = ["tests/external"]`
 ├── scripts/
-│   ├── check_imports.py              # AST no-Gui/no-third-party ring check (AD-1/12) — CI job
-│   ├── check_skill_shape.py          # 4-section + word-count check (AD-15) — CI job
+│   ├── check_imports.py              # AST ring check: no Gui, no third-party, no ActiveDocument (AD-1/12/20) — CI job
+│   ├── check_status_vocab.py         # holds the AD-17 closed status set — CI job
+│   ├── check_provenance.py           # benchmark provenance manifests (AD-16) — CI job
+│   ├── gen_schemas.py                # generates contracts/jsonschema/, `--check` drift-fails CI (AD-28)
 │   ├── build_addon.py                # assembles dist/addon/FreeCADBuddy/ (§2.2); stdlib only
-│   └── install_addon_dev.py          # dev copy/junction into FreeCAD Mod/ (§4.1)
+│   └── automation/                   # run_mcp_e2e.py, run_mcp_edge_cases.py — live MCP manual harness
+│
+│   # check_skill_shape.py (AD-15, 4-section + word-count) is NOT yet built — Story 6.1.
 └── .github/
     └── workflows/
         ├── ci.yml                    # blocking matrix + arch checks + render leg (§5)
@@ -111,14 +132,17 @@ name = "freecad-buddy"
 version = "0.0.1"
 requires-python = ">=3.11"
 dependencies = [
-    "mcp==1.26.*",        # placeholder — pin EXACT at Phase 0 gate after SDK v2 (spine Stack); spec ≥2025-06-18
+    "mcp>=1.28,<2",       # official MCP python-sdk, CLOSED at the Phase 0 gate (decision 005); low-level Server,
+                          #   NOT PrefectHQ fastmcp; <2 caps below the SDK v2 rename. Spec ≥2025-06-18
     "trimesh==4.*",       # export oracle (AD-9)
     "lib3mf==2.*",        # 3MF oracle (AD-9)
 ]
 
 [project.optional-dependencies]
 stl-oracle = ["admesh ; sys_platform == 'linux'"]   # optional 2nd oracle; fallback chosen at Phase 0 gate (AD-9)
-dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4"]
+dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4", "pyyaml>=6"]  # pyyaml: external harness only (AD-12)
+stl-oracle = ["admesh ; sys_platform == 'linux'"]               # optional 2nd STL oracle (AD-9)
+react-local = ["openai>=1"]                                     # optional local ReAct eval transport (decision 011)
 
 [project.scripts]
 freecad-buddy = "freecad_buddy.hosts.main:main"
@@ -193,7 +217,7 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 
 1. Install FreeCAD 1.1.x GUI (official installer).
 2. `uv sync --all-extras` in repo root.
-3. `python scripts/install_addon_dev.py` — copies `package.xml` + `InitGui.py` into `<FreeCAD user dir>/Mod/FreeCADBuddy/` and writes a `buddy_dev.pth`-style pointer: `InitGui.py` checks env var `FREECAD_BUDDY_SRC`; when set (dev), it `sys.path.insert(0, $FREECAD_BUDDY_SRC)` so the live repo `src/` is used — no re-copy per edit. Unset = vendored copy (release behavior).
+3. `python scripts/build_addon.py "<FreeCAD user dir>/Mod/FreeCADBuddy"` — assembles the addon (package copy + `package.xml` + generated `InitGui.py` shim) at that path. With no argument it writes to `dist/addon/FreeCADBuddy/` instead. The generated shim resolves the package from its own install location, so a junction from `Mod/FreeCADBuddy` to the built dir gives edit-in-place development without a re-copy per change.
 4. Start FreeCAD → the addon starts the RPC listener on localhost with a per-session token AND **auto-spawns the external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp`. The proxy interpreter is the project `.venv`/`venv` python, **auto-discovered from the addon's install path** — no env var to set (the addon never imports `mcp`; AD-2/3, AD-12). So the whole setup is: install the addon, `uv sync`, open FreeCAD; the MCP client connects straight to `:8765`.
 5. **(debug/troubleshoot only)** If the auto-spawned proxy is unavailable, start it by hand: `uv run freecad-buddy serve --mode rpc --transport http`. The `--mode rpc` CLI is a fallback for when auto-start is disabled (`FREECAD_BUDDY_NO_AUTO_MCP`) or no venv is discoverable — never the normal path.
 
@@ -221,7 +245,7 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 
 | Job | Matrix | Steps | Blocking |
 | --- | --- | --- | --- |
-| `arch-checks` | — (uv, py3.12) | `uv sync` → `check_imports.py` → `check_skill_shape.py` → `ruff check` → `pytest tests/external` (no-FreeCAD subset) | yes |
+| `arch-checks` | — (uv, py3.12) | `uv sync` → `check_imports.py` → `check_status_vocab.py` → `gen_schemas.py --check` → `check_provenance.py` → `ruff check` (T201 print ban) → `pytest tests/external` | yes |
 | `headless` | `{freecad: 1.0.x/py3.11, 1.1.x/py3.12}` `fail-fast: false` | micromamba (cached) → pip layer-in → `FreeCADCmd tests/run_tests.py` → `pytest tests/external` → `benchmarks/runner.py --gate G0` | yes (both legs, G0.4) |
 | `render` | 1.1.x only | same env + `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1`, render-tagged tests only | no (`continue-on-error: true`) |
 
@@ -273,8 +297,8 @@ Single job, `continue-on-error: true`: resolve FreeCAD 1.2-dev (conda-forge dev 
 
 ## 6. Tool-count runway (G0.2 ≥15 tools)
 
-The authoritative Phase 0 tool catalog is **mcp-tools-design.md** (§2): 25 Phase 0 tools, of which 17 fall in the gate's literal `query_`/`document_`/`export_` namespace set (≥15, G0.2 satisfied), plus 7 `verify_` tools. Names, schemas, and counts live there — this doc only maps them to files (`usecases/` per §1).
+The authoritative Phase 0 tool catalog is **mcp-tools-design.md** (§2): **24 AI-visible Phase 0 tools + 1 operator-only** (`debug_exec`, unregistered when off per AD-4). Of the 24, **17** fall in the gate's literal `query_`/`document_`/`export_` namespace set (≥15, G0.2 satisfied) and **7** are `verify_`. Names, schemas, and counts live there — this doc only maps them to files (`usecases/` per §1). The shipped surface is whatever `hosts/tool_catalog.py:tool_specs()` returns; any count in a document is a claim about that function.
 
 ## 7. Conflicts
 
-No AD is contradicted by this design. The AD-1 marshal wording gap flagged during authoring has since been **resolved in the spine**: AD-1 now names both `adapters/` Qt exemptions explicitly (render capability probe + main-thread marshal, QtCore only). `check_imports.py` whitelists exactly `hosts/`, `adapters/marshal.py`, `adapters/render_probe.py` for Qt; `marshal.py` imports Qt symbols inside functions so module import stays clean.
+No AD is contradicted by this design. AD-1 names **one** `adapters/` Qt exemption: the render capability probe. `marshal.py` ended up needing no Qt at all — the event pump lives in `hosts/gui_addon/pump.py`, where Qt is legal without an exemption. `check_imports.py` still whitelists `adapters/marshal.py`; that entry is now dead and should be removed when the guard is next touched.

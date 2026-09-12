@@ -12,7 +12,7 @@ sources:
 
 # MCP Client Integration Design
 
-One FastMCP server object serves every client; transport is a run flag (AD-3). Clients differ only in transport, confirmation mechanism, skills delivery, and image handling. This document fixes those per-client rules so no client-specific logic leaks into `usecases/` (AD-1) and no client gets a weaker safety posture than AD-10 allows.
+One MCP low-level `Server` object serves every client; transport is a run flag (AD-3). Clients differ only in transport, confirmation mechanism, skills delivery, and image handling. This document fixes those per-client rules so no client-specific logic leaks into `usecases/` (AD-1) and no client gets a weaker safety posture than AD-10 allows.
 
 ## 1. Client Contexts
 
@@ -113,7 +113,7 @@ The local leg MUST run with grammar/JSON-Schema-constrained sampling for tool ca
 The model-agnostic proof path, built regardless of model choice. An adapter in `adapters/` (external process) that presents the same tool interface the MCP path uses:
 
 - **Prompt build:** render tool names + JSON schemas + calling convention into the system prompt (schemas sourced from `contracts/` — single source of truth).
-- **Loop:** ReAct — model emits a fenced JSON tool-call block → adapter parses → dispatches through the same tool registry the FastMCP server uses → appends the `ResultEnvelope` text mirror to the transcript → repeats until a final answer.
+- **Loop:** ReAct — model emits a fenced JSON tool-call block → adapter parses → dispatches through the same tool registry the MCP server uses → appends the `ResultEnvelope` text mirror to the transcript → repeats until a final answer.
 - **Parser:** scans text for JSON objects matching the tool-call shape; malformed JSON → one structured re-prompt, then typed failure (`INVALID_INPUT`), never silent retry loops.
 - **Question detector:** if the model asks the user instead of calling a tool, re-prompt once to use the tool.
 - **Safety parity:** the adapter is a client like any other — typed tools only (AD-4), confirmation per §4 (no elicitation ⇒ token fallback or fail-closed), explicit document handles (AD-20).
