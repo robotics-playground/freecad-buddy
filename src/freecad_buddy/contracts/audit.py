@@ -27,3 +27,8 @@ class AuditRecord(TypedDict, total=False):
     verify_report_ref: str | None
     approval: dict | None
     rollback: dict | None
+    # The verbatim camera string read before a tool moved the live viewport (AD-31). It rides its
+    # own field rather than joining ``params_digest`` (it is not a tool parameter, and the digest
+    # is irreversible) or ``fingerprint_before`` (a geometry digest under AD-6), so an operator can
+    # restore the camera the move replaced. Omitted whenever the camera could not be read.
+    camera_before: str | None

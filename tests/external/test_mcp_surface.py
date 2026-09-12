@@ -29,8 +29,9 @@ from freecad_buddy.adapters.mcp_server import (
     build_server,
     registered_tools,
 )
-from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
+from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
 from freecad_buddy.hosts.headless.entry import build_registry
+from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, tool_specs
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -119,6 +120,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
     assert EXPECTED_FEATURE_TOOLS <= names
     assert "query_capabilities" in names
     assert "query_screenshot" in names
+    assert "view_fit_viewport" in names
     assert "debug_exec" not in names
     assert names == (
         EXPECTED_DOCUMENT_TOOLS
@@ -127,7 +129,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
         | EXPECTED_EXPORT_TOOLS
         | EXPECTED_SKETCH_TOOLS
         | EXPECTED_FEATURE_TOOLS
-        | {"query_capabilities", "query_screenshot", "preview_dry_run"}
+        | {"query_capabilities", "query_screenshot", "view_fit_viewport", "preview_dry_run"}
     )
 
 
@@ -163,6 +165,58 @@ def test_screenshot_schema_is_tightened_on_view_and_selectors():
     assert view["properties"]["height"]["maximum"] == 1920
     assert view["properties"]["width"]["default"] == 1920
     assert view["properties"]["height"]["default"] == 1920
+
+
+def test_view_fit_viewport_is_the_confirm_exempt_mutating_shape():
+    """AD-31's wire shape, enforced rather than assumed.
+
+    ``mutating`` with no ``confirm`` is the whole difference between this tool and a gated
+    geometry mutation, and the only thing keeping it out of the assistant surface is its absence
+    from the opt-in allow-list. A schema built through ``_feature_schema`` would silently acquire
+    ``confirm`` and start demanding a ``preview_id`` for a camera move.
+    """
+    # Arrange
+    spec = {spec.name: spec for spec in tool_specs()}["view_fit_viewport"]
+
+    # Act
+    schema = spec.input_schema
+
+    # Assert
+    assert spec.mutating is True
+    assert "confirm" not in schema["properties"]
+    assert set(schema["properties"]) == {"doc"}
+    assert schema["required"] == ["doc"]
+    assert schema["additionalProperties"] is False
+    assert spec.audit_event == "mutation"
+    assert "view_fit_viewport" not in READ_ONLY_PROFILE
+
+
+def test_view_fit_viewport_is_audited_by_dispatch():
+    """``mutating=True`` alone must qualify it for the audit bracket; ``is_audited`` is unchanged.
+
+    Declaring the tool non-mutating to dodge the confirm question would silently drop every camera
+    move from the audit log — the opposite of AD-31's intent.
+    """
+    # Arrange
+    caps = Capabilities(allow_exec=False)
+    method = _registry(caps).get("view_fit_viewport")
+
+    # Act
+    audited = is_audited(method)
+
+    # Assert
+    assert audited is True
+
+
+def test_dispatch_view_fit_with_unknown_handle_is_invalid_input():
+    # Arrange
+    registry = _registry(Capabilities(allow_exec=False))
+
+    # Act
+    envelope = registry.dispatch("view_fit_viewport", {"doc": "fcb-doc:missing"})
+
+    # Assert
+    assert envelope["status"] == "INVALID_INPUT"
 
 
 def test_dispatch_query_with_unknown_handle_is_invalid_input():

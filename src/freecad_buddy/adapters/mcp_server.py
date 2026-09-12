@@ -23,7 +23,7 @@ from mcp.server.lowlevel import Server
 
 from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
-from freecad_buddy.usecases import confirm
+from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.usecases.capabilities import (
     Capabilities,
     auto_approve_enabled,
@@ -160,9 +160,10 @@ def build_server(
         logger.warning("SECURITY: debug_exec ENABLED by operator flag")
     if auto_approve_enabled(caps):
         logger.warning("SECURITY: mutation auto-approve ENABLED by operator flag")
-    # The mutation gate writes its approval records through this sink; the handlers the registry
-    # holds take no sink argument of their own.
+    # The mutation gate and the camera fit write their own records through this sink; the handlers
+    # the registry holds take no sink argument of their own.
     confirm.set_approval_sink(audit)
+    view_fit.set_audit_sink(audit)
 
     server: Server = Server(name)
     suspect = _SuspectDocuments()

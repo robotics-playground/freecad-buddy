@@ -24,7 +24,7 @@ from typing import Callable
 from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
-from freecad_buddy.usecases import confirm
+from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.contracts.rpc import (
     RPC_ERROR_NO_HANDSHAKE,
     RPC_ERROR_VERSION_MISMATCH,
@@ -124,10 +124,11 @@ class RpcListener:
         self._capabilities = capabilities or {}
         self._appdata_dir = Path(appdata_dir) if appdata_dir is not None else None
         self._audit = audit
-        # The mutation gate writes its approval records through this sink; the handlers the
-        # registry holds take no sink argument of their own.
+        # The mutation gate and the camera fit write their own records through this sink; the
+        # handlers the registry holds take no sink argument of their own.
         if audit is not None:
             confirm.set_approval_sink(audit)
+            view_fit.set_audit_sink(audit)
 
         self._sock: socket.socket | None = None
         self._thread: threading.Thread | None = None

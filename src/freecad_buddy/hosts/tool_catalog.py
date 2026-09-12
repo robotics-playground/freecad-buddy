@@ -33,6 +33,7 @@ from freecad_buddy.usecases import (
     screenshot,
     sketches,
     verify,
+    view_fit,
 )
 from freecad_buddy.usecases.capabilities import (
     Capabilities,
@@ -45,10 +46,12 @@ from freecad_buddy.usecases.exports import ExportRegistry
 _DOC_SCHEMA = {"type": "string", "description": "opaque fcb-doc handle"}
 
 # HandlerFactory returns the raw, un-marshaled handler for a tool given the use-case registries,
-# capabilities, and the host-injected ``RenderPort``. ``build_inline_handlers`` optionally wraps
-# its result in ``marshal.call``.
+# capabilities, and the two host-injected ports: the ``RenderPort`` (offscreen renders, every
+# host) and the ``ViewportPort`` (the live camera, the GUI host only; ``None`` elsewhere).
+# ``build_inline_handlers`` optionally wraps its result in ``marshal.call``.
 HandlerFactory = Callable[
-    [DocumentRegistry, ExportRegistry, Capabilities, RenderPort], Callable[..., dict]
+    [DocumentRegistry, ExportRegistry, Capabilities, RenderPort, ViewportPort | None],
+    Callable[..., dict],
 ]
 
 
@@ -349,7 +352,7 @@ def _sketch_method(name, fn, schema, description):
     server already writes a before/after record for every ``mutating`` tool.
     """
 
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda **p: fn(doc_registry, **p)
 
     return ToolSpec(
@@ -541,7 +544,7 @@ def _feature_method(name, fn, schema, description):
     keyword dict rather than binding it positionally.
     """
 
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda **p: fn(doc_registry, **p)
 
     return ToolSpec(
@@ -777,7 +780,7 @@ def _feature_specs():
 def _doc_method(attr, timeout, schema, description, *, mutating):
     """A ``ToolSpec`` whose handler forwards straight to a ``DocumentRegistry`` method."""
 
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return getattr(doc_registry, attr)
 
     return ToolSpec(
@@ -793,7 +796,7 @@ def _doc_method(attr, timeout, schema, description, *, mutating):
 def _query_method(name, fn, timeout, schema, description):
     """A ``ToolSpec`` for a read-only query use case taking the doc registry."""
 
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda **p: fn(doc_registry, **p)
 
     return ToolSpec(
@@ -809,7 +812,7 @@ def _query_method(name, fn, timeout, schema, description):
 def _export_method(name, fn, timeout, schema, description, *, mutating):
     """A ``ToolSpec`` for an export use case taking both registries."""
 
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda **p: fn(doc_registry, export_registry, **p)
 
     return ToolSpec(
@@ -823,7 +826,7 @@ def _export_method(name, fn, timeout, schema, description, *, mutating):
 
 
 def _mesh_verify_spec(name, fmt, description):
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return _mesh_verify_handler(doc_registry, export_registry, None, fmt)
 
     return ToolSpec(
@@ -837,7 +840,7 @@ def _mesh_verify_spec(name, fmt, description):
 
 
 def _capabilities_spec():
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda: queries.query_capabilities(
             exec_enabled=exec_registered(caps), render=render_capability_flag()
         )
@@ -854,7 +857,7 @@ def _capabilities_spec():
 
 
 def _screenshot_spec():
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda **p: screenshot.query_screenshot(doc_registry, render_port, **p)
 
     return ToolSpec(
@@ -865,6 +868,42 @@ def _screenshot_spec():
         "styles/focus/highlight/camera) to a PNG resource_link; never mutates the document.",
         timeout_s=60.0,
         mutating=False,
+    )
+
+
+def _view_fit_spec():
+    """The ``view_fit_viewport`` spec: the confirm-exempt mutating shape (AD-31, AD-33).
+
+    ``mutating=True`` with **no ``confirm`` property** — the same wire shape ``document_save``/
+    ``document_recompute``/``document_undo`` ship, and the reason this spec is written out rather
+    than built through ``_feature_schema``, which adds ``confirm``. The confirm gate is the
+    explicit ``confirm.gate_mutation`` call inside the geometry mutation use cases, so a camera
+    move that routed through them to obtain an audit record would wrongly demand a ``preview_id``
+    for an operation that has no geometry to preview. Declaring it non-mutating instead would
+    silently drop the move from the audit log, which is the opposite of the intent — and would
+    also lift the quarantine refusal both hosts gate on ``mutating``.
+
+    It is absent from ``READ_ONLY_PROFILE`` by adding nothing: that set is an opt-in allow-list.
+    """
+
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
+        return lambda **p: view_fit.view_fit_viewport(doc_registry, viewport_port, **p)
+
+    return ToolSpec(
+        name="view_fit_viewport",
+        make_handler=make,
+        input_schema={
+            "type": "object",
+            "properties": {"doc": _DOC_SCHEMA},
+            "required": ["doc"],
+            "additionalProperties": False,
+        },
+        description="Fit the named document's model into its own live viewport. Moves the "
+        "human's camera, so call it only after changing geometry they must see — a "
+        "deliberately zoomed view is theirs to keep. Needs no confirm; the prior camera is "
+        "audit-logged. Refused when the live viewport is showing a different document.",
+        timeout_s=30.0,
+        mutating=True,
     )
 
 
@@ -936,7 +975,7 @@ def _preview_spec():
     """
     op_table = preview_op_table()
 
-    def make(doc_registry, export_registry, caps, render_port):  # noqa: ARG001
+    def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
         return lambda **p: preview.preview_dry_run(doc_registry, op_table, render_port, **p)
 
     return ToolSpec(
@@ -973,7 +1012,7 @@ READ_ONLY_PROFILE = frozenset(
 
 DEBUG_EXEC_SPEC = ToolSpec(
     name="debug_exec",
-    make_handler=lambda doc_registry, export_registry, caps, render_port: (
+    make_handler=lambda doc_registry, export_registry, caps, render_port, viewport_port: (
         lambda **params: debug_exec_uc.debug_exec(
             doc_registry, params.get("doc"), params.get("code", "")
         )
@@ -1088,6 +1127,7 @@ def tool_specs() -> list[ToolSpec]:
         ),
         _capabilities_spec(),
         _screenshot_spec(),
+        _view_fit_spec(),
         _query_method(
             "query_tree_summary",
             queries.query_tree_summary,
@@ -1276,7 +1316,7 @@ def build_inline_handlers(
     render_port: RenderPort | None = None,
     apply_posture: bool = True,
     *,
-    viewport_port: ViewportPort | None = None,  # noqa: ARG001 - held for its first consumer
+    viewport_port: ViewportPort | None = None,
 ) -> MethodRegistry:
     """Build a ``MethodRegistry`` from the shared catalog.
 
@@ -1286,9 +1326,8 @@ def build_inline_handlers(
     defaults to a fresh ``OffscreenRenderPort`` (the one render capability serves every host).
 
     ``viewport_port`` is the AD-29 live-camera seam: the GUI addon injects a live port, every
-    other host injects ``None``. It is not threaded into ``make_handler``, because no tool
-    consumes it yet and widening ~40 handler signatures for an unused argument would be
-    speculative; the first consumer threads it.
+    other host injects ``None``. It is threaded into every ``make_handler``; a host without one
+    passes ``None`` and ``view_fit_viewport``, its only consumer, degrades honestly.
 
     With a ``marshal``, ``debug_exec`` alone gets an inner bounded marshal so its body runs on a
     worker thread and its budget is enforced; every other tool stays on the calling thread.
@@ -1329,7 +1368,7 @@ def build_inline_handlers(
         specs.append(DEBUG_EXEC_SPEC)
 
     for spec in specs:
-        raw = spec.make_handler(doc_registry, export_registry, caps, port)
+        raw = spec.make_handler(doc_registry, export_registry, caps, port, viewport_port)
         if spec.name == "debug_exec":
             raw = bound_off_main_thread(raw, spec.timeout_s)
         methods.register(

@@ -34,6 +34,16 @@
         }
       ]
     },
+    "camera_before": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "code": {
       "type": "string"
     },

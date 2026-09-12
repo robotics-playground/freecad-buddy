@@ -100,6 +100,19 @@ class AuditSink:
         record["approval"] = dict(approval)
         self._write(record)
 
+    def camera(self, tool: str, doc: str | None, params: dict, camera_before: str | None) -> None:
+        """Append the record for a call that moved the live viewport camera.
+
+        ``camera_before`` is the verbatim pre-move camera string. It is placed on the record
+        directly and never into ``params``, so it cannot enter ``params_digest``: the digest is
+        irreversible, and the camera must stay readable for an operator restoring the view.
+        A camera that could not be read omits the field rather than recording a fabricated one.
+        """
+        record = self._record("mutation", tool, doc, params)
+        if camera_before is not None:
+            record["camera_before"] = camera_before
+        self._write(record)
+
     def after(
         self,
         event: str,
