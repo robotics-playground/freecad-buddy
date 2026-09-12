@@ -52,6 +52,13 @@
 #   per sprint-change-proposal-robot-description-2026-07-23.md (ADs 22/23). Epic 7 depends on a
 #   Phase-5 Assemblies capability (not yet an epic) — scope Assemblies first. Skills 6-7..6-9 pair
 #   with Epic 7 (authored now as ablation-ready drafts; ablated when GS infra + Epic-7 tools exist).
+# - A5 (spine update 2026-09-12): Epic 8 (Viewport Framing & Auto-Fit) added from AD-29..AD-33 with
+#   FR24-FR26. PARALLEL-ELIGIBLE AFTER EPIC 1 — it adds one tool plus an optional ResultEnvelope
+#   key on top of the shipped bridge, weakens no existing AD, and therefore does NOT reopen the
+#   closed G0 or G2 gates. Story 8.5 also closes a live pre-existing defect: check_imports.py:41
+#   FREECAD_MODULE_ALIASES omits FreeCADGui, so FreeCADGui.ActiveDocument evades the AD-20
+#   ActiveDocument ban in CI today. Story 8.1 must NOT extend adapters/render_probe.py — that
+#   would force a second AD-1 Qt exemption; the framing port belongs in hosts/gui_addon/.
 
 generated: 2026-07-21
 last_updated: 2026-07-31
@@ -123,6 +130,13 @@ development_status:
   7-4-part-sourcing-import-placement: backlog
   7-5-gate-g5robot-exit: backlog
   epic-7-retrospective: optional
+  epic-8: backlog
+  8-1-viewportport-contract-gui-host-impl: backlog
+  8-2-framing-read-exact-projection-test: backlog
+  8-3-view-fit-viewport-tool: backlog
+  8-4-framing-warning-on-tool-results: backlog
+  8-5-enforcement-framing-test-ci-alias-gap: backlog
+  epic-8-retrospective: optional
 
 action_items:
   - epic: 1

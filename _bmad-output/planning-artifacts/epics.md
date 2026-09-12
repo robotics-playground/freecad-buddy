@@ -1,5 +1,7 @@
 ---
 stepsCompleted: [1, 2, 3]
+amendments:
+  - "2026-09-12: Epic 8 (Viewport Framing & Auto-Fit) + FR24-FR26 added from architecture-spine AD-29..AD-33. Additive and parallel-eligible after Epic 1; reopens no closed gate."
 inputDocuments:
   - _bmad-output/specs/spec-freecad-buddy/SPEC.md
   - _bmad-output/specs/spec-freecad-buddy/phase-gates.md
@@ -78,6 +80,12 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR22** — The same assembly exports to SDF (model-level) through its own paired verify, sharing the tessellation source with URDF. *(AD-22)*
 - **FR23** — Off-the-shelf STEP parts are sourced (external search) and imported/placed only through the bridge's document/import path, with mating frames measured from geometry, never assumed, and provenance recorded for shipped fixtures. *(AD-23)*
 
+#### Viewport framing — CAP-9
+
+- **FR24** — The bridge can read whether the targeted document's model is fully visible in the live FreeCAD viewport, by projecting the 8 corners of the union bounding box of the visible shape-bearing objects and testing containment against the viewport rectangle. The read lives behind a `ViewportPort` injected from a GUI host; where no viewport exists the capability reports unavailable rather than guessing. *(AD-29, AD-30)*
+- **FR25** — An agent can call `view_fit_viewport` to fit the targeted document's model into the live viewport on its own judgement — no preview token — and every call is audit-logged with the prior camera so the move is traceable and reversible. The human owns the camera: the bridge never fits spontaneously. *(AD-31, AD-33)*
+- **FR26** — When the model does not fully fit, a tool result carries a structured `framing` verdict whose warning sentence guides the agent to run the fit tool. The verdict is computed on change rather than per call, is rendered from the structured block by one shared helper rather than appended per tool, and never claims a freshness the bridge cannot prove. *(AD-32)*
+
 ### NonFunctional Requirements
 
 | ID | Requirement | Source |
@@ -153,8 +161,9 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | FR15 | Epic 5 | Headless job API, revisions, agent-to-agent cycle |
 | FR16 | Epic 6 | 12-skill library + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.7–6.9) |
 | FR21–FR23 | Epic 7 | URDF/SDF export with paired verify; off-the-shelf part sourcing/import *(Phase 5)* |
+| FR24–FR26 | Epic 8 | Viewport framing read, agent-invoked fit tool, change-driven framing warning |
 
-All 23 FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks. FR21–FR23 are post-MVP (Phase 5) and additive; the MVP (Phases 0–4) is unaffected.
+All 26 FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks. FR21–FR23 are post-MVP (Phase 5) and additive; the MVP (Phases 0–4) is unaffected. FR24–FR26 are additive and parallel-eligible after Epic 1 — they add a new tool and an optional envelope field, and weaken no existing AD.
 
 ---
 
@@ -202,7 +211,13 @@ A parametric assembly exports to validated URDF and SDF, and off-the-shelf STEP 
 
 **FRs covered:** FR21, FR22, FR23
 
-**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7.
+### Epic 8: Viewport Framing & Auto-Fit
+
+An agent working in a live FreeCAD session can tell when its work has grown beyond what the human can see, is told so in the tool result it already reads, and can fit the view itself — without ever taking the camera away from the human unasked.
+
+**FRs covered:** FR24, FR25, FR26
+
+**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates.
 
 ---
 
@@ -864,3 +879,157 @@ A parametric assembly exports to validated URDF and SDF — links, joints, inert
 - A parametric assembly round-trips: export URDF/SDF → verify legs green on the golden fixtures → re-parse clean
 - Fault suite caught ≥95 %; `spot_audit` token bound
 - Gate verdict green from stored reports.
+
+---
+
+## Epic 8: Viewport Framing & Auto-Fit
+
+An agent working in a live FreeCAD session can tell when its work has grown beyond what the human can see, is told so in the tool result it already reads, and can fit the view itself — without ever taking the camera away from the human unasked.
+
+**Why now:** the bridge has never been able to see the human's viewport. `adapters/render_probe.py` builds its own Coin scene and always self-frames (`camera.viewAll`), so an MCP render is by construction never mis-framed — only the human's screen can be. An agent can therefore pad a solid past the edge of the viewport, read a perfectly framed render of its own, and never know the user is staring at the corner of a face.
+
+**Sequencing:** parallel-eligible after Epic 1. Additive — one new tool plus one optional envelope field — so it does not reopen gates G0 or G2.
+
+**Reviewer note:** the ADs behind this epic went through a gate that returned **NOT SAFE** on its first draft and refuted three load-bearing claims. Those corrections matter to these stories: read AD-29 through AD-33 in full, not their summaries.
+
+### Story 8.1: `ViewportPort` Contract & GUI-Host Implementation
+
+> **As** a bridge developer, **I want** the live-camera read and write behind a second injected port implemented in a GUI host, **so that** `usecases/` stays Gui-free and AD-1's single adapters Qt exemption is not widened (AD-29, FR24).
+
+**Acceptance Criteria:**
+
+1. **Given** `contracts/render.py`
+   **When** inspected
+   **Then** a `ViewportPort` Protocol sits beside `RenderPort` with its own availability answer, and a `FramingVerdict` TypedDict is declared for the AD-32 block
+
+2. **Given** the GUI addon
+   **When** the bridge starts
+   **Then** a `hosts/gui_addon/` implementation is injected; hosts with no viewport inject `None` and the usecase reports the capability unavailable
+
+3. **Given** `scripts/check_imports.py`
+   **When** CI runs
+   **Then** `QT_EXEMPT_ADAPTERS` still holds exactly one entry (`adapters/render_probe.py`) and `OffscreenRenderPort` is untouched — adding framing code to it would force a second exemption and is a defect
+
+4. **Given** a headless `FreeCADCmd` leg that can render offscreen
+   **When** framing availability is asked
+   **Then** it answers unavailable. `OffscreenRenderPort.available()` probes offscreen *render* capability via `setupWithoutGUI()`, which is orthogonal to "a live viewport exists"; reusing it as the framing predicate reports available in headless and then finds no `ActiveView`
+
+### Story 8.2: Framing Read — Exact Projection Test
+
+> **As** an agent, **I want** an exact, non-heuristic answer to "is the model fully visible", **so that** two implementations can never disagree about the same scene (AD-30, FR24).
+
+**Acceptance Criteria:**
+
+1. **Given** a document with a visible solid
+   **When** the framing read runs
+   **Then** it projects the 8 corners of the union bbox via `View3DInventor.getPointOnViewport` and tests containment against `getSize()`; `fits` is false iff any corner falls outside
+
+2. **Given** the object set to measure
+   **When** resolved
+   **Then** it reuses `usecases/screenshot.py:51 _is_default_renderable` — the render and the warning must never describe different scenes, so a re-derived visibility filter is a defect
+
+3. **Given** a corner projected far off-screen
+   **When** its coordinate exceeds 4× the corresponding viewport dimension
+   **Then** it is treated as **outside** and the coordinate discarded. `getPointOnViewport` returns `SbVec2s` through an unchecked `short()` cast (`View3DInventorViewer.cpp:3823-3824`) that wraps sign for a distant corner, so a wrapped value must never read as inside
+
+4. **Given** a `ratio` is reported
+   **When** computed
+   **Then** it is the larger of the two `extent / viewport_extent` quotients over the 2D axis-aligned hull of the 8 projected corners, and is `None` (with `fits:false`) whenever any coordinate was discarded — a fabricated ratio would report a wildly wrong camera as a hair's-breadth miss
+
+5. **Given** a HiDPI display
+   **When** the test runs
+   **Then** no `devicePixelRatio` correction is applied: `getSize()` and the projection share one render-manager pixel space, and the DPI divide exists only in `toQPoint`, which this path never calls
+
+### Story 8.3: `view_fit_viewport` Tool
+
+> **As** an agent, **I want** to fit the model into the viewport on my own judgement without a preview round trip, **so that** the human sees the result of work I just did (AD-31, AD-33, FR25).
+
+**Acceptance Criteria:**
+
+1. **Given** the tool spec
+   **When** registered
+   **Then** it is `mutating=True` with **no `confirm` property**, is built outside the `features.py`/`sketches.py` mutation wrappers, and is absent from `READ_ONLY_PROFILE`
+
+2. **Given** a call
+   **When** it executes
+   **Then** no `preview_id` is demanded. The confirm gate is the explicit `confirm.gate_mutation` call at `usecases/features.py:369`/`sketches.py:561`, which this tool never reaches; routing it through `run_mutation` to get an audit record would wrongly trigger that gate
+
+3. **Given** a successful fit
+   **When** the audit record is written
+   **Then** a new optional `AuditRecord.camera_before` carries the verbatim `getCamera()` string, `audit-record.schema.json` is regenerated in the same change, and the camera is never folded into `params_digest` (irreversible, defeating the point) nor `fingerprint_before` (a geometry digest under AD-6)
+
+4. **Given** a `doc` handle that is not the document the live viewport is showing
+   **When** called
+   **Then** it returns `INVALID_INPUT` naming both documents — it must not fit the active document instead, and must not activate the named one
+
+5. **Given** the implementation resolves the view
+   **When** reviewed
+   **Then** it uses `FreeCADGui.getDocument(<resolved Name>).ActiveView`, never `FreeCADGui.ActiveDocument`
+
+6. **Given** a quarantined document (AD-27)
+   **When** a fit is attempted
+   **Then** it is refused, so quarantine keeps one meaning across the whole tool surface
+
+### Story 8.4: Framing Warning on Tool Results
+
+> **As** an agent, **I want** the warning to reach me in the tool result I already read, **so that** I learn the model is off-screen without polling for it (AD-32, FR26).
+
+**Acceptance Criteria:**
+
+1. **Given** a `framing` verdict
+   **When** attached
+   **Then** it rides a new **optional top-level `ResultEnvelope` key** (`contracts/envelope.py`), not a key inside `structured_content`, and `result-envelope.schema.json` is regenerated (additive under AD-28)
+
+2. **Given** `fits` is false
+   **When** the summary is built
+   **Then** the sentence is rendered from the block by **one shared helper in `contracts/`** called from the envelope assembly path, never appended by an individual tool's summary function
+
+3. **Given** a repeated query with no geometry or visibility change
+   **When** framing is reported
+   **Then** the cached verdict is reused; the cache key is `(fingerprint, camera_string, viewport_size, active_view_id)`, and a verdict whose key differs in any component is reported `checked:"cached"` with the differing component named in `stale_reason`
+
+4. **Given** the human resizes the window or drags the tree/3D-view splitter
+   **When** the next tool is called
+   **Then** the verdict is not reported as fresh. `getSize()` changed while `getCamera()` did not, so a geometry-only staleness trigger would return `fits:true, stale_reason:None` for a viewport that now clips the model
+
+5. **Given** any non-`OK` terminal status
+   **When** the envelope is built
+   **Then** the `framing` block is **omitted** — one rule, no either/or, so two implementations cannot differ on the same `TIMEOUT` and rolled-back geometry is never measured
+
+6. **Given** the three no-verdict states
+   **When** a reader inspects the result
+   **Then** they are discriminated by `checked`, never by absence alone: no viewport for this document → omitted; projection attempted and failed → `fits:null` + `checked:"unavailable"` + reason; success → a real bool with `"computed"`/`"cached"`
+
+7. **Given** a two-document session
+   **When** framing is reported
+   **Then** the verdict describes the **document the call targeted**, never whichever document is on screen — a warning about a document the human is not looking at is not actionable
+
+8. **Given** the pad that grew the model past the edge
+   **When** its own call returns
+   **Then** that call warns: the verdict describes state after the call's own effect, read **outside** the AD-5 bracket after `commitTransaction` (`usecases/transaction.py:549`)
+
+### Story 8.5: Enforcement — Framing Contract Test & CI Alias Gap
+
+> **As** a project owner, **I want** the framing rules enforced by CI rather than by convention, and the pre-existing AD-20 evasion closed, **so that** these ADs are self-enforcing (AD-32, AD-20).
+
+**Acceptance Criteria:**
+
+1. **Given** a new contract test
+   **When** CI runs
+   **Then** it asserts that for every tool whose envelope carries a `framing` block with `fits:false` the rendered `text` contains the sentence, and that no tool appends it independently. Without it the AD-32 shared-helper rule is convention only: `tests/external/test_envelope_summary.py` covers just the generic `mirror_text` fallback, and real tools hand-write `text` (`usecases/screenshot.py:400-410`)
+
+2. **Given** `scripts/check_imports.py`
+   **When** the alias set is inspected
+   **Then** `FREECAD_MODULE_ALIASES` (`:41`) includes `FreeCADGui` alongside `FreeCAD`/`App`. **This is a live pre-existing defect:** the `ActiveDocument` ban at `:149-169` does not match `FreeCADGui.ActiveDocument`, so that access passes CI today while violating AD-20
+
+3. **Given** a planted `FreeCADGui.ActiveDocument` access in a test fixture
+   **When** the checker runs
+   **Then** it is flagged, proving the gap is closed rather than assumed
+
+4. **Given** the checker's own diagnostics
+   **When** read
+   **Then** the error message (`:250-252`) and module docstring (`:11`) no longer advertise `adapters/marshal.py` as Qt-exempt. `QT_EXEMPT_ADAPTERS` holds one entry and the message must say so, or an implementer will believe `marshal.py` may import Qt
+
+5. **Given** the AD-32 deferred thresholds
+   **When** implementation begins
+   **Then** the `fitAll(factor)` margin and the near-miss tolerance are calibrated against real parts and recorded — a hair-trigger warning on every call is noise
