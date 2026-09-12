@@ -11,6 +11,7 @@ from __future__ import annotations
 import ast
 import inspect
 import json
+import math
 
 import pytest
 
@@ -451,32 +452,6 @@ class _FactorRecordingView:
         self.factors.append(factor)
 
 
-def test_should_pass_the_calibrated_margin_factor_to_a_view_that_accepts_one():
-    """``fitAll(factor)`` scales the bbox before framing it, so the value reaching the view is what
-    decides how much of the viewport the human's model occupies."""
-    # Arrange
-    document = _FakeDocument()
-    view = _FactorRecordingView(document)
-    registry = _FakeRegistry(document)
-
-    # Act
-    envelope = view_fit_viewport(registry, _FakeViewportPort(view), doc=HANDLE)
-
-    # Assert
-    assert envelope["status"] == "OK"
-    assert view.factors == [view_fit._FIT_MARGIN_FACTOR]
-
-
-def test_should_keep_the_margin_at_one_so_the_sphere_fit_is_not_compounded():
-    """``fitAll`` already frames the bounding *sphere* of the bbox
-    (``View3DInventorViewer.cpp:4571-4573``), leaving the model at
-    ``largest_extent / space_diagonal`` of the viewport — 0.58 for a cube, 0.81 for a 40x25x15
-    plate. A factor above 1.0 would inset it again; below 1.0 would crop it."""
-    # Act
-    factor = view_fit._FIT_MARGIN_FACTOR
-
-    # Assert
-    assert factor == 1.0
 
 
 def test_should_fall_back_to_the_bare_call_for_a_view_whose_fitAll_takes_no_factor():
@@ -489,6 +464,316 @@ def test_should_fall_back_to_the_bare_call_for_a_view_whose_fitAll_takes_no_fact
 
     # Act
     envelope = view_fit_viewport(registry, _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert view.fit_calls == 1
+
+
+# ---- silhouette framing ----------------------------------------------------------------------
+
+
+class _FakeShape:
+    def __init__(self, bounds):
+        self.BoundBox = _FakeBoundBox(bounds)
+
+    def isNull(self):  # noqa: N802 - FreeCAD API name
+        return False
+
+
+class _FakeBoundBox:
+    def __init__(self, bounds):
+        (self.XMin, self.YMin, self.ZMin, self.XMax, self.YMax, self.ZMax) = bounds
+
+
+class _FakeObject:
+    """A visible shape-bearing object, the set ``is_default_renderable`` selects."""
+
+    def __init__(self, name, bounds):
+        self.Name = name
+        self.TypeId = "Part::Feature"
+        self.Visibility = True
+        self.Shape = _FakeShape(bounds)
+
+
+class _ProjectingDocument:
+    def __init__(self, objects, name="Part"):
+        self.Name = name
+        self.Objects = objects
+
+
+class _ProjectingView(_FakeView):
+    """A view that projects world corners through a caller-supplied function.
+
+    ``boxZoom`` calls are recorded verbatim so the rectangle handed to FreeCAD can be asserted
+    rather than inferred from a camera the fake does not really own.
+    """
+
+    def __init__(self, project, size=(800, 600), document=None):
+        super().__init__(document=document)
+        self._project = project
+        self._size = size
+        self.box_zooms = []
+        self.isometric_calls = 0
+
+    def getSize(self):  # noqa: N802 - FreeCAD API name
+        return self._size
+
+    def getPointOnViewport(self, x, y, z):  # noqa: N802 - FreeCAD API name
+        return self._project(x, y, z)
+
+    def boxZoom(self, xmin, ymin, xmax, ymax):  # noqa: N802 - FreeCAD API name
+        self.box_zooms.append((xmin, ymin, xmax, ymax))
+
+    def viewIsometric(self):  # noqa: N802 - FreeCAD API name
+        self.isometric_calls += 1
+
+
+def _centred_box(half_w, half_h, size=(800, 600)):
+    """Project every corner onto a centred rectangle of the given half-extents."""
+    cx, cy = size[0] / 2, size[1] / 2
+
+    def project(x, y, _z):
+        return (cx + (half_w if x > 0 else -half_w), cy + (half_h if y > 0 else -half_h))
+
+    return project
+
+
+
+
+
+def test_should_reorient_to_isometric_when_the_model_is_edge_on():
+    # Arrange: a silhouette filling 2% of the viewport — a tall bar seen down its own axis.
+    view = _ProjectingView(_centred_box(8, 6))
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.isometric_calls == 1
+
+
+def test_should_orient_isometrically_on_every_fit():
+    # Arrange: the isometric corner view shows all three dimensions, which is what a fit is for.
+    # A top view down a tall bar shows only its end face however well it is zoomed.
+    view = _ProjectingView(_centred_box(200, 100))
+    document = _ProjectingDocument([_FakeObject("Pad", (-10, -10, -10, 10, 10, 10))])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.isometric_calls == 1
+
+
+def test_should_fall_back_to_fit_all_when_every_corner_is_implausible():
+    # Arrange: corners far beyond the viewport wrap through short() and carry no usable value.
+    view = _ProjectingView(lambda _x, _y, _z: (99999.0, 99999.0))
+    document = _ProjectingDocument([_FakeObject("Pad", (-10, -10, -10, 10, 10, 10))])
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert view.box_zooms == []
+    assert view.fit_calls >= 1
+
+
+def test_should_still_fit_when_the_camera_starts_pointed_away_from_the_model():
+    # Arrange: the live failure this guards. A camera not looking at the model projects every
+    # corner to an implausible magnitude, so the silhouette cannot be measured. fitAll must still
+    # run, or the one call an agent makes to recover a lost model does nothing.
+    view = _ProjectingView(lambda _x, _y, _z: (99999.0, 99999.0))
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert view.fit_calls >= 1, "an unmeasurable silhouette must not leave the camera untouched"
+
+
+
+
+# ---- geometry-computed framing ---------------------------------------------------------------
+
+
+class _FactorView(_FakeView):
+    """A view recording the ``fitAll`` factor it was handed."""
+
+    def __init__(self, document=None):
+        super().__init__(document=document)
+        self.factors = []
+        self.isometric_calls = 0
+
+    def fitAll(self, factor=None):  # noqa: N802 - FreeCAD API name
+        self.factors.append(factor)
+        self.fit_calls += 1
+
+    def viewIsometric(self):  # noqa: N802 - FreeCAD API name
+        self.isometric_calls += 1
+
+
+def _resulting_fill(bounds, factor):
+    """What fraction of the viewport the model occupies after ``fitAll(factor)``.
+
+    ``fitAll`` frames the scene box's space diagonal, so the model lands at
+    ``silhouette / (diagonal * factor)``. This mirrors the shipped arithmetic rather than
+    re-deriving it, so the assertions below are about the *result* the human sees.
+    """
+    dx, dy, dz = bounds[3] - bounds[0], bounds[4] - bounds[1], bounds[5] - bounds[2]
+    diagonal = math.sqrt(dx * dx + dy * dy + dz * dz)
+    silhouette = max(
+        math.sqrt(dx * dx + dy * dy),
+        math.sqrt(dy * dy + dz * dz),
+        math.sqrt(dx * dx + dz * dz),
+    )
+    return silhouette / (diagonal * factor)
+
+
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        (-20, -20, 0, 20, 20, 800),  # 20:1 bar — the shape fitAll alone frames at 5%
+        (-20, -20, -20, 20, 20, 20),  # cube
+        (0, 0, 0, 40, 25, 15),  # plate
+    ],
+)
+def test_should_fill_the_viewport_to_the_configured_fraction_whatever_the_aspect(bounds):
+    # Arrange
+    view = _FactorView()
+    document = _ProjectingDocument([_FakeObject("Part", bounds)])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert _resulting_fill(bounds, view.factors[-1]) == pytest.approx(
+        view_fit._FILL_FRACTION, abs=0.001
+    )
+
+
+def test_should_not_read_the_camera_back_while_it_holds_the_qt_thread():
+    # Arrange: the fit runs on the Qt main thread inside the marshal, so viewIsometric's
+    # NavigationAnimation and viewBoundBox's own animation cannot land until the call returns.
+    # A projection taken here would read the PRE-fit camera, which is how a measure-then-correct
+    # loop converged on the wrong framing and still reported success. The framing must therefore
+    # come from geometry alone.
+    view = _FactorView()
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.fit_calls == 1, "one deterministic camera write, no correction passes"
+    assert not hasattr(view, "projections"), "the fit must not project through the live camera"
+
+
+def test_should_fall_back_to_a_plain_fit_when_the_geometry_cannot_be_measured():
+    # Arrange: an unreadable document still gets framed rather than refused.
+    view = _FactorView()
+
+    class _Opaque:
+        Name = "Part"
+
+    # Act
+    view_fit_viewport(_FakeRegistry(_Opaque()), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.factors == [1.0]
+
+
+def test_should_never_pass_a_factor_viewall_would_refuse():
+    # Arrange: viewAll returns early for factor <= 0 (View3DInventorViewer.cpp:4463), so a
+    # degenerate box must not silently skip the fit.
+    view = _FactorView()
+    document = _ProjectingDocument([_FakeObject("Flat", (0, 0, 0, 0, 0, 0))])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.factors[-1] > 0.0
+
+
+class _AnimationView(_FactorView):
+    """A view recording the order of animation toggles and camera writes."""
+
+    def __init__(self, animation_enabled=True):
+        super().__init__()
+        self._animation_enabled = animation_enabled
+        self.events = []
+
+    def isAnimationEnabled(self):  # noqa: N802 - FreeCAD API name
+        return self._animation_enabled
+
+    def setAnimationEnabled(self, enabled):  # noqa: N802 - FreeCAD API name
+        self._animation_enabled = enabled
+        self.events.append(f"animation={enabled}")
+
+    def viewIsometric(self):  # noqa: N802 - FreeCAD API name
+        super().viewIsometric()
+        self.events.append("isometric")
+
+    def fitAll(self, factor=None):  # noqa: N802 - FreeCAD API name
+        super().fitAll(factor)
+        self.events.append("fitAll")
+
+
+def test_should_write_the_camera_with_animation_off_so_the_fit_lands_in_this_call():
+    # Arrange: both camera writes animate by default, and an animation advances on the Qt event
+    # loop this code blocks while it runs inside the marshal. Animated, the fit would land only
+    # after the call returned — the defect that made a single call frame the model wrongly.
+    view = _AnimationView(animation_enabled=True)
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.events == ["animation=False", "isometric", "fitAll", "animation=True"]
+
+
+def test_should_restore_the_humans_animation_setting_when_the_fit_raises():
+    # Arrange: this is the human's viewer; a failed fit must not leave animation switched off.
+    class _Raising(_AnimationView):
+        def fitAll(self, factor=None):  # noqa: N802 - FreeCAD API name
+            raise RuntimeError("the scene graph is empty")
+
+    view = _Raising(animation_enabled=True)
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] != "OK"
+    assert view.isAnimationEnabled() is True
+
+
+def test_should_leave_animation_off_when_the_human_already_had_it_off():
+    # Arrange
+    view = _AnimationView(animation_enabled=False)
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert view.isAnimationEnabled() is False
+
+
+def test_should_still_fit_a_view_that_has_no_animation_toggle():
+    # Arrange: the toggle is a nicety; a view without it still gets framed.
+    view = _FactorView()
+    document = _ProjectingDocument([_FakeObject("Bar", (-20, -20, 0, 20, 20, 800))])
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
 
     # Assert
     assert envelope["status"] == "OK"

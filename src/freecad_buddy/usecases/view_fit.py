@@ -18,22 +18,26 @@ Contains no ``FreeCADGui``/Qt import. The view arrives as an opaque object from 
 
 from __future__ import annotations
 
+import math
+
 from freecad_buddy.contracts import ResultEnvelope, ViewportPort
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.framing import Bounds, union_bbox
+from freecad_buddy.usecases.screenshot import is_default_renderable
 
 _AUDIT_SINK: object = None
 
-# Passed to ``fitAll(factor)``, which scales the scene bounding box before framing it
-# (``View3DInventorViewer.cpp:4456-4490``). ``1.0`` is the calibrated value, not an unconsidered
-# default: ``fitAll`` frames the bounding *sphere* of that box, whose diameter is the box's space
-# diagonal — FreeCAD states this itself at ``View3DInventorViewer.cpp:4571-4573`` ("It uses a
-# sphere to surround the bounding box"). A model therefore already lands at
-# ``largest_extent / space_diagonal`` of the viewport: 0.58 for a cube, 0.81 for a 40x25x15 plate,
-# 0.99 for a 100x10x10 bar. The margin is the sphere's, and it is never smaller than the model.
-# Any factor above 1.0 would compound that inset and shrink the part the human asked to see;
-# a factor below 1.0 would crop it. Raise this only against a measured overflow, which the
-# sphere-fit geometry above makes impossible for a plain fit.
-_FIT_MARGIN_FACTOR = 1.0
+# Fraction of the binding viewport axis the model is framed to fill. 0.95 leaves a 5% margin:
+# enough that the part never reads as clipped and a small camera nudge does not push a corner
+# outside, while still filling the screen. Measured on a 40x40x800 bar and a 40x25x15 plate in
+# top, front and isometric views; at 1.0 both touched the edge, at 0.90 the empty border was
+# plainly visible.
+_FILL_FRACTION = 0.95
+
+# Floor on the computed fitAll factor. A factor at or below zero is refused outright by
+# ``viewAll`` (``View3DInventorViewer.cpp:4463``), so a degenerate measurement must never
+# produce one; this keeps the call a no-op zoom rather than a silently skipped fit.
+_MIN_FIT_FACTOR = 0.01
 
 
 def set_audit_sink(sink: object) -> object:
@@ -86,7 +90,7 @@ def view_fit_viewport(
 
         camera_before = _read_camera(view)
         try:
-            _fit_all(view)
+            _fit_all(view, document)
         except Exception as exc:  # noqa: BLE001 - a view that refuses the fit is a stated reason
             return _failed_envelope(f"the view refused the fit: {type(exc).__name__}: {exc}")
 
@@ -96,19 +100,135 @@ def view_fit_viewport(
     return registry.with_document(doc, fit)
 
 
-def _fit_all(view: object) -> None:
-    """Fit the scene with the calibrated margin, falling back to the no-argument form.
+def _fit_all(view: object, document: object) -> None:
+    """Orient isometrically and frame the model, filling the viewport to ``_FILL_FRACTION``.
+
+    **This cannot measure its own result, so it does not try.** The fit runs on the Qt main thread
+    inside the marshal, which is the thread that applies camera changes: ``viewIsometric`` starts a
+    ``NavigationAnimation`` through Qt signals (``NavigationAnimator.cpp:45-57``) and
+    ``viewBoundBox`` animates too (``View3DInventorViewer.cpp:4821``), so both land only once this
+    call returns and the event loop runs again. Any projection taken here reads the camera as it
+    was *before* the fit, which is why a measure-then-correct loop silently converged on the wrong
+    framing and still reported success.
+
+    The framing is therefore computed from geometry, which needs no feedback. ``fitAll(factor)``
+    scales the scene box by ``factor`` and frames the result
+    (``View3DInventorViewer.cpp:4467-4488``), and the framing is sphere-based — the camera height
+    becomes the box's space diagonal (``cam->viewBoundingBox``). A part therefore lands at
+    ``silhouette / diagonal`` of the viewport, which is 0.58 for a cube but only 0.05 for a
+    40x40x800 bar. Passing ``factor = silhouette / diagonal / _FILL_FRACTION`` cancels exactly
+    that shrinkage and leaves the requested margin.
+
+    The camera is oriented isometrically first — the standard TOP/FRONT/RIGHT corner view, which
+    shows all three dimensions at once. A fit exists to show the human the work, and a top view
+    down a tall bar shows only its end face however well it is zoomed.
+    """
+    factor = _fill_factor(document)
+    with _animation_suspended(view):
+        _view_isometric(view)
+        _fit_all_with_factor(view, factor)
+
+
+class _animation_suspended:  # noqa: N801 - a context manager reads as a statement, not a class
+    """Turn the view's camera animation off for the fit, and restore it afterwards.
+
+    This is what makes a fit land within its own call. Both camera writes animate by default:
+    ``viewIsometric`` starts a ``NavigationAnimation`` and ``viewBoundBox`` calls
+    ``animatedViewAll`` when animation is enabled (``View3DInventorViewer.cpp:4821``). An
+    animation advances on the Qt event loop — the loop this code is blocking while it runs inside
+    the marshal — so both would land only after the call returned, and the agent's next call would
+    see a camera the fit never observed. With animation off, ``setAnimationEnabled`` stops
+    anything already in flight and the camera is written synchronously
+    (``NavigationStyle.cpp:1660-1666``).
+
+    The previous setting is restored even when the fit raises: this is the human's viewer, and a
+    fit must not leave their navigation animation switched off.
+    """
+
+    def __init__(self, view: object) -> None:
+        self._view = view
+        self._previous: bool | None = None
+
+    def __enter__(self) -> None:
+        try:
+            self._previous = bool(self._view.isAnimationEnabled())
+            self._view.setAnimationEnabled(False)
+        except Exception:  # noqa: BLE001 - a view without the toggle still fits, just animated
+            self._previous = None
+
+    def __exit__(self, *_exc: object) -> None:
+        if self._previous is None:
+            return
+        try:
+            self._view.setAnimationEnabled(self._previous)
+        except Exception:  # noqa: BLE001 - restoring is best-effort; the fit itself already landed
+            pass
+
+
+def _fill_factor(document: object) -> float:
+    """The ``fitAll`` factor that leaves ``_FILL_FRACTION`` of the binding axis filled.
+
+    ``1.0`` (a plain fit) whenever the geometry cannot be measured, so an unreadable document
+    still gets framed rather than refused.
+    """
+    box = _document_bounds(document)
+    if box is None:
+        return 1.0
+    xmin, ymin, zmin, xmax, ymax, zmax = box
+    dx, dy, dz = xmax - xmin, ymax - ymin, zmax - zmin
+    diagonal = math.sqrt(dx * dx + dy * dy + dz * dz)
+    if diagonal <= 0.0:
+        return 1.0
+    # The isometric silhouette of a box is bounded by its largest face diagonal: looking down a
+    # cube corner, the widest thing on screen is a face diagonal, never the space diagonal the
+    # sphere framing reserves room for. Using the largest of the three keeps the whole model
+    # inside for any of the eight isometric corners, so no orientation clips.
+    silhouette = max(
+        math.sqrt(dx * dx + dy * dy),
+        math.sqrt(dy * dy + dz * dz),
+        math.sqrt(dx * dx + dz * dz),
+    )
+    return max(silhouette / diagonal / _FILL_FRACTION, _MIN_FIT_FACTOR)
+
+
+def _document_bounds(document: object) -> Bounds | None:
+    """The union bbox of the document's visible shape-bearing objects, or ``None``."""
+    try:
+        return union_bbox([obj for obj in document.Objects if is_default_renderable(obj)])
+    except Exception:  # noqa: BLE001 - an unreadable document degrades to a plain fit
+        return None
+
+
+def _fit_all_with_factor(view: object, factor: float) -> None:
+    """``fitAll(factor)``, falling back to the no-argument form for a view that takes none.
 
     ``fitAll`` takes an optional factor (``View3DPy.cpp:484-492``), but the view is duck-typed
-    here and an older or stubbed one may accept no argument at all. A ``TypeError`` from the
-    arity is retried bare rather than reported as a refused fit: at ``_FIT_MARGIN_FACTOR == 1.0``
-    the two calls frame identically (``viewAll(factor)`` delegates to ``viewAll()`` when the
-    factor is exactly 1.0), so the fallback loses nothing the caller asked for.
+    here and an older or stubbed one may accept no argument at all. A ``TypeError`` from the arity
+    is retried bare rather than reported as a refused fit: the bare call still frames the model,
+    just with the sphere's own margin instead of the requested one.
     """
     try:
-        view.fitAll(_FIT_MARGIN_FACTOR)
+        view.fitAll(factor)
     except TypeError:
         view.fitAll()
+
+
+
+
+
+
+def _view_isometric(view: object) -> None:
+    """Swing the camera to isometric so an edge-on model shows its real extent.
+
+    A view that does not expose the orientation is left pointing where it was: the fit still
+    frames the model from the camera the human already chose, which is worse framing for a tall
+    part but never a failed fit.
+    """
+    try:
+        view.viewIsometric()
+    except Exception:  # noqa: BLE001 - orientation is a nicety; the zoom below is the fit
+        pass
+
 
 
 def _require_same_document(document: object, view: object) -> None:
