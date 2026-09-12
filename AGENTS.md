@@ -174,7 +174,9 @@ Code is written for the standards, never compressed:
 - **Specs live beside their subject** as `*.spec.ts`.
 - **Pure functions get fixture-driven unit specs.** Fixture coverage is defined per
   project branch; keep captures redacted.
-- Manual smoke test on the real site is the operator's job, never the agent's.
+- Manual smoke test of the FreeCAD GUI is agent work: drive the real application with
+  `cua-driver` (see section 17). Only steps that need a human decision — accepting a visual
+  result, approving a destructive action — stay with the operator.
 
 **Detail:**
 - `.knowledge-base/technical/standards/testing/unit-testing.md`
@@ -294,6 +296,7 @@ Load the required skill BEFORE you start the task, not after.
 | Write or run unit tests | `typescript-unit-testing` |
 | Write or run end-to-end tests | `typescript-e2e-testing` |
 | Plan, write, or run manual tests | `manual-testing` |
+| Manual test the FreeCAD GUI, or drive any native application | `cua-driver` |
 | Automate a browser | `playwright-cli` |
 
 Every other BMAD skill is installed but not catalogued here. Invoke one by name only when the
@@ -389,3 +392,42 @@ then propose a doc correction.
 - **Why the proxy is a separate process (AD-2/AD-12):** the MCP/FastMCP libs are third-party and may not be imported inside FreeCAD's bundled Python. The addon spawns the proxy in the **external project venv interpreter** (which has `mcp`); it never imports `mcp` itself.
 - **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
 - Headless automation (CI, the `run_mcp_*` sweeps) is unaffected: it uses the single-process H1 stdio host, not this proxy.
+
+## 17. Manual Testing the FreeCAD GUI (cua-driver)
+
+**The agent drives FreeCAD itself. Load `skill(name="cua-driver")` before the first tool call.**
+
+Use `cua-driver` when the test needs the real application: menus, dialogs, toolbars, the 3D
+viewport, the tree view, or anything the MCP bridge does not expose.
+
+### Which tool for which job
+
+| Goal | Use |
+|------|-----|
+| Create, query, verify, or export a model | `mcp__freecad-buddy__*` — the MCP bridge (section 16) |
+| Click a menu, a dialog, a toolbar button, the tree view | `cua-driver` |
+| See what the operator sees on screen | `cua-driver` screenshot of the real window |
+| Confirm a render matches the viewport | Both — MCP render, then diff against a `cua-driver` screenshot |
+
+The MCP bridge is faster and exact. Reach for `cua-driver` only for the GUI parts the bridge
+cannot touch.
+
+### Rules
+
+- **Snapshot before every action.** Refresh the window state, act through the fresh element
+  token, then verify from fresh state. A stale index clicks the wrong control.
+- **Verify, do not assume.** A tool call that returns success is not proof the application
+  changed. Check the postcondition — window title, tree item, dialog gone.
+- **`unknown` is not success.** Re-snapshot and check again, or report the failure.
+- **Do not trigger modal dialogs by surprise.** Name the dialog you expect before you open it.
+- **Stop after 2-3 failed attempts.** Report what you tried and what happened. Do not loop.
+- **The MCP render is a constructed scene, not the operator's viewport.** For any visual claim,
+  screenshot the real FreeCAD window and compare.
+- **Destructive GUI steps need operator approval** — deleting a document, overwriting a file,
+  quitting without save.
+
+### Read first
+
+- `skill(name="cua-driver")` — the loop, the snapshot invariant, failure modes.
+- `WINDOWS.md` in the same skill directory — this repository develops on Windows; it covers the
+  UIA tree, window hosting, and click dispatch.
