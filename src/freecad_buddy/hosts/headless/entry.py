@@ -51,8 +51,20 @@ def verify_freecad_importable() -> None:
 def build_registry(
     registry: DocumentRegistry, caps: Capabilities, marshal: Marshal
 ) -> MethodRegistry:
-    """Register the tool surface, each handler marshaled onto the FreeCAD thread."""
-    return build_inline_handlers(registry, ExportRegistry(), caps, marshal, OffscreenRenderPort())
+    """Register the tool surface, each handler marshaled onto the FreeCAD thread.
+
+    ``viewport_port=None`` is stated, not defaulted by omission: this host has no live 3D view, so
+    the framing capability is unavailable here even though the offscreen render probe may report
+    itself available (AD-29 — the two predicates are independent).
+    """
+    return build_inline_handlers(
+        registry,
+        ExportRegistry(),
+        caps,
+        marshal,
+        OffscreenRenderPort(),
+        viewport_port=None,
+    )
 
 
 def _default_audit_path() -> Path:

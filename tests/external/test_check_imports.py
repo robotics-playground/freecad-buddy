@@ -92,6 +92,12 @@ def test_qt_in_marshal_flagged(tmp_path):
     assert "Qt" in _rules(v) or "FreeCADGui" in _rules(v)
 
 
+def test_qt_exempt_adapters_holds_exactly_render_probe():
+    # AD-29: the live camera lives in hosts/gui_addon/, so this list must never grow a second
+    # entry. Without this assertion the single-exemption rule is convention only.
+    assert check_imports.QT_EXEMPT_ADAPTERS == frozenset({"adapters/render_probe.py"})
+
+
 def test_qt_in_render_probe_allowed(tmp_path):
     root = _make_tree(tmp_path, {
         "adapters/render_probe.py": "import FreeCADGui\n",

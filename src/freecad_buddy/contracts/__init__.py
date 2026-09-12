@@ -54,10 +54,12 @@ from freecad_buddy.contracts.mutation import (
 )
 from freecad_buddy.contracts.render import (
     FocusSpec,
+    FramingVerdict,
     RenderPort,
     RenderResult,
     SceneSpec,
     StyleSpec,
+    ViewportPort,
 )
 from freecad_buddy.contracts.report import (
     Check,
@@ -115,6 +117,7 @@ __all__ = [
     "FeatureState",
     "FingerprintRecord",
     "FocusSpec",
+    "FramingVerdict",
     "GeometricSelector",
     "GeometryDiff",
     "GeometryKind",
@@ -161,6 +164,7 @@ __all__ = [
     "TnpAuditBlock",
     "TnpStatus",
     "ValidationReport",
+    "ViewportPort",
     "WilsonCI",
     "derive_verdict",
     "fingerprints_equal",

@@ -22,7 +22,7 @@ from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.marshal import Marshal, ThreadExecutor
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.contracts import RenderPort
+from freecad_buddy.contracts import RenderPort, ViewportPort
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
 from freecad_buddy.usecases import (
     confirm,
@@ -1275,6 +1275,8 @@ def build_inline_handlers(
     marshal: Marshal | None,
     render_port: RenderPort | None = None,
     apply_posture: bool = True,
+    *,
+    viewport_port: ViewportPort | None = None,  # noqa: ARG001 - held for its first consumer
 ) -> MethodRegistry:
     """Build a ``MethodRegistry`` from the shared catalog.
 
@@ -1282,6 +1284,11 @@ def build_inline_handlers(
     ``marshal`` is ``None`` → handlers call the use case directly (the listener owns the single
     ``marshal.call`` and a second layer would deadlock the Qt main thread). ``render_port``
     defaults to a fresh ``OffscreenRenderPort`` (the one render capability serves every host).
+
+    ``viewport_port`` is the AD-29 live-camera seam: the GUI addon injects a live port, every
+    other host injects ``None``. It is not threaded into ``make_handler``, because no tool
+    consumes it yet and widening ~40 handler signatures for an unused argument would be
+    speculative; the first consumer threads it.
 
     With a ``marshal``, ``debug_exec`` alone gets an inner bounded marshal so its body runs on a
     worker thread and its budget is enforced; every other tool stays on the calling thread.

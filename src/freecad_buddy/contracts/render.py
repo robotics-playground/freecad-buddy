@@ -10,7 +10,7 @@ so it stays in the innermost ring.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Protocol, runtime_checkable
+from typing import Literal, Protocol, TypedDict, runtime_checkable
 
 
 @dataclass(frozen=True)
@@ -76,6 +76,41 @@ class RenderResult:
     empty_scene: bool = False
 
 
+class FramingVerdict(TypedDict, total=False):
+    """Whether the targeted document's model fits the live viewport, and how fresh that answer is.
+
+    **Three no-verdict states, discriminated by ``checked`` and never by an absent field:**
+
+    1. No viewport for this document (a headless host, or a GUI document with no open 3D view —
+       what ``ViewportPort.available`` reports as ``(False, reason)``) → the whole block is
+       **omitted**, no ``FramingVerdict`` is built.
+    2. Viewport present, projection attempted and failed → ``fits: None`` **always** paired with
+       ``checked: "unavailable"``, the failure named in ``stale_reason``.
+    3. Viewport present, projection succeeded → ``fits`` is a real bool.
+
+    State 1 vs state 2 is the divergence this spelling exists to prevent: "GUI document with no
+    open 3D view" is state 1 (omitted), never state 2.
+
+    ``fits`` is ``None`` only when the verdict could not be computed, never a guess.
+
+    ``ratio`` is the larger of the two extent/viewport-extent quotients over the 2D axis-aligned
+    hull of the projected bbox corners, so ``1.0`` exactly fills, ``< 1.0`` leaves margin and
+    ``> 1.0`` overflows. **If any corner coordinate was discarded as an implausible magnitude —
+    ``|coordinate| > 4 ×`` the corresponding viewport dimension, a stated constant, not a
+    per-implementer judgement — then ``ratio`` is ``None`` while ``fits`` is ``False``.** A
+    discarded coordinate has no measurable fraction, and fabricating one would report a wildly
+    wrong camera as a hair's-breadth miss.
+
+    ``checked`` is a closed enum: adding a fourth value is a schema **major bump** under AD-28,
+    not an additive change.
+    """
+
+    fits: bool | None  # required
+    ratio: float | None  # required
+    checked: Literal["computed", "cached", "unavailable"]  # required
+    stale_reason: str | None  # required
+
+
 @runtime_checkable
 class RenderPort(Protocol):
     """The render capability the host injects; the usecase depends only on this shape."""
@@ -92,10 +127,33 @@ class RenderPort(Protocol):
         """
 
 
+@runtime_checkable
+class ViewportPort(Protocol):
+    """The live-camera capability the host injects; a host with no viewport injects ``None``.
+
+    Separate from ``RenderPort``: the render port self-frames a constructed scene, so its
+    availability answers "can this process render offscreen" — orthogonal to "a live 3D view
+    exists for this document". Both answers are per document, because one GUI session can hold a
+    document with an open 3D view beside one without.
+    """
+
+    def available(self, document: object) -> tuple[bool, str | None]:
+        """Return ``(is_available, reason)`` for ``document``; ``reason`` is set only when False."""
+
+    def view(self, document: object) -> object | None:
+        """Return ``document``'s live 3D view handle, or ``None`` when it has none.
+
+        Never falls back to another document's view: a verdict must describe the document the
+        call targeted, not whichever document the GUI happens to show.
+        """
+
+
 __all__ = [
     "FocusSpec",
+    "FramingVerdict",
     "RenderPort",
     "RenderResult",
     "SceneSpec",
     "StyleSpec",
+    "ViewportPort",
 ]

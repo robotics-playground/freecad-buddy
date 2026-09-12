@@ -22,6 +22,7 @@ from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_listener import RpcListener
 from freecad_buddy.hosts.gui_addon.pump import QtMainThreadExecutor
+from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 from freecad_buddy.usecases import shim
@@ -98,7 +99,12 @@ def start_bridge() -> RpcListener:
         logger.warning("capability-probe warm-up failed; probing lazily", exc_info=True)
     doc_registry = DocumentRegistry()
     registry = build_inline_handlers(
-        doc_registry, ExportRegistry(), caps, None, OffscreenRenderPort()
+        doc_registry,
+        ExportRegistry(),
+        caps,
+        None,
+        OffscreenRenderPort(),
+        viewport_port=GuiViewportPort(),
     )
     token = secrets.token_urlsafe(32)
     audit = AuditSink(default_audit_path())
