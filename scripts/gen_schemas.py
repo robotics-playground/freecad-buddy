@@ -93,6 +93,9 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     ],
     # embedded $defs
     "ErrorDetail": ["message"],
+    # All four are required-and-nullable: a verdict that omitted `checked` would let a reader
+    # take a cached `fits` for a fresh one, which is the failure AD-32 exists to prevent.
+    "FramingVerdict": ["fits", "ratio", "checked", "stale_reason"],
     "PostVerifyBlock": ["recompute_clean", "is_valid", "fully_constrained", "tnp_audit", "passed"],
     "TnpAuditBlock": ["status", "element_map_version", "findings"],
     "RefFinding": ["owner", "prop", "verdict", "layer"],

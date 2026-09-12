@@ -25,7 +25,14 @@ from freecad_buddy.contracts.document import (
     MappedNameSelector,
     Selector,
 )
-from freecad_buddy.contracts.envelope import ImageRef, ResultEnvelope, mirror_text, summary_text
+from freecad_buddy.contracts.envelope import (
+    ImageRef,
+    ResultEnvelope,
+    framing_warning,
+    mirror_text,
+    summary_text,
+    with_framing_text,
+)
 from freecad_buddy.contracts.feature import (
     DatumKind,
     ExtrudeType,
@@ -168,8 +175,10 @@ __all__ = [
     "WilsonCI",
     "derive_verdict",
     "fingerprints_equal",
+    "framing_warning",
     "massprops_equal",
     "mirror_text",
     "require_wilson_ci_for_rates",
     "summary_text",
+    "with_framing_text",
 ]

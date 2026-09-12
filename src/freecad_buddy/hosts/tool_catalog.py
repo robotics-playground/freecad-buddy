@@ -22,12 +22,13 @@ from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.marshal import Marshal, ThreadExecutor
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.contracts import RenderPort, ViewportPort
+from freecad_buddy.contracts import RenderPort, ViewportPort, with_framing_text
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
 from freecad_buddy.usecases import (
     confirm,
     exports,
     features,
+    framing,
     preview,
     queries,
     screenshot,
@@ -1308,6 +1309,79 @@ def tool_specs() -> list[ToolSpec]:
     ]
 
 
+def with_framing(
+    raw: Callable[..., dict],
+    doc_registry: DocumentRegistry,
+    viewport_port: ViewportPort | None,
+) -> Callable[..., dict]:
+    """Wrap ``raw`` so its ``OK`` results carry the live-viewport framing verdict (AD-32).
+
+    The single attachment point. No tool attaches the block or appends the sentence itself: one
+    wrapper here is what keeps ~40 hand-written ``text`` strings from drifting into 40 wordings.
+
+    The read runs **after** ``raw`` returns, so it measures the call's own effect: a pad that
+    grew the model past the edge warns on that same call. Every exit from ``run_mutation`` is
+    already outside the AD-5 transaction bracket and past ``commitTransaction``, so this needs no
+    transaction reasoning — and it is the same reason ``view_fit_viewport`` reports the fitted
+    view rather than the pre-fit one it just replaced.
+
+    On **any** non-``OK`` terminal status the block is omitted entirely — one rule, no either/or.
+    A verdict on a ``TIMEOUT`` invites a reader to treat a cached answer as current, and geometry
+    a rollback undid must never be measured.
+    """
+    if viewport_port is None:
+        return raw
+
+    def handler(**params):
+        envelope = raw(**params)
+        if not isinstance(envelope, dict) or envelope.get("status") != "OK":
+            return envelope
+        verdict = _read_framing_quietly(doc_registry, viewport_port, params.get("doc"), envelope)
+        if verdict is None:
+            return envelope
+        text = with_framing_text(envelope["text"], verdict)
+        return {**envelope, "framing": verdict, "text": text}
+
+    return handler
+
+
+def _read_framing_quietly(
+    doc_registry: DocumentRegistry,
+    viewport_port: ViewportPort,
+    doc: object,
+    envelope: dict,
+) -> dict | None:
+    """``read_framing`` for the document the call targeted, or ``None`` when it cannot answer.
+
+    The verdict is advisory, so a framing read that raises must not turn a completed tool call
+    into a failure: a handle the registry no longer knows, or a view that died between the call
+    and the read, degrades to no block at all.
+    """
+    if not isinstance(doc, str):
+        return None
+    try:
+        return framing.read_framing(doc_registry, viewport_port, doc, _geometry_proxy(envelope))
+    except Exception:  # noqa: BLE001 - an advisory verdict must never fail a completed call
+        return None
+
+
+def _geometry_proxy(envelope: dict) -> str | None:
+    """The mutation's own post-commit fingerprint digest, or ``None`` on the query path.
+
+    Free and exact where it exists: ``run_mutation`` already computed it and stored it in the
+    envelope. It is never computed here — ``usecases/fingerprint.py`` serializes every shape and
+    would cost more than the projection the cache exists to avoid. Its absence on the query path
+    is not a gap: a query cannot change geometry, and the cached verdict names the component as
+    unverified rather than claiming a freshness the bridge cannot prove.
+    """
+    mutation = envelope.get("structured_content", {}).get("mutation")
+    if not isinstance(mutation, dict):
+        return None
+    after = mutation.get("fingerprint_after")
+    digest = after.get("digest") if isinstance(after, dict) else None
+    return digest if isinstance(digest, str) else None
+
+
 def build_inline_handlers(
     doc_registry: DocumentRegistry,
     export_registry: ExportRegistry,
@@ -1371,10 +1445,11 @@ def build_inline_handlers(
         raw = spec.make_handler(doc_registry, export_registry, caps, port, viewport_port)
         if spec.name == "debug_exec":
             raw = bound_off_main_thread(raw, spec.timeout_s)
+        framed = with_framing(raw, doc_registry, viewport_port)
         methods.register(
             RpcMethod(
                 name=spec.name,
-                handler=wrap(raw, spec.timeout_s),
+                handler=wrap(framed, spec.timeout_s),
                 input_schema=spec.input_schema,
                 description=spec.description,
                 timeout_s=spec.timeout_s,

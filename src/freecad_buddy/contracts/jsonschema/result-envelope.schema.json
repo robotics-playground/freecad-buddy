@@ -29,6 +29,54 @@
       ],
       "type": "object"
     },
+    "FramingVerdict": {
+      "properties": {
+        "checked": {
+          "enum": [
+            "computed",
+            "cached",
+            "unavailable"
+          ]
+        },
+        "fits": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ratio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stale_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fits",
+        "ratio",
+        "checked",
+        "stale_reason"
+      ],
+      "type": "object"
+    },
     "ImageRef": {
       "properties": {
         "audience": {
@@ -66,6 +114,16 @@
       "anyOf": [
         {
           "$ref": "#/$defs/ErrorDetail"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "framing": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FramingVerdict"
         },
         {
           "type": "null"

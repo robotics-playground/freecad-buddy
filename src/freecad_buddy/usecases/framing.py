@@ -17,6 +17,7 @@ host-injected ``ViewportPort`` and is only duck-typed (``getPointOnViewport``, `
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 from freecad_buddy.contracts import FramingVerdict, ViewportPort
 from freecad_buddy.usecases.documents import DocumentRegistry
@@ -31,6 +32,26 @@ _IMPLAUSIBLE_FACTOR = 4
 
 # ``(xmin, ymin, zmin, xmax, ymax, zmax)`` — raw floats, never a FreeCAD ``BoundBox``.
 Bounds = tuple[float, float, float, float, float, float]
+
+# The readable three of AD-32's four-tuple: ``(geometry, camera, viewport_size)``. A component
+# the process could not read cheaply is ``None`` here and named in the served verdict's reason.
+# The fourth, the active view, is not a value — see ``_CacheEntry.view``.
+_CacheKey = tuple[str | None, str | None, str | None]
+
+
+@dataclass(frozen=True)
+class _CacheEntry:
+    """One measured verdict, the key it was measured under, and the view it was measured in.
+
+    ``view`` is AD-32's fourth key component, held as the object rather than reduced to a value.
+    ``View3DInventor`` exposes no name getter, and an address-derived id is unsound: a dead
+    view's address is reused, so a *different* view would compare equal to the one measured. The
+    reference both keeps the identity honest and makes the comparison an ``is``.
+    """
+
+    key: _CacheKey
+    verdict: FramingVerdict
+    view: object
 
 
 def union_bbox(objects: list) -> Bounds | None:
@@ -131,7 +152,10 @@ def hull_ratio(
 
 
 def read_framing(
-    registry: DocumentRegistry, viewport_port: ViewportPort | None, doc: str | None = None
+    registry: DocumentRegistry,
+    viewport_port: ViewportPort | None,
+    doc: str | None = None,
+    geometry: str | None = None,
 ) -> FramingVerdict | None:
     """Measure whether ``doc``'s visible model fits its live viewport.
 
@@ -142,20 +166,133 @@ def read_framing(
 
     Every other failure returns ``fits: None`` with ``checked: "unavailable"`` and a named
     ``stale_reason``. ``fits`` is never a guess.
+
+    :param geometry: the caller's cheap geometry digest — the fingerprint a mutation already
+        computed. ``None`` on the pure-query path, where no digest is available cheaply, and a
+        cache hit is then reported ``checked: "cached"`` naming the geometry component as
+        unverified rather than claiming a freshness the bridge cannot prove. ``fingerprint()``
+        is never called here: it serializes every shape and would cost more than the projection
+        this cache exists to avoid.
     """
     if viewport_port is None:
         return None
 
-    def read(_handle: str, document: object) -> FramingVerdict | None:
+    def read(handle: str, document: object) -> FramingVerdict | None:
         available, _reason = viewport_port.available(document)
         if not available:
             return None
         view = viewport_port.view(document)
         if view is None:
             return None
-        return _verdict(document, view)
+        return _cached_verdict(handle, document, view, geometry)
 
     return registry.with_document(doc, read)
+
+
+def _cached_verdict(
+    handle: str, document: object, view: object, geometry: str | None
+) -> FramingVerdict:
+    """``_verdict``, served from the cache when nothing in the four-tuple key moved.
+
+    The projection is a GUI round trip per tool result, which the ≤15 s tool budget cannot
+    afford on every call. The key is AD-32's four-tuple — geometry digest, camera string,
+    viewport size, active view id — and a component the process cannot read cheaply is never
+    silently treated as unchanged: it is named in ``stale_reason`` on the served verdict.
+
+    A *geometry-only* trigger is the specific mistake this shape avoids. A window resize or a
+    splitter drag changes ``getSize()`` while the camera node is untouched, so a geometry-only
+    cache would keep serving ``fits: true`` for a viewport that now clips the model.
+    """
+    key, unread = _cache_key(view, geometry)
+    entry = _CACHE.get(handle)
+    if entry is not None and entry.view is view and entry.key == key:
+        return _as_cached(entry.verdict, unread)
+    verdict = _verdict(document, view)
+    _CACHE.put(handle, key, verdict, view)
+    return verdict
+
+
+def _cache_key(view: object, geometry: str | None) -> tuple[_CacheKey, list[str]]:
+    """``view``'s readable key components, plus the names of the ones that could not be read.
+
+    A component that raised, or that the caller had no cheap value for, enters the key as
+    ``None`` **and** is named in the returned list. Both halves matter: ``None`` keeps two
+    unreadable reads comparing equal so the cache still serves, and the name is what stops that
+    served verdict being reported as fresh.
+
+    The fourth component, the active view, is compared by identity against
+    ``_CacheEntry.view`` rather than reduced to a value here.
+
+    An unreadable ``getSize`` is not in the unread list because it cannot reach a served verdict:
+    the projection needs the size too, so a size the process cannot read makes the whole verdict
+    ``unavailable``, which ``_as_cached`` never re-stamps.
+    """
+    unread: list[str] = []
+    if geometry is None:
+        unread.append("geometry")
+    camera = _read_component(view, "getCamera")
+    if camera is None:
+        unread.append("camera")
+    return (geometry, camera, _read_component(view, "getSize")), unread
+
+
+def _read_component(view: object, method: str) -> str | None:
+    """One cache-key component read off the view, or ``None`` when it cannot be read cheaply.
+
+    Every component is a scalar GUI read that costs far less than the 8-corner projection. A
+    read that raises is not an error here — the caller names it unread and serves a cached
+    verdict, which is AD-32's escape clause. The value is reduced to its ``repr`` so the key
+    stays hashable whatever shape the view hands back.
+    """
+    try:
+        value = getattr(view, method)()
+    except Exception:  # noqa: BLE001 - an unreadable component is named, never fatal
+        return None
+    return repr(value)
+
+
+def _as_cached(verdict: FramingVerdict, unread: list[str]) -> FramingVerdict:
+    """``verdict`` re-stamped ``checked: "cached"``, naming any component that went unverified.
+
+    An ``unavailable`` verdict keeps its own ``checked`` and reason: it never measured anything,
+    so calling it "cached" would imply a stored measurement that does not exist.
+    """
+    if verdict.get("checked") == "unavailable":
+        return verdict
+    reason = (
+        f"served from cache; unverified key component(s): {', '.join(unread)}" if unread else None
+    )
+    return {**verdict, "checked": "cached", "stale_reason": reason}
+
+
+class _FramingCache:
+    """The last verdict per document handle, with the key and the view it was measured under.
+
+    One entry per handle, overwritten on every recompute — a verdict for a key that moved has no
+    further use, so nothing is evicted by age or size, and at most one view reference is held per
+    open document. The tool-call boundary processes one call at a time, so this needs no lock
+    (the shape ``adapters/mcp_server.py:_SuspectDocuments`` already ships).
+    """
+
+    def __init__(self) -> None:
+        self._entries: dict[str, _CacheEntry] = {}
+
+    def get(self, handle: str) -> _CacheEntry | None:
+        return self._entries.get(handle)
+
+    def put(self, handle: str, key: _CacheKey, verdict: FramingVerdict, view: object) -> None:
+        self._entries[handle] = _CacheEntry(key=key, verdict=verdict, view=view)
+
+    def clear(self) -> None:
+        self._entries.clear()
+
+
+_CACHE = _FramingCache()
+
+
+def reset_cache() -> None:
+    """Drop every cached verdict. The cache is process-global, so a test must start from empty."""
+    _CACHE.clear()
 
 
 def _verdict(document: object, view: object) -> FramingVerdict:
@@ -215,4 +352,4 @@ def _unavailable(reason: str) -> FramingVerdict:
     return {"fits": None, "ratio": None, "checked": "unavailable", "stale_reason": reason}
 
 
-__all__ = ["containment", "corners", "hull_ratio", "read_framing", "union_bbox"]
+__all__ = ["containment", "corners", "hull_ratio", "read_framing", "reset_cache", "union_bbox"]
