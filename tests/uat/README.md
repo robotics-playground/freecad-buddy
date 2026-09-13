@@ -75,6 +75,21 @@ Never merge the two into a single number.
 8. **The agent judges the visual, always.** Never accept an automated verdict or an MCP render as
    the visual evidence. The MCP render is produced by the code under test; a `cua-driver` capture of
    the window is independent. Where the two disagree, record which is wrong as a finding.
+9. **Run the watchdog between test cases.** A dead harness does not announce itself — a lapsed
+   `cua-driver` session answers a plain-text refusal and the next capture silently writes nothing,
+   so a run stalls rather than fails. One pass takes under a second:
+
+   ```bash
+   uv run python scripts/automation/uat_watchdog.py \
+       --pid <freecad-pid> --window <window-id> --since "<run start ISO>"
+   ```
+
+   It checks the `cua-driver` session (reviving a lapsed one in place and saying so), the FreeCAD
+   window, an `initialize` handshake against `:8765` — a LISTENING socket alone is not proof — and
+   reserved-prefix temp hygiene. Exit 1 names the first failure. `--since` makes a snapshot
+   directory created after that timestamp a stop-the-line condition: a surviving `FCB_TMP_snap_*`
+   means a mutation bracket did not close, which voids the snapshot assertions of every scenario
+   after it.
 
 ## Reporting
 

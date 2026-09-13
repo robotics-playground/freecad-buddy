@@ -147,7 +147,7 @@ mcp document_close { doc: <handle> }
 
 **When** a fillet whose radius cannot fit the edge is previewed  
 ```
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 500, unit: "mm" } } } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 500, unit: "mm" } } } }
 ```
 
 **Then** the envelope is a success — verify: `status` is `OK` and `detail` is `null`  

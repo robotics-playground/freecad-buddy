@@ -143,8 +143,8 @@ mcp query_tree_summary { doc: <handle>, depth: 3 }
 ```
 **And** a 2 mm fillet on one edge of the pad is previewed and applied  
 ```
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 2, unit: "mm" } } } }
-mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 2, unit: "mm" }, confirm: { preview_id: "<token>" } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 2, unit: "mm" } } } }
+mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 2, unit: "mm" }, confirm: { preview_id: "<token>" } }
 ```
 **And** the object list after is captured  
 
@@ -173,12 +173,12 @@ mcp document_close { doc: <handle> }
 
 **When** the pre-mutation digest is recorded by previewing any operation  
 ```
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 500, unit: "mm" } } } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 500, unit: "mm" } } } }
 ```
 Record `diff.fingerprint_before`.
 **And** the impossible fillet is applied — a 500 mm radius cannot fit a 20 mm edge, so OCCT fails the feature  
 ```
-mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 500, unit: "mm" }, confirm: { preview_id: "<token>" } }
+mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 500, unit: "mm" }, confirm: { preview_id: "<token>" } }
 ```
 
 **Then** the call did not raise — verify: a `ResultEnvelope` was returned, not an MCP `isError` response  
@@ -294,8 +294,8 @@ rm -rf "$TEMP"/FCB_TMP_snap_*
 
 **When** a mutation that will fail post_verify is run on that document  
 ```
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 500, unit: "mm" } } } }
-mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 500, unit: "mm" }, confirm: { preview_id: "<token>" } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 500, unit: "mm" } } } }
+mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 500, unit: "mm" }, confirm: { preview_id: "<token>" } }
 ```
 
 **Then** the unavailability is recorded in the explanation — verify: `mutation.post_verify.explanation` ends with `; undo unavailable on this document`  
@@ -322,9 +322,9 @@ mcp document_close { doc: <handle> }
 
 **When** for each failure path in turn — under-constrained sketch (TC-05-03), impossible fillet (TC-05-05), and an operation naming a missing base — the failing mutation is run, then a mutation that MUST succeed  
 ```
-mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "BadFillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 500, unit: "mm" }, confirm: { preview_id: "<token-a>" } }
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "GoodFillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 2, unit: "mm" } } } }
-mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "GoodFillet", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge1" }], radius: { value: 2, unit: "mm" }, confirm: { preview_id: "<token-b>" } }
+mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "BadFillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 500, unit: "mm" }, confirm: { preview_id: "<token-a>" } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "Pad", name: "GoodFillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 2, unit: "mm" } } } }
+mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "GoodFillet", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }], radius: { value: 2, unit: "mm" }, confirm: { preview_id: "<token-b>" } }
 ```
 
 **Then** the follow-up mutation succeeded after every failure path — verify: each `GoodFillet` call returns `status: "OK"`  
@@ -567,8 +567,8 @@ mcp document_close { doc: <handle> }
 
 **When** geometry that re-indexes the filleted edge is inserted — a chamfer is added on an adjacent edge of the same pad, so the edge numbering downstream of it shifts  
 ```
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_chamfer", args: { body: "Body", base: "Pad", name: "Chamfer", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge2" }], size: { value: 3, unit: "mm" } } } }
-mcp feature_chamfer { doc: <handle>, body: "Body", base: "Pad", name: "Chamfer", edges: [{ kind: "geometric", object: "Pad", subelement: "Edge2" }], size: { value: 3, unit: "mm" }, confirm: { preview_id: "<token>" } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_chamfer", args: { body: "Body", base: "Pad", name: "Chamfer", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge2" }], size: { value: 3, unit: "mm" } } } }
+mcp feature_chamfer { doc: <handle>, body: "Body", base: "Pad", name: "Chamfer", edges: [{ kind: "mapped_name", object: "Pad", mapped_name: "Edge2" }], size: { value: 3, unit: "mm" }, confirm: { preview_id: "<token>" } }
 ```
 
 **Then** the audit flagged the reference — verify: `mutation.post_verify.tnp_audit.status` equals `"FLAGGED"`  
@@ -638,7 +638,7 @@ as not-exercised.
 
 **When** the degraded form runs — an operation that is refused by its own use case before the bracket runs is previewed, so no `post_verify` block exists  
 ```
-mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "NoSuchFeature", name: "Fillet", edges: [{ kind: "geometric", object: "NoSuchFeature", subelement: "Edge1" }], radius: { value: 2, unit: "mm" } } } }
+mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: { body: "Body", base: "NoSuchFeature", name: "Fillet", edges: [{ kind: "mapped_name", object: "NoSuchFeature", mapped_name: "Edge1" }], radius: { value: 2, unit: "mm" } } } }
 ```
 **And** the build-gated form runs, if a no-element-map build exists — any successful mutation is run on it  
 
