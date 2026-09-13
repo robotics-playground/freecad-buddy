@@ -11,23 +11,23 @@ the suite is worse than no matrix.
 import re,sys,pathlib
 sys.path.insert(0,'src')
 from freecad_buddy.hosts.tool_catalog import tool_specs
-corpus=''.join(p.read_text(encoding='utf-8') for p in pathlib.Path('tests/uat').glob('TC-*.md'))
+corpus=''.join(p.read_text(encoding='utf-8') for p in pathlib.Path('tests/uat/testcases').glob('TC-*.md'))
 missing=[t.name for t in tool_specs() if t.name not in corpus]
 print('shipped:',len(tool_specs()),'missing:',missing or 'none')
 "
 ```
 
-Expected output: `shipped: 44 missing: none`.
+Expected output: `shipped: 45 missing: none`.
 
 ## 1. Suite totals
 
 | Metric | Value |
 | --- | --- |
-| Test-case files | 14 (TC-01..TC-13 green gate, TC-99 conformance gate) |
-| Scenarios | 243 |
+| Test-case files | 15 (TC-01..TC-14 green gate, TC-99 conformance gate) |
+| Scenarios | 259 |
 | Checkpoints | 1637 |
-| Shipped tools covered | 44 / 44 |
-| Green-gate scenarios | 235 |
+| Shipped tools covered | 45 / 45 |
+| Green-gate scenarios | 251 |
 | Conformance-gate scenarios (expected-fail) | 8 |
 
 ## 2. Scenario allocation by file
@@ -51,11 +51,12 @@ are executed: **GUI** = `cua-driver` against the live FreeCAD window, **MCP** = 
 | TC-11 | Security posture & artifact hygiene | green | High | MCP+GUI | 16 | 109 |
 | TC-12 | GUI workflows (maximal) | green | High | **GUI** | 15 | 98 |
 | TC-13 | GUI ↔ MCP parity | green | Critical | **GUI+MCP** | 18 | 123 |
+| TC-14 | Viewport framing & auto-fit | green | Critical | **GUI+MCP+H1** | 16 | 88 |
 | TC-99 | AD conformance gaps | conformance | — | MCP×2 | 8 | 47 |
 
 ## 3. Tool → TC coverage
 
-Every one of the 44 shipped tools has an owning file. `Also in` lists files that exercise the tool
+Every one of the 45 shipped tools has an owning file. `Also in` lists files that exercise the tool
 as a supporting step.
 
 ### `document_` (7)

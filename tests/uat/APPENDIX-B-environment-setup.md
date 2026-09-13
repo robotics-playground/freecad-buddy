@@ -33,7 +33,7 @@ edits in the repo take effect after a FreeCAD restart with no rebuild.
 
 - [ ] Symlink exists and points at the repo (verify:
       `Get-Item "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy" | Select-Object LinkType, Target`
-      — `Target` must be `D:\Work\Personal\Sources\freecad-buddy\src\freecad_buddy`)
+      — `Target` must be `$PROJECT_ROOT\src\freecad_buddy`, this checkout's source directory)
 - [ ] Addon metadata present (verify:
       `Test-Path "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\package.xml"`)
 
@@ -117,7 +117,7 @@ the listener you are testing is not the one the addon owns — kill it and relau
 
 ## Step 6 — Confirm the tool surface
 
-- [ ] `tools/list` returns **exactly 44** names (verify: call `tools/list` through the connected
+- [ ] `tools/list` returns **exactly 45** names (verify: call `tools/list` through the connected
       MCP client and count)
 - [ ] `export_self_read_stl` and `export_self_read_3mf` are **ABSENT**. They are internal RPC-only
       and are filtered out of `tools/list`.
@@ -126,7 +126,7 @@ the listener you are testing is not the one the addon owns — kill it and relau
       `debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)`.
 
 Expected counts by family: `document_` 7, `query_` 8, `verify_` 6, `export_` 3, `sketch_` 8,
-`feature_` 11, `preview_dry_run` 1. Total 44.
+`feature_` 11, `preview_dry_run` 1, `view_fit_viewport` 1. Total 45.
 
 **A short count is stop-the-line.** Do not begin testing against a partial surface — the failures
 it produces are setup artifacts, not findings.
