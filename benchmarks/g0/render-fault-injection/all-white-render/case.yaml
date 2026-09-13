@@ -1,0 +1,8 @@
+id: g0-render-all-white-render
+gate: g0
+targets_validator: verify_render_tone
+expectation: DETECT
+render_file: render.png
+fault:
+  kind: planted_defect
+  description: "face rendered at the background tone, leaving only its anti-aliased outline - the shipped defect"

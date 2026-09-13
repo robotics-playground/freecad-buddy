@@ -1,0 +1,8 @@
+id: g0-render-near-white-face
+gate: g0
+targets_validator: verify_render_tone
+expectation: DETECT
+render_file: render.png
+fault:
+  kind: planted_defect
+  description: "face at rgb(246,248,250), above the band ceiling and indistinguishable from the background"

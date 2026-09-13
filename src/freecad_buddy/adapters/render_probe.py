@@ -26,6 +26,29 @@ _ACCENT_COLOR = (1.0, 0.55, 0.0)
 _FRAME_GROW = 1.2
 _MIN_FRAME_EXTENT = 1e-3
 
+# Headlight aim, as an offset from the camera's default -Z look axis, and the ambient fill.
+# Both are measured against a 10x20x30 box rendered at 240x240 from every named camera plus
+# `custom`, sampling the non-background pixels inside the middle 80% of each axis:
+#
+#   * The offscreen renderer honors exactly ONE SoDirectionalLight. A second light — any
+#     direction, intensity, or child order — puts every axis-aligned camera back at pure white.
+#     That is why this is one offset light rather than an on-axis key plus an angled fill.
+#   * Offset magnitude has a cliff, not a falloff: (0.25, 0.18) still renders `front` white at
+#     ~1,276 edge-only samples, while (0.30, 0.20) lights the face at ~13,000 samples. The value
+#     below sits well past that cliff so a renderer or driver that shifts the threshold slightly
+#     does not silently reopen the white end.
+#   * Ambient and the offset trade against each other and cannot both be satisfied. An
+#     axis-aligned view is lit almost entirely by ambient plus a grazing diffuse term, while `iso`
+#     also gets a head-on diffuse term. Raising ambient to bring `iso` up to the live viewport's
+#     rgb(158,165,169) raises the axis-aligned views nearly one-for-one, and at 0.95 they overshoot
+#     the 235 ceiling (`right` measured 241.6 on blue). Light intensity does not separate them —
+#     it is already 1.0. So ambient is set for the ceiling, not for `iso`: at these values every
+#     camera holds >=24/255 of headroom below 235 and clears the background by >=57/255, while
+#     `iso` reads rgb(131,135,138) — darker than the viewport, which is the cost of keeping the
+#     axis-aligned views inside the band.
+_HEADLIGHT_OFFSET = (0.55, 0.38, -1.0)
+_AMBIENT_INTENSITY = 0.70
+
 # FreeCAD stores the 3D-view anti-aliasing choice as the ``AntiAliasing`` enum value under this
 # preference group/key (Gui/Multisample.h). The enum is NOT sequential — MSAA6x=5 and MSAA8x=4 —
 # so map each stored value to its true multisample count, matching the live viewport instead of a
@@ -79,23 +102,26 @@ def render_capability_flag() -> str:
 
 
 def _add_lighting(coin, root, orientation) -> None:
-    """Add a camera-aligned headlight plus ambient fill so no face renders black.
+    """Add an off-axis headlight plus ambient fill so every camera renders a separable face tone.
 
-    FreeCAD's live viewport lights the scene with a headlight that follows the camera (it lights
-    whatever the camera sees). A single fixed ``SoDirectionalLight`` leaves every face angled away
-    from its world-space direction near-black — the divergence a viewport comparison exposes. This
-    aims the light along the camera's view direction (the orientation quaternion applied to the
-    camera's default -Z look axis) and adds a modest ambient term via ``SoEnvironment`` so grazing
-    faces keep some tone, matching the viewport's softer shading.
+    FreeCAD's live viewport lights the scene with a headlight that follows the camera, and that
+    headlight is not exactly camera-parallel — which is why the viewport shades an axis-aligned
+    view correctly. The invariant here is two-sided: a face must render neither black nor white,
+    but at a tone the eye and an assertion can both separate from the background. A headlight aimed
+    exactly along the view axis fails the white end on an axis-aligned camera: the visible face's
+    normal is anti-parallel to the light, the diffuse term degenerates, and the ambient term alone
+    saturates the near-white default material to pure white, leaving a PNG with no shape
+    information beyond its outline.
+
+    The headlight is therefore offset off the pure view axis by ``_HEADLIGHT_OFFSET`` before the
+    orientation is applied, so an anti-parallel face still receives a diffuse term.
     """
-    view_dir = coin.SbRotation(*orientation).multVec(coin.SbVec3f(0.0, 0.0, -1.0))
+    offset = coin.SbVec3f(*_HEADLIGHT_OFFSET)
+    offset.normalize()
     headlight = coin.SoDirectionalLight()
-    headlight.direction.setValue(view_dir)
+    headlight.direction.setValue(coin.SbRotation(*orientation).multVec(offset))
     environment = coin.SoEnvironment()
-    # 0.7 matches FreeCAD's live viewport tone: measured against a PrintWindow capture, a lit face
-    # reads RGB ~(158,165,169), which this ambient reproduces (~159,164,169). A lower value renders
-    # the model visibly darker than the viewport while keeping the headlight's angular gradient.
-    environment.ambientIntensity.setValue(0.7)
+    environment.ambientIntensity.setValue(_AMBIENT_INTENSITY)
     root.addChild(environment)
     root.addChild(headlight)
 

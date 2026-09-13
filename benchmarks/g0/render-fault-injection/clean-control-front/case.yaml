@@ -1,0 +1,7 @@
+id: g0-render-clean-control-front
+gate: g0
+targets_validator: verify_render_tone
+expectation: PASS_CLEAN
+render_file: render.png
+camera: front
+description: "golden 10x20x30 box rendered from the front camera by the shipped renderer"

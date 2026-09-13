@@ -28,7 +28,7 @@ from freecad_buddy.contracts import (
     massprops_equal,
     mirror_text,
 )
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
 _MAX_DIM = 1920
@@ -169,7 +169,7 @@ def _render_with_lifecycle(render_port, document, scene, before, dirty):
     A port reporting an empty scene wrote no image by design, so the placeholder temp file is
     removed and ``None`` is returned in place of a path.
     """
-    fd, out_path = tempfile.mkstemp(prefix="FCB_TMP_shot_", suffix=".png")
+    fd, out_path = tempfile.mkstemp(prefix="FCB_TMP_shot_", suffix=".png", dir=temp_dir())
     os.close(fd)
     try:
         result = render_port.render(document, scene, out_path)

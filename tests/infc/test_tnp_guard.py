@@ -9,7 +9,6 @@ directions, and the end-to-end rollback a ``DROPPED`` finding must produce.
 import glob
 import os
 import shutil
-import tempfile
 import unittest
 
 import FreeCAD as App
@@ -17,7 +16,7 @@ import Part
 import Sketcher
 
 from freecad_buddy.usecases import shim, tnp_guard, transaction
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.documents import DocumentRegistry, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
 SQUARE = 20.0
@@ -25,7 +24,9 @@ PAD_LENGTH = 10.0
 FILLET_RADIUS = 1.0
 FILLET_EDGES = ["Edge1", "Edge2", "Edge3", "Edge4"]
 
-_SNAPSHOT_GLOB = os.path.join(tempfile.gettempdir(), "FCB_TMP_snap_*")
+# Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
+# directory here would now match nothing and this leak check would pass without measuring.
+_SNAPSHOT_GLOB = os.path.join(temp_dir(), "FCB_TMP_snap_*")
 
 
 def _snapshot_leftovers():

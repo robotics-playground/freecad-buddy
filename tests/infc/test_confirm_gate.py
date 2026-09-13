@@ -23,14 +23,16 @@ import Sketcher
 
 from freecad_buddy.hosts.tool_catalog import preview_op_table
 from freecad_buddy.usecases import confirm, features, preview, sketches, transaction
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
 SQUARE = 10.0
 PAD_LENGTH = 5.0
 PAD_VOLUME = SQUARE * SQUARE * PAD_LENGTH
 
-_SNAPSHOT_GLOB = os.path.join(tempfile.gettempdir(), "FCB_TMP_snap_*")
+# Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
+# directory here would now match nothing and this leak check would pass without measuring.
+_SNAPSHOT_GLOB = os.path.join(temp_dir(), "FCB_TMP_snap_*")
 
 PAD_ARGS = {
     "body": "Body",

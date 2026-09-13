@@ -26,7 +26,7 @@ from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
 from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
 from freecad_buddy.usecases import shim
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.documents import DocumentRegistry, sweep_temp_dir
 from freecad_buddy.usecases.exports import ExportRegistry
 
 logger = logging.getLogger("freecad_buddy.hosts.gui_addon.bootstrap")
@@ -86,6 +86,9 @@ def start_bridge() -> RpcListener:
         return _listener
 
     _configure_file_logging()
+    # Session start is the only safe moment to clear temp artifacts: a render link the previous
+    # session returned may still have been being read when that call completed (AD-25).
+    logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
     caps = Capabilities.from_env(dict(os.environ))
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)

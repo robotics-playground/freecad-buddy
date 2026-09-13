@@ -26,7 +26,7 @@ from freecad_buddy.contracts import (
     massprops_equal,
 )
 from freecad_buddy.usecases import confirm, shim
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 from freecad_buddy.usecases.queries import shape_metrics
 
@@ -314,8 +314,11 @@ def _tempdoc_path() -> str:
 
     The prefix is carried by the filename as well as the directory: the reopened document takes
     its ``Name`` from the file stem, so this is what makes the TempDoc identifiable as one.
+
+    The directory is minted inside the session workdir (AD-25) so a cleanup that fails leaves
+    something the next session's sweep can still reach.
     """
-    directory = tempfile.mkdtemp(prefix=_TEMPDOC_PREFIX)
+    directory = tempfile.mkdtemp(prefix=_TEMPDOC_PREFIX, dir=temp_dir())
     return os.path.join(directory, f"{_TEMPDOC_PREFIX}{secrets.token_hex(8)}.FCStd")
 
 

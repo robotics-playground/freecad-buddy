@@ -303,7 +303,7 @@ def render_offscreen(doc, out_path: str, width: int = 1920, height: int = 1920,
                      orientation: str = "iso") -> RenderResult:
     # FreeCADGui.setupWithoutGUI() already done by probe
     root = coin.SoSeparator()
-    root.addChild(camera); root.addChild(coin.SoDirectionalLight())
+    root.addChild(camera); add_lighting(root, orientation)   # see "Lighting rig" below
     for obj in visible_objects(doc):                        # leaf shapes only — never a Body/datum
         root.addChild(FreeCADGui.subgraphFromObject(obj))   # transient view provider
     camera.viewAll(root, coin.SbViewportRegion(width, height))
@@ -311,6 +311,22 @@ def render_offscreen(doc, out_path: str, width: int = 1920, height: int = 1920,
     off.setNumPasses(configured_msaa_samples())              # anti-aliasing from FreeCAD's own pref
     off.render(root); off.writeToImage(out_path)             # QImage saver → PNG
 ```
+
+**Lighting rig (AD-34 — every camera must render a visible face).** The invariant is two-sided: a face must render neither black nor white, but at a tone separable from the background. The rig is **one** `SoDirectionalLight` aimed **off** the pure view axis, plus a `SoEnvironment` ambient term:
+
+```python
+offset = coin.SbVec3f(0.55, 0.38, -1.0); offset.normalize()   # NOT (0, 0, -1)
+light = coin.SoDirectionalLight()
+light.direction.setValue(coin.SbRotation(*orientation).multVec(offset))
+env = coin.SoEnvironment(); env.ambientIntensity.setValue(0.70)
+root.addChild(env); root.addChild(light)
+```
+
+- **Why off-axis:** aimed exactly along the view axis, an axis-aligned camera's visible face has a normal anti-parallel to the light, the diffuse term degenerates, and ambient alone saturates the near-white default material to pure white — a PNG carrying no shape information beyond its outline. FreeCAD's own viewport headlight is not exactly camera-parallel, which is why the live viewport shades these views correctly.
+- **Exactly one light.** Measured under `SoQtOffscreenRenderer` (FreeCAD 1.1.1): a second `SoDirectionalLight` — any direction, intensity, or child order — returns every axis-aligned camera to pure white. An on-axis key plus an angled fill is therefore **not** a usable variant of this rig.
+- **The offset has a cliff, not a falloff:** `(0.25, 0.18)` still renders `front` white; `(0.30, 0.20)` lights it. The shipped value sits well past that threshold.
+- **Ambient is set by the band ceiling, not by viewport match.** Ambient lifts every camera nearly equally, so it cannot raise `iso` toward the viewport's `rgb(158,165,169)` without pushing the axis-aligned views past the acceptance band's 235 ceiling. At the shipped values `iso` reads `rgb(131,135,138)` — darker than the viewport, the accepted cost of keeping every other camera inside the band.
+- **Acceptance is two-sided** (`tests/infc/test_screenshot.py::CameraToneTest`), across all named cameras plus `custom`: mean interior tone differs from the background by **≥ 24/255 on at least one channel** *and* lies within **`[20, 235]` on every channel**, over **≥ 500 interior samples** (non-background pixels inside the middle 80 % of each axis). A one-sided "not black" test passes the white-face defect; a one-sided "not white" test re-admits the black-face defect.
 
 **Anti-aliasing (config-driven, not hard-coded):** the offscreen render uses the same multisample count the user configured for the live 3D viewport, read from FreeCAD's own preference — group `User parameter:BaseApp/Preferences/View`, key `AntiAliasing` — and applied via `SoQtOffscreenRenderer.setNumPasses` (which sets the FBO and GL-context sample count, `Gui/SoFCOffscreenRenderer.cpp`). The stored value is the `Gui::AntiAliasing` **enum value, which is NOT sequential** — from `Gui/Multisample.h`: `None=0, MSAA1x=1, MSAA2x=2, MSAA4x=3, MSAA6x=5, MSAA8x=4` — so it maps to samples `{0:0, 1:1, 2:2, 3:4, 4:8, 5:6}`, never by array index. A build without `setNumPasses`, or an enum value of 0/1, falls back to a single sample. This mapping was confirmed against the FreeCAD source under `docs/references/FreeCAD`, not assumed — see the source-verify standard.
 

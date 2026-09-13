@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import tempfile
 from typing import Callable
@@ -33,8 +34,10 @@ from freecad_buddy.contracts import (
     fingerprints_equal,
 )
 from freecad_buddy.usecases import shim, tnp_guard, verify
-from freecad_buddy.usecases.documents import ValidationError
+from freecad_buddy.usecases.documents import ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
+
+logger = logging.getLogger("freecad_buddy.usecases.transaction")
 
 _SNAPSHOT_PREFIX = "FCB_TMP_snap_"
 
@@ -90,8 +93,11 @@ def temp_snapshot_path(doc: object) -> str:
     The path names a file that does not yet exist, inside a freshly created private temp
     directory. Pre-creating the file would make ``saveCopy`` treat it as an existing document and
     write a sibling ``.FCBak`` backup, which nothing would then clean up.
+
+    The private directory is minted inside the session workdir (AD-25) so a cleanup that fails
+    leaves something the next session's sweep can still reach.
     """
-    directory = tempfile.mkdtemp(prefix=_SNAPSHOT_PREFIX)
+    directory = tempfile.mkdtemp(prefix=_SNAPSHOT_PREFIX, dir=temp_dir())
     return os.path.join(directory, f"{doc.Name}.FCStd")
 
 
@@ -101,20 +107,25 @@ def _delete_snapshot(path: str) -> None:
     Only a directory this module minted is emptied: the whole-directory removal exists to catch the
     sibling files ``saveCopy`` writes, so a path outside a reserved-prefix directory is left alone
     rather than having its contents deleted.
+
+    A removal failure is logged and not raised: the mutation it belongs to has already completed,
+    and failing it on a cleanup error would undo a committed result. The artifact stays inside the
+    session workdir, so the next session's sweep reaches what this call could not remove — an
+    orphan nothing reports and nothing collects is what let empty snapshot directories accumulate.
     """
     directory = os.path.dirname(path)
     if not os.path.basename(directory).startswith(_SNAPSHOT_PREFIX):
         try:
             os.remove(path)
         except OSError:
-            pass
+            logger.warning("could not remove snapshot file %s", path, exc_info=True)
         return
     try:
         for name in os.listdir(directory):
             os.remove(os.path.join(directory, name))
         os.rmdir(directory)
     except OSError:
-        pass
+        logger.warning("could not remove snapshot directory %s", directory, exc_info=True)
 
 
 def _passed(envelope: dict) -> bool:

@@ -1,0 +1,8 @@
+id: g0-render-all-black-face
+gate: g0
+targets_validator: verify_render_tone
+expectation: DETECT
+render_file: render.png
+fault:
+  kind: planted_defect
+  description: "face at rgb(6,6,8), below the band floor - the defect the ambient term originally fixed"

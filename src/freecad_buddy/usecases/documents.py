@@ -1,23 +1,96 @@
-"""Document lifecycle operations and the opaque-handle registry.
+"""Document lifecycle operations, the opaque-handle registry, and the session workdir.
 
 Mints an opaque ``fcb-doc:<token>`` handle per document and targets every operation by that
 handle. A call that omits a required handle, or names a stale or unknown handle, raises
 ``ValidationError``. A single process-wide lock serializes mutating operations.
+
+This module also owns the session workdir (AD-25): every file the bridge writes on its own
+initiative lives under it, so the session-start sweep can reach them.
 """
 
 from __future__ import annotations
 
+import logging
+import os
 import secrets
 import threading
+from pathlib import Path
 from typing import Callable, TypeVar
 
 from freecad_buddy.contracts import ResultEnvelope, massprops_equal, summary_text
 
 T = TypeVar("T")
 
+logger = logging.getLogger("freecad_buddy.usecases.documents")
+
 
 class ValidationError(Exception):
     """Caller-facing input validation failure for a document operation."""
+
+
+# -- session workdir (AD-25) ------------------------------------------------------------
+
+_WORKDIR_ENV = "FREECAD_BUDDY_WORKDIR"
+_DEFAULT_WORKDIR = "freecad-buddy-workdir"
+
+
+def workdir_root() -> Path:
+    """The session workdir root, from ``FREECAD_BUDDY_WORKDIR`` or a cwd-relative default.
+
+    Follows the ``FREECAD_BUDDY_AUDIT_LOG`` precedent: an operator overrides the location by
+    environment variable, and the default is cwd-relative so no absolute path is baked in.
+    """
+    return Path(os.environ.get(_WORKDIR_ENV, _DEFAULT_WORKDIR))
+
+
+def temp_dir() -> str:
+    """The session temp directory (``<workdir>/tmp``), created on demand.
+
+    Every temp file the bridge creates is passed this as ``dir=``, which is what puts it inside
+    the tree :func:`sweep_temp_dir` owns. A creation failure is the caller's to report — a temp
+    file that cannot be placed inside the workdir must not silently fall back to the OS temp
+    directory, because nothing would then sweep it.
+    """
+    path = workdir_root() / "tmp"
+    path.mkdir(parents=True, exist_ok=True)
+    return str(path)
+
+
+def sweep_temp_dir() -> int:
+    """Remove the previous session's temp files from ``<workdir>/tmp``; return the count removed.
+
+    Runs once at session start, never as an immediate unlink: a render link may still be being
+    read when the call that returned it completes. The scope is exactly ``<workdir>/tmp`` — the OS
+    temp directory is another session's territory and is never scanned.
+
+    Only regular files and the bridge's own snapshot directories are removed; the walk is one
+    level deep, so no path outside the workdir can be reached. An in-memory FreeCAD document
+    carrying a reserved ``FCB_TMP_`` name can never appear here, because this reads a real
+    directory and a document is not a directory entry.
+
+    Every failure is logged and skipped rather than raised: one locked file must not keep the rest
+    of the previous session's leftovers alive, and an unreadable workdir must not stop a host from
+    starting — the leftovers simply stay for the next start to retry.
+    """
+    root = workdir_root() / "tmp"
+    removed = 0
+    try:
+        entries = list(root.iterdir()) if root.is_dir() else []
+    except OSError:
+        logger.warning("session sweep could not read %s", root, exc_info=True)
+        return 0
+    for entry in entries:
+        try:
+            if entry.is_dir():
+                for child in entry.iterdir():
+                    child.unlink()
+                entry.rmdir()
+            else:
+                entry.unlink()
+            removed += 1
+        except OSError:
+            logger.warning("session sweep could not remove %s", entry, exc_info=True)
+    return removed
 
 
 def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope:

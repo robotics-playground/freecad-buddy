@@ -1,0 +1,8 @@
+id: g0-render-low-contrast-face
+gate: g0
+targets_validator: verify_render_tone
+expectation: DETECT
+render_file: render.png
+fault:
+  kind: planted_defect
+  description: "face at rgb(243,244,245), separable in principle but under the 24/255 background difference"

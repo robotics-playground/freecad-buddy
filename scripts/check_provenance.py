@@ -8,7 +8,8 @@ Recursively walks ``benchmarks/**`` for artifact files (``*.FCStd``), excluding 
   - the manifest ``source.kind`` must be in the closed set.
 
 Additionally flags:
-  - a fault case dir with a ``case.yaml`` but no ``fixture.FCStd``;
+  - a fault case dir with a ``case.yaml`` but no fixture — ``fixture.FCStd``, or the artifact
+    file the case declares itself (``export_file``, ``render_file``);
   - duplicate ``artifact`` ids across manifests (a duplicate must not silently overwrite);
   - an orphan manifest whose ``artifact`` id has no matching ``.FCStd`` on disk;
   - a manifest whose ``source.kind`` is a non-``hand-authored`` closed-set kind but is missing
@@ -87,14 +88,24 @@ def _iter_artifacts(benchmarks_root: Path):
         yield fcstd
 
 
-def _declared_export_file(case_yaml: Path) -> str | None:
-    """Return the ``export_file`` a case declares, or ``None`` for a geometry-fixture case."""
+_ARTIFACT_FILE_KEYS = ("export_file", "render_file")
+
+
+def _declared_artifact_file(case_yaml: Path) -> str | None:
+    """Return the artifact file a case declares, or ``None`` for a geometry-fixture case.
+
+    An export-fault case declares ``export_file`` (the written ``.stl``/``.3mf``/``.step``) and a
+    render-fault case declares ``render_file`` (the rendered ``.png``). In both the declared file
+    IS the fixture — there is no ``.FCStd`` to carry.
+    """
     try:
         data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError):
         return None
-    if isinstance(data, dict):
-        value = data.get("export_file")
+    if not isinstance(data, dict):
+        return None
+    for key in _ARTIFACT_FILE_KEYS:
+        value = data.get(key)
         if isinstance(value, str) and value:
             return value
     return None
@@ -157,10 +168,11 @@ def _is_text_case(case_yaml: Path) -> bool:
 def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
     """A case dir with a case.yaml must carry its declared fixture.
 
-    A geometry-fixture case must carry ``fixture.FCStd``; an export-fault case that declares an
-    ``export_file`` must carry that exported file instead (a written ``.stl``/``.3mf``/``.step``
-    is the fixture, there is no ``.FCStd``). A text case (one carrying a ``candidate_answer`` the
-    grader judges) has no geometry and is exempt.
+    A geometry-fixture case must carry ``fixture.FCStd``; a case that declares its own artifact
+    file (an export-fault case's ``export_file``, a render-fault case's ``render_file``) must
+    carry that file instead — the written ``.stl``/``.3mf``/``.step``/``.png`` is the fixture and
+    there is no ``.FCStd``. A text case (one carrying a ``candidate_answer`` the grader judges)
+    has no geometry and is exempt.
     """
     violations: list[str] = []
     for case_yaml in sorted(benchmarks_root.rglob("case.yaml")):
@@ -174,10 +186,10 @@ def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
         ):
             continue
         rel = case_yaml.parent.relative_to(benchmarks_root).as_posix()
-        export_file = _declared_export_file(case_yaml)
-        if export_file is not None:
-            if not (case_yaml.parent / export_file).is_file():
-                violations.append(f"{rel} -- case.yaml present but {export_file} missing")
+        artifact_file = _declared_artifact_file(case_yaml)
+        if artifact_file is not None:
+            if not (case_yaml.parent / artifact_file).is_file():
+                violations.append(f"{rel} -- case.yaml present but {artifact_file} missing")
         elif not (case_yaml.parent / "fixture.FCStd").is_file():
             violations.append(f"{rel} -- case.yaml present but fixture.FCStd missing")
     return violations

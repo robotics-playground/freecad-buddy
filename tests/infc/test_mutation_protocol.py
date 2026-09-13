@@ -9,7 +9,6 @@ captured before the op ran), never captured from a verify tool.
 
 import glob
 import os
-import tempfile
 import unittest
 
 import FreeCAD as App
@@ -17,7 +16,7 @@ import Part
 
 from freecad_buddy.contracts import fingerprints_equal
 from freecad_buddy.usecases import shim, tnp_guard, transaction, verify
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
 BOX_L = 10.0
@@ -26,7 +25,9 @@ BOX_H = 30.0
 CYL_R = 5.0
 CYL_H = 20.0
 
-_SNAPSHOT_GLOB = os.path.join(tempfile.gettempdir(), "FCB_TMP_snap_*")
+# Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
+# directory here would now match nothing and this leak check would pass without measuring.
+_SNAPSHOT_GLOB = os.path.join(temp_dir(), "FCB_TMP_snap_*")
 
 
 def _snapshot_leftovers():

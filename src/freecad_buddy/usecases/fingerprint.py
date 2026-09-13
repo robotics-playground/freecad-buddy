@@ -19,6 +19,7 @@ import tempfile
 
 from freecad_buddy.contracts import FingerprintRecord, MassProps
 from freecad_buddy.usecases import shim
+from freecad_buddy.usecases.documents import temp_dir
 
 Q = 1e-6
 
@@ -70,7 +71,7 @@ def _serialize(shape: object) -> bytes:
     stream. Raises ``SerializerUnavailable`` when neither path exists.
     """
     if shim.export_binary_available():
-        fd, path = tempfile.mkstemp(prefix="FCB_TMP_fp_", suffix=".bin")
+        fd, path = tempfile.mkstemp(prefix="FCB_TMP_fp_", suffix=".bin", dir=temp_dir())
         os.close(fd)
         try:
             shape.exportBinary(path)

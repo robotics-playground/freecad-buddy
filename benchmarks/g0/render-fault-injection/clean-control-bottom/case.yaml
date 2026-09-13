@@ -1,0 +1,7 @@
+id: g0-render-clean-control-bottom
+gate: g0
+targets_validator: verify_render_tone
+expectation: PASS_CLEAN
+render_file: render.png
+camera: bottom
+description: "golden 10x20x30 box rendered from the bottom camera by the shipped renderer"

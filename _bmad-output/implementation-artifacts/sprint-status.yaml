@@ -149,11 +149,11 @@ development_status:
   8-4-framing-warning-on-tool-results: done
   8-5-enforcement-framing-test-ci-alias-gap: done
   epic-8-retrospective: optional
-  epic-9: backlog
+  epic-9: done
   9-1-shared-projection-self-verifying-fit: done
   9-2-wrong-document-guard-that-fires: done
-  9-3-render-lighting-every-camera: backlog
-  9-4-temp-files-inside-session-workdir: backlog
+  9-3-render-lighting-every-camera: done
+  9-4-temp-files-inside-session-workdir: done
   epic-9-retrospective: optional
 
 action_items:

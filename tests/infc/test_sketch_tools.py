@@ -12,15 +12,16 @@ that pin it — never captured from ``verify_sketch`` or any tool under test.
 import glob
 import math
 import os
-import tempfile
 import unittest
 
 import FreeCAD as App
 
 from freecad_buddy.usecases import confirm, sketches, transaction
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 
-_SNAPSHOT_GLOB = os.path.join(tempfile.gettempdir(), "FCB_TMP_snap_*")
+# Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
+# directory here would now match nothing and this leak check would pass without measuring.
+_SNAPSHOT_GLOB = os.path.join(temp_dir(), "FCB_TMP_snap_*")
 
 
 def _snapshot_leftovers():

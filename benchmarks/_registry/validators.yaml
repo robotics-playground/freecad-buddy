@@ -110,7 +110,7 @@ audit_references:
 
 fingerprint:
   suite: g2/fault-injection/
-  validator_sha: "f3eab29e826a6508044c14e644d19f34ee25840e832bd55591ba80a2e263fba7"
+  validator_sha: "6f07ff0d709d14a047996f16683622ef949cd2228d6efefc9dec75d989e9834f"
   last_run:
     run_id: g2-2026-08-04-1
     sensitivity: 0.0
@@ -126,7 +126,7 @@ fingerprint:
 
 run_mutation:
   suite: g2/fault-injection/
-  validator_sha: "88f7a670069e8428b84ffdd08184c50fedc9c91029a2c4657e5388b3c5e18d36"
+  validator_sha: "fb85f4194fb7119b1f68dc4b7403abf8a8df77954ff8cbb12696873b57bd2dc3"
   last_run:
     run_id: g2-2026-08-04-1
     sensitivity: 0.0
@@ -156,3 +156,18 @@ verify_sketch:
       high: 1.0
       n: 0
       r: 0
+
+verify_render_tone:
+  suite: g0/render-fault-injection/
+  validator_sha: "98828bab6f514bcbf1ece4b0d8b313dfe6ce4c8d464c7adbfee979b1d84b259a"
+  last_run:
+    run_id: rt-2026-09-13-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-09-13
+    wilson_ci:
+      rate: 1.0
+      low: 0.6097
+      high: 1.0
+      n: 6
+      r: 6

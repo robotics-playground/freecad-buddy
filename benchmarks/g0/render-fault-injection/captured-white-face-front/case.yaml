@@ -1,0 +1,9 @@
+id: g0-render-captured-white-face-front
+gate: g0
+targets_validator: verify_render_tone
+expectation: DETECT
+render_file: render.png
+camera: front
+fault:
+  kind: planted_defect
+  description: "the real defect, captured from the renderer with the pre-fix on-axis headlight: the front face renders at rgb(255,255,255) and only its anti-aliased outline is non-background"

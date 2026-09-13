@@ -28,7 +28,7 @@ from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
 from freecad_buddy.usecases import shim
-from freecad_buddy.usecases.documents import DocumentRegistry
+from freecad_buddy.usecases.documents import DocumentRegistry, sweep_temp_dir
 from freecad_buddy.usecases.exports import ExportRegistry
 
 logger = logging.getLogger("freecad_buddy.hosts.headless")
@@ -80,6 +80,9 @@ def run(argv: list[str] | None = None) -> int:  # noqa: ARG001 - reserved for fu
         sys.stderr.write(f"{exc}\n")
         return 2
 
+    # Session start is the only safe moment to clear temp artifacts: a render link the previous
+    # session returned may still have been being read when that call completed (AD-25).
+    logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
     caps = Capabilities.from_env(dict(os.environ))
     doc_registry = DocumentRegistry()
     marshal = Marshal(InlineExecutor())

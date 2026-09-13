@@ -22,6 +22,7 @@ from freecad_buddy.contracts.render import SceneSpec, StyleSpec
 from freecad_buddy.usecases import screenshot
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
+from freecad_buddy.usecases.render_tone import verify_render_tone
 
 BOX_L = 10.0
 BOX_W = 20.0
@@ -641,6 +642,128 @@ class StyleReachesThePixelsTest(unittest.TestCase):
         self.assertEqual(
             plain, transparent, f"a transparency-only style repainted the object: {transparent}"
         )
+
+
+_TONE_VIEWPORT = 240
+
+# A quaternion no preset uses, so `custom` exercises the orientation path rather than a preset.
+_CUSTOM_QUAT = (0.2, 0.3, 0.1, 0.9273618)
+
+# `iso`'s tone under the shipped rig. The live viewport reads rgb(158,165,169) and `iso` matched it
+# while the headlight was on-axis, but that rig rendered every axis-aligned camera pure white.
+# Offsetting the headlight and lowering ambient to keep those cameras under the band's 235 ceiling
+# necessarily darkens `iso` too: it is lit by the same ambient term. This pins the tone so a later
+# lighting change cannot drift it unnoticed in either direction.
+_ISO_TONE = (131.3, 134.5, 137.8)
+_ISO_TOLERANCE = 6
+
+# The band's black end, asserted directly by the deliberately one-sided regression guard below.
+_BLACK_END = 20
+
+
+class CameraToneTest(unittest.TestCase):
+    """Every named camera plus ``custom`` must render a face separable from the background.
+
+    A headlight aimed exactly along the view axis leaves an axis-aligned camera's visible face
+    anti-parallel to the light, degenerating the diffuse term until ambient alone saturates the
+    face to pure white. The band below is two-sided on purpose: asserting only "not black" passes
+    that white-face defect, and asserting only "not white" would re-admit the black-face defect
+    that the ambient term was originally added to fix.
+    """
+
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.port = OffscreenRenderPort()
+        handle = self.registry.document_create("screenshot_tone")["structured_content"]["doc"]
+        _, self.document = self.registry.with_document(handle, lambda h, d: (h, d))
+        box = self.document.addObject("Part::Box", "Box")
+        box.Length, box.Width, box.Height = BOX_L, BOX_W, BOX_H
+        self.document.recompute()
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _render_verdict(self, orientation):
+        """Render the golden box at ``orientation`` and return the shared oracle's verdict.
+
+        The sweep grades through ``verify_render_tone`` rather than re-deriving the rule here, so
+        this test and the ``g0/render-fault-injection`` suite that measures the oracle's
+        sensitivity cannot drift apart.
+        """
+        scene = SceneSpec(
+            objects=["Box"],
+            orientation=orientation,
+            width=_TONE_VIEWPORT,
+            height=_TONE_VIEWPORT,
+        )
+        handle, path = tempfile.mkstemp(suffix=".png")
+        os.close(handle)
+        try:
+            self.port.render(self.document, scene, path)
+            return verify_render_tone(path)
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+
+    def _camera_orientations(self):
+        """Every named camera preset plus an explicit ``custom`` quaternion."""
+        cameras = dict(screenshot._CAMERA_QUATS)
+        cameras["custom"] = _CUSTOM_QUAT
+        return cameras
+
+    def test_every_camera_renders_a_face_inside_the_tone_band(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        for name, orientation in sorted(self._camera_orientations().items()):
+            with self.subTest(camera=name):
+                verdict = self._render_verdict(orientation)
+                self.assertTrue(
+                    verdict["passed"],
+                    f"{name} failed the tone band: {'; '.join(verdict['reasons'])} "
+                    f"(tone {verdict['tone']}, background {verdict['background']}, "
+                    f"{verdict['samples']} samples, {verdict['coverage']:.1%} coverage)",
+                )
+
+    def test_front_camera_is_no_longer_a_white_rectangle(self):
+        """The reproducer: `front` rendered rgb(255,255,255), identical to the background."""
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        verdict = self._render_verdict(screenshot._CAMERA_QUATS["front"])
+        tone = verdict["tone"]
+        self.assertNotEqual(tuple(round(value) for value in tone), (255, 255, 255))
+        self.assertTrue(verdict["passed"], f"front tone {tone}: {verdict['reasons']}")
+
+    def test_iso_tone_is_pinned(self):
+        """`iso` holds its measured tone -- a lighting change must not drift it unnoticed."""
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        tone = self._render_verdict(screenshot._CAMERA_QUATS["iso"])["tone"]
+        for channel, (value, expected) in enumerate(zip(tone, _ISO_TONE)):
+            self.assertAlmostEqual(
+                value,
+                expected,
+                delta=_ISO_TOLERANCE,
+                msg=f"iso channel {channel} is {value:.1f}, expected ~{expected} "
+                f"(measured tone {_ISO_TONE}, got {tone})",
+            )
+
+    def test_no_face_renders_black(self):
+        """A "not black" assertion must still pass -- closing the white end opened no black end.
+
+        This is deliberately the one-sided test that let the defect ship. It is kept as a
+        regression guard: on its own it proves nothing, but a failure here would mean the fix
+        traded one saturated end for the other.
+        """
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        for name, orientation in sorted(self._camera_orientations().items()):
+            with self.subTest(camera=name):
+                tone = self._render_verdict(orientation)["tone"]
+                self.assertTrue(
+                    all(value >= _BLACK_END for value in tone),
+                    f"{name} rendered near-black: {tone}",
+                )
 
 
 if __name__ == "__main__":
