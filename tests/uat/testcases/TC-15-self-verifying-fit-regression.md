@@ -199,3 +199,90 @@ only.
 mcp document_close { doc: "<box_10_20_30 handle>", save: false }
 mcp document_close { doc: "<tc14bar handle>", save: false }
 ```
+
+---
+
+### TC-15-06: Every named camera renders a face the human can see
+
+**Priority**: Critical
+**Design Ref**: AD-34; epics.md §Story 9.3; source `adapters/render_probe.py:_add_lighting`,
+`usecases/render_tone.py`
+
+This is R2-03's reproduction. The shipped rig aimed one `SoDirectionalLight` **along** the view
+axis, so an axis-aligned face normal was exactly anti-parallel, the diffuse term degenerated, and
+ambient alone saturated the near-white material to pure white. `front`, `top`, `right` and `back`
+all rendered `rgb(255,255,255)` — identical to the background, so the PNG carried no shape
+information beyond its outline. Orientation was correct throughout, which is why TC-06-02 passes
+against the defect: it asserts orientation and never tone.
+
+**Given** a document holding a 40 mm cube built through the tool surface — verify: the pad's
+`feature_state.shape_summary.bbox` is `[40, 40, 40]` and `is_valid` is `true`  
+
+**When** the cube is rendered from `front`, the camera R2-03 measured at `rgb(255,255,255)`  
+```
+mcp query_screenshot { doc: "<handle>", view: { camera: "front", width: 800, height: 600 } }
+```
+
+**Then** the call returns `OK` with a real image — verify: `render.available` is `true` and
+`render.empty_scene` is `false`  
+**And** the rendered PNG passes the two-sided tone band — verify: run the shipped oracle on the
+returned path, `verify_render_tone(<path>)`, and read `passed`; it must be `true` with empty
+`reasons`. The oracle is the same one the in-FreeCAD sweep and the fault suite use, so a pass here
+cannot drift from them  
+**And** the face differs from the background by at least 24/255 on some channel — verify: read
+`difference` from that verdict; R2-03 measured 0 for this camera  
+**And** the mean tone sits within `[20, 235]` on every channel — verify: read `tone`; a one-sided
+"not black" check would pass the defect, so both ends are asserted  
+**And** `iso` also passes the band — verify: render `iso` and run the oracle; `passed` is `true`.
+Its absolute tone is **not** asserted: the rig trades ambient against the headlight offset, and the
+`iso` tone deviation is recorded in the story 9.3 spec's `deferred` list  
+**And** *(visual)* the `front` PNG shows a shaded face clearly separable from the background, not an
+outline around empty space — verify: `Read` the returned PNG and judge the pixels  
+
+**Cleanup**:
+```
+mcp document_close { doc: "<handle>", save: false }
+```
+
+---
+
+### TC-15-07: Temp files land where the sweep can see them, and the sweep stays in its lane
+
+**Priority**: High
+**Design Ref**: AD-25; epics.md §Story 9.4; source `usecases/documents.py` (workdir + sweep),
+`usecases/screenshot.py`, `usecases/fingerprint.py`
+
+This is R2-04's reproduction. Both `mkstemp` sites passed no `dir=`, so every render and
+fingerprint temporary landed in the OS temp directory — outside the tree AD-25 scopes the sweep to.
+R2-04 counted 392 orphaned `FCB_TMP_shot_*` files across already-exited sessions.
+
+The scope half matters as much as the location half: a sweep that "fixed" the leak by deleting from
+the OS temp directory would break the guarantee that a caller may still be reading a returned link,
+and on a shared host would delete another session's files.
+
+**Given** the count of `FCB_TMP_*` entries in the OS temp directory is recorded as `before` —
+verify: `(Get-ChildItem $env:TEMP -Filter 'FCB_TMP_*' | Measure-Object).Count`  
+**And** a document holding a renderable solid is open  
+
+**When** two renders are taken through the bridge  
+
+**Then** each returned path is **inside** the session workdir — verify: read `render.resource_link`
+from each envelope; both are under `<workdir>/tmp`, and neither is under the OS temp directory  
+**And** the OS temp count is unchanged — verify: re-count `FCB_TMP_*` in `$env:TEMP`; it equals
+`before`. Under the shipped code each render added one  
+**And** the workdir's own `tmp/` holds the two renders — verify: count entries under
+`<workdir>/tmp`  
+**And** those files survive the session exit — verify: close FreeCAD, then re-count
+`<workdir>/tmp`; the files are still present, because a caller may still be reading a returned link
+and the sweep is a session-start action, never an immediate unlink  
+**And** the next session start sweeps them — verify: relaunch FreeCAD via `cua-driver launch_app`,
+wait for the proxy on `:8765`, then re-count `<workdir>/tmp`; it is `0`  
+**And** the sweep did not reach outside the workdir — verify: re-count `FCB_TMP_*` in `$env:TEMP`;
+it still equals `before`. Pre-existing strays there are a one-time operator cleanup and the bridge
+must not delete them  
+
+**Cleanup**:
+```
+mcp document_close { doc: "<handle>", save: false }
+```
+Do not delete anything from the OS temp directory: those files are the control for this scenario.
