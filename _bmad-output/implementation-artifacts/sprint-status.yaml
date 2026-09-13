@@ -60,8 +60,20 @@
 #   ActiveDocument ban in CI today. Story 8.1 must NOT extend adapters/render_probe.py — that
 #   would force a second AD-1 Qt exemption; the framing port belongs in hosts/gui_addon/.
 
+# - A6 (UAT correction 2026-09-13): Epic 9 (Viewport & Render Correctness) added from UAT run
+#   2026-09-13-02 + the same-day spine amendment (AD-25/29/30/31/32 amended, AD-34 new). It CORRECTS
+#   SHIPPED behaviour in Epic 8 and story 1-9, so it opens no gate and Epic 8 stays 'done' rather
+#   than being reopened (AD-19 keeps a passed gate closed). Ordering: 9-1 -> 9-2 (both edit
+#   usecases/view_fit.py, keep the diffs separable); 9-3 and 9-4 touch disjoint files and are
+#   parallel-eligible with either. NO gate-exit story: acceptance is re-running the four
+#   reproducers in tests/uat/run/2026-09-13-02/bugs.md against each story's regression fixture.
+#   Story 9-1 carries DR-3 as well as DR-1 -- the framing carve-out is NOT independently shippable,
+#   because a SPEC_FAILED without its ratio is less informative than the defect it replaces.
+#   Story 9-3 must also update design/integration-mcp-freecad.md:306 (the shipped _add_lighting rig
+#   silently diverged from it). R2-05 from the same run was closed INVALID -- no story.
+
 generated: 2026-07-21
-last_updated: 2026-07-31
+last_updated: 2026-09-13
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -137,6 +149,12 @@ development_status:
   8-4-framing-warning-on-tool-results: done
   8-5-enforcement-framing-test-ci-alias-gap: done
   epic-8-retrospective: optional
+  epic-9: backlog
+  9-1-shared-projection-self-verifying-fit: backlog
+  9-2-wrong-document-guard-that-fires: backlog
+  9-3-render-lighting-every-camera: backlog
+  9-4-temp-files-inside-session-workdir: backlog
+  epic-9-retrospective: optional
 
 action_items:
   - epic: 1

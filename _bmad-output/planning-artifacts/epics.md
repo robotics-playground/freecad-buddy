@@ -1,7 +1,9 @@
 ---
 stepsCompleted: [1, 2, 3]
+lastRun: '2026-09-13 — Epic 9 (Viewport & Render Correctness), steps 1-3'
 amendments:
   - "2026-09-12: Epic 8 (Viewport Framing & Auto-Fit) + FR24-FR26 added from architecture-spine AD-29..AD-33. Additive and parallel-eligible after Epic 1; reopens no closed gate."
+  - "2026-09-13: Epic 9 (Viewport & Render Correctness) + DR-1..DR-5 added from UAT run 2026-09-13-02 and the same-day spine amendment (AD-25/29/30/31/32 amended, AD-34 new). These correct SHIPPED behaviour in Epic 8 and story 1-9; Epic 8 stays closed rather than reopening a done epic (AD-19 gate discipline). R2-05 closed invalid - no story."
 inputDocuments:
   - _bmad-output/specs/spec-freecad-buddy/SPEC.md
   - _bmad-output/specs/spec-freecad-buddy/phase-gates.md
@@ -86,6 +88,26 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR25** — An agent can call `view_fit_viewport` to fit the targeted document's model into the live viewport on its own judgement — no preview token — and every call is audit-logged with the prior camera so the move is traceable and reversible. The human owns the camera: the bridge never fits spontaneously. *(AD-31, AD-33)*
 - **FR26** — When the model does not fully fit, a tool result carries a structured `framing` verdict whose warning sentence guides the agent to run the fit tool. The verdict is computed on change rather than per call, is rendered from the structured block by one shared helper rather than appended per tool, and never claims a freshness the bridge cannot prove. *(AD-32)*
 
+#### Viewport & render correctness — CAP-8 (defect requirements, Epic 9)
+
+Derived from UAT run `2026-09-13-02` (`tests/uat/run/2026-09-13-02/bugs.md`) and the 2026-09-13 spine
+amendment. These correct **shipped** behaviour: FR24–FR26 (Epic 8) and FR3 (story 1-9) are implemented
+and their stories are `done`, so each DR names the defect rather than a new capability. Every DR was
+reproduced live against FreeCAD 1.1.1 before it was written.
+
+- **DR-1** — `view_fit_viewport` frames the model using the **same 8-corner projection that produces the framing verdict**, not a second analytic estimate, and it may not report `fitted: true` when its own post-fit projection returns `fits: false`. The fit is three passes inside one animation-suspended block (measure → `fitAll(factor)` on AD-32's binding axis → re-project to verify); a fit that cannot suspend animation cannot verify itself and fails honestly. *(AD-30, AD-31; defect R2-01 — a 40 mm cube measured `ratio 1.0978` with `fitted: true`, bottom vertex clipped, two consecutive fits never converging)*
+- **DR-2** — The wrong-document guard actually fires: `view_fit_viewport` refuses a handle that does not name the document the live viewport is showing, comparing against `ViewportPort.showing_document_name()` rather than a view resolved from the target's own name. `FreeCADGui.ActiveDocument` stays banned in every ring. *(AD-29, AD-31; defect R2-02 — with `r2other` on screen a fit targeting `r2repro` returned `fitted: true` and rescaled the on-screen document's view from `8.68 × 4.14 mm` to `79.39 × 59.55 mm`)*
+- **DR-3** — The fit's post-fit `SPEC_FAILED` **carries its `framing` block** — the single carve-out in AD-32's omission rule — so the failure names the measured ratio it is about. Without it the new failure envelope is strictly less informative than the defect it replaces. *(AD-31, AD-32; not independently shippable — lands with DR-1)*
+- **DR-4** — Every named camera renders a face tone separable from the background, verified by a **two-sided** band: mean interior tone differs from background by ≥ 24/255 on at least one channel and lies within `[20, 235]` on every channel, over ≥ 500 interior samples. *(AD-34; defect R2-03 — `iso` fills `rgb(159,164,169)`, while `front`/`top`/`right`/`back` render the face at `rgb(255,255,255)`, identical to the background)*
+- **DR-5** — Every temp file the bridge writes is created **inside** the session workdir, so the AD-25 sweep can see it; the reserved `FCB_TMP_` prefix marks files only and never the in-memory probe documents that share it. *(AD-25; defect R2-04 — 392 leaked `FCB_TMP_shot_*` files across exited sessions, plus 10 empty `FCB_TMP_snap_*` directories from a swallowed `rmdir` failure)*
+
+**Closed as invalid — no story:** R2-05 (`export_*` "creates missing parent directories") is not a
+defect. `usecases/exports.py:151` calls `shape.exportStep(path)` and no `makedirs` exists anywhere in
+the module; the reported directory pre-existed the run. Retested at one missing level on two drives —
+both returned `RECOMPUTE_ERROR` and created nothing. The residual nit (a missing parent should be
+`INVALID_INPUT` per AD-17, not `RECOMPUTE_ERROR` with `unexpected: true` and a raw traceback) is
+deferred-work, not a fix story.
+
 ### NonFunctional Requirements
 
 | ID | Requirement | Source |
@@ -162,8 +184,14 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | FR16 | Epic 6 | 12-skill library + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.7–6.9) |
 | FR21–FR23 | Epic 7 | URDF/SDF export with paired verify; off-the-shelf part sourcing/import *(Phase 5)* |
 | FR24–FR26 | Epic 8 | Viewport framing read, agent-invoked fit tool, change-driven framing warning |
+| DR-1, DR-3 | Epic 9 (story 9.1) | Shared 8-corner projection; `fitted: true` requires the post-fit verdict to agree; that failure carries its `framing` block |
+| DR-2 | Epic 9 (story 9.2) | `showing_document_name()` makes the wrong-document refusal actually fire |
+| DR-4 | Epic 9 (story 9.3) | Two-sided tone band so every named camera renders a face separable from the background |
+| DR-5 | Epic 9 (story 9.4) | Temp files created inside the session workdir so the AD-25 sweep can see them |
 
 All 26 FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks. FR21–FR23 are post-MVP (Phase 5) and additive; the MVP (Phases 0–4) is unaffected. FR24–FR26 are additive and parallel-eligible after Epic 1 — they add a new tool and an optional envelope field, and weaken no existing AD.
+
+All 5 DRs mapped; none orphaned. R2-05 from the same UAT run is deliberately absent — closed invalid, no story. The DRs correct **shipped** behaviour (Epic 8 and story 1-9 are `done`), so they open no gate and reopen no closed epic.
 
 ---
 
@@ -217,7 +245,13 @@ An agent working in a live FreeCAD session can tell when its work has grown beyo
 
 **FRs covered:** FR24, FR25, FR26
 
-**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates.
+### Epic 9: Viewport & Render Correctness
+
+When the bridge says the human can see the model, the human can actually see it — and when it cannot, the agent is handed a measured number it can act on rather than a success it must not trust. A render from any camera angle shows the part instead of a white rectangle, and the bridge stops leaving files behind.
+
+**DRs covered:** DR-1, DR-2, DR-3, DR-4, DR-5
+
+**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates. **9 corrects shipped Epic 8 + story 1-9 behaviour**: it opens no gate, and Epic 8 stays `done` rather than being reopened (AD-19 keeps a passed gate closed). Within Epic 9, 9.1 → 9.2 are ordered because both edit `usecases/view_fit.py`; 9.3 and 9.4 touch disjoint files and are parallel-eligible with either.
 
 ---
 
@@ -1033,3 +1067,157 @@ An agent working in a live FreeCAD session can tell when its work has grown beyo
 5. **Given** the AD-32 deferred thresholds
    **When** implementation begins
    **Then** the `fitAll(factor)` margin and the near-miss tolerance are calibrated against real parts and recorded — a hair-trigger warning on every call is noise
+
+---
+
+## Epic 9: Viewport & Render Correctness
+
+When the bridge says the human can see the model, the human can actually see it — and when it cannot, the agent is handed a measured number it can act on rather than a success it must not trust. A render from any camera angle shows the part instead of a white rectangle, and the bridge stops leaving files behind.
+
+**Why now:** UAT run `2026-09-13-02` reproduced four defects against the shipped bridge (FreeCAD 1.1.1, GUI addon + H2 proxy). Three of them are *the spine already being right and the code not matching it* — AD-30 fixes an exact projection test that `usecases/view_fit.py` re-approximates analytically, AD-31 requires a wrong-document refusal that the shipped guard can never reach, and `design/integration-mcp-freecad.md:306` specifies a render rig the shipped `_add_lighting` silently diverged from. The fourth is a hygiene contract AD-25 states and the render path never joined.
+
+**Sequencing:** corrects shipped Epic 8 + story 1-9 behaviour. **Opens no gate and reopens no epic** — Epic 8 stays `done`, because AD-19 keeps a passed gate closed and these corrections carry forward rather than backward. 9.1 → 9.2 are ordered (both edit `usecases/view_fit.py`); 9.3 and 9.4 touch disjoint files and are parallel-eligible with either.
+
+**Acceptance for the epic:** the four reproducers in `tests/uat/run/2026-09-13-02/bugs.md` re-run clean, each against the regression fixture its story adds. There is no gate-exit story — this is correction work, not a phase boundary.
+
+**Reviewer note:** the 2026-09-13 spine amendment behind this epic passed a reviewer gate that caught a contradiction *introduced by the amendment itself* (AD-31 required a `SPEC_FAILED` to name a ratio AD-32 forbade the envelope to carry) and two paragraphs describing already-shipped work as pending. Read AD-25, AD-29, AD-30, AD-31, AD-32 and AD-34 in full — the carve-outs are load-bearing and the summaries drop them.
+
+### Story 9.1: One Projection for Fit and Verdict, and a Fit That Verifies Itself
+
+> **As** an agent, **I want** the fit to frame the model with the same measurement it later grades itself by, **so that** `fitted: true` means the human can actually see the part rather than that the call ran (AD-30, AD-31, AD-32; DR-1, DR-3).
+
+**Acceptance Criteria:**
+
+1. **Given** the corner projection
+   **When** the fit computes its factor and the framing read computes its verdict
+   **Then** both call **one shared routine**, and no analytic silhouette estimate remains. The shipped `usecases/view_fit.py:168 _fill_factor` takes the largest *face* diagonal over the space diagonal, which understates the true projected extent by up to 1.155× — the divergence AD-30's Prevents clause names, realised inside one file pair
+
+2. **Given** a 40 mm cube, a 20×20×30 box, a 40×40×80 bar, a 40×25×15 plate and a 40×40×800 bar
+   **When** each is fitted once
+   **Then** every one lands inside the band and none clips. These span the aspect range the old tuning missed: the estimate's error runs 1.155 (cube) down to 0.856 (long bar), so **a cube and a 20×20×30 box must both be fixtures** — the two cases the shipped tuning never sampled
+
+3. **Given** the fit has moved the camera
+   **When** the envelope is built
+   **Then** `fitted: true` requires the post-fit projection to return `fits: true`; a contradiction returns **`SPEC_FAILED`**. Shipped today is `{"fitted": true}` beside `framing: {"fits": false, "ratio": 1.0978}` — a tool reporting success over a window that contradicts it
+
+4. **Given** that `SPEC_FAILED`
+   **When** the caller reads it
+   **Then** it **carries its `framing` block** — the single carve-out in AD-32's omission rule, because `ratio` lives nowhere else in the contract and `hosts/tool_catalog.py:1337` short-circuits non-`OK` before attaching it. Without this the new failure is strictly less informative than the defect it replaces. The ratio is **not** hand-written into the prose reason, which would put the sentence in a tool summary
+
+5. **Given** the projection needs a camera and the camera needs the factor
+   **When** the fit runs
+   **Then** it is **three passes inside one animation-suspended block** — measure the pre-fit extent, `fitAll(factor)` scaling it to `_FILL_FRACTION` on **AD-32's binding axis**, then re-project through the written camera to verify
+
+6. **Given** `setAnimationEnabled(False)` fails
+   **When** the fit proceeds
+   **Then** it returns `SPEC_FAILED` rather than an unverifiable `fitted: true`. Animation suspension is a **precondition**, not best-effort: with animation on, both camera writes land after the call returns and pass 3 silently re-reads the pre-fit camera — the same defect, restored
+
+7. **Given** the factor is derived
+   **When** the binding axis is chosen
+   **Then** it is AD-32's (`max` of the two `extent / viewport_extent` quotients), not `fitAll`'s sphere radius. The two differ on any non-cubic part, and only the former satisfies AD-31's post-fit check
+
+8. **Given** the comment at `usecases/view_fit.py:182-186`
+   **When** the estimate is removed
+   **Then** the comment goes with it. It argues the widest thing on screen is a face diagonal "looking down a cube corner" — the error is **worst** for a cube, so a reader left with it will re-derive the bug
+
+9. **Given** the same model fitted twice
+   **When** the second call returns
+   **Then** the verdict is stable and within the band. Two consecutive fits on a 40 mm cube both returned `ratio 1.0978` today — non-convergent, because a geometry-derived factor cannot improve by repetition
+
+### Story 9.2: A Wrong-Document Guard That Can Actually Fire
+
+> **As** a human with two documents open, **I want** a fit aimed at the document I am not looking at to be refused, **so that** an agent cannot rewrite the camera of the document on my screen (AD-29, AD-31; DR-2).
+
+**Acceptance Criteria:**
+
+1. **Given** `ViewportPort`
+   **When** inspected
+   **Then** it carries **`showing_document_name() -> str | None`** beside `available()` and `view()`, implemented in `hosts/gui_addon/` off the focused Qt MDI sub-window
+
+2. **Given** the guard compares names
+   **When** it decides
+   **Then** it compares the target against `showing_document_name()`, **not** against the view it resolved from the target's own name. `GuiViewportPort.view()` resolves through `getDocument(<target Name>).ActiveView`, so the shipped comparison at `usecases/view_fit.py:234-250` tests a name against itself and returns early every time
+
+3. **Given** document A is open and document B is active on screen
+   **When** a fit targets A
+   **Then** it is refused naming **both** documents, and **no camera moves**. Reproduced today: with `r2other` on screen, a fit targeting `r2repro` returned `fitted: true` and rescaled the on-screen view from `8.68 × 4.14 mm` to `79.39 × 59.55 mm`
+
+4. **Given** `showing_document_name()` cannot read the on-screen name
+   **When** it returns `None`
+   **Then** the fit **proceeds** — an unreadable name is no evidence of a mismatch. It carries no reason string, deliberately unlike its sibling `available()`, because both causes are treated identically and a reason would invite a caller to branch on a distinction with no consequence
+
+5. **Given** `scripts/check_imports.py`
+   **When** CI runs
+   **Then** `FreeCADGui.ActiveDocument` remains banned **in every ring including `hosts/`** — `_check_active_document` is invoked at `:227` and `:306` with no layer filter. The ban is not relaxed to make this fix easier; R2-02 is the implicit-target bug the ban exists to prevent, so weakening the enforcer would invert the control
+
+6. **Given** the `ViewportPort` class docstring
+   **When** the third method lands
+   **Then** its "Both answers are per document" sentence is corrected — the new method is session-wide and takes no document, so leaving that sentence makes the contract contradict itself exactly where an implementer reads it
+
+7. **Given** a targeted document whose view exists but is not the focused one
+   **When** framing is reported
+   **Then** the verdict still describes the **targeted** document's own view. `showing_document_name()` governs the fit refusal only, never the framing verdict's target
+
+### Story 9.3: Every Camera Renders a Visible Part
+
+> **As** an agent checking my work from a named view, **I want** a render whose faces I can actually see, **so that** I can tell a successful render from an empty scene (AD-34; DR-4).
+
+**Acceptance Criteria:**
+
+1. **Given** each of the named cameras plus `custom`
+   **When** the golden box is rendered
+   **Then** every one produces a shaded interior. Today `iso` fills `rgb(159,164,169)` while `front`, `top`, `right` and `back` render the face at `rgb(255,255,255)` — identical to the background, so the PNG carries no shape information beyond its outline
+
+2. **Given** the lighting rig
+   **When** reviewed
+   **Then** the headlight is offset off the pure view axis (or a second fill light is added), so a face whose normal is anti-parallel to the camera still receives a diffuse term. `adapters/render_probe.py:91-98` aims a single `SoDirectionalLight` **along** the view direction, leaving only `ambientIntensity` 0.7, which saturates the near-white default material to pure white
+
+3. **Given** the acceptance test
+   **When** it runs
+   **Then** it is **two-sided**: mean interior tone differs from background by **≥ 24/255 on at least one channel** *and* lies within **`[20, 235]` on every channel**. One-sidedness is how this shipped — `_add_lighting`'s docstring states its purpose as "so no face renders black", it closed the black end and opened the white end, and a test asserting only "not black" passes the current defect
+
+4. **Given** the interior is sampled
+   **When** the assertion runs
+   **Then** it excludes the outer 10 % of the span on each axis and requires **≥ 500 interior samples**. The `front` defect yielded only ~138 samples, all anti-aliased edge pixels, so a sample-count floor is part of the assertion rather than a harness detail
+
+5. **Given** the `iso` tone the tuning comment records
+   **When** the fix lands
+   **Then** `iso` still reads near `rgb(158,165,169)` — the fix must not brighten the case that already matches the live viewport
+
+6. **Given** the render is a validator under AD-13
+   **When** the fault suite runs
+   **Then** a planted all-white render is caught by the suite, not only by a human spot-check
+
+7. **Given** `design/integration-mcp-freecad.md:306`
+   **When** the rig changes
+   **Then** that line is updated with it. It still specifies a bare `coin.SoDirectionalLight()` with no aiming and no ambient — the shipped divergence was never recorded, which is why it was never reviewed
+
+### Story 9.4: Temp Files the Sweep Can See
+
+> **As** an operator, **I want** every file the bridge writes to land where its own cleanup can find it, **so that** a long-running install does not accumulate orphans (AD-25; DR-5).
+
+**Acceptance Criteria:**
+
+1. **Given** a render or fingerprint temp file
+   **When** it is created
+   **Then** it is created **inside the session workdir** (`tempfile.mkstemp(..., dir=<workdir>/tmp)`). `usecases/screenshot.py:172` passes no `dir=`, so outputs land in the OS temp directory — outside the tree AD-25 scopes the sweep to, which is why 392 `FCB_TMP_shot_*` files accumulated across already-exited sessions
+
+2. **Given** the session-start sweep
+   **When** it runs
+   **Then** its scope stays **exactly the session workdir**. It must not scan the OS temp directory: on a shared or multi-user host that is another session's territory, and deleting from it would break the "a caller may still be reading the link" guarantee
+
+3. **Given** N renders followed by closing every document
+   **When** the temp directory is counted
+   **Then** the session's own artifacts are gone at next session start. Pre-existing strays outside the workdir are a one-time operator cleanup, not a bridge responsibility
+
+4. **Given** the reserved `FCB_TMP_` prefix
+   **When** the sweep walks it
+   **Then** it treats the prefix as marking **files only**. `FCB_TMP_prev_`, `FCB_TMP_varset_probe`, `FCB_TMP_partdesign_probe` and `FCB_TMP_type_probe` name **in-memory FreeCAD documents**, are released with `closeDocument`, and must never be handed to `unlink`
+
+5. **Given** a snapshot directory whose `rmdir` fails
+   **When** the failure is swallowed
+   **Then** the directory is still removable at next session start rather than orphaned silently. `usecases/transaction.py:111-116` removes the files then catches `OSError` and passes, which is why 10 empty `FCB_TMP_snap_*` directories survive today despite the deletion contract
+
+6. **Given** the swallowed-error path
+   **When** it is exercised
+   **Then** the failure is surfaced (logged) rather than discarded, so the next occurrence is diagnosable. *(The survivors correlate with the snapshot-restore path, where `transaction.py:290 FreeCAD.openDocument` holds the file open; a forced undo-path rollback leaked nothing. Cause is indicated but **unverified** — do not encode it as fact without reproducing it.)*
