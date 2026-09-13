@@ -62,13 +62,6 @@ class _FakeDocument:
         self.Objects = [_FakeObject("Pad", bounds)]
 
 
-class _FakeGuiDocument:
-    """The ``View3DInventor.Document`` hop: a Gui document wrapping its App document."""
-
-    def __init__(self, document):
-        self.Document = document
-
-
 class _FakeView:
     """A live 3D view whose camera string and ``fitAll`` outcome are scripted per test.
 
@@ -81,12 +74,10 @@ class _FakeView:
     tripping over an unmeasurable view.
     """
 
-    def __init__(self, document=None, camera=CAMERA, raises=None):
+    def __init__(self, camera=CAMERA, raises=None):
         self._camera = camera
         self._raises = raises
         self.fit_calls = 0
-        if document is not None:
-            self.Document = _FakeGuiDocument(document)
 
     def getCamera(self):  # noqa: N802 - FreeCAD API name
         if self._raises == "getCamera":
@@ -110,16 +101,27 @@ class _FakeView:
 
 
 class _FakeViewportPort:
-    def __init__(self, view, available=True, reason=None):
+    """One view plus the session-wide on-screen name the wrong-document guard reads.
+
+    ``showing`` defaults to ``None`` — "the on-screen name could not be read" — so every row that
+    is not about the guard proceeds without naming a document, which is the shipped behaviour for
+    a host that cannot read it.
+    """
+
+    def __init__(self, view, available=True, reason=None, showing=None):
         self._view = view
         self._available = available
         self._reason = reason
+        self._showing = showing
 
     def available(self, document):  # noqa: ARG002 - the fake answers the same for any document
         return (self._available, self._reason)
 
     def view(self, document):  # noqa: ARG002 - the fake holds one view
         return self._view
+
+    def showing_document_name(self):
+        return self._showing
 
 
 class _FakeRegistry:
@@ -168,7 +170,7 @@ def _no_host_sink():
 def test_should_fit_the_view_and_audit_the_prior_camera_when_the_document_has_a_live_view():
     # Arrange
     document = _FakeDocument("Part")
-    view = _FakeView(document)
+    view = _FakeView()
     sink = _RecordingSink()
 
     # Act
@@ -190,7 +192,7 @@ def test_should_write_through_the_host_installed_sink_when_the_caller_passes_non
     view_fit.set_audit_sink(sink)
 
     # Act
-    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(_FakeView(document)), HANDLE)
+    view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(_FakeView()), HANDLE)
 
     # Assert
     assert sink.records[0]["camera_before"] == CAMERA
@@ -203,7 +205,7 @@ def test_should_not_abort_the_fit_when_the_audit_sink_cannot_write():
             raise OSError("no space left on device")
 
     document = _FakeDocument("Part")
-    view = _FakeView(document)
+    view = _FakeView()
 
     # Act
     envelope = view_fit_viewport(
@@ -233,7 +235,7 @@ def test_should_keep_the_camera_out_of_params_digest_when_the_real_sink_writes_t
     # Act
     view_fit_viewport(
         _FakeRegistry(document),
-        _FakeViewportPort(_FakeView(document)),
+        _FakeViewportPort(_FakeView()),
         HANDLE,
         AuditSink(path, actor="test"),
     )
@@ -249,14 +251,22 @@ def test_should_keep_the_camera_out_of_params_digest_when_the_real_sink_writes_t
 
 
 def test_should_refuse_naming_both_documents_when_the_viewport_shows_another_document():
+    """R2-02's reproduction: DocB is on screen and the fit targets DocA.
+
+    The port's on-screen name is session-wide, so it disagrees with the target even though the
+    view was resolved from the target's own handle. The shipped guard compared the target against
+    a view resolved from that same target, which is a name against itself, and let this through
+    with ``fitted: true`` after rewriting DocB's camera.
+    """
     # Arrange
     target = _FakeDocument("DocA")
-    view = _FakeView(_FakeDocument("DocB"))
+    view = _FakeView()
     sink = _RecordingSink()
+    port = _FakeViewportPort(view, showing="DocB")
 
     # Act
     def act():
-        return view_fit_viewport(_FakeRegistry(target), _FakeViewportPort(view), HANDLE, sink)
+        return view_fit_viewport(_FakeRegistry(target), port, HANDLE, sink)
 
     # Assert
     with pytest.raises(ValidationError) as caught:
@@ -268,23 +278,39 @@ def test_should_refuse_naming_both_documents_when_the_viewport_shows_another_doc
     assert sink.records == []
 
 
-def test_should_fit_when_the_view_reports_no_document_of_its_own():
-    """An unreadable view document is not evidence of a mismatch, so it must not refuse.
-
-    The port already resolved the view through ``getDocument(<Name>)``, so the view belongs to the
-    targeted document; refusing on a missing attribute would make the tool unusable against any
-    build whose view does not expose one.
-    """
+def test_should_fit_when_the_viewport_is_showing_the_targeted_document():
     # Arrange
-    document = _FakeDocument("Part")
-    view = _FakeView(document=None)
+    document = _FakeDocument("DocA")
+    view = _FakeView()
+    port = _FakeViewportPort(view, showing="DocA")
 
     # Act
-    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), HANDLE)
+    envelope = view_fit_viewport(_FakeRegistry(document), port, HANDLE)
 
     # Assert
     assert envelope["status"] == "OK"
     assert view.fit_calls == 2, "one known-state fit, then one correction pass"
+
+
+def test_should_fit_when_the_on_screen_document_name_cannot_be_read():
+    """An unreadable on-screen name is not evidence of a mismatch, so it must not refuse.
+
+    ``showing_document_name`` returns ``None`` for a host with no viewport and for a focused
+    sub-window that is not a 3D view alike, with no reason string. Refusing on it would make the
+    tool unusable wherever the name cannot be read.
+    """
+    # Arrange
+    document = _FakeDocument("Part")
+    view = _FakeView()
+    port = _FakeViewportPort(view, showing=None)
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), port, HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert view.fit_calls == 2, "one known-state fit, then one correction pass"
+    assert "reason" not in envelope["structured_content"]
 
 
 # ---- handle errors ---------------------------------------------------------------------------
@@ -353,7 +379,7 @@ def test_should_degrade_honestly_when_no_viewport_port_is_injected():
 def test_should_name_the_missing_view_when_the_port_reports_unavailable():
     # Arrange
     document = _FakeDocument("Part")
-    view = _FakeView(document)
+    view = _FakeView()
     port = _FakeViewportPort(view, available=False, reason="document 'Part' has no open 3D view")
 
     # Act
@@ -383,7 +409,7 @@ def test_should_degrade_honestly_when_the_port_reports_available_but_hands_back_
 def test_should_fit_and_omit_the_camera_when_getcamera_is_unavailable():
     # Arrange
     document = _FakeDocument("Part")
-    view = _FakeView(document, raises="getCamera")
+    view = _FakeView(raises="getCamera")
     sink = _RecordingSink()
 
     # Act
@@ -401,7 +427,7 @@ def test_should_omit_the_camera_field_entirely_when_the_camera_was_unreadable(tm
     # Arrange
     path = tmp_path / "audit.jsonl"
     document = _FakeDocument("Part")
-    view = _FakeView(document, raises="getCamera")
+    view = _FakeView(raises="getCamera")
 
     # Act
     view_fit_viewport(
@@ -416,7 +442,7 @@ def test_should_omit_the_camera_field_entirely_when_the_camera_was_unreadable(tm
 def test_should_report_a_non_ok_status_naming_the_failure_when_fitall_raises():
     # Arrange
     document = _FakeDocument("Part")
-    view = _FakeView(document, raises="fitAll")
+    view = _FakeView(raises="fitAll")
     sink = _RecordingSink()
 
     # Act
@@ -432,7 +458,7 @@ def test_should_report_a_non_ok_status_naming_the_failure_when_fitall_raises():
 def test_should_ignore_a_camera_that_is_not_a_string():
     # Arrange
     document = _FakeDocument("Part")
-    view = _FakeView(document, camera=object())
+    view = _FakeView(camera=object())
     sink = _RecordingSink()
 
     # Act
@@ -498,8 +524,8 @@ class _ProjectingView(_FakeView):
     ``factors`` records the ``fitAll`` argument of each pass.
     """
 
-    def __init__(self, project, size=(800, 600), document=None):
-        super().__init__(document=document)
+    def __init__(self, project, size=(800, 600)):
+        super().__init__()
         self.project = project
         self._size = size
         self.factors = []
@@ -625,8 +651,8 @@ class _SimulatingView(_FakeView):
         (0.4082482904638631, 0.4082482904638631, -0.8164965809277261),
     )
 
-    def __init__(self, bounds, size=(800, 600), initial_scale=1.0, document=None):
-        super().__init__(document=document)
+    def __init__(self, bounds, size=(800, 600), initial_scale=1.0):
+        super().__init__()
         self._bounds = bounds
         self._size = size
         self._scale = initial_scale

@@ -94,7 +94,7 @@ def view_fit_viewport(
         view = viewport_port.view(document)
         if view is None:
             return _unavailable_envelope(f"'{_name_of(document)}' has no live 3D view to fit")
-        _require_same_document(document, view)
+        _require_same_document(document, viewport_port)
 
         camera_before = _read_camera(view)
         try:
@@ -288,16 +288,24 @@ def _view_isometric(view: object) -> None:
 
 
 
-def _require_same_document(document: object, view: object) -> None:
-    """Raise unless ``view`` is showing ``document``.
+def _require_same_document(document: object, viewport_port: ViewportPort) -> None:
+    """Raise unless the one document on screen is ``document``.
 
-    The port resolves a view through ``getDocument(<Name>)``, so a view handed back for document A
-    belongs to A. The failure this guards is the other direction: a view that carries its own
-    document name and that name is not the one the call targeted. Both names go in the message —
-    an agent told only "wrong document" cannot tell which of its handles is stale.
+    The on-screen name comes from the port's session-wide ``showing_document_name``, never from
+    the view: ``view(document)`` is resolved through the target's own ``Name``, so comparing that
+    view's document against the target compares a name with itself and can never fire. That
+    tautology is what let a fit rewrite the camera of the document the human was looking at.
+
+    ``None`` proceeds. An unreadable on-screen name — no viewport, a focused sub-window that is
+    not a 3D view — is no evidence of a mismatch, and refusing on it would make the tool unusable
+    wherever the name cannot be read.
+
+    Both names go in the message: an agent told only "wrong document" cannot tell which of its
+    handles is stale. The named document is never activated and no camera is touched; the caller
+    decides which handle it meant.
     """
     target = _name_of(document)
-    showing = _name_of(_view_document(view))
+    showing = viewport_port.showing_document_name()
     if showing is None or target is None or showing == target:
         return
     raise ValidationError(
@@ -305,19 +313,6 @@ def _require_same_document(document: object, view: object) -> None:
         f"call view_fit_viewport with the handle for '{showing}', or open a 3D view "
         f"for '{target}'"
     )
-
-
-def _view_document(view: object) -> object | None:
-    """The App document a view reports as its own, or ``None`` when it reports none.
-
-    A ``View3DInventor`` exposes its Gui document as ``Document``, whose ``Document`` in turn is
-    the App document. Both hops are optional: a view that names neither is not evidence of a
-    mismatch, so the caller treats an unreadable name as "no contradiction".
-    """
-    gui_document = getattr(view, "Document", None)
-    if gui_document is None:
-        return None
-    return getattr(gui_document, "Document", gui_document)
 
 
 def _name_of(document: object | None) -> str | None:

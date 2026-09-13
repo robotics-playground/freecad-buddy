@@ -212,9 +212,11 @@ mcp document_close { doc: "<handle>" }
 ### TC-14-06: A handle naming a document the viewport is not showing is refused, naming both
 
 **Priority**: Critical
-**Design Ref**: `usecases/view_fit.py:234-250` (`_require_same_document`), §AD-20
+**Design Ref**: `usecases/view_fit.py:291` (`_require_same_document`),
+`hosts/gui_addon/viewport.py:59` (`showing_document_name`), §AD-20, §AD-29
 
 **Given** two documents are open, `DocA` and `DocB` — verify: `mcp document_list {}` lists both; record both handles  
+**And** both have an open 3D view, so the refusal cannot be mistaken for "`DocA` has no viewport" — verify: `mcp view_fit_viewport { doc: "<DocA handle>" }` returned `OK` while `DocA` was still the focused tab, before `DocB` was opened  
 **And** the live viewport is showing `DocB` — verify: `cua-driver call list_windows` reports an active window title naming `DocB`  
 **And** `DocB` is fitted so its framing is a known baseline — verify: `mcp view_fit_viewport { doc: "<DocB handle>" }` returns `OK`; record `framing.ratio` from `mcp query_tree_summary { doc: "<DocB handle>" }` as `ratio_before`  
 
@@ -227,6 +229,8 @@ mcp view_fit_viewport { doc: "<DocA handle>" }
 **And** the message names **both** documents — verify: `detail.message` contains both `DocA` and `DocB`. An agent told only "wrong document" cannot tell which of its handles is stale.  
 **And** the message states the remedy — verify: `detail.message` matches `the live viewport is showing '<DocB>', not the targeted '<DocA>'; call view_fit_viewport with the handle for '<DocB>', or open a 3D view for '<DocA>'`  
 **And** the camera did **not** move — verify: `mcp query_tree_summary { doc: "<DocB handle>" }` returns `framing.ratio` equal to `ratio_before`. The fit is never redirected to the active document.  
+**And** the refusal came from the on-screen name, not from a missing viewport — verify: `detail.message` names `DocB`, which no per-document accessor keyed on `DocA` could produce. R2-02 failed this scenario because the guard compared `DocA` against a view resolved from `DocA`'s own name: a name against itself. A refusal citing only `DocA`, or one reading `no live 3D view`, means the guard is answering the wrong question again.  
+**And** `DocA` was **not** brought forward to resolve the comparison — verify: the window capture below still shows `DocB`'s tab active. The on-screen name is read from the focused MDI sub-window; activating or raising `DocA` would be the unrequested GUI change AD-31 forbids.  
 **And** *(visual)* the window still shows `DocB`, unchanged — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-06-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: `DocB`'s model at the same size and position as before, its name in the title bar and its tab active — `DocA` was not silently brought forward. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking at the image.  
 
 **Cleanup**:

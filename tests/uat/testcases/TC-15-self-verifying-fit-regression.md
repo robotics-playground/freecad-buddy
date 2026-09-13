@@ -1,14 +1,20 @@
-# TC-15: Self-Verifying Fit — R2-01 Regression
+# TC-15: Self-Verifying Fit — R2-01 and R2-02 Regressions
 
 Proves that `view_fit_viewport` can no longer report `fitted: true` over a viewport its own
-measurement says the model overflows. R2-01 (run `2026-09-13-02`) recorded a 40 mm cube returning
-`fitted: true` beside `framing: {"fits": false, "ratio": 1.0978}`, with the top vertex and bottom
-face visibly clipped. Story 9.1 replaced the analytic silhouette estimate with the shared corner
-projection and gated the success envelope on a post-fit re-measurement.
+measurement says the model overflows, and can no longer move the camera of a document the human is
+not looking at. R2-01 (run `2026-09-13-02`) recorded a 40 mm cube returning `fitted: true` beside
+`framing: {"fits": false, "ratio": 1.0978}`, with the top vertex and bottom face visibly clipped.
+Story 9.1 replaced the analytic silhouette estimate with the shared corner projection and gated the
+success envelope on a post-fit re-measurement. R2-02 recorded a fit targeting `tc14bar` returning
+`fitted: true` while `box_10_20_30` was on screen, rewriting the camera the human was watching.
+Story 9.2 gave `ViewportPort` a session-wide `showing_document_name()` and compared against that.
 
-The compact and near-cubic aspects are the point: the shipped estimate underestimated the projected
-extent by 1.155x on a cube and 1.132x on a 20x20x30 box, while the elongated bar it was tuned
-against passed. A suite that only re-runs the bar would pass against the defect.
+The compact and near-cubic aspects are the point for R2-01: the shipped estimate underestimated the
+projected extent by 1.155x on a cube and 1.132x on a 20x20x30 box, while the elongated bar it was
+tuned against passed. A suite that only re-runs the bar would pass against the defect.
+
+The two open documents are the point for R2-02. With one document open the shipped guard and the
+fixed guard behave identically, so a single-document scenario passes against the defect.
 
 **Host**: GUI via H2 proxy. Every scenario needs the live viewport, so none run under H1 headless.
 
@@ -17,7 +23,9 @@ against passed. A suite that only re-runs the bar would pass against the defect.
       (verify: compare `Get-Process -Id <pid>` `StartTime` against the `LastWriteTime` of
       `$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy\usecases\view_fit.py`)
 - [ ] The installed addon matches the source under test
-      (verify: `md5sum` of `src/freecad_buddy/usecases/{view_fit,framing}.py` equals the installed copies)
+      (verify: `md5sum` of `src/freecad_buddy/usecases/{view_fit,framing}.py`,
+      `src/freecad_buddy/hosts/gui_addon/viewport.py` and `src/freecad_buddy/contracts/render.py`
+      equals the installed copies)
 - [ ] No documents are open (verify: `mcp document_list` reports `0 open document(s).`)
 - [ ] `cua-driver` daemon is running in an interactive session (verify: `cua-driver status`)
 - [ ] `$RUN_DIR` is set to this run's folder under `tests/uat/run/`
@@ -110,4 +118,84 @@ cube whole — verify: `cua-driver call get_window_state` with
 **Cleanup**:
 ```
 mcp document_close { doc: "<handle>", save: false }
+```
+
+---
+
+### TC-15-04: A fit aimed off-screen is refused and moves no camera
+
+**Priority**: Critical
+**Design Ref**: AD-29, AD-31; epics.md §Story 9.2; source `usecases/view_fit.py:291`,
+`hosts/gui_addon/viewport.py:59`
+
+This is R2-02's exact reproduction. The shipped guard compared the target against a view the port
+resolved from that same target's `Name`, so the comparison tested a name against itself and
+returned early every time.
+
+**Given** `box-10-20-30.FCStd` is open and fitted, so its camera is a recorded baseline — verify:
+`view_fit_viewport` returns `OK`; record its `framing.ratio` as `ratio_before`  
+**And** a second document `tc14bar` is then opened and becomes the focused tab — verify:
+`mcp document_list {}` lists both, and `cua-driver call list_windows` reports the active window
+title naming `tc14bar`  
+**And** `box_10_20_30` still has its own open 3D view, so any refusal cannot be a no-viewport
+answer — verify: its earlier `OK` fit proves the view exists  
+
+**When** the fit targets the document that is **not** on screen  
+```
+mcp view_fit_viewport { doc: "<box_10_20_30 handle>" }
+```
+
+**Then** the call is refused — verify: `status` is `INVALID_INPUT`  
+**And** the message names **both** documents — verify: `detail.message` contains
+`box_10_20_30` and `tc14bar`. A message naming only the target means the guard is comparing a name
+against itself again, which is the defect.  
+**And** no camera moved — verify: `mcp query_tree_summary { doc: "<tc14bar handle>" }` reports the
+same `framing.ratio` as immediately before the call, and
+`mcp query_tree_summary { doc: "<box_10_20_30 handle>" }` still reports `ratio_before`  
+**And** `box_10_20_30` was not brought forward — verify: `cua-driver call list_windows` still
+reports `tc14bar` as the active window. AD-31 refuses; it never redirects and never activates.  
+**And** *(visual)* the window is untouched — verify: `cua-driver call get_window_state` with
+  `screenshot_out_file: "$RUN_DIR/evidence/tc-15-04-after.png"`, then `Read` it and say what is on
+  screen: `tc14bar`'s model at the same size and position as before the call, its tab still
+  active. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking
+  at the image.
+
+**Cleanup**:
+```
+mcp document_close { doc: "<box_10_20_30 handle>", save: false }
+mcp document_close { doc: "<tc14bar handle>", save: false }
+```
+
+---
+
+### TC-15-05: The refusal fires on the mismatch only, never on every fit
+
+**Priority**: Critical
+**Design Ref**: AD-29; epics.md §Story 9.2; source `usecases/view_fit.py:291`
+
+A guard that refuses everything would pass TC-15-04 while making the tool unusable. This is the
+control that separates a working guard from a broken one.
+
+**Given** the two documents of TC-15-04 are open with `tc14bar` focused  
+
+**When** the fit targets the document that **is** on screen  
+```
+mcp view_fit_viewport { doc: "<tc14bar handle>" }
+```
+**And** the focus is then moved to `box_10_20_30` by clicking its tab with `cua-driver`, and the
+fit targets `box_10_20_30`  
+
+**Then** both calls return `OK` — verify: read `status` from each. The guard fires on the mismatch
+only.  
+**And** each fit framed its own document — verify: each envelope's `framing.fits` is `true`  
+**And** *(visual)* each fit reframed the document it named and left the other alone — verify:
+`cua-driver call get_window_state` with
+  `screenshot_out_file: "$RUN_DIR/evidence/tc-15-05-after.png"` after the second call, then `Read`
+  it and say what is on screen: `box_10_20_30` whole and framed, with `tc14bar` unchanged behind
+  its own tab
+
+**Cleanup**:
+```
+mcp document_close { doc: "<box_10_20_30 handle>", save: false }
+mcp document_close { doc: "<tc14bar handle>", save: false }
 ```

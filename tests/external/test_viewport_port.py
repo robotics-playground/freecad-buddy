@@ -68,6 +68,81 @@ def _install_gui(monkeypatch, documents):
     return gui
 
 
+# ---- the MDI chain the on-screen name is read from -------------------------------------------
+
+
+class _FakeWidget:
+    """A Qt widget that answers ``isAncestorOf`` from an explicit containment set."""
+
+    def __init__(self, contains=()):
+        self._contains = list(contains)
+
+    def isAncestorOf(self, widget):  # noqa: N802 - Qt API name
+        return widget in self._contains
+
+
+class _FakeSubWindow:
+    def __init__(self, widget):
+        self._widget = widget
+
+    def widget(self):
+        return self._widget
+
+
+class _FakeMdiArea:
+    def __init__(self, active):
+        self._active = active
+
+    def activeSubWindow(self):  # noqa: N802 - Qt API name
+        return self._active
+
+
+class _FakeMainWindow:
+    def __init__(self, central):
+        self._central = central
+
+    def centralWidget(self):  # noqa: N802 - Qt API name
+        return self._central
+
+
+class _FakeView3D:
+    """A document's live view; ``graphicsView`` returns the viewer widget inside it."""
+
+    def __init__(self, viewer):
+        self._viewer = viewer
+
+    def graphicsView(self):  # noqa: N802 - FreeCAD API name
+        return self._viewer
+
+
+def _install_freecad(monkeypatch, names):
+    """Stub ``FreeCAD`` so the port can enumerate the open documents by ``Name``."""
+    freecad = types.ModuleType("FreeCAD")
+    freecad.listDocuments = lambda: {name: object() for name in names}
+    monkeypatch.setitem(sys.modules, "FreeCAD", freecad)
+    return freecad
+
+
+def _install_screen(monkeypatch, *, focused_document, documents):
+    """Wire a fake GUI whose focused MDI sub-window hosts ``focused_document``'s viewer.
+
+    ``documents`` is the ordered list of open document Names; each gets its own viewer widget, and
+    only the focused one's viewer sits inside the focused sub-window's widget. ``focused_document``
+    of ``None`` focuses a sub-window hosting no document's viewer — the non-3D case.
+    """
+    viewers = {name: _FakeWidget() for name in documents}
+    hosted = [viewers[focused_document]] if focused_document is not None else []
+    gui = _install_gui(
+        monkeypatch,
+        {name: _FakeGuiDocument(_FakeView3D(viewers[name])) for name in documents},
+    )
+    gui.getMainWindow = lambda: _FakeMainWindow(
+        _FakeMdiArea(_FakeSubWindow(_FakeWidget(contains=hosted)))
+    )
+    _install_freecad(monkeypatch, documents)
+    return gui
+
+
 # ---- conformance -----------------------------------------------------------------------------
 
 
@@ -194,6 +269,129 @@ def test_the_fake_gui_active_document_raises_so_the_guard_has_teeth(monkeypatch)
     gui = _install_gui(monkeypatch, {})
     with pytest.raises(AssertionError):
         _ = gui.ActiveDocument
+
+
+# ---- the on-screen document name -------------------------------------------------------------
+
+
+def test_showing_document_name_takes_no_document():
+    # The whole point of the method: a per-document accessor cannot answer "which document is on
+    # screen", because it resolves through the name it is handed and compares that name to itself.
+    for source in (ViewportPort, GuiViewportPort):
+        params = list(inspect.signature(source.showing_document_name).parameters)
+        assert params == ["self"], source
+
+
+def test_showing_document_name_names_the_focused_sub_windows_document(monkeypatch):
+    # Arrange
+    _install_screen(monkeypatch, focused_document="DocB", documents=["DocA", "DocB"])
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing == "DocB", "the answer must not depend on which document a caller asks about"
+
+
+def test_showing_document_name_is_none_when_the_focused_sub_window_is_not_a_3d_view(monkeypatch):
+    # A StartView, a spreadsheet or a TechDraw page hosts no document's 3D viewer.
+    # Arrange
+    _install_screen(monkeypatch, focused_document=None, documents=["DocA", "DocB"])
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing is None
+
+
+@pytest.mark.parametrize(
+    "main_window",
+    [
+        pytest.param(None, id="no main window"),
+        pytest.param(_FakeMainWindow(None), id="no central widget"),
+        pytest.param(_FakeMainWindow(object()), id="central widget is not an MDI area"),
+        pytest.param(_FakeMainWindow(_FakeMdiArea(None)), id="no focused sub-window"),
+    ],
+)
+def test_showing_document_name_is_none_when_a_hop_in_the_chain_is_missing(monkeypatch, main_window):
+    # Arrange
+    gui = _install_gui(monkeypatch, {})
+    gui.getMainWindow = lambda: main_window
+    _install_freecad(monkeypatch, [])
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing is None
+
+
+def test_showing_document_name_is_none_rather_than_raising_when_the_gui_raises(monkeypatch):
+    # Arrange
+    def _explode():
+        raise RuntimeError("the main window is being torn down")
+
+    gui = _install_gui(monkeypatch, {})
+    gui.getMainWindow = _explode
+    _install_freecad(monkeypatch, [])
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing is None, "an unreadable name is None, never a raise the caller must handle"
+
+
+def test_showing_document_name_is_none_without_freecadgui(monkeypatch):
+    # Arrange
+    monkeypatch.setitem(sys.modules, "FreeCADGui", None)
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing is None
+
+
+def test_showing_document_name_skips_a_document_whose_view_cannot_be_read(monkeypatch):
+    """A document with no readable 3D view is not the match, and does not abort the search."""
+    # Arrange
+    viewer = _FakeWidget()
+    gui = _install_gui(
+        monkeypatch,
+        {"Broken": _FakeGuiDocument(None), "DocB": _FakeGuiDocument(_FakeView3D(viewer))},
+    )
+    gui.getMainWindow = lambda: _FakeMainWindow(
+        _FakeMdiArea(_FakeSubWindow(_FakeWidget(contains=[viewer])))
+    )
+    _install_freecad(monkeypatch, ["Broken", "DocB"])
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing == "DocB"
+
+
+def test_showing_document_name_never_reads_the_active_document(monkeypatch):
+    # The fake's ActiveDocument raises, so a port that consulted it fails here. AD-20 bans the
+    # implicit target in every ring, and R2-02 is exactly the defect that ban exists to prevent.
+    # Arrange
+    _install_screen(monkeypatch, focused_document="DocA", documents=["DocA"])
+    target = GuiViewportPort()
+
+    # Act
+    showing = target.showing_document_name()
+
+    # Assert
+    assert showing == "DocA"
 
 
 # ---- GUI-host injection ----------------------------------------------------------------------

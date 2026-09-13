@@ -151,7 +151,7 @@ development_status:
   epic-8-retrospective: optional
   epic-9: backlog
   9-1-shared-projection-self-verifying-fit: done
-  9-2-wrong-document-guard-that-fires: backlog
+  9-2-wrong-document-guard-that-fires: done
   9-3-render-lighting-every-camera: backlog
   9-4-temp-files-inside-session-workdir: backlog
   epic-9-retrospective: optional

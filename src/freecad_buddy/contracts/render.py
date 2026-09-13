@@ -133,8 +133,9 @@ class ViewportPort(Protocol):
 
     Separate from ``RenderPort``: the render port self-frames a constructed scene, so its
     availability answers "can this process render offscreen" — orthogonal to "a live 3D view
-    exists for this document". Both answers are per document, because one GUI session can hold a
-    document with an open 3D view beside one without.
+    exists for this document". ``available`` and ``view`` answer per document, because one GUI
+    session can hold a document with an open 3D view beside one without.
+    ``showing_document_name`` is the exception: it is session-wide and takes no document.
     """
 
     def available(self, document: object) -> tuple[bool, str | None]:
@@ -145,6 +146,21 @@ class ViewportPort(Protocol):
 
         Never falls back to another document's view: a verdict must describe the document the
         call targeted, not whichever document the GUI happens to show.
+        """
+
+    def showing_document_name(self) -> str | None:
+        """Return the ``Name`` of the one document on screen, or ``None`` when unreadable.
+
+        **Session-wide, and takes no document** — that is the whole point. ``view(document)``
+        resolves through the passed handle's own ``Name``, so any guard comparing that view's
+        document against the target compares a name with itself and can never fire. The on-screen
+        name must come from a source independent of the target handle.
+
+        ``None`` means "could not read the on-screen name" and is **not** a refusal: an unreadable
+        name is no evidence of a mismatch, so a caller guarding on it proceeds. ``None``
+        deliberately conflates "no viewport" with "name unreadable" and carries **no reason
+        string**, unlike ``available``: both are treated identically, and a reason would invite a
+        caller to branch on a distinction with no consequence.
         """
 
 
