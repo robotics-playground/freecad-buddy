@@ -2,7 +2,7 @@
 
 ## Test Plan Template
 
-Use this for new test plans. Save to `docs/tests/test-plan.md` or the project's test directory.
+Use this for new test plans. Save to the project's test directory — `tests/uat/test-plan.md` in this repo.
 
 ````markdown
 # [Project Name] — Manual Test Plan
@@ -43,9 +43,20 @@ Use this for new test plans. Save to `docs/tests/test-plan.md` or the project's 
 
 ### Environment Variables
 
-| Variable   | Purpose       | Example |
-| ---------- | ------------- | ------- |
-| `VAR_NAME` | [description] | `value` |
+No test case hardcodes a machine path. Export these before the first scenario; every path in the
+suite is written against them.
+
+```bash
+export PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+export RUN_DIR="$PROJECT_ROOT/tests/uat/run/$(date +%F)-01"   # absolute; pick the next free -NN
+mkdir -p "$RUN_DIR/evidence"
+```
+
+| Variable       | Purpose                                                        | Example                          |
+| -------------- | -------------------------------------------------------------- | -------------------------------- |
+| `PROJECT_ROOT` | checkout root; fixtures and inputs are written against it      | `$(git rev-parse --show-toplevel)` |
+| `RUN_DIR`      | this run's folder, absolute; all evidence is written against it | `$PROJECT_ROOT/tests/uat/run/2026-09-13-01` |
+| `VAR_NAME`     | [description]                                                  | `value`                          |
 
 ## 5. Test Case Index
 
@@ -70,9 +81,59 @@ Use this for new test plans. Save to `docs/tests/test-plan.md` or the project's 
 - [LLM non-determinism, timing, external dependencies]
 ````
 
-## Test Case File Template
+## Test Case File Template — Given/When/Then (default for new suites)
 
-Use this for individual test case files. Save to `docs/tests/TC-XX-feature-name.md`.
+One scenario carries its own setup, actions, and assertions, so a reader never maps "step 3" onto "CP5".
+
+**Every `Given` / `When` / `Then` / `And` line MUST end with two spaces.** Without them markdown joins consecutive lines into one paragraph and the scenario renders as an unreadable block. Check with:
+`grep -n '^\*\*\(Given\|When\|Then\|And\)\*\*' TC-*.md | grep -v '  $'` — it must print nothing.
+
+````markdown
+# TC-XX: [Feature Area Name]
+
+[What this file proves and why it exists]
+
+**Host / environment**: [which host, service, or mode these scenarios run against]
+
+## Preconditions
+
+- [ ] [State shared by EVERY scenario in this file] (verify: `[command]`)
+- [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
+
+---
+
+### TC-XX-01: [One behaviour, stated as an outcome]
+
+**Priority**: Critical | High | Medium
+**Design Ref**: [design doc path] Section [N]; `src/module.py:120`
+
+**Given** [starting state] — verify: `[command]`
+**And** [more starting state] — verify: `[command]`
+
+**When** [the single action under test]
+```bash
+curl -s -X POST -d '{"field":"value"}' http://localhost:8000/endpoint
+```
+**And** [a following action, only if the behaviour needs a sequence]
+
+**Then** [assertion] — verify: `[command producing a checkable result]`
+**And** [assertion] — verify: `[command]`
+
+**Cleanup**:
+```bash
+psql -c "DELETE FROM table WHERE condition;"
+```
+
+---
+
+### TC-XX-02: [Next behaviour]
+````
+
+**One behaviour per scenario.** Two unrelated `When` actions means two scenarios.
+
+## Test Case File Template — Steps + Checkpoints (legacy)
+
+Use only when the suite already uses this shape; don't mix the two in one suite. Save to the project's test directory.
 
 ````markdown
 # TC-XX: [Feature Area Name]
@@ -128,6 +189,56 @@ rm -f /path/to/temp/file
 
 ...
 ````
+
+## Suite Layout and Run Folders
+
+A suite that is run repeatedly needs each run's evidence kept separately, or the second run overwrites the first and nobody can tell when something regressed.
+
+```
+tests/uat/
+  test-plan.md              scope, format contract, gates, env variables
+  README.md                 how to execute a run
+  coverage-matrix.md        feature/tool → scenario traceability
+  testcases/TC-NN-*.md      one file per test case
+  run/<YYYY-MM-DD>-<NN>/    one folder per run, never reused or edited later
+    report.md               verdict per scenario
+    bugs.md                 findings raised by this run
+    evidence/               screenshots, logs, exports, json
+```
+
+**Never hardcode a machine path into a test case.** A suite with `/home/dev/project/...` or `D:/Work/...` baked in only runs on the machine that wrote it. Define variables once in the test plan and write every path against them:
+
+```bash
+export PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+export RUN_DIR="$PROJECT_ROOT/tests/uat/run/$(date +%F)-01"   # pick the next free -NN
+mkdir -p "$RUN_DIR/evidence"
+```
+
+Then a scenario writes `$RUN_DIR/evidence/tc-03-01-after.png`, never an absolute path.
+
+Make `RUN_DIR` **absolute** when any tool under test resolves paths against its own working directory — a relative path silently resolves somewhere else and the call fails for a reason that looks like a product bug.
+
+**Check before handing over** — search for your own checkout root, literally. Blanket "any absolute path" patterns produce false positives: a third-party install directory (`C:\Program Files\...`) and an `$APPDATA/...` path are legitimate literals; your own working copy is not.
+
+```bash
+# the checkout root must appear nowhere in the test cases
+grep -rn -- "$PROJECT_ROOT" testcases/          # must be empty
+# also catch the Windows spelling of the same root
+grep -rni -- "$(cygpath -w "$PROJECT_ROOT" 2>/dev/null || echo "$PROJECT_ROOT")" testcases/
+```
+
+Review any hit by eye before "fixing" it — see Common traps below.
+
+### Common traps when variabilizing paths
+
+Both of these were introduced by a blind search-and-replace over a real suite and had to be found afterwards:
+
+| Trap | What breaks | Fix |
+| --- | --- | --- |
+| **Rewriting a deliberately-bad path** | A scenario asserting "a relative path is rejected" had its example rewritten to `$PROJECT_ROOT/...`, which expands to absolute — the assertion then tested the opposite of its claim and would always fail | Negative-path scenarios keep their literal bad input. Check every hit whose assertion expects a rejection. |
+| **Double prefix** | `$PROJECT_ROOT/$RUN_DIR/...` — `RUN_DIR` was already absolute, so the composed path pointed nowhere | Decide once whether `RUN_DIR` is absolute or repo-relative, state it in the test plan, and never prefix it. |
+
+After any bulk path edit, re-read the scenarios that assert a *failure*. A substitution that makes bad input valid is invisible to every grep.
 
 ## Test Case Naming Convention
 

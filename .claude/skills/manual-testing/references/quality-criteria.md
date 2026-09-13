@@ -337,7 +337,14 @@ Overall = (Determinism × 0.30) + (Isolation × 0.25) + (Maintainability × 0.25
 
 ## Testability Assessment (from BMAD Test Design)
 
-Before writing tests, assess the system's testability across 3 axes (from `bmad-testarch-test-design`):
+**First assess the executor, then the system.** The three axes below ask what the *system* permits. They are all satisfiable by an agent that has no way to touch the product — so run the harness gate (SKILL.md §0) before them:
+
+- **Agent control** — can the agent drive the product as the user does (click, type, menus, windows, profiles)?
+- **Agent observation** — can the agent see the real result independently of the product's own report (real pixels, stored bytes, the file on disk)?
+
+Both NO-answers have the same fix: name the gap, recommend the harness (`cua-driver` native, `playwright-cli` web, both for Chrome extensions), and say what it unlocks. A suite written past a NO is either unexecutable or quietly human-only.
+
+Then assess the system's testability across 3 axes (from `bmad-testarch-test-design`):
 
 ### Controllability
 
