@@ -221,6 +221,40 @@ def test_should_omit_framing_entirely_on_any_non_ok_terminal_status(status):
     assert result["text"] == "pad created"
 
 
+def test_should_leave_a_usecase_attached_framing_block_intact_on_a_non_ok_envelope():
+    """AD-32's single carve-out: ``view_fit_viewport``'s post-fit ``SPEC_FAILED`` carries its own
+    freshly-computed verdict, and the wrapper must not strip it.
+
+    ``with_framing`` short-circuits on non-``OK`` today, so the carve-out costs the wrapper
+    nothing — but that is the property the carve-out depends on, so it is pinned rather than read.
+    If the wrapper is ever changed to strip unknown keys, this story's contract breaks silently.
+    """
+    # Arrange
+    verdict = {"fits": False, "ratio": 1.1, "checked": "computed", "stale_reason": None}
+    fit_failure = {**_envelope(status="SPEC_FAILED", text="the fit ran"), "framing": verdict}
+    handler = _wired(_FakeView(), result=fit_failure)
+
+    # Act
+    result = handler(doc=_HANDLE)
+
+    # Assert
+    assert result["framing"] == verdict
+    assert result["text"] == "the fit ran", "the wrapper appends no sentence to a failed call"
+
+
+def test_should_attach_no_framing_block_to_any_other_non_ok_tool():
+    """The carve-out extends to exactly one site: a tool that attached nothing still gets nothing,
+    whatever the view would have answered."""
+    # Arrange
+    handler = _wired(_FakeView(point=(1700.0, 300.0)), result=_envelope(status="SPEC_FAILED"))
+
+    # Act
+    result = handler(doc=_HANDLE)
+
+    # Assert
+    assert "framing" not in result
+
+
 def test_should_not_project_at_all_when_the_status_is_not_ok():
     # Arrange
     view = _FakeView()

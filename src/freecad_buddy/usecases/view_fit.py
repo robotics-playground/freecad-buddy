@@ -12,18 +12,21 @@ usecase writing its own record for something dispatch cannot see. The dispatch b
 writes its own generic before/after lines, so a fit is audited twice: once generically, once with
 the camera.
 
+``fitted: true`` is a measurement, never "the call ran": the fit re-projects through the camera it
+wrote and reports ``SPEC_FAILED`` when that projection contradicts it (AD-31).
+
 Contains no ``FreeCADGui``/Qt import. The view arrives as an opaque object from the host-injected
-``ViewportPort`` and is only duck-typed (``getCamera``, ``fitAll``).
+``ViewportPort`` and is only duck-typed (``getCamera``, ``fitAll``, ``getPointOnViewport``,
+``getSize``).
 """
 
 from __future__ import annotations
 
 import math
 
-from freecad_buddy.contracts import ResultEnvelope, ViewportPort
+from freecad_buddy.contracts import FramingVerdict, ResultEnvelope, ViewportPort
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
-from freecad_buddy.usecases.framing import Bounds, union_bbox
-from freecad_buddy.usecases.screenshot import is_default_renderable
+from freecad_buddy.usecases.framing import measure_framing
 
 _AUDIT_SINK: object = None
 
@@ -69,6 +72,11 @@ def view_fit_viewport(
     document raises ``ValidationError`` naming **both** documents, so the agent can act rather
     than guess; the fit is never redirected and the named document is never activated.
 
+    ``OK`` requires the post-fit re-projection to agree: a fit whose own measurement says the model
+    still overflows returns ``SPEC_FAILED`` carrying that verdict as a top-level ``framing`` block.
+    There is no second attempt — a contradiction is an honest failure, and the camera stays where
+    the fit left it, which is still the best framing the tool achieved.
+
     :param audit_sink: sink exposing ``camera``; defaults to the host-installed one.
     :raises ValidationError: the handle is missing, unknown, or names a document the live
         viewport is not showing.
@@ -90,43 +98,110 @@ def view_fit_viewport(
 
         camera_before = _read_camera(view)
         try:
-            _fit_all(view, document)
+            verdict = _fit_all(view, document)
+        except _AnimationRefused as refused:
+            return _refused_envelope("view_fit.animation", str(refused))
         except Exception as exc:  # noqa: BLE001 - a view that refuses the fit is a stated reason
             return _failed_envelope(f"the view refused the fit: {type(exc).__name__}: {exc}")
 
         _audit(audit_sink, handle, {"doc": handle}, camera_before)
-        return _fitted_envelope(_name_of(document), camera_before)
+        if verdict.get("fits") is True:
+            return _fitted_envelope(_name_of(document), camera_before)
+        if verdict.get("checked") == "unavailable":
+            return _unverified_envelope(verdict)
+        return _not_framed_envelope(verdict)
 
     return registry.with_document(doc, fit)
 
 
-def _fit_all(view: object, document: object) -> None:
-    """Orient isometrically and frame the model, filling the viewport to ``_FILL_FRACTION``.
+def _fit_all(view: object, document: object) -> FramingVerdict:
+    """Orient isometrically, frame the model to ``_FILL_FRACTION``, and measure the result.
 
-    **This cannot measure its own result, so it does not try.** The fit runs on the Qt main thread
-    inside the marshal, which is the thread that applies camera changes: ``viewIsometric`` starts a
-    ``NavigationAnimation`` through Qt signals (``NavigationAnimator.cpp:45-57``) and
-    ``viewBoundBox`` animates too (``View3DInventorViewer.cpp:4821``), so both land only once this
-    call returns and the event loop runs again. Any projection taken here reads the camera as it
-    was *before* the fit, which is why a measure-then-correct loop silently converged on the wrong
-    framing and still reported success.
+    Three passes inside one suspended block, which is what lets the fit verify itself (AD-30):
 
-    The framing is therefore computed from geometry, which needs no feedback. ``fitAll(factor)``
-    scales the scene box by ``factor`` and frames the result
-    (``View3DInventorViewer.cpp:4467-4488``), and the framing is sphere-based — the camera height
-    becomes the box's space diagonal (``cam->viewBoundingBox``). A part therefore lands at
-    ``silhouette / diagonal`` of the viewport, which is 0.58 for a cube but only 0.05 for a
-    40x40x800 bar. Passing ``factor = silhouette / diagonal / _FILL_FRACTION`` cancels exactly
-    that shrinkage and leaves the requested margin.
+    1. ``viewIsometric`` then a plain ``fitAll(1.0)``, so the camera is in a *known* state, and
+       ``measure_framing`` through it reports how much of the binding axis the model then fills.
+    2. ``fitAll(factor)`` with ``factor = ratio / _FILL_FRACTION``. ``fitAll(f)`` scales the scene
+       box by ``f`` before framing its space diagonal (``View3DInventorViewer.cpp:4467-4488``), so
+       the on-screen extent scales as ``1/f`` relative to ``fitAll(1.0)`` and the measured ratio
+       lands exactly on the requested fill.
+    3. ``measure_framing`` again, through the camera pass 2 just wrote. Its verdict is the one the
+       caller gets, and it is what makes ``fitted: true`` a measurement rather than a report that
+       the call ran.
+
+    Passes 1 and 3 measure with the *same* routine the framing verdict uses. An analytic estimate
+    of the same quantity was the defect: it underestimated the projected extent by 1.155x on a cube
+    and overestimated it by 0.856x on a 40x40x800 bar, so compact parts were zoomed past the edge
+    while the tool reported success.
+
+    The measurement is only sound because animation is suspended: with animation on, both camera
+    writes land after this call returns and pass 3 would re-read the pre-fit camera. That is why
+    a toggle that exists and refuses is a refusal rather than a degraded fit.
 
     The camera is oriented isometrically first — the standard TOP/FRONT/RIGHT corner view, which
     shows all three dimensions at once. A fit exists to show the human the work, and a top view
     down a tall bar shows only its end face however well it is zoomed.
     """
-    factor = _fill_factor(document)
     with _animation_suspended(view):
         _view_isometric(view)
-        _fit_all_with_factor(view, factor)
+        _fit_all_with_factor(view, 1.0)
+        factor = _correction_factor(_measure(document, view))
+        if factor is not None:
+            _fit_all_with_factor(view, factor)
+        return _measure(document, view)
+
+
+def _measure(document: object, view: object) -> FramingVerdict:
+    """``measure_framing``, with an unreadable document reported rather than raised.
+
+    ``measure_framing`` reads ``document.Objects`` unguarded — correct on its own path, where the
+    caller already resolved a live document. Here the same raise would be reported as "the view
+    refused the fit", blaming the view for a document it never saw.
+    """
+    try:
+        return measure_framing(document, view)
+    except Exception as exc:  # noqa: BLE001 - an unreadable document is a stated reason
+        return {
+            "fits": None,
+            "ratio": None,
+            "checked": "unavailable",
+            "stale_reason": f"the document's model could not be read: {type(exc).__name__}",
+        }
+
+
+def _correction_factor(verdict: FramingVerdict) -> float | None:
+    """The ``fitAll`` factor that moves the measured ratio onto ``_FILL_FRACTION``.
+
+    ``None`` only when the pass-1 measurement produced no ratio at all — every corner implausible,
+    no readable bbox, an unreadable ``getSize``. The plain ``fitAll(1.0)`` already ran, so a model
+    the camera was pointed away from is still recovered; only the margin is FreeCAD's own rather
+    than the requested one.
+
+    A measured ``0.0`` is a measurement, not a failure to measure: it says the model projects to a
+    sub-pixel dot, which is the case most in need of correction. Treating it as unusable left the
+    dot on screen and reported ``fitted: true``. ``_MIN_FIT_FACTOR`` floors the resulting zoom, so
+    the factor stays one ``viewAll`` will act on.
+    """
+    ratio = verdict.get("ratio")
+    if not isinstance(ratio, (int, float)) or isinstance(ratio, bool) or not math.isfinite(ratio):
+        return None
+    return max(ratio / _FILL_FRACTION, _MIN_FIT_FACTOR)
+
+
+class _AnimationRefused(Exception):
+    """The view has an animation toggle that refused, so the fit cannot verify its own camera."""
+
+
+class _Unsuspended:
+    """"Nothing was suspended, so there is nothing to restore" — distinct from any bool setting.
+
+    A sentinel rather than ``None`` because ``None`` would also be the natural spelling of "the
+    previous setting could not be read", and conflating the two is what left animation switched
+    off in the human's viewer after an unreadable ``isAnimationEnabled``.
+    """
+
+
+_UNSUSPENDED = _Unsuspended()
 
 
 class _animation_suspended:  # noqa: N801 - a context manager reads as a statement, not a class
@@ -141,62 +216,44 @@ class _animation_suspended:  # noqa: N801 - a context manager reads as a stateme
     anything already in flight and the camera is written synchronously
     (``NavigationStyle.cpp:1660-1666``).
 
+    Suspension is a **precondition**, not a nicety, because the fit now re-projects through the
+    camera it wrote: with animation on, that projection reads the pre-fit camera and would grade a
+    fit that had not happened yet. A toggle that is *present and refuses* therefore raises
+    ``_AnimationRefused`` before any camera is touched. A view with **no** toggle at all is a
+    different case — nothing is animating, so the fit proceeds.
+
     The previous setting is restored even when the fit raises: this is the human's viewer, and a
     fit must not leave their navigation animation switched off.
     """
 
     def __init__(self, view: object) -> None:
         self._view = view
-        self._previous: bool | None = None
+        self._previous: bool | None | _Unsuspended = _UNSUSPENDED
 
     def __enter__(self) -> None:
+        suspend = getattr(self._view, "setAnimationEnabled", None)
+        if suspend is None:
+            return
         try:
-            self._previous = bool(self._view.isAnimationEnabled())
-            self._view.setAnimationEnabled(False)
-        except Exception:  # noqa: BLE001 - a view without the toggle still fits, just animated
-            self._previous = None
+            previous = bool(self._view.isAnimationEnabled())
+        except Exception:  # noqa: BLE001 - an unreadable setting is restored to the safe default
+            previous = True
+        try:
+            suspend(False)
+        except Exception as exc:
+            raise _AnimationRefused(
+                "the view refused to suspend camera animation, so the fit cannot verify the "
+                f"camera it writes: {type(exc).__name__}: {exc}"
+            ) from exc
+        self._previous = previous
 
     def __exit__(self, *_exc: object) -> None:
-        if self._previous is None:
+        if self._previous is _UNSUSPENDED:
             return
         try:
             self._view.setAnimationEnabled(self._previous)
         except Exception:  # noqa: BLE001 - restoring is best-effort; the fit itself already landed
             pass
-
-
-def _fill_factor(document: object) -> float:
-    """The ``fitAll`` factor that leaves ``_FILL_FRACTION`` of the binding axis filled.
-
-    ``1.0`` (a plain fit) whenever the geometry cannot be measured, so an unreadable document
-    still gets framed rather than refused.
-    """
-    box = _document_bounds(document)
-    if box is None:
-        return 1.0
-    xmin, ymin, zmin, xmax, ymax, zmax = box
-    dx, dy, dz = xmax - xmin, ymax - ymin, zmax - zmin
-    diagonal = math.sqrt(dx * dx + dy * dy + dz * dz)
-    if diagonal <= 0.0:
-        return 1.0
-    # The isometric silhouette of a box is bounded by its largest face diagonal: looking down a
-    # cube corner, the widest thing on screen is a face diagonal, never the space diagonal the
-    # sphere framing reserves room for. Using the largest of the three keeps the whole model
-    # inside for any of the eight isometric corners, so no orientation clips.
-    silhouette = max(
-        math.sqrt(dx * dx + dy * dy),
-        math.sqrt(dy * dy + dz * dz),
-        math.sqrt(dx * dx + dz * dz),
-    )
-    return max(silhouette / diagonal / _FILL_FRACTION, _MIN_FIT_FACTOR)
-
-
-def _document_bounds(document: object) -> Bounds | None:
-    """The union bbox of the document's visible shape-bearing objects, or ``None``."""
-    try:
-        return union_bbox([obj for obj in document.Objects if is_default_renderable(obj)])
-    except Exception:  # noqa: BLE001 - an unreadable document degrades to a plain fit
-        return None
 
 
 def _fit_all_with_factor(view: object, factor: float) -> None:
@@ -310,6 +367,41 @@ def _fitted_envelope(name: str | None, camera_before: str | None) -> ResultEnvel
         "structured_content": structured,
         "text": f"fitted the live viewport to '{name}'",
     }
+
+
+def _not_framed_envelope(verdict: FramingVerdict) -> ResultEnvelope:
+    """The fit ran, re-projected, and the model still does not fit: an honest failure, not a retry.
+
+    This is AD-32's single carve-out to the omit-on-non-``OK`` rule. The verdict is freshly
+    ``"computed"``, it is the *cause* of the status rather than a leftover, and ``ratio`` lives
+    nowhere else in the contract — so the block rides the envelope. ``with_framing`` returns a
+    non-``OK`` envelope untouched, so nothing strips it and nothing attaches a second copy.
+
+    The number stays out of ``text`` and ``detail.message``: the ratio reaches the caller through
+    the block, and a hand-written copy is a second place for it to drift.
+    """
+    reason = (
+        "the fit ran and the model still does not fit the live viewport; "
+        "read the framing block for the measured overflow"
+    )
+    envelope = _refused_envelope("view_fit.not_framed", reason)
+    return {**envelope, "framing": verdict}
+
+
+def _unverified_envelope(verdict: FramingVerdict) -> ResultEnvelope:
+    """The fit ran and its own measurement could not answer, so the result is unverified.
+
+    Distinct from ``view_fit.not_framed``, which states a *measured* overflow. Nothing was measured
+    here — every corner implausible, no readable bbox, an unreadable size — so claiming the model
+    "does not fit" would name a cause the verdict does not support. The block still rides the
+    envelope: ``stale_reason`` is the only place the failure is named.
+    """
+    reason = (
+        "the fit ran but could not verify its own result; "
+        f"read the framing block for why: {verdict.get('stale_reason')}"
+    )
+    envelope = _refused_envelope("view_fit.unverified", reason)
+    return {**envelope, "framing": verdict}
 
 
 def _unavailable_envelope(reason: str) -> ResultEnvelope:

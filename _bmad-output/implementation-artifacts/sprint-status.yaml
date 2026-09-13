@@ -150,7 +150,7 @@ development_status:
   8-5-enforcement-framing-test-ci-alias-gap: done
   epic-8-retrospective: optional
   epic-9: backlog
-  9-1-shared-projection-self-verifying-fit: backlog
+  9-1-shared-projection-self-verifying-fit: done
   9-2-wrong-document-guard-that-fires: backlog
   9-3-render-lighting-every-camera: backlog
   9-4-temp-files-inside-session-workdir: backlog

@@ -194,7 +194,7 @@ def read_framing(
 def _cached_verdict(
     handle: str, document: object, view: object, geometry: str | None
 ) -> FramingVerdict:
-    """``_verdict``, served from the cache when nothing in the four-tuple key moved.
+    """``measure_framing``, served from the cache when nothing in the four-tuple key moved.
 
     The projection is a GUI round trip per tool result, which the ≤15 s tool budget cannot
     afford on every call. The key is AD-32's four-tuple — geometry digest, camera string,
@@ -209,7 +209,7 @@ def _cached_verdict(
     entry = _CACHE.get(handle)
     if entry is not None and entry.view is view and entry.key == key:
         return _as_cached(entry.verdict, unread)
-    verdict = _verdict(document, view)
+    verdict = measure_framing(document, view)
     _CACHE.put(handle, key, verdict, view)
     return verdict
 
@@ -297,8 +297,14 @@ def reset_cache() -> None:
     _CACHE.clear()
 
 
-def _verdict(document: object, view: object) -> FramingVerdict:
-    """Project the union bbox through ``view`` and grade containment into a ``FramingVerdict``."""
+def measure_framing(document: object, view: object) -> FramingVerdict:
+    """Project the union bbox through ``view`` and grade containment into a ``FramingVerdict``.
+
+    Public because the viewport fit frames the model with this same measurement (AD-30): a second
+    analytic estimate of the on-screen extent is how a fit ends up reporting success beside a
+    verdict that contradicts it. The fit calls this before and after its zoom; the framing read
+    calls it through the cache.
+    """
     box = union_bbox([obj for obj in document.Objects if is_default_renderable(obj)])
     if box is None:
         return _unavailable("no visible shape-bearing objects to measure")
@@ -354,4 +360,12 @@ def _unavailable(reason: str) -> FramingVerdict:
     return {"fits": None, "ratio": None, "checked": "unavailable", "stale_reason": reason}
 
 
-__all__ = ["containment", "corners", "hull_ratio", "read_framing", "reset_cache", "union_bbox"]
+__all__ = [
+    "containment",
+    "corners",
+    "hull_ratio",
+    "measure_framing",
+    "read_framing",
+    "reset_cache",
+    "union_bbox",
+]
