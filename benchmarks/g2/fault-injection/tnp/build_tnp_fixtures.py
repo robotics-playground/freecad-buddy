@@ -72,9 +72,7 @@ def _attached_sketch_document(name: str):
     document.recompute()
     sketch = document.addObject("Sketcher::SketchObject", "Sketch")
     shim.set_attachment(sketch, [(base, ["Face6"])], "FlatFace")
-    sketch.addGeometry(
-        Part.LineSegment(App.Vector(0, 0, 0), App.Vector(SQUARE, 0, 0)), False
-    )
+    sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(SQUARE, 0, 0)), False)
     document.recompute()
     return document
 
@@ -90,9 +88,7 @@ def _external_geometry_document(name: str):
     source.Shape = Part.makeBox(BOX_L, BOX_W, BOX_H)
     document.recompute()
     sketch = document.addObject("Sketcher::SketchObject", "Sketch")
-    sketch.Placement = App.Placement(
-        App.Vector(0, 0, BOX_H), App.Rotation(App.Vector(0, 0, 1), 0)
-    )
+    sketch.Placement = App.Placement(App.Vector(0, 0, BOX_H), App.Rotation(App.Vector(0, 0, 1), 0))
     sketch.addExternal(source.Name, "Edge1")
     document.recompute()
     return document

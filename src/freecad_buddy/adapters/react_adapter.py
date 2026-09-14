@@ -32,7 +32,7 @@ _MALFORMED_REPROMPT = (
 )
 _QUESTION_REPROMPT = (
     "Do not ask the user a question. Either call a read-only tool via one fenced ```json block "
-    "of the form {\"tool\": \"<name>\", \"args\": {...}}, or give your final answer as prose."
+    'of the form {"tool": "<name>", "args": {...}}, or give your final answer as prose.'
 )
 
 
@@ -52,17 +52,15 @@ class ReactResult:
     error: ResultEnvelope | None = None
 
 
-def _render_system_prompt(
-    tool_schemas: dict[str, dict], tool_descriptions: dict[str, str]
-) -> str:
+def _render_system_prompt(tool_schemas: dict[str, dict], tool_descriptions: dict[str, str]) -> str:
     """Render the read-only tool surface into the ReAct system prompt from the injected schemas."""
     lines = [
         "You answer questions about a FreeCAD model using read-only tools.",
         "",
         "To call a tool, emit exactly one fenced json block of the form:",
-        '```json',
+        "```json",
         '{"tool": "<name>", "args": {...}}',
-        '```',
+        "```",
         "Emit at most one tool call per turn. When you are done, reply with your final answer as "
         "plain prose and no fenced block. Never ask the user a question.",
         "",

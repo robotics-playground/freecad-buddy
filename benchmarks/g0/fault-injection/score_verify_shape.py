@@ -117,7 +117,7 @@ def _iter_flow_mappings(text: str) -> list[str]:
     checks_line = re.search(r"^\s*checks:\s*$", text, re.MULTILINE)
     if checks_line is None:
         raise ValueError("no 'checks:' region found in case.yaml")
-    scope = text[checks_line.end():]
+    scope = text[checks_line.end() :]
 
     blocks: list[str] = []
     depth = 0

@@ -152,9 +152,9 @@ def score() -> dict:
         kind = fault.get("kind")
         expectation = fault.get("expectation")
         # kind and expectation must agree, or the case is silently mis-partitioned below.
-        if (kind == "planted_defect") != (expectation == "DETECT") or (
-            kind == "clean_control"
-        ) != (expectation == "PASS_CLEAN"):
+        if (kind == "planted_defect") != (expectation == "DETECT") or (kind == "clean_control") != (
+            expectation == "PASS_CLEAN"
+        ):
             raise SuiteError(
                 f"case {case.get('id', '<no id>')!r}: fault.kind {kind!r} disagrees with "
                 f"expectation {expectation!r} (planted_defect<->DETECT, clean_control<->PASS_CLEAN)"
@@ -273,9 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     wilson = result["wilson_ci"]
 
     for case_id, expectation, passed, outcome in rows:
-        sys.stderr.write(
-            f"  {case_id:34s} {expectation:11s} pass={str(passed):5s} {outcome}\n"
-        )
+        sys.stderr.write(f"  {case_id:34s} {expectation:11s} pass={str(passed):5s} {outcome}\n")
     sys.stderr.write(
         f"\n  planted={result['planted']} detected={result['detected']} "
         f"sensitivity={sensitivity:.3f}\n"

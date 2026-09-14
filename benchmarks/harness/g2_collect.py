@@ -133,9 +133,11 @@ def _is_fault(outcome: object) -> bool:
 def _unexecuted_note(driven: list, applied: list) -> str:
     """How many driven cases never executed an op, for the criterion's message."""
     refused = {o.case_id for o in driven} - {o.case_id for o in applied}
-    return f" ({len(refused)} driven case(s) executed no op: {', '.join(sorted(refused))})" if (
-        refused
-    ) else ""
+    return (
+        f" ({len(refused)} driven case(s) executed no op: {', '.join(sorted(refused))})"
+        if (refused)
+        else ""
+    )
 
 
 def _failed_check(check_id: str, message: str) -> Check:
@@ -451,8 +453,7 @@ def collect_g2_4(
             "expected": required,
             "passed": flagged >= required,
             "detail": {
-                "code": "ok" if flagged >= required else
-                "invalid_input.tnp_scenarios_unflagged",
+                "code": "ok" if flagged >= required else "invalid_input.tnp_scenarios_unflagged",
                 "message": f"{flagged} scenarios flagged, rule requires {required}",
             },
         }

@@ -42,9 +42,7 @@ class GraderVerdict:
 class GraderClient(Protocol):
     """The grader seam. A model-backed grader implements the same ``grade`` signature."""
 
-    def grade(
-        self, question: str, answer: str, rubric: str, expected: dict
-    ) -> GraderVerdict: ...
+    def grade(self, question: str, answer: str, rubric: str, expected: dict) -> GraderVerdict: ...
 
 
 def _normalize(text: str) -> str:
@@ -104,9 +102,7 @@ def _cause_keywords(expected: dict) -> list[str]:
 class DeterministicGrader:
     """Rubric-keyed matcher of the named failing object + cause. Independent of the actor."""
 
-    def grade(
-        self, question: str, answer: str, rubric: str, expected: dict
-    ) -> GraderVerdict:
+    def grade(self, question: str, answer: str, rubric: str, expected: dict) -> GraderVerdict:
         """Grade ``answer`` against ``expected`` = ``{object, cause_keywords, ...}``.
 
         Returns a FAIL verdict when the expected object identity is absent, or when none of the

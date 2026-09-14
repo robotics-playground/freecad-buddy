@@ -193,7 +193,7 @@ class _AnimationRefused(Exception):
 
 
 class _Unsuspended:
-    """"Nothing was suspended, so there is nothing to restore" — distinct from any bool setting.
+    """ "Nothing was suspended, so there is nothing to restore" — distinct from any bool setting.
 
     A sentinel rather than ``None`` because ``None`` would also be the natural spelling of "the
     previous setting could not be read", and conflating the two is what left animation switched
@@ -270,10 +270,6 @@ def _fit_all_with_factor(view: object, factor: float) -> None:
         view.fitAll()
 
 
-
-
-
-
 def _view_isometric(view: object) -> None:
     """Swing the camera to isometric so an edge-on model shows its real extent.
 
@@ -285,7 +281,6 @@ def _view_isometric(view: object) -> None:
         view.viewIsometric()
     except Exception:  # noqa: BLE001 - orientation is a nicety; the zoom below is the fit
         pass
-
 
 
 def _require_same_document(document: object, viewport_port: ViewportPort) -> None:

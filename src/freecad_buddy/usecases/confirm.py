@@ -384,9 +384,7 @@ def set_approval_sink(sink: object) -> object:
     return previous
 
 
-def audit_approval(
-    sink: object, approval: ApprovalRecord, params: dict | None = None
-) -> None:
+def audit_approval(sink: object, approval: ApprovalRecord, params: dict | None = None) -> None:
     """Append one ``approval`` audit line, preferring a caller-supplied sink over the host's.
 
     ``params`` are the authorized call's own parameters; passing them lets the approval line

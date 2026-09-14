@@ -88,8 +88,7 @@ def verify_render_tone(path: str) -> dict:
         for channel, value in enumerate(tone):
             if not _TONE_FLOOR <= value <= _TONE_CEILING:
                 reasons.append(
-                    f"channel {channel} is {value:.1f}, outside "
-                    f"[{_TONE_FLOOR}, {_TONE_CEILING}]"
+                    f"channel {channel} is {value:.1f}, outside [{_TONE_FLOOR}, {_TONE_CEILING}]"
                 )
 
     return {
