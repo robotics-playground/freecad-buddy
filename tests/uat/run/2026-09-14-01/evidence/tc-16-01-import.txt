@@ -1,0 +1,5 @@
+=== bare import TechDrawGui in a FRESH process ===
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: Cannot load Gui module in console application.
+exit=1

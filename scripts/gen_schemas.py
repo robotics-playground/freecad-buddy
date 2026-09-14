@@ -47,6 +47,9 @@ from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.mutation import MutationBlock
 from freecad_buddy.contracts.report import ValidationReport
 from freecad_buddy.contracts.sketch import SketchState
+from freecad_buddy.contracts.techdraw import DrawingSheet
+from freecad_buddy.contracts.designer import RunRecord
+from freecad_buddy.contracts.visual import JudgeVerdict, VisualSet
 
 # Wire roots: (filename stem, TypedDict). One schema file each.
 WIRE_ROOTS: list[tuple[str, Any]] = [
@@ -60,6 +63,10 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("mutation", MutationBlock),
     ("sketch-state", SketchState),
     ("feature-state", FeatureState),
+    ("drawing-sheet", DrawingSheet),
+    ("judge-verdict", JudgeVerdict),
+    ("visual-set", VisualSet),
+    ("designer-run", RunRecord),
 ]
 
 # Required-field manifest (type name -> required field names).
@@ -68,6 +75,23 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     # roots
     "ResultEnvelope": ["schema", "status", "structured_content", "text"],
     "ValidationReport": ["schema", "banner", "checks", "verdict"],
+    # A run record IS the artifact a failed run is reconstructed from, so the fields a reader
+    # needs to answer "did it converge, by what rule, and over how many repairs" are required.
+    "RunRecord": [
+        "schema",
+        "run_id",
+        "spec_id",
+        "status",
+        "converged",
+        "convergence_rule",
+        "repairs_used",
+        "max_repairs",
+        "iterations",
+    ],
+    "IterationRecord": ["index", "geometry_pass", "visual_pass", "discrepancy"],
+    "Discrepancy": ["check_id", "measured", "expected"],
+    "DesignPlan": ["spec_id", "spec_text", "steps", "approved"],
+    "PlanStep": ["tool", "args"],
     "JobStatus": ["schema", "state"],
     "AuditRecord": ["schema", "ts", "actor", "event"],
     "GeometryDiff": ["schema", "deltas", "counts", "validity", "tnp_precheck"],
@@ -132,6 +156,32 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     # The shape summary is present only when `readable` is true; a feature a rollback removed
     # reports `readable: false` and carries no summary.
     "FeatureState": ["schema", "feature", "readable"],
+    # Every field is required-and-nullable except the flags: a sheet that omitted `available`
+    # would let a reader take an unavailable sheet for a drawn one, and one that omitted
+    # `png_path` would leave the judge with no image and no way to tell that from an error.
+    "DrawingSheet": [
+        "schema",
+        "available",
+        "reason",
+        "svg_path",
+        "png_path",
+        "page_width_px",
+        "page_height_px",
+        "views",
+        "callouts",
+    ],
+    "DimensionCallout": ["view", "parameter", "value", "text", "kind"],
+    # Both fields are required, and ``pass`` above all: a verdict that omitted it would be read as
+    # a pass by any caller doing ``verdict.get("pass")``, which is the exact failure the schema and
+    # ``validate_verdict`` exist to prevent.
+    "JudgeVerdict": ["pass", "findings"],
+    "JudgeFinding": ["view", "observation", "severity"],
+    # A finding must attribute itself to a view, or the repair loop cannot tell the agent where to
+    # look; ``width_px`` is required because the ≥2048 px legibility gate is measured over it.
+    "JudgeImage": ["view", "path", "width_px", "media_type"],
+    # ``complete`` above all: a set that omitted it would let a reader take a partial set for a
+    # full one and report a verdict read from missing images with full confidence.
+    "VisualSet": ["schema", "complete", "reason", "images", "spec_text", "checklist"],
     "ShapeSummary": [
         "volume",
         "area",

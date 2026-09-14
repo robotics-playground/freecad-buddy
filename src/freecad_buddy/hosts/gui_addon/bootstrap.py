@@ -219,8 +219,18 @@ def _mcp_proxy_command() -> list[str] | None:
         repo_root = Path(repo)
         if repo_root.name == "freecad_buddy":
             repo_root = repo_root.parent.parent
-        return [uv, "run", "--project", str(repo_root), "freecad-buddy",
-                "serve", "--mode", "rpc", "--transport", "http"]
+        return [
+            uv,
+            "run",
+            "--project",
+            str(repo_root),
+            "freecad-buddy",
+            "serve",
+            "--mode",
+            "rpc",
+            "--transport",
+            "http",
+        ]
     return None
 
 
@@ -255,7 +265,10 @@ def _start_mcp_proxy() -> None:
         )
         logger.info(
             "spawned MCP proxy (pid %s) -> http://%s:%s/mcp; proxy log: %s",
-            _mcp_proxy.pid, _MCP_HOST, _MCP_PORT, proxy_log,
+            _mcp_proxy.pid,
+            _MCP_HOST,
+            _MCP_PORT,
+            proxy_log,
         )
     except Exception:  # noqa: BLE001 - a failed proxy spawn must not break the listener/GUI start
         logger.exception("failed to spawn the MCP proxy; the RPC listener is still up")

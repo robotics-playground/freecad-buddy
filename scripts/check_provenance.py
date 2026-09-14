@@ -15,6 +15,17 @@ Additionally flags:
   - a manifest whose ``source.kind`` is a non-``hand-authored`` closed-set kind but is missing
     a non-empty ``source.url``, ``source.license``, or ``source.attribution``.
 
+A manifest declaring ``kind: part-spec`` binds to a written spec rather than a geometry file: the
+Phase 3 designer BUILDS the part from the spec text, so its artifact id resolves against
+``<artifact>.yaml`` (the case file) instead of ``<artifact>.FCStd``, and the case declaring
+``fixture: none-spec-to-part`` is exempt from the fixture-presence rule.
+
+A fault case declaring a driven fixture plus a ``planted_op`` is likewise exempt, because the
+production path produces the artifact and no ``.FCStd`` ships. ``driven-by-designer-loop`` names
+the plan that op returns, driven through the designer loop. ``driven-by-mutation-bracket`` names
+the op itself, run through ``transaction.run_mutation``; the fixture is the document that bracket
+leaves behind, which is what a document-state validator is graded over.
+
 On any violation: print ``path -- rule`` and exit 1. Clean tree: exit 0.
 
 Importable: ``check_tree(benchmarks_root)`` returns a list[str] of violations (unit-testable).
@@ -130,6 +141,58 @@ def _reuses_an_existing_document(case_yaml: Path) -> bool:
     return (case_yaml.parent / document).is_file()
 
 
+# The fixture state a spec-to-part case declares: it has no input document at all, because the
+# designer BUILDS the part from the spec text. Distinct from `pending` (a fixture that does not
+# exist yet) — this one will never exist.
+_SPEC_TO_PART_FIXTURE = "none-spec-to-part"
+
+# The manifest kind that binds to a written spec rather than a geometry file. Its artifact id
+# resolves against `<artifact>.yaml`, since the artifact IS the case file.
+_SPEC_MANIFEST_KIND = "part-spec"
+
+
+def _declares_spec_to_part(case_yaml: Path) -> bool:
+    """Whether a case declares that it ships a written spec and no input document.
+
+    A Phase 3 spec case hands the designer a requirement, not a document to mutate, so there is
+    nothing to carry as a fixture. The exemption requires the state to be *declared*, matching
+    the ``fixture: pending`` rule: a case that simply omits its fixture is still flagged.
+    """
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return False
+    return isinstance(data, dict) and data.get("fixture") == _SPEC_TO_PART_FIXTURE
+
+
+# The fixture states a driven fault case declares: the fault is planted by running its
+# ``planted_op`` through a driver, so no file ships. ``driven-by-designer-loop`` drives a plan
+# through the designer loop and the plan IS the fixture. ``driven-by-mutation-bracket`` drives a
+# planted op through ``transaction.run_mutation`` and the document the bracket leaves behind IS the
+# fixture — the shape a document-state validator such as ``verify_recompute`` is graded over, where
+# there is no plan to carry. Both are distinct from `pending` (nothing can plant it yet) and from
+# `none-spec-to-part` (a written spec with no fault at all): these ARE plantable, and the
+# declaration names how.
+_DRIVEN_FIXTURES = frozenset({"driven-by-designer-loop", "driven-by-mutation-bracket"})
+
+
+def _declares_driven_fixture(case_yaml: Path) -> bool:
+    """Whether a case declares that a driver plants its fixture, rather than a file carrying it.
+
+    The exemption requires the state to be *declared* and the case to name the ``planted_op`` that
+    resolves it, matching the ``fixture: pending`` rule's insistence on an explicit declaration. A
+    case claiming to be driven while naming no op is still flagged: a defect nothing can plant must
+    not hide behind the same word as one the suite actually runs.
+    """
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return False
+    if not isinstance(data, dict) or data.get("fixture") not in _DRIVEN_FIXTURES:
+        return False
+    return isinstance(data.get("planted_op"), str) and bool(data["planted_op"])
+
+
 def _declares_pending_fixture(case_yaml: Path) -> bool:
     """Whether a case explicitly declares ``fixture: pending`` — an entry-gate case.
 
@@ -182,6 +245,8 @@ def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
         if (
             _is_text_case(case_yaml)
             or _declares_pending_fixture(case_yaml)
+            or _declares_driven_fixture(case_yaml)
+            or _declares_spec_to_part(case_yaml)
             or _reuses_an_existing_document(case_yaml)
         ):
             continue
@@ -206,31 +271,53 @@ def check_tree(benchmarks_root: Path) -> list[str]:
         if manifest is None:
             violations.append(f"{rel} -- no provenance manifest (artifact id '{artifact_id}')")
             continue
-        source = manifest.get("source")
-        kind = source.get("kind") if isinstance(source, dict) else None
-        if kind not in CLOSED_SOURCE_KINDS:
-            violations.append(
-                f"{rel} -- source.kind '{kind}' not in closed set "
-                f"({', '.join(sorted(CLOSED_SOURCE_KINDS))})"
-            )
-        elif kind != "hand-authored":
-            for field in ("url", "license", "attribution"):
-                value = source.get(field)
-                if not (isinstance(value, str) and value.strip()):
-                    violations.append(
-                        f"{rel} -- source.{field} required for non-hand-authored kind '{kind}'"
-                    )
+        violations.extend(_check_source(manifest, rel))
 
     for artifact_id, manifest_path in sorted(manifest_paths.items()):
         if any(part in _EXCLUDED_DIRS for part in Path(artifact_id).parts):
             continue
-        if not (benchmarks_root / (artifact_id + ".FCStd")).is_file():
-            manifest_rel = manifest_path.relative_to(benchmarks_root).as_posix()
+        manifest = manifests[artifact_id]
+        manifest_rel = manifest_path.relative_to(benchmarks_root).as_posix()
+        # A part-spec manifest binds to the written spec (the case.yaml), not to a geometry file:
+        # the designer BUILDS the part, so no .FCStd is shipped and requiring one would make
+        # every Phase 3 spec an orphan. Its source block is checked here, since the .FCStd walk
+        # above never reaches it.
+        if manifest.get("kind") == _SPEC_MANIFEST_KIND:
+            suffix = ".yaml"
+            violations.extend(_check_source(manifest, manifest_rel))
+        else:
+            suffix = ".FCStd"
+        if not (benchmarks_root / (artifact_id + suffix)).is_file():
             violations.append(
                 f"{manifest_rel} -- orphan manifest "
-                f"(artifact '{artifact_id}' has no matching .FCStd)"
+                f"(artifact '{artifact_id}' has no matching {suffix})"
             )
 
+    return violations
+
+
+def _check_source(manifest: dict, rel: str) -> list[str]:
+    """The source-block violations of one manifest, reported against ``rel``.
+
+    ``source.kind`` must be in the closed set; a non-``hand-authored`` kind must also carry a
+    non-empty ``url``, ``license`` and ``attribution``, so a borrowed artifact always names where
+    it came from and under what terms.
+    """
+    violations: list[str] = []
+    source = manifest.get("source")
+    kind = source.get("kind") if isinstance(source, dict) else None
+    if kind not in CLOSED_SOURCE_KINDS:
+        violations.append(
+            f"{rel} -- source.kind '{kind}' not in closed set "
+            f"({', '.join(sorted(CLOSED_SOURCE_KINDS))})"
+        )
+    elif kind != "hand-authored":
+        for field in ("url", "license", "attribution"):
+            value = source.get(field)
+            if not (isinstance(value, str) and value.strip()):
+                violations.append(
+                    f"{rel} -- source.{field} required for non-hand-authored kind '{kind}'"
+                )
     return violations
 
 

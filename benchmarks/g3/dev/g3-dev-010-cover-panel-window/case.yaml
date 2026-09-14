@@ -1,0 +1,22 @@
+id: g3-dev-010-cover-panel-window
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 120*80*3 - 60*30*3 = 28800 - 5400 = 23400 mm^3
+# the window is rectangular, so no cylindrical hole is created -> count = 0
+# bbox = 120 x 80 x 3
+spec: >-
+  An enclosure cover panel 120 mm by 80 mm and 3 mm thick with a rectangular window 60 mm by 30
+  mm cut through the centre of the panel.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares no fixture and check_provenance exempts it by kind.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-010-cover-panel-window.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 23400.0, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [120.0, 80.0, 3.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 0}

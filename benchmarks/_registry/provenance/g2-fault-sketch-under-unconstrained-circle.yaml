@@ -1,0 +1,8 @@
+artifact: g2/fault-injection/sketch/g2-fault-sketch-under-unconstrained-circle/fixture
+kind: oracle-geometry
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+  generator: benchmarks/g2/fault-injection/sketch/build_sketch_fixtures.py
+real_world_basis: "Clean fully constrained sketch; the pre-mutation input for a verify_sketch fault run"
+license_checked: {by: TanNT, date: 2026-09-14}

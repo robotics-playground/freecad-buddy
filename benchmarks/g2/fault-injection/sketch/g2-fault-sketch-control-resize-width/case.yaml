@@ -1,0 +1,19 @@
+id: g2-fault-sketch-control-resize-width
+gate: g2
+criterion: G2.5
+targets_validator: verify_sketch@usecases.verify.read_sketch
+fault:
+  kind: clean_control
+  description: >-
+    The width is driven to 24 mm: the sketch changes shape and stays fully constrained.
+  expectation: PASS_CLEAN
+expected:
+  dof: 0
+  fully_constrained: true
+  degenerate_geometry_count: 0
+# The fault is a runtime path, not a defective saved sketch: the fixture is the clean
+# pre-mutation input and the op named here plants the defect through the production
+# mutation path, where verify_sketch grades the document that path produced.
+planted_op: resize_width_datum
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-sketch-control-resize-width.yaml

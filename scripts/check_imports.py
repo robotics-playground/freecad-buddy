@@ -5,7 +5,8 @@ Static AST analysis over ``src/freecad_buddy/**/*.py``. Runs with NO FreeCAD ins
 Rules enforced (dependencies point inward only):
   contracts/ ..... stdlib-only (+ firstparty freecad_buddy inward). No third-party, no FreeCAD.
   usecases/ ...... stdlib + FreeCAD-App whitelist {FreeCAD, Part, Sketcher, PartDesign,
-                   Mesh, MeshPart} + firstparty inward (contracts). No third-party, no Qt.
+                   Mesh, MeshPart, TechDraw} + firstparty inward (contracts). No third-party,
+                   no Qt.
   adapters/ ...... may import contracts/usecases + third-party; NOT hosts.
   hosts/ ......... top ring; may import anything inward.
   Qt / FreeCADGui / PySide* allowed ONLY in hosts/** and adapters/render_probe.py.
@@ -40,8 +41,13 @@ from pathlib import Path
 
 FIRSTPARTY = "freecad_buddy"
 
+# FreeCAD *App* modules only. ``TechDraw`` is the App-side drawing module
+# (``AppTechDrawPy.cpp``), which is importable in a console process; its Gui counterpart
+# ``TechDrawGui`` is NOT here and is caught by the Qt/Gui rule instead — decision 016 measured
+# that importing it headless raises, and that a second import after ``setupWithoutGUI()``
+# terminates the interpreter outright.
 FREECAD_APP_WHITELIST = frozenset(
-    {"FreeCAD", "Part", "Sketcher", "PartDesign", "Mesh", "MeshPart"}
+    {"FreeCAD", "Part", "Sketcher", "PartDesign", "Mesh", "MeshPart", "TechDraw"}
 )
 
 # Module names FreeCAD is bound to; ``<name>.ActiveDocument`` on any of these is the banned form.

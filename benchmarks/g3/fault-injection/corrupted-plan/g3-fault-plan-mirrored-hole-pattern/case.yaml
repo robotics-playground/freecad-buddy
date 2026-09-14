@@ -1,0 +1,23 @@
+id: g3-fault-plan-mirrored-hole-pattern
+gate: g3
+criterion: G3.4
+targets_validator: corrupted_plan@usecases.designer_loop.detect_spec_violation
+fault:
+  kind: planted_defect
+  description: >-
+    The plan mirrors the lever arm's hole pattern about the wrong axis, so the 12 mm pivot bore
+    and the 8 mm linkage hole swap ends. Both holes exist at the right spacing and the right
+    diameters — only which end each sits at is wrong.
+  expectation: DETECT
+corruption_class: topology
+spec_ref: g3-dev-011-lever-arm
+detected_by: hole_position
+# Detection must come from measuring the produced ARTIFACT. A loop that flags this
+# by inspecting the plan text would pass the suite while catching no real deviant
+# part (AD-13: assertions measure the artifact, never the plan).
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the deviant part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: mirrored_hole_pattern
+fixture: driven-by-designer-loop

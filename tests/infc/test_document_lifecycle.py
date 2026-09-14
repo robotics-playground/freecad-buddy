@@ -205,12 +205,14 @@ class CapabilityProbeTest(unittest.TestCase):
         self.assertTrue(result)
 
     def test_warm_capability_probes_is_idempotent_and_leaves_no_temp_doc(self):
-        # Clear the probe caches so warming actually re-runs varset_backend (which opens and
+        # Clear the probe caches so warming actually re-runs varset_probe (which opens and
         # closes a throwaway document); a cache hit would exercise nothing.
+        shim.varset_probe.cache_clear()
         shim.varset_backend.cache_clear()
         shim.varset_available.cache_clear()
         shim.warm_capability_probes()
         self.assertNotIn("FCB_TMP_varset_probe", App.listDocuments())
+        shim.varset_probe.cache_clear()
         shim.varset_backend.cache_clear()
         shim.varset_available.cache_clear()
         shim.warm_capability_probes()

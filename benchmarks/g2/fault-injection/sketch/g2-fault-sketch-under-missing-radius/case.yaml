@@ -1,0 +1,20 @@
+id: g2-fault-sketch-under-missing-radius
+gate: g2
+criterion: G2.5
+targets_validator: verify_sketch@usecases.verify.read_sketch
+fault:
+  kind: planted_defect
+  description: >-
+    The circle's radius dimension is deleted, leaving exactly one degree of freedom on a sketch
+    whose every element is still placed.
+  expectation: DETECT
+expected:
+  dof: 1
+  fully_constrained: false
+  trigger: "dof > 0"
+# The fault is a runtime path, not a defective saved sketch: the fixture is the clean
+# pre-mutation input and the op named here plants the defect through the production
+# mutation path, where verify_sketch grades the document that path produced.
+planted_op: remove_radius_dimension
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-sketch-under-missing-radius.yaml

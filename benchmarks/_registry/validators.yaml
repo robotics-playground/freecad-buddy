@@ -4,12 +4,12 @@
 
 verify_shape:
   suite: g0/fault-injection/
-  validator_sha: "2ae61ab3ef7afc66d066068f2c358bedb7726687949496bab4e41c0984658e38"
+  validator_sha: "6b6e2a174527d1a5f043eb4ed3d225af853489057fe1ce3cb90a53b5e27c62fe"
   last_run:
-    run_id: fr-2026-07-22-1
+    run_id: fr-2026-09-14-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-07-22
+    date: 2026-09-14
     wilson_ci:
       rate: 1.0
       low: 0.7412
@@ -64,12 +64,12 @@ verify_export_step:
 
 grader:
   suite: g1/fault-injection/
-  validator_sha: "bcec425e6aad723d4d71b6bfc2365ceab4aab317384234ba8c5dd814cc7a43e0"
+  validator_sha: "ebc364c45a681601cfbb7fdfb7b93775f9072e98ed35285ff194aeaa1c992d47"
   last_run:
-    run_id: gr-2026-07-30-1
+    run_id: gr-2026-09-14-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-07-30
+    date: 2026-09-14
     wilson_ci:
       rate: 1.0
       low: 0.8064
@@ -79,12 +79,12 @@ grader:
 
 assertions:
   suite: g2/fault-injection/
-  validator_sha: "023249478c03cfb87e1e2677aa1213ee9e27d14d8c53c4cce7c9d36fec2d962c"
+  validator_sha: "f145d5041f606a0f7e79b6769822be004332f7091e6232f3d1d494e8f448a489"
   last_run:
-    run_id: g2-2026-08-04-1
+    run_id: g2-2026-09-14-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-08-04
+    date: 2026-09-14
     wilson_ci:
       rate: 1.0
       low: 0.6756
@@ -96,10 +96,10 @@ audit_references:
   suite: g2/fault-injection/
   validator_sha: "674475a4f5cc44cc5d81826d4617088696896c9e40bc72e69ab4f626abd52ccb"
   last_run:
-    run_id: g2-2026-08-04-1
+    run_id: g2-2026-09-14-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-08-04
+    date: 2026-09-14
     skipped_cases: 4
     wilson_ci:
       rate: 1.0
@@ -112,10 +112,10 @@ fingerprint:
   suite: g2/fault-injection/
   validator_sha: "6f07ff0d709d14a047996f16683622ef949cd2228d6efefc9dec75d989e9834f"
   last_run:
-    run_id: g2-2026-08-04-1
+    run_id: g2-2026-09-14-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-08-04
+    date: 2026-09-14
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
@@ -128,10 +128,10 @@ run_mutation:
   suite: g2/fault-injection/
   validator_sha: "fb85f4194fb7119b1f68dc4b7403abf8a8df77954ff8cbb12696873b57bd2dc3"
   last_run:
-    run_id: g2-2026-08-04-1
+    run_id: g2-2026-09-14-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-08-04
+    date: 2026-09-14
     not_scored: "no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero"
     skipped_cases: 2
     wilson_ci:
@@ -143,19 +143,18 @@ run_mutation:
 
 verify_sketch:
   suite: g2/fault-injection/
-  validator_sha: "79f07d765ab4a1ce80459cba4fc6757ca73f344642da28ea8d074215e5a9148d"
+  validator_sha: "490f57bfdff578d942fe1733f2dd5f6994bf7a58d8a728555151f143cb201f48"
   last_run:
-    run_id: g2-2026-08-04-1
-    sensitivity: 0.0
+    run_id: g2-2026-09-14-1
+    sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-08-04
-    not_scored: "no fault case targets this validator"
+    date: 2026-09-14
     wilson_ci:
-      rate: 0.0
-      low: 0.0
+      rate: 1.0
+      low: 0.7719
       high: 1.0
-      n: 0
-      r: 0
+      n: 13
+      r: 13
 
 verify_render_tone:
   suite: g0/render-fault-injection/
@@ -171,3 +170,75 @@ verify_render_tone:
       high: 1.0
       n: 6
       r: 6
+
+corrupted_plan:
+  suite: g3/fault-injection/corrupted-plan/
+  validator_sha: "c1c9f854d7ae37858f9193aed269c84d54aa5c1e009e08307a4985fc817c882b"
+  last_run:
+    run_id: g3-2026-09-14-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-09-14
+    skipped_cases: 2
+    excluded_unscorable:
+      g3-fault-plan-hole-on-wrong-face: "g3-fault-plan-hole-on-wrong-face declares detected_by: hole_position, but its spec g3-dev-007-jig-block-blind-bore declares no hole_position check. Measured: moving the 12 mm x 15 mm bore from the top face to a side face leaves every declared assertion passing — volume 60803.540 (expect 60803.54), bbox [50, 50, 25], one logical hole, diameter 12.0, hole_through False. The axis direction is what changed and no declared assertion reads it. Scoring this as a miss would blame the loop for a spec that cannot decide the case; the fix is a hole_position or expect_extent check on the dev spec, which is an assertion-set change and not this story's to make (AD-19)"
+      g3-fault-plan-mirrored-hole-pattern: 'g3-fault-plan-mirrored-hole-pattern declares detected_by: hole_position, but its spec g3-dev-011-lever-arm declares no hole_position check. Measured: swapping the 12 mm pivot and the 8 mm linkage bore between the two ends leaves volume 13093.097, bbox [90, 20, 8], two logical holes, spacing 60.0 and hole_through True — every declared assertion passes, because the pattern is symmetric under the mirror in all of them. Only WHICH end carries WHICH diameter changed, and that needs a per-hole position or a diameter-banded position check the spec does not declare'
+    wilson_ci:
+      rate: 1.0
+      low: 0.6756
+      high: 1.0
+      n: 8
+      r: 8
+
+g3_assertions:
+  suite: g3/fault-injection/assertions/
+  validator_sha: "9adcb68251e9d07037de09f9843ecd826bf69bdf83a021f6a8a77b4dd0227321"
+  last_run:
+    run_id: g3-2026-09-14-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-09-14
+    wilson_ci:
+      rate: 1.0
+      low: 0.5101
+      high: 1.0
+      n: 4
+      r: 4
+
+visual_judge:
+  suite: g3/fault-injection/visual-judge/
+  validator_sha: "3829dff1b96ef9d86aa80873669cf118d0d3686e9b84426e2186ab897c75d02b"
+  last_run:
+    run_id: g3-2026-09-14-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-09-14
+    graded_by: 'vision-capable agent inspecting the rendered PNGs directly against benchmarks/g3/fault-injection/visual-judge/RUBRIC.md, which was written before any fixture image was rendered or seen. No API client and no credential — decision 017 governs the automatic in-loop judge (usecases/verify_visual.py, driven headless with no agent attached), not a one-off offline grading of a fixed 8-case suite.'
+    independence_caveat: 'NOT the independent judge AD-13 specifies: the grading agent also drove the designer loop. Bounded — parts authored before any judge existed, rubric predates every image — but a clean AD-13 measurement needs a separate model or separate context.'
+    low_confidence: 'Wilson 95% CI on sensitivity at n=5 is [0.566, 1.000]; the lower bound is far below the 0.95 bar. At this n one miss gives 0.800 and one flagged control 0.333, so the suite falsifies an obviously broken judge but cannot demonstrate the AD-13 bars.'
+    record: 'benchmarks/g3/fault-injection/visual-judge/GRADING-2026-09-14.md'
+    wilson_ci:
+      rate: 1.0
+      low: 0.5655
+      high: 1.0
+      n: 5
+      r: 5
+
+verify_recompute:
+  suite: g3/fault-injection/recompute/
+  validator_sha: "5c35c164ba4792139320c4fd45cd7a76a10d4165590f41642196a83fba6f917a"
+  last_run:
+    run_id: g3-2026-09-14-1
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-09-14
+    skipped_cases: 2
+    excluded_unscorable:
+      g3-fault-recompute-circular-dependency: "a circular dependency cannot be planted through the production path. Measured on FreeCAD 1.1.0 by running the op through score_recompute_infc.run_case: Cut already consumes Base, so `Base.setExpression('Height', 'Cut.Shape.BoundBox.ZLength')` closes the loop, and FreeCAD raises RuntimeError: cyclic reference to <doc>#Cut at setExpression time, inside the op. The bracket maps that to SPEC_FAILED and rolls back, leaving Base, Tool and Cut all ['Up-to-date'] 'Valid' and verify_recompute reporting verdict=OK with failing_objects=[]. The cycle is refused before it exists, so there is no document state for the validator to read. This is FreeCAD's own guard working, not a validator miss"
+      g3-fault-recompute-parameter-removed-under-binding: "removing a driving parameter from its holder plants no fault. Measured on FreeCAD 1.1.0 by running the op through score_recompute_infc.run_case: `parameters.declare` binds Box.Height by expression to Parameters.plate_thickness, then `holder.removeProperty('plate_thickness')` inside the production bracket commits OK and leaves the document at Box=['Up-to-date'] 'Valid', Parameters=['Up-to-date'] 'Valid' with verify_recompute reporting verdict=OK and failing_objects=[]. FreeCAD does not re-evaluate a bound expression when the property it names is dropped, so no object enters error state. Scoring this as a miss would blame verify_recompute for a defect that was never created; the real gap is that removeProperty leaves a stale binding silently, which is a finding about parameters.py and not about this validator"
+    wilson_ci:
+      rate: 1.0
+      low: 0.7225
+      high: 1.0
+      n: 10
+      r: 10

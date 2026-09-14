@@ -1,0 +1,102 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-003-shaft-collar",
+  "spec_text": "A plain shaft collar: an annular ring 40 mm outside diameter, 16 mm bore and 15 mm wide. The bore runs the full width of the collar.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Outline",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Outline"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Outline",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 20.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 8.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 3,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 3,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 40.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 1,
+            "value": {
+              "value": 16.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "40 mm outside, 16 mm bore"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Outline",
+        "name": "Collar",
+        "length": {
+          "value": 15.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Outline 15 mm"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "A plain annular collar: 40 mm outside, 16 mm bore, padded 15 mm. Padding the annulus makes the bore run the full width in one feature, which is what 'the bore runs the full width' asks for."
+}

@@ -1,0 +1,110 @@
+{
+  "$defs": {
+    "DimensionCallout": {
+      "properties": {
+        "kind": {
+          "const": "distance"
+        },
+        "parameter": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "view": {
+          "enum": [
+            "front",
+            "top",
+            "right"
+          ]
+        }
+      },
+      "required": [
+        "view",
+        "parameter",
+        "value",
+        "text",
+        "kind"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.drawing-sheet/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "available": {
+      "type": "boolean"
+    },
+    "callouts": {
+      "items": {
+        "$ref": "#/$defs/DimensionCallout"
+      },
+      "type": "array"
+    },
+    "page_height_px": {
+      "type": "integer"
+    },
+    "page_width_px": {
+      "type": "integer"
+    },
+    "png_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "fcb.drawing-sheet/1"
+    },
+    "svg_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "views": {
+      "items": {
+        "enum": [
+          "front",
+          "top",
+          "right"
+        ]
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "available",
+    "reason",
+    "svg_path",
+    "png_path",
+    "page_width_px",
+    "page_height_px",
+    "views",
+    "callouts"
+  ],
+  "title": "DrawingSheet",
+  "type": "object"
+}

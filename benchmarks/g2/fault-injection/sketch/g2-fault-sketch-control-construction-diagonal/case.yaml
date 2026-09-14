@@ -1,0 +1,20 @@
+id: g2-fault-sketch-control-construction-diagonal
+gate: g2
+criterion: G2.5
+targets_validator: verify_sketch@usecases.verify.read_sketch
+fault:
+  kind: clean_control
+  description: >-
+    A construction diagonal pinned to two corners is added: new geometry, no new degree of
+    freedom.
+  expectation: PASS_CLEAN
+expected:
+  dof: 0
+  fully_constrained: true
+  degenerate_geometry_count: 0
+# The fault is a runtime path, not a defective saved sketch: the fixture is the clean
+# pre-mutation input and the op named here plants the defect through the production
+# mutation path, where verify_sketch grades the document that path produced.
+planted_op: add_constrained_construction_line
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-sketch-control-construction-diagonal.yaml

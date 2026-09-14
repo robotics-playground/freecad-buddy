@@ -1,0 +1,84 @@
+# Declarative mirror of the G3 exit-criteria table (spec-freecad-buddy/phase-gates.md:81-87).
+# The gate runner READS this — it never hardcodes the criteria. Until Stories 4.2-4.6 land there
+# is no designer loop for an actor to drive, so every criterion FAILS honestly with
+# INVALID_INPUT. That failure is the entry-gate acceptance signal, not a defect (AD-19).
+#
+# G3 is forward-declared: this story (4.1) lands the 20 specs, their compiled assertions, the
+# fault suites and the judge SEAM, so the machinery is born graded and cannot be tuned to the
+# implementation it grades.
+#
+# Fault suites live BESIDE the dev/heldout split, never inside it
+# (validation-harness-design.md §1): they validate validators and never count toward the G3.1
+# pass rate.
+
+gate: G3
+
+# The designer actor plans, executes over the Phase-2 mutation surface, reads the discrepancy
+# vector plus the judge's findings, and self-repairs within the ≤3 cap. One human plan approval
+# at the start; nothing after it is supervised.
+actor:
+  model: claude-mcp-client
+  context: designer-under-test
+  transport: mcp
+  profile: spec-to-part-designer
+
+# Deterministic geometry validator, re-executed by the runner. Agent claims are never echoed.
+# `assertions.evaluate` grades the fn names the dev cases declare; the six §7.2 primitives that
+# story 4.2 implements report INVALID_INPUT until 4.2 lands (benchmarks/g3/README.md).
+grader:
+  model: deterministic-geometry-assertions
+  context: independent-grader
+  implementation: benchmarks/harness/assertions.py
+
+# The visual leg's judge (AD-21). A DISTINCT model id from `actor:` — the preflight identity
+# guard compares every actor descriptor against `grader:`, and the README records why this block
+# must also never collide with the actor. Story 4.4 replaces `benchmarks/g3/judge.py` with a real
+# vision client; today it is the honest-failing stub that reports `visual.unavailable`.
+visual_judge:
+  model: vision-judge-independent
+  context: independent-visual-judge
+  temperature: 0
+  implementation: benchmarks/g3/judge.py
+  verdict_schema: "{pass: bool, findings: [{view, observation, severity}]}"
+  check_id: visual.judge
+  min_page_width_px: 2048
+
+# Gate-level required human token (validation-harness-design.md §7), checked for PRESENCE at
+# exit (Story 4.7), not here. The spot_audit hashes the run's report set, covers >=20% of passing
+# results, and cannot be recycled across runs.
+required_tokens: [spot_audit]
+
+# The sealed held-out split is unsealed only at Gate G3 exit (Story 4.7); dev iteration touches
+# dev/ only. The runner must never sweep g3/heldout/.
+verdict:
+  heldout: sealed
+
+criteria:
+  - id: G3.1
+    text: "Spec benchmark: 20 specs end-to-end, one human plan approval; convergence = geometry assertions pass AND visual judge PASS (never the iteration cap); sealed held-out at exit, R>=10"
+    pass_rule: ">=70% pass within <=3 self-repairs; dev/held-out gap <=15pp"
+    cited_validators: [g3_assertions, visual_judge]
+  - id: G3.2
+    text: "Artifact hygiene: for every generated part read the verify reports"
+    pass_rule: "100%: valid watertight solid, recompute-clean, all sketches FullyConstrained, driving dimensions exposed as named parameters"
+    cited_validators: [verify_shape, verify_sketch, verify_recompute]
+  - id: G3.3
+    text: "Editability: script one driving-parameter change per passing part; recompute; verify"
+    pass_rule: ">=90% recompute without errors"
+    cited_validators: [verify_recompute]
+  - id: G3.4
+    text: "Self-verification catches faults: run the 10 corrupted-plan cases through the loop"
+    pass_rule: ">=9/10 spec violations detected; zero silent bad parts"
+    cited_validators: [g3_assertions, corrupted_plan]
+  - id: G3.5
+    text: "Throughput: read wall-clock from the run reports (tool-call entry to envelope return, model time included, spanning all repair iterations)"
+    pass_rule: "median <=10 min per part"
+    cited_validators: []
+  - id: G3.6
+    text: "Skills track convergence: see GS; the design-decomposition claim on its dedicated n>=40 set"
+    pass_rule: "GS criteria met per AD-14"
+    cited_validators: []
+  - id: G3.7
+    text: "Visual verification leg (AD-21): for every passing part read the verify_visual report — independent judge (never the actor), standard visual set (iso + focus + dimensioned TechDraw per-axis projections) + spec checklist, temperature 0"
+    pass_rule: "100% of passing parts carry a visual judge PASS; render/drawing/judge unavailable -> not done (operator waiver audit-logged only)"
+    cited_validators: [visual_judge]

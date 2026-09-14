@@ -1,0 +1,299 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-006-bearing-base-pad",
+  "spec_text": "The base pad of a pillow-block bearing housing: a 70 mm by 30 mm pad, 10 mm thick, with two 9 mm mounting holes on the long centreline, 50 mm apart and symmetric about the pad centre.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Outline",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Outline"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Outline",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              -35.0,
+              -15.0
+            ],
+            "end": [
+              35.0,
+              -15.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              35.0,
+              -15.0
+            ],
+            "end": [
+              35.0,
+              15.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              35.0,
+              15.0
+            ],
+            "end": [
+              -35.0,
+              15.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              -35.0,
+              15.0
+            ],
+            "end": [
+              -35.0,
+              -15.0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -35.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -15.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 70.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "70 x 30 outline"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Outline",
+        "name": "Plate",
+        "length": {
+          "value": 10.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Outline 10 mm"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Holes",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Holes"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Holes",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              -25,
+              0
+            ],
+            "radius": {
+              "value": 4.5,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              25,
+              0
+            ],
+            "radius": {
+              "value": 4.5,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": -25.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 9.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 25.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 1,
+            "value": {
+              "value": 9.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "2 hole centres"
+    },
+    {
+      "tool": "feature_hole",
+      "args": {
+        "body": "Body",
+        "profile": "Holes",
+        "name": "Drill",
+        "diameter": {
+          "value": 9.0,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll",
+        "reversed": true
+      },
+      "intent": "drill 9.0 mm through"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "70x30x10 pad. The two 9 mm holes are 50 mm apart and symmetric about the centre, so they sit at +-25 on the long centreline."
+}

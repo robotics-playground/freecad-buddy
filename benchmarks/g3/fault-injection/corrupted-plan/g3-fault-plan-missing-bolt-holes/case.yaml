@@ -1,0 +1,22 @@
+id: g3-fault-plan-missing-bolt-holes
+gate: g3
+criterion: G3.4
+targets_validator: corrupted_plan@usecases.designer_loop.detect_spec_violation
+fault:
+  kind: planted_defect
+  description: >-
+    The plan builds the gasket ring and its 60 mm bore but omits the six bolt holes the spec
+    requires. The part is a clean valid solid that simply lacks a required feature.
+  expectation: DETECT
+corruption_class: omission
+spec_ref: g3-dev-008-flange-gasket
+detected_by: count_cylindrical_holes
+# Detection must come from measuring the produced ARTIFACT. A loop that flags this
+# by inspecting the plan text would pass the suite while catching no real deviant
+# part (AD-13: assertions measure the artifact, never the plan).
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the deviant part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: missing_bolt_holes
+fixture: driven-by-designer-loop

@@ -1,0 +1,21 @@
+id: g3-fault-recompute-stale-dependent-only
+gate: g3
+criterion: G3.2
+targets_validator: verify_recompute@usecases.verify.verify_recompute
+fault:
+  kind: planted_defect
+  description: >-
+    Only the DOWNSTREAM boolean is left unresolved; every input it consumes is up to date. The
+    op writes no object, so a validator scoped to what the mutation touched would see nothing.
+  expectation: DETECT
+fault_class: dependency_order
+detected_by: recompute.object
+# Detection must come from reading the DOCUMENT the production path left behind. A validator that
+# reported this case by inspecting the mutation status, or by the case's own declaration, would
+# pass the suite while catching no real broken document (AD-13: measure the artifact).
+# The fault is planted by running `planted_op` through `usecases.transaction.run_mutation` - the
+# production bracket every shipped mutation tool writes through - after its fixture builds the same
+# way. No .FCStd ships: the document IS the fixture, which is why `fixture` declares the driver
+# rather than a file.
+planted_op: stale_dependent_only
+fixture: driven-by-mutation-bracket

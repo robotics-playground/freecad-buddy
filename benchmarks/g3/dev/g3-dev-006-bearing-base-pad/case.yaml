@@ -1,0 +1,25 @@
+id: g3-dev-006-bearing-base-pad
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 70*30*10 - 2*pi*4.5^2*10 = 21000 - 1272.345 = 19727.655 mm^3
+# holes 50 mm apart symmetric about centre -> each sits 10 mm from its end ((70-50)/2 = 10)
+# bbox = 70 x 30 x 10
+spec: >-
+  The base pad of a pillow-block bearing housing: a 70 mm by 30 mm pad, 10 mm thick, with two 9
+  mm mounting holes on the long centreline, 50 mm apart and symmetric about the pad centre.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares no fixture and check_provenance exempts it by kind.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-006-bearing-base-pad.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 19727.655, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [70.0, 30.0, 10.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 2}
+    - {fn: hole_spacing, expect: 50.0, tol: {abs: 0.05}}
+    - {fn: hole_diameter, expect: 9.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}

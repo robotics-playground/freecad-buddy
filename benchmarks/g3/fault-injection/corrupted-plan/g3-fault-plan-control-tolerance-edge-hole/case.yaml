@@ -1,0 +1,22 @@
+id: g3-fault-plan-control-tolerance-edge-hole
+gate: g3
+criterion: G3.4
+targets_validator: corrupted_plan@usecases.designer_loop.detect_spec_violation
+fault:
+  kind: clean_control
+  description: >-
+    A faithful plan whose 5.5 mm hole lands 0.04 mm oversize — inside the 0.05 mm linear band. A
+    guard that flags this has an unusable false-alarm rate on real machining variation, and one
+    that also misses the 8 mm defect scores zero sensitivity.
+  expectation: PASS_CLEAN
+corruption_class: none
+spec_ref: g3-dev-001-mounting-plate
+# Detection must come from measuring the produced ARTIFACT. A loop that flags this
+# by inspecting the plan text would pass the suite while catching no real deviant
+# part (AD-13: assertions measure the artifact, never the plan).
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the deviant part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: tolerance_edge_hole
+fixture: driven-by-designer-loop

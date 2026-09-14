@@ -34,4 +34,8 @@ _automation/
 # Audit log written to repo root when FREECAD_BUDDY_AUDIT_LOG is unset
 freecad-buddy-audit.jsonl
 
+# Session workdir written to repo root when FREECAD_BUDDY_WORKDIR is unset; holds transient
+# renders and temp documents, never a fixture
+freecad-buddy-workdir/
+
 .mcp.json

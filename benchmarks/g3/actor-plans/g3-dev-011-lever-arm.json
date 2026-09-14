@@ -1,0 +1,334 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-011-lever-arm",
+  "spec_text": "A lever arm from 8 mm plate, 90 mm long and 20 mm wide. A 12 mm pivot bore sits on the centreline 15 mm from one end, and an 8 mm linkage hole sits on the centreline 15 mm from the other end. Both holes go through.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Outline",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Outline"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Outline",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              -45.0,
+              -10.0
+            ],
+            "end": [
+              45.0,
+              -10.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              45.0,
+              -10.0
+            ],
+            "end": [
+              45.0,
+              10.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              45.0,
+              10.0
+            ],
+            "end": [
+              -45.0,
+              10.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              -45.0,
+              10.0
+            ],
+            "end": [
+              -45.0,
+              -10.0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -45.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -10.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 90.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "90x20 arm outline"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Outline",
+        "name": "Arm",
+        "length": {
+          "value": 8.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Outline 8 mm"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Pivot",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Pivot"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Pivot",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              -30,
+              0
+            ],
+            "radius": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 12.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "12 mm pivot bore"
+    },
+    {
+      "tool": "feature_hole",
+      "args": {
+        "body": "Body",
+        "profile": "Pivot",
+        "name": "PivotBore",
+        "diameter": {
+          "value": 12.0,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll",
+        "reversed": true
+      },
+      "intent": "drill 12.0 mm through"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Linkage",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Linkage"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Linkage",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              30,
+              0
+            ],
+            "radius": {
+              "value": 4.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 8.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "8 mm linkage hole"
+    },
+    {
+      "tool": "feature_hole",
+      "args": {
+        "body": "Body",
+        "profile": "Linkage",
+        "name": "LinkageHole",
+        "diameter": {
+          "value": 8.0,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll",
+        "reversed": true
+      },
+      "intent": "drill 8.0 mm through"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "90x20x8 plate. The two holes differ in diameter, so each gets its own profile and its own Hole feature. 15 mm from each end on a centred outline is -30 and +30."
+}

@@ -285,13 +285,26 @@ def test_link_sub_entries_normalizes_both_property_shapes(value, expected):
     assert tnp_guard._link_sub_entries(value) == expected
 
 
-def test_assertions_module_imports_without_freecad_and_declares_the_eight_fns():
+def test_assertions_module_imports_without_freecad_and_declares_the_closed_vocabulary():
+    """The eleven closed §7.2 primitives plus the three declared G2 extensions, and nothing else.
+
+    Spelled as a literal rather than derived: the point of a closed vocabulary is that growing it
+    is a deliberate edit here, not a side effect of adding a measurer (AD-13).
+    """
     assert assertions.SUPPORTED_FNS == {
+        # verification-design.md §7.2
         "is_valid_solid",
         "count_cylindrical_holes",
+        "hole_diameter",
+        "hole_position",
         "hole_spacing",
         "hole_through",
+        "distance_between",
+        "angle_between",
+        "expect_bbox",
+        "expect_extent",
         "expect_volume",
+        # the G2 extensions declared in benchmarks/g2/README.md
         "expect_solid_count",
         "expect_sketch_fully_constrained",
         "expect_sketch_geometry_count",

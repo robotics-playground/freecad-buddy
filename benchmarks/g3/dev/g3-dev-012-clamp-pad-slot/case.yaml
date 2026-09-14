@@ -1,0 +1,23 @@
+id: g3-dev-012-clamp-pad-slot
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 40*40*20 - 20*40*10 = 32000 - 8000 = 24000 mm^3
+# the remaining material is 10 mm of full-width base plus two 10x10x40 walls
+# bbox = 40 x 40 x 20 (the slot removes material but not the outer extents)
+# the slot is rectangular -> no cylindrical hole
+spec: >-
+  A clamp pad 40 mm square and 20 mm tall with a rectangular slot cut right across the top face.
+  The slot is 20 mm wide and 10 mm deep, and runs the full 40 mm depth of the pad.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares no fixture and check_provenance exempts it by kind.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-012-clamp-pad-slot.yaml
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 24000.0, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [40.0, 40.0, 20.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 0}

@@ -24,6 +24,12 @@ what the run is graded on:
 ``assertions``
     ``benchmarks.harness.assertions.evaluate`` measured against the commanded parameters the case's
     ``planted_ops.CHECKS`` entry declares: a planted defect is detected when a check fails.
+``verify_sketch``
+    the validator's OWN verdict on the sketch the op produced, read inside the open transaction —
+    after the op, before ``post_verify`` can short-circuit and before a failing verify rolls the
+    document back. A planted defect is detected when ``read_sketch`` returns a non-``OK`` status.
+    Grading off the mutation status instead would credit this validator for catches the recompute
+    sweep made, and grading after the bracket returns would read the restored clean sketch.
 
 Computes sensitivity / false alarm + a Wilson CI per validator, hashes each validator's sources and
 the cases scored over it into ``validator_sha``, and merge-writes only those blocks of
@@ -65,9 +71,14 @@ if str(_EXPORT_SCORER_DIR) not in sys.path:
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
+_SKETCH_SUITE_DIR = HERE / "sketch"
+if str(_SKETCH_SUITE_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKETCH_SUITE_DIR))
+
 import planted_ops  # noqa: E402
+import planted_sketches  # noqa: E402
 from benchmarks.harness import assertions  # noqa: E402
-from freecad_buddy.usecases import stats, transaction  # noqa: E402
+from freecad_buddy.usecases import stats, transaction, verify  # noqa: E402
 from score_export_verify import merge_validators_yaml  # noqa: E402
 
 VALIDATORS_YAML = REPO_ROOT / "benchmarks" / "_registry" / "validators.yaml"
@@ -220,18 +231,92 @@ def _assertions_failed(document: object, case: dict) -> tuple[bool, str]:
             f"case {case['id']!r} targets 'assertions' but planted_ops.CHECKS declares no "
             "commanded parameters for it"
         )
-    results = assertions.evaluate(document, checks)
+    results = assertions.evaluate(
+        document, checks, (case.get("assertions") or {}).get("anchor_frame")
+    )
     failed = [r for r in results if not r.get("passed")]
     detail = "; ".join(str(r.get("detail", {}).get("message", "")) for r in failed)
     return bool(failed), detail
+
+
+def _resolve_op(case: dict):
+    """The callable the case's ``planted_op`` denotes, from whichever suite registry declares it.
+
+    :raises SuiteError: no suite registry carries an op of that name.
+    """
+    name = case["planted_op"]
+    for module in (planted_ops, planted_sketches):
+        if name in module.REGISTRY:
+            return module.REGISTRY[name]
+    raise SuiteError(f"case {case['id']!r}: no planted op named {name!r} in any suite registry")
+
+
+def undriveable_reason(planted_op: str) -> str | None:
+    """Why ``planted_op`` cannot be driven on this build, or ``None`` when it can."""
+    return planted_ops.UNDRIVEABLE.get(planted_op) or planted_sketches.UNDRIVEABLE.get(planted_op)
+
+
+def _grade_sketch_inside_bracket(op, captured: dict):
+    """Wrap ``op`` so ``verify_sketch`` grades the document the op just produced.
+
+    The reading has to happen HERE — inside the open transaction, after the op and before
+    ``post_verify`` — for two reasons, both measured on FreeCAD 1.1.0:
+
+    * ``post_verify`` short-circuits at its ``_invalid_objects`` sweep for a conflicting or
+      over-constrained sketch, so ``verify_sketch`` never runs on four of this suite's planted
+      defects and the block reports ``fully_constrained: not_measured``. Reading detection off the
+      mutation status would credit ``verify_sketch`` with a catch the recompute sweep made.
+    * A failing ``post_verify`` rolls the document back, and the restored sketch is clean, so a
+      reading taken after ``run_mutation`` returns reports ``dof=0``/``FullyConstrained=True`` for
+      every planted defect — a perfect miss rate measured over a document that no longer holds the
+      fault.
+
+    ``read_sketch`` rather than ``verify_sketch`` because the registry lock is already held.
+    """
+
+    def graded(document: object) -> list[str]:
+        touched = list(op(document) or [])
+        try:
+            envelope = verify.read_sketch(document, planted_sketches.SKETCH_NAME)
+        except Exception as exc:  # noqa: BLE001 - a validator that raised graded nothing
+            captured["error"] = f"{type(exc).__name__}: {exc}"
+            return touched
+        captured["status"] = envelope.get("status")
+        captured["subject"] = (envelope.get("structured_content") or {}).get("subject") or {}
+        return touched
+
+    return graded
+
+
+def _sketch_verdict(captured: dict, case_id: str) -> tuple[bool, str]:
+    """Grade one sketch case on ``verify_sketch``'s own verdict.
+
+    Detection is the validator returning a non-``OK`` status and nothing else, so a case cannot be
+    graded by what it declares about itself.
+
+    :raises SuiteError: the validator never produced a verdict, so the case was never graded.
+    """
+    if "status" not in captured:
+        raise SuiteError(
+            f"case {case_id!r}: verify_sketch produced no verdict "
+            f"({captured.get('error', 'the graded op did not run')})"
+        )
+    subject = captured.get("subject") or {}
+    detected = captured["status"] != "OK"
+    verdict = (
+        f"{captured['status']}/dof={subject.get('dof')} "
+        f"fc={subject.get('fully_constrained')} "
+        f"red={len(subject.get('redundant') or [])}"
+    )
+    return detected, verdict
 
 
 def _run_case(case: dict) -> tuple[bool, str]:
     """Drive one case's ``planted_op`` through ``run_mutation``; return ``(detected, verdict)``.
 
     ``detected`` is what the case's target validator concluded — the bracket refused to commit,
-    the TNP audit flagged a reference, or an assertion failed. ``verdict`` is the short string the
-    per-case table prints.
+    the TNP audit flagged a reference, an assertion failed, or ``verify_sketch`` returned a
+    non-``OK`` verdict. ``verdict`` is the short string the per-case table prints.
 
     :raises planted_ops.OpNotDriveable: the op has no reachable trigger on this build.
     """
@@ -239,7 +324,10 @@ def _run_case(case: dict) -> tuple[bool, str]:
 
     from freecad_buddy.usecases.documents import DocumentRegistry
 
-    op = planted_ops.resolve(case["planted_op"])
+    op = _resolve_op(case)
+    captured: dict = {}
+    if case["validator"] == "verify_sketch":
+        op = _grade_sketch_inside_bracket(op, captured)
     fixture = case["dir"] / (case["fixture"] or "fixture.FCStd")
     if not fixture.is_file():
         raise SuiteError(f"case {case['id']!r}: fixture not found: {fixture}")
@@ -276,6 +364,8 @@ def _run_case(case: dict) -> tuple[bool, str]:
                 )
             failed, detail = _assertions_failed(document, case)
             return failed, f"OK/{'FAIL' if failed else 'PASS'} {detail}"[:60]
+        if case["validator"] == "verify_sketch":
+            return _sketch_verdict(captured, case["id"])
         raise SuiteError(f"case {case['id']!r}: unscorable validator {case['validator']!r}")
     finally:
         for name in list(App.listDocuments().keys()):
@@ -305,13 +395,13 @@ def score() -> dict[str, dict]:
         controls = 0
 
         for case in cases:
-            reason = planted_ops.UNDRIVEABLE.get(case["planted_op"])
+            reason = undriveable_reason(case["planted_op"])
             if reason:
                 skipped.append((case["id"], reason))
                 continue
             try:
                 is_detected, verdict = _run_case(case)
-            except planted_ops.OpNotDriveable as exc:
+            except (planted_ops.OpNotDriveable, planted_sketches.OpNotDriveable) as exc:
                 skipped.append((case["id"], str(exc)))
                 continue
             except SuiteError:

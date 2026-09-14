@@ -1,0 +1,9 @@
+{
+  "archive_sha256": "308279a09c75e482a6f495c74bea63fb16bf0ca3f8f93cbd1fc1c51b79517120",
+  "case_count": 7,
+  "case_id_list_sha256": "8df0837d1992605507181347fcd36158ef5eb6cba54f06c0e3130faa90f337e3",
+  "gate": "G3",
+  "sealed_at": "2026-09-13T16:11:49.023960+00:00",
+  "sealed_by": "thuan",
+  "unseal_events": []
+}

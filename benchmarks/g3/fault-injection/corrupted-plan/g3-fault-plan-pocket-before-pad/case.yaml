@@ -1,0 +1,23 @@
+id: g3-fault-plan-pocket-before-pad
+gate: g3
+criterion: G3.4
+targets_validator: corrupted_plan@usecases.designer_loop.detect_spec_violation
+fault:
+  kind: planted_defect
+  description: >-
+    The plan pockets the slot before padding the block to full height, so the slot is buried
+    inside the finished solid instead of open at the top face. Every step and every dimension is
+    the one the spec states; only their order is wrong.
+  expectation: DETECT
+corruption_class: ordering
+spec_ref: g3-dev-012-clamp-pad-slot
+detected_by: expect_volume
+# Detection must come from measuring the produced ARTIFACT. A loop that flags this
+# by inspecting the plan text would pass the suite while catching no real deviant
+# part (AD-13: assertions measure the artifact, never the plan).
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the deviant part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: pocket_before_pad
+fixture: driven-by-designer-loop

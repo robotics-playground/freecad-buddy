@@ -1,0 +1,448 @@
+{
+  "$defs": {
+    "Check": {
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorDetail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "measured": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "measured_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "rate",
+                "quantity",
+                "count",
+                "flag",
+                "text"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "passed"
+      ],
+      "type": "object"
+    },
+    "DesignPlan": {
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "approved_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema": {
+          "const": "fcb.design-plan/1"
+        },
+        "spec_id": {
+          "type": "string"
+        },
+        "spec_text": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/$defs/PlanStep"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "spec_id",
+        "spec_text",
+        "steps",
+        "approved"
+      ],
+      "type": "object"
+    },
+    "Discrepancy": {
+      "properties": {
+        "check_id": {
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "measured": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "check_id",
+        "measured",
+        "expected"
+      ],
+      "type": "object"
+    },
+    "ErrorDetail": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "constraint_ids": {
+          "items": {
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "data": {
+          "type": "object"
+        },
+        "message": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "IterationRecord": {
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/Check"
+          },
+          "type": "array"
+        },
+        "discrepancy": {
+          "items": {
+            "$ref": "#/$defs/Discrepancy"
+          },
+          "type": "array"
+        },
+        "elapsed_s": {
+          "type": "number"
+        },
+        "executed_steps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "geometry_pass": {
+          "type": "boolean"
+        },
+        "index": {
+          "type": "integer"
+        },
+        "judge_findings": {
+          "items": {
+            "$ref": "#/$defs/JudgeFinding"
+          },
+          "type": "array"
+        },
+        "repair": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema": {
+          "const": "fcb.designer-iteration/1"
+        },
+        "step_failure": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visual_detail": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visual_pass": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "index",
+        "geometry_pass",
+        "visual_pass",
+        "discrepancy"
+      ],
+      "type": "object"
+    },
+    "JudgeFinding": {
+      "properties": {
+        "observation": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocking",
+            "advisory"
+          ]
+        },
+        "view": {
+          "enum": [
+            "iso",
+            "focus",
+            "front",
+            "top",
+            "right"
+          ]
+        }
+      },
+      "required": [
+        "view",
+        "observation",
+        "severity"
+      ],
+      "type": "object"
+    },
+    "PlanStep": {
+      "properties": {
+        "args": {
+          "type": "object"
+        },
+        "intent": {
+          "type": "string"
+        },
+        "tool": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool",
+        "args"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.designer-run/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "converged": {
+      "type": "boolean"
+    },
+    "convergence_rule": {
+      "type": "string"
+    },
+    "detail": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "document": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "elapsed_s": {
+      "type": "number"
+    },
+    "iterations": {
+      "items": {
+        "$ref": "#/$defs/IterationRecord"
+      },
+      "type": "array"
+    },
+    "max_repairs": {
+      "type": "integer"
+    },
+    "plan": {
+      "$ref": "#/$defs/DesignPlan"
+    },
+    "repairs_used": {
+      "type": "integer"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "fcb.designer-run/1"
+    },
+    "spec_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "CONVERGED",
+        "CAP_EXHAUSTED",
+        "PLAN_REFUSED",
+        "EXECUTION_FAILED"
+      ]
+    },
+    "workdir": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "spec_id",
+    "status",
+    "converged",
+    "convergence_rule",
+    "repairs_used",
+    "max_repairs",
+    "iterations"
+  ],
+  "title": "RunRecord",
+  "type": "object"
+}

@@ -23,11 +23,11 @@ Expected output: `shipped: 45 missing: none`.
 
 | Metric | Value |
 | --- | --- |
-| Test-case files | 15 (TC-01..TC-14 green gate, TC-99 conformance gate) |
-| Scenarios | 259 |
-| Checkpoints | 1637 |
+| Test-case files | 17 (TC-01..TC-14 + TC-16 green gate, TC-15 regression, TC-99 conformance gate) |
+| Scenarios | 270 (259 counted + TC-15's 7 + TC-16's 4) |
+| Checkpoints | 1697 (1637 counted + TC-15's 41 + TC-16's 19) |
 | Shipped tools covered | 45 / 45 |
-| Green-gate scenarios | 251 |
+| Green-gate scenarios | 262 |
 | Conformance-gate scenarios (expected-fail) | 8 |
 
 ## 2. Scenario allocation by file
@@ -52,7 +52,18 @@ are executed: **GUI** = `cua-driver` against the live FreeCAD window, **MCP** = 
 | TC-12 | GUI workflows (maximal) | green | High | **GUI** | 15 | 98 |
 | TC-13 | GUI ↔ MCP parity | green | Critical | **GUI+MCP** | 18 | 123 |
 | TC-14 | Viewport framing & auto-fit | green | Critical | **GUI+MCP+H1** | 16 | 88 |
+| TC-15 | Self-verifying fit regression | regression | Critical | **GUI+MCP** | 7 | 41 |
+| TC-16 | Headless TechDraw capability boundary | green | Critical | **GUI+FreeCADCmd** | 4 | 19 |
 | TC-99 | AD conformance gaps | conformance | — | MCP×2 | 8 | 47 |
+
+TC-15 had no row before this change — pre-existing drift from story 9.1. Its counts are measured
+from the file (7 scenarios, 41 checkpoints) and added here, because a table that omits a shipped
+test file understates coverage in exactly the direction that hides a gap.
+
+TC-16 covers no shipped tool: it checks a **capability boundary** in FreeCAD itself (which TechDraw
+entry points exist headless versus in the GUI), which is why it appears in no tool row below. The
+boundary is what `docs/decisions/016-headless-techdraw-export.md` records and what Story 4.3's
+design rests on.
 
 ## 3. Tool → TC coverage
 
@@ -220,7 +231,7 @@ These are not gaps in the matrix; they are the documented edge of the suite.
 
 | Area | Why it is not covered | Recorded in |
 | --- | --- | --- |
-| Epics 4–7 (designer loop, visual judge, TechDraw, Phase-4 service, skills loader, URDF/SDF) | No source exists | `APPENDIX-A-deferred-coverage.md` |
+| Epics 4–7 (designer loop, visual judge, TechDraw tool, Phase-4 service, skills loader, URDF/SDF) | No source exists. TC-16 is the one exception and does not contradict this row: it tests **FreeCAD's** TechDraw capability boundary, which story 4.1's spike verdict rests on, not any freecad-buddy tool. | `APPENDIX-A-deferred-coverage.md` |
 | 6 planned-but-unshipped tools | Not in `tool_specs()` | `APPENDIX-A-deferred-coverage.md` |
 | `OOM_KILLED` status | Not reachable on the GUI or H1 host; TC-09-02 asserts the status **set** is closed, not that every member is reachable | TC-09-02 |
 | AD-6 cross-tag fingerprint comparison | Producing two serializer tags needs two FreeCAD builds; conditional-skip | TC-05 |

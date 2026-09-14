@@ -1,0 +1,21 @@
+id: g2-fault-sketch-control-short-segment-above-tolerance
+gate: g2
+criterion: G2.5
+targets_validator: verify_sketch@usecases.verify.read_sketch
+fault:
+  kind: clean_control
+  description: >-
+    A fully dimensioned 1 um segment: short, but above the 1e-7 degeneracy tolerance. The
+    discriminating pair for the zero-length planted case, identical except for being long enough
+    not to be degenerate.
+  expectation: PASS_CLEAN
+expected:
+  dof: 0
+  fully_constrained: true
+  degenerate_geometry_count: 0
+# The fault is a runtime path, not a defective saved sketch: the fixture is the clean
+# pre-mutation input and the op named here plants the defect through the production
+# mutation path, where verify_sketch grades the document that path produced.
+planted_op: add_short_segment_above_tolerance
+fixture: fixture.FCStd
+provenance: ../../../../_registry/provenance/g2-fault-sketch-control-short-segment-above-tolerance.yaml

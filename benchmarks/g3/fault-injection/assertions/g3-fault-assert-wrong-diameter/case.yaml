@@ -1,0 +1,18 @@
+id: g3-fault-assert-wrong-diameter
+gate: g3
+criterion: G3.1
+targets_validator: g3_assertions@benchmarks.harness.assertions
+fault:
+  kind: planted_defect
+  description: >-
+    Every hole is present but drilled 6.5 mm instead of 5.5 mm — a 1 mm error, twenty times the
+    0.05 mm linear band.
+  expectation: DETECT
+spec_ref: g3-dev-001-mounting-plate
+detected_by: hole_diameter
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the defective part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: assert_wrong_diameter
+fixture: driven-by-designer-loop

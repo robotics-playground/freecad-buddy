@@ -1,0 +1,36 @@
+id: g3-fault-visual-mirrored-part
+gate: g3
+criterion: G3.7
+targets_validator: visual_judge@benchmarks.g3.judge
+fault:
+  kind: planted_defect
+  description: >-
+    The bracket is built as the mirror image of the spec: its clearance hole sits 12 mm from the
+    RIGHT-hand edge where the spec states the left. Every dimension, the hole count and the hole
+    diameter all measure correct, so the geometry assertions pass — only the visual leg can see
+    that the part is the wrong hand. The spec's hole is what makes the part chiral; without it a
+    mirrored L-bracket is the same part turned 180 degrees and there is no defect to find
+    (DW-127).
+  expectation: DETECT
+spec_ref: g3-dev-002-l-bracket
+must_not_be_caught_by: geometry_assertions_pass
+planted_op: visual_mirrored_part
+# This fault is invisible to the geometry leg by construction: every assertion
+# passes. Only the visual judge can reach it, which is what makes the leg
+# conjunctive rather than decorative. Measured, and recorded per case in
+# `render-manifest.json` under `geometry_leg`.
+# The part and its standard visual set (iso render + dimensioned three-view sheet) are BUILT by
+# `render_visual_judge.py`, which drives this case's `planted_op` through the designer loop and
+# renders the result. The images live in `render/` and `render-manifest.json` carries the spec text
+# and the analytic facts a grader needs.
+#
+# No verdict has been produced. Grading these images is an act of INSPECTION: a vision-capable
+# judge looks at the render and the sheet and decides. It needs no API client and no credential,
+# so decision 017 does not govern it — that decision governs the IN-LOOP judge
+# (`usecases/verify_visual.py`), which runs automatically inside the designer loop with no agent
+# attached and therefore does need a wired backend. Grading a fixed 8-case suite once, offline, is
+# a different act from calling a judge on every loop iteration.
+#
+# `validators.yaml`'s `visual_judge` row stays `not_scored` until a judge actually grades the
+# images and a sensitivity number is recorded from that grading.
+fixture: driven-by-designer-loop

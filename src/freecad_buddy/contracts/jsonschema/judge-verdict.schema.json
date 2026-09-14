@@ -1,0 +1,51 @@
+{
+  "$defs": {
+    "JudgeFinding": {
+      "properties": {
+        "observation": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "blocking",
+            "advisory"
+          ]
+        },
+        "view": {
+          "enum": [
+            "iso",
+            "focus",
+            "front",
+            "top",
+            "right"
+          ]
+        }
+      },
+      "required": [
+        "view",
+        "observation",
+        "severity"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.judge-verdict/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/JudgeFinding"
+      },
+      "type": "array"
+    },
+    "pass": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "pass",
+    "findings"
+  ],
+  "title": "JudgeVerdict",
+  "type": "object"
+}

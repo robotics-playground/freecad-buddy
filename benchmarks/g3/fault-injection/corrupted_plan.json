@@ -1,0 +1,106 @@
+{
+  "controls": 4,
+  "detected": 8,
+  "flagged": 0,
+  "planted": 8,
+  "rows": [
+    {
+      "detected_by": "hole_through",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-blind-hole-made-through",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_through"
+    },
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-plan-control-equivalent-step-order",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-plan-control-faithful-mounting-plate",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-plan-control-named-datum-honoured",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-plan-control-tolerance-edge-hole",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": "hole_position",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-datum-origin-swapped",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_position"
+    },
+    {
+      "detected_by": "expect_volume",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-extra-unrequested-pocket",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.expect_volume"
+    },
+    {
+      "detected_by": "count_cylindrical_holes",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-missing-bolt-holes",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.count_cylindrical_holes"
+    },
+    {
+      "detected_by": "expect_volume",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-pocket-before-pad",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.expect_volume"
+    },
+    {
+      "detected_by": "hole_diameter",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-radius-for-diameter",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_diameter"
+    },
+    {
+      "detected_by": "hole_diameter",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-wrong-hole-diameter",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_diameter"
+    },
+    {
+      "detected_by": "expect_bbox",
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-wrong-plate-thickness",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.expect_bbox"
+    }
+  ],
+  "skipped": [
+    {
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-hole-on-wrong-face",
+      "reason": "g3-fault-plan-hole-on-wrong-face declares detected_by: hole_position, but its spec g3-dev-007-jig-block-blind-bore declares no hole_position check. Measured: moving the 12 mm x 15 mm bore from the top face to a side face leaves every declared assertion passing \u2014 volume 60803.540 (expect 60803.54), bbox [50, 50, 25], one logical hole, diameter 12.0, hole_through False. The axis direction is what changed and no declared assertion reads it. Scoring this as a miss would blame the loop for a spec that cannot decide the case; the fix is a hole_position or expect_extent check on the dev spec, which is an assertion-set change and not this story's to make (AD-19)"
+    },
+    {
+      "expectation": "DETECT",
+      "id": "g3-fault-plan-mirrored-hole-pattern",
+      "reason": "g3-fault-plan-mirrored-hole-pattern declares detected_by: hole_position, but its spec g3-dev-011-lever-arm declares no hole_position check. Measured: swapping the 12 mm pivot and the 8 mm linkage bore between the two ends leaves volume 13093.097, bbox [90, 20, 8], two logical holes, spacing 60.0 and hole_through True \u2014 every declared assertion passes, because the pattern is symmetric under the mirror in all of them. Only WHICH end carries WHICH diameter changed, and that needs a per-hole position or a diameter-banded position check the spec does not declare"
+    }
+  ],
+  "validator": "corrupted_plan",
+  "visual_leg": "fail-closed; no live judge call (decision 017). Geometry leg only."
+}

@@ -142,6 +142,19 @@
             }
           ]
         },
+        "varset_backend": {
+          "anyOf": [
+            {
+              "enum": [
+                "varset",
+                "spreadsheet"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "wilson_ci": {
           "anyOf": [
             {

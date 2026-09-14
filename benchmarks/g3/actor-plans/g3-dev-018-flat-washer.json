@@ -1,0 +1,102 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-018-flat-washer",
+  "spec_text": "An M10 flat washer: 21 mm outside diameter, 10.3 mm bore and 2 mm thick.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Outline",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Outline"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Outline",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 10.5,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 5.15,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 3,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 3,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 21.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 1,
+            "value": {
+              "value": 10.3,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "21 mm outside, 10.3 mm bore"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Outline",
+        "name": "Washer",
+        "length": {
+          "value": 2.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Outline 2 mm"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "M10 flat washer: 21 mm outside, 10.3 mm bore, 2 mm thick."
+}

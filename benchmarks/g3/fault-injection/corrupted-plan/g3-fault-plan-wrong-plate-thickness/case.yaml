@@ -1,0 +1,22 @@
+id: g3-fault-plan-wrong-plate-thickness
+gate: g3
+criterion: G3.4
+targets_validator: corrupted_plan@usecases.designer_loop.detect_spec_violation
+fault:
+  kind: planted_defect
+  description: >-
+    The plan pads the base sketch 8 mm where the spec states 6 mm. The part is a valid solid of
+    the right outline and hole pattern; only thickness and volume are wrong.
+  expectation: DETECT
+corruption_class: value
+spec_ref: g3-dev-001-mounting-plate
+detected_by: expect_bbox
+# Detection must come from measuring the produced ARTIFACT. A loop that flags this
+# by inspecting the plan text would pass the suite while catching no real deviant
+# part (AD-13: assertions measure the artifact, never the plan).
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the deviant part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: wrong_plate_thickness
+fixture: driven-by-designer-loop

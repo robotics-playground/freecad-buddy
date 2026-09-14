@@ -1,0 +1,21 @@
+id: g3-fault-recompute-feature-errors-on-rebuild
+gate: g3
+criterion: G3.2
+targets_validator: verify_recompute@usecases.verify.verify_recompute
+fault:
+  kind: planted_defect
+  description: >-
+    A boolean Tool is pointed at a datum carrying no Shape, so the feature errors every time it
+    rebuilds: FreeCAD reports 'Linked object is not a Part object'.
+  expectation: DETECT
+fault_class: rebuild_error
+detected_by: recompute.object
+# Detection must come from reading the DOCUMENT the production path left behind. A validator that
+# reported this case by inspecting the mutation status, or by the case's own declaration, would
+# pass the suite while catching no real broken document (AD-13: measure the artifact).
+# The fault is planted by running `planted_op` through `usecases.transaction.run_mutation` - the
+# production bracket every shipped mutation tool writes through - after its fixture builds the same
+# way. No .FCStd ships: the document IS the fixture, which is why `fixture` declares the driver
+# rather than a file.
+planted_op: feature_errors_on_rebuild
+fixture: driven-by-mutation-bracket

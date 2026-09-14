@@ -1,0 +1,241 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-009-flanged-bushing",
+  "spec_text": "A flanged bushing turned from one piece. The flange is 30 mm in diameter and 4 mm thick. The body is 18 mm in diameter and extends a further 16 mm from the flange. A 10 mm bore runs through the whole 20 mm length.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Flange",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Flange"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Flange",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 15.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "30 mm flange disc"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Flange",
+        "name": "FlangeDisc",
+        "length": {
+          "value": 4.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Flange 4 mm"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Body18",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Body18"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Body18",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 9.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 18.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "18 mm body"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Body18",
+        "name": "BodyStem",
+        "length": {
+          "value": 20.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Body18 20 mm"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Bore",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Bore"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Bore",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 5.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 10.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "10 mm through bore"
+    },
+    {
+      "tool": "feature_hole",
+      "args": {
+        "body": "Body",
+        "profile": "Bore",
+        "name": "BoreHole",
+        "diameter": {
+          "value": 10.0,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll",
+        "reversed": true
+      },
+      "intent": "drill 10.0 mm through"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "The flange pads 4 mm one way and the 18 mm body pads 16 mm the other, giving the stated 20 mm overall length from one piece. The 10 mm bore is drilled ThroughAll so it runs the whole length."
+}

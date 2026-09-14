@@ -1,0 +1,19 @@
+id: g3-fault-assert-control-within-band-spacing
+gate: g3
+criterion: G3.1
+targets_validator: g3_assertions@benchmarks.harness.assertions
+fault:
+  kind: clean_control
+  description: >-
+    The holes sit 80.04 mm apart — inside the 0.05 mm band. Pairs with the 0.5 mm spacing
+    defect: the same kind of error, an order of magnitude smaller, and it must NOT be flagged. A
+    tolerance tightened until the 0.5 mm case is caught but this one is too is mis-calibrated,
+    which is exactly what this control measures.
+  expectation: PASS_CLEAN
+spec_ref: g3-dev-005-rail-shim
+# The fault is planted by driving `planted_op`'s plan through
+# `usecases.designer_loop.run_designer_loop`, so the defective part is produced by the
+# production mutation path rather than carved into a saved document. No .FCStd ships:
+# the fixture IS the plan, which is why `fixture` declares the driver rather than a file.
+planted_op: assert_within_band_spacing
+fixture: driven-by-designer-loop

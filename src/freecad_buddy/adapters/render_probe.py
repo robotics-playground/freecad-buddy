@@ -12,6 +12,7 @@ without a GUI stack; this is the only ring outside ``hosts/`` allowed those impo
 from __future__ import annotations
 
 import os
+import time
 from functools import lru_cache
 
 from freecad_buddy.contracts.render import FocusSpec, RenderResult, SceneSpec
@@ -371,8 +372,124 @@ def _frame_bbox(coin, camera, bbox, viewport):
     camera.focalDistance.setValue(distance)
 
 
+# Wall-clock yielded per settle attempt. The hidden-line-removal pass runs on a worker thread, so
+# the main thread must actually give up the CPU for it to make progress: at 10 ms a measured view
+# completed in 2 attempts, while pumping with no sleep took 888. Small enough that the headless
+# leg — where the pass is synchronous and never settles at all — pays nothing.
+_SETTLE_SLEEP_S = 0.01
+
+
+class RasterError(RuntimeError):
+    """Raised when the SVG rasterizer fails to produce an image."""
+
+
+class QtSvgRasterPort:
+    """Qt-backed SVG-to-PNG rasterizer implementing the ``SvgRasterPort`` protocol.
+
+    Rasterizes the judge sheet ``usecases/techdraw.py`` composes. It lives here rather than in a
+    new adapter because Qt is legal in exactly two places — ``hosts/**`` and this file — and AD-29
+    pins that carve-out to one adapter (``scripts/check_imports.py`` ``QT_EXEMPT_ADAPTERS``, and
+    the test that asserts the set holds only this path).
+
+    **Why Qt rather than a new dependency.** The judge needs a raster on both the headless CI leg
+    and the Windows operator machine, and a sheet that rasterizes on only one leg cannot support
+    Epic 5's headless service. ``PySide6.QtSvg`` ships inside FreeCAD's own bundle, so it is
+    present wherever FreeCAD is, adds nothing to ``pyproject.toml``, and needs no display: measured
+    under ``FreeCADCmd`` on FreeCAD 1.1.1 (Libs 1.1.1R20260414) on Windows with no display server,
+    a 2048x1024 raster of a sheet carrying stroked paths and text wrote a 26,982-byte PNG with the
+    text rendered as real glyphs. ``cairosvg`` was the alternative considered and rejected: it is
+    absent from the bundle, so it would be a new third-party dependency that must then be proven
+    installable on every leg to buy what Qt already provides.
+
+    Unlike ``OffscreenRenderPort`` this needs no GL context and no Coin scene — ``QSvgRenderer``
+    paints into a ``QImage`` through the raster paint engine — so its availability is deliberately
+    NOT gated on ``render_capability()``. A leg with no usable GL still rasterizes a sheet.
+    """
+
+    def available(self) -> tuple[bool, str | None]:
+        """Whether Qt's SVG module can be imported; ``(False, reason)`` naming what is missing."""
+        try:
+            self._qt()
+        except Exception as exc:  # noqa: BLE001 - any import failure means no rasterizer
+            return False, f"Qt SVG rasterizer unavailable: {exc}"
+        return True, None
+
+    def settle(self) -> None:
+        """Give a pending HLR pass one turn to advance: pump Qt's queue, then yield the CPU.
+
+        **Both halves are required, and the sleep is the load-bearing one.** Measured on FreeCAD
+        1.1.1 with a ``QApplication`` up, over the same 80x60x6 plate, counting iterations until
+        ``viewPartAsSvg`` first returned path geometry:
+
+        * ``processEvents()`` alone — **888** iterations;
+        * ``processEvents()`` then ``sleep(0.01)`` — **2** iterations;
+        * ``sleep(0.01)`` alone — still nothing after **500**.
+
+        The pass runs on a worker thread, so a bare pump loop spins the main thread hot and starves
+        it, while the pump alone is what lets the completion be observed. Sleeping without pumping
+        never finishes. Hence pump, then yield.
+
+        A process with no Qt application object has nothing to pump; the sleep then costs one
+        ``_SETTLE_SLEEP_S`` per attempt, which the caller never pays because HLR is synchronous
+        there and the first read already succeeded.
+
+        Any failure is swallowed. This is a best-effort nudge inside a polling loop whose real
+        verdict is whether the SVG arrived; raising here would replace a recoverable wait with an
+        error.
+        """
+        try:
+            from PySide import QtGui
+
+            app = QtGui.QGuiApplication.instance()
+            if app is not None:
+                app.processEvents()
+        except Exception:  # noqa: BLE001 - a nudge that cannot run leaves the poll to time out
+            pass
+        time.sleep(_SETTLE_SLEEP_S)
+
+    def rasterize(self, svg: str, out_path: str, width: int, height: int) -> None:
+        """Paint ``svg`` into a ``width`` x ``height`` PNG at ``out_path``.
+
+        The image is filled white first: an unfilled ``QImage`` starts with undefined contents, and
+        the composed sheet draws unfilled strokes, so painting onto it directly would hand the
+        judge line art over noise.
+
+        :raises RasterError: Qt is unavailable, the SVG does not parse, or the write fails.
+        """
+        try:
+            qtsvg, qtgui = self._qt()
+        except Exception as exc:  # noqa: BLE001 - surfaced as the port's own failure type
+            raise RasterError(f"Qt SVG rasterizer unavailable: {exc}") from exc
+
+        _ensure_qgui_application()
+        renderer = qtsvg.QSvgRenderer(bytearray(svg.encode("utf-8")))
+        if not renderer.isValid():
+            raise RasterError("composed sheet is not parseable SVG")
+
+        image = qtgui.QImage(width, height, qtgui.QImage.Format_RGB32)
+        image.fill(qtgui.QColor(255, 255, 255))
+        painter = qtgui.QPainter(image)
+        try:
+            renderer.render(painter)
+        finally:
+            # A QPainter still active when its QImage is saved leaves the paint device locked and
+            # the file empty, so the end() must survive a failing render.
+            painter.end()
+        if not image.save(out_path, "PNG"):
+            raise RasterError(f"could not write the rasterized sheet to {out_path}")
+
+    @staticmethod
+    def _qt():
+        """Return the ``(QtSvg, QtGui)`` module pair, raising when either is unavailable."""
+        from PySide import QtGui, QtSvg
+
+        return QtSvg, QtGui
+
+
 __all__ = [
     "OffscreenRenderPort",
+    "QtSvgRasterPort",
+    "RasterError",
     "RenderError",
     "render_capability",
     "render_capability_flag",

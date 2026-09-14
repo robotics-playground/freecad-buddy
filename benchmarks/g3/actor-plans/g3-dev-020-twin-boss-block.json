@@ -1,0 +1,414 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-020-twin-boss-block",
+  "spec_text": "A spacer block 80 mm by 30 mm and 10 mm thick carrying two cylindrical bosses on its top face. Each boss is 14 mm in diameter and 12 mm tall, and their axes are 50 mm apart, symmetric about the block centre. A 6 mm hole runs through each boss and the block beneath it.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Outline",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Outline"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Outline",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              -40.0,
+              -15.0
+            ],
+            "end": [
+              40.0,
+              -15.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              40.0,
+              -15.0
+            ],
+            "end": [
+              40.0,
+              15.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              40.0,
+              15.0
+            ],
+            "end": [
+              -40.0,
+              15.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              -40.0,
+              15.0
+            ],
+            "end": [
+              -40.0,
+              -15.0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -40.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -15.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 80.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "80x30 spacer block"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Outline",
+        "name": "Block",
+        "length": {
+          "value": 10.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Outline 10 mm"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Bosses",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Bosses"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Bosses",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              -25,
+              0
+            ],
+            "radius": {
+              "value": 7.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              25,
+              0
+            ],
+            "radius": {
+              "value": 7.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": -25.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 14.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 25.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 1,
+            "value": {
+              "value": 14.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "two 14 mm bosses, axes 50 mm apart about the centre"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Bosses",
+        "name": "Bosses12",
+        "length": {
+          "value": 22.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "raise both bosses 12 mm above the block's top face"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "BossBores",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for BossBores"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "BossBores",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              -25,
+              0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              25,
+              0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": -25.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 25.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 1,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "6 mm hole through each boss and the block beneath it"
+    },
+    {
+      "tool": "feature_hole",
+      "args": {
+        "body": "Body",
+        "profile": "BossBores",
+        "name": "BossBoreHoles",
+        "diameter": {
+          "value": 6.0,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll",
+        "reversed": true
+      },
+      "intent": "drill 6.0 mm through"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "The boss profile is on the same XY plane as the block outline, so padding it 22 mm (10 mm block + 12 mm boss) leaves each boss standing 12 mm proud of the top face. The 6 mm holes are then drilled ThroughAll so each passes through its boss and the block."
+}

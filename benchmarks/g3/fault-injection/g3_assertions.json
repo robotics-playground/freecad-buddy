@@ -1,0 +1,60 @@
+{
+  "controls": 3,
+  "detected": 4,
+  "flagged": 0,
+  "planted": 4,
+  "rows": [
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-assert-control-correct-part",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-assert-control-stepped-bore-one-hole",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": null,
+      "expectation": "PASS_CLEAN",
+      "id": "g3-fault-assert-control-within-band-spacing",
+      "outcome": "PASS_CLEAN",
+      "verdict": "CAP_EXHAUSTED/-"
+    },
+    {
+      "detected_by": "hole_position",
+      "expectation": "DETECT",
+      "id": "g3-fault-assert-mirrored-pattern",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_position"
+    },
+    {
+      "detected_by": "count_cylindrical_holes",
+      "expectation": "DETECT",
+      "id": "g3-fault-assert-missing-hole",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.count_cylindrical_holes"
+    },
+    {
+      "detected_by": "hole_spacing",
+      "expectation": "DETECT",
+      "id": "g3-fault-assert-spacing-error-0p5mm",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_spacing"
+    },
+    {
+      "detected_by": "hole_diameter",
+      "expectation": "DETECT",
+      "id": "g3-fault-assert-wrong-diameter",
+      "outcome": "DETECTED",
+      "verdict": "CAP_EXHAUSTED/assert.hole_diameter"
+    }
+  ],
+  "skipped": [],
+  "validator": "g3_assertions",
+  "visual_leg": "fail-closed; no live judge call (decision 017). Geometry leg only."
+}

@@ -174,7 +174,10 @@ def run_case(case: dict, resolver, *, audit_sink=None) -> CaseOutcome:
         applied = _apply(registry, tool, handle, args, token, audit_sink)
         mutation = (applied.get("structured_content") or {}).get("mutation")
 
-        checks = assertions.evaluate(document, case.get("assertions", {}).get("checks") or [])
+        declared = case.get("assertions", {})
+        checks = assertions.evaluate(
+            document, declared.get("checks") or [], declared.get("anchor_frame")
+        )
         # A refused apply commits no transaction, so undoing would revert whatever sits below it
         # on the stack — or raise on an empty one, aborting every case still to run. An op that
         # never applied has nothing to undo, and the criterion reads that as the failure it is.

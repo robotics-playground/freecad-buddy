@@ -52,9 +52,9 @@ from benchmarks.harness.verdict import (  # noqa: E402
 from freecad_buddy.contracts.report import Check, require_wilson_ci_for_rates  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
-KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2"}
+KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2", "G3": "g3"}
 # Gates carrying a sealed held-out split. G0's suites are all open by design.
-_SEALABLE_GATES = frozenset({"G1", "G2"})
+_SEALABLE_GATES = frozenset({"G1", "G2", "G3"})
 
 _EXIT_USAGE = 2
 _EXIT_FAIL = 1
@@ -75,6 +75,7 @@ _EXIT_REPEATS = 10
 _FAULT_SCORERS = {
     "G1": Path("benchmarks") / "g1" / "fault-injection" / "score_grader.py",
     "G2": Path("benchmarks") / "g2" / "fault-injection" / "score_g2_validators.py",
+    "G3": Path("benchmarks") / "g3" / "fault-injection" / "score_g3_validators.py",
 }
 
 # The repeats a G2 dev run drives each command at (R=5, the G2.1 criterion's declared R).
@@ -115,6 +116,31 @@ _VALIDATOR_SOURCES = {
     "fingerprint": (_SRC / "usecases" / "fingerprint.py",),
     "audit_references": (_SRC / "usecases" / "tnp_guard.py",),
     "verify_sketch": (_SRC / "usecases" / "verify.py",),
+    # The validators the G3 criteria cite. Each hashes its source plus the G3 fault cases
+    # targeting it, matching score_g3_validators.py's `_validator_sha` byte for byte so a clean
+    # working tree reads as CURRENT rather than stale.
+    #
+    # `g3_assertions` is the SAME code as `assertions` (benchmarks/harness/assertions.py) under a
+    # separate registry name, because a validator's digest folds in the suite it was measured
+    # over. Reusing the `assertions` name would fold the G3 cases into the digest the committed
+    # G2 sensitivity was measured under and stale a G2 score that nothing about G2 changed.
+    "g3_assertions": (_REPO_ROOT / "benchmarks" / "harness" / "assertions.py",),
+    # The judge is three files, not one: the entry-gate seam that fixes the verdict schema, the
+    # use case that owns the fail-closed rule and the legibility gate, and the client that carries
+    # the rubric the model answers under. AD-19's hash-staleness rule names the rubric explicitly —
+    # "editing the rubric or checklist invalidates prior sensitivity runs" — so the client's bytes
+    # must be in the digest or a rubric edit would leave a measured number standing.
+    "visual_judge": (
+        _REPO_ROOT / "benchmarks" / "g3" / "judge.py",
+        _SRC / "usecases" / "verify_visual.py",
+        _SRC / "adapters" / "visual_judge_client.py",
+    ),
+    "verify_recompute": (_SRC / "usecases" / "verify.py",),
+    # The corrupted-plan detector is the designer loop's own spec-violation path, which story 4.5
+    # writes. Naming the file it WILL occupy keeps the citation honest: the source is unreadable
+    # today, so `_validator_src_hasher` returns "" and leg-b reports the validator stale rather
+    # than letting G3.4 cite a validator nothing backs.
+    "corrupted_plan": (_SRC / "usecases" / "designer_loop.py",),
 }
 
 # The G1 fault suite whose `case.yaml` set is folded into the `grader` hash.
@@ -128,6 +154,14 @@ _G2_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g2" / "fault-injection"
 _G2_VALIDATORS = frozenset(
     {"assertions", "run_mutation", "fingerprint", "audit_references", "verify_sketch"}
 )
+
+# The G3 fault suite whose `case.yaml` set is folded into each G3 validator's hash.
+_G3_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g3" / "fault-injection"
+
+# The G3 validators, folded in the same way as the G2 ones. `verify_sketch` is cited by both
+# gates and stays on the G2 suite: its committed score was measured there and nothing in G3
+# re-measures it.
+_G3_VALIDATORS = frozenset({"g3_assertions", "visual_judge", "corrupted_plan", "verify_recompute"})
 
 
 class UsageError(Exception):
@@ -250,8 +284,9 @@ def _validator_src_hasher(name: str) -> str:
         suite = _grader_suite_sources()
         if not suite:
             return ""
-    elif name in _G2_VALIDATORS:
-        suite = _g2_suite_sources(name)
+    elif name in _G2_VALIDATORS or name in _G3_VALIDATORS:
+        root = _G3_SUITE_ROOT if name in _G3_VALIDATORS else _G2_SUITE_ROOT
+        suite = _suite_sources(root, name)
         if not suite:
             hasher.update(b"\x00no-fault-suite")
             return hasher.hexdigest()
@@ -269,16 +304,16 @@ def _validator_src_hasher(name: str) -> str:
     return hasher.hexdigest()
 
 
-def _g2_suite_sources(validator: str) -> list[tuple[bytes, Path]]:
-    """The G2 fault cases targeting ``validator``, as (identity prefix, path) pairs.
+def _suite_sources(suite_root: Path, validator: str) -> list[tuple[bytes, Path]]:
+    """The fault cases under ``suite_root`` targeting ``validator``, as (identity, path) pairs.
 
-    Ordered by suite-relative POSIX path to match score_g2_validators.py's ordering. Only cases
-    whose ``targets_validator`` names this validator are folded in, so an edit to another
-    validator's suite does not stale this one.
+    Ordered by suite-relative POSIX path to match each gate's scorer ordering. Only cases whose
+    ``targets_validator`` names this validator are folded in, so an edit to another validator's
+    suite does not stale this one.
     """
     cases = sorted(
-        (p for p in _G2_SUITE_ROOT.rglob("case.yaml") if p.name == "case.yaml"),
-        key=lambda p: p.relative_to(_G2_SUITE_ROOT).as_posix(),
+        (p for p in suite_root.rglob("case.yaml") if p.name == "case.yaml"),
+        key=lambda p: p.relative_to(suite_root).as_posix(),
     )
     selected = []
     for path in cases:
@@ -288,7 +323,7 @@ def _g2_suite_sources(validator: str) -> list[tuple[bytes, Path]]:
             continue
         declared = data.get("targets_validator") if isinstance(data, dict) else None
         if isinstance(declared, str) and declared.split("@", 1)[0] == validator:
-            selected.append((path.relative_to(_G2_SUITE_ROOT).as_posix().encode("utf-8"), path))
+            selected.append((path.relative_to(suite_root).as_posix().encode("utf-8"), path))
     return selected
 
 
@@ -387,7 +422,161 @@ def _collect_report(criterion: dict, run_dir: Path, live_outcomes=None):
     collector = _G2_COLLECTORS.get(criterion_id)
     if collector is not None:
         return collector(criterion, live_outcomes or [])
+    if criterion_id == "G3.3":
+        return _collect_g3_3(criterion)
+    if criterion_id == "G3.4":
+        return _collect_g3_4()
+    if criterion_id.startswith("G3."):
+        return not_collected_report(criterion_id, _g3_missing_actor(criterion_id))
     return not_collected_report(criterion_id, f"no collector for {criterion_id}")
+
+
+def _collect_g3_3(criterion: dict):
+    """Collect G3.3 from the editability probe run, which happens inside FreeCAD.
+
+    Changing a driving parameter means recomputing the part, so the measurement lives in
+    ``benchmarks/harness/editability.probe_part`` under FreeCAD and this reads what it recorded —
+    the same way every other criterion reads stored evidence rather than re-executing it.
+
+    The bar and the denominator rule are decision 018's, not this function's: the collector is
+    handed the criterion so it reads ">=90%" out of ``gate.yaml``.
+    """
+    import json
+
+    from benchmarks.harness.editability import collect_g3_3
+
+    results_path = _REPO_ROOT / "benchmarks" / "g3" / "editability.json"
+    if not results_path.is_file():
+        return not_collected_report(
+            "G3.3",
+            "no editability run has been driven: the probe changes one driving parameter per part "
+            "that PASSED G3.1, and G3.1 has no planner to produce a passing part. The test itself "
+            "is defined in docs/decisions/018-editability-test-definition.md and implemented in "
+            "benchmarks/harness/editability.py",
+        )
+    try:
+        measured = json.loads(results_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return not_collected_report("G3.3", f"the editability results are unreadable: {exc}")
+    return collect_g3_3(criterion, measured.get("results") or [])
+
+
+def _collect_g3_4():
+    """Collect G3.4 from the corrupted-plan fault run the designer loop drove.
+
+    The measurement itself happens inside FreeCAD (``score_g3_infc.py``), because planting a
+    corrupted plan means building the part it produces. This reads what that run recorded, the
+    same way every other criterion reads stored evidence rather than re-executing it.
+
+    The pass rule is ">=9/10 spec violations detected; zero silent bad parts". Both halves are
+    graded here: sensitivity against the bar, and the false-alarm count against zero — a clean
+    control the loop flagged IS a silent bad part in the other direction, and a criterion that
+    read only sensitivity would pass a loop that flags everything.
+    """
+    import json
+
+    results_path = _REPO_ROOT / "benchmarks" / "g3" / "fault-injection" / "corrupted_plan.json"
+    if not results_path.is_file():
+        return not_collected_report(
+            "G3.4",
+            "the corrupted-plan cases are driveable but no run has driven them: planting a G3 "
+            "fault needs the geometry, so the suite runs under "
+            "`FREECAD_BUDDY_RUN_FAULT_SCORER=1 FreeCADCmd "
+            "benchmarks/g3/fault-injection/score_g3_infc.py`, whose results this reads",
+        )
+    try:
+        measured = json.loads(results_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return not_collected_report("G3.4", f"the corrupted-plan results are unreadable: {exc}")
+
+    scored = int(measured.get("planted", 0))
+    detected = int(measured.get("detected", 0))
+    controls = int(measured.get("controls", 0))
+    flagged = int(measured.get("flagged", 0))
+    skipped = measured.get("skipped") or []
+
+    # The pass rule is ">=9/10", and the 10 is the AUTHORED defect count, not the number that ran.
+    # Grading against the population that happened to be scorable would let a criterion pass by
+    # shrinking its own denominator — a loop that could drive only one case and caught it would
+    # read 1/1 and clear a bar written for ten.
+    authored = scored + sum(1 for entry in skipped if entry.get("expectation") != "PASS_CLEAN")
+    excluded_ids = [entry.get("id") for entry in skipped]
+
+    checks = [
+        {
+            "id": "G3.4.detection",
+            "measured": detected,
+            "expected": G3_4_DETECTION_BAR,
+            "passed": detected >= G3_4_DETECTION_BAR,
+            "detail": {
+                "message": (
+                    f"{detected} of {authored} authored corrupted plans detected by measuring the "
+                    f"produced artifact ({scored} scorable, bar >={G3_4_DETECTION_BAR}); "
+                    f"{len(excluded_ids)} case(s) excluded as unscorable against their own spec: "
+                    f"{excluded_ids}"
+                )
+            },
+        },
+        {
+            "id": "G3.4.zero_silent_bad_parts",
+            "measured": flagged,
+            "expected": 0,
+            "passed": flagged == 0,
+            "detail": {
+                "message": f"{flagged}/{controls} clean control(s) flagged; the bar is zero"
+            },
+        },
+    ]
+    return evidence_report("G3.4", checks)
+
+
+# G3.4's stated pass rule is ">=9/10 spec violations detected". The 9 is an absolute count over the
+# authored defect set, so it is written here as one rather than derived from whatever population a
+# run managed to score — a criterion that recomputed its own bar from its own denominator could
+# never fail.
+G3_4_DETECTION_BAR = 9
+
+
+# What each G3 criterion is waiting on, so an honest failure names the missing actor rather than
+# reporting the generic "no collector". The entry gate (story 4.1) lands the measures; the code
+# they measure is stories 4.2-4.6, and a reader of a failing report must be able to tell those
+# apart without opening the epic.
+_G3_MISSING_ACTOR = {
+    "G3.1": (
+        "no designer actor: the spec-to-part loop exists (usecases/designer_loop.py, story 4.5) "
+        "but nothing PLANS from a written spec — the loop executes an approved plan, and turning "
+        "the 20 dev specs into plans is the actor's job, which no shipped component performs. The "
+        "specs and their compiled assertions are present and ungraded"
+    ),
+    "G3.2": (
+        "no generated part to inspect: artifact hygiene reads the verify reports of parts a G3.1 "
+        "run produced, and G3.1 has no planner to produce them"
+    ),
+    "G3.4": (
+        "no designer loop to corrupt: the 10 corrupted-plan cases are authored and pending, and "
+        "planting one means running it through the loop (story 4.5)"
+    ),
+    "G3.5": (
+        "no run to time: the loop records its AD-24 wall-clock on every run record, but the "
+        "budget is a median over the 20 dev specs, which G3.1 has no planner to drive"
+    ),
+    "G3.6": (
+        "no ablation result: the skills gate and the design-decomposition claim ride the "
+        "parallel skills track (epic 6), whose harness is shared infrastructure"
+    ),
+    "G3.7": (
+        "no visual verdict: verify_visual and its vision client landed in story 4.4, but the "
+        "judge call needs a credential the unattended runner does not hold (decision 017), so "
+        "every leg reports visual.unavailable and a verdict comes only from an operator run"
+    ),
+}
+
+
+def _g3_missing_actor(criterion_id: str) -> str:
+    """The honest reason a G3 criterion could not be collected, naming what is absent."""
+    return _G3_MISSING_ACTOR.get(
+        criterion_id, f"no collector for {criterion_id} (no Phase 3 implementation exists)"
+    )
 
 
 def _collect_g2_4(criterion: dict, outcomes: list):
@@ -826,10 +1015,41 @@ def _g2_exit_precondition() -> None:
         )
 
 
-_EXIT_EVALUATORS = {"G1": _g1_exit_eval, "G2": _g2_exit_eval}
+def _g3_exit_eval(extract_dir: Path, run_dir: Path):
+    """Run G3's held-out eval over the unsealed set; return (per-case reports, dev rate, tier).
+
+    Driving a held-out spec needs the designer loop (story 4.5) plus the visual judge (4.4), so
+    without them this produces no case reports and the caller fails the exit honestly rather than
+    scoring an undriven set. The unsealed case content is never read here.
+    """
+    raise UsageError("G3 exit evaluation is not reachable without the designer loop")
+
+
+def _g3_exit_precondition() -> None:
+    """Refuse a G3 exit that cannot be evaluated, before anything unseals the held-out set.
+
+    Gating on the resolver alone would still spend an unseal once a resolver is wired but the
+    evaluator is not, so the evaluator's own reachability is checked here too — whatever makes
+    ``_g3_exit_eval`` raise must refuse before the set is decrypted, never after.
+
+    :raises UsageError: when no designer-loop resolver is wired, or the eval is still the stub.
+    """
+    if _command_resolver() is None:
+        raise UsageError(
+            "G3 --exit needs the designer loop to translate each held-out spec into a plan and "
+            "drive it; no command resolver is wired (story 4.5)"
+        )
+    if _EXIT_EVALUATORS.get("G3") is _g3_exit_eval:
+        raise UsageError(
+            "G3 --exit has a resolver but no held-out evaluator: _g3_exit_eval is the "
+            "unimplemented stub, so the set would be unsealed for a run that measures nothing"
+        )
+
+
+_EXIT_EVALUATORS = {"G1": _g1_exit_eval, "G2": _g2_exit_eval, "G3": _g3_exit_eval}
 
 # Checked before the unseal: an exit that cannot be evaluated must not spend an unseal event.
-_EXIT_PRECONDITIONS = {"G2": _g2_exit_precondition}
+_EXIT_PRECONDITIONS = {"G2": _g2_exit_precondition, "G3": _g3_exit_precondition}
 
 
 def run_exit_command(gate: str, run_id: str) -> int:
@@ -844,8 +1064,7 @@ def run_exit_command(gate: str, run_id: str) -> int:
     gate_def = _load_gate_def(gate)
     if gate_def.get("verdict", {}).get("heldout") != "sealed":
         raise UsageError(
-            f"--exit is only defined for a gate declaring verdict.heldout: sealed, "
-            f"got {gate!r}"
+            f"--exit is only defined for a gate declaring verdict.heldout: sealed, got {gate!r}"
         )
     evaluate = _EXIT_EVALUATORS.get(gate)
     if evaluate is None:
@@ -1190,36 +1409,80 @@ def _actor_descriptors(data: dict) -> list[tuple[str, dict]]:
     return descriptors
 
 
-def _preflight_actor_grader(gate: str) -> None:
-    """Hard-fail INVALID_INPUT if any actor descriptor and the ``grader:`` resolve to one model.
-
-    NFR1 / harness §8: the actor never grades itself. The check spans EVERY actor descriptor — the
-    ``actor:`` key, any additional ``actor*`` key (e.g. ``actor_local:``), and any ``actors:`` list
-    entry — so a second backend cannot slip an actor==grader collision past the guard. Same model
-    id is the collision; a different ``context`` string does not make the same underlying model an
-    independent grader. Raises ``UsageError`` (exit-2, clean message, never a traceback). Gates
-    without a grader block or without any actor block (e.g. G0's deterministic-tool gate) are inert.
-    """
+def _gate_mapping(gate: str) -> tuple[Path, dict]:
+    """Return ``(gate_file, parsed mapping)`` for a gate; an unparseable file is a usage error."""
     gate_file = BENCHMARKS_ROOT / KNOWN_GATES[gate] / "gate.yaml"
     try:
         data = yaml.safe_load(gate_file.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError) as exc:
         raise UsageError(f"unreadable gate.yaml ({gate_file}): {exc.__class__.__name__}") from exc
-    if not isinstance(data, dict):
+    return gate_file, data if isinstance(data, dict) else {}
+
+
+def _preflight_independence(
+    gate_file: Path, data: dict, block: str, also_match_context: bool, rule: str
+) -> None:
+    """Hard-fail when ``block:`` collides with ANY actor descriptor under its independence rule.
+
+    Shared by the grader guard and the visual-judge guard so there is one traversal of the actor
+    descriptors: the ``actor:`` key, any additional ``actor*`` key (e.g. ``actor_local:``), and
+    every ``actors:`` list entry. A second backend must not be able to slip a collision past the
+    guard by declaring itself under a different key.
+
+    The two guards differ in what counts as a collision, and the difference is deliberate:
+
+    * The **grader** (NFR1 / harness §8) collides on the model id alone. A different ``context``
+      string does not make the same underlying model an independent grader of its own answers.
+    * The **visual judge** (AD-21 / verification-design §7a) is independent when it has "a separate
+      model id **or** a separate context", so it collides only when BOTH match. The judge reads
+      images, not its own text, and a fresh context with no build history is the separation that
+      rule buys.
+
+    :param also_match_context: require the ``context`` values to match too before flagging.
+    :raises UsageError: a collision was found; exit-2 with a clean message, never a traceback.
+    """
+    descriptor = data.get(block)
+    if not isinstance(descriptor, dict):
         return
-    grader = data.get("grader")
-    if not isinstance(grader, dict):
+    model = descriptor.get("model")
+    if model is None:
         return
-    grader_model = grader.get("model")
-    if grader_model is None:
-        return
+    context = descriptor.get("context")
     for key, actor in _actor_descriptors(data):
-        if actor.get("model") == grader_model:
-            raise UsageError(
-                f"{key}==grader identity collision in {gate_file}: both resolve to model "
-                f"{grader_model!r} (NFR1: the actor must never grade itself — the grader must "
-                f"be a different model)"
-            )
+        if actor.get("model") != model:
+            continue
+        if also_match_context and actor.get("context") != context:
+            continue
+        shared = f"model {model!r}"
+        if also_match_context:
+            shared += f" and context {context!r}"
+        raise UsageError(
+            f"{key}=={block} identity collision in {gate_file}: both resolve to {shared} ({rule})"
+        )
+
+
+def _preflight_actor_grader(gate: str) -> None:
+    """Run every identity guard the gate declares, before any model call is made.
+
+    Gates without a ``grader:``/``visual_judge:`` block, or without any actor block (e.g. G0's
+    deterministic-tool gate), are inert.
+    """
+    gate_file, data = _gate_mapping(gate)
+    _preflight_independence(
+        gate_file,
+        data,
+        "grader",
+        also_match_context=False,
+        rule="NFR1: the actor must never grade itself — the grader must be a different model",
+    )
+    _preflight_independence(
+        gate_file,
+        data,
+        "visual_judge",
+        also_match_context=True,
+        rule="AD-21: the judge must never be the acting agent — give it a separate model id or "
+        "a separate context",
+    )
 
 
 def run_gate(gate: str, criterion_id: str | None = None) -> tuple[list[dict], int]:

@@ -1,0 +1,586 @@
+{
+  "schema": "fcb.design-plan/1",
+  "spec_id": "g3-dev-016-perforated-cover",
+  "spec_text": "A ventilation cover plate 100 mm square and 4 mm thick, perforated by a three-by-three grid of 6 mm through holes. The grid is centred on the plate and the holes are 30 mm apart in both directions.",
+  "steps": [
+    {
+      "tool": "feature_body_create",
+      "args": {
+        "name": "Body"
+      },
+      "intent": "every PartDesign feature builds into a Body"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Outline",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Outline"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Outline",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              -50.0,
+              -50.0
+            ],
+            "end": [
+              50.0,
+              -50.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              50.0,
+              -50.0
+            ],
+            "end": [
+              50.0,
+              50.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              50.0,
+              50.0
+            ],
+            "end": [
+              -50.0,
+              50.0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              -50.0,
+              50.0
+            ],
+            "end": [
+              -50.0,
+              -50.0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -50.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": -50.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 100.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 100.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "100 x 100 outline"
+    },
+    {
+      "tool": "feature_pad",
+      "args": {
+        "body": "Body",
+        "profile": "Outline",
+        "name": "Plate",
+        "length": {
+          "value": 4.0,
+          "unit": "mm"
+        }
+      },
+      "intent": "extrude Outline 4 mm"
+    },
+    {
+      "tool": "sketch_create",
+      "args": {
+        "name": "Holes",
+        "plane": "XY",
+        "body": "Body"
+      },
+      "intent": "profile plane for Holes"
+    },
+    {
+      "tool": "sketch_add_geometry",
+      "args": {
+        "sketch": "Holes",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              -30.0,
+              -30.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              0.0,
+              -30.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              30.0,
+              -30.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              -30.0,
+              0.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              0.0,
+              0.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              30.0,
+              0.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              -30.0,
+              30.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              0.0,
+              30.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              30.0,
+              30.0
+            ],
+            "radius": {
+              "value": 3.0,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 0,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 1,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 2,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 2,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 2,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 3,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 3,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 3,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 4,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 4,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 4,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 5,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 5,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 5,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 6,
+            "second_pos": 3,
+            "value": {
+              "value": -30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 6,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 6,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 7,
+            "second_pos": 3,
+            "value": {
+              "value": 0.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 7,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 7,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 8,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 8,
+            "second_pos": 3,
+            "value": {
+              "value": 30.0,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Diameter",
+            "first": 8,
+            "value": {
+              "value": 6.0,
+              "unit": "mm"
+            }
+          }
+        ]
+      },
+      "intent": "9 hole centres"
+    },
+    {
+      "tool": "feature_hole",
+      "args": {
+        "body": "Body",
+        "profile": "Holes",
+        "name": "Drill",
+        "diameter": {
+          "value": 6.0,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll",
+        "reversed": true
+      },
+      "intent": "drill 6.0 mm through"
+    }
+  ],
+  "approved": true,
+  "approved_by": "designer-actor",
+  "rationale": "100 mm square, 4 mm thick. A 3x3 grid on a 30 mm pitch centred on the plate puts the hole centres at -30, 0 and +30 in both directions."
+}

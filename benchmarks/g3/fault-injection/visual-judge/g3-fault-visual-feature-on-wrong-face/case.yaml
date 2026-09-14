@@ -1,0 +1,27 @@
+id: g3-fault-visual-feature-on-wrong-face
+gate: g3
+criterion: G3.7
+targets_validator: visual_judge@benchmarks.g3.judge
+fault:
+  kind: planted_defect
+  description: >-
+    The rib stands on the pad's short edge rather than the long centreline the spec states. The
+    rib's own dimensions are correct.
+  expectation: DETECT
+spec_ref: g3-dev-015-ribbed-pad
+planted_op: visual_feature_on_wrong_face
+# The part and its standard visual set (iso render + dimensioned three-view sheet) are BUILT by
+# `render_visual_judge.py`, which drives this case's `planted_op` through the designer loop and
+# renders the result. The images live in `render/` and `render-manifest.json` carries the spec text
+# and the analytic facts a grader needs.
+#
+# No verdict has been produced. Grading these images is an act of INSPECTION: a vision-capable
+# judge looks at the render and the sheet and decides. It needs no API client and no credential,
+# so decision 017 does not govern it — that decision governs the IN-LOOP judge
+# (`usecases/verify_visual.py`), which runs automatically inside the designer loop with no agent
+# attached and therefore does need a wired backend. Grading a fixed 8-case suite once, offline, is
+# a different act from calling a judge on every loop iteration.
+#
+# `validators.yaml`'s `visual_judge` row stays `not_scored` until a judge actually grades the
+# images and a sensitivity number is recorded from that grading.
+fixture: driven-by-designer-loop
