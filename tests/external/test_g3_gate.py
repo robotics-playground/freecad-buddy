@@ -19,6 +19,8 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 G3 = REPO_ROOT / "benchmarks" / "g3"
+# Repo-relative POSIX path of the sealed split, as git spells it in `--name-only` output.
+HELDOUT_REL = "benchmarks/g3/heldout"
 PROVENANCE = REPO_ROOT / "benchmarks" / "_registry" / "provenance"
 
 EXPECTED_DEV_CASES = 20
@@ -320,19 +322,33 @@ def test_Should_be_opaque_When_the_sealed_archive_is_scanned_for_case_text():
 
 
 def test_Should_show_no_plaintext_case_When_the_heldout_git_history_is_read():
-    """The DW-99 trap: G2's split was burned by a plaintext commit that stays in history."""
+    """The DW-99 trap: G2's split was burned by a plaintext commit that stays in history.
+
+    Asserts over the committed FILE LIST, not over ``git log -p`` output. The earlier version
+    grepped the whole patch text for ``anchor_frame``, which also scans commit MESSAGES — so the
+    first commit whose message described the anchor-frame work failed it, reporting a leak while
+    the archive was in fact clean. A guard that fails on prose about the work cannot distinguish
+    a real leak from someone writing about one.
+
+    What makes the seal sound is that no readable case file was ever committed under ``heldout/``,
+    and the path list states exactly that. Falsified by planting a ``case.yaml`` there in a
+    throwaway commit: this fails, and passes again once it is gone.
+    """
     # Arrange
-    command = ["git", "log", "-p", "--", "benchmarks/g3/heldout/"]
+    listing = ["git", "log", "--all", "--name-only", "--pretty=format:", "--", HELDOUT_REL]
 
     # Act
     completed = subprocess.run(
-        command, cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=60
+        listing, cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=60
     )
 
     # Assert
     assert completed.returncode == 0, completed.stderr
-    assert "anchor_frame" not in completed.stdout
-    assert "g3-heldout-" not in completed.stdout
+    committed = {line.strip() for line in completed.stdout.splitlines() if line.strip()}
+    allowed = {f"{HELDOUT_REL}/SEAL.json", f"{HELDOUT_REL}/heldout.tar.enc"}
+    assert committed <= allowed, (
+        f"readable held-out artifacts are in git history: {sorted(committed - allowed)}"
+    )
 
 
 # --- fault suites ----------------------------------------------------------------------------
