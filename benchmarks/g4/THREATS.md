@@ -44,43 +44,6 @@ planned 20  geometry_pass 20  visual_pass 0  converged 0
   against synthetic diffs, but the 15-revision benchmark needs converged parts to revise, and
   nothing converges.
 
-## What story 5.5 measured
-
-Both criteria that do not depend on the visual leg were measured and PASS.
-
-**G4.5, the 50-job soak** (`soak-results.json`):
-
-```
-jobs 50  statuses {'OK': 43, 'TIMEOUT': 2, 'WORKER_CRASHED': 5}
-supervisor growth 2.00% (bar 20%)  hangs 0  silent 0
-```
-
-The mix deliberately includes crashes and timeouts. A soak of 50 clean jobs measures the happy
-path 50 times and would miss the leak that only a killed worker leaves behind — and killing
-workers is the normal condition of a service running untrusted specs. "No crash or hang" is read
-as the SERVICE never crashing or hanging; a job resolving to a structured failure status is the
-service working.
-
-RSS is sampled at each job boundary from the health surface through stdlib `ctypes`, not parsed
-from logs afterwards and not via `psutil`, which is not a dependency of this project.
-
-**G4.4, the agent-to-agent cycle** (`agent-cycle-results.json`):
-
-```
-submit -> OK   inspect -> OK   revise -> QUEUED   accept -> OK
-completed=True  auto_approve_off=True  human_inputs=0
-```
-
-`auto_approve_off` is asserted, not assumed. A cycle completed while the process-global
-auto-approve flag was set would prove the flag works, not that the service can be driven without
-a human — the flag IS a human's approval left permanently on. The confirm gate is satisfied per
-step by a real preview token instead.
-
-**The `spot_audit` token is deliberately unminted.** Leg-d requires a human attestation over at
-least 20% of passing results. `attest_command` stamps `signed_by` from the environment and
-verifies nothing about who ran it, so an agent minting one would fabricate the human audit the leg
-exists to require. The gate therefore reports `leg-d: spot_audit token absent`, which is correct.
-
 ## What this suite does NOT measure
 
 Recorded so nobody reads a green G4.E as more than it is.
