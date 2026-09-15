@@ -16,7 +16,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.563,
+      "elapsed_s": 1.0,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -29,7 +29,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.203,
+      "elapsed_s": 0.234,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -42,7 +42,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.063,
+      "elapsed_s": 0.079,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -55,7 +55,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.062,
+      "elapsed_s": 0.093,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -68,7 +68,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.187,
+      "elapsed_s": 0.234,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -81,7 +81,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.203,
+      "elapsed_s": 0.235,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -94,7 +94,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.203,
+      "elapsed_s": 0.235,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -107,7 +107,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.266,
+      "elapsed_s": 0.313,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -120,7 +120,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.218,
+      "elapsed_s": 0.313,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -133,7 +133,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.157,
+      "elapsed_s": 0.203,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -146,7 +146,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.282,
+      "elapsed_s": 0.391,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -159,7 +159,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.172,
+      "elapsed_s": 0.188,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -172,7 +172,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.063,
+      "elapsed_s": 0.078,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -185,7 +185,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.171,
+      "elapsed_s": 0.187,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -198,7 +198,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.188,
+      "elapsed_s": 0.203,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -211,7 +211,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.484,
+      "elapsed_s": 0.547,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -224,7 +224,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.172,
+      "elapsed_s": 0.218,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -237,7 +237,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.063,
+      "elapsed_s": 0.079,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -250,7 +250,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.188,
+      "elapsed_s": 0.234,
       "failing_families": [],
       "step_failure": null,
       "repairs": []
@@ -263,7 +263,7 @@
       "visual_pass": false,
       "visual_code": "visual.unavailable",
       "repairs_used": 0,
-      "elapsed_s": 0.469,
+      "elapsed_s": 0.531,
       "failing_families": [],
       "step_failure": null,
       "repairs": []

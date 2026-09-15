@@ -44,6 +44,28 @@ class JobSpec(TypedDict, total=False):
     limits: JobLimits | None
 
 
+class RevisionRequest(TypedDict, total=False):
+    """A change to a part a previous job produced, plus the scope it is allowed to touch.
+
+    ``scope`` is the whole of the G4.2 criterion. A revision asks for one thing to change; a
+    revision that also changes something nobody asked about is the failure the gate grades, and
+    without a DECLARED scope there is nothing to judge "out of scope" against. The requester
+    names what may change, and the diff is graded against that list rather than against whatever
+    the result happened to touch.
+
+    ``changes`` carries the edit itself: ``{parameter_name: new_value}`` for a driving dimension.
+    Keeping it to declared parameters is deliberate — a revision that could rewrite arbitrary
+    feature properties would have no stable scope to grade.
+    """
+
+    schema: Literal["fcb.revision-request/1"]
+    job_id: str  # required; the NEW job this revision creates
+    base_job_id: str  # required; the job whose result is being revised
+    changes: dict  # required
+    scope: list[str]  # required; object names the change may touch
+    limits: JobLimits | None
+
+
 class JobStatus(TypedDict, total=False):
     schema: Literal["fcb.job-status/1"]
     job_id: str

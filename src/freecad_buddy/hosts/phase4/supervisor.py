@@ -25,7 +25,7 @@ from dataclasses import dataclass, replace
 
 from freecad_buddy.contracts.job import JobSpec, JobStatus
 from freecad_buddy.contracts.status import ErrorDetail
-from freecad_buddy.hosts.phase4 import status_map
+from freecad_buddy.hosts.phase4 import revision, status_map
 from freecad_buddy.hosts.phase4.pool import JobRun, QueueFull, WorkerPool
 from freecad_buddy.usecases.capabilities import Capabilities
 
@@ -54,6 +54,31 @@ class Supervisor:
     def __init__(self, pool: WorkerPool | None = None, caps: Capabilities | None = None) -> None:
         self.pool = pool or WorkerPool()
         self.caps = caps or build_capabilities()
+        # Completed jobs, by id. A revision names the job it revises, and a revision of a job
+        # that never ran has no prior state to change — refusing it needs this record.
+        self.completed: dict[str, JobStatus] = {}
+
+    def submit_revision(self, request: object) -> JobStatus:
+        """Validate a revision against the jobs that actually completed.
+
+        Refused BEFORE a worker binds when the base job is unknown: running it would build a part
+        from nothing and report it as a revision of something.
+        """
+        problem = revision.validate_request(request, self.completed)
+        if problem is not None:
+            return _status(_revision_id(request), "INVALID_INPUT", problem)
+        return _status(_revision_id(request), "QUEUED", None)
+
+    def grade_revision(self, request: dict, diff: object) -> JobStatus:
+        """Grade a completed revision's geometry diff against its declared scope.
+
+        The G4.2 question is not "did the revision work" but "did it stay inside what was asked",
+        so the scope check is what decides the status here.
+        """
+        check = revision.check_diff_scope(diff, list(request.get("scope") or []))
+        if check["passed"]:
+            return _status(_revision_id(request), "OK", None)
+        return _status(_revision_id(request), "SPEC_FAILED", check.get("detail"))
 
     def submit(self, spec: object) -> JobStatus:
         """Validate and enqueue ``spec``; return the status it starts life with.
@@ -109,6 +134,9 @@ class Supervisor:
             status["artifacts"] = {"sandbox": run.sandbox}
         if state == status_map.OK and run.envelope is not None:
             status["result"] = run.envelope  # type: ignore[typeddict-item]
+        job_id = str(run.spec.get("job_id", ""))
+        if job_id:
+            self.completed[job_id] = status
         return status
 
 
@@ -213,6 +241,15 @@ def _status(job_id: str, state: str, detail: ErrorDetail | None) -> JobStatus:
     if detail is not None:
         status["detail"] = detail
     return status
+
+
+def _revision_id(request: object) -> str:
+    """The id to report a revision against; empty when the request did not carry one."""
+    if isinstance(request, dict):
+        value = request.get("job_id")
+        if isinstance(value, str):
+            return value
+    return ""
 
 
 def _job_id(spec: object) -> str:

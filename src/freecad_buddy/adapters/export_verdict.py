@@ -101,6 +101,43 @@ def assemble_export_verdict(
     }
 
 
+def oracle_legs_for(fmt: str, facts: dict) -> list[dict]:
+    """Run the FreeCAD-free oracle legs for ``fmt`` over the file ``facts`` describes.
+
+    Every caller that grades a written mesh export runs the same legs against the same facts:
+    the MCP tool handler, the GUI-external proxy, and the Phase 4 supervisor's re-check. The
+    composition lived in two copies before the third caller arrived; one copy is what keeps a
+    change to the leg set from reaching only some of them.
+
+    ``facts`` is the worker's or FreeCAD's self-read output, and it is a CLAIM. These legs grade
+    the file on disk against it, so a caller comparing the result back to ``facts`` is what turns
+    the claim into a measurement.
+
+    :param fmt: ``"stl"`` or ``"3mf"``.
+    :param facts: the self-read structured content (``source``, ``volume_band``, ``path``).
+    """
+    from freecad_buddy.adapters import export_oracle
+
+    source = facts["source"]
+    band = facts["volume_band"]
+    path = facts["path"]
+    if fmt == "stl":
+        return [
+            export_oracle.safe_oracle(
+                "trimesh_stl", lambda: export_oracle.stl_oracle(path, source["volume"], band)
+            ),
+            export_oracle.safe_oracle(
+                "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+            ),
+        ]
+    return [
+        export_oracle.safe_oracle(
+            "lib3mf",
+            lambda: export_oracle.mesh3mf_oracle(path, source["is_mm"], source["volume"], band),
+        ),
+    ]
+
+
 def _failure_detail(report: dict) -> dict:
     """Build the envelope ``ErrorDetail`` from the report's failed checks."""
     failed = [c for c in report.get("checks", []) if not c.get("passed")]
