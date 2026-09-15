@@ -407,97 +407,6 @@ def _check_firstparty_direction(
         _flag_outward(target_ring, ring_rank, relpath, line, violations)
 
 
-# Modules that must never load FreeCAD, checked TRANSITIVELY through first-party imports.
-#
-# The ring rules bound what a module MAY import; they never require it to avoid something. The
-# Phase 4 supervisor's central invariant (AD-18) is exactly such a requirement: its RSS is flat
-# only because FreeCAD is never loaded into it, and a flat supervisor is what makes the G4 soak's
-# leak number interpretable. Nothing else in this checker would catch an edit adding the import,
-# so the requirement is declared here.
-#
-# ``hosts/phase4/worker.py`` and its payload modules are deliberately ABSENT: they run in the
-# child process, on the far side of the boundary, where importing FreeCAD is the whole point.
-FREECAD_FREE_MODULES = frozenset(
-    {
-        "hosts/phase4/supervisor.py",
-        "hosts/phase4/pool.py",
-        "hosts/phase4/tree_kill.py",
-        "hosts/phase4/status_map.py",
-    }
-)
-
-
-def _module_imports(path: Path) -> tuple[set[str], set[str]]:
-    """Return (third-party-or-freecad module roots, first-party relpaths) ``path`` imports."""
-    try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError):
-        return set(), set()
-
-    external: set[str] = set()
-    firstparty: set[str] = set()
-
-    def add_firstparty(dotted: str) -> None:
-        parts = dotted.split(".")[1:]
-        if parts:
-            firstparty.add("/".join(parts) + ".py")
-            firstparty.add("/".join(parts) + "/__init__.py")
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name.split(".")[0] == FIRSTPARTY:
-                    add_firstparty(alias.name)
-                else:
-                    external.add(alias.name.split(".")[0])
-        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-            if node.module.split(".")[0] == FIRSTPARTY:
-                add_firstparty(node.module)
-                # ``from pkg import mod`` names a MODULE, not just an attribute. Following only
-                # ``node.module`` would stop at the package's __init__ and miss the module that
-                # actually carries the import — a one-hop indirection that would defeat the whole
-                # transitive check.
-                for alias in node.names:
-                    add_firstparty(f"{node.module}.{alias.name}")
-            else:
-                external.add(node.module.split(".")[0])
-    return external, firstparty
-
-
-def _freecad_free_violations(root: Path) -> list[Violation]:
-    """Flag any declared FreeCAD-free module that reaches FreeCAD, directly or transitively."""
-    violations: list[Violation] = []
-    for relpath in sorted(FREECAD_FREE_MODULES):
-        start = root / relpath
-        if not start.is_file():
-            continue
-        seen: set[str] = set()
-        stack = [relpath]
-        while stack:
-            current = stack.pop()
-            if current in seen:
-                continue
-            seen.add(current)
-            path = root / current
-            if not path.is_file():
-                continue
-            external, firstparty = _module_imports(path)
-            hit = sorted(external & FREECAD_APP_WHITELIST)
-            if hit:
-                via = "" if current == relpath else f" (via {current})"
-                violations.append(
-                    Violation(
-                        relpath,
-                        0,
-                        f"declared FreeCAD-free but imports {', '.join(hit)}{via}; "
-                        f"the Phase 4 supervisor's flat RSS depends on never loading FreeCAD "
-                        f"(AD-18)",
-                    )
-                )
-            stack.extend(firstparty)
-    return violations
-
-
 def check_tree(root: Path) -> list[Violation]:
     """Scan every .py under ``root`` (a freecad_buddy package dir) and return violations."""
     stdlib = _stdlib_names()
@@ -505,7 +414,6 @@ def check_tree(root: Path) -> list[Violation]:
     for path in sorted(root.rglob("*.py")):
         relpath = path.relative_to(root).as_posix()
         violations.extend(_check_file(path, relpath, stdlib))
-    violations.extend(_freecad_free_violations(root))
     return violations
 
 

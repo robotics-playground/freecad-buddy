@@ -245,7 +245,7 @@ verify_recompute:
 
 job_lifecycle:
   suite: g4/fault-injection/lifecycle/
-  validator_sha: "bea65b88de8a809a9286a5b706bc5e8d5b2d02b4a0d5e8c9fd5109180a8c3c05"
+  validator_sha: "1a13c340f4d7d617be3d8cee1f6a98026b8dbd3c1733900919ab700a33bee087"
   last_run:
     run_id: g4-2026-09-15-1
     sensitivity: 1.0
@@ -262,7 +262,7 @@ job_lifecycle:
 
 revision_diff:
   suite: g4/fault-injection/revision-diff/
-  validator_sha: "793b2a925855dfe4f6d07b51824e8e98dbca04fb357a6508b504a851f83c894f"
+  validator_sha: "b23661a82fcdbb959d219f438667b3ad259c5320e93c764ea145436d5824b16b"
   last_run:
     run_id: g4-2026-09-15-1
     sensitivity: 1.0
@@ -279,7 +279,7 @@ revision_diff:
 
 soak_status:
   suite: g4/fault-injection/{timeout,oom,crash}/
-  validator_sha: "dc13f1f1465ee74452fc337a50f9516eb81dba6f361695e6b3ba4ed45a134fff"
+  validator_sha: "bb4f0abc7c5d81e4d274abb12f7570156512e53f39bf6a723a597974ff72bc96"
   last_run:
     run_id: g4-2026-09-15-1
     sensitivity: 1.0
@@ -296,7 +296,7 @@ soak_status:
 
 supervisor_recheck:
   suite: g4/fault-injection/wrong-part/
-  validator_sha: "c52122a5131300375cb09876bdfc529039c592e3b5b5494ad726825df0bd2169"
+  validator_sha: "9d39a4103d2ec0df968ac3d1818f624f8caa0ec7da829c8e77d9f4f6c8a92163"
   last_run:
     run_id: g4-2026-09-15-1
     sensitivity: 1.0

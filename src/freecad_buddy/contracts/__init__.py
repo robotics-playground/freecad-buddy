@@ -62,7 +62,7 @@ from freecad_buddy.contracts.fingerprint import (
     fingerprints_equal,
     massprops_equal,
 )
-from freecad_buddy.contracts.job import JobLimits, JobSpec, JobStatus
+from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.mutation import (
     NOT_MEASURED,
     MutationBlock,
@@ -184,8 +184,6 @@ __all__ = [
     "ImageRef",
     "IterationRecord",
     "JobState",
-    "JobLimits",
-    "JobSpec",
     "JobStatus",
     "JudgeClient",
     "JudgeFinding",
