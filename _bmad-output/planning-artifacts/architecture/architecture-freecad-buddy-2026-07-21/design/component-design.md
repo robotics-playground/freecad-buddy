@@ -2,7 +2,7 @@
 title: 'FreeCAD Buddy — Component Design'
 status: draft
 date: '2026-07-21'
-ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-14, AD-15, AD-16, AD-17, AD-18, AD-19, AD-20]
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-14, AD-15, AD-16, AD-17, AD-19, AD-20, AD-35]
 binds: ['../ARCHITECTURE-SPINE.md']
 ---
 
@@ -194,9 +194,9 @@ sequenceDiagram
 | P1 (G1) | skills_loader (router mode), read-only registry filter, large-tree summarized queries; skills `freecad-fundamentals`, `freecad-troubleshooting` |
 | GS.E | skills_loader forced-subset ablation mode + CI shape check (`check_skill_shape.py`, Story 6.1) |
 | P2 (G2) | sketches, features, preview, verify_sketch, render_probe, elicitation/confirm glue; tnp_guard Layers 1–2 + 5-scenario fault suite |
-| P3 (G3) | assertion compiler + spec-benchmark runner extensions in harness (designer loop is agent-side plan/execute over P2 tools — no new ring component) |
+| Spec-to-part | assertion compiler + spec-benchmark runner extensions in harness (the loop is agent-side plan/execute over the mutation tools — no new ring component) |
 | P5 (G5-robot) | robot-description export use cases (`export_urdf`/`export_sdf` + paired `verify_export_*`) over the Assembly kinematic tree + native inertials; part sourcing/import use cases; external-side URDF/SDF schema/parse oracle (mirrors export_oracle); skills `urdf-export`, `sdf-export`, `part-sourcing`. Depends on a Phase-5 Assemblies capability (AD-22/AD-23; detail at the G5-robot gate) |
 
 ## 8. Conflicts
 
-No conflicts with AD-1..AD-28 found. `adapters/marshal.py` holds **no Qt import at all** — it carries the queue and the wait, while the Qt event pump lives in `hosts/gui_addon/pump.py` where Qt is legal without an exemption (AD-1, §3). That makes `render_probe.py` the single adapters Qt carve-out. The `check_imports.py` exemption list still names `adapters/marshal.py`; that entry is dead and is tracked for removal.
+No conflicts with the spine's ADs found. `adapters/marshal.py` holds **no Qt import at all** — it carries the queue and the wait, while the Qt event pump lives in `hosts/gui_addon/pump.py` where Qt is legal without an exemption (AD-1, §3). That makes `render_probe.py` the single adapters Qt carve-out. The `check_imports.py` exemption list still names `adapters/marshal.py`; that entry is dead and is tracked for removal.

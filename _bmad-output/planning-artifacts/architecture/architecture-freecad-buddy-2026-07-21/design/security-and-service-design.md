@@ -45,9 +45,9 @@ def register_tools(server, caps: Capabilities):
 
 Records reuse the AD-17 contracts-owned audit-record type. The log file is opened append-only (`"a"`, plus `O_APPEND` semantics); the bridge exposes no tool that reads, truncates, or rotates it. Location: alongside the session workdir, operator-configurable.
 
-**4. Namespace reduction (hardening only, not a boundary).** `debug_exec` runs code with globals limited to FreeCAD App modules + a result channel. Per research Finding 1c this is bypassable and is documented as blast-radius reduction only (§8).
+**4. Namespace reduction (hardening only, not a boundary).** `debug_exec` runs code with globals limited to FreeCAD App modules + a result channel. Per research Finding 1c this is bypassable and is documented as blast-radius reduction only (§1.4).
 
-CI check: a test asserts `tools/list` excludes `debug_exec` when the env flag is unset, includes it when set, and always excludes it when `service_mode` is set.
+CI check: a test asserts `tools/list` excludes `debug_exec` when the env flag is unset, includes it when set, and always excludes it when `unattended` is set.
 
 ## 2. RPC Bind and Per-Session Token (AD-3) — implementation-ready
 
@@ -56,7 +56,7 @@ The GUI-mode RPC channel (external MCP server ⇄ in-FreeCAD listener, AD-2) is 
 - **Bind:** listener binds `127.0.0.1` on an ephemeral or configured port. Same for the streamable-HTTP MCP endpoint. Remote bind requires an explicit operator flag (`FREECAD_BUDDY_BIND=<addr>`) and logs a stderr security warning at startup; no silent `0.0.0.0`.
 - **Token generation:** at addon start, the listener generates `secrets.token_urlsafe(32)` (stdlib only — AD-12) and writes it with the port to the discovery file `<FreeCAD user app data>/freecad-buddy/rpc-<pid>.json` (authoritative shape: integration-mcp-freecad.md §2.6) created with owner-only permissions (`0o600`; on Windows, default user-profile ACLs suffice). New token per session; file deleted on clean shutdown; stale files (dead PID) are ignored.
 - **Validation:** every RPC frame carries the token; the versioned handshake (AD-2 wire contract in `contracts/`) validates it before any dispatch. Comparison via `hmac.compare_digest`. Invalid/missing token → connection closed, one audit-log line, no error detail leaked to the peer.
-- **Not in scope:** TLS on loopback, multi-user hosts hardening. Single-operator desktop is the Phase 0–3 trust model (§4).
+- **Not in scope:** TLS on loopback, multi-user hosts hardening. Single-operator desktop is the attended trust model (§4).
 
 ## 3. stderr-Only Logging Enforcement (AD-3) — implementation-ready
 
@@ -73,10 +73,10 @@ On the stdio transport, stdout **is** the MCP protocol; one stray `print()` corr
 | --- | --- | --- | --- |
 | 0 (bridge/harness) | None — operator + our own CI scripts | `debug_exec` off-by-default + unregistered (AD-4); localhost bind + token (AD-3); audit log (AD-17) | Malicious local processes with the operator's own privileges; malicious operator |
 | 1 (read-only assistant) | LLM output (hallucination, prompt injection) | Zero mutation tools registered (AD-4); read-only `query_*` only; no exec in tool list | Model reading data it's shown; local-process threats as above |
-| 2–3 (copilot/designer) | LLM-driven mutation requests | Typed tools only mutation path (AD-4); AD-5 transaction + verify per mutation; AD-10 confirmation; audit log; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because the operator confirms mutations |
+| 2 (copilot) | LLM-driven mutation requests | Typed tools only mutation path (AD-4); AD-5 transaction + verify per mutation; AD-10 confirmation; audit log; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because the operator confirms mutations |
 | Unattended | Agent requests = fully untrusted input, even over typed tools | Everything above; every reported field is a re-executed check (AD-17); `debug_exec` never enabled; the audit log makes the run reconstructable after the fact | This repository ships no process boundary — the operator's environment provides isolation, and a determined attacker on that host is out of scope |
 
-Threats defended across phases: LLM free-form exec as mutation path (AD-4); silent bad-part success (AD-17 re-executed checks); stdout protocol corruption (AD-3); rogue local RPC caller (token); Phase 4 adds: resource exhaustion, exfiltration/egress, host FS tamper, crash/hang cascade (AD-18).
+Threats defended across phases: LLM free-form exec as mutation path (AD-4); silent bad-part success (AD-17 re-executed checks); stdout protocol corruption (AD-3); rogue local RPC caller (token); An unattended run adds: resource exhaustion, exfiltration/egress, host FS tamper, and crash cascade — all bounded by the operator's environment rather than by anything this repository ships.
 
 ## 5. Trust Boundary Diagram
 
@@ -114,6 +114,5 @@ Never described, configured, or relied upon as a security boundary. Permitted on
 | Import/builtin blacklists | Trivially bypassed via `().__class__.__bases__[0].__subclasses__()` class-tree walk | Not used; `debug_exec` namespace reduction is blast-radius hygiene, documented as bypassable (§1.4) |
 | Namespace-restricted `exec` globals | Same class-tree escape; reduces accidents, not adversaries | `debug_exec` hardening layer only (§1.4) |
 | String/AST filtering of submitted code | Denylist arms race; dynamic introspection routes around it | Nowhere |
-| Long-lived shared FreeCAD worker ("clean up between jobs") | FreeCAD `closeDocument` only invalidates the Python wrapper; OCCT allocator retains freed blocks; community workaround is process restart | Rejected by AD-18; process is the reclamation unit |
 
-The real boundaries, restated: **typed tools as the only AI mutation path (AD-4)** and **the OS-level jail around the Phase 4 worker process (AD-18)**. Everything else is depth.
+The real boundary, restated: **typed tools as the only AI mutation path, reached only over MCP (AD-4, AD-35)**. Everything else is depth, and process isolation is the operator's environment to provide.

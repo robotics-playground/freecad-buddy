@@ -14,7 +14,7 @@ The harness is the mechanical executor of `phase-gates.md`. It lives entirely in
 
 ```text
 benchmarks/
-  g0/                       # per-gate dirs mirror phase-gates.md (g0..g4, gs)
+  g0/                       # per-gate dirs mirror phase-gates.md (g0..g2, gs)
     golden-models/          #   5 hand-made reference models (.FCStd + expected.yaml)
     fault-injection/        #   >=10 planted-fault cases (see §6)
     cases/                  #   criterion checks (round-trip, registry introspection...)
@@ -27,10 +27,6 @@ benchmarks/
     dev/                    #   40-command benchmark, per-command assertions
     heldout/
     fault-injection/        #   wrong-param, 5 TNP scenarios, dress-up drop, #6031 rollback
-  g3/
-    dev/                    #   20 written specs, compiled assertions
-    heldout/
-    fault-injection/        #   10 corrupted-plan cases + planted-wrong parts
   gs/
     ablation-sets/          #   design-decomposition n>=40 dedicated set (AD-14)
     dummy-skill/            #   GS.E clean-A/B fixture
@@ -51,7 +47,7 @@ The held-out set must be *provably unseen* by both the developer and the agent d
 
 ```json
 {
-  "gate": "g3",
+  "gate": "g2",
   "sealed_at": "2026-08-14T10:02:00Z",
   "sealed_by": "TanNT",
   "case_count": 8,
@@ -70,7 +66,7 @@ The held-out set must be *provably unseen* by both the developer and the agent d
 Every benchmark artifact (golden model, spec, reference geometry) carries a manifest in `_registry/provenance/<artifact-id>.yaml`. CI fails on any artifact without one, and on any `source.kind` outside the commercial-clean closed set.
 
 ```yaml
-artifact: g3/dev/bracket-4hole
+artifact: g2/dev/bracket-4hole
 kind: spec+golden          # spec | golden-model | oracle-geometry
 source:
   kind: freecad-parts-library   # freecad-parts-library | freecad-wiki-tutorial |
@@ -90,9 +86,9 @@ Per the license research: DeepCAD/ABC/Text2CAD lineage and Fusion 360 Gallery ar
 One directory per case; `case.yaml` is the contract:
 
 ```yaml
-id: g3-dev-012
-gate: g3
-criterion: G3.1
+id: g2-dev-012
+gate: g2
+criterion: G2.1
 spec: spec.md                    # NL spec given to the agent (Phase 3) / command (Phase 2)
 inputs:
   document: fixtures/base.FCStd  # opened via document_* only (AD-20)
@@ -107,7 +103,7 @@ assertions:                      # compiled BEFORE implementation (AD-19); AD-13
 expected_meta:                   # non-scoring diagnostics for reports
   golden_fingerprint: {sha256: "…", serializer: exportBinary}      # AD-6, tagged
   fully_constrained_sketches: [Sketch, Sketch001]                  # AD-8 signal
-provenance: ../../_registry/provenance/g3-dev-012.yaml
+provenance: ../../_registry/provenance/g2-dev-012.yaml
 ```
 
 Assertion `fn` names come from the `contracts/` assertion vocabulary; the harness resolves them to deterministic `verify_*` calls re-executed by the runner — agent claims are never echoed as results (AD-17). Tolerances default to fault-injection-calibrated bands (spine conventions).
@@ -122,17 +118,17 @@ Assertion `fn` names come from the `contracts/` assertion vocabulary; the harnes
 # dev iteration: R=5, dev/ set only, heldout untouched
 uv run gate run g2                          # whole gate, all criteria
 uv run gate run g2 --criterion G2.3         # single criterion
-uv run gate run g3 --case g3-dev-012 -R 1   # one case, quick loop
+uv run gate run g2 --case g2-dev-012 -R 1   # one case, quick loop
 uv run gate run g2 --skills sketch-patterns,constraint-repair   # forced-subset passthrough (AD-15)
 
 # exit run: unseals heldout, forces R>=10, computes full verdict
-uv run gate run g3 --exit                   # prompts for unseal key
+uv run gate run g2 --exit                   # prompts for unseal key
 
 # supporting commands
 uv run gate faults g2                       # run fault suite -> sensitivity/FA (§6)
 uv run gate ablate design-decomposition --set gs/ablation-sets/dd-n40 -R 10   # paired A/B (§5)
-uv run gate verdict g3 --run <run-id>       # recompute verdict from stored reports only
-uv run gate seal g3                         # human ceremony: encrypt heldout, write SEAL.json
+uv run gate verdict g2 --run <run-id>       # recompute verdict from stored reports only
+uv run gate seal g2                         # human ceremony: encrypt heldout, write SEAL.json
 ```
 
 `--skills` maps to the AD-15 forced explicit-subset injection path with auto-activation disabled; the routed/injected subset is logged into every `ValidationReport`.
@@ -151,7 +147,7 @@ uv run gate seal g3                         # human ceremony: encrypt heldout, w
    - (b) every cited validator's current fault run: sensitivity ≥95 % ∧ FA ≤5 %;
    - (c) exit legs ran on the sealed held-out set, R≥10, majority-of-R, and dev/held-out gap ≤15pp (AD-14 — gap >15pp = overfitting, no exit);
    - (d) each required human token is present and bound to this run (§7);
-   - (e) the gate's **AD-24 budget** is met at the stated n — G1 answer latency ≤15 s median, G3 per-part wall-clock ≤10 min median, G4 50-job soak with RSS growth <20 % and zero crash/hang. Budgets are pass/fail here, never advisory: a run that satisfies every assertion and blows its budget **fails the gate**.
+   - (e) the gate's **AD-24 budget** is met at the stated n — G1 answer latency ≤15 s median, per-part wall-clock ≤10 min median on the spec benchmark. Budgets are pass/fail here, never advisory: a run that satisfies every assertion and blows its budget **fails the gate**.
    `gate verdict` is a pure function over stored `ValidationReport`s + token artifacts — re-runnable by anyone, including an auditing agent, without re-executing cases.
 
 ## 4. Stats Module (`usecases/stats.py`)
@@ -177,7 +173,7 @@ Report blocks (verbatim shapes from the stats research; the harness renders thes
 **Single pass rate (phase gate):**
 
 ```text
-Phase 3 held-out: 15/20 passed = 75.0%
+Held-out: 15/20 passed = 75.0%
   Wilson 95% CI: [53.1%, 88.8%]
   Repeats: R=10 per case; per-case pass distribution attached
   Validator sensitivity: 96%
@@ -187,7 +183,7 @@ Phase 3 held-out: 15/20 passed = 75.0%
 **Ablation (skill on vs off):**
 
 ```text
-Skill: design-decomposition | Benchmark: Phase 3 first-plan success | n=40 paired specs, R=10
+Skill: design-decomposition | Benchmark: first-plan success | n=40 paired specs, R=10
   Without skill: 22/40 (55.0%)
   With skill:    30/40 (75.0%)   -> +20.0pp raw
   Paired 2x2: agree-pass=20, agree-fail=8, skill-fixed(c)=10, skill-broke(b)=2
@@ -244,18 +240,18 @@ Human-only steps are recorded as artifacts the runner *checks for presence and b
 ```json
 {
   "token_type": "spot_audit",   // spot_audit | rubric_review | gui_smoke | skills_accuracy
-  "gate": "g3", "run_id": "g3-exit-2026-09-30-1",
+  "gate": "g2", "run_id": "g2-exit-1",
   "binds_reports_sha256": "…",  // hash over the run's ValidationReport set
-  "scope": {"audited_cases": ["g3-ho-002", "g3-ho-005", "…"], "fraction_of_passing": 0.25},
+  "scope": {"audited_cases": ["g2-ho-002", "g2-ho-005", "…"], "fraction_of_passing": 0.25},
   "outcome": "PASS",             // any audit-found false pass => outcome FAIL => run invalidated
   "notes": "…",
   "signed_by": "TanNT", "date": "2026-09-30"
 }
 ```
 
-Creation is a guided ceremony (`gate attest g3 --run <id> --type spot_audit`) that computes `binds_reports_sha256` and walks the human through the sample (spot-audit: runner pre-selects ≥20 % of passing results at random per AD-19). Verdict-time checks: token exists for each required type, `binds_reports_sha256` matches the stored reports (a token cannot be recycled across runs), `outcome == PASS`. A `spot_audit` with `outcome: FAIL` marks the run invalidated; the fix-validator → re-run → re-audit loop starts over, and if held-out was unsealed, §1.1's burn rule applies.
+Creation is a guided ceremony (`gate attest g2 --run <id> --type spot_audit`) that computes `binds_reports_sha256` and walks the human through the sample (spot-audit: runner pre-selects ≥20 % of passing results at random per AD-19). Verdict-time checks: token exists for each required type, `binds_reports_sha256` matches the stored reports (a token cannot be recycled across runs), `outcome == PASS`. A `spot_audit` with `outcome: FAIL` marks the run invalidated; the fix-validator → re-run → re-audit loop starts over, and if held-out was unsealed, §1.1's burn rule applies.
 
-Required tokens per gate: G0 → `gui_smoke`; G1 → `rubric_review` + `spot_audit`; G2/G3/G4 → `spot_audit`; GS → `skills_accuracy` (×12 skills, GS.5) + `spot_audit` on ablation exit runs.
+Required tokens per gate: G0 → `gui_smoke`; G1 → `rubric_review` + `spot_audit`; G2 → `spot_audit`; GS → `skills_accuracy` (per skill, GS.5) + `spot_audit` on ablation exit runs.
 
 ## 8. Independent Grader (Phase 1 / G1)
 
@@ -267,7 +263,7 @@ Where judgment is needed (answer quality, error-diagnosis naming), pass/fail com
 - **Grader validation:** the grader is itself a validator in `_registry/validators.yaml` — its fault suite is the planted confident-wrong answer set (G1.E); its sensitivity/FA must clear the bar before G1.1/G1.2 scores are citable, and `rubric_review` human token covers rubric authorship.
 - The rubric is versioned; a rubric edit invalidates prior grader sensitivity runs (same hash-staleness rule as §6).
 
-**Visual judge (G3/G4, AD-21)** reuses this exact wiring: `g3/gate.yaml` declares `actor:` and `visual_judge:` (vision-capable model; preflight hard-fails on same-model-same-context); judge input = the AD-21 standard visual set — 3D iso render + focus views **+ dimensioned TechDraw projections (front/top/right)**, generated on a TempDoc copy from the part's driving parameters and the spec's assertion set (`techdraw_for_judge`, verification-design §7a) — plus spec + checklist; output = structured `{pass, findings}` at temperature 0, mapped into the `ValidationReport` as check `visual.judge`. A judge dimension-callout mismatch is a blocking finding, re-checked against `verify_*` before rework — geometry stays authoritative. The judge registers in `_registry/validators.yaml` with its planted visually-wrong-part fault suite (mirrored, missing flange, wrong-face feature, wrong proportions + clean controls); checklist edits stale its sensitivity run. Part-done verdict in the runner = geometry checks ∧ `visual.judge` pass (AD-21 conjunction); `visual.unavailable` blocks done unless an audit-logged operator waiver is present.
+**Visual review (AD-21)** is not harness wiring. The harness produces the standard visual set — 3D iso render + focus views + dimensioned front/top/right projections, generated on a TempDoc copy from the part's driving parameters and the spec's assertion set (verification-design §7a) — and stops there. The review itself is the driving agent's, following the `visual-review` skill, and its findings land in the AD-17 run workdir rather than in a `ValidationReport` check. There is no judge model, no independence preflight, and no runner-computed done-predicate: "done" is a verdict the agent reaches, never a predicate this repository exports (AD-35).
 
 ## 9. Out of Scope / Deferred
 

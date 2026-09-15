@@ -1,6 +1,5 @@
 ---
 stepsCompleted: [1, 2, 3]
-lastRun: '2026-09-15'
 inputDocuments:
   - _bmad-output/specs/spec-freecad-buddy/SPEC.md
   - _bmad-output/specs/spec-freecad-buddy/phase-gates.md
@@ -51,7 +50,7 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 
 #### Skills library — CAP-6
 
-- **FR16** — A skills library of 12 Track A+B skills (4 mandatory sections, ≤1,500 words each) loads via two modes: production metadata-first router (2–5 bodies, ≤10K tokens) and ablation forced explicit-subset injection with auto-activation disabled. *(AD-15)*
+- **FR16** — A skills library of 15 skills — 12 Track A+B plus the three Track W workflow skills (`design-loop`, `visual-review`, `spec-to-assertions`) that carry the design loop the code does not — each with 4 mandatory sections, ≤1,500 words, loading via two modes: production metadata-first router (2–5 bodies, ≤10K tokens) and ablation forced explicit-subset injection with auto-activation disabled. *(AD-15)*
 
 #### Validation harness — CAP-7
 
@@ -75,7 +74,7 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR25** — An agent can call `view_fit_viewport` to fit the targeted document's model into the live viewport on its own judgement — no preview token — and every call is audit-logged with the prior camera so the move is traceable and reversible. The human owns the camera: the bridge never fits spontaneously. *(AD-31, AD-33)*
 - **FR26** — When the model does not fully fit, a tool result carries a structured `framing` verdict whose warning sentence guides the agent to run the fit tool. The verdict is computed on change rather than per call, is rendered from the structured block by one shared helper rather than appended per tool, and never claims a freshness the bridge cannot prove. *(AD-32)*
 
-#### Viewport & render correctness — CAP-8 (defect requirements, Epic 9)
+#### Viewport & render correctness — CAP-9 (defect requirements, Epic 9)
 
 Derived from UAT run `2026-09-13-02` (`tests/uat/run/2026-09-13-02/bugs.md`) and the 2026-09-13 spine
 amendment. These correct **shipped** behaviour: FR24–FR26 (Epic 8) and FR3 (story 1-9) are implemented
@@ -99,7 +98,7 @@ deferred-work, not a fix story.
 
 | ID | Requirement | Source |
 | --- | --- | --- |
-| **NFR1** | The producing agent never grades itself — pass/fail comes from deterministic code or independent graders/judges only | AD-13 |
+| **NFR1** | The producing agent never grades itself in a cited number — pass/fail comes from deterministic code or an independent grader only | AD-13 |
 | **NFR2** | Every validator proves sensitivity ≥95 % / false-alarm ≤5 % on its fault suite before its scores are citable; suites land before phase implementation | AD-13, AD-19 |
 | **NFR3** | Statistics discipline: majority-of-R scoring (R=5 dev / R≥10 exit), Wilson 95 % CI beside every rate, exact McNemar for ablations, pp-threshold claims on n≥40 sets, dev/held-out gap >15pp blocks exit | AD-14 |
 | **NFR4** | All suites run headless in CI on the FreeCAD 1.0.x (Py 3.11) + 1.1.x (Py 3.12) blocking matrix + 1.2-dev canary; version-sensitive calls live in one shim behind capability probes | AD-11 |
@@ -108,7 +107,7 @@ deferred-work, not a fix story.
 | **NFR7** | Security posture: localhost-only binds, per-session RPC token, stderr-only logging on stdio, no free-form exec in any AI path | AD-3, AD-4 |
 | **NFR8** | Benchmark artifacts only from commercial-clean, per-item license-checked sources with documented real-world provenance — never reverse-fit to agent ability | AD-16 |
 | **NFR9** | Performance: Phase 1 median response ≤15 s | phase gates |
-| **NFR10** | All wire schemas (ResultEnvelope, ValidationReport, JobStatus, AuditRecord, GeometryDiff, RPC frames) are contracts-owned, stdlib-only, additive-only within a major | AD-17 |
+| **NFR10** | All wire schemas (ResultEnvelope, ValidationReport, AuditRecord, GeometryDiff, RPC frames) are contracts-owned, stdlib-only, additive-only within a major | AD-17 |
 | **NFR11** | Phase ordering: entry gate (validators + benchmark vs stub + fault suite + rubric + reuse survey) lands before phase implementation; previous gate fully green before next phase starts | AD-19 |
 | **NFR12** | Skills shape enforced by CI: 4 exact sections, ≤1,500-word bodies, <1,024-char routing descriptions, no cross-skill body dependencies | AD-15 |
 | **NFR13** | Reuse before invention: adopted components wrapped not forked; from-scratch builds record why nothing existing fit | spine conventions |
@@ -164,7 +163,7 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | FR19, FR20 | Epic 1 | debug_exec gating; append-only audit log from Phase 0 |
 | FR7 | Epic 2 | Read-only assistant on ≥2 backends |
 | FR8–FR11 | Epic 3 | Typed mutations + transaction protocol; preview/confirm; verified undo; TNP guard |
-| FR16 | Epic 6 | 12-skill library + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.7–6.9) |
+| FR16 | Epic 6 | 15-skill library (Track A+B+W) + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.8–6.10) |
 | FR21–FR23 | Epic 7 | URDF/SDF export with paired verify; off-the-shelf part sourcing/import *(Phase 5)* |
 | FR24–FR26 | Epic 8 | Viewport framing read, agent-invoked fit tool, change-driven framing warning |
 | DR-1, DR-3 | Epic 9 (story 9.1) | Shared 8-corner projection; `fitted: true` requires the post-fit verdict to agree; that failure carries its `framing` block |
@@ -202,7 +201,7 @@ A user can issue one natural-language modeling command, see a structured preview
 
 Any LLM harness gains measurable CAD judgment from curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–3; needs Epic 1's harness.
 
-**FRs covered:** FR16 (+ FR21–FR23 skill support in stories 6.7–6.9, Phase 5)
+**FRs covered:** FR16 (+ FR21–FR23 skill support in stories 6.8–6.10, Phase 5)
 
 ### Epic 7: Robot-Description Export & Part Sourcing (Phase 5 · gate G5-robot)
 
@@ -665,7 +664,18 @@ Any LLM harness gains measurable CAD judgment from curated skills — each prove
 - `design-decomposition`, `sketch-strategy`, `tool-selection`, `design-intent`, `parametric-patterns`, `verification-thinking` authored + shape-checked + dual-path loadable
 - `verification-thinking` encodes the dual-channel done protocol (geometry ∧ visual) and discrepancy-vector reading.
 
-### Story 6.5: Production Router
+### Story 6.5: Track W Workflow Skills
+
+**Acceptance Criteria:**
+
+- `design-loop`, `visual-review`, `spec-to-assertions` authored + shape-checked + dual-path loadable.
+- `design-loop` encodes the plan → execute → measure → repair cycle: one plan approval, what to verify after each step, how to read a discrepancy, the repair cap, and what "done" means (assertions pass **and** the part looks right).
+- `visual-review` encodes the per-part checklist: which views to request, what a mirrored or wrong-face part looks like, what is a shading artefact rather than a defect, and the requirement to write findings into the run workdir.
+- `spec-to-assertions` encodes authoring machine-checkable assertions **before** building, so the measurement exists before the part does.
+- A skill may carry read-only helper scripts under `scripts/` (AD-15): reads and computes, never mutates; no model call, no credential; answers one question per invocation and never decides the next action.
+- Track W is exempt from the AD-14 ablation cut — without `design-loop` no loop exists to measure, so it is validated by the spec benchmark running at all.
+
+### Story 6.6: Production Router
 
 **Acceptance Criteria:**
 
@@ -673,7 +683,7 @@ Any LLM harness gains measurable CAD judgment from curated skills — each prove
 - Starter routing table shipped as replaceable seed
 - Native Claude activation + local-backend injection both served from the single store.
 
-### Story 6.6: Ablation Campaign & Gate GS Exit
+### Story 6.7: Ablation Campaign & Gate GS Exit
 
 **Acceptance Criteria:**
 
@@ -683,21 +693,21 @@ Any LLM harness gains measurable CAD judgment from curated skills — each prove
 - `skills_accuracy` tokens ×12 + `spot_audit` bound
 - Gate verdict green.
 
-### Story 6.7: URDF-Export Skill *(Phase 5 · with Epic 7)*
+### Story 6.8: URDF-Export Skill *(Phase 5 · with Epic 7)*
 
 **Acceptance Criteria:**
 
 - `urdf-export` skill authored per the SKILL.md template (shape-check green), teaching how to drive an assembly → URDF through the bridge's Phase-5 export tools (`export_urdf`/`verify_export_urdf`), frame-semantics discipline, unit conversion, and the verify-first done rule (AD-22)
 - Ablated once GS infra + Epic-7 tools exist.
 
-### Story 6.8: SDF-Export Skill *(Phase 5 · with Epic 7)*
+### Story 6.9: SDF-Export Skill *(Phase 5 · with Epic 7)*
 
 **Acceptance Criteria:**
 
 - `sdf-export` skill authored (shape-check green), teaching assembly → SDF export, model-vs-world scope, and the paired verify (AD-22)
 - Ablated once GS infra + Epic-7 tools exist.
 
-### Story 6.9: Part-Sourcing Skill *(Phase 5 · with Epic 7)*
+### Story 6.10: Part-Sourcing Skill *(Phase 5 · with Epic 7)*
 
 **Acceptance Criteria:**
 
@@ -764,7 +774,7 @@ An agent working in a live FreeCAD session can tell when its work has grown beyo
 
 **Sequencing:** parallel-eligible after Epic 1. Additive — one new tool plus one optional envelope field — so it does not reopen gates G0 or G2.
 
-**Reviewer note:** the ADs behind this epic went through a gate that returned **NOT SAFE** on its first draft and refuted three load-bearing claims. Those corrections matter to these stories: read AD-29 through AD-33 in full, not their summaries.
+**Read AD-29 through AD-33 in full, not their summaries** — their carve-outs are load-bearing for these stories.
 
 ### Story 8.1: `ViewportPort` Contract & GUI-Host Implementation
 
@@ -902,7 +912,7 @@ An agent working in a live FreeCAD session can tell when its work has grown beyo
 
 4. **Given** the checker's own diagnostics
    **When** read
-   **Then** the error message (`:250-252`) and module docstring (`:11`) no longer advertise `adapters/marshal.py` as Qt-exempt. `QT_EXEMPT_ADAPTERS` holds one entry and the message must say so, or an implementer will believe `marshal.py` may import Qt
+   **Then** the error message (`:250-252`) and module docstring (`:11`) do not advertise `adapters/marshal.py` as Qt-exempt. `QT_EXEMPT_ADAPTERS` holds one entry and the message must say so, or an implementer will believe `marshal.py` may import Qt
 
 5. **Given** the AD-32 deferred thresholds
    **When** implementation begins
@@ -920,7 +930,7 @@ When the bridge says the human can see the model, the human can actually see it 
 
 **Acceptance for the epic:** the four reproducers in `tests/uat/run/2026-09-13-02/bugs.md` re-run clean, each against the regression fixture its story adds. There is no gate-exit story — this is correction work, not a phase boundary.
 
-**Reviewer note:** the 2026-09-13 spine amendment behind this epic passed a reviewer gate that caught a contradiction *introduced by the amendment itself* (AD-31 required a `SPEC_FAILED` to name a ratio AD-32 forbade the envelope to carry) and two paragraphs describing already-shipped work as pending. Read AD-25, AD-29, AD-30, AD-31, AD-32 and AD-34 in full — the carve-outs are load-bearing and the summaries drop them.
+**Read AD-25, AD-29, AD-30, AD-31, AD-32 and AD-34 in full** — the carve-outs are load-bearing and the summaries drop them. Note in particular the one narrow carve-out where a `SPEC_FAILED` from `view_fit_viewport` does carry its `framing` block.
 
 ### Story 9.1: One Projection for Fit and Verdict, and a Fit That Verifies Itself
 

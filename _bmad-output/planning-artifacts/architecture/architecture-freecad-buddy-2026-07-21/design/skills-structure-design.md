@@ -121,7 +121,7 @@ One loader component (`adapters/skills_loader` per the spine's structural seed �
 
 ### 4.1 Production mode — metadata-first router
 
-**Resident always:** one `name` + `description` pair per catalogued skill (12 at Phase 3, 15 after Phase 5; Level 1, ~1.2K tokens at 12). **Routed per task:** 2–5 SKILL.md bodies, ≤~10K total skill budget (AD-15). The routed subset is logged on every run (AD-15: "routed subset logged") — this is what lets production quality issues be traced to "skill absent" vs "skill wrong".
+**Resident always:** one `name` + `description` pair per catalogued skill (15 core (Track A+B+W), 18 with the Phase-5 group; Level 1, ~1.2K tokens at 12). **Routed per task:** 2–5 SKILL.md bodies, ≤~10K total skill budget (AD-15). The routed subset is logged on every run (AD-15: "routed subset logged") — this is what lets production quality issues be traced to "skill absent" vs "skill wrong".
 
 Routing mechanism is per backend:
 

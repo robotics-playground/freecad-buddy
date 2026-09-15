@@ -2,10 +2,10 @@
 title: 'Scenario Sequence Diagrams'
 status: draft
 date: '2026-09-15'
-ad-refs: ['AD-35', 'AD-2', 'AD-3', 'AD-4', 'AD-5', 'AD-10', 'AD-13', 'AD-17', 'AD-18', 'AD-21', 'AD-25']
+ad-refs: ['AD-35', 'AD-2', 'AD-3', 'AD-4', 'AD-5', 'AD-10', 'AD-13', 'AD-17', 'AD-21', 'AD-25']
 sources:
-  - 'ARCHITECTURE-SPINE.md (2026-09-15 amendment, AD-35)'
-  - 'docs/intent.md (revised 2026-09-15)'
+  - 'ARCHITECTURE-SPINE.md'
+  - 'docs/intent.md'
   - 'src/freecad_buddy/ (call paths read, not inferred)'
 ---
 
@@ -198,10 +198,10 @@ existing value commits without moving the fingerprint. Hence the spent-id set
 
 ---
 
-## 4. Spec to part — the Phase 3 loop, held by the agent
+## 4. Spec to part — the loop, held by the agent
 
-**This is the diagram AD-35 changed.** The loop is the agent following `design-loop`; the repo
-supplies measurements and images and decides nothing.
+The loop is the agent following `design-loop`; the repo supplies measurements and images and
+decides nothing.
 
 ```mermaid
 sequenceDiagram
@@ -254,14 +254,14 @@ sequenceDiagram
 **Both legs are required for done** — geometry assertions *and* a performed visual review. Nothing
 at runtime enforces the conjunction: `derive_verdict` reads checks alone and no code may produce a
 visual verdict. A run whose workdir carries no visual evidence is an **incomplete run**, caught
-after the fact by AD-19's ≥20 % human spot-audit. That is a real weakening versus the fail-closed
-code path AD-21 previously specified, and it is the accepted cost of AD-35.
+after the fact by AD-19's ≥20 % human spot-audit. Detectability is therefore after the fact rather
+than at runtime — the accepted cost of AD-35.
 
 ---
 
 ## 5. Unattended operation, and delegation
 
-There is **no job API, no supervisor and no worker pool** (AD-18 retired, 2026-09-15). Unattended
+There is **no job API, no supervisor and no worker pool**. Unattended
 means an operator starts an agent and walks away — the same agent, the same MCP surface, the same
 skills as scenario 4, with no human in the loop. **Delegation is the agent's own mechanism:** an
 agent that wants to parallelize spawns a **subagent**, which operates the same MCP surface with the
@@ -311,10 +311,9 @@ sequenceDiagram
 audit log and `run_id` traceability (AD-17), artifact retention in the session workdir (AD-25), and
 verification whose every field is re-executed rather than echoed. None of that needs a worker.
 
-**What was genuinely lost** when AD-18 retired: crash containment. A segfault in OCCT used to take
-down a child process and leave the service standing. It now takes down whatever process the agent
-is driving. The repo offers no boundary of its own — the operator's environment is the boundary.
-Recorded here rather than discovered later.
+**There is no crash containment of our own.** A segfault in the geometry kernel takes down whatever
+process the agent is driving. This repository offers no boundary — the operator's environment is the
+boundary, which is why the audit log matters: it is what makes such a failure legible afterwards.
 
 ---
 
@@ -359,10 +358,8 @@ sequenceDiagram
 
 **Without a declared scope there is nothing to be out of**, and "confined to the requested change"
 would reduce to whatever the result happened to touch — a check that can never fail. That reasoning
-came from `hosts/phase4/revision.py:8-10`, which is retired with AD-18; **the idea must survive the
-module**. It belongs to the `design-loop` skill, and the deterministic half — comparing two
-fingerprints and reporting what moved — belongs in `usecases/verify_*` where any caller can re-run
-it. Deleting the module without re-homing the rule would lose a real defence.
+lives in the `design-loop` skill, and its deterministic half — comparing two fingerprints and
+reporting what moved — belongs in `usecases/verify_*` where any caller can re-run it.
 
 ---
 
@@ -471,7 +468,7 @@ sequenceDiagram
   U->>Audit: append-only record (before execution)
   U-->>MCP: result
   MCP-->>Operator: envelope
-  Note over U: in-process restriction is never called a security<br/>boundary — with AD-18 retired the repo ships NO<br/>boundary of its own, so the operator's environment is it
+  Note over U: in-process restriction is never called a security<br/>boundary — this repo ships NO boundary of its<br/>own, so the operator's environment is it
 ```
 
 ---
@@ -484,4 +481,4 @@ Three shapes are absent because AD-35 forbids them. Their absence is the design.
 | --- | --- |
 | A `src/` box deciding the next action | The loop is the agent's. Any arrow returning "do this next" from inside the repo is a violation |
 | A judge participant with a model API | The reviewer is the agent. No model client, no credential, no verdict-producing code |
-| A job API that takes a spec and returns a part | That is the loop in the code wearing a service's clothes. Scenario 5 submits *FreeCAD work*, not a design task |
+| A service endpoint that takes a spec and returns a part | That is the loop in the code wearing a service's clothes. Scenario 5 submits *FreeCAD work*, not a design task |

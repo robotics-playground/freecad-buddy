@@ -154,7 +154,6 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `verify_export_stl` | 0 | trimesh + second oracle (admesh or Phase 0 fallback); disagreement = fail | no |
 | `verify_export_3mf` | 0 | lib3mf + trimesh + FreeCAD self-read (self-read leg via RPC) | no |
 | `verify_references` | 2 | Standalone TNP reference audit (AD-7 Layers 0–2) between mutations — **planned**; the audit runs inside AD-5 today (`usecases/tnp_guard.py`), just not as a standalone tool | no |
-| `verify_visual` | 3 | AD-21 visual leg: standard visual set — iso render + focus views + **dimensioned TechDraw front/top/right projections** (auto-generated from driving params on a TempDoc via internal `techdraw_for_judge`; part doc never polluted) → **independent** VLM judge (never the actor) vs spec checklist; conjunctive with geometry assertions for part-done; fail-closed when render/drawing/judge unavailable. *(Phase 3 — **planned**, outside the P0–P2 count table. Blocked on the AD-21 ≥2048 px judge-image path: the render route caps at 1920 px today.)* | no |
 
 ### `sketch_` — sketch mutations (Phase 2; AI mutation path per AD-4)
 
@@ -183,7 +182,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `feature_pattern` | 2 | Linear/polar pattern of features | yes |
 | `feature_mirror` | 2 | Mirror features across plane/datum | yes |
 | `feature_datum` | 2 | Create datum plane/axis/point/CS (TNP-defensive referencing) | yes |
-| `feature_set_parameters` | 2 | Edit feature properties / driving dimensions (G3.3 editability path) | yes |
+| `feature_set_parameters` | 2 | Edit feature properties / driving dimensions (parameter-editability path) | yes |
 
 ### `preview_` — dry-run channel (AD-10)
 
@@ -206,16 +205,16 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
 | `query_` | 8 | 2 | — | — | 10 | 8 (`query_tree_children`, `query_parameters` planned) |
 | `export_` | 3 | — | — | — | 3 | 3 |
-| `verify_` | 7 | — | 1 | 1 | 9 | 6 (`verify_fingerprint`, `verify_references`, `verify_visual` planned) |
+| `verify_` | 7 | — | 1 | — | 8 | 5 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
 | `feature_` | — | — | 11 | — | 11 | 11 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
-| **AI-visible total** | | | | | **50** | **44** |
+| **AI-visible total** | | | | | **49** | **44** |
 | `debug_` (operator-only) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus operator-only `debug_exec` (unregistered by default, never counted in the AI-visible registry) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule).
 
-The six planned tools are Phase 1/2/3 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returning 44 + `DEBUG_EXEC_SPEC` = 45 registered specs is the current truth.
+The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returning 44 + `DEBUG_EXEC_SPEC` = 45 registered specs is the current truth.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 

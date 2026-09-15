@@ -1,6 +1,6 @@
 # Phase Gates — Agent-Executable Validation Contracts
 
-Companion to `SPEC.md`. One gate per phase (G0–G2) plus the Skills track (GS). Each gate = **goal**, **entry gate** (the AD-19 Validation Design Gate that must land before phase implementation — always: threat list, benchmark runnable against a stub and failing honestly, ≥10-case fault-injection suite at the sensitivity bar, grading rubric where judgment is needed, and a recorded reuse survey), and an **exit criteria table** whose checks an AI agent executes and whose verdict it computes mechanically.
+Companion to `SPEC.md`. One gate per phase (G0–G2) plus the Skills track (GS). Phase-5 work carries its own gate (`G5-robot`), specified when that phase is scoped. Each gate = **goal**, **entry gate** (the AD-19 Validation Design Gate that must land before phase implementation — always: threat list, benchmark runnable against a stub and failing honestly, ≥10-case fault-injection suite at the sensitivity bar, grading rubric where judgment is needed, and a recorded reuse survey), and an **exit criteria table** whose checks an AI agent executes and whose verdict it computes mechanically.
 
 ## Global protocol — how an agent validates a gate
 
@@ -72,15 +72,15 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 
 ## GS — Skills Track (runs alongside Phases 1–3)
 
-**Goal:** 12 Track A+B skills that measurably move benchmark metrics; loadable by ≥2 harnesses.
+**Goal:** 15 skills — 12 Track A+B that measurably move benchmark metrics, plus the three Track W workflow skills that carry the design loop; all loadable by ≥2 harnesses.
 
 **Entry gate GS.E:** ablation harness (forced explicit-subset injection, auto-activation disabled, AD-15) lands and demonstrates a clean A/B on a dummy skill; skill shape check (4 sections, ≤1,500 words) wired into CI.
 
 | ID | Criterion | Agent-executable check | Pass rule |
 | --- | --- | --- | --- |
-| GS.1 | 12 skills authored, dual-harness | Shape-check all 12; load each via native activation AND forced injection; run one benchmark case per path | All 12 pass shape check and load on both paths |
+| GS.1 | 15 skills authored, dual-harness | Shape-check all 15; load each via native activation AND forced injection; run one benchmark case per path | All 15 pass shape check and load on both paths |
 | GS.2 | Ablation harness operational | Run any benchmark with `--skills <subset>`; verify complement excluded from context | Declared subset in, complement out, per-skill paired deltas reported in AD-14 format |
-| GS.3 | Measurable lift | Run per-skill ablations on Phase 2/3 benchmarks | ≥8/12 skills significant per AD-14 (McNemar p<0.05 ∧ CI excludes 0); rest revised or cut; sub-detection effects reported as such |
+| GS.3 | Measurable lift | Run per-skill ablations on the Phase 2 and spec benchmarks | ≥8/12 Track A+B skills significant per AD-14 (McNemar p<0.05 ∧ CI excludes 0); rest revised or cut; sub-detection effects reported as such. Track W is exempt — without `design-loop` no loop exists to ablate against, so it is validated by the spec benchmark running at all |
 | GS.4 | `freecad-troubleshooting` | Re-run G1.2 tiered cases with skill loaded, R≥10; grade n=10 first, escalate to n=30 only when n=10 is 10/10 | n=10 ≥9/10 to pass; 10/10 escalates to n=30 with Wilson CI; below 10/10 concludes at n=10 (low-confidence flag, CI attached) |
 | GS.5 | Accuracy review | Check for recorded owner review vs version-pinned FreeCAD docs | Human sign-off token present for all 12 |
 | GS.6 | `design-decomposition` | Run dedicated ≥40-spec paired ablation, R≥10 | ≥+15pp first-plan success, McNemar p<0.05, CI excludes 0 |

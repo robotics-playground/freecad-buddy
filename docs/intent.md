@@ -137,15 +137,15 @@ Tools give an agent the *ability* to act; skills give it the *judgment* to act w
 
 A skill earns its place by moving a number, not by sounding wise. The standing test: run a phase benchmark **with and without** the skill loaded; the skill must improve the pass rate (or a named sub-metric, e.g. "fully constrained sketch rate") by a measurable margin on the same model. Skills that show no measurable effect are rewritten or cut.
 
-### SMART goal — Skills Track (runs alongside Phases 1–4)
+### SMART goal — Skills Track (runs alongside Phases 1–3)
 
-**Specific.** Author, version, and validate the Track A and Track B catalogs (12 skills) in a standard skill format under `skills/`, each with: scope statement, decision rules, worked examples, and anti-patterns. Wire them into the agent harness so benchmarks can run with any skill subset.
+**Specific.** Author, version, and validate the Track A, Track B and Track W catalogs (15 skills) in a standard skill format under `skills/`, each with: scope statement, decision rules, worked examples, and anti-patterns. Wire them into the agent harness so benchmarks can run with any skill subset.
 
 **Measurable — exit criteria:**
-- [ ] All 12 Track A + B skills authored and loadable by at least 2 different agent harnesses (e.g. Claude Code skill + plain system-prompt injection for other LLMs).
+- [ ] All 15 Track A + B + W skills authored and loadable by at least 2 different agent harnesses (e.g. Claude Code skill + plain system-prompt injection for other LLMs).
 - [ ] Ablation harness exists: any benchmark can run with a declared skill subset, and reports per-skill deltas.
-- [ ] ≥ 8 of 12 skills demonstrate a measurable benchmark improvement (pass-rate or named sub-metric) in ablation on Phase 2 or Phase 3 benchmarks; the rest are revised or removed.
-- [ ] `design-decomposition` specifically: Phase 3 benchmark first-plan success rate (plan needs no structural rework) improves by ≥ 15 percentage points with the skill loaded vs without.
+- [ ] ≥ 8 of the 12 Track A + B skills demonstrate a measurable benchmark improvement (pass-rate or named sub-metric) in ablation; the rest are revised or removed. Track W is exempt — without `design-loop` there is no loop to ablate against, so it is validated by the spec benchmark running at all.
+- [ ] `design-decomposition` specifically: spec-benchmark first-plan success rate (plan needs no structural rework) improves by ≥ 15 percentage points with the skill loaded vs without.
 - [ ] `freecad-troubleshooting` specifically: Phase 1 error-diagnosis cases pass rate with skill ≥ 9/10 at n=10 (vs the baseline 8/10 criterion), escalating to the full n=30 run on a 10/10 result (Wilson CI reported).
 - [ ] Each skill has an owner-reviewed accuracy pass against current FreeCAD documentation (version-pinned, same versions as CI matrix).
 
@@ -207,7 +207,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 > *Make FreeCAD programmatically drivable and verifiable. No AI yet.*
 
-**Specific.** Build the Python bridge exposing FreeCAD via MCP: document lifecycle (new/open/save), object tree inspection, Python execution sandbox, geometry queries (volume, area, bounding box, mass properties, shape validity), screenshot capture, and export (STEP, STL). Works both inside the FreeCAD GUI and headless via `FreeCADCmd`. Set up the golden-model test harness in CI.
+**Specific.** Build the Python bridge exposing FreeCAD via MCP: document lifecycle (new/open/save), object tree inspection, operator-only `debug_exec`, geometry queries (volume, area, bounding box, mass properties, shape validity), screenshot capture, and export (STEP, STL). Works both inside the FreeCAD GUI and headless via `FreeCADCmd`. Set up the golden-model test harness in CI.
 
 **Measurable — exit criteria:**
 - [ ] MCP server starts inside FreeCAD (as addon/workbench) and headless; an MCP client (e.g. Claude Code) can list and call its tools.
@@ -282,7 +282,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 - [ ] Editability test: changing one driving parameter (e.g. plate length) in the generated model recomputes without errors in ≥ 90% of passing benchmark parts.
 - [ ] Self-verification catches injected faults: for 10 deliberately corrupted plans, the agent following the `design-loop` skill detects the spec violation in ≥ 9 cases (no silent bad parts). What is measured is the assertion layer plus the skill's instruction to consult it — not a coded loop.
 - [ ] Median wall-clock time per benchmark part ≤ 10 minutes.
-- [ ] Skills: full Track A + B catalog (12 skills) validated per the Skills Track SMART goal — this phase's benchmark is the primary ablation testbed; every benchmark failure analyzed and, where generalizable, fed back into a skill.
+- [ ] Skills: full Track A + B + W catalog (15 skills) validated per the Skills Track SMART goal — this phase's benchmark is the primary ablation testbed; every benchmark failure analyzed and, where generalizable, fed back into a skill.
 
 **Achievable.** Composes Phase 2 verified primitives under the agent's plan-execute-check loop; the spec-assertion harness makes "done" objective.
 
@@ -292,7 +292,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 ---
 
-### Phase 4 — Autonomous Agent: Full Design Loop as a Service
+### Phase 4 — Autonomous Agent: Unattended Operation
 
 > *An AI agent runs a design task end to end with no human and no GUI, and delivers a validated, exportable, revisable model.*
 
@@ -303,7 +303,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 **Measurable — exit criteria:**
 - [ ] End-to-end headless run: an agent running the `design-loop` skill against the headless bridge completes the 20-spec Phase 3 benchmark with zero GUI, ≥ 70% pass rate maintained.
 - [ ] Revision benchmark: 15 modification requests against previously generated models; ≥ 70% succeed while preserving unrelated features (geometry diff confined to the requested change).
-- [ ] Every delivered job includes a machine-readable validation report (spec assertions, shape validity, design-rule check results) and at least STEP + STL exports that re-import cleanly.
+- [ ] Every completed run produces a machine-readable validation report (spec assertions, shape validity, design-rule check results) and at least STEP + STL exports that re-import cleanly.
 - [ ] Agent-to-agent proof: an external MCP-client agent (not human-driven) completes a submit → inspect report → request revision → accept cycle without human input.
 - [ ] Robustness: the bridge survives a long unattended run without crash, hang, or resource leak; every failed operation fails with a structured error, never silently.
 
@@ -315,7 +315,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 ---
 
-### Phase 5 — Advanced (exploratory, scoped after Phase 4 retrospective)
+### Phase 5 — Advanced (exploratory, scoped after the Phase 2 retrospective)
 
 Candidate directions — each will get its own SMART goal when selected:
 
@@ -339,7 +339,7 @@ Candidate directions — each will get its own SMART goal when selected:
 | 3 | Spec-to-part designer | ≥ 70% on 20-spec benchmark, ≤ 3 self-repairs | 8 wk |
 | 4 | Unattended agent operation | Phase 3 rate maintained headless + a full unattended cycle | 8 wk |
 | 5 | Assemblies / FEM / drawings | Scoped after Phase 4 | TBD |
-| Skills track | Designer knowledge for any agent | 12 skills authored; ≥ 8 prove measurable benchmark lift in ablation | alongside Phases 1–3 |
+| Skills track | Designer knowledge and workflow for any agent | 15 skills authored; ≥ 8 of the 12 Track A+B prove measurable lift in ablation | alongside Phases 1–3 |
 
 ## Risks & Mitigations
 

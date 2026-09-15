@@ -83,7 +83,7 @@ freecad-buddy/
 │               └── entry.py          # headless entry (FreeCADCmd / import FreeCAD)
 ├── addon/
 │   └── package.xml                   # Addon Manager metadata (§2.2)
-├── skills/                           # one dir per skill (AD-15); 15 present (12 Track A/B + 3 Phase-5)
+├── skills/                           # one dir per skill (AD-15); 18 target (12 Track A/B + 3 Track W + 3 Phase-5)
 │   └── <skill-name>/
 │       ├── SKILL.md                  # 4 sections, ≤1,500 words (check_skill_shape.py — unbuilt, Story 6.1;
 │       │                             #   cap is convention only until it lands)
