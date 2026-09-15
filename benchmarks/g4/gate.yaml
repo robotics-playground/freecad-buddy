@@ -1,0 +1,59 @@
+# Declarative mirror of the G4 exit-criteria table (spec-freecad-buddy/phase-gates.md:99-105).
+# The gate runner READS this — it never hardcodes the criteria. Until Stories 5.2-5.5 land there
+# is no job service for an actor to drive, so every criterion FAILS honestly. That failure is the
+# entry-gate acceptance signal, not a defect (AD-19).
+#
+# G4 is forward-declared: this story (5.1) lands the fault suites, the scorer, and the service
+# SEAM, so the machinery is born graded and cannot be tuned to the implementation it grades.
+#
+# Fault suites live BESIDE the dev/heldout split, never inside it
+# (validation-harness-design.md §1): they validate validators and never count toward the G4.1
+# pass rate.
+#
+# `verdict.heldout` is `inert`, not `sealed`: G4 has no held-out split until story 5.5 authors one.
+# A `sealed` declaration here would engage leg-c against reports no exit run has produced.
+
+gate: G4
+
+# The submitting client is an ordinary MCP-client agent with no privileged access to the service:
+# it submits a spec, reads back a JobStatus, and revises. G4.4 grades exactly that loop, so the
+# actor must not be the same context that built the service.
+actor:
+  model: claude-mcp-client
+  context: service-client-under-test
+  transport: mcp
+  profile: job-api-client
+
+# The supervisor re-executes every check against the artifacts on disk. Worker claims are hints,
+# never results — this is what closes the "HTTP 200 for a bad part" threat (G4.3).
+grader:
+  model: deterministic-supervisor-recheck
+  context: independent-grader
+  implementation: benchmarks/g4/stub_service.py
+
+required_tokens: [spot_audit]
+
+verdict:
+  heldout: inert
+
+criteria:
+  - id: G4.1
+    text: "Headless parity: run the 20-spec Phase 3 benchmark through the job API on CI with zero GUI"
+    pass_rule: "Phase 3 pass rate maintained at >=70%"
+    cited_validators: [job_lifecycle, supervisor_recheck]
+  - id: G4.2
+    text: "Revisions: 15 modification requests against prior results, geometry diff measured against request scope"
+    pass_rule: ">=70% succeed with the geometry diff confined to the requested change"
+    cited_validators: [revision_diff]
+  - id: G4.3
+    text: "Deliverables complete: every job's ValidationReport plus exports, with supervisor-re-executed check fields including the AD-21 visual judge verdict"
+    pass_rule: "Report schema-valid; STEP + STL present and re-import clean"
+    cited_validators: [supervisor_recheck]
+  - id: G4.4
+    text: "Agent-to-agent proof: an external MCP-client agent drives submit -> inspect -> revise -> accept"
+    pass_rule: "Full cycle completes with zero human input"
+    cited_validators: [job_lifecycle]
+  - id: G4.5
+    text: "Robustness soak: 50-job soak sampling supervisor and worker RSS at job boundaries"
+    pass_rule: "No crash or hang; memory growth <20%; every failure carries a closed-set structured status (AD-17), none silent"
+    cited_validators: [soak_status, job_lifecycle]

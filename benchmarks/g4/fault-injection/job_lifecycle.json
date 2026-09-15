@@ -1,0 +1,17 @@
+{
+  "rows": [
+    {
+      "id": "g4-fault-lifecycle-control-terminal-success-shape",
+      "outcome": "PASS_CLEAN",
+      "detected_by": "job_state"
+    },
+    {
+      "id": "g4-fault-lifecycle-terminal-failure-without-detail",
+      "outcome": "DETECTED",
+      "detected_by": "job_state"
+    }
+  ],
+  "skipped": [],
+  "graded_by": "benchmarks/g4/fault-injection/drive_g4_faults.py resolving each case against benchmarks/g4/stub_service.py, whose fault-to-status mapping was authored before any service exists. No job was run: no supervisor, worker pool or sandbox is implemented (stories 5.2-5.4).",
+  "independence_caveat": "NOT a service measurement. The stub answers from each case's own declaration, so these bars demonstrate that the suite separates planted faults from clean controls against a known-good mapping \u2014 the entry-gate property (AD-19). A real sensitivity number requires the supervisor of story 5.2 and, for OOM_KILLED specifically, the sandbox of story 5.3: until that jail exists nothing here distinguishes a sandbox kill from a host OOM kill."
+}

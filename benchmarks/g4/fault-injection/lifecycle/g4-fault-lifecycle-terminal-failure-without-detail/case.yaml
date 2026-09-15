@@ -1,0 +1,15 @@
+id: g4-fault-lifecycle-terminal-failure-without-detail
+gate: g4
+criterion: G4.5
+targets_validator: job_lifecycle
+fault:
+  kind: planted_defect
+  description: >-
+    A job fails and carries no structured detail. AD-17 requires every failure to be
+    machine-readable, so a terminal failure with an empty detail is the silent failure G4.5
+    exists to catch, not a lesser form of reporting.
+  expectation: DETECT
+corruption_class: behaviour
+planted_op: silent_terminal_failure
+detected_by: job_state
+fixture: driven-by-job-service

@@ -1,0 +1,13 @@
+id: g4-fault-revision-diff-control-only-requested-change
+gate: g4
+criterion: G4.2
+targets_validator: revision_diff
+fault:
+  kind: clean_control
+  description: >-
+    A revision that changes exactly what was asked. Flagging this would make every legitimate
+    revision fail.
+  expectation: PASS_CLEAN
+corruption_class: none
+detected_by: diff_scope
+fixture: driven-by-job-service

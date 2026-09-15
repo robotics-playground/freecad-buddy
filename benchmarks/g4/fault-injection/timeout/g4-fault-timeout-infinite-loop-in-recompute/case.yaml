@@ -1,0 +1,15 @@
+id: g4-fault-timeout-infinite-loop-in-recompute
+gate: g4
+criterion: G4.5
+targets_validator: soak_status
+fault:
+  kind: planted_defect
+  description: >-
+    The job spec drives a feature whose recompute never returns. A correct supervisor enforces
+    its wall-clock deadline, kills the whole process tree, and resolves the job TIMEOUT. A
+    supervisor that waits for the worker hangs the pool and the job never resolves at all.
+  expectation: DETECT
+corruption_class: behaviour
+planted_op: infinite_loop
+detected_by: job_state
+fixture: driven-by-job-service

@@ -1,0 +1,15 @@
+id: g4-fault-crash-occt-segfault-mid-recompute
+gate: g4
+criterion: G4.5
+targets_validator: soak_status
+fault:
+  kind: planted_defect
+  description: >-
+    A native OCCT fault kills the worker process mid-recompute. A correct supervisor maps the
+    abnormal exit to WORKER_CRASHED and refills the pool. A supervisor reading only the worker's
+    return channel sees nothing and the job hangs forever.
+  expectation: DETECT
+corruption_class: behaviour
+planted_op: occt_segfault
+detected_by: job_state
+fixture: driven-by-job-service

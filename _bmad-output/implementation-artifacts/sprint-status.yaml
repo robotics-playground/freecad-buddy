@@ -117,8 +117,8 @@ development_status:
   4-6-parametric-editability: done
   4-7-gate-g3-exit: in-progress
   epic-4-retrospective: optional
-  epic-5: backlog
-  5-1-entry-gate-g4e-soak-fault-harness: backlog
+  epic-5: in-progress
+  5-1-entry-gate-g4e-soak-fault-harness: done
   5-2-supervisor-worker-pool: backlog
   5-3-per-job-sandbox: backlog
   5-4-job-api-revisions: backlog

@@ -1,0 +1,13 @@
+id: g4-fault-oom-control-large-but-bounded
+gate: g4
+criterion: G4.5
+targets_validator: soak_status
+fault:
+  kind: clean_control
+  description: >-
+    A job with a large but bounded working set. Killing this would mean the memory cap is below
+    legitimate use.
+  expectation: PASS_CLEAN
+corruption_class: none
+detected_by: job_state
+fixture: driven-by-job-service

@@ -1,0 +1,15 @@
+id: g4-fault-oom-unbounded-alloc-in-worker
+gate: g4
+criterion: G4.5
+targets_validator: soak_status
+fault:
+  kind: planted_defect
+  description: >-
+    The job allocates without bound. A correct sandbox caps the worker's memory and the job
+    resolves OOM_KILLED. Note this case grades the STATUS MAPPING only; proving the kill came
+    from the sandbox rather than the host OOM killer needs story 5.3's real jail.
+  expectation: DETECT
+corruption_class: behaviour
+planted_op: unbounded_alloc
+detected_by: job_state
+fixture: driven-by-job-service

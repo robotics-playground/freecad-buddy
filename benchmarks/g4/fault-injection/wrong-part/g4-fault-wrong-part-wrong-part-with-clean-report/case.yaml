@@ -1,0 +1,16 @@
+id: g4-fault-wrong-part-wrong-part-with-clean-report
+gate: g4
+criterion: G4.3
+targets_validator: supervisor_recheck
+fault:
+  kind: planted_defect
+  description: >-
+    The worker returns a part that does not satisfy the spec, together with a report claiming
+    every check passed. A correct supervisor re-executes the checks against the artifacts on
+    disk and flags SPEC_FAILED. This is the 'HTTP 200 for a bad part' threat: a supervisor that
+    trusts the worker's report ships a wrong part with a green result.
+  expectation: DETECT
+corruption_class: behaviour
+planted_op: wrong_part_clean_report
+detected_by: recheck_verdict
+fixture: driven-by-job-service
