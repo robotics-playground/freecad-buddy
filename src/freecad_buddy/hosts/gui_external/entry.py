@@ -22,7 +22,7 @@ from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from starlette.applications import Starlette
 from starlette.routing import Mount
 
-from freecad_buddy.adapters import export_verdict
+from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.mcp_server import (
     Capabilities,
     _to_call_result,
@@ -58,7 +58,27 @@ def _mesh_verify_proxy_handler(client: RpcClient, lock, tool_name: str):
         if self_read.get("status") != "OK":
             return self_read
         facts = self_read["structured_content"]
-        oracle_legs = export_verdict.oracle_legs_for(fmt, facts)
+        source = facts["source"]
+        band = facts["volume_band"]
+        path = facts["path"]
+        if fmt == "stl":
+            oracle_legs = [
+                export_oracle.safe_oracle(
+                    "trimesh_stl", lambda: export_oracle.stl_oracle(path, source["volume"], band)
+                ),
+                export_oracle.safe_oracle(
+                    "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+                ),
+            ]
+        else:
+            oracle_legs = [
+                export_oracle.safe_oracle(
+                    "lib3mf",
+                    lambda: export_oracle.mesh3mf_oracle(
+                        path, source["is_mm"], source["volume"], band
+                    ),
+                ),
+            ]
         return export_verdict.assemble_export_verdict(oracle_legs, facts, facts["banner"])
 
     return handler

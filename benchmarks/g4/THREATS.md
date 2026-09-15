@@ -22,28 +22,6 @@ Everything below follows from that.
 | A job writes outside its own directory | Mount namespace: everything read-only except `jobs/<id>/` | Story 5.3, Linux backend; same test file |
 | Free-form Python execution reaches the host through the service | Service mode unregisters the operator exec tool unconditionally; typed tools are the only mutation path | Story 5.2; `test_phase4_supervisor.py` asserts `debug_exec` is unreachable with the flag set |
 
-## What story 5.4 measured, and what it did not
-
-The design payload, deliverable re-check and revision scope-checker landed with story 5.4, and the
-committed plans were driven through the job service. Recorded in `parity-results.json`:
-
-```
-planned 20  geometry_pass 20  visual_pass 0  converged 0
-```
-
-- **This is not G4.1.** G4.1 requires the 20-SPEC benchmark. No spec-to-plan translator exists
-  (`benchmarks/runner.py`), so the run carried the 20 COMMITTED plans instead. It measures the
-  designer loop end to end through the job service — document creation, per-step preview-token
-  approval, mutation, grading — and says nothing about the actor half, which is absent.
-- **Geometry is 20/20, matching the G3 dev split.** The job service did not degrade the loop, which
-  is the useful fact this run does establish.
-- **Convergence is 0 by construction, not by failure.** The visual leg is unavailable: no vision
-  backend, no GUI under `FreeCADCmd`, and on this branch no part exposes driving parameters so the
-  judge drawing refuses. G4.3's visual-verdict requirement is therefore unmet and unmeasured.
-- **G4.2 is unmeasured.** The revision mechanism and its `diff_scope` checker exist and are tested
-  against synthetic diffs, but the 15-revision benchmark needs converged parts to revise, and
-  nothing converges.
-
 ## What this suite does NOT measure
 
 Recorded so nobody reads a green G4.E as more than it is.
