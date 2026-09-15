@@ -1,0 +1,29 @@
+{
+  "schema": "fcb.g4-agent-cycle/1",
+  "steps": [
+    {
+      "step": "submit",
+      "state": "OK",
+      "job_id": "agent-cycle-base"
+    },
+    {
+      "step": "inspect",
+      "state": "OK",
+      "job_id": "agent-cycle-base"
+    },
+    {
+      "step": "revise",
+      "state": "QUEUED",
+      "job_id": "agent-cycle-rev"
+    },
+    {
+      "step": "accept",
+      "state": "OK",
+      "job_id": "agent-cycle-rev"
+    }
+  ],
+  "completed": true,
+  "auto_approve_off": true,
+  "human_inputs": 0,
+  "passed": true
+}

@@ -1,0 +1,419 @@
+{
+  "schema": "fcb.g4-soak/1",
+  "jobs": 50,
+  "crashes": 0,
+  "hangs": 0,
+  "silent_failures": 0,
+  "supervisor_growth": 0.02,
+  "worker_growth": 0.0,
+  "samples": [
+    {
+      "job_index": 0,
+      "supervisor_rss_bytes": 20639744,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 1,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 1,
+      "supervisor_rss_bytes": 20664320,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 2,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 2,
+      "supervisor_rss_bytes": 20680704,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 3,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 3,
+      "supervisor_rss_bytes": 20828160,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 4,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 4,
+      "supervisor_rss_bytes": 20844544,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 5,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 5,
+      "supervisor_rss_bytes": 20844544,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 6,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 6,
+      "supervisor_rss_bytes": 20844544,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 7,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 7,
+      "supervisor_rss_bytes": 20844544,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 8,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 8,
+      "supervisor_rss_bytes": 20848640,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 9,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 9,
+      "supervisor_rss_bytes": 20852736,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 10,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 10,
+      "supervisor_rss_bytes": 20860928,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 11,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 11,
+      "supervisor_rss_bytes": 20893696,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 12,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 12,
+      "supervisor_rss_bytes": 20910080,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 13,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 13,
+      "supervisor_rss_bytes": 20910080,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 14,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 14,
+      "supervisor_rss_bytes": 20910080,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 15,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 15,
+      "supervisor_rss_bytes": 20910080,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 16,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 16,
+      "supervisor_rss_bytes": 20914176,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 17,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 17,
+      "supervisor_rss_bytes": 20914176,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 18,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 18,
+      "supervisor_rss_bytes": 20922368,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 19,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 19,
+      "supervisor_rss_bytes": 20979712,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 20,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 20,
+      "supervisor_rss_bytes": 20963328,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 21,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 21,
+      "supervisor_rss_bytes": 20963328,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 22,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 22,
+      "supervisor_rss_bytes": 20963328,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 23,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 23,
+      "supervisor_rss_bytes": 20963328,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 24,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 24,
+      "supervisor_rss_bytes": 20963328,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 25,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 25,
+      "supervisor_rss_bytes": 20967424,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 26,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 26,
+      "supervisor_rss_bytes": 20971520,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 27,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 27,
+      "supervisor_rss_bytes": 20979712,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 28,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 28,
+      "supervisor_rss_bytes": 20979712,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 29,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 29,
+      "supervisor_rss_bytes": 20987904,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 30,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 30,
+      "supervisor_rss_bytes": 20987904,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 31,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 31,
+      "supervisor_rss_bytes": 20987904,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 32,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 32,
+      "supervisor_rss_bytes": 20987904,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 33,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 33,
+      "supervisor_rss_bytes": 20992000,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 34,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 34,
+      "supervisor_rss_bytes": 21000192,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 35,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 35,
+      "supervisor_rss_bytes": 21000192,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 36,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 36,
+      "supervisor_rss_bytes": 21004288,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 37,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 37,
+      "supervisor_rss_bytes": 21008384,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 38,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 38,
+      "supervisor_rss_bytes": 21012480,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 39,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 39,
+      "supervisor_rss_bytes": 21053440,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 40,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 40,
+      "supervisor_rss_bytes": 21016576,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 41,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 41,
+      "supervisor_rss_bytes": 21016576,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 42,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 42,
+      "supervisor_rss_bytes": 21020672,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 43,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 43,
+      "supervisor_rss_bytes": 21024768,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 44,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 44,
+      "supervisor_rss_bytes": 21028864,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 45,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 45,
+      "supervisor_rss_bytes": 21037056,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 46,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 46,
+      "supervisor_rss_bytes": 21041152,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 47,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 47,
+      "supervisor_rss_bytes": 21045248,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 48,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 48,
+      "supervisor_rss_bytes": 21045248,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 49,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    },
+    {
+      "job_index": 49,
+      "supervisor_rss_bytes": 21045248,
+      "worker_rss_bytes": 0,
+      "jobs_completed": 50,
+      "queue_depth": 0,
+      "session_id": "g4-soak"
+    }
+  ],
+  "statuses": {
+    "OK": 43,
+    "TIMEOUT": 2,
+    "WORKER_CRASHED": 5
+  },
+  "unstructured": [],
+  "growth_bar": 0.2,
+  "passed": true
+}
