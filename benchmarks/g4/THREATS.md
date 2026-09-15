@@ -18,16 +18,28 @@ Everything below follows from that.
 | Unbounded allocation takes down the host rather than the job | The sandbox caps worker memory; the job resolves `OOM_KILLED` | `oom/` leg, validator `soak_status` |
 | A native OCCT fault kills the worker and the job hangs with nothing reported | Abnormal exit maps to `WORKER_CRASHED` and the pool refills | `crash/` leg, validator `soak_status` |
 | A job fails and says nothing a machine can read | Every terminal failure carries a structured detail; a detail-less failure is refused | `lifecycle/` leg, validator `job_lifecycle` |
-| A job spec exfiltrates data from the host | Egress deny-by-default; the worker has an empty network namespace and needs no network | Story 5.3 — NOT measured by this suite |
-| Free-form Python execution reaches the host through the service | Service mode unregisters the operator exec tool unconditionally; typed tools are the only mutation path | Story 5.2 — NOT measured by this suite |
+| A job spec exfiltrates data from the host | Egress deny-by-default; the worker runs in an empty network namespace and needs no network | Story 5.3, Linux backend; `tests/external/test_phase4_sandbox.py` measures it against an unsandboxed baseline |
+| A job writes outside its own directory | Mount namespace: everything read-only except `jobs/<id>/` | Story 5.3, Linux backend; same test file |
+| Free-form Python execution reaches the host through the service | Service mode unregisters the operator exec tool unconditionally; typed tools are the only mutation path | Story 5.2; `test_phase4_supervisor.py` asserts `debug_exec` is unreachable with the flag set |
 
 ## What this suite does NOT measure
 
 Recorded so nobody reads a green G4.E as more than it is.
 
-- **The kill's origin.** The `oom/` leg asserts the STATUS MAPPING only. Proving `OOM_KILLED` came
-  from the sandbox rather than the host OOM killer needs the real jail of story 5.3. Until then
-  nothing here distinguishes them.
+- **The kill's origin, still only partly.** The `oom/` leg asserts the STATUS MAPPING only. Story
+  5.3 landed the jail, so a memory ceiling is now enforced from outside the payload — but on a
+  host that does not delegate cgroup2 it is enforced by `RLIMIT_AS`, which the process can lower
+  itself. The sandbox report marks that case `weakened` rather than `applied`, so a run's own
+  status says which it got. A cgroup-enforced kill is contained; an rlimit-enforced one stops an
+  honest runaway and not a determined one.
+- **Seccomp is not applied.** The Linux backend uses user, mount and network namespaces plus
+  resource ceilings. There is no syscall filter, so a worker may make any syscall its unprivileged
+  uid allows. `nsjail`/`bubblewrap` would add one; neither is a dependency, for the reason
+  recorded in `REUSE-SURVEY.md`.
+- **The Windows backend contains less.** A Job Object gives real memory and CPU ceilings and an
+  atomic tree kill, but no network or filesystem isolation. It reports `egress_denied` and
+  `filesystem_readonly` as UNAVAILABLE rather than claiming them. Running the service under WSL2
+  gets the Linux backend and its containment.
 - **Any real service behaviour.** Every case is resolved by `stub_service.py` from the case's own
   declaration. No job is run, no process is spawned, nothing is allocated. What the suite proves
   is that it can separate a planted fault from a clean control against a mapping authored before

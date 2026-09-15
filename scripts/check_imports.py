@@ -423,6 +423,10 @@ FREECAD_FREE_MODULES = frozenset(
         "hosts/phase4/pool.py",
         "hosts/phase4/tree_kill.py",
         "hosts/phase4/status_map.py",
+        "hosts/phase4/sandbox.py",
+        "hosts/phase4/sandbox_linux.py",
+        "hosts/phase4/sandbox_windows.py",
+        "hosts/phase4/job_dir.py",
     }
 )
 

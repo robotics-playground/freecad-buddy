@@ -120,7 +120,7 @@ development_status:
   epic-5: in-progress
   5-1-entry-gate-g4e-soak-fault-harness: done
   5-2-supervisor-worker-pool: done
-  5-3-per-job-sandbox: backlog
+  5-3-per-job-sandbox: done
   5-4-job-api-revisions: backlog
   5-5-agent-to-agent-gate-g4-exit: backlog
   epic-5-retrospective: optional
