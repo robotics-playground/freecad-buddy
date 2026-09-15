@@ -25,23 +25,6 @@ survey exists so a fourth parallel scorer is not written by habit.
 | `fault-injection/drive_g4_faults.py` | The G2/G3 drivers run inside FreeCAD because their faults need geometry. A G4 fault is a supervisor-level event — a deadline, a memory cap, an abnormal exit — and none needs a document, so this driver runs in the uv environment |
 | `_G4_VALIDATORS` / `_G4_SUITE_ROOT` and the hasher branch | The hasher routes a validator to its suite root by gate membership. Without the branch a G4 name falls through to the source-only digest, never folds the suite in, and every G4 row reads stale forever |
 
-## Story 5.3: why the jail is namespaces rather than nsjail or bubblewrap
-
-The design names nsjail or bubblewrap for the Linux jail, with a hardened OCI container as the
-CI-reproducibility alternative. Measured on the development host: neither binary is installed,
-and `mkdir` under `/sys/fs/cgroup/unified` is permission-denied unprivileged.
-
-A sandbox depending on them would make every containment claim an assertion rather than a
-measurement, because nothing could run the test that checks it. What those tools wrap — user,
-mount and network namespaces — is reachable unprivileged through `unshare`, which ships with
-util-linux everywhere the project runs. Verified working before the backend was written: an
-empty network namespace denies egress, and a bind-then-remount sequence leaves `jobs/<id>/` as
-the only writable path.
-
-So the posture the design fixes is unchanged and the mechanism is narrower and provable. Seccomp
-and cgroup limits stay as hardening the backend detects and uses when available, reported as
-`weakened` when it falls back. Revisit if a deployment target ships the tools by default.
-
 ## Deliberately NOT built
 
 Story 5.5 owns the exit ceremony. G4 is absent from `_SEALABLE_GATES`, `_EXIT_EVALUATORS` and

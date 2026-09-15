@@ -33,7 +33,7 @@ import time
 from dataclasses import dataclass, field
 
 from freecad_buddy.contracts.job import JobSpec
-from freecad_buddy.hosts.phase4 import sandbox, tree_kill
+from freecad_buddy.hosts.phase4 import tree_kill
 from freecad_buddy.hosts.phase4.status_map import Outcome
 
 # The wall-clock budget a job gets when its spec names none. Generous, because a real part can
@@ -67,9 +67,6 @@ class JobRun:
     envelope: dict | None = None
     stderr: str = ""
     duration_s: float = 0.0
-    # What the sandbox actually applied for this run. Carried on the run rather than looked up
-    # later so a status can state its own containment rather than the pool's current setting.
-    sandbox: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -105,7 +102,6 @@ class WorkerPool:
         self.stats = PoolStats(warm_workers=warm_workers)
         self._queue: queue.Queue = queue.Queue(maxsize=queue_bound)
         self._lock = threading.Lock()
-        self._last_report = sandbox.SandboxReport(backend="none")
 
     def submit(self, spec: JobSpec) -> None:
         """Accept a job onto the queue, or refuse it.
@@ -133,7 +129,7 @@ class WorkerPool:
             self.stats.queue_depth = self._queue.qsize()
         return self.run(spec)
 
-    def run(self, spec: JobSpec, job_dir=None) -> JobRun:
+    def run(self, spec: JobSpec) -> JobRun:
         """Run one job in its own process and return what was observed.
 
         Never raises for a job-level failure. A crash, a hang and a refused result are all things
@@ -145,7 +141,7 @@ class WorkerPool:
             self.stats.jobs_started += 1
 
         started = time.monotonic()
-        process, handle = self._spawn(spec, job_dir)
+        process, handle = self._spawn(spec)
         stdout, stderr, timed_out = self._await(process, deadline_s)
         duration = time.monotonic() - started
 
@@ -162,7 +158,6 @@ class WorkerPool:
                 ),
                 stderr=stderr,
                 duration_s=duration,
-                sandbox=self._last_report.as_dict(),
             )
 
         if handle is not None:
@@ -170,9 +165,7 @@ class WorkerPool:
             # would kill an already-finished tree and turn a clean run into a reported crash.
             handle.release()
 
-        run = self._observe(spec, process, stdout, stderr, duration)
-        run.sandbox = self._last_report.as_dict()
-        return run
+        return self._observe(spec, process, stdout, stderr, duration)
 
     def _observe(self, spec, process, stdout: str, stderr: str, duration: float) -> JobRun:
         """Turn a finished process into observations, without naming a status."""
@@ -211,28 +204,13 @@ class WorkerPool:
             return float(declared)
         return self.default_deadline_s
 
-    def _spawn(self, spec: JobSpec, job_dir=None):
-        """Start a worker process for ``spec``, contained, and take ownership of its tree.
-
-        The sandbox rewrites the COMMAND and the pool still owns the resulting process. That
-        split is deliberate: a sandbox that spawned its own process would hide the pid, and the
-        pid is what the deadline needs in order to kill the tree.
-        """
+    def _spawn(self, spec: JobSpec):
+        """Start a worker process for ``spec`` and take ownership of its tree."""
         command = [
             self.python_executable,
             "-m",
             "freecad_buddy.hosts.phase4.run_worker",
         ]
-        limits = dict(spec.get("limits") or {})
-        if job_dir is not None:
-            command, report = sandbox.wrap(command, job_dir, limits)
-        else:
-            # No job directory means no writable mount to grant, so there is nothing to contain
-            # filesystem access TO. Recorded rather than silently skipped.
-            report = sandbox.SandboxReport(backend="none")
-            for control in sandbox.ALL_CONTROLS:
-                report.miss(control, "no job directory supplied; sandbox not applied")
-
         kwargs = tree_kill.spawn_kwargs(
             {
                 "stdin": subprocess.PIPE,
@@ -243,11 +221,6 @@ class WorkerPool:
         )
         process = subprocess.Popen(command, **kwargs)
         handle = tree_kill.JobHandle(process.pid)
-        if sys.platform == "win32" and handle is not None and limits:
-            from freecad_buddy.hosts.phase4 import sandbox_windows
-
-            sandbox_windows.apply_limits(handle._handle, limits)
-        self._last_report = report
         try:
             if process.stdin is not None:
                 process.stdin.write(json.dumps(spec))

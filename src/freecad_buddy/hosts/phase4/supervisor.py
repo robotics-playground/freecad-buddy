@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import os
 import time
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 from freecad_buddy.contracts.job import JobSpec, JobStatus
 from freecad_buddy.contracts.status import ErrorDetail
@@ -97,54 +97,12 @@ class Supervisor:
         The envelope a worker returned is attached only when the status is ``OK``. A failed job
         that still carried an envelope would invite a reader to treat the worker's own account of
         a failure as the result.
-
-        The sandbox report rides on every status, passing or failing. A caller judging whether to
-        trust a result needs to know what contained the job that produced it, and a report present
-        only on success would be missing exactly when containment mattered most.
         """
-        outcome = _with_memory_observation(run)
-        state, detail = status_map.resolve(outcome)
+        state, detail = status_map.resolve(run.outcome)
         status = _status(str(run.spec.get("job_id", "")), state, detail)
-        if run.sandbox:
-            status["artifacts"] = {"sandbox": run.sandbox}
         if state == status_map.OK and run.envelope is not None:
             status["result"] = run.envelope  # type: ignore[typeddict-item]
         return status
-
-
-# What a worker killed by a memory ceiling leaves behind. ``RLIMIT_AS`` makes the allocation fail
-# inside the process, so Python raises ``MemoryError`` and the traceback reaches the worker's
-# stderr; a cgroup or Job Object kill instead terminates the process outright, which surfaces as a
-# signal or an exit code. Both are memory-cap breaches and both must reach ``OOM_KILLED`` — the
-# mapping already exists in ``status_map`` and has been unreachable until something set the flag.
-_MEMORY_MARKERS = ("MemoryError", "Cannot allocate memory", "out of memory")
-
-# The Windows Job Object reports a process killed for exceeding ``ProcessMemoryLimit`` with this
-# exit code.
-_WIN_JOB_MEMORY_EXIT = 0xC0000017  # STATUS_NO_MEMORY
-
-
-def _with_memory_observation(run: JobRun) -> "status_map.Outcome":
-    """Return the run's outcome, with ``memory_exceeded`` set when the evidence says so.
-
-    Kept out of ``status_map`` on purpose: that module decides what an observation is CALLED, and
-    this decides what was observed. Folding the evidence-reading in there would give the naming
-    rule a second job and make it depend on stderr text.
-    """
-    outcome = run.outcome
-    if outcome.deadline_exceeded or outcome.memory_exceeded:
-        return outcome
-    stderr = run.stderr or ""
-    hit = any(marker in stderr for marker in _MEMORY_MARKERS)
-    if not hit and outcome.exit_code is not None:
-        hit = (outcome.exit_code & 0xFFFFFFFF) == _WIN_JOB_MEMORY_EXIT
-    if not hit:
-        return outcome
-    return replace(
-        outcome,
-        memory_exceeded=True,
-        message=outcome.message or "worker exceeded its memory ceiling",
-    )
 
 
 def build_capabilities(environ: dict | None = None) -> Capabilities:
