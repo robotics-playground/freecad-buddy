@@ -1,6 +1,0 @@
-FreeCAD version in GUI process: 1.1.1
-TechDrawGui import: SUCCESS (C:\Program Files\FreeCAD 1.1\lib\TechDrawGui.pyd)
-  hasattr exportPageAsSvg: True
-  hasattr exportPageAsPdf: True
-TechDraw (App) exportPageAsSvg present: False
-TechDraw (App) exportPage* names: []

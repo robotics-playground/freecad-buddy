@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, TypedDict, get_args, get_type_hints
 
-from freecad_buddy.contracts.parameters import ParameterBackend
 from freecad_buddy.contracts.status import ErrorDetail, TerminalStatus
 
 
@@ -25,10 +24,6 @@ class WilsonCI(TypedDict):
 class ReportBanner(TypedDict, total=False):
     freecad_version: str  # required
     element_map_version: int | None  # required; None ⇔ no element map
-    # The probed driving-dimension backend (AD-11). Carried on every report so a backend that
-    # differs between the two CI legs is visible in the evidence rather than only in a live probe:
-    # an editability rate read from two legs on two backends is not one number.
-    varset_backend: ParameterBackend | None
     validator_sensitivity: dict | None
     wilson_ci: WilsonCI | None
 

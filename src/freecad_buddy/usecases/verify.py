@@ -30,11 +30,10 @@ def _recompute_error_state(state: list) -> bool:
 
 
 def _banner() -> dict:
-    """Return the report banner: FreeCAD version, element-map version, and parameter backend."""
+    """Return the report banner: FreeCAD version and element-map version (int or None)."""
     return {
         "freecad_version": shim.freecad_version(),
         "element_map_version": shim.element_map_version(),
-        "varset_backend": shim.varset_backend(),
     }
 
 
@@ -303,7 +302,9 @@ def verify_shape(
     document's first object is measured. Never recomputes. An unknown object, a null ``Shape``,
     or an unknown assertion ``fn`` raises ``ValidationError``.
     """
-    return registry.with_document(doc, lambda _h, document: read_shape(document, object, checks))
+    return registry.with_document(
+        doc, lambda _h, document: read_shape(document, object, checks)
+    )
 
 
 def read_shape(
@@ -350,6 +351,7 @@ def read_shape(
     report["banner"] = _banner()
     report["verdict"] = derive_verdict(report)
     return _report_envelope(report, summarize_shape(report))
+
 
 
 def _getattr_list(obj: object, name: str) -> list:
@@ -477,6 +479,7 @@ def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
         "warnings": warnings,
     }
     return _finish(report)
+
 
 
 def verify_recompute(registry: DocumentRegistry, doc: str | None = None) -> ResultEnvelope:

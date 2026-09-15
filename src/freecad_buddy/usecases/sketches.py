@@ -155,7 +155,9 @@ def _positive_datum(constraint_type: str, value: object, what: str) -> float:
     """
     datum = _datum_value(constraint_type, value)
     if constraint_type in _POSITIVE_DATUM_TYPES and datum <= 0.0:
-        raise ValidationError(f"{what} {constraint_type} value must be positive, got {datum}")
+        raise ValidationError(
+            f"{what} {constraint_type} value must be positive, got {datum}"
+        )
     if constraint_type in _NONZERO_DATUM_TYPES and datum == 0.0:
         raise ValidationError(f"{what} {constraint_type} value must be non-zero")
     return datum
@@ -216,7 +218,9 @@ def _build_geometry(spec: object, index: int) -> tuple[object, bool]:
     end_angle = _angle_radians(spec.get("end_angle"), f"{what}.end_angle")
     # The span is taken modulo a full turn, so 0..360 is as degenerate as 0..0.
     if math.isclose(math.fmod(end_angle - start_angle, 2 * math.pi), 0.0, abs_tol=1e-12):
-        raise ValidationError(f"{what} start_angle and end_angle span zero or a whole turn")
+        raise ValidationError(
+            f"{what} start_angle and end_angle span zero or a whole turn"
+        )
     return Part.ArcOfCircle(circle, start_angle, end_angle), construction
 
 
@@ -291,7 +295,9 @@ def _constraint_args(spec: object, index: int, sketch_obj: object) -> tuple:
     first = _check_geo_id(spec.get("first"), sketch_obj, f"{what}.first")
     has_second = spec.get("second") is not None
     has_value = spec.get("value") is not None
-    second = _check_geo_id(spec.get("second"), sketch_obj, f"{what}.second") if has_second else None
+    second = (
+        _check_geo_id(spec.get("second"), sketch_obj, f"{what}.second") if has_second else None
+    )
     third = (
         _check_geo_id(spec.get("third"), sketch_obj, f"{what}.third")
         if spec.get("third") is not None
@@ -421,7 +427,8 @@ def _constraint_args(spec: object, index: int, sketch_obj: object) -> tuple:
     if second is not None:
         if spec.get("first_pos") is None or spec.get("second_pos") is None:
             raise ValidationError(
-                f"{what} {constraint_type} between two geometries requires first_pos and second_pos"
+                f"{what} {constraint_type} between two geometries requires first_pos "
+                "and second_pos"
             )
         return (
             constraint_type,
@@ -1007,7 +1014,9 @@ def sketch_set_datum(
     if (value is None) == (sense is None):
         raise ValidationError("sketch_set_datum requires exactly one of 'value' and 'sense'")
     if sense is not None and sense not in _SENSE_VALUES:
-        raise ValidationError(f"sense must be one of {sorted(_SENSE_VALUES)}, got {sense!r}")
+        raise ValidationError(
+            f"sense must be one of {sorted(_SENSE_VALUES)}, got {sense!r}"
+        )
 
     def _target(document: object) -> tuple[object, int, float]:
         sketch_obj = _resolve_sketch(document, sketch)

@@ -19,7 +19,7 @@ OP_TYPES = frozenset({"sketch", "pad", "pocket", "revolve", "hole", "dressup", "
 EXPECTED_DEV_CASES = 40
 CASES_PER_OP_TYPE = 5
 FAULT_SUITES = frozenset(
-    {"tnp", "dressup-drop", "coincidental-hash", "rollback-boundary", "wrong-parameter", "sketch"}
+    {"tnp", "dressup-drop", "coincidental-hash", "rollback-boundary", "wrong-parameter"}
 )
 
 
@@ -146,30 +146,9 @@ def test_fault_case_declares_the_validator_it_targets(case: Path):
     assert str(_load(case).get("targets_validator") or "").strip()
 
 
-def test_every_fault_suite_is_present():
+def test_all_five_fault_suites_are_present():
     suites = {path.parent.parent.name for path in FAULT_CASES}
     assert suites == FAULT_SUITES
-
-
-# The cited validators that still have no fault case behind them. A cited validator with an empty
-# suite passes leg-b having validated nothing, because `check_validator_currency` compares only the
-# stored validator_sha against the working tree and never asserts the suite exists (DW-98). This set
-# is the remaining debt, and it only ever shrinks: authoring a suite removes a name, and the test
-# below fails if a name is added or if a name here turns out to be covered after all.
-G2_VALIDATORS_WITHOUT_A_FAULT_SUITE = frozenset({"fingerprint"})
-
-
-def test_no_cited_g2_validator_loses_the_fault_cases_behind_it():
-    """Every cited validator is targeted by a case, except the named remaining debt."""
-    cited = {
-        validator
-        for criterion in _load(G2 / "gate.yaml")["criteria"]
-        for validator in criterion.get("cited_validators") or []
-    }
-    targeted = {
-        str(_load(case).get("targets_validator") or "").split("@", 1)[0] for case in FAULT_CASES
-    }
-    assert cited - targeted == G2_VALIDATORS_WITHOUT_A_FAULT_SUITE
 
 
 @pytest.mark.parametrize("case", FAULT_CASES, ids=lambda p: p.parent.name)

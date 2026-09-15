@@ -108,14 +108,14 @@ development_status:
   3-7-confirmation-flow-verified-undo: done
   3-8-gate-g2-exit: done
   epic-3-retrospective: optional
-  epic-4: in-progress
-  4-1-entry-gate-g3e-specs-judge-techdraw: done
-  4-2-assertion-primitives: done
-  4-3-techdraw-drawing-generator: done
-  4-4-visual-judge: done
-  4-5-designer-loop: done
-  4-6-parametric-editability: done
-  4-7-gate-g3-exit: in-progress
+  epic-4: backlog
+  4-1-entry-gate-g3e-specs-judge-techdraw: backlog
+  4-2-assertion-primitives: backlog
+  4-3-techdraw-drawing-generator: backlog
+  4-4-visual-judge: backlog
+  4-5-designer-loop: backlog
+  4-6-parametric-editability: backlog
+  4-7-gate-g3-exit: backlog
   epic-4-retrospective: optional
   epic-5: backlog
   5-1-entry-gate-g4e-soak-fault-harness: backlog

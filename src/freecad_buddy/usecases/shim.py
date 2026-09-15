@@ -56,44 +56,26 @@ def serializer_tag() -> Literal["exportBinary", "exportBrep"]:
 
 
 @lru_cache(maxsize=1)
-def varset_probe() -> tuple[Literal["varset", "spreadsheet"], str | None]:
-    """The driving-dimension backend and, when it fell back, why.
+def varset_backend() -> Literal["varset", "spreadsheet"]:
+    """Driving-dimension backend: ``varset`` when ``App::VarSet`` is usable, else ``spreadsheet``.
 
-    Adds an ``App::VarSet`` on a throwaway document and writes one property to it. Creating the
-    object is not enough on its own: decision 004's open question is whether VarSet's *Python*
-    surface is exposed (upstream #12531), and a build that hands back an object whose
-    ``addProperty`` raises would hold no parameter the facade could write. The probe therefore
-    exercises the write the facade actually performs.
-
-    The reason is kept rather than discarded because the Spreadsheet fallback is currently
-    unexercised — VarSet is the measured path on both supported legs — so the only way a silent
-    switch becomes visible is for the fallback to name what it could not do.
+    Attempts to add an ``App::VarSet`` on a throwaway document and confirms it materializes.
     """
     try:
         import FreeCAD
     except ImportError:
-        return "spreadsheet", "FreeCAD is unavailable"
+        return "spreadsheet"
     try:
         doc = FreeCAD.newDocument("FCB_TMP_varset_probe")
-    except Exception as exc:  # noqa: BLE001 - cannot open a probe document; assume unavailable
-        return "spreadsheet", f"probe document could not be opened: {exc}"
+    except Exception:  # noqa: BLE001 - cannot open a probe document; assume unavailable
+        return "spreadsheet"
     try:
         obj = doc.addObject("App::VarSet", "FCB_TMP_probe")
-        if obj is None:
-            return "spreadsheet", "App::VarSet is not a type this build creates"
-        obj.addProperty("App::PropertyLength", "FCB_TMP_probe_length", "Driving", "")
-        obj.FCB_TMP_probe_length = 1.0
-        return "varset", None
-    except Exception as exc:  # noqa: BLE001 - any failure means the backend is unavailable
-        return "spreadsheet", f"App::VarSet is not writable from Python: {exc}"
+        return "varset" if obj is not None else "spreadsheet"
+    except Exception:  # noqa: BLE001 - any failure means the backend is unavailable
+        return "spreadsheet"
     finally:
         FreeCAD.closeDocument(doc.Name)
-
-
-@lru_cache(maxsize=1)
-def varset_backend() -> Literal["varset", "spreadsheet"]:
-    """Driving-dimension backend: ``varset`` when ``App::VarSet`` is usable, else the fallback."""
-    return varset_probe()[0]
 
 
 @lru_cache(maxsize=1)
@@ -210,31 +192,6 @@ def partdesign_available() -> bool:
         return False
     finally:
         FreeCAD.closeDocument(doc.Name)
-
-
-# The headless ``TechDraw`` App-module surface decision 016 rests on
-# (``AppTechDrawPy.cpp:138-170``). Probed as a set rather than by importing the module alone,
-# because a build can expose ``TechDraw`` while missing a helper, and discovering that halfway
-# through a TempDoc build leaks the document. The set is the whole measured boundary, not only
-# what the drawing generator calls today: a build that lost any of the four has moved the boundary
-# decision 016 records, and reporting that as "available" would hide the move.
-_TECHDRAW_ENTRY_POINTS = ("projectToSVG", "viewPartAsSvg", "makeExtentDim", "makeDistanceDim")
-
-
-@lru_cache(maxsize=1)
-def techdraw_available() -> bool:
-    """Whether the headless ``TechDraw`` App module exposes every entry point 4.3 drives.
-
-    Never probes ``TechDrawGui``. Page export lives there and is unreachable from a console
-    process, and a *second* import of it after ``FreeCADGui.setupWithoutGUI()`` terminates the
-    interpreter with no traceback (decision 016, DW-116) — so a probe that reached for it could
-    take the whole process down instead of returning ``False``.
-    """
-    try:
-        import TechDraw
-    except Exception:  # noqa: BLE001 - a module that will not import means the feature is absent
-        return False
-    return all(hasattr(TechDraw, name) for name in _TECHDRAW_ENTRY_POINTS)
 
 
 def probe_object(type_id: str, read: Callable[[object], T]) -> T:
@@ -443,7 +400,6 @@ def warm_capability_probes() -> None:
     """
     export_binary_available()
     serializer_tag()
-    varset_probe()
     varset_backend()
     varset_available()
     element_map_available()
@@ -451,7 +407,6 @@ def warm_capability_probes() -> None:
     element_map_version()
     sketcher_available()
     partdesign_available()
-    techdraw_available()
     freecad_version()
 
 

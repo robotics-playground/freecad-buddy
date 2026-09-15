@@ -1,8 +1,0 @@
-FreeCAD version: 1.1.0
-TechDraw imported OK: TechDraw
-exportPage* names on App module: []
-  has projectToSVG     : True
-  has viewPartAsSvg    : True
-  has makeExtentDim    : True
-  has makeDistanceDim  : True
-  has writeDXFPage     : True

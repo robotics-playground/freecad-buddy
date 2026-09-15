@@ -65,7 +65,6 @@ def is_default_renderable(obj: object) -> bool:
         return False
     return _has_shape(obj)
 
-
 # Fixed camera orientations (x, y, z, w quaternions), transcribed from FreeCAD's
 # ``src/Gui/Camera.cpp``: ``iso`` is ``Camera::isometric()``, ``front`` ``Camera::front()``,
 # ``top`` ``Camera::top()``, ``bottom`` ``Camera::bottom()``, ``right`` ``Camera::right()``,
