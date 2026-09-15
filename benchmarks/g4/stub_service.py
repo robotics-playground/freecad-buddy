@@ -175,10 +175,21 @@ def submit(_spec) -> dict:
     """Refuse a real submission: there is no service behind this seam yet.
 
     ``resolve`` answers the suite from a case declaration, which is how the entry gate grades its
-    own machinery. A caller submitting a real spec is asking for a job to be RUN, and nothing runs
-    jobs today. Failing closed here is what keeps a green G4 impossible before 5.2-5.4 land.
+    own machinery. A caller submitting a real spec is asking for a DELIVERABLE — a validated
+    model, its exports and a report — and nothing produces one today.
+
+    Story 5.2 landed the supervisor, the worker pool and whole-tree kill
+    (``hosts/phase4/``), so a job's LIFECYCLE now runs: it can be spawned, deadlined, killed, and
+    resolved to a closed-set status. That is not a deliverable. What is still missing is the
+    designer payload and the job API that carries a spec to it (story 5.4), plus the sandbox the
+    worker must run inside (story 5.3).
+
+    So this stays raising. Flipping it once the lifecycle worked would make the gate report a
+    capability the service does not have, which is the self-deception an entry gate exists to
+    prevent.
     """
     raise ServiceUnavailable(
-        "no job service implemented yet (stories 5.2-5.4): the supervisor, worker pool and "
-        "sandbox do not exist, so no job can be run and no deliverable can be produced"
+        "no job service implemented yet: the supervisor and worker pool exist (story 5.2), but "
+        "the per-job sandbox (5.3) and the job API with its designer payload (5.4) do not, so "
+        "no job can be run end to end and no deliverable can be produced"
     )

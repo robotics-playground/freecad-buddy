@@ -1,0 +1,56 @@
+{
+  "$defs": {
+    "JobLimits": {
+      "properties": {
+        "cpu_time_s": {
+          "type": "number"
+        },
+        "memory_bytes": {
+          "type": "integer"
+        },
+        "wall_deadline_s": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "fcb.job-spec/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "job_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/JobLimits"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "payload_module": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "fcb.job-spec/1"
+    }
+  },
+  "title": "JobSpec",
+  "type": "object"
+}

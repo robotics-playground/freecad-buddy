@@ -43,7 +43,7 @@ from freecad_buddy.contracts.diff import GeometryDiff
 from freecad_buddy.contracts.envelope import ResultEnvelope
 from freecad_buddy.contracts.feature import FeatureState
 from freecad_buddy.contracts.fingerprint import FingerprintRecord
-from freecad_buddy.contracts.job import JobStatus
+from freecad_buddy.contracts.job import JobSpec, JobStatus
 from freecad_buddy.contracts.mutation import MutationBlock
 from freecad_buddy.contracts.report import ValidationReport
 from freecad_buddy.contracts.sketch import SketchState
@@ -56,6 +56,7 @@ WIRE_ROOTS: list[tuple[str, Any]] = [
     ("result-envelope", ResultEnvelope),
     ("validation-report", ValidationReport),
     ("job-status", JobStatus),
+    ("job-spec", JobSpec),
     ("audit-record", AuditRecord),
     ("geometry-diff", GeometryDiff),
     ("fingerprint", FingerprintRecord),
