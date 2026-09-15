@@ -1,6 +1,6 @@
 ---
 title: MCP Tool Catalog Design — Phases 0–2
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-1, AD-2, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-17, AD-20]
 sources:
@@ -15,7 +15,7 @@ sources:
 
 # MCP Tool Catalog Design — Phases 0–2
 
-Implementation-ready catalog of the FreeCAD Buddy MCP tool surface for Phases 0–2. Tool names use the wire convention: underscore + namespace prefix (`query_`, `document_`, `export_`, `verify_`, `sketch_`, `feature_`, `preview_`, `debug_`); dot forms in older docs are shorthand only (spine Consistency Conventions). All tool implementations live in `usecases/`, schemas and envelopes in `contracts/` (AD-1); identical implementations serve GUI (via RPC listener) and headless hosts (AD-2).
+Implementation-ready catalog of the FreeCAD Buddy MCP tool surface for Phases 0–2. Tool names use the wire convention: underscore + namespace prefix (`query_`, `document_`, `export_`, `verify_`, `sketch_`, `feature_`, `preview_`, `debug_`); dot form is docs shorthand only (spine Consistency Conventions). All tool implementations live in `usecases/`, schemas and envelopes in `contracts/` (AD-1); identical implementations serve GUI (via RPC listener) and headless hosts (AD-2).
 
 ## 1. Cross-Cutting Contracts
 
@@ -205,16 +205,17 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
 | `query_` | 8 | 2 | — | — | 10 | 8 (`query_tree_children`, `query_parameters` planned) |
 | `export_` | 3 | — | — | — | 3 | 3 |
-| `verify_` | 7 | — | 1 | — | 8 | 5 (`verify_fingerprint`, `verify_references` planned) |
+| `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
 | `feature_` | — | — | 11 | — | 11 | 11 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
-| **AI-visible total** | | | | | **49** | **44** |
+| `view_` | — | — | — | — | 1 | 1 |
+| **AI-visible total** | | | | | **50** | **45** |
 | `debug_` (operator-only) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus operator-only `debug_exec` (unregistered by default, never counted in the AI-visible registry) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule).
 
-The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returning 44 + `DEBUG_EXEC_SPEC` = 45 registered specs is the current truth.
+The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **45**; with `DEBUG_EXEC_SPEC` that is 46 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -538,7 +539,7 @@ Phase 2 policy: mutation tool called without valid `confirm` in a confirm-requir
 ## 7. Conflicts & Design Decisions
 
 - **No AD conflicts identified.** Two deliberate interpretations, recorded per spine instructions:
-  1. **Lifecycle-op exemption (§1.4):** `document_save/close/recompute/undo` are mutations for serialization/audit purposes but exempt from the AD-5 snapshot bracket and Phase 2 preview gate (no new geometric intent; `undo` is itself the AD-5 rollback mechanism, proven by AD-6 fingerprints per G2.3). AD-5's "every mutation" is read as "every geometry-intent mutation"; flagged for spine-owner confirmation.
+  1. **Lifecycle-op exemption (§1.4):** `document_save/close/recompute/undo` are mutations for serialization/audit purposes but exempt from the AD-5 snapshot bracket and Phase 2 preview gate (no new geometric intent; `undo` is itself the AD-5 rollback mechanism, proven by AD-6 fingerprints per G2.3). AD-5's "every mutation" is read as "every geometry-intent mutation"; 
   2. **G0.2 counting:** the gate text counts `query_`/`document_`/`export_`; this catalog meets ≥15 (17: 8 `query_` + 6 `document_` + 3 `export_`) within those namespaces alone, so the stricter reading holds; with Phase 0 `verify_` the AI-visible count is 24.
 
 ## 8. Phase-5 tools (forward pointer — designed at the G5-robot gate)

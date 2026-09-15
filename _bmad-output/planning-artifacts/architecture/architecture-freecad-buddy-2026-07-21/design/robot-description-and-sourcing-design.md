@@ -1,6 +1,6 @@
 ---
 title: 'Robot-Description Export & Part Sourcing Design — Phase 5'
-status: draft
+status: final
 date: '2026-07-23'
 ad-refs: [AD-22, AD-23, AD-9, AD-11, AD-12, AD-17, AD-20, AD-16, AD-1, AD-2]
 binds: ['../ARCHITECTURE-SPINE.md']

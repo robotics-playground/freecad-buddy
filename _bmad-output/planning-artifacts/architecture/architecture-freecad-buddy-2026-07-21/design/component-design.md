@@ -1,6 +1,6 @@
 ---
 title: 'FreeCAD Buddy — Component Design'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-14, AD-15, AD-16, AD-17, AD-19, AD-20, AD-35]
 binds: ['../ARCHITECTURE-SPINE.md']
@@ -80,10 +80,10 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 | `rpc_listener.py` | P0 | In-FreeCAD RPC listener (AD-2): accepts frames off-thread, validates token + handshake, hands work to `marshal`. **Stdlib + FreeCAD only** (AD-12); CI no-`Gui`-import check applies (AD-1) | runs inside FreeCAD GUI process |
 | `marshal.py` | P0 | Main-thread marshal (AD-2): Mod/Web `postEvent` pattern — queue callable to Qt main thread, block for result. Headless degrade: direct inline call (no Qt loop). Holds **no Qt import** — the Qt event pump lives in `hosts/gui_addon/pump.py`, so this module needs no AD-1 exemption | research §2.3/§4.3 |
 | `rpc_dispatch.py` | P0 | The single AD-17 error boundary: maps use-case exceptions onto the closed status set (`INVALID_INPUT`, `RECOMPUTE_ERROR`, `TIMEOUT`; unexpected → `RECOMPUTE_ERROR` + `detail.unexpected`), attaches machine detail (exception class, message, truncated traceback), gates `debug_exec` registration (AD-4) | integration §3.5 |
-| `audit_log.py` | P0 | `AuditSink` implementation: append-only JSON-lines per job/session (AD-17, conventions) | injected into `transaction` |
+| `audit_log.py` | P0 | `AuditSink` implementation: append-only JSON-lines per session (AD-17, conventions) | injected into `transaction` |
 | `export_oracle.py` + `export_verdict.py` | P0 | External-side orchestration of `verify_export_*` (AD-9): STEP re-import round-trip, trimesh primary + second oracle (admesh or Phase 0-gate fallback) for STL, lib3mf + trimesh + in-FreeCAD self-read (via RPC) for 3MF; oracle disagreement = fail; mesh tolerance derived from deflection | third-party oracles |
 | `benchmarks/runner.py` + `benchmarks/harness/` | P0 | **Gate runner** core (AD-13, AD-14, AD-19): runs benchmarks/fault-injection suites via pytest, computes majority-of-R, Wilson CI, McNemar; emits contracts-owned `ValidationReport` with banner; verdict from report fields only. Thin CLI lives in `benchmarks/runner.py` (`gate` console alias) | external process only |
-| `skills_loader.py` *(planned, Phase 1 — not yet built)* | P1 (router) / GS.E (forced-subset) | **Skills loader** (AD-15): one store, two modes — production metadata-first router (12 descriptions resident, 2–5 bodies routed, ≤~10K tokens, subset logged) and ablation forced explicit-subset injection with auto-activation disabled; CI shape check (4 sections, ≤1,500 words) — **checker unbuilt, Story 6.1** | `--skills <subset>` flag |
+| `skills_loader.py` *(planned, Phase 1 — not yet built)* | P1 (router) / GS.E (forced-subset) | **Skills loader** (AD-15): one store, two modes — production metadata-first router (15 descriptions resident, 2–5 bodies routed, ≤~10K tokens, subset logged) and ablation forced explicit-subset injection with auto-activation disabled; CI shape check (4 sections, ≤1,500 words) — **checker unbuilt, Story 6.1** | `--skills <subset>` flag |
 | `render_probe.py` | P0 | Capability-gated render probe serving `query_screenshot` (P0) and preview images (P2): GUI `saveImage` / offscreen-Xvfb / omit; ≤1920 px, `resource_link` preferred — the single adapter Qt carve-out (AD-1, AD-10) | optional payload only |
 
 ## 4. Host ring — `src/freecad_buddy/hosts/` (imports adapters)

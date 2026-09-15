@@ -1,6 +1,6 @@
 # Phase Gates — Agent-Executable Validation Contracts
 
-Companion to `SPEC.md`. One gate per phase (G0–G2) plus the Skills track (GS). Phase-5 work carries its own gate (`G5-robot`), specified when that phase is scoped. Each gate = **goal**, **entry gate** (the AD-19 Validation Design Gate that must land before phase implementation — always: threat list, benchmark runnable against a stub and failing honestly, ≥10-case fault-injection suite at the sensitivity bar, grading rubric where judgment is needed, and a recorded reuse survey), and an **exit criteria table** whose checks an AI agent executes and whose verdict it computes mechanically.
+Companion to `SPEC.md`. One gate per phase (G0–G4) plus the Skills track (GS). Phase-5 work carries its own gate (`G5-robot`), specified when that phase is scoped. Each gate = **goal**, **entry gate** (the AD-19 Validation Design Gate that must land before phase implementation — always: threat list, benchmark runnable against a stub and failing honestly, ≥10-case fault-injection suite at the sensitivity bar, grading rubric where judgment is needed, and a recorded reuse survey), and an **exit criteria table** whose checks an AI agent executes and whose verdict it computes mechanically.
 
 ## Global protocol — how an agent validates a gate
 
@@ -70,6 +70,45 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 
 ---
 
+## G3 — Phase 3: Spec-to-Part
+
+**Goal:** A written spec becomes a clean parametric part, measured against compiled assertions and looked at, with the loop held by the driving agent.
+
+**Entry gate G3.E:** the spec set with compiled assertions (authored before any part is built, in a declared anchor frame) lands and fails honestly against a stub; the corrupted-plan fault suite lands at sensitivity ≥95 % / FA ≤5 %; the render and drawing path reaches the ≥2048 px review floor; the `design-loop`, `visual-review` and `spec-to-assertions` skills exist.
+
+The actor is an **external agent harness** the runner spawns as a separate process — it drives the bridge over MCP and holds its own loop (AD-35). The runner grades artifacts; it never reasons. The actor's exact model id is recorded in the report banner, and a cited rate is valid only for the actor that produced it.
+
+| ID | Criterion | Agent-executable check | Pass rule |
+| --- | --- | --- | --- |
+| G3.1 | Spec benchmark | Drive the spec set end to end, one human plan approval, R≥10 on the sealed held-out split; grade with the compiled assertions [stats] | ≥70 % pass within ≤3 repairs; dev/held-out gap ≤15pp |
+| G3.2 | Parts are sound | Read `verify_shape` / `verify_sketch` / recompute reports for every passing part | Valid watertight solid, recompute-clean, all sketches `FullyConstrained` |
+| G3.3 | Parametric editability | Change one driving parameter per passing part; recompute; re-verify | ≥90 % recompute clean with the change reflected |
+| G3.4 | Corrupted-plan detection | Drive the ≥10 planted corrupted plans through the same loop | ≥9/10 spec violations detected; zero silent bad parts |
+| G3.5 | Visual review performed | Read the run workdir for every passing part | Per-part visual findings present; a run with no visual evidence is incomplete, not passing (AD-21) |
+| G3.6 | Budget | Read the per-part wall-clock from the report banner | ≤10 min median across all repair iterations, model time included (AD-24) |
+
+**Threats → counters:** "plan looks professional, part deviates" → assertions authored independently of the plan, from the spec text; "agent stopped because it ran out of patience" → done is assertions passing, never an iteration count; "part never looked at" → G3.5 reads the evidence trail, and the ≥20 % human spot-audit catches a missing one; "cited a Sonnet rate for an Opus run" → the banner carries the actor model id.
+
+---
+
+## G4 — Phase 4: Unattended Operation
+
+**Goal:** An operator starts an agent and leaves; the bridge makes the run safe, auditable and reconstructable with nobody watching.
+
+**Entry gate G4.E:** the revision fault suite (a change that silently breaks an unrelated feature) lands at sensitivity ≥95 % / FA ≤5 %; the audit log and run workdir carry everything a failed run needs to be reconstructed without the agent's context.
+
+| ID | Criterion | Agent-executable check | Pass rule |
+| --- | --- | --- | --- |
+| G4.1 | Rate holds unattended | Re-run the G3 spec set with no human in the loop after kickoff | G3.1 rate maintained |
+| G4.2 | Revisions stay in scope | Drive the revision set; compare fingerprints against each request's declared scope | ≥70 % succeed with the diff confined to the requested change; an unreadable diff fails closed |
+| G4.3 | Reports are re-executed | Re-run every field of a delivered validation report against the artifacts on disk | Every field reproduces; no agent claim is echoed as a result (AD-17) |
+| G4.4 | Full cycle, no human | One build → inspect report → revise → accept cycle with no human input after kickoff | Completes; every step traceable through one `run_id` |
+| G4.5 | Nothing fails silently | Inject faults; read the audit log and terminal statuses | Every failure carries a structured AD-17 status; the run reconstructs from its workdir alone |
+
+**Threats → counters:** "well-formatted report over a bad part" → G4.3 re-executes rather than trusting; "revision broke something unrelated" → the declared scope is the thing graded, so a check that could never fail is impossible; "nobody was watching when it failed" → the audit log is what makes the failure legible afterwards.
+
+---
+
 ## GS — Skills Track (runs alongside Phases 1–3)
 
 **Goal:** 15 skills — 12 Track A+B that measurably move benchmark metrics, plus the three Track W workflow skills that carry the design loop; all loadable by ≥2 harnesses.
@@ -82,7 +121,7 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 | GS.2 | Ablation harness operational | Run any benchmark with `--skills <subset>`; verify complement excluded from context | Declared subset in, complement out, per-skill paired deltas reported in AD-14 format |
 | GS.3 | Measurable lift | Run per-skill ablations on the Phase 2 and spec benchmarks | ≥8/12 Track A+B skills significant per AD-14 (McNemar p<0.05 ∧ CI excludes 0); rest revised or cut; sub-detection effects reported as such. Track W is exempt — without `design-loop` no loop exists to ablate against, so it is validated by the spec benchmark running at all |
 | GS.4 | `freecad-troubleshooting` | Re-run G1.2 tiered cases with skill loaded, R≥10; grade n=10 first, escalate to n=30 only when n=10 is 10/10 | n=10 ≥9/10 to pass; 10/10 escalates to n=30 with Wilson CI; below 10/10 concludes at n=10 (low-confidence flag, CI attached) |
-| GS.5 | Accuracy review | Check for recorded owner review vs version-pinned FreeCAD docs | Human sign-off token present for all 12 |
+| GS.5 | Accuracy review | Check for recorded owner review vs version-pinned FreeCAD docs | Human sign-off token present for all 15 |
 | GS.6 | `design-decomposition` | Run dedicated ≥40-spec paired ablation, R≥10 | ≥+15pp first-plan success, McNemar p<0.05, CI excludes 0 |
 
 **Threats → counters:** "skill sounds authoritative, measures nothing" → GS.3 ablation rule; "activation nondeterminism pollutes A/B" → forced injection with auto-activation disabled; "skill helps only via another skill" → no cross-skill body deps (AD-15) + per-skill isolation in deltas.

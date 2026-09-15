@@ -1,6 +1,6 @@
 ---
 title: 'Scenario Sequence Diagrams'
-status: draft
+status: final
 date: '2026-09-15'
 ad-refs: ['AD-35', 'AD-2', 'AD-3', 'AD-4', 'AD-5', 'AD-10', 'AD-13', 'AD-17', 'AD-21', 'AD-25']
 sources:

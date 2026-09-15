@@ -1,6 +1,6 @@
 ---
 title: 'Verification Subsystem Design — FreeCAD Buddy'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs:
   primary: [AD-5, AD-6, AD-7, AD-8, AD-9, AD-13]
@@ -92,7 +92,7 @@ Exactly one implementation, in `usecases/fingerprint.py`. Document fingerprint =
 The serializer is shim-probed once per process (AD-11 capability probe, never version sniffing):
 
 - `exportBinary(stream)` exposed to Python → serializer tag `exportBinary` (OCCT BinTools VERSION_3; byte-deterministic for an unchanged in-memory shape — positional ids, no pointer hash in the stream).
-- else `exportBrep(stream)` (ASCII `BRepTools_ShapeSet`, same determinism argument) → serializer tag `exportBrep`. (Tag literals match `contracts/fingerprint.py` — data-contracts-design.md §10.)
+- else `exportBrep(stream)` (ASCII `BRepTools_ShapeSet`, same determinism argument) → serializer tag `exportBrep`. (Tag literals match `contracts/fingerprint.py` — data-contracts-design.md §9.)
 
 Every `Fingerprint` value carries its serializer tag. **Comparing fingerprints across different tags is banned** — the comparison helper raises. Document-XML/FCStd hashing (random UUIDs, zip mtimes, build strings) and tessellation hashing (parallel, non-deterministic meshing) are banned as identity oracles.
 

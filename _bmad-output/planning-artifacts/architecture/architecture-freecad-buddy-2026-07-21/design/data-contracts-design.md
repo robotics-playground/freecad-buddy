@@ -1,6 +1,6 @@
 ---
 title: 'Data Contracts Design — contracts/ package'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-1, AD-2, AD-3, AD-5, AD-6, AD-7, AD-8, AD-10, AD-12, AD-13, AD-14, AD-17, AD-20]
 sources:
@@ -145,7 +145,7 @@ class AuditRecord(TypedDict, total=False):
     params_digest: str              # "sha256:<hex>" over canonical-JSON params (params
                                     #   themselves may be large/sensitive; digest is mandatory,
                                     #   inline params optional under a size cap)
-    fingerprint_before: str | None  # FingerprintRecord.digest (§8), serializer-tagged
+    fingerprint_before: str | None  # FingerprintRecord.digest (§9), serializer-tagged
     fingerprint_after: str | None
     verify_verdict: TerminalStatus | None   # verdict of the AD-5 post-verify report
     verify_report_ref: str | None   # path/uri of the full ValidationReport
@@ -157,7 +157,7 @@ class AuditRecord(TypedDict, total=False):
                                     #   "verified": bool}        # AD-5: measured, never assumed
 ```
 
-Vocabulary reuse (spine Deferred table: preview must reuse this vocabulary): `fingerprint_before/after`, `verify_verdict`, `params_digest`, and the diff's `touched/new/deleted` naming (§8) are shared identifiers — the preview channel and any revision diff introduce **no synonyms** for these concepts. Every AD-10 headless `autoApprove` writes an `approval` record with `mode:"auto_approve"` and the `diff_digest` of the diff that was auto-accepted.
+Vocabulary reuse (spine Deferred table: preview must reuse this vocabulary): `fingerprint_before/after`, `verify_verdict`, `params_digest`, and the diff's `touched/new/deleted` naming (§7) are shared identifiers — the preview channel and any revision diff introduce **no synonyms** for these concepts. Every AD-10 headless `autoApprove` writes an `approval` record with `mode:"auto_approve"` and the `diff_digest` of the diff that was auto-accepted.
 
 ## 7. Geometry diff (`diff.py`) — preview payload (AD-10)
 
@@ -189,7 +189,7 @@ class GeometryDiff(TypedDict, total=False):
     tnp_precheck: dict              # required: {"status": "CLEAN"|"FLAGGED"|"UNSUPPORTED",
                                     #  "flagged": [{"object": str, "reference": Selector,
                                     #               "kind": "re_point"|"drop"|"marker"}]}
-    fingerprint_before: str         # live-doc FingerprintRecord.digest — audit-vocabulary reuse (§7)
+    fingerprint_before: str         # live-doc FingerprintRecord.digest — audit-vocabulary reuse (§6)
     render: dict | None             # {"available": bool, "reason": str|None} — images travel in
                                     #   the envelope (§4), never inside the diff
 ```
@@ -276,7 +276,7 @@ Frame layout, method registry, error codes, timeouts, and the discovery file are
 // success — result IS a ResultEnvelope (no second result vocabulary)
 {"jsonrpc": "2.0", "id": 41, "result": {"schema": "fcb.result-envelope/1", "status": "OK", ...}}
 
-// marshal timeout is a DOMAIN outcome — an envelope, never a JSON-RPC error (§2.3)
+// marshal timeout is a DOMAIN outcome — an envelope, never a JSON-RPC error (§3)
 {"jsonrpc": "2.0", "id": 41, "result": {"schema": "fcb.result-envelope/1", "status": "TIMEOUT",
   "detail": {"marshal_timeout": true, "maybe_still_running": true}}}
 
@@ -314,10 +314,10 @@ Frame layout, method registry, error codes, timeouts, and the discovery file are
 
 | Decision | This doc | Deferred to |
 | --- | --- | --- |
-| Diff field list | Fixed (§8) — spine deferred only the Phase 2 lock-in moment; fields follow the preview research verbatim | Tolerance defaults per assertion → fault-injection calibration (AD-19) |
+| Diff field list | Fixed (§7) — spine deferred only the Phase 2 lock-in moment; fields follow the preview research verbatim | Tolerance defaults per assertion → fault-injection calibration (AD-19) |
 | Status set | Frozen (§3) | — |
-| RPC framing | Newline-delimited JSON-RPC 2.0 + handshake (§11) | Marshal timeout values → Phase 0 spike |
-| Fingerprint serializer | Tagged union `exportBinary`/`exportBrep` (§10) | Which tag a given build uses → Phase 0 `exportBinary` exposure spike |
-| Approval modes | Closed list (§7) | Elicitation-unsupported client UX detail → Phase 2 UX design |
+| RPC framing | Newline-delimited JSON-RPC 2.0 + handshake (§10) | Marshal timeout values → Phase 0 spike |
+| Fingerprint serializer | Tagged union `exportBinary`/`exportBrep` (§9) | Which tag a given build uses → Phase 0 `exportBinary` exposure spike |
+| Approval modes | Closed list (§6) | Elicitation-unsupported client UX detail → Phase 2 UX design |
 
 **Conflicts with the spine:** none found. One deliberate refinement: the spine's AD-10 deferred row leaves the diff `outputSchema` field list to "Phase 2 UX design"; this document fixes the field *names and shapes* now (they are fully determined by the research and the AD-17 audit vocabulary) and leaves only tolerances/thresholds to Phase 2 — locking names early is what the AD-17 reuse rule requires.

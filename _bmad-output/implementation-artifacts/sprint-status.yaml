@@ -45,7 +45,7 @@
 # - Epics are gate-sequential (AD-19): epic N+1 must not start before epic N's gate-exit story is
 #   done. Epic 6 is the parallel exception (after Epic 1).
 # - Epic 7 depends on a Phase-5 Assemblies capability (not yet an epic) — scope Assemblies first.
-#   Skills 6-7..6-9 pair with Epic 7 (ablation-ready drafts; ablated when GS infra + Epic-7 tools
+#   Skills 6-8..6-10 pair with Epic 7 (ablation-ready drafts; ablated when GS infra + Epic-7 tools
 #   exist).
 # - Epic 8 is parallel-eligible after Epic 1: it adds one tool plus an optional ResultEnvelope key
 #   on top of the shipped bridge, weakens no AD, and reopens no closed gate. Story 8.1 must NOT
@@ -82,7 +82,7 @@ development_status:
   epic-2: done
   2-1-entry-gate-g1e-eval-rubric-grader: done
   2-2-assistant-claude-backend: done
-  2-3-local-backend-react-adapter: done
+  2-3-local-backend-native-mcp: done
   2-4-gate-g1-exit: done
   epic-2-retrospective: optional
   epic-3: done
@@ -95,6 +95,20 @@ development_status:
   3-7-confirmation-flow-verified-undo: done
   3-8-gate-g2-exit: done
   epic-3-retrospective: optional
+  epic-4: backlog
+  4-1-entry-gate-g3e-spec-set-assertions-fault-suite: backlog
+  4-2-assertion-primitives: backlog
+  4-3-drawing-generator: backlog
+  4-4-parametric-editability: backlog
+  4-5-gate-g3-exit: backlog
+  epic-4-retrospective: optional
+  epic-5: backlog
+  5-1-entry-gate-g4e-revision-fault-suite: backlog
+  5-2-re-executed-validation-reports: backlog
+  5-3-scope-graded-revisions: backlog
+  5-4-run-traceability: backlog
+  5-5-gate-g4-exit: backlog
+  epic-5-retrospective: optional
   epic-6: backlog
   6-1-entry-gate-gse-ablation-shape-check: backlog
   6-2-first-track-a-skills: backlog

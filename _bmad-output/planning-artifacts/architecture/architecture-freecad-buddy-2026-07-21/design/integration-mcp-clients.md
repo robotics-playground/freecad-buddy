@@ -1,6 +1,6 @@
 ---
 title: 'MCP Client Integration Design — Claude Code, Local LLM, Future Agent Clients'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-3, AD-4, AD-10, AD-12, AD-15, AD-17, AD-20]
 sources:
@@ -73,7 +73,7 @@ Standard `tools/list`. Names follow the underscore convention (`query_*`, `verif
 
 One skill store (`skills/`, `SKILL.md` + `references/`). For Claude Code, the production metadata-first router maps directly onto the native skill mechanism: skill descriptions resident, 2–5 bodies loaded per task on trigger. Delivery = expose the store to Claude Code as native skills (symlink or generated `.claude/skills/` entries pointing at the single store — no second copy of skill bodies). The routed subset is logged per AD-15; the ≤~10K token skill budget applies.
 
-Ablation runs against Claude Code use the forced-subset injection path with native auto-activation disabled — same mechanism as the local backend (§3.4), which is what makes it the portable second harness.
+Ablation runs against Claude Code use the forced-subset injection path with native auto-activation disabled — same mechanism as the local backend (§3.3), which is what makes it the portable second harness.
 
 ### 2.5 Elicitation flow
 

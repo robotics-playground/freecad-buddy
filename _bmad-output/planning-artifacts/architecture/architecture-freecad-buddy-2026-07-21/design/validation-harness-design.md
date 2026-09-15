@@ -1,6 +1,6 @@
 ---
 title: 'Validation & Benchmark Harness Design'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-13, AD-14, AD-16, AD-19, AD-17, AD-15, AD-12, AD-20, AD-8, AD-6]
 spec-refs: ['_bmad-output/specs/spec-freecad-buddy/phase-gates.md']

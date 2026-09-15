@@ -48,6 +48,16 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR10** — Bridge-owned undo restores exact prior state, verified by fingerprint comparison in 100 % of cases. *(AD-6)*
 - **FR11** — A TNP guard snapshots all reference-holding subsystems before each mutation and audits after recompute — flags broken (`?`-marker), silently re-pointed, and dropped references; reports `UNSUPPORTED` (never clean) without an element map. *(AD-7)*
 
+#### Spec-to-part — CAP-4
+
+- **FR12** — An agent turns a written part spec into a parametric part: plan (human-approved once) → execute the Phase 2 tools → measure against compiled spec assertions in a declared anchor frame → repair, within the cap the `design-loop` skill sets. Convergence is the measurements agreeing, never an iteration count. This repository ships the assertion primitives and the skill; it ships no loop. *(AD-13/21/35)*
+- **FR13** — The bridge produces the standard visual set — 3D iso render, focus views, and dimensioned front/top/right projections generated from the part's driving parameters on a TempDoc copy at a ≥2048 px legibility floor — and the `visual-review` skill's checklist. The driving agent performs the review and writes its findings to the run workdir; no judge model, credential, or verdict-producing code exists in the source tree. *(AD-21/35)*
+- **FR14** — Generated parts expose driving dimensions as named parameters (VarSet with Spreadsheet fallback façade); editing one parameter recomputes clean. *(AD-11)*
+
+#### Unattended operation — CAP-5
+
+- **FR15** — An operator starts an agent against the headless bridge and leaves. Every reported validation field is a re-executed check rather than an echoed claim, every mutation lands in the append-only audit log, and a failed run is reconstructable from its `run_id` workdir alone. Revisions are graded against a declared scope, and a diff that cannot be read fails closed. *(AD-17/25/35)*
+
 #### Skills library — CAP-6
 
 - **FR16** — A skills library of 15 skills — 12 Track A+B plus the three Track W workflow skills (`design-loop`, `visual-review`, `spec-to-assertions`) that carry the design loop the code does not — each with 4 mandatory sections, ≤1,500 words, loading via two modes: production metadata-first router (2–5 bodies, ≤10K tokens) and ablation forced explicit-subset injection with auto-activation disabled. *(AD-15)*
@@ -163,6 +173,8 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | FR19, FR20 | Epic 1 | debug_exec gating; append-only audit log from Phase 0 |
 | FR7 | Epic 2 | Read-only assistant on ≥2 backends |
 | FR8–FR11 | Epic 3 | Typed mutations + transaction protocol; preview/confirm; verified undo; TNP guard |
+| FR12–FR14 | Epic 4 | Assertion primitives, render/drawing path, parametric parameters — the agent's loop lives in `design-loop` |
+| FR15 | Epic 5 | Audit, retention, re-executed reports, scope-graded revisions |
 | FR16 | Epic 6 | 15-skill library (Track A+B+W) + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.8–6.10) |
 | FR21–FR23 | Epic 7 | URDF/SDF export with paired verify; off-the-shelf part sourcing/import *(Phase 5)* |
 | FR24–FR26 | Epic 8 | Viewport framing read, agent-invoked fit tool, change-driven framing warning |
@@ -197,6 +209,18 @@ A user can issue one natural-language modeling command, see a structured preview
 
 **FRs covered:** FR8, FR9, FR10, FR11
 
+### Epic 4: Spec-to-Part (Phase 3 · gate G3)
+
+A user hands over a written part spec and an agent returns an editable parametric part that measurably meets it — geometry assertions plus a visual review, repaired without babysitting. This repository supplies what the agent measures and looks at; the loop is the agent's.
+
+**FRs covered:** FR12, FR13, FR14
+
+### Epic 5: Unattended Operation (Phase 4 · gate G4)
+
+An operator starts an agent and walks away, and comes back to a part, exports, a validation report whose every field was re-executed, and a run workdir that reconstructs what happened. No service, no job API, no worker pool.
+
+**FRs covered:** FR15
+
 ### Epic 6: CAD Skills Library & Ablation (parallel track · gate GS)
 
 Any LLM harness gains measurable CAD judgment from curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–3; needs Epic 1's harness.
@@ -221,7 +245,7 @@ When the bridge says the human can see the model, the human can actually see it 
 
 **DRs covered:** DR-1, DR-2, DR-3, DR-4, DR-5
 
-**Dependency chain:** 1 → 2 → 3 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 3 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates. **9 corrects shipped Epic 8 + story 1-9 behaviour**: it opens no gate, and Epic 8 stays `done` rather than being reopened (AD-19 keeps a passed gate closed). Within Epic 9, 9.1 → 9.2 are ordered because both edit `usecases/view_fit.py`; 9.3 and 9.4 touch disjoint files and are parallel-eligible with either.
+**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.8–6.10 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates. **9 corrects shipped Epic 8 + story 1-9 behaviour**: it opens no gate, and Epic 8 stays `done` rather than being reopened (AD-19 keeps a passed gate closed). Within Epic 9, 9.1 → 9.2 are ordered because both edit `usecases/view_fit.py`; 9.3 and 9.4 touch disjoint files and are parallel-eligible with either.
 
 ---
 
@@ -633,9 +657,110 @@ A user can issue one natural-language modeling command, see a structured preview
 ---
 
 
+## Epic 4: Spec-to-Part (Phase 3 · gate G3)
+
+A user hands over a written part spec and an agent returns an editable parametric part that measurably meets it. This repository supplies the assertion primitives the agent measures with, the render and drawing path it looks at, and the `design-loop` / `visual-review` / `spec-to-assertions` skills that tell it how. It supplies no loop: no plan-execute-repair function exists in the source tree (AD-35).
+
+### Story 4.1: Entry Gate G3.E — Spec Set, Assertions & Fault Suite
+
+**Acceptance Criteria:**
+
+1. **Given** the written spec set with its compiled assertions, authored from the spec prose before any part exists
+   **When** the gate runs against a stub
+   **Then** every criterion fails honestly with `INVALID_INPUT`, never a vacuous pass
+
+2. **Given** each spec's declared anchor frame (named datum | base sketch plane | largest planar face with its tie-break)
+   **When** the frame resolves on the floor and primary FreeCAD legs
+   **Then** it resolves identically on both, or the spec is broken rather than the part failing
+
+3. **Given** the corrupted-plan fault suite (≥10 planted spec violations plus clean controls)
+   **When** scored
+   **Then** sensitivity ≥95 % and false-alarm ≤5 %, recorded with the validator hash
+
+### Story 4.2: Assertion Primitives
+
+**Acceptance Criteria:**
+
+- The spec assertion vocabulary measures geometry — surface typing, axis/radius/spacing, bbox/volume — in the declared anchor frame, through one shared resolver.
+- Feature metadata is a diagnostic hint only; sub-element index selectors are refused in a spec.
+- An assertion that cannot be evaluated reports a failing `INVALID_INPUT` check, never a silent skip.
+
+### Story 4.3: Drawing Generator
+
+**Acceptance Criteria:**
+
+- Dimensioned front/top/right projections compose onto one sheet from the part's driving parameters, on a reserved-prefix TempDoc copy that leaves the part document byte-identical.
+- The sheet renders at ≥2048 px page width; below that floor the visual set is incomplete and the part is not done.
+- One sheet-wide scale, stated on the sheet as a ratio, so proportions are comparable between views.
+
+### Story 4.4: Parametric Editability
+
+**Acceptance Criteria:**
+
+- Driving dimensions are exposed as named parameters through the VarSet façade with its Spreadsheet fallback.
+- Changing one parameter recomputes clean and the change is reflected in the geometry, verified by re-running the spec's assertions.
+
+### Story 4.5: Gate G3 Exit
+
+**Acceptance Criteria:**
+
+1. **Given** all G3 criteria and an external agent harness as the actor
+   **When** the exit runs against the sealed held-out split at R≥10
+   **Then** G3.1–G3.6 pass their rules with Wilson CIs reported, the dev/held-out gap is ≤15pp, the `spot_audit` token is present and run-bound, and the report banner names the actor's exact model id
+
+---
+
+## Epic 5: Unattended Operation (Phase 4 · gate G4)
+
+An operator starts an agent against the headless bridge and leaves. Nothing here schedules, supervises or parallelizes that run — the agent holds the loop and spawns subagents if the work fans out. What this epic owes is everything that makes such a run safe and auditable with nobody watching.
+
+### Story 5.1: Entry Gate G4.E — Revision Fault Suite
+
+**Acceptance Criteria:**
+
+1. **Given** the revision fault suite (a change that moves what was asked *and* silently breaks an unrelated feature, plus clean controls)
+   **When** scored
+   **Then** sensitivity ≥95 % and false-alarm ≤5 %, recorded with the validator hash
+
+2. **Given** the gate runs against a stub
+   **When** executed
+   **Then** every criterion fails honestly rather than passing vacuously
+
+### Story 5.2: Re-Executed Validation Reports
+
+**Acceptance Criteria:**
+
+- Every field of a delivered validation report is produced by re-running its check against the artifacts on disk; an agent's account of its own work is never echoed as a result (AD-17).
+- A check that cannot be re-run reports as not-run rather than as passing.
+
+### Story 5.3: Scope-Graded Revisions
+
+**Acceptance Criteria:**
+
+- A revision carries a declared scope and is graded against it: the check fails when the geometry diff touches, adds or deletes anything the request did not name.
+- A diff that cannot be read fails closed — an unproven revision, never a passing one.
+
+### Story 5.4: Run Traceability
+
+**Acceptance Criteria:**
+
+- Every run carries a `run_id` threaded through every `ResultEnvelope`, `AuditRecord` and `ValidationReport` it produces.
+- The plan, per-iteration discrepancy vectors, visual-review findings with their images, and repair decisions are written to the session workdir as the run proceeds, so a run that dies mid-iteration still leaves everything up to that point.
+- A failed run is reconstructable from its workdir alone, without the agent's context.
+
+### Story 5.5: Gate G4 Exit
+
+**Acceptance Criteria:**
+
+1. **Given** all G4 criteria
+   **When** the exit runs with no human input after kickoff
+   **Then** G4.1–G4.5 pass their rules, the full build → inspect → revise → accept cycle completes, and every failure carries a structured AD-17 status
+
+---
+
 ## Epic 6: CAD Skills Library & Ablation (parallel track · gate GS)
 
-Any LLM harness gains measurable CAD judgment from curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–3 after Epic 1.
+Any LLM harness gains measurable CAD judgment and workflow from curated skills — each Track A+B skill proven by ablation to move a benchmark number or cut, and Track W carrying the design loop itself. Runs alongside Epics 2–4 after Epic 1.
 
 ### Story 6.1: Entry Gate GS.E — Ablation Harness & Shape Check
 
@@ -683,7 +808,7 @@ Any LLM harness gains measurable CAD judgment from curated skills — each prove
 
 **Acceptance Criteria:**
 
-- Metadata-first router live (12 descriptions resident, 2–5 bodies routed, ≤10K budget, routed subset logged)
+- Metadata-first router live (15 descriptions resident, 2–5 bodies routed, ≤10K budget, routed subset logged)
 - Starter routing table shipped as replaceable seed
 - Native Claude activation + local-backend injection both served from the single store.
 
@@ -694,7 +819,7 @@ Any LLM harness gains measurable CAD judgment from curated skills — each prove
 - Per-skill paired ablations on Phase 2/3 benchmarks in AD-14 format
 - ≥8/12 significant (McNemar p<0.05 ∧ CI excludes 0), rest revised/cut with below-detection reported honestly (GS.3)
 - `design-decomposition` ≥+15pp on its dedicated n≥40 set at R≥10 (GS.6)
-- `skills_accuracy` tokens ×12 + `spot_audit` bound
+- `skills_accuracy` tokens ×15 + `spot_audit` bound
 - Gate verdict green.
 
 ### Story 6.8: URDF-Export Skill *(Phase 5 · with Epic 7)*

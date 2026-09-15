@@ -26,12 +26,24 @@ A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable 
 - **CAP-3** — Copilot (Phase 2)
   - **intent:** A user can issue one natural-language modeling command; the system previews a structured diff, executes on confirmation, auto-verifies, and rolls back provably on failure.
   - **success:** Gate **G2** passes: ≥85 % on the 40-command benchmark, 100 % auto-verify with rollback, undo hash-exact, TNP guard 5/5, sketches `FullyConstrained` ≥90 %.
+- **CAP-4** — Spec-to-part (Phase 3)
+  - **intent:** An agent turns a written part spec into a clean parametric part: it plans, builds through the mutation tools, measures the result against compiled spec assertions, looks at the rendered views, and repairs until both channels agree. The loop is the agent's, carried in the `design-loop` skill; this repository supplies the assertion primitives, the render and drawing path, and the checklist.
+  - **success:** Gate **G3** passes: ≥70 % of the spec set produces a passing part within ≤3 repairs on the sealed held-out split; every part valid/watertight/DoF-0/parameter-editable; the corrupted-plan suite detects ≥9/10 spec violations.
+- **CAP-5** — Unattended operation (Phase 4)
+  - **intent:** An operator starts an agent against the headless bridge and leaves. The agent holds the loop and delegates by spawning subagents; the bridge makes the run safe and auditable when nobody is watching — every reported field a re-executed check, every mutation in an append-only log, every artifact reconstructable from the run workdir alone.
+  - **success:** Gate **G4** passes: the spec-set rate is maintained with no human in the loop; revisions ≥70 % with the geometry diff confined to the requested change; a full build → inspect → revise → accept cycle completes without human input; every failure is a structured status, never silent.
 - **CAP-6** — Skills library
-  - **intent:** Any LLM harness can load curated CAD skills — Track A operating knowledge, Track B design thinking, Track W workflow (`design-loop`, `visual-review`, `spec-to-assertions`) — that measurably improve benchmark outcomes. The workflow lives here rather than in code, so this library is the load-bearing deliverable.
-  - **success:** Gate **GS** passes: skills authored and dual-harness loadable; the required majority show statistically significant lift under the AD-14 rules. Track W is validated by the benchmark running at all rather than by an ablation delta — without `design-loop` there is no loop to measure.
+  - **intent:** Any LLM harness can load curated CAD skills — Track A operating knowledge, Track B design thinking, Track W workflow (`design-loop`, `visual-review`, `spec-to-assertions`) — that measurably improve benchmark outcomes. The catalogue is 15 skills: 12 Track A+B plus the three Track W. The workflow lives here rather than in code, so this library is the load-bearing deliverable.
+  - **success:** Gate **GS** passes: all 15 skills authored and dual-harness loadable; ≥8 of the 12 Track A+B show statistically significant lift under the AD-14 rules. Track W is validated by the benchmark running at all rather than by an ablation delta — without `design-loop` there is no loop to measure.
 - **CAP-7** — Validation harness
   - **intent:** For every phase, an executable gate exists — benchmark + assertions + fault-injection suite + report schema — that an AI agent can run to compute the phase verdict.
   - **success:** Each phase's entry gate (AD-19) lands before its implementation: benchmark fails honestly against a stub; validator sensitivity ≥95 % and false-alarm ≤5 % proven on planted faults.
+- **CAP-8** — Robot-description export & part sourcing (Phase 5)
+  - **intent:** A parametric assembly exports to URDF and SDF — links, joints, limits, inertials from native mass properties, collision and visual meshes — and off-the-shelf STEP parts are sourced and placed through the bridge with their mating frames measured rather than assumed.
+  - **success:** Gate **G5-robot** passes: every export completes only through a paired re-parse + schema + kinematic-tree sanity check; the mm/deg→m/kg/rad conversion is explicit and every origin records its frame.
+- **CAP-9** — Viewport & render correctness
+  - **intent:** When the bridge reports that the human can see the model, the human can see it; when it cannot, the agent is handed a measured number rather than a success it must not trust. A render from any camera shows the part rather than a white rectangle, and the bridge leaves no files behind.
+  - **success:** Framing verdicts come from one shared projection that the fit factor and the verdict both use; `fitted: true` requires the post-fit verdict to agree; every named camera renders a face tone separable from the background; temp files are created inside the session workdir the sweep can reach.
 
 ## User journeys
 
@@ -122,7 +134,7 @@ depending on which model is talking to it.
 
 ## Success signal
 
-An agent loaded with the skills library turns a written part spec into a clean parametric part against the bridge — measuring the result with `verify_*`, reading the rendered views, repairing what it finds, and stopping because the measurements say so — with no design logic anywhere in this repository. That is the moment "FreeCAD as a design tool an AI agent can drive" becomes demonstrable rather than claimed, and it is demonstrable on whatever agent the operator brings.
+An agent loaded with the skills library completes a full build → inspect → revise → accept cycle against the headless bridge with no human in the loop, while the sealed held-out spec set holds ≥70 % — measuring with `verify_*`, reading the rendered views, repairing what it finds, and stopping because the measurements say so, with no design logic anywhere in this repository. That is the moment "FreeCAD as a design tool an AI agent can drive" becomes demonstrable rather than claimed, and it is demonstrable on whatever agent the operator brings.
 
 ## Assumptions
 

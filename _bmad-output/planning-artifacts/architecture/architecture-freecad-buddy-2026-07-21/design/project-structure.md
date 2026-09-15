@@ -1,6 +1,6 @@
 ---
 title: 'FreeCAD Buddy — Project Structure Design'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-6, AD-9, AD-11, AD-12, AD-13, AD-15, AD-16, AD-17, AD-19, AD-20]
 binds-to: ../ARCHITECTURE-SPINE.md

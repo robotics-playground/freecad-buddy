@@ -1,6 +1,6 @@
 ---
 title: 'Integration Design — MCP <-> FreeCAD Bridge'
-status: draft
+status: final
 date: '2026-07-21'
 ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20]
 sources:
