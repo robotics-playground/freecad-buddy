@@ -39,7 +39,7 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 
 #### Assistant — CAP-2
 
-- **FR7** — An assistant answers document questions (tree explanation, error diagnosis, next-tool guidance) through read-only tools, on ≥2 LLM backends including a local model with ReAct fallback adapter.
+- **FR7** — An assistant answers document questions (tree explanation, error diagnosis, next-tool guidance) through read-only tools, driven from ≥2 external agent harnesses including one on a local model, all over MCP.
 
 #### Copilot — CAP-3
 
@@ -504,19 +504,23 @@ A FreeCAD user can ask questions about their open model — tree explanation, er
    **When** asked "what's wrong?"  
    **Then** the assistant names the failing object and cause via `verify_recompute` + `getStatusString` diagnostics (G1.2 target: n=10 ≥8/10, escalate to n=30 on 10/10)
 
-### Story 2.3: Local Backend + ReAct Fallback Adapter
+### Story 2.3: Local Backend Over Native MCP
 
-> **As** a project owner, **I want** the same assistant running on a local model through native MCP and through the ReAct text-parse adapter, **so that** the bridge is proven model-agnostic (G1.4).
+> **As** a project owner, **I want** the same assistant running on a local model through native MCP, **so that** the bridge is proven model-agnostic rather than tuned to one vendor.
 
 **Acceptance Criteria:**
 
-1. **Given** the pinned local stack (llama.cpp + Qwen3-30B-A3B per Phase 1 pin, constrained decoding ON)  
-   **When** the G1.1 sample re-runs  
+1. **Given** the pinned local stack (llama.cpp + Qwen3-30B-A3B per Phase 1 pin, constrained decoding ON)
+   **When** the G1.1 sample re-runs
    **Then** it completes through the identical tool surface over HTTP
 
-2. **Given** the ReAct adapter (`adapters/`, same tool registry, schemas from contracts)  
-   **When** run against an OpenAI-compatible endpoint  
-   **Then** tool calls parse from fenced JSON, malformed JSON → one re-prompt then `INVALID_INPUT`; confirmation posture matches the no-elicitation matrix row
+2. **Given** a second external agent harness (one non-Claude)
+   **When** it drives the same read-only surface over MCP
+   **Then** the confirmation posture matches the no-elicitation path and no tool schema, envelope field, or confirmation path depends on one client's capabilities
+
+3. **Given** AD-35
+   **When** model agnosticism is evidenced
+   **Then** it is evidenced by driving the bridge from external harnesses — this repository ships no chat loop, no model client, and no model-vendor dependency
 
 ### Story 2.4: Gate G1 Exit
 

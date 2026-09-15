@@ -778,15 +778,15 @@ def _majority_report(case) -> dict:
 def _g1_exit_eval(extract_dir: Path, run_dir: Path):  # noqa: ARG001 - the seam's fixed signature
     """Run G1's held-out eval; return (per-case reports, dev rate, tier).
 
-    Offline this drives the scripted ReAct double at R>=10, which is a labelled machinery dry-run
+    Offline this replays the scripted plans at R>=10, which is a labelled machinery dry-run
     and never the operator pass-rate.
     """
     from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
     from benchmarks.harness.actor import Actor
-    from benchmarks.harness.react_backend import ReactBackend, ScriptedChat
+    from benchmarks.harness.scripted_backend import ScriptedBackend
 
-    scripts = {case["id"]: _scripted_react_turns_for(case) for case in _load_broken_cases()}
-    backend = ReactBackend(ScriptedChat(scripts).for_case)
+    plans = {case["id"]: _scripted_plan_for(case) for case in _load_broken_cases()}
+    backend = ScriptedBackend(plans)
     actor = Actor(_offline_profile_registry())
     result = run_actor_eval(actor, backend, repeats=_EXIT_REPEATS)
     tier = result.n30 if result.escalated else result.n10
@@ -1069,30 +1069,29 @@ def _offline_profile_registry():
     return registry
 
 
-def _scripted_react_turns_for(case: dict) -> list[str]:
-    """The recorded assistant turns a scripted model emits for one broken-doc case.
+def _scripted_plan_for(case: dict):
+    """The recorded plan for one broken-doc case: two read-only calls, then the answer.
 
-    Two tool-call turns (``query_tree_summary`` then ``verify_recompute``, both on the read-only
-    surface) followed by a final-answer turn naming the expected object + a matching cause keyword,
-    so the deterministic grader PASSES every case. The offline run exercises the ReAct loop +
-    escalation + report build + Wilson CI end-to-end, not model quality (the ≥80% figure is a
-    measured operator run, never asserted by this deterministic double).
+    ``query_tree_summary`` then ``verify_recompute``, followed by an answer naming the expected
+    object and a matching cause keyword, so the deterministic grader PASSES every case. The offline
+    run exercises escalation + report build + Wilson CI end-to-end, never model quality — the >=80 %
+    figure is a measured operator run and is never asserted by this deterministic double.
     """
     expected = case.get("expected", {})
     obj = expected.get("object", "")
     keywords = expected.get("cause_keywords") or []
     keyword = keywords[0] if keywords else ""
-    return [
-        '```json\n{"tool": "query_tree_summary", "args": {"doc": "d"}}\n```',
-        '```json\n{"tool": "verify_recompute", "args": {"doc": "d"}}\n```',
-        f"{obj} is in error: {keyword}.",
+    steps = [
+        ("query_tree_summary", {"doc": "d"}),
+        ("verify_recompute", {"doc": "d"}),
     ]
+    return steps, f"{obj} is in error: {keyword}."
 
 
 def actor_run_command(gate: str) -> int:
-    """Run the G1 actor-run over the read-only profile via the ReAct backend; grade + escalate.
+    """Run the G1 actor-run over the read-only profile; grade + escalate.
 
-    Offline (no operator backend): builds the ReAct backend over a scripted chat double + the stub
+    Offline (no operator backend): replays the scripted plans over the stub
     profile registry, runs the tiered n10->n30 escalation via ``actor_run.run_actor_eval``, prints
     the per-tier summary + Wilson CI, and exits 0 when the scripted answers pass. A live backend
     (any ``FREECAD_BUDDY_G1_ACTOR_BACKEND`` value other than ``offline``) is operator-only and NOT
@@ -1116,15 +1115,14 @@ def actor_run_command(gate: str) -> int:
 
     from benchmarks.g1.actor_run import _load_broken_cases, run_actor_eval
     from benchmarks.harness.actor import Actor
-    from benchmarks.harness.react_backend import ReactBackend, ScriptedChat
+    from benchmarks.harness.scripted_backend import ScriptedBackend
 
     print(
-        f"actor-run {gate}: no operator backend; running offline ReAct backend over a scripted "
-        f"chat double (live eval skipped)"
+        f"actor-run {gate}: no operator backend; replaying scripted plans over the read-only "
+        f"surface (live eval skipped)"
     )
-    scripts = {case["id"]: _scripted_react_turns_for(case) for case in _load_broken_cases()}
-    chat = ScriptedChat(scripts)
-    backend = ReactBackend(chat.for_case)
+    plans = {case["id"]: _scripted_plan_for(case) for case in _load_broken_cases()}
+    backend = ScriptedBackend(plans)
     actor = Actor(_offline_profile_registry())
     result = run_actor_eval(actor, backend, repeats=3)
 

@@ -365,10 +365,8 @@ reporting what moved — belongs in `usecases/verify_*` where any caller can re-
 
 ## 7. Gate run — spawning the actor with the Claude Agent SDK
 
-Drawn as the **target** shape under AD-35, not as the runner ships today
-(`benchmarks/harness/react_backend.py:14` currently imports a ReAct loop; that is a violation on
-the disposition list). **Open question:** whether gates keep scoring end-to-end production at all
-is recorded in the spine's Deferred table.
+**Open question:** whether gates keep scoring end-to-end production at all is recorded in the
+spine's Deferred table.
 
 **The runner spawns the actor as a Claude Agent SDK process** (`claude-agent-sdk` /
 `@anthropic-ai/claude-agent-sdk`). That SDK *is* the Claude Code harness packaged as a library: it

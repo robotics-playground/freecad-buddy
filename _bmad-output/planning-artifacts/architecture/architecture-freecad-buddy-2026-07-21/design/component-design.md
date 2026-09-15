@@ -190,7 +190,7 @@ sequenceDiagram
 
 | Phase | Components first shipped |
 | --- | --- |
-| P0 (G0) | All contracts; shim, fingerprint, tnp_guard (Layer 0), transaction, documents, queries, verify (shape/document), exports, debug_exec; mcp_server, rpc_client, rpc_listener, marshal, audit_log, export_oracle, export_verdict, react_adapter; gui_addon/{InitGui,bootstrap,pump}.py, gui_external/entry.py, headless/entry.py, main.py, tool_catalog.py. Entry gate G0.E artifacts (fault suite, golden benchmark) precede implementation (AD-19) |
+| P0 (G0) | All contracts; shim, fingerprint, tnp_guard (Layer 0), transaction, documents, queries, verify (shape/document), exports, debug_exec; mcp_server, rpc_client, rpc_listener, marshal, audit_log, export_oracle, export_verdict; gui_addon/{InitGui,bootstrap,pump}.py, gui_external/entry.py, headless/entry.py, main.py, tool_catalog.py. Entry gate G0.E artifacts (fault suite, golden benchmark) precede implementation (AD-19) |
 | P1 (G1) | skills_loader (router mode), read-only registry filter, large-tree summarized queries; skills `freecad-fundamentals`, `freecad-troubleshooting` |
 | GS.E | skills_loader forced-subset ablation mode + CI shape check (`check_skill_shape.py`, Story 6.1) |
 | P2 (G2) | sketches, features, preview, verify_sketch, render_probe, elicitation/confirm glue; tnp_guard Layers 1–2 + 5-scenario fault suite |

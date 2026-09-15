@@ -25,7 +25,7 @@ companions: []
 | --- | --- | --- | --- |
 | Contracts | `src/freecad_buddy/contracts/` | Tool schemas, result envelopes, diff/report/status types, assertion vocabulary | stdlib only |
 | Use cases | `src/freecad_buddy/usecases/` | Tool implementations (`query_*`, `verify_*`, `sketch_*`, `feature_*`, `export_*`, `preview_*`), mutation protocol, TNP guard, fingerprint, capabilities, confirm, screenshot, `stats` (stdlib-only rate statistics, importable from both sides) | contracts, FreeCAD **App** modules (via version shim) |
-| Adapters | `src/freecad_buddy/adapters/` | MCP server, RPC client/listener/dispatch, main-thread marshal, render probe, audit log, export oracle + verdict, ReAct adapter (second-harness path); skills loader *(planned, Phase 1)* | usecases, contracts |
+| Adapters | `src/freecad_buddy/adapters/` | MCP server, RPC client/listener/dispatch, main-thread marshal, render probe, audit log, export oracle + verdict | usecases, contracts |
 | Hosts | `src/freecad_buddy/hosts/` | GUI addon (`gui_addon/`), external GUI host, headless entry, `main.py`, `tool_catalog.py` (shared tool surface — schemas, timeouts, mutating flags) | adapters |
 
 ```mermaid
@@ -473,7 +473,7 @@ freecad-buddy/
 
 | Decision | Why it can wait |
 | --- | --- |
-| Model agnosticism evidence | There is no backend to pin: the repo ships no chat loop and no model client. The property is proven by driving the bridge from **two external agent harnesses** (Conventions, Model agnosticism). `adapters/react_adapter.py` predates AD-35 and is a standing violation awaiting removal — it drives a model over the tool surface, which is the harness's job, not this repo's |
+| Model agnosticism evidence | There is no backend to pin: the repo ships no chat loop and no model client. The property is proven by driving the bridge from **two external agent harnesses** (Conventions, Model agnosticism) |
 | Preview diff `outputSchema` field list | Locked once at Phase 2 UX design; must reuse the contracts-owned audit-record vocabulary that exists from Phase 0 (AD-17) |
 | Skill router rules (task→subset map) | Tuned from ablation data; forced-subset mode unaffected |
 | Slicer-acceptance CI job for 3MF; lib3mf as fallback writer | Phase 4 realism gate; triggered by slicer rejects |

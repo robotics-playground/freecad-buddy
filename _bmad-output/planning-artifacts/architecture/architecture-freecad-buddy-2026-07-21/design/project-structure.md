@@ -67,7 +67,6 @@ freecad-buddy/
 │       │   ├── audit_log.py          # append-only JSON-lines writer (AD-17)
 │       │   ├── export_oracle.py      # trimesh / lib3mf / admesh checks (AD-9) [ext-only]
 │       │   ├── export_verdict.py     # oracle-agreement verdict (disagreement = fail, AD-9) [ext-only]
-│       │   └── react_adapter.py      # ReAct/system-prompt-injection second harness; injected chat
 │       │                             #   transport, contracts + stdlib only (decision 011) [ext-only]
 │       └── hosts/
 │           ├── __init__.py           # EMPTY
@@ -90,7 +89,7 @@ freecad-buddy/
 │       └── references/
 ├── benchmarks/                       # per-gate layout, not a flat dev/heldout split
 │   ├── runner.py                     # gate runner CLI → contracts ValidationReport ( `gate` console alias)
-│   ├── harness/                      # actor, assertions, evidence, seal, verdict, report_build, react_backend …
+│   ├── harness/                      # actor, assertions, evidence, seal, verdict, report_build, scripted_backend …
 │   ├── g0/                           # each gate dir carries its own splits + gate.yaml
 │   │   ├── golden-models/            # 5 reference models (G0.3): {model.FCStd, expected.yaml, PROVENANCE.md}
 │   │   ├── dev/
@@ -141,7 +140,6 @@ dependencies = [
 stl-oracle = ["admesh ; sys_platform == 'linux'"]   # optional 2nd oracle; fallback chosen at Phase 0 gate (AD-9)
 dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4", "pyyaml>=6"]  # pyyaml: external harness only (AD-12)
 stl-oracle = ["admesh ; sys_platform == 'linux'"]               # optional 2nd STL oracle (AD-9)
-react-local = ["openai>=1"]                                     # optional local ReAct eval transport (decision 011)
 
 [project.scripts]
 freecad-buddy = "freecad_buddy.hosts.main:main"

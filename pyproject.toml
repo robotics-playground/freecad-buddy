@@ -16,10 +16,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5", "jsonschema>=4", "pyyaml>=6"]  # pyyaml: external harness only (AD-12)
 stl-oracle = ["admesh ; sys_platform == 'linux'"]  # optional 2nd oracle; fallback chosen at Phase 0 gate (AD-9)
-# Optional OpenAI-compatible client for an operator's live local (llama.cpp/Qwen) ReAct eval.
-# External-only + never required: the ReAct adapter injects its chat transport, so CI drives it
-# offline against a scripted double and never installs this (see decision 011).
-react-local = ["openai>=1"]
 
 [project.scripts]
 freecad-buddy = "freecad_buddy.hosts.main:main"
