@@ -52,7 +52,7 @@ from benchmarks.harness.verdict import (  # noqa: E402
 from freecad_buddy.contracts.report import Check, require_wilson_ci_for_rates  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
-KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2", "G3": "g3", "G4": "g4"}
+KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2", "G3": "g3"}
 # Gates carrying a sealed held-out split. G0's suites are all open by design.
 _SEALABLE_GATES = frozenset({"G1", "G2", "G3"})
 
@@ -76,7 +76,6 @@ _FAULT_SCORERS = {
     "G1": Path("benchmarks") / "g1" / "fault-injection" / "score_grader.py",
     "G2": Path("benchmarks") / "g2" / "fault-injection" / "score_g2_validators.py",
     "G3": Path("benchmarks") / "g3" / "fault-injection" / "score_g3_validators.py",
-    "G4": Path("benchmarks") / "g4" / "fault-injection" / "score_g4_validators.py",
 }
 
 # The repeats a G2 dev run drives each command at (R=5, the G2.1 criterion's declared R).
@@ -142,19 +141,6 @@ _VALIDATOR_SOURCES = {
     # today, so `_validator_src_hasher` returns "" and leg-b reports the validator stale rather
     # than letting G3.4 cite a validator nothing backs.
     "corrupted_plan": (_SRC / "usecases" / "designer_loop.py",),
-    # The validators the G4 criteria cite. Each hashes its source plus the G4 fault cases
-    # targeting it, matching score_g4_validators.py's `_validator_sha` byte for byte so a clean
-    # working tree reads as CURRENT rather than stale.
-    #
-    # All four name the entry-gate stub seam, which is what the G4.E cases were authored against:
-    # it fixes the terminal-status vocabulary and the JobStatus shape rules before any supervisor,
-    # worker pool or sandbox exists. Stories 5.2-5.4 add the real modules to each source set, which
-    # stales these rows — the intended behaviour, since a bar measured over a stub says nothing
-    # about the service that replaces it.
-    "job_lifecycle": (_REPO_ROOT / "benchmarks" / "g4" / "stub_service.py",),
-    "supervisor_recheck": (_REPO_ROOT / "benchmarks" / "g4" / "stub_service.py",),
-    "revision_diff": (_REPO_ROOT / "benchmarks" / "g4" / "stub_service.py",),
-    "soak_status": (_REPO_ROOT / "benchmarks" / "g4" / "stub_service.py",),
 }
 
 # The G1 fault suite whose `case.yaml` set is folded into the `grader` hash.
@@ -176,16 +162,6 @@ _G3_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g3" / "fault-injection"
 # gates and stays on the G2 suite: its committed score was measured there and nothing in G3
 # re-measures it.
 _G3_VALIDATORS = frozenset({"g3_assertions", "visual_judge", "corrupted_plan", "verify_recompute"})
-
-# The G4 fault suite whose `case.yaml` set is folded into each G4 validator's hash.
-_G4_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g4" / "fault-injection"
-
-# The G4 validators, folded in the same way as the G2/G3 ones. All four hash the stub service seam
-# today: it is the implementation under test at the entry gate, and it fixes the status vocabulary
-# the cases were authored against. When stories 5.2-5.4 land the real modules join each source set
-# and these rows stale, which is correct — a score measured over a stub must not survive the
-# service that replaces it.
-_G4_VALIDATORS = frozenset({"job_lifecycle", "supervisor_recheck", "revision_diff", "soak_status"})
 
 
 class UsageError(Exception):
@@ -308,13 +284,8 @@ def _validator_src_hasher(name: str) -> str:
         suite = _grader_suite_sources()
         if not suite:
             return ""
-    elif name in _G2_VALIDATORS or name in _G3_VALIDATORS or name in _G4_VALIDATORS:
-        if name in _G4_VALIDATORS:
-            root = _G4_SUITE_ROOT
-        elif name in _G3_VALIDATORS:
-            root = _G3_SUITE_ROOT
-        else:
-            root = _G2_SUITE_ROOT
+    elif name in _G2_VALIDATORS or name in _G3_VALIDATORS:
+        root = _G3_SUITE_ROOT if name in _G3_VALIDATORS else _G2_SUITE_ROOT
         suite = _suite_sources(root, name)
         if not suite:
             hasher.update(b"\x00no-fault-suite")

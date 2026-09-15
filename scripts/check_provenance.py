@@ -173,28 +173,16 @@ def _declares_spec_to_part(case_yaml: Path) -> bool:
 # there is no plan to carry. Both are distinct from `pending` (nothing can plant it yet) and from
 # `none-spec-to-part` (a written spec with no fault at all): these ARE plantable, and the
 # declaration names how.
-# ``driven-by-job-service`` submits the case to the Phase-4 job service and the SUBMISSION is the
-# fixture: a G4 fault is a supervisor-level event — a deadline, a memory cap, an abnormal exit —
-# and none of them has a document to carry.
-_DRIVEN_FIXTURES = frozenset(
-    {"driven-by-designer-loop", "driven-by-mutation-bracket", "driven-by-job-service"}
-)
+_DRIVEN_FIXTURES = frozenset({"driven-by-designer-loop", "driven-by-mutation-bracket"})
 
 
 def _declares_driven_fixture(case_yaml: Path) -> bool:
     """Whether a case declares that a driver plants its fixture, rather than a file carrying it.
 
-    The exemption requires the state to be *declared* and a planted case to name the
-    ``planted_op`` that resolves it, matching the ``fixture: pending`` rule's insistence on an
-    explicit declaration. A planted case claiming to be driven while naming no op is still
-    flagged: a defect nothing can plant must not hide behind the same word as one the suite
-    actually runs.
-
-    A clean CONTROL needs no op — there is no defect to plant — so it is exempt on the declaration
-    alone. For a document-backed suite that changes nothing, since its controls carry a real
-    ``.FCStd``; for a driven suite whose controls are a clean submission there is no file either,
-    and requiring a phantom ``planted_op`` would force every control to name a fault it does not
-    contain.
+    The exemption requires the state to be *declared* and the case to name the ``planted_op`` that
+    resolves it, matching the ``fixture: pending`` rule's insistence on an explicit declaration. A
+    case claiming to be driven while naming no op is still flagged: a defect nothing can plant must
+    not hide behind the same word as one the suite actually runs.
     """
     try:
         data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
@@ -202,8 +190,6 @@ def _declares_driven_fixture(case_yaml: Path) -> bool:
         return False
     if not isinstance(data, dict) or data.get("fixture") not in _DRIVEN_FIXTURES:
         return False
-    if (data.get("fault") or {}).get("kind") == "clean_control":
-        return True
     return isinstance(data.get("planted_op"), str) and bool(data["planted_op"])
 
 
