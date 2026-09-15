@@ -8,15 +8,18 @@ FreeCAD is a powerful, free, parametric 3D CAD tool — but almost everything in
 
 1. **Assistant** — answers questions, explains the model, suggests next steps (read-only).
 2. **Copilot** — executes single operations from natural language, with user confirmation.
-3. **Designer** — turns a textual specification into a complete parametric part, with self-verification.
-4. **Autonomous agent** — a full agentic design loop usable by both humans and other AI agents: spec in, validated manufacturable model out, including iteration, assemblies, and exports.
+3. **Designer** — the agent turns a written specification into a complete parametric part, measuring and repairing its own work against the spec.
+4. **Autonomous agent** — the agent runs the whole task unattended: spec in, validated manufacturable model out, including iteration and exports.
 
-The core technical bet: FreeCAD is fully scriptable via its Python API (`FreeCAD`, `Part`, `Sketcher`, `PartDesign` modules) and can run headless. An AI layer that speaks this API — exposed through a tool protocol such as MCP (Model Context Protocol) — can drive everything a human can do, and can *verify* its own work by querying geometry (volumes, bounding boxes, mass properties, topological checks) rather than guessing.
+The core technical bet: FreeCAD is fully scriptable via its Python API (`FreeCAD`, `Part`, `Sketcher`, `PartDesign` modules) and can run headless. A tool layer that speaks this API — exposed through a tool protocol such as MCP (Model Context Protocol) — lets any AI agent drive everything a human can do, and lets that agent *verify* its work by querying geometry (volumes, bounding boxes, mass properties, topological checks) rather than guessing.
 
 The second bet: tools alone are not enough. An agent with perfect API access but no CAD judgment produces unmaintainable models and dead-end feature trees. The repo therefore ships a **skills library** — curated, versioned knowledge documents (agent skills) that teach any LLM to *think like a 3D designer*: how to decompose a complex object into sketches and features, which FreeCAD tool to use when, how to build design intent into constraints, and how to avoid FreeCAD's known traps. Tools are the hands; skills are the brain.
 
+**The brain is never in the box.** FreeCAD Buddy ships hands and eyes — typed FreeCAD operations and deterministic geometry verification — and nothing else. The design loop, the planning, the repair strategy, the checklists, and the visual review all live in the agent driving the tools, carried in skills. The repo contains no agent loop, no planner, no model client, and no API credential. Levels 3 and 4 above are capability levels *of the agent plus the skills*, not features to be coded into this repo.
+
 ## Guiding Principles
 
+- **No AI workflow in the code.** The bridge and the MCP surface expose FreeCAD operations and deterministic geometry checks. They never contain a design loop, a planner, a repair strategy, a judge, an LLM API client, or a credential. Everything that *reasons* lives in the driving agent and in skills. The test: if a change would make this repo behave differently depending on which model is talking to it, the change is in the wrong place.
 - **Verify, don't trust.** Every AI-generated operation must be validated by querying the resulting geometry, not by assuming the script succeeded. A recompute error, a null shape, or an unconstrained sketch is a failure even if the code ran.
 - **Parametric first.** The AI produces proper parametric feature trees (sketches with constraints, named features), not dumb mesh blobs. The output must remain editable by a human in the FreeCAD GUI.
 - **Human in the loop by default, autonomy by opt-in.** Early phases require confirmation for every mutation. Autonomy is earned per phase by passing that phase's validation gates.
@@ -27,28 +30,31 @@ The second bet: tools alone are not enough. An agent with perfect API access but
 ## Architecture Direction (high level)
 
 ```
-┌──────────────────────┐
-│  Skills Library       │  knowledge: CAD thinking, FreeCAD manual,
-│  (markdown, versioned)│  decomposition patterns, tool selection
-└──────────┬───────────┘
-           │ loaded into context
+┌───────────────────────────┐
+│  Skills Library            │  knowledge: CAD thinking, FreeCAD manual,
+│  (markdown + helper        │  decomposition patterns, tool selection,
+│   scripts, versioned)      │  the design loop, checklists, rubrics
+└──────────┬────────────────┘
+           │ loaded into context; scripts run by the agent's own shell
 ┌──────────▼──────────┐     MCP / RPC      ┌──────────────────────┐
 │  AI Agent / LLM      │ ◄────────────────► │  FreeCAD Bridge       │
-│  (Claude, local LLM, │    tools:          │  (Python, runs inside │
-│   or any MCP client) │    query / mutate  │   FreeCAD or headless │
-└─────────────────────┘    / verify        │   FreeCADCmd)         │
-                                            └──────────┬───────────┘
-                                                       │ Python API
-                                            ┌──────────▼───────────┐
-                                            │  FreeCAD kernel       │
-                                            │  (Part, Sketcher,     │
+│  (Claude Code,       │    tools:          │  (Python, runs inside │
+│   opencode, or any   │    query / mutate  │   FreeCAD or headless │
+│   MCP client)        │    / verify        │   FreeCADCmd)         │
+│                      │                    └──────────┬───────────┘
+│  OWNS: the loop,     │                               │ Python API
+│  planning, repair,   │                    ┌──────────▼───────────┐
+│  visual review       │                    │  FreeCAD kernel       │
+└─────────────────────┘                     │  (Part, Sketcher,     │
                                             │   PartDesign, Assembly)│
                                             └──────────────────────┘
 ```
 
-- **Bridge**: a Python component exposing FreeCAD operations as typed tools (MCP server). Runs inside the FreeCAD GUI process (Workbench/addon) *and* headless (`FreeCADCmd`) for CI and agent use.
+- **Bridge**: a Python component exposing FreeCAD operations as typed tools (MCP server). Runs inside the FreeCAD GUI process (Workbench/addon) *and* headless (`FreeCADCmd`) for CI and agent use. It is stateless with respect to any design task: it answers one tool call at a time and holds no plan, no iteration count, and no notion of "done".
 - **Tool taxonomy**: `query.*` (read model state, geometry properties, screenshots), `sketch.*` / `feature.*` / `assembly.*` (mutations), `verify.*` (recompute checks, geometry assertions, export validation).
-- **Skills library**: agent-agnostic knowledge documents (markdown skills in the Claude Code / MCP skill format) that any agent loads before designing — see the dedicated section below.
+- **Skills library**: agent-agnostic knowledge documents (markdown skills in the Claude Code / MCP skill format) that any agent loads before designing. A skill may carry **helper scripts** — geometry checkers, assertion evaluators, report formatters — run by the driving agent's own shell, never by the bridge. Scripts read and compute; they never mutate the model, which keeps the rule that typed tools are the only mutation path. See the dedicated section below.
+- **The loop lives in the agent.** Plan → execute → measure → repair is a skill the agent follows, not a function this repo exports. The agent decides when to stop, using the spec and the measurements the `verify.*` tools return.
+- **The agent reaches the tools only through MCP.** No in-process path into the tool implementations exists, for any caller.
 - **Validation harness**: golden-model test suite — each capability is proven by scripted scenarios whose resulting geometry is asserted programmatically (volume within tolerance, watertight solid, constraint count, degrees of freedom = 0).
 
 ---
@@ -81,6 +87,10 @@ Explicitly identified as **genuine inventions** (survey expected to come up empt
 
 Tools give an agent the *ability* to act; skills give it the *judgment* to act well. The skills library is a first-class deliverable of this repo: a set of versioned, agent-agnostic knowledge documents (markdown skills, consumable by Claude Code, MCP clients, or any LLM harness) that encode what an experienced FreeCAD user and mechanical designer knows. Skills are developed alongside the phases and validated the same way everything else is: by their measurable effect on benchmark pass rates.
 
+**Skills carry the workflow.** Because no loop exists in the code, the procedural knowledge a coded pipeline would have held — how to plan, what to measure after each step, what to look at in a render, how many repairs before giving up, when a part is done — is skill content. This is the largest single consequence of the no-AI-in-the-code rule, and it makes the skills library the load-bearing deliverable rather than a supporting one.
+
+**Skills may carry helper scripts.** A skill directory may hold executable helpers — geometry checkers, assertion evaluators, report formatters — run by the driving agent's own shell. Three limits keep this from reintroducing the problem: a helper **reads and computes, never mutates** (no document mutation, and no writes outside the run workdir, so it cannot carry state between invocations as a plan file); a helper **contains no model call and no credential**; and a helper **answers one question per invocation and never decides the next action** — a geometry check is a helper, a next-action chooser is the loop wearing a script's clothes.
+
 ### Skill Catalog
 
 **Track A — FreeCAD operating knowledge (the manual, distilled):**
@@ -105,7 +115,15 @@ Tools give an agent the *ability* to act; skills give it the *judgment* to act w
 | `parametric-patterns` | Master/skeleton sketch pattern, spreadsheet/VarSet-driven dimensions, feature ordering for robust edits (fillets last, references early) |
 | `verification-thinking` | What to measure after each step and why; sanity checks (volume orders of magnitude, symmetry, bounding box vs spec); treating a passing recompute as necessary but not sufficient |
 
-**Track C — Domain judgment (candidate, matures with Phases 3–5):**
+**Track W — Workflow (the procedural knowledge that replaces a coded loop):**
+
+| Skill | Teaches |
+|-------|---------|
+| `design-loop` | The plan → execute → measure → repair cycle: approving a plan once, what to verify after each step, how to read a discrepancy, how many repairs before stopping, and what "done" means (assertions pass *and* the part looks right) |
+| `visual-review` | Reading rendered views and dimensioned projections against a spec: which views to request, what a mirrored or wrong-face part looks like, what is a real defect versus a shading artefact, and the checklist to walk per part |
+| `spec-to-assertions` | Turning a written spec into machine-checkable assertions before building anything, so the measurement exists before the part does |
+
+**Track C — Domain judgment (candidate, matures with later phases):**
 
 | Skill | Teaches |
 |-------|---------|
@@ -173,8 +191,8 @@ The gate itself is timeboxed to ~20% of the phase timebox (e.g. ~1 week of a 6-w
 |-------|---------------------------|-----------------|
 | 1 | Fluent, plausible, wrong answers; diagnosis names *an* object, not *the* object | Grading rubric keyed to exact expected findings; independent grader; wrong-but-confident cases planted in eval set |
 | 2 | Operation runs without error but produces wrong geometry; verification checks recompute success instead of intent ("a pocket exists" vs "the right pocket, right place, right depth") | Per-command geometry assertions written with the benchmark, before implementation; fault-injected wrong-parameter runs |
-| 3 | Plan looks professional but final part deviates from spec; self-repair loop declares convergence by iteration cap, not by measurement; measures what it built instead of what was asked | Spec assertions authored independently of the plan; convergence = assertions pass, never "loop finished"; corrupted-plan fault suite (already in Phase 3 criteria) |
-| 4 | Service returns HTTP 200 + well-formatted report for a bad part; revision "succeeds" by breaking an unrelated feature silently | Validation report fields backed by re-executed checks, not echoed agent claims; geometry diff on revisions confined to requested change |
+| 3 | Plan looks professional but final part deviates from spec; the agent calls it done because it ran out of patience, not because it measured; measures what it built instead of what was asked | Spec assertions authored independently of the plan; done = assertions pass, never "I stopped"; corrupted-plan fault suite (already in Phase 3 criteria) |
+| 4 | A well-formatted report for a bad part; revision "succeeds" by breaking an unrelated feature silently; unattended runs hide the failure because nobody is watching | Validation report fields backed by re-executed checks, not echoed agent claims; geometry diff on revisions confined to requested change; audit log makes an unattended run reconstructable after the fact |
 | Skills | Skill sounds authoritative, measures nothing | Ablation rule (already standing): no measurable lift, no skill |
 
 ---
@@ -217,7 +235,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 - [ ] Given a document with a deliberately broken recompute (e.g. dangling sketch reference), assistant identifies the failing object and the cause. Tiered eval: a 30-case fixture set is authored, the gate grades the first n=10 (pass ≥ 8/10), and only a 10/10 result escalates to the full n=30 run (Wilson CI reported); below 10/10 the gate concludes at n=10, low-confidence flagged.
 - [ ] Feature-tree explanation works on documents with ≥ 50 features without exceeding context limits (uses summarized tree queries, not raw dumps).
 - [ ] Response latency ≤ 15 s median on the evaluation set.
-- [ ] Runs against at least 2 LLM backends (e.g. Claude API + one local model) to prove the bridge is model-agnostic.
+- [ ] Driven by at least 2 different agent harnesses (e.g. Claude Code and one other MCP client) to prove the bridge is model-agnostic. The harnesses are external; this repo ships no chat loop and no model client to satisfy this criterion.
 - [ ] Skills: `freecad-fundamentals` and `freecad-troubleshooting` drafted and loaded during the evaluation runs (Track A drafting starts here).
 
 **Achievable.** Read-only tools already exist from Phase 0; work is prompting, tree summarization, and the eval set.
@@ -254,17 +272,19 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 > *"Design a mounting bracket: 60×40×5 mm base plate, two M5 through-holes 40 mm apart, one perpendicular flange 30 mm tall with a 10 mm lightening slot" — AI plans, executes multi-step, checks itself, and iterates until the spec is met.*
 
-**Specific.** The AI takes a structured or free-text part specification, produces a plan (sequence of Phase 2 operations), executes it end-to-end with per-step verification, and closes the loop: after building, it *measures* the result against the spec (dimensions, hole positions/diameters, volume sanity) and repairs discrepancies, up to N iterations. Human confirms the plan once up front, not each step. Output is a clean parametric tree with named features and a spreadsheet/VarSet of driving dimensions.
+**Specific.** The driving agent takes a structured or free-text part specification, produces a plan (sequence of Phase 2 operations), executes it end-to-end with per-step verification, and closes the loop: after building, it *measures* the result against the spec (dimensions, hole positions/diameters, volume sanity) using `verify.*` tools and skill helper scripts, looks at rendered views, and repairs discrepancies, up to N iterations. Human confirms the plan once up front, not each step. Output is a clean parametric tree with named features and a spreadsheet/VarSet of driving dimensions.
+
+**What this repo ships for this phase** is the ability to *support* that loop, not the loop: the assertion primitives the agent measures with, a render and drawing path good enough to look at, and a `design-loop` skill that tells the agent how to plan, when to measure, what to check visually, and when to stop. No plan-execute-repair function exists in the source tree.
 
 **Measurable — exit criteria:**
 - [ ] Benchmark of 20 written part specs (brackets, plates, flanges, spacers, enclosure-like parts; each spec has machine-checkable acceptance assertions). ≥ 70% produce a passing part within ≤ 3 self-repair iterations, no human intervention after plan approval.
 - [ ] Every generated part: valid watertight solid, recompute-clean, all sketches DoF = 0, all driving dimensions exposed as named parameters.
 - [ ] Editability test: changing one driving parameter (e.g. plate length) in the generated model recomputes without errors in ≥ 90% of passing benchmark parts.
-- [ ] Self-verification catches injected faults: for 10 deliberately corrupted plans, the loop detects the spec violation in ≥ 9 cases (no silent bad parts).
+- [ ] Self-verification catches injected faults: for 10 deliberately corrupted plans, the agent following the `design-loop` skill detects the spec violation in ≥ 9 cases (no silent bad parts). What is measured is the assertion layer plus the skill's instruction to consult it — not a coded loop.
 - [ ] Median wall-clock time per benchmark part ≤ 10 minutes.
 - [ ] Skills: full Track A + B catalog (12 skills) validated per the Skills Track SMART goal — this phase's benchmark is the primary ablation testbed; every benchmark failure analyzed and, where generalizable, fed back into a skill.
 
-**Achievable.** Composes Phase 2 verified primitives under a plan-execute-check loop; the spec-assertion harness makes "done" objective.
+**Achievable.** Composes Phase 2 verified primitives under the agent's plan-execute-check loop; the spec-assertion harness makes "done" objective.
 
 **Relevant.** This is the first true *design* capability — the step from tool-driver to designer.
 
@@ -274,20 +294,22 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 ### Phase 4 — Autonomous Agent: Full Design Loop as a Service
 
-> *Any AI agent (or human) submits a design task; FreeCAD Buddy delivers a validated, exportable, revisable model — no GUI required.*
+> *An AI agent runs a design task end to end with no human and no GUI, and delivers a validated, exportable, revisable model.*
 
-**Specific.** Package the Phase 3 loop as a fully headless, long-running agent service: job API (submit spec → receive model + validation report + STEP/STL/3MF exports + rendered views), revision requests against previous results ("make the flange 5 mm taller"), design-rule checks (minimum wall thickness, hole-edge distance), and printability/manufacturability heuristics for 3D-printing-oriented parts. Safety rails: resource limits, iteration caps, sandboxed execution, full audit log of every operation.
+**Specific.** Make the bridge good enough that an agent can work unattended against it: headless operation with no GUI dependency, a full audit log of every operation, design-rule checks (minimum wall thickness, hole-edge distance), printability heuristics for 3D-printing-oriented parts, and a machine-readable validation report covering the delivered artifact and its exports. Revision work ("make the flange 5 mm taller") is the agent re-entering the same tools against an existing model, with the geometry diff confined to the requested change.
+
+**Autonomy is a property of the agent, not a service this repo runs.** There is no job API that accepts a spec and internally designs a part — that would be the design loop in the code again. Unattended operation means the operator starts an agent that holds the loop and talks to the bridge. What this phase owes is everything that makes such a run safe and auditable when no human is watching: limits, logging, and a report the agent cannot fake because its fields are re-executed checks rather than echoed claims.
 
 **Measurable — exit criteria:**
-- [ ] End-to-end headless run: 20-spec benchmark from Phase 3 executes via the job API on CI with zero GUI, ≥ 70% pass rate maintained.
+- [ ] End-to-end headless run: an agent running the `design-loop` skill against the headless bridge completes the 20-spec Phase 3 benchmark with zero GUI, ≥ 70% pass rate maintained.
 - [ ] Revision benchmark: 15 modification requests against previously generated models; ≥ 70% succeed while preserving unrelated features (geometry diff confined to the requested change).
 - [ ] Every delivered job includes a machine-readable validation report (spec assertions, shape validity, design-rule check results) and at least STEP + STL exports that re-import cleanly.
 - [ ] Agent-to-agent proof: an external MCP-client agent (not human-driven) completes a submit → inspect report → request revision → accept cycle without human input.
-- [ ] Robustness: service survives a 50-job soak run without crash, hang, or resource leak (memory growth < 20% over the run); every failed job fails with a structured error, never silently.
+- [ ] Robustness: the bridge survives a long unattended run without crash, hang, or resource leak; every failed operation fails with a structured error, never silently.
 
-**Achievable.** No new design intelligence required — Phase 3 capability hardened into a service; work is packaging, API, sandboxing, and reliability.
+**Achievable.** No new design intelligence required — the Phase 3 skill is unchanged; work is hardening the bridge for unattended use: limits, audit, reporting, and reliability.
 
-**Relevant.** Delivers the end-state vision: FreeCAD as an autonomous 3D design tool usable *by* AI agents.
+**Relevant.** Delivers the end-state vision: FreeCAD as a 3D design tool an autonomous agent can drive.
 
 **Time-bound.** 8 weeks after Phase 3.
 
@@ -315,7 +337,7 @@ Candidate directions — each will get its own SMART goal when selected:
 | 1 | Read-only assistant | ≥ 80% on 50-question eval | 4 wk |
 | 2 | Confirmed single ops | ≥ 85% on 40-command benchmark, 100% auto-verify + rollback | 6 wk |
 | 3 | Spec-to-part designer | ≥ 70% on 20-spec benchmark, ≤ 3 self-repairs | 8 wk |
-| 4 | Autonomous headless service | Phase 3 rate maintained headless + agent-to-agent cycle | 8 wk |
+| 4 | Unattended agent operation | Phase 3 rate maintained headless + a full unattended cycle | 8 wk |
 | 5 | Assemblies / FEM / drawings | Scoped after Phase 4 | TBD |
 | Skills track | Designer knowledge for any agent | 12 skills authored; ≥ 8 prove measurable benchmark lift in ablation | alongside Phases 1–3 |
 
@@ -325,10 +347,12 @@ Candidate directions — each will get its own SMART goal when selected:
 |------|--------|-----------|
 | Topological Naming Problem breaks references after recompute | Silent model corruption | TNP guard from Phase 2: reference datums/named features, re-resolve check after every mutation, benchmark includes TNP-provoking cases |
 | LLM hallucinates FreeCAD API calls | Failed or wrong operations | Typed tool layer (no free-form `exec` in mutation path), per-step geometry verification, rollback on failure |
+| Workflow lives in skills, so a weak agent produces a weak result | Quality depends on the driving model, not only on this repo | Accepted and explicit: the bridge guarantees *verifiability*, not *design quality*. Deterministic assertions fail a bad part regardless of which agent built it; the skills raise the floor; the ablation rule measures whether they do |
+| Design loop reappears in the code because it is convenient | The rule erodes one helper at a time | Stated as a Guiding Principle with a concrete test (would behaviour change with a different model?); any loop, planner, judge, or model client in the source tree is a defect, not a feature |
 | FreeCAD version drift (API changes between 0.21/1.0+) | Bridge breakage | Pin supported versions, CI matrix across versions, thin adapter layer over version-sensitive calls |
 | Agent self-grades → thinks it's doing well when it isn't | False confidence, silent bad output | Validation-First Discipline: validation designed and fault-tested before implementation, actor never grades itself, held-out sets, human audit sampling |
 | Eval benchmarks too easy → inflated pass rates | False confidence | Validation Design Gate: benchmarks + assertions land before phase code; real-world provenance required; validator sensitivity ≥ 95% proven by fault injection |
-| Headless vs GUI behavior differences | Works in dev, fails in service | Every phase's suite runs headless in CI from Phase 0 onward |
+| Headless vs GUI behavior differences | Works in dev, fails unattended | Every phase's suite runs headless in CI from Phase 0 onward |
 | Skills become stale or plausible-but-wrong lore | Agent confidently follows bad advice | Ablation rule (skill must move a metric or be cut), version-pinned accuracy review against FreeCAD docs, failure analyses feed corrections back |
 | Scope creep into Phase 5 topics early | Phase slippage | Phase gates: no phase starts until previous exit criteria all checked |
 
@@ -337,4 +361,5 @@ Candidate directions — each will get its own SMART goal when selected:
 - Training or fine-tuning custom ML models (the project uses existing LLMs via API/local inference).
 - CAM / toolpath generation.
 - Photorealistic rendering pipelines.
-- Cloud multi-tenant SaaS hosting (Phase 4 service is single-tenant/local-first).
+- Cloud multi-tenant SaaS hosting (the bridge is single-tenant/local-first).
+- An agent harness, chat UI, or model client of our own. The user brings their agent; this repo brings the tools. A design loop, planner, judge, or LLM API client inside the source tree is out of scope permanently, not deferred.

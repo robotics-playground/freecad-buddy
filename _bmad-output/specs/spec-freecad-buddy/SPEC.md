@@ -13,7 +13,7 @@ sources: []
 
 ## Why
 
-A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable and headless-capable, so an AI layer speaking its Python API through MCP can do — and *verify* — everything a human does, maturing from read-only assistant to autonomous design service. The single most likely failure mode is the agent believing it did well when it did not; therefore every phase goal in this contract is a machine-checkable gate whose validators exist and are fault-tested *before* phase implementation, and whose verdict an AI agent can compute by running deterministic checks and reading their reports — never by grading its own output.
+A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable and headless-capable, so an agent speaking its Python API through MCP can do — and *verify* — everything a human does. This repository ships the tools and the verification, never the agent: the design loop, the judgement and the workflow live in whatever agent drives the bridge, carried in skills. The single most likely failure mode is the agent believing it did well when it did not; therefore every phase goal in this contract is a machine-checkable gate whose validators exist and are fault-tested *before* phase implementation, and whose verdict an AI agent can compute by running deterministic checks and reading their reports — never by grading its own output.
 
 ## Capabilities
 
@@ -26,22 +26,85 @@ A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable 
 - **CAP-3** — Copilot (Phase 2)
   - **intent:** A user can issue one natural-language modeling command; the system previews a structured diff, executes on confirmation, auto-verifies, and rolls back provably on failure.
   - **success:** Gate **G2** passes: ≥85 % on the 40-command benchmark, 100 % auto-verify with rollback, undo hash-exact, TNP guard 5/5, sketches `FullyConstrained` ≥90 %.
-- **CAP-4** — Designer (Phase 3)
-  - **intent:** The system turns a written part spec into a clean parametric part, measuring the result against spec assertions and self-repairing until they pass.
-  - **success:** Gate **G3** passes: ≥70 % of 20 specs within ≤3 repairs on the sealed held-out set; every part valid/watertight/DoF-0/parameter-editable; corrupted-plan detection ≥9/10.
-- **CAP-5** — Autonomous service (Phase 4)
-  - **intent:** Any agent or human submits a spec to a headless job API and receives a validated model, exports, and a validation report; revisions preserve unrelated geometry.
-  - **success:** Gate **G4** passes: Phase 3 rate maintained headless; revisions ≥70 % with confined diffs; agent-to-agent cycle without human input; 50-job soak clean.
 - **CAP-6** — Skills library
-  - **intent:** Any LLM harness can load curated CAD-judgment skills (Track A operating knowledge + Track B design thinking) that measurably improve benchmark outcomes.
-  - **success:** Gate **GS** passes: 12 skills authored and dual-harness loadable; ≥8/12 show statistically significant lift under the AD-14 rules.
+  - **intent:** Any LLM harness can load curated CAD skills — Track A operating knowledge, Track B design thinking, Track W workflow (`design-loop`, `visual-review`, `spec-to-assertions`) — that measurably improve benchmark outcomes. The workflow lives here rather than in code, so this library is the load-bearing deliverable.
+  - **success:** Gate **GS** passes: skills authored and dual-harness loadable; the required majority show statistically significant lift under the AD-14 rules. Track W is validated by the benchmark running at all rather than by an ablation delta — without `design-loop` there is no loop to measure.
 - **CAP-7** — Validation harness
   - **intent:** For every phase, an executable gate exists — benchmark + assertions + fault-injection suite + report schema — that an AI agent can run to compute the phase verdict.
   - **success:** Each phase's entry gate (AD-19) lands before its implementation: benchmark fails honestly against a stub; validator sensitivity ≥95 % and false-alarm ≤5 % proven on planted faults.
 
+## User journeys
+
+Four people touch this system. Each journey names the real tools and skills it uses, then the
+failures it must survive — a journey that cannot fail is not telling you anything.
+
+In every journey the agent reaches the tools only through MCP. There is no in-process path into the
+use-case layer.
+
+### J1 — CAD user, FreeCAD open
+
+They open FreeCAD. The addon starts the RPC listener and spawns the MCP proxy; that is the entire
+setup. In a side window they talk to their agent, which loads the skills library, calls
+`query_tree_summary` to orient itself in the open document, and answers or acts. When the ask is a
+change, the agent calls `preview_dry_run`, shows the structured diff, and applies it on confirmation
+through a typed `sketch_*`/`feature_*` tool. When the ask is a whole part, the same conversation runs
+longer: the agent plans, builds, measures with `verify_*`, looks at the rendered views, and repairs —
+`design-loop` tells it how, and `visual-review` tells it what to look for. Asking a question,
+executing one command, and building a part are one continuum, not three products.
+
+*Failures it must survive:* an operation that runs without error and produces the wrong geometry —
+caught because `verify_*` re-measures the artifact rather than trusting the agent's account; a fast
+FreeCAD restart leaving a stale proxy on the port, which must surface as an error and never as a
+silent reuse; the agent calling a part done without ever looking at it, which only the evidence in
+the run workdir reveals.
+
+*Exercises:* CAP-1, CAP-2, CAP-3, CAP-6.
+
+### J2 — Operator, unattended
+
+They start an agent against the headless bridge and walk away. Nothing in this repository schedules,
+supervises, or parallelizes that run: the agent holds the loop, and spawns subagents itself if the
+work fans out. They come back to a part, exports, an audit log of every mutation, and a run workdir
+that reconstructs the whole run without the agent's context.
+
+*Failures it must survive:* a crash in the geometry kernel taking down the process the agent drives —
+this repository ships no isolation boundary of its own, so the operator's environment is the
+boundary and the audit log is what makes the failure legible; a long run accumulating memory with no
+recycle point; a plausible-looking report over a bad part, which is why every field in a validation
+report is a re-executed check rather than an echoed claim.
+
+*Exercises:* CAP-1, CAP-6, CAP-7.
+
+### J3 — Skill author
+
+They write or revise a skill, then run a benchmark with and without it and read the per-skill delta.
+Because the workflow lives in skills rather than in code, this is the loop by which the system
+actually improves — a better `design-loop` is a better product, with no release.
+
+*Failures it must survive:* a skill that reads as authoritative and moves no number, which the
+ablation cut rule exists to remove; a helper script drifting from answering one question into
+deciding the next action, at which point it has become the loop wearing a script's clothes; a skill's
+claims going stale against a FreeCAD version bump, which the recorded verification version catches.
+
+*Exercises:* CAP-6, CAP-7.
+
+### J4 — Contributor extending the tool surface
+
+They add a typed FreeCAD operation. It goes in the ring its dependencies allow, every mutation runs
+the uniform transaction protocol so it can prove its own rollback, and its entry gate lands before
+the implementation it grades.
+
+*Failures it must survive:* an import reaching across a ring boundary, which CI refuses; a mutation
+that skips the protocol and cannot prove it rolled back; reasoning creeping into the source tree
+because it was convenient in the moment — the test is whether the repository would behave differently
+depending on which model is talking to it.
+
+*Exercises:* CAP-1, CAP-7.
+
 ## Constraints
 
-- The architecture spine's AD-1..AD-20 bind all implementation (adopted companion); load-bearing here: typed-tools-only mutation (AD-4), uniform mutation protocol with hash-proven rollback (AD-5/6), TNP audit (AD-7), `FullyConstrained` as the sketch pass signal (AD-8), Validation Design Gate ordering (AD-19).
+- The architecture spine's ADs bind all implementation (adopted companion); load-bearing here: no AI workflow in shipped code (AD-35), typed-tools-only mutation (AD-4), uniform mutation protocol with hash-proven rollback (AD-5/6), TNP audit (AD-7), `FullyConstrained` as the sketch pass signal (AD-8), Validation Design Gate ordering (AD-19).
+- The agent reaches the tools only through MCP. No in-process path into the use-case layer exists, for any caller.
 - Pass/fail is computed by deterministic harness code or an independent grader — the producing agent's self-assessment is never a result (AD-13).
 - A phase may not start until the previous phase's gate is fully green; phase implementation may not start until its entry gate lands (AD-19).
 - All gate runs execute headless in CI on the FreeCAD 1.0.x + 1.1.x matrix (AD-11); a check that only passes in-GUI does not count.
@@ -53,12 +116,13 @@ A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable 
 
 - Training or fine-tuning custom ML models — existing LLMs via API/local inference only.
 - CAM/toolpath generation, photorealistic rendering, cloud multi-tenant SaaS.
-- Phase 5 topics (assemblies, TechDraw, FEM loops, vision feedback, reverse engineering) until scoped after the Phase 4 retrospective.
+- An agent harness, a chat UI, a model client, or a job/worker service of our own. The operator brings the agent; this repository brings the tools.
+- Phase 5 topics (assemblies, FEM loops, reverse engineering) until scoped after the Phase 2 retrospective.
 - Fully removing humans from gate verdicts — audit sampling and rubric authorship stay human (see phase-gates.md §Global protocol).
 
 ## Success signal
 
-An external MCP-client agent completes a full submit-spec → receive validated model + report → request revision → accept cycle against the headless service with zero human input, while the sealed held-out Phase 3 benchmark holds ≥70 % — the exact moment "FreeCAD as an autonomous design tool usable by AI agents" becomes demonstrable, not claimed.
+An agent loaded with the skills library turns a written part spec into a clean parametric part against the bridge — measuring the result with `verify_*`, reading the rendered views, repairing what it finds, and stopping because the measurements say so — with no design logic anywhere in this repository. That is the moment "FreeCAD as a design tool an AI agent can drive" becomes demonstrable rather than claimed, and it is demonstrable on whatever agent the operator brings.
 
 ## Assumptions
 

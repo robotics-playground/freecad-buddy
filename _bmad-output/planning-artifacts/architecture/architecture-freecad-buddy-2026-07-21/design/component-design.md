@@ -16,7 +16,7 @@ Module layout and type shapes are owned by **data-contracts-design.md** (§1); i
 
 | Component | Phase | Responsibility | Consumed by |
 | --- | --- | --- | --- |
-| `status.py`, `envelope.py`, `report.py`, `job.py`, `audit.py` | P0 | `ResultEnvelope`, `ValidationReport`, `JobStatus`, `AuditRecord`, closed status set (AD-17). Single owner — no surface defines variants | every ring |
+| `status.py`, `envelope.py`, `report.py`, `audit.py` | P0 | `ResultEnvelope`, `ValidationReport`, `AuditRecord`, closed status set (AD-17). Single owner — no surface defines variants | every ring |
 | `rpc.py` | P0 | JSON-RPC frame types + `rpc_hello` versioned handshake for the bridge RPC channel; stdlib-encodable only (AD-2). Both sides import it; neither invents framing | `rpc_listener`, `rpc_client` |
 | `jsonschema/` (generated) | P0 | Per-tool input/`outputSchema` composed by `$ref` from contract types (`query_`, `document_`, `export_`, `verify_`; `sketch_`/`feature_`/`preview_` added P2) | `mcp_server`, harness |
 | `document.py` | P0 | `DocHandle` + sub-element selector objects: geometric query \| TNP mapped name; bare `Face6` resolved at call time, never stored (conventions table; AD-20) | usecases |
@@ -39,7 +39,7 @@ Module layout and type shapes are owned by **data-contracts-design.md** (§1); i
 | `sketches.py` | P2 | `sketch_*` typed mutations (geometry + constraints), 1-based solver-ID → `Constraints[id-1]` diagnostic mapping | contracts, shim, transaction |
 | `features.py` | P2 | `feature_*` typed mutations (pad/pocket/hole/dress-up…), intent-bearing generated `Name`s | contracts, shim, transaction |
 | `preview.py` | P2 | `preview_dry_run` on `copyObject` TempDoc (AD-10, AD-20): structured diff (Δvolume/area/bbox/COM, counts, validity, TNP pre-check); apply path re-runs op under AD-5 | contracts, shim, documents, transaction |
-| `debug_exec.py` | P0 | Operator-only exec (AD-4): env-flag gated, unregistered when off, audit-logged, permanently off in Phase 4 | contracts, shim |
+| `debug_exec.py` | P0 | Operator-only exec (AD-4): env-flag gated, unregistered when off, audit-logged, never enabled unattended | contracts, shim |
 
 Key entry points:
 
@@ -92,8 +92,6 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 | --- | --- | --- |
 | `gui_addon/InitGui.py` + `bootstrap.py` | P0 | GUI addon: waits for `FreeCAD.GuiUp`, defers via `QTimer.singleShot`, generates per-session RPC token, starts `rpc_listener`, then **auto-spawns the external MCP protocol server** as a child process (`serve --mode rpc --transport http`, `:8765`) so opening FreeCAD is the only step to reach the bridge. The addon never *imports* `mcp` — it only spawns the process in the project venv interpreter, auto-discovered from the addon's own install path (no env vars; AD-2, AD-3, AD-12). Qt/`FreeCADGui` legal here (AD-1) |
 | `headless.py` | P0 | Headless entry: single process where FreeCAD is importable (conda env); runs `mcp_server` on stdio, use-cases called inline through the marshal's degrade path (AD-2). Also the `FreeCADCmd run_tests.py` CI entry |
-| `phase4/supervisor.py` | P4 | Job API host (streamable HTTP, AD-3): never imports FreeCAD; `spawn` workers, `max_tasks_per_child=1` (`ProcessPoolExecutor`), whole-tree kill; re-executes validation checks before reporting (AD-17, AD-18); `debug_exec` permanently disabled (AD-4) |
-| `phase4/worker.py` | P4 | Sandboxed worker entry: imports FreeCAD, runs use-cases inline (headless path), network-free (AD-18); reuses `JobStatus`/`ValidationReport` from P0 (AD-17) |
 
 ## 5. Interaction flows
 
@@ -197,7 +195,6 @@ sequenceDiagram
 | GS.E | skills_loader forced-subset ablation mode + CI shape check (`check_skill_shape.py`, Story 6.1) |
 | P2 (G2) | sketches, features, preview, verify_sketch, render_probe, elicitation/confirm glue; tnp_guard Layers 1–2 + 5-scenario fault suite |
 | P3 (G3) | assertion compiler + spec-benchmark runner extensions in harness (designer loop is agent-side plan/execute over P2 tools — no new ring component) |
-| P4 (G4) | phase4/supervisor, phase4/worker, job API surface (schemas unchanged — owned by contracts since P0 per AD-17) |
 | P5 (G5-robot) | robot-description export use cases (`export_urdf`/`export_sdf` + paired `verify_export_*`) over the Assembly kinematic tree + native inertials; part sourcing/import use cases; external-side URDF/SDF schema/parse oracle (mirrors export_oracle); skills `urdf-export`, `sdf-export`, `part-sourcing`. Depends on a Phase-5 Assemblies capability (AD-22/AD-23; detail at the G5-robot gate) |
 
 ## 8. Conflicts

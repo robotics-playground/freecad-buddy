@@ -24,7 +24,6 @@ freecad-buddy/
 │       │   ├── status.py             # closed terminal-status set + ErrorDetail (AD-17)
 │       │   ├── envelope.py           # ResultEnvelope, ImageRef (AD-17)
 │       │   ├── report.py             # ValidationReport, ReportBanner, Check, WilsonCI
-│       │   ├── job.py                # JobStatus
 │       │   ├── audit.py              # AuditRecord (JSON-lines)
 │       │   ├── diff.py               # GeometryDiff preview payload (AD-10)
 │       │   ├── document.py           # DocHandle + sub-element selectors (AD-20; no bare Face6)
@@ -119,7 +118,7 @@ freecad-buddy/
         └── canary.yml                # weekly 1.2-dev allowed-to-fail leg (AD-11)
 ```
 
-Deferred (dirs reserved, no Phase 0 files): `hosts/phase4/` supervisor (AD-18), `benchmarks/dev/phase{1,2,3}/`, per-phase fault suites (AD-19 lands each at its entry gate).
+Deferred (dirs reserved, no Phase 0 files): `benchmarks/dev/phase{1,2}/`, per-phase fault suites (AD-19 lands each at its entry gate).
 
 ## 2. Packaging
 

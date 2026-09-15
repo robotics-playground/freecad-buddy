@@ -271,4 +271,4 @@ Where judgment is needed (answer quality, error-diagnosis naming), pass/fail com
 
 ## 9. Out of Scope / Deferred
 
-Consistent with the spine's Deferred table: exact per-assertion tolerance defaults (calibrated during each phase's fault-injection work), G4 soak/fault harness specifics (Phase 4 gate, reuses §3 flow + AD-18 posture), skill-router rules (ablation-only forced subset is all this harness needs).
+Consistent with the spine's Deferred table: exact per-assertion tolerance defaults (calibrated during each phase's fault-injection work) and skill-router rules (ablation-only forced subset is all this harness needs).

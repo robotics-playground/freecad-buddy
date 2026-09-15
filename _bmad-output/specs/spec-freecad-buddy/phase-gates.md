@@ -1,6 +1,6 @@
 # Phase Gates — Agent-Executable Validation Contracts
 
-Companion to `SPEC.md`. One gate per phase (G0–G4) plus the Skills track (GS). Each gate = **goal**, **entry gate** (the AD-19 Validation Design Gate that must land before phase implementation — always: threat list, benchmark runnable against a stub and failing honestly, ≥10-case fault-injection suite at the sensitivity bar, grading rubric where judgment is needed, and a recorded reuse survey), and an **exit criteria table** whose checks an AI agent executes and whose verdict it computes mechanically.
+Companion to `SPEC.md`. One gate per phase (G0–G2) plus the Skills track (GS). Each gate = **goal**, **entry gate** (the AD-19 Validation Design Gate that must land before phase implementation — always: threat list, benchmark runnable against a stub and failing honestly, ≥10-case fault-injection suite at the sensitivity bar, grading rubric where judgment is needed, and a recorded reuse survey), and an **exit criteria table** whose checks an AI agent executes and whose verdict it computes mechanically.
 
 ## Global protocol — how an agent validates a gate
 
@@ -67,44 +67,6 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 | G2.6 | Skills + ablation harness | Shape-check 6 newly drafted skills; run ablation with declared subsets | Harness reports per-skill paired deltas in AD-14 format |
 
 **Threats → counters:** "op ran but wrong geometry" → assertions check intent (right pocket, right place, right depth), not recompute success; "rollback assumed" → G2.3 hash proof; "silent reference re-point" → G2.4 mapped-name diff incl. count-drop.
-
----
-
-## G3 — Phase 3: Designer (Spec-to-Part)
-
-**Goal:** Written spec → plan → verified multi-step build → measured against spec assertions → self-repair ≤3 iterations → clean parametric part.
-
-**Entry gate G3.E:** 20 written specs (real-world provenance per AD-16) each compiled to assertion primitives (AD-13 vocabulary: `count_cylindrical_holes`, `hole_spacing`, `expect_bbox`, anchor-frame declared per spec), split dev/held-out and sealed; 10 corrupted-plan fault cases; assertion-layer sensitivity ≥95 % / FA ≤5 % on planted-wrong parts (missing hole, wrong diameter, mirrored, off-spacing). **Visual judge (AD-21) landed and fault-tested**: independent vision model + structured checklist over the standard visual set (3D iso + focus views + **dimensioned TechDraw front/top/right projections** auto-generated from driving parameters on a TempDoc); planted visually-wrong parts (mirrored part, missing flange, wrong proportions, feature on wrong face) **+ planted wrong-dimension-callout drawings** — judge sensitivity ≥95 % / FA ≤5 % before its verdicts count. **Headless TechDraw page-export spike** resolved (TechDrawGui dependency risk) before implementation.
-
-| ID | Criterion | Agent-executable check | Pass rule |
-| --- | --- | --- | --- |
-| G3.1 | Spec benchmark | Run 20 specs end-to-end, human approves plan once; convergence = **geometry assertions pass ∧ visual judge PASS** (AD-21; never iteration cap); sealed held-out at exit, R≥10 [stats] | ≥70 % pass within ≤3 self-repairs; dev/held-out gap ≤15pp |
-| G3.2 | Artifact hygiene | For every generated part read verify reports | 100 %: valid watertight solid, recompute-clean, all sketches `FullyConstrained`, driving dimensions exposed as named parameters |
-| G3.3 | Editability | Script one driving-parameter change per passing part; recompute; verify | ≥90 % recompute without errors |
-| G3.4 | Self-verification catches faults | Run 10 corrupted-plan cases through the loop | ≥9/10 spec violations detected; zero silent bad parts |
-| G3.5 | Throughput | Read wall-clock from run reports | Median ≤10 min per part |
-| G3.6 | Skills track convergence | See GS; `design-decomposition` claim on its dedicated n≥40 set | GS criteria met per AD-14 |
-| G3.7 | Visual verification leg (AD-21) | For every passing part read the `verify_visual` report: independent judge (never the actor), standard visual set (iso + focus + dimensioned TechDraw per-axis projections) + spec checklist, temperature 0 | 100 % of passing parts carry visual judge PASS; render/drawing/judge unavailable → not done (operator waiver audit-logged only) |
-
-**Threats → counters:** "measures what it built, not what was asked" → assertions authored at G3.E, independent of any plan; "loop declares convergence by cap" → convergence defined as assertion-∧-visual pass in the runner itself; "plausible plan, deviant part" → artifact-level geometry assertions primary; "geometry passes but part visually/semantically wrong" → independent visual judge, conjunctive (AD-21); "actor grades own render" → judge model/context separation enforced at preflight.
-
----
-
-## G4 — Phase 4: Autonomous Service
-
-**Goal:** Phase 3 loop as a headless single-tenant service: job API, revisions, validation reports, sandboxed workers.
-
-**Entry gate G4.E:** soak + fault harness lands first and fails honestly against a stub service: planted infinite-loop → `TIMEOUT`, unbounded-alloc → `OOM_KILLED` (sandbox, not host OOM), OCCT segfault → `WORKER_CRASHED` + pool refill, wrong-part-with-pretty-report → supervisor re-check flags `SPEC_FAILED`; ≥95 % caught. Revision-diff checker fault-tested (unrelated-feature change planted → flagged).
-
-| ID | Criterion | Agent-executable check | Pass rule |
-| --- | --- | --- | --- |
-| G4.1 | Headless parity | Run the 20-spec Phase 3 benchmark via job API on CI, zero GUI [stats] | ≥70 % maintained |
-| G4.2 | Revisions | Run 15 modification requests against prior results; geometry diff vs request scope | ≥70 % succeed with diff confined to the requested change |
-| G4.3 | Deliverables complete | For every job read `ValidationReport` + exports | Report schema-valid with supervisor-re-executed check fields **including the AD-21 visual judge verdict** (rendered views ship with the job); STEP + STL present and re-import clean |
-| G4.4 | Agent-to-agent proof | External MCP-client agent drives submit → inspect → revise → accept | Full cycle completes with zero human input |
-| G4.5 | Robustness soak | 50-job soak run; sample supervisor+worker RSS at job boundaries | No crash/hang; memory growth <20 %; every failure carries a closed-set structured status (AD-17), none silent |
-
-**Threats → counters:** "HTTP 200 for a bad part" → G4.3 supervisor re-executes checks; "revision breaks unrelated feature silently" → G4.2 confined-diff assertion; "leak hidden by restart luck" → G4.5 boundary sampling per job.
 
 ---
 

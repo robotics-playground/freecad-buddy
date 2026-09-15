@@ -1,9 +1,6 @@
 ---
 stepsCompleted: [1, 2, 3]
-lastRun: '2026-09-13 — Epic 9 (Viewport & Render Correctness), steps 1-3'
-amendments:
-  - "2026-09-12: Epic 8 (Viewport Framing & Auto-Fit) + FR24-FR26 added from architecture-spine AD-29..AD-33. Additive and parallel-eligible after Epic 1; reopens no closed gate."
-  - "2026-09-13: Epic 9 (Viewport & Render Correctness) + DR-1..DR-5 added from UAT run 2026-09-13-02 and the same-day spine amendment (AD-25/29/30/31/32 amended, AD-34 new). These correct SHIPPED behaviour in Epic 8 and story 1-9; Epic 8 stays closed rather than reopening a done epic (AD-19 gate discipline). R2-05 closed invalid - no story."
+lastRun: '2026-09-15'
 inputDocuments:
   - _bmad-output/specs/spec-freecad-buddy/SPEC.md
   - _bmad-output/specs/spec-freecad-buddy/phase-gates.md
@@ -52,23 +49,13 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR10** — Bridge-owned undo restores exact prior state, verified by fingerprint comparison in 100 % of cases. *(AD-6)*
 - **FR11** — A TNP guard snapshots all reference-holding subsystems before each mutation and audits after recompute — flags broken (`?`-marker), silently re-pointed, and dropped references; reports `UNSUPPORTED` (never clean) without an element map. *(AD-7)*
 
-#### Designer — CAP-4
-
-- **FR12** — A designer loop turns a written part spec into a parametric part: plan (human-approved once) → execute Phase 2 tools → measure against compiled spec assertions in a declared anchor frame → self-repair ≤3 iterations; convergence = geometry assertions PASS ∧ visual judge PASS. *(AD-13/21)*
-- **FR13** — An independent visual judge (vision model, never the actor) verifies the standard visual set — 3D iso render + focus views + dimensioned TechDraw front/top/right projections — against the spec checklist; conjunctive with geometry, fail-closed when render/drawing/judge unavailable. *(AD-21)*
-- **FR14** — Generated parts expose driving dimensions as named parameters (VarSet with Spreadsheet fallback façade); editing one parameter recomputes clean. *(AD-11)*
-
-#### Autonomous service — CAP-5
-
-- **FR15** — A headless job API accepts spec submissions and delivers validated model + supervisor-re-executed ValidationReport + STEP/STL/3MF + rendered views; supports revision requests preserving unrelated geometry; completes an agent-to-agent submit → inspect → revise → accept cycle. *(AD-17/18)*
-
 #### Skills library — CAP-6
 
 - **FR16** — A skills library of 12 Track A+B skills (4 mandatory sections, ≤1,500 words each) loads via two modes: production metadata-first router (2–5 bodies, ≤10K tokens) and ablation forced explicit-subset injection with auto-activation disabled. *(AD-15)*
 
 #### Validation harness — CAP-7
 
-- **FR17** — A gate runner executes phase-gate criteria (G0–G4, GS) against benchmarks, emits contracts-owned ValidationReports, and computes gate verdicts mechanically: pass rules on report fields + validator sensitivity currency + sealed held-out R≥10 + human sign-off tokens. *(AD-19)*
+- **FR17** — A gate runner executes phase-gate criteria (G0–G2, GS) against benchmarks, emits contracts-owned ValidationReports, and computes gate verdicts mechanically: pass rules on report fields + validator sensitivity currency + sealed held-out R≥10 + human sign-off tokens. *(AD-19)*
 - **FR18** — A fault-injection framework validates every validator (planted defects + clean controls) and tracks per-validator sensitivity/false-alarm with source-hash staleness. *(AD-13)*
 
 #### Cross-cutting
@@ -120,7 +107,7 @@ deferred-work, not a fix story.
 | **NFR6** | Clean Architecture dependency rule enforced by CI import checks; Qt only in `hosts/` + the two named adapter exemptions | AD-1 |
 | **NFR7** | Security posture: localhost-only binds, per-session RPC token, stderr-only logging on stdio, no free-form exec in any AI path | AD-3, AD-4 |
 | **NFR8** | Benchmark artifacts only from commercial-clean, per-item license-checked sources with documented real-world provenance — never reverse-fit to agent ability | AD-16 |
-| **NFR9** | Performance: Phase 1 median response ≤15 s; Phase 3 median ≤10 min/part; Phase 4 50-job soak <20 % memory growth, no crash/hang | phase gates |
+| **NFR9** | Performance: Phase 1 median response ≤15 s | phase gates |
 | **NFR10** | All wire schemas (ResultEnvelope, ValidationReport, JobStatus, AuditRecord, GeometryDiff, RPC frames) are contracts-owned, stdlib-only, additive-only within a major | AD-17 |
 | **NFR11** | Phase ordering: entry gate (validators + benchmark vs stub + fault suite + rubric + reuse survey) lands before phase implementation; previous gate fully green before next phase starts | AD-19 |
 | **NFR12** | Skills shape enforced by CI: 4 exact sections, ≤1,500-word bodies, <1,024-char routing descriptions, no cross-skill body dependencies | AD-15 |
@@ -148,7 +135,6 @@ deferred-work, not a fix story.
 #### Phase-specific
 
 - **AR9** — Phase 0 spike items (first week): `exportBinary` Python exposure, conda FreeCADCmd path edge, `renderToImage` vs Xvfb, VarSet exposure on 1.1, MCP SDK v2 pin.
-- **AR10** — Phase 4 direction (deferred detail): supervisor never imports FreeCAD; spawn pool `maxtasksperchild=1`; `run_job_in_sandbox` wrapper (nsjail/bwrap Linux, WSL2-preferred Windows); egress deny-by-default; `jobs/<id>/` data plane.
 
 #### Research supplement — implementer reading list per story area
 
@@ -161,7 +147,6 @@ deferred-work, not a fix story.
 | Skills | Skill token budget / context limits |
 | Phase 1 local backend | Local LLM MCP tool-use |
 | Phase 2 preview/confirm | Headless preview/diff channel |
-| Phase 4 service | OS-level sandboxing; process-per-job isolation; Python execution sandbox policy |
 | Render / screenshots | Offscreen screenshot FreeCADCmd |
 | Version shim | FreeCAD version matrix |
 | Tool authoring reference | FreeCAD features & functionalities catalog |
@@ -179,8 +164,6 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | FR19, FR20 | Epic 1 | debug_exec gating; append-only audit log from Phase 0 |
 | FR7 | Epic 2 | Read-only assistant on ≥2 backends |
 | FR8–FR11 | Epic 3 | Typed mutations + transaction protocol; preview/confirm; verified undo; TNP guard |
-| FR12–FR14 | Epic 4 | Designer loop (geometry ∧ visual convergence); visual judge; named parameters |
-| FR15 | Epic 5 | Headless job API, revisions, agent-to-agent cycle |
 | FR16 | Epic 6 | 12-skill library + two-mode loader + ablation (+ 3 Phase-5 skills, stories 6.7–6.9) |
 | FR21–FR23 | Epic 7 | URDF/SDF export with paired verify; off-the-shelf part sourcing/import *(Phase 5)* |
 | FR24–FR26 | Epic 8 | Viewport framing read, agent-invoked fit tool, change-driven framing warning |
@@ -189,7 +172,7 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | DR-4 | Epic 9 (story 9.3) | Two-sided tone band so every named camera renders a face separable from the background |
 | DR-5 | Epic 9 (story 9.4) | Temp files created inside the session workdir so the AD-25 sweep can see them |
 
-All 26 FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks. FR21–FR23 are post-MVP (Phase 5) and additive; the MVP (Phases 0–4) is unaffected. FR24–FR26 are additive and parallel-eligible after Epic 1 — they add a new tool and an optional envelope field, and weaken no existing AD.
+All FRs mapped; none orphaned. NFR1–NFR13 bind cross-epic and are enforced per story via gate criteria and CI checks. FR21–FR23 are post-MVP (Phase 5) and additive. FR24–FR26 are additive and parallel-eligible after Epic 1 — they add a new tool and an optional envelope field, and weaken no existing AD.
 
 All 5 DRs mapped; none orphaned. R2-05 from the same UAT run is deliberately absent — closed invalid, no story. The DRs correct **shipped** behaviour (Epic 8 and story 1-9 are `done`), so they open no gate and reopen no closed epic.
 
@@ -215,21 +198,9 @@ A user can issue one natural-language modeling command, see a structured preview
 
 **FRs covered:** FR8, FR9, FR10, FR11
 
-### Epic 4: Spec-to-Part Designer (Phase 3 · gate G3)
-
-A user hands over a written part spec and receives an editable parametric part that measurably meets it — geometry assertions ∧ independent visual judge, self-repaired without babysitting.
-
-**FRs covered:** FR12, FR13, FR14
-
-### Epic 5: Autonomous Design Service (Phase 4 · gate G4)
-
-Any agent or human submits specs to a headless job API and gets validated models, exports, reports, and revisions — no GUI, no human in the loop, sandboxed.
-
-**FRs covered:** FR15
-
 ### Epic 6: CAD Skills Library & Ablation (parallel track · gate GS)
 
-Any LLM harness gains measurable CAD judgment from 12 curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–4; needs Epic 1's harness.
+Any LLM harness gains measurable CAD judgment from curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–3; needs Epic 1's harness.
 
 **FRs covered:** FR16 (+ FR21–FR23 skill support in stories 6.7–6.9, Phase 5)
 
@@ -251,7 +222,7 @@ When the bridge says the human can see the model, the human can actually see it 
 
 **DRs covered:** DR-1, DR-2, DR-3, DR-4, DR-5
 
-**Dependency chain:** 1 → 2 → 3 → 4 → 5 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 5 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates. **9 corrects shipped Epic 8 + story 1-9 behaviour**: it opens no gate, and Epic 8 stays `done` rather than being reopened (AD-19 keeps a passed gate closed). Within Epic 9, 9.1 → 9.2 are ordered because both edit `usecases/view_fit.py`; 9.3 and 9.4 touch disjoint files and are parallel-eligible with either.
+**Dependency chain:** 1 → 2 → 3 (gate-sequential per AD-19); 6 parallel after 1; 7 is Phase 5, after 3 and after a Phase-5 Assemblies capability. Skills stories 6.7–6.9 pair with Epic 7. **8 is parallel-eligible after Epic 1** — it adds a tool and an optional envelope field on top of the shipped bridge and weakens no existing AD, so it does not reopen the closed G0/G2 gates. **9 corrects shipped Epic 8 + story 1-9 behaviour**: it opens no gate, and Epic 8 stays `done` rather than being reopened (AD-19 keeps a passed gate closed). Within Epic 9, 9.1 → 9.2 are ordered because both edit `usecases/view_fit.py`; 9.3 and 9.4 touch disjoint files and are parallel-eligible with either.
 
 ---
 
@@ -658,141 +629,10 @@ A user can issue one natural-language modeling command, see a structured preview
 
 ---
 
-## Epic 4: Spec-to-Part Designer (Phase 3 · gate G3)
-
-A user hands over a written part spec and receives an editable parametric part that measurably meets it — geometry assertions ∧ independent visual judge (iso + focus + dimensioned TechDraw per-axis projections), self-repaired without babysitting.
-
-### Story 4.1: Entry Gate G3.E — Specs, Assertions, Judge & TechDraw Spike
-
-> **As** a project owner, **I want** 20 real-world specs compiled to assertions, the corrupted-plan suite, the visual judge fault-tested, and the headless TechDraw export spike resolved — before designer code, **so that** Phase 3's "done" is defined before anything tries to reach it (AD-19/21).
-
-**Acceptance Criteria:**
-
-1. **Given** `benchmarks/g3/`  
-   **When** inspected  
-   **Then** 20 specs (AD-16 provenance, real-world basis) with compiled assertion sets + declared anchor frames, dev/held-out sealed, 10 corrupted-plan cases; assertion-layer sensitivity ≥95 %/≤5 % on planted-wrong parts
-
-2. **Given** the visual judge config (vision model ≠ actor)  
-   **When** its fault suite runs (mirrored, missing flange, wrong-face feature, wrong proportions, wrong-dimension-callout drawings + controls)  
-   **Then** judge sensitivity ≥95 % / FA ≤5 %; headless TechDraw page-export spike answer recorded
-
-### Story 4.2: Assertion Primitives
-
-> **As** a bridge developer, **I want** the full AD-13 vocabulary implemented (holes, spacing, bbox, angles, anchor frames, disambiguation), **so that** any spec compiles to deterministic artifact-level checks.
-
-**Acceptance Criteria:**
-
-1. **Given** the primitive set per verification-design §7  
-   **When** run against golden + planted-wrong parts  
-   **Then** hole-vs-boss, coaxial grouping, fillet filtering, countersink recognition behave per the normative rules; measurements evaluate in the declared anchor frame; feature metadata is hint-only
-
-### Story 4.3: TechDraw Drawing Generator
-
-> **As** a visual judge, **I want** dimensioned front/top/right TechDraw projections auto-generated from driving parameters on a TempDoc, **so that** per-axis dimensioned drawings exist for every part-done check without polluting the part document.
-
-**Acceptance Criteria:**
-
-1. **Given** a finished candidate part  
-   **When** `techdraw_for_judge` runs  
-   **Then** a TempDoc gains page + three projections + parameter-sourced dimensions, exports ≥2048 px images, and is discarded; part document fingerprint unchanged
-
-### Story 4.4: Visual Judge (`verify_visual`)
-
-> **As** a project owner, **I want** the independent judge verdict over the standard visual set, **so that** done = geometry ∧ visual (AD-21, FR13).
-
-**Acceptance Criteria:**
-
-1. **Given** iso render + focus views + dimensioned TechDraw projections + spec checklist  
-   **When** `verify_visual` runs (judge ≠ actor, temperature 0)  
-   **Then** a structured `{pass, findings}` verdict lands in the ValidationReport as check `visual.judge`; callout-vs-spec mismatches block done and are re-checked against `verify_*` measurements; render/drawing/judge unavailable → not done (waiver audit-logged only)
-
-### Story 4.5: Designer Loop
-
-> **As** a user, **I want** to hand over a spec, approve the plan once, and receive a passing part within ≤3 self-repairs, **so that** design happens without step-by-step babysitting (FR12, G3.1).
-
-**Acceptance Criteria:**
-
-1. **Given** a spec from the dev set  
-   **When** the loop runs (plan → Phase 2 tools → measure → repair)  
-   **Then** convergence is declared only by geometry-∧-visual pass; repair input = discrepancy vector + judge findings; corrupted-plan cases detected ≥9/10 (G3.4); median wall-clock ≤10 min (G3.5)
-
-### Story 4.6: Parametric Editability
-
-> **As** a user, **I want** driving dimensions exposed as named parameters that survive edits, **so that** the generated part is a real parametric model, not a frozen blob (FR14, G3.2/G3.3).
-
-**Acceptance Criteria:**
-
-1. **Given** any passing part  
-   **When** inspected  
-   **Then** driving dimensions live in the VarSet/Spreadsheet façade with intent-bearing names, all sketches `FullyConstrained`  
-   **And** changing one driving parameter recomputes clean in ≥90 % of passing parts
-
-### Story 4.7: Gate G3 Exit
-
-> **As** a project owner, **I want** the sealed 20-spec run green with audits, **so that** the designer capability is proven, not claimed.
-
-**Acceptance Criteria:**
-
-1. **Given** `gate run g3 --exit` (R≥10, held-out unsealed once)  
-   **When** complete  
-   **Then** G3.1–G3.7 pass (≥70 % within ≤3 repairs, artifact hygiene 100 %, editability ≥90 %, faults ≥9/10, ≤10 min median, GS convergence, visual leg 100 %); gap ≤15pp; `spot_audit` token bound
-
----
-
-## Epic 5: Autonomous Design Service (Phase 4 · gate G4)
-
-Any agent or human submits specs to a headless job API and gets validated models, exports, reports, and revisions — no GUI, no human in the loop, sandboxed. *(Detail expanded at the Phase 4 gate per spine Deferred; stories below are the committed skeleton.)*
-
-### Story 5.1: Entry Gate G4.E — Soak & Fault Harness
-
-**Acceptance Criteria:**
-
-- Soak/fault harness lands first and fails honestly vs a stub service
-- The four canonical faults (infinite loop → `TIMEOUT` + tree-kill, unbounded alloc → `OOM_KILLED` by sandbox, OCCT segfault → `WORKER_CRASHED` + refill, wrong-part-with-clean-report → supervisor re-check `SPEC_FAILED`) all caught ≥95 %
-- Revision-diff checker fault-tested.
-
-### Story 5.2: Supervisor & Worker Pool
-
-**Acceptance Criteria:**
-
-- Supervisor never imports FreeCAD
-- Spawn pool `maxtasksperchild=1` with warm refill and bounded queue
-- Whole-tree kill on deadline/cap
-- Every abnormal exit maps to the closed status set
-- `debug_exec` permanently off (`service_mode`).
-
-### Story 5.3: Per-Job Sandbox
-
-**Acceptance Criteria:**
-
-- `run_job_in_sandbox` with Linux (nsjail/bwrap + cgroups + seccomp) and Windows (WSL2-preferred / AppContainer+Job Object) backends
-- Egress deny-by-default
-- GPU-none
-- `jobs/<id>/` sole writable mount
-- Concrete profiles per Phase 4 gate decisions.
-
-### Story 5.4: Job API & Revisions
-
-**Acceptance Criteria:**
-
-- Submit → `JobStatus` lifecycle → deliverables (model, STEP/STL/3MF re-import-clean, rendered views, supervisor-re-executed ValidationReport incl. visual verdict — G4.3)
-- 15-revision benchmark ≥70 % with geometry diff confined to the requested change (G4.2)
-- Phase 3 rate maintained headless (G4.1).
-
-### Story 5.5: Agent-to-Agent Proof & Gate G4 Exit
-
-**Acceptance Criteria:**
-
-- External MCP-client agent completes submit → inspect → revise → accept with zero human input (G4.4)
-- 50-job soak: no crash/hang, memory growth <20 %, no silent failures (G4.5)
-- `spot_audit` token bound
-- Gate verdict green.
-
----
 
 ## Epic 6: CAD Skills Library & Ablation (parallel track · gate GS)
 
-Any LLM harness gains measurable CAD judgment from 12 curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–4 after Epic 1.
+Any LLM harness gains measurable CAD judgment from curated skills — each proven by ablation to move a benchmark number or cut. Runs alongside Epics 2–3 after Epic 1.
 
 ### Story 6.1: Entry Gate GS.E — Ablation Harness & Shape Check
 

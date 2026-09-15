@@ -13,7 +13,7 @@ sources:
 
 # Data Contracts Design — `src/freecad_buddy/contracts/`
 
-Implementation-ready design for the schema-owning ring. Per **AD-17**, `ResultEnvelope`, `ValidationReport`, `JobStatus`, and the audit record are owned here from Phase 0 and reused by every surface (tool results, harness reports, Phase 4 job API, audit log) — no surface defines its own variant. Per **AD-1/AD-12** this package imports **stdlib only** (it runs both in-FreeCAD and in the external process).
+Implementation-ready design for the schema-owning ring. Per **AD-17**, `ResultEnvelope`, `ValidationReport`, and the audit record are owned here from Phase 0 and reused by every surface (tool results, harness reports, audit log) — no surface defines its own variant. Per **AD-1/AD-12** this package imports **stdlib only** (it runs both in-FreeCAD and in the external process).
 
 ## 1. Package layout & ground rules
 
@@ -22,7 +22,6 @@ src/freecad_buddy/contracts/
   status.py        # TerminalStatus, JobState, ErrorDetail
   envelope.py      # ResultEnvelope, ImageRef
   report.py        # ValidationReport, ReportBanner, Check, WilsonCI
-  job.py           # JobStatus
   audit.py         # AuditRecord (JSON-lines)
   diff.py          # GeometryDiff (preview payload, AD-10)
   document.py      # DocHandle, Selector types (AD-20)
@@ -66,11 +65,11 @@ class ErrorDetail(TypedDict, total=False):
     data: dict           # code-specific machine payload
 ```
 
-Semantics fixed here: `TIMEOUT`/`WORKER_CRASHED` originate only from transport/supervision layers (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7) and `OOM_KILLED` only from the Phase 4 sandbox; use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17).
+Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17).
 
 ## 4. `ResultEnvelope` (`envelope.py`)
 
-Every tool call — MCP tool result, RPC response payload, harness check, Phase 4 job result — returns exactly this shape.
+Every tool call — MCP tool result, RPC response payload, harness check — returns exactly this shape.
 
 ```python
 class ImageRef(TypedDict, total=False):
@@ -96,7 +95,7 @@ class ResultEnvelope(TypedDict, total=False):
 
 ## 5. `ValidationReport` (`report.py`)
 
-Emitted identically by `verify_*` tools, the gate runner (phase-gates global protocol step 1), and the Phase 4 supervisor's re-executed checks (**AD-17**). Fields are backed by re-executed deterministic checks; producing-agent claims are never echoed into it.
+Emitted identically by `verify_*` tools and the gate runner (phase-gates global protocol step 1) (**AD-17**). Fields are backed by re-executed deterministic checks; producing-agent claims are never echoed into it.
 
 ```python
 class WilsonCI(TypedDict):
@@ -130,38 +129,16 @@ class ValidationReport(TypedDict, total=False):
 
 **Verdict derivation (normative):** `OK` ⇔ every `checks[].passed` is true. Any failed spec/geometry check → `SPEC_FAILED`; a check that could not run because recompute failed → `RECOMPUTE_ERROR`; malformed inputs → `INVALID_INPUT`. `warnings` never affect the verdict (AD-8: redundant-constraint findings warn, never fail). An `UNSUPPORTED` TNP check is `passed: false` — never clean (AD-7) — surfacing as `SPEC_FAILED` with `detail.code="tnp.unsupported"`; an `element_map_version` bump re-baselines, it does not fail.
 
-## 6. `JobStatus` (`job.py`)
+## 6. Audit record (`audit.py`) — append-only JSON-lines
 
-Phase 4 job API shape — bound now so Phase 4 needs zero schema rework (AD-17). Earlier phases use it for harness runs (a benchmark case is a job).
-
-```python
-class JobStatus(TypedDict, total=False):
-    schema: Literal["fcb.job-status/1"]
-    job_id: str                     # supervisor-issued, opaque
-    state: JobState                 # QUEUED | RUNNING | <TerminalStatus>
-    submitted_at: str               # RFC 3339 UTC
-    started_at: str | None
-    finished_at: str | None         # set ⇔ state is terminal
-    detail: ErrorDetail | None      # machine detail; required non-null on any non-OK terminal
-    progress: dict | None           # {"phase": str, "iteration": int, "of": int} — advisory only
-    result: ResultEnvelope | None   # present ⇔ terminal; result.structured_content.report is the
-                                    #   supervisor-RE-EXECUTED ValidationReport (G4.3)
-    artifacts: dict | None          # {"dir": str, "exports": [paths], "audit_log": path}
-                                    #   paths not blobs (isolation research §6 data plane)
-```
-
-Non-terminal design: `QUEUED`/`RUNNING` exist **only** on `JobStatus.state` — `ResultEnvelope.status` and `ValidationReport.verdict` are always terminal. Polling a non-terminal job returns `result: null`; a job may never transition out of a terminal state; every abnormal worker exit is mapped to a terminal state before the future resolves (no silent/hanging jobs — G4.5).
-
-## 7. Audit record (`audit.py`) — append-only JSON-lines
-
-Exists from Phase 0 (AD-17). One line per mutation, exec, or approval event; per job/session file (`audit.log` in the job dir; spine Logging convention). Lines are never edited or deleted.
+Exists from Phase 0 (AD-17). One line per mutation, exec, or approval event; per session file (`audit.log` in the session workdir; spine Logging convention). Lines are never edited or deleted.
 
 ```python
 class AuditRecord(TypedDict, total=False):
     schema: Literal["fcb.audit-record/1"]
     ts: str                         # RFC 3339 UTC, required
     actor: str                      # "ai:<model-or-client-id>" | "human:<operator>" |
-                                    # "harness:<run-id>" | "supervisor"
+                                    # "harness:<run-id>" | "agent"
     event: Literal["mutation", "exec", "preview", "approval", "rollback"]
     tool: str                       # wire tool name ("feature_pocket", "debug_exec", …)
     doc: DocHandle                  # §9 — required for document-touching events
@@ -180,11 +157,11 @@ class AuditRecord(TypedDict, total=False):
                                     #   "verified": bool}        # AD-5: measured, never assumed
 ```
 
-Vocabulary reuse (spine Deferred table: preview must reuse this vocabulary): `fingerprint_before/after`, `verify_verdict`, `params_digest`, and the diff's `touched/new/deleted` naming (§8) are shared identifiers — the Phase 2 preview channel and the Phase 4 revision diff introduce **no synonyms** for these concepts. Every AD-10 headless `autoApprove` writes an `approval` record with `mode:"auto_approve"` and the `diff_digest` of the diff that was auto-accepted.
+Vocabulary reuse (spine Deferred table: preview must reuse this vocabulary): `fingerprint_before/after`, `verify_verdict`, `params_digest`, and the diff's `touched/new/deleted` naming (§8) are shared identifiers — the preview channel and any revision diff introduce **no synonyms** for these concepts. Every AD-10 headless `autoApprove` writes an `approval` record with `mode:"auto_approve"` and the `diff_digest` of the diff that was auto-accepted.
 
-## 8. Geometry diff (`diff.py`) — preview payload (AD-10)
+## 7. Geometry diff (`diff.py`) — preview payload (AD-10)
 
-The mandatory `preview_dry_run` payload and its `outputSchema`; also the G4.2 revision-diff shape. Field list fixed from the preview-channel research (Finding 3) — the spine defers only tolerance defaults, not fields.
+The mandatory `preview_dry_run` payload and its `outputSchema`; also the revision-diff shape. Field list fixed from the preview-channel research (Finding 3) — the spine defers only tolerance defaults, not fields.
 
 ```python
 class ScalarDelta(TypedDict):
@@ -219,7 +196,7 @@ class GeometryDiff(TypedDict, total=False):
 
 `tnp_precheck.status == "UNSUPPORTED"` (no element map, AD-7/AD-11) is surfaced to the confirmer verbatim — the preview never claims clean. The diff is computed on a `copyObject` TempDoc (AD-20 lifecycle); `before` values come from the live document, `after` from the copy. Confirmation gates on this object; renders are optional overlay (AD-10).
 
-## 9. Document handle & sub-element selectors (`document.py`)
+## 8. Document handle & sub-element selectors (`document.py`)
 
 **AD-20:** every tool call carries an explicit handle; `ActiveDocument` is never an implicit target.
 
@@ -255,7 +232,7 @@ Selector = GeometricSelector | MappedNameSelector
 
 Bare indexed names (`Face6`) are accepted **only** as call-time input sugar: the use case resolves them to a `MappedNameSelector` immediately; contracts objects (audit records, diffs, reports, specs) never store an indexed name (spine convention; AD-13 bans them in specs outright).
 
-## 10. Fingerprint record (`fingerprint.py`) — AD-6
+## 9. Fingerprint record (`fingerprint.py`) — AD-6
 
 Produced by the single `fingerprint()` implementation in `usecases/`; the contracts ring owns only the record shape.
 
@@ -285,7 +262,7 @@ Comparison rule (normative, AD-6): two records are comparable **iff `serializer`
 
 **Read-only-after-render verdict (normative):** a check that a read-only operation (a render/screenshot) did not mutate the document compares `massprops_equal(before, after)` — the geometric invariants — **not** the `digest`. OCCT re-lays-out a freshly loaded shape's BRep bytes the first time a render touches it, so the digest legitimately shifts while the geometry is unchanged; a digest comparison here yields a false "changed" verdict. The invariants compared are `volume`, `area`, `com`, and `principal_moments`; `bbox` is excluded because `Shape.BoundBox` is tessellation-derived and shifts when a render/export refines the mesh. A genuine mutation still changes the mass-properties.
 
-## 11. RPC wire contract (`rpc.py`) — AD-2/AD-3
+## 10. RPC wire contract (`rpc.py`) — AD-2/AD-3
 
 Frames between the external MCP process and the in-FreeCAD RPC listener. Both sides import this module; neither invents framing. Transport: newline-delimited JSON-RPC 2.0 frames over localhost TCP; stdlib-encodable only (both ends must run without third-party deps — AD-12 on the listener side).
 
@@ -323,7 +300,7 @@ Frame layout, method registry, error codes, timeouts, and the discovery file are
 - **Error mapping (normative):** tool-level failures always arrive as a `result` `ResultEnvelope` with non-OK status — JSON-RPC `error` is reserved for the channel itself (codes: integration doc §2.3). Channel errors map to the closed set: listener/marshal crash or dropped connection → `WORKER_CRASHED`; marshal deadline exceeded → `TIMEOUT`; malformed frame, bad token, unknown method, version mismatch → `INVALID_INPUT`. `error.data` always embeds `{status, detail}` so callers run one decoder for both paths.
 - Localhost bind + per-session `token` (discovery file, mode 0600) per AD-3; token travels in `params`, never in a URL.
 
-## 12. Cross-contract invariants (checked by contract tests)
+## 11. Cross-contract invariants (checked by contract tests)
 
 1. One status vocabulary: no `Literal` status/verdict/state type outside `status.py` (grep-enforced in CI alongside the AD-1 no-Gui-import check).
 2. Every `ValidationReport` has a `banner`; `wilson_ci` present whenever any check `measured` is a rate (AD-14).
@@ -333,7 +310,7 @@ Frame layout, method registry, error codes, timeouts, and the discovery file are
 6. JSON Schemas under `jsonschema/` regenerate byte-identical from the TypedDicts.
 7. `DocHandle.handle` is required on every document-touching wire object (AD-20).
 
-## 13. Resolved-here vs deferred
+## 12. Resolved-here vs deferred
 
 | Decision | This doc | Deferred to |
 | --- | --- | --- |

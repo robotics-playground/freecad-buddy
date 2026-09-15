@@ -23,7 +23,7 @@ One MCP low-level `Server` object serves every client; transport is a run flag (
 | Local backend: llama.cpp `llama-server` (native MCP client) | streamable HTTP (localhost) | 1+ |
 | ReAct / system-prompt-injection fallback (any OpenAI-compatible endpoint) | in-process adapter — no MCP transport | 1+ |
 | Headless CI harness | stdio or in-process | 0+ |
-| External agent (Phase 4) | streamable HTTP | 4 |
+| External agent (unattended) | streamable HTTP | 4 |
 
 SSE never (AD-3). HTTP and RPC bind localhost; remote bind is explicit operator opt-in (AD-3).
 

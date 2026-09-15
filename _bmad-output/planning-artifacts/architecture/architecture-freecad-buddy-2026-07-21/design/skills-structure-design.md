@@ -41,9 +41,9 @@ skills/
 
 Rules:
 
-- Directory name == frontmatter `name` (CI-checked). The Phase-5 Track R skills (robot-description/sourcing, AD-22/AD-23) join the same layout; a later Track C (domain judgment, Phase 4/5) would too. The catalog is the 12 Track A+B plus these — the router's resident-description count and the budget table grow with it.
+- Directory name == frontmatter `name` (CI-checked). The Phase-5 Track R skills (robot-description/sourcing, AD-22/AD-23) join the same layout; a later Track C (domain judgment, Phase 4/5) would too. The catalog is Track A+B, the three Track W workflow skills (`design-loop`, `visual-review`, `spec-to-assertions`), plus these — the router's resident-description count and the budget table grow with it.
 - `references/` files are per-operation and transient: a body may point to its **own** `references/` files by relative path, never to another skill's directory (AD-15: no cross-skill *path* dependency; the §6 check forbids any `references/` link escaping the skill's own dir). A body may still name a sibling skill in prose as a routing pointer (AD-15 amended) — that is not a path dependency.
-- No scripts, no assets: skills are pure knowledge documents (agent-agnostic per intent.md); executable behavior belongs in tools, not skills (AD-4 posture).
+- A skill directory may carry **read-only helper scripts** under `scripts/` — geometry checkers, assertion evaluators, report formatters — run by the driving agent's own shell, never by the bridge (AD-15). Three limits apply: a helper reads and computes but never mutates (no document mutation, and no writes outside the AD-25 run workdir); a helper contains no model call and no credential; and a helper answers one question per invocation and never decides the next action. Anything that decides the next action is the loop, and the loop lives in the agent (AD-35).
 - The store is consumed by the external-process loader only (AD-15 binds skills library + agent harnesses); nothing under `skills/` is imported by in-FreeCAD code (AD-12 untouched).
 
 ## 2. SKILL.md Template

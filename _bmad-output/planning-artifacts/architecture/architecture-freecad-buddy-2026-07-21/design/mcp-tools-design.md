@@ -23,7 +23,7 @@ Implementation-ready catalog of the FreeCAD Buddy MCP tool surface for Phases 0�
 
 - Every tool input carries an explicit `doc` handle (opaque string, e.g. `"fcb-doc:7f3a…"`). `ActiveDocument` is never an implicit target.
 - Only `document_create`, `document_open`, and `document_list` omit `doc` (they mint or enumerate handles).
-- Documents open/close only through `document_*` tools — harness and supervisor included.
+- Documents open/close only through `document_*` tools — the harness included.
 - Preview TempDocs use reserved prefix `FCB_TMP_`, are flagged transient, and are cleaned only by `preview_dry_run` (their creator).
 
 ### 1.2 Sub-element selectors (spine convention; AD-7, AD-13)
@@ -76,7 +76,7 @@ The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contrac
 }}}
 ```
 
-- The status set is closed (AD-17); Phase 0–2 use-case outcomes emit `OK | SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`; the transport layer additionally emits `TIMEOUT` (marshal timeout) and `WORKER_CRASHED` (RPC listener unreachable) from Phase 0 — see integration-mcp-freecad.md §7; `OOM_KILLED` is Phase 4 supervisor-only. The schema binds from Phase 0.
+- The status set is closed (AD-17); Phase 0–2 use-case outcomes emit `OK | SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`; the transport layer additionally emits `TIMEOUT` (marshal timeout) and `WORKER_CRASHED` (RPC listener unreachable) from Phase 0 — see integration-mcp-freecad.md §7; `OOM_KILLED` is reserved vocabulary with no producer. The schema binds from Phase 0.
 - Verification payloads reuse the contracts `ValidationReport` shape with its banner (FreeCAD version, `ElementMapVersion`, validator sensitivity where citable).
 - Renders follow AD-10 budgets: ≤1920 px, `audience:["user"]`, `resource_link` preferred over inline base64.
 
@@ -526,8 +526,8 @@ Phase 2 policy: mutation tool called without valid `confirm` in a confirm-requir
 1. **Off by default.** Registered into the MCP tool list only when the human operator sets `FREECAD_BUDDY_ALLOW_EXEC=1` at server start. When off it is *unregistered* — absent from `tools/list`, not merely erroring.
 2. **Never an AI mutation path.** Excluded from `preview_dry_run.operation.tool`, from the confirm flow, and from every benchmark/harness agent toolset. G1.6/registry introspection must show zero mutation tools *and* no `debug_exec` in AI-facing registries.
 3. **Audited.** Every call appended to the append-only audit log (code, timestamp, caller, doc handle, resulting fingerprint) — from Phase 0 (AD-17).
-4. **Not a sandbox.** Namespace reduction (FreeCAD API globals only) is blast-radius hygiene, never described as a security boundary; isolation is OS-level (AD-18, exec-sandbox research Finding 1).
-5. **Phase 4: permanently disabled** in the service; flag is ignored there.
+4. **Not a sandbox.** Namespace reduction (FreeCAD API globals only) is hygiene, never described as a security boundary; this repository ships no isolation boundary, so the operator's environment is the only one (AD-35, exec-sandbox research Finding 1).
+5. **Never enabled in an unattended run:** the flag is a human act, and no agent may set it.
 6. Input `{ "doc": handle, "code": string }`; result `{ "stdout", "value_repr", "fingerprint_after" }`. It still requires an explicit doc handle (AD-20) and its mutations are audit-logged, though it bypasses AD-5 typing by definition — which is exactly why it is operator-only.
 
 ## 6. Registration & Phasing Rules
