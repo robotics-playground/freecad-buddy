@@ -129,11 +129,16 @@ Code is written for the standards, never compressed:
 - Before substantive work:
   1. Read `.knowledge-base/technical/standards/index.md`.
   2. Read `.knowledge-base/technical/application-design/index.md`.
-  3. Read the project branch's own `docs/` and `README.md` — they define the scope, and
+  3. Read `ARCHITECTURE-SPINE.md` and every design document that covers the area you will
+   touch. Both are catalogued in section 15. The spine holds the `AD-n` decisions; each design
+   document lists in its front matter the `AD-n` it implements. Do not write code or a spec for
+   an area whose design document you have not read. If no design document covers the area,
+   say so before you start.
+  4. Read the project branch's own `docs/` and `README.md` — they define the scope, and
    they win any conflict about what the assistant should do.
-  4. Read the branch's `.knowledge-base/` research only when you need the *evidence*
+  5. Read the branch's `.knowledge-base/` research only when you need the *evidence*
    behind a decision, or when touching a selector or endpoint.
-  5. Load skills applicable to the task and technology (see section 13).
+  6. Load skills applicable to the task and technology (see section 13).
 - BMAD writes generated artifacts to `.ai-artifacts/`. Planning artifacts go to
   `.ai-artifacts/planning-artifacts/`, implementation records to
   `.ai-artifacts/implementation-artifacts/`.
@@ -188,6 +193,7 @@ Code is written for the standards, never compressed:
 - `skill(name="manual-testing")`
 - `skill(name="cua-driver")`
 - Directory: `tests/uat`
+- GUI end-to-end harness — launch, install modes, MCP over HTTP, canary, visual check, shutdown: [freecad-gui-e2e-harness](.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md). Read it before you launch FreeCAD for any test.
 - FreeCAD GUI operations:
   - Shutdown all FreeCAD instances before starting the tests. Verify that no FreeCAD processes are running.
   - Ensure no documents are open in the FreeCAD GUI before running UAT tests.
@@ -256,6 +262,10 @@ Message Chains · Dead Code · Speculative Generality
 - Use Conventional Commits. Keep workspace commit and service-repository commits separate.
 
 ## 12. Repo Structure
+
+Full tree, packaging, environments, and CI layout:
+[design/project-structure.md](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/project-structure.md).
+The summary below is the working map; that document decides any disagreement about layout.
 
 Single installable package, four Clean Architecture rings (AD-1). Imports cross ring boundaries **inward only**: `contracts/` ← `usecases/` ← `adapters/` ← `hosts/`. `check_imports.py` enforces it; don't fight it, fix the placement.
 
@@ -388,6 +398,34 @@ Read `.knowledge-base/technical/standards/index.md` first — it maps standards 
 
 **Precedence when documents disagree:** the installed CODE wins over any document — verify,
 then propose a doc correction.
+
+### Design documents
+
+Architecture root: `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/`.
+[ARCHITECTURE-SPINE.md](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/ARCHITECTURE-SPINE.md)
+holds the decision records `AD-n`. Every design document below binds to it and lists the `AD-n` it
+implements in its front matter. Read the design document for the area you touch before you change
+code there.
+
+Path prefix for the table: `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/`.
+
+| Document | Covers |
+|----------|--------|
+| [project-structure](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/project-structure.md) | Repository tree, packaging, Python/FreeCAD version per CI leg, environments, CI workflow layout |
+| [component-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/component-design.md) | The four rings, each module's responsibility, and the import rules between them |
+| [data-contracts-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/data-contracts-design.md) | `contracts/` wire types, status vocabulary, result envelope, generated JSON Schemas |
+| [mcp-tools-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md) | MCP tool catalog for Phases 0–2: names, inputs, outputs, errors |
+| [integration-mcp-freecad](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/integration-mcp-freecad.md) | The MCP-to-FreeCAD bridge: hosts, RPC listener, marshal, render rig |
+| [integration-mcp-clients](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/integration-mcp-clients.md) | Client side: Claude Code, local LLM, future agent clients |
+| [verification-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/verification-design.md) | Verification subsystem: assertions, tolerances, paired export verdicts |
+| [validation-harness-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/validation-harness-design.md) | `benchmarks/` gate runner, fault suites, validator registry, provenance |
+| [security-and-service-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/security-and-service-design.md) | Trust boundaries, bounded execution, service posture |
+| [skills-structure-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/skills-structure-design.md) | `skills/` library shape: `SKILL.md` sections, size limit, `references/` |
+| [sequence-diagrams](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/sequence-diagrams.md) | End-to-end call flows per scenario |
+| [robot-description-and-sourcing-design](_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/robot-description-and-sourcing-design.md) | Phase 5: URDF/SDF export and part sourcing |
+
+Design reviews live beside the designs in `reviews/`. They record drift found between intent,
+design, and code. Read one only when you need the evidence behind a design decision.
 
 ## 16. Running the MCP Bridge (GUI mode)
 
