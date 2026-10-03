@@ -51,6 +51,10 @@ def _appdata_dir() -> Path:
     return base_path
 
 
+_PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+_STILL_ACTIVE = 259
+
+
 def _pid_alive(pid: int) -> bool:
     """Cross-platform best-effort liveness check for a discovery-file ``pid``."""
     if pid <= 0:
@@ -59,11 +63,16 @@ def _pid_alive(pid: int) -> bool:
         try:
             import ctypes
 
-            process = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)
+            kernel32 = ctypes.windll.kernel32
+            process = kernel32.OpenProcess(_PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
             if not process:
                 return False
-            ctypes.windll.kernel32.CloseHandle(process)
-            return True
+            # An exited process keeps its kernel object, and OpenProcess still succeeds, while
+            # any handle to it stays open; only the exit code tells it apart from a live one.
+            exit_code = ctypes.c_ulong()
+            queried = kernel32.GetExitCodeProcess(process, ctypes.byref(exit_code))
+            kernel32.CloseHandle(process)
+            return not queried or exit_code.value == _STILL_ACTIVE
         except Exception:  # noqa: BLE001 - liveness is best-effort
             return True
     try:

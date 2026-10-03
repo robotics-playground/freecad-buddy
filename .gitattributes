@@ -1,0 +1,10 @@
+# Check text out with LF on every platform. Validator scores hash source and case files byte for
+# byte (benchmarks/runner.py `_validator_src_hasher`), so a CRLF checkout on Windows computes a
+# different validator_sha from CI's LF checkout and reads a current score as stale.
+* text=auto eol=lf
+
+*.FCStd binary
+*.png binary
+*.stl binary
+*.3mf binary
+*.enc binary

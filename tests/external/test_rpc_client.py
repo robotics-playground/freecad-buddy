@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 import os
 import socket
+import subprocess
+import sys
 import threading
 
 from freecad_buddy.adapters.marshal import Marshal
@@ -91,11 +93,14 @@ def test_discover_none_when_no_file(tmp_path):
 
 
 def test_discover_skips_dead_pid(tmp_path):
+    # A child that has exited and been reaped has a pid no live process holds; a fixed small pid
+    # does not work, because pid 2 is the always-alive kernel thread daemon on Linux.
+    child = subprocess.Popen([sys.executable, "-c", "pass"])
+    child.wait()
     disco = tmp_path / "freecad-buddy"
     disco.mkdir(parents=True)
-    record = {"schema": 1, "pid": 2, "host": "127.0.0.1", "port": 1, "token": "t"}
-    (disco / "rpc-999999.json").write_text(json.dumps(record), encoding="utf-8")
-    # pid 999999 is (almost certainly) not alive -> skipped -> no record.
+    record = {"schema": 1, "pid": child.pid, "host": "127.0.0.1", "port": 1, "token": "t"}
+    (disco / f"rpc-{child.pid}.json").write_text(json.dumps(record), encoding="utf-8")
     assert discover(appdata_dir=str(tmp_path)) is None
 
 
