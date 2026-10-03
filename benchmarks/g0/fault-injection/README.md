@@ -14,7 +14,7 @@ these `fn`s (there is no bridge yet); they are the contract 1.6 binds:
 | `fn`                | measures                     |
 | ------------------- | ---------------------------- |
 | `expect_volume`     | solid volume (mm³)           |
-| `expect_bbox`       | axis-aligned bbox `[X,Y,Z]`  |
+| `expect_bbox`       | bbox extents measured in the anchor frame (global when none), compared sorted: axis order is ignored |
 | `expect_solid_count`| number of `Solids`           |
 | `expect_valid`      | OCCT `Shape.isValid()`       |
 | `expect_watertight` | closed/manifold solid shell  |

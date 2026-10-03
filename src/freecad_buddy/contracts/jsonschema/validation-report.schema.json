@@ -1,5 +1,75 @@
 {
   "$defs": {
+    "AnchorFrame": {
+      "properties": {
+        "axes": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "named_datum",
+                "base_sketch_plane",
+                "largest_planar_face"
+              ]
+            },
+            {
+              "const": "global"
+            }
+          ]
+        },
+        "origin": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "units": {
+          "const": "mm"
+        },
+        "unresolved": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
     "Check": {
       "properties": {
         "detail": {
@@ -119,6 +189,16 @@
     },
     "ReportBanner": {
       "properties": {
+        "anchor_frame": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AnchorFrame"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "element_map_version": {
           "anyOf": [
             {

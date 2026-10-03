@@ -97,7 +97,7 @@ development_status:
   epic-3-retrospective: optional
   epic-4: in-progress
   4-1-entry-gate-g3e-spec-set-assertions-fault-suite: review
-  4-2-assertion-primitives: backlog
+  4-2-assertion-primitives: review
   4-3-drawing-generator: backlog
   4-4-parametric-editability: backlog
   4-5-gate-g3-exit: backlog

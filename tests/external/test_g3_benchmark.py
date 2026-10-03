@@ -30,7 +30,10 @@ import check_provenance  # noqa: E402
 import score_g3_validators as scorer  # noqa: E402
 
 from benchmarks import runner  # noqa: E402
+from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, ASSERTION_FNS  # noqa: E402
 from freecad_buddy.contracts.report import derive_verdict  # noqa: E402
+from freecad_buddy.usecases import assertions as primitives  # noqa: E402
+from freecad_buddy.usecases.documents import ValidationError  # noqa: E402
 
 SUITE = scorer.load_suite()
 TOOLS = scorer.tool_schemas()
@@ -145,7 +148,7 @@ def test_should_list_every_g3e_item_with_its_owning_story_when_gate_yaml_is_read
     owners = [item["owner"] for item in entry]
 
     # Assert
-    assert owners == ["4.1", "4.1", "4.2", "4.2", "4.3", "6.5", "4.1"]
+    assert owners == ["4.1", "4.1", "4.2b", "4.2b", "4.3", "6.5", "4.1"]
 
 
 def test_should_report_invalid_input_for_other_stories_when_the_suite_is_sound():
@@ -797,3 +800,63 @@ def test_should_name_the_manifest_when_a_case_file_manifest_has_an_invalid_sourc
     assert any(
         "g3-fault-plan-pocket-before-pad.yaml" in p and "not in closed set" in p for p in problems
     ), problems
+
+
+# The shipped validator: every committed dev spec must be a check `verify_shape` accepts. The
+# sealed held-out split is never read outside `gate run --exit`.
+DEV_CASES = sorted((G3 / "dev").glob("*/case.yaml"))
+
+
+def _dev_assertions(case_yaml: Path) -> dict:
+    return yaml.safe_load(case_yaml.read_text(encoding="utf-8"))["assertions"]
+
+
+@pytest.mark.parametrize("case_yaml", DEV_CASES, ids=lambda path: path.parent.name)
+def test_should_accept_every_check_and_frame_when_a_dev_spec_is_validated(case_yaml):
+    # Arrange
+    spec = _dev_assertions(case_yaml)
+
+    # Act
+    def act():
+        primitives._validate_declared_frame(spec["anchor_frame"])
+        for check in spec["checks"]:
+            primitives.validate_check(check)
+
+    # Assert
+    act()
+
+
+def test_should_share_the_vocabulary_when_the_structural_check_and_the_validator_are_compared():
+    # Arrange
+    contract_fns, contract_kinds = ASSERTION_FNS, ANCHOR_FRAME_KINDS
+
+    # Act
+    structural_fns, structural_kinds = scorer.CLOSED_FNS, scorer.ANCHOR_KINDS
+
+    # Assert
+    assert DEV_CASES, "no G3 dev case.yaml found"
+    assert structural_fns == contract_fns
+    assert structural_kinds == contract_kinds
+
+
+@pytest.mark.parametrize(
+    "declared",
+    [
+        {"kind": "named_origin", "ref": "XY_Plane"},
+        {"kind": "base_sketch_plane", "ref": "XY_Plane", "offset": 5},
+        {"kind": "largest_planar_face", "ref": "Face6"},
+        {"kind": "named_datum", "ref": ""},
+    ],
+    ids=["unknown-kind", "extra-key", "ref-on-largest-face", "empty-ref"],
+)
+def test_should_raise_validation_error_when_the_anchor_frame_is_malformed(declared):
+    # Arrange
+    frame = copy.deepcopy(declared)
+
+    # Act
+    def act():
+        primitives._validate_declared_frame(frame)
+
+    # Assert
+    with pytest.raises(ValidationError):
+        act()

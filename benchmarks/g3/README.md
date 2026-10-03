@@ -24,14 +24,16 @@ the structural check. `runner run G3 --exit` is refused before the unseal.
 ## Entry gate G3.E
 
 `gate.yaml` `entry:` lists every G3.E item from `phase-gates.md:77` and the story that owns it.
-G3.E stays open after Story 4.1.
+G3.E stays open after Story 4.1. Story 4.2a supplies the assertion primitives and the anchor-frame
+resolver that G3.E.3 and G3.E.4 measure with. Story 4.2b owns both items: it replays the corrupted
+plans, scores the suite, and checks the frames on both legs.
 
 | Item | Owner | State after 4.1 |
 | --- | --- | --- |
 | Spec set with compiled assertions, failing honestly against a stub | 4.1 | landed |
 | Corrupted-plan fault suite, every threat countered | 4.1 | landed, `fixture: pending` |
-| Anchor frames resolve identically on the 1.0.x and 1.1.x legs | 4.2 | `INVALID_INPUT` |
-| Corrupted-plan sensitivity ≥95 % / false-alarm ≤5 % with `validator_sha` | 4.2 | `INVALID_INPUT` |
+| Anchor frames resolve identically on the 1.0.x and 1.1.x legs | 4.2b | `INVALID_INPUT` |
+| Corrupted-plan sensitivity ≥95 % / false-alarm ≤5 % with `validator_sha` | 4.2b | `INVALID_INPUT` |
 | Render and drawing path at the ≥2048 px review floor | 4.3 | `INVALID_INPUT` |
 | `design-loop`, `visual-review`, `spec-to-assertions` skills | 6.5 | `INVALID_INPUT` |
 | Recorded reuse survey (`phase-gates.md:3`) | 4.1 | landed, `reuse-survey.md` |
@@ -56,10 +58,12 @@ Only the eleven closed `verification-design.md` §7.2 functions are legal: `is_v
 `count_cylindrical_holes`, `hole_diameter`, `hole_position`, `hole_spacing`, `hole_through`,
 `distance_between`, `angle_between`, `expect_bbox`, `expect_extent`, `expect_volume`. G3
 declares no extension. A sub-element index selector (`Face6`) and a feature-metadata reference
-(`PartDesign::Hole.Diameter`) are refused in a spec (AD-13). Six of the eleven are not in
-`harness/assertions.py` yet; they land in Story 4.2 with the anchor-frame resolver.
+(`PartDesign::Hole.Diameter`) are refused in a spec (AD-13). All eleven and the anchor-frame
+resolver live in `src/freecad_buddy/usecases/assertions.py`; `harness/assertions.py` and the MCP
+`verify_shape` tool both measure through it.
 
-Selectors are geometric queries, never indexes. Story 4.2 implements them as written here.
+Selectors are geometric queries, never indexes. `usecases/assertions.py` implements them as
+written here.
 
 - `select` narrows a hole primitive (`count_cylindrical_holes`, `hole_diameter`,
   `hole_position`, `hole_spacing`) to the logical holes that match. `diameter` is matched within
@@ -76,6 +80,10 @@ Selectors are geometric queries, never indexes. Story 4.2 implements them as wri
   `distance_between` measures `distToShape` between the two faces; `angle_between` the angle
   between their normals or axes; `hole_spacing` axis to axis. A `normal` matches within the
   angle band (±0.1°).
+- `hole_position` reports where each matched hole's axis meets the anchor frame's XY plane, in
+  frame coordinates.
+- `expect_bbox` compares the sorted extents measured in the anchor frame, so the order of the
+  three `expect` values does not matter. `expect_extent` measures along its frame `direction`.
 - `hole_diameter` on a logical hole with several coaxial cylinders (`g3-dev-017`: a 6.5 mm bore
   under an 11 mm counterbore) returns the smallest of them, the through bore. A counterbore is
   asserted through `select.diameter`, never through `hole_diameter`.
@@ -94,7 +102,13 @@ Selectors are geometric queries, never indexes. Story 4.2 implements them as wri
 
 The specs assume a `largest_planar_face` frame has its origin at that face's centroid and its
 +Z pointing from the face into the part. `g3-dev-007`, `g3-dev-012` and `g3-dev-017` rely on
-it, and the `g3-dev-019` comment states the origin rule. The Story 4.2 resolver fixes that rule.
+it, and the `g3-dev-019` comment states the origin rule. The resolver fixes that rule. Its
+in-plane X is document X projected onto the face, or document Y when the face is normal to X. A
+tie on area goes to the lowest centroid Z, then the lowest mapped face name; without mapped
+names, to the lowest centroid X, then Y. A tie that survives every rule leaves the frame
+unresolved, and every frame-dependent check fails with `INVALID_INPUT`. `base_sketch_plane` and
+`named_datum` resolve `ref` by object `Name`, then by unique `Label`, to that object's global
+placement. The report banner records the resolved frame and the entity it came from.
 
 ## Corrupted plans
 
@@ -102,7 +116,7 @@ A corrupted plan is a recorded plan, in the `harness/scripted_backend.py` `PlanS
 ordered list of `{tool, args}` steps that build `spec_ref` through the MCP mutation tools.
 `$doc` stands for the handle the `document_create` step returns. A planted case marks its one
 defect step in `planted_step` (0-based); a clean control marks none. Every case targets
-`assertions@harness.assertions.evaluate`: Story 4.2 replays the plan, and the spec's own
+`assertions@harness.assertions.evaluate`: Story 4.2b replays the plan, and the spec's own
 assertions grade the part it produces. Detection comes from measuring that part, never from
 reading the plan. Every case declares `fixture: pending` until that replay lands.
 
@@ -224,5 +238,5 @@ pure data is reused. No loop, judge, designer or actor code is restored.
   selectors mostly fails through an empty match (a tilted leg or rib matches no face) rather
   than through a measured angle off by more than 0.1°.
 - The `assertions` registry row in `_registry/validators.yaml` was measured over the G2 suite.
-  G3.1 and G3.4 cite the same validator name, so until Story 4.2 scores this suite and records
+  G3.1 and G3.4 cite the same validator name, so until Story 4.2b scores this suite and records
   its own `validator_sha`, a G3 leg-b currency read reflects the G2 population.

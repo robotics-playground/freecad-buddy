@@ -2,22 +2,19 @@
 
 Each resolves its document through the registry lock, builds a contracts-owned
 ``ValidationReport`` whose verdict is DERIVED from its checks (never asserted), and returns it
-inside a ``ResultEnvelope``. ``verify_shape`` measures ``obj.Shape`` against the closed
-forward-declared assertion vocabulary (``expect_volume``/``expect_bbox``/``expect_solid_count``/
-``expect_valid``/``expect_watertight``) and never recomputes. ``verify_sketch`` and
-``verify_recompute`` call ``doc.recompute()`` as a read-refresh but open no transaction and
-write no property. Unknown object, null ``Shape``, or a non-sketch raises ``ValidationError``
-so the dispatch boundary maps it to ``INVALID_INPUT``.
+inside a ``ResultEnvelope``. ``verify_shape`` measures ``obj.Shape`` against the closed §7.2
+assertion vocabulary (``usecases.assertions``) in an optional anchor frame, plus
+``expect_solid_count``/``expect_valid``/``expect_watertight``, and never recomputes.
+``verify_sketch`` and ``verify_recompute`` call ``doc.recompute()`` as a read-refresh but open no
+transaction and write no property. Unknown object, null ``Shape``, or a non-sketch raises
+``ValidationError`` so the dispatch boundary maps it to ``INVALID_INPUT``.
 """
 
 from __future__ import annotations
 
-from freecad_buddy.contracts import ResultEnvelope, derive_verdict, summary_text
-from freecad_buddy.usecases import shim
+from freecad_buddy.contracts import ASSERTION_FNS, ResultEnvelope, derive_verdict, summary_text
+from freecad_buddy.usecases import assertions, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
-
-_DEFAULT_VOLUME_REL = 0.01
-_DEFAULT_LINEAR_ABS = 0.05
 
 # FreeCAD marks a failed object with "Invalid"/"Error" in obj.State; an object still "Touched"
 # after a full recompute was silently skipped (dependencies unresolved) — also an error state.
@@ -119,38 +116,6 @@ def _require_shape(obj: object, name: str):
     return shape
 
 
-def _tol_close(
-    measured: float, expected: float, tol: dict | None, floor: float
-) -> tuple[bool, str]:
-    """Return ``(passed, detail)`` for ``measured`` vs ``expected`` under ``tol``.
-
-    ``tol`` carries ``{rel}`` and/or ``{abs}``; the effective absolute allowance is the larger
-    of the resolved band and ``floor`` (the shape's own tolerance), so no comparison asserts
-    tighter than the B-rep floor. The detail records when the floor clamped the band.
-    """
-    rel = None
-    abs_tol = None
-    if isinstance(tol, dict):
-        rel = tol.get("rel")
-        abs_tol = tol.get("abs")
-
-    allowances = []
-    if abs_tol is not None:
-        allowances.append(float(abs_tol))
-    if rel is not None:
-        allowances.append(abs(float(expected)) * float(rel))
-    band = max(allowances) if allowances else floor
-
-    clamped = floor > band
-    effective = max(band, floor)
-    delta = abs(measured - expected)
-    passed = delta <= effective
-    detail = f"|{measured} - {expected}| = {delta} <= {effective}"
-    if clamped:
-        detail += f" (clamped to shape tolerance floor {floor})"
-    return passed, detail
-
-
 def _bbox_extents(shape: object) -> list[float]:
     bb = shape.BoundBox
     return [bb.XLength, bb.YLength, bb.ZLength]
@@ -173,45 +138,7 @@ def _is_watertight(shape: object) -> bool:
         raise ValidationError(f"cannot measure shape closure: {exc}") from exc
 
 
-def _has_band(tol) -> bool:
-    """Whether ``tol`` carries a usable ``rel`` or ``abs`` allowance."""
-    return isinstance(tol, dict) and (tol.get("rel") is not None or tol.get("abs") is not None)
-
-
-def _check_expect_volume(shape: object, expect, tol, floor: float) -> dict:
-    measured = float(shape.Volume)
-    band = tol if _has_band(tol) else {"rel": _DEFAULT_VOLUME_REL}
-    passed, detail = _tol_close(measured, float(expect), band, floor)
-    return {
-        "id": "shape.volume",
-        "measured": measured,
-        "expected": float(expect),
-        "tolerance": tol,
-        "passed": passed,
-        "detail": {"message": detail},
-    }
-
-
-def _check_expect_bbox(shape: object, expect, tol, floor: float) -> dict:
-    if not isinstance(expect, (list, tuple)) or len(expect) != 3:
-        raise ValidationError(f"expect_bbox needs 3 extents [X,Y,Z], got {expect!r}")
-    measured = _bbox_extents(shape)
-    expected = [float(v) for v in expect]
-    band = tol if _has_band(tol) else {"abs": _DEFAULT_LINEAR_ABS}
-    per_axis = [_tol_close(measured[i], expected[i], band, floor) for i in range(3)]
-    passed = all(ok for ok, _ in per_axis)
-    detail = "; ".join(d for _, d in per_axis)
-    return {
-        "id": "shape.bbox",
-        "measured": measured,
-        "expected": expected,
-        "tolerance": tol,
-        "passed": passed,
-        "detail": {"message": detail},
-    }
-
-
-def _check_expect_solid_count(shape: object, expect, tol, floor: float) -> dict:
+def _check_expect_solid_count(shape: object, expect) -> dict:
     measured = len(shape.Solids)
     expected = int(expect)
     passed = measured == expected
@@ -225,7 +152,7 @@ def _check_expect_solid_count(shape: object, expect, tol, floor: float) -> dict:
     }
 
 
-def _check_expect_valid(shape: object, expect, tol, floor: float) -> dict:
+def _check_expect_valid(shape: object, expect) -> dict:
     measured = bool(shape.isValid())
     expected = bool(expect)
     passed = measured == expected
@@ -239,7 +166,7 @@ def _check_expect_valid(shape: object, expect, tol, floor: float) -> dict:
     }
 
 
-def _check_expect_watertight(shape: object, expect, tol, floor: float) -> dict:
+def _check_expect_watertight(shape: object, expect) -> dict:
     measured = _is_watertight(shape)
     expected = bool(expect)
     passed = measured == expected
@@ -254,27 +181,10 @@ def _check_expect_watertight(shape: object, expect, tol, floor: float) -> dict:
 
 
 _ASSERTIONS = {
-    "expect_volume": _check_expect_volume,
-    "expect_bbox": _check_expect_bbox,
     "expect_solid_count": _check_expect_solid_count,
     "expect_valid": _check_expect_valid,
     "expect_watertight": _check_expect_watertight,
 }
-
-
-def _shape_floor(shape: object) -> float:
-    """Return the shape's own tolerance floor, ``0.0`` when the shape has no tolerance concept.
-
-    A shape whose ``getTolerance`` is absent floors at ``0.0``; one whose ``getTolerance(1)``
-    call raises surfaces as ``ValidationError`` rather than a false ``0.0`` floor.
-    """
-    getter = getattr(shape, "getTolerance", None)
-    if getter is None:
-        return 0.0
-    try:
-        return float(getter(1))
-    except Exception as exc:  # noqa: BLE001
-        raise ValidationError(f"cannot measure shape tolerance: {exc}") from exc
 
 
 def _measured_facts(shape: object) -> list[dict]:
@@ -293,22 +203,28 @@ def verify_shape(
     doc: str | None = None,
     object: str | None = None,
     checks: list | None = None,
+    anchor_frame: dict | None = None,
 ) -> ResultEnvelope:
     """Measure an object's shape against the closed assertion vocabulary, read-only.
 
-    ``checks`` is a list of ``{fn, expect, tol?}``; each ``fn`` maps to one measurement over
-    ``obj.Shape`` producing a ``Check``. When ``checks`` is omitted the report carries the bare
-    measured shape facts with ``passed=true`` and no expected. When ``object`` is omitted the
-    document's first object is measured. Never recomputes. An unknown object, a null ``Shape``,
-    or an unknown assertion ``fn`` raises ``ValidationError``.
+    ``checks`` is a list of ``{fn, expect, ...}``; a §7.2 ``fn`` is measured by
+    ``usecases.assertions`` in ``anchor_frame`` (``{kind, ref}``, the global frame when omitted),
+    and ``expect_solid_count``/``expect_valid``/``expect_watertight`` here. When ``checks`` is
+    omitted the report carries the bare measured shape facts with ``passed=true`` and no expected.
+    When ``object`` is omitted the document's first object is measured. The banner records the
+    resolved frame. Never recomputes. An unknown object, a null ``Shape``, or a malformed check or
+    frame raises ``ValidationError``.
     """
     return registry.with_document(
-        doc, lambda _h, document: read_shape(document, object, checks)
+        doc, lambda _h, document: read_shape(document, object, checks, anchor_frame)
     )
 
 
 def read_shape(
-    document: object, object: str | None = None, checks: list | None = None
+    document: object,
+    object: str | None = None,
+    checks: list | None = None,
+    anchor_frame: dict | None = None,
 ) -> ResultEnvelope:
     """Measure ``object``'s shape on an already-resolved ``document``, holding no registry lock.
 
@@ -316,8 +232,8 @@ def read_shape(
     reporting the state it just produced — must reach the measurement this way rather than
     through :func:`verify_shape`, which would deadlock.
 
-    :raises ValidationError: the object is unknown, its ``Shape`` is null, or an assertion ``fn``
-        is outside the closed vocabulary.
+    :raises ValidationError: the object is unknown, its ``Shape`` is null, or a check or the
+        anchor frame is malformed.
     """
     if object:
         obj = _resolve_object(document, object)
@@ -326,32 +242,33 @@ def read_shape(
         if not objects:
             raise ValidationError("document has no objects to verify")
         obj = objects[0]
-    shape = _require_shape(obj, obj.Name)
+    shape = assertions.document_shape(obj, _require_shape(obj, obj.Name))
 
-    report: dict = {"subject": {"object": obj.Name}}
-    if not checks:
-        report["checks"] = _measured_facts(shape)
-        report["schema"] = "fcb.validation-report/1"
-        report["banner"] = _banner()
-        report["verdict"] = derive_verdict(report)
-        return _report_envelope(report, summarize_shape(report))
-
-    floor = _shape_floor(shape)
-    built = []
+    checks = checks or []
     for check in checks:
         if not isinstance(check, dict):
             raise ValidationError(f"check must be an object, got {check!r}")
         fn = check.get("fn")
-        builder = _ASSERTIONS.get(fn)
-        if builder is None:
+        if fn not in ASSERTION_FNS and fn not in _ASSERTIONS:
             raise ValidationError(f"unknown assertion fn: {fn!r}")
-        built.append(builder(shape, check.get("expect"), check.get("tol"), floor))
-    report["checks"] = built
+    primitives = [check for check in checks if check["fn"] in ASSERTION_FNS]
+    measured, frame = assertions.evaluate_checks(document, shape, anchor_frame, primitives)
+
+    report: dict = {"subject": {"object": obj.Name}}
+    if checks:
+        pending = iter(measured)
+        report["checks"] = [
+            next(pending)
+            if check["fn"] in ASSERTION_FNS
+            else _ASSERTIONS[check["fn"]](shape, check.get("expect"))
+            for check in checks
+        ]
+    else:
+        report["checks"] = _measured_facts(shape)
     report["schema"] = "fcb.validation-report/1"
-    report["banner"] = _banner()
+    report["banner"] = {**_banner(), "anchor_frame": frame}
     report["verdict"] = derive_verdict(report)
     return _report_envelope(report, summarize_shape(report))
-
 
 
 def _getattr_list(obj: object, name: str) -> list:
@@ -479,7 +396,6 @@ def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
         "warnings": warnings,
     }
     return _finish(report)
-
 
 
 def verify_recompute(registry: DocumentRegistry, doc: str | None = None) -> ResultEnvelope:

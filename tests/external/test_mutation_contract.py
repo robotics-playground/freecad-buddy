@@ -30,6 +30,7 @@ from freecad_buddy.contracts import (  # noqa: E402
     TnpAuditBlock,
     TnpStatus,
 )
+from freecad_buddy.usecases import assertions as primitives  # noqa: E402
 from freecad_buddy.usecases import shim, tnp_guard, transaction  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -285,12 +286,18 @@ def test_link_sub_entries_normalizes_both_property_shapes(value, expected):
     assert tnp_guard._link_sub_entries(value) == expected
 
 
-def test_assertions_module_imports_without_freecad_and_declares_the_eight_fns():
+def test_assertions_module_imports_without_freecad_and_declares_fourteen_fns():
     assert assertions.SUPPORTED_FNS == {
         "is_valid_solid",
         "count_cylindrical_holes",
+        "hole_diameter",
+        "hole_position",
         "hole_spacing",
         "hole_through",
+        "distance_between",
+        "angle_between",
+        "expect_bbox",
+        "expect_extent",
         "expect_volume",
         "expect_solid_count",
         "expect_sketch_fully_constrained",
@@ -331,7 +338,7 @@ def test_assertions_grade_every_declared_g2_fn():
 
 
 def test_tolerance_band_prefers_the_declared_allowance_over_the_default():
-    assert assertions._band({"abs": 0.5}, 100.0, 0.05, None) == 0.5
-    assert assertions._band({"rel": 0.001}, 100.0, None, 0.01) == pytest.approx(0.1)
-    assert assertions._band(None, 100.0, None, 0.01) == pytest.approx(1.0)
-    assert assertions._band(None, 10.0, 0.05, None) == 0.05
+    assert primitives._band({"abs": 0.5}, 100.0, 0.05, None) == 0.5
+    assert primitives._band({"rel": 0.001}, 100.0, None, 0.01) == pytest.approx(0.1)
+    assert primitives._band(None, 100.0, None, 0.01) == pytest.approx(1.0)
+    assert primitives._band(None, 10.0, 0.05, None) == 0.05

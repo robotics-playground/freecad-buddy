@@ -98,6 +98,7 @@ _VALIDATOR_SOURCES = {
     "verify_shape": (
         _SRC / "usecases" / "verify.py",
         _SRC / "usecases" / "fingerprint.py",
+        _SRC / "usecases" / "assertions.py",
     ),
     # The G1 grader's currency depends on the grader source, the rubric it encodes AND the fault
     # suite the score was measured over; a rubric edit changes the pass rule and a case edit
@@ -111,7 +112,10 @@ _VALIDATOR_SOURCES = {
     # The five validators the G2 criteria cite. Each hashes its source plus the G2 fault cases
     # that target it, matching score_g2_validators.py's `_validator_sha` byte for byte so a clean
     # working tree reads as CURRENT rather than stale.
-    "assertions": (_REPO_ROOT / "benchmarks" / "harness" / "assertions.py",),
+    "assertions": (
+        _REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
+        _SRC / "usecases" / "assertions.py",
+    ),
     "run_mutation": (_SRC / "usecases" / "transaction.py",),
     "fingerprint": (_SRC / "usecases" / "fingerprint.py",),
     "audit_references": (_SRC / "usecases" / "tnp_guard.py",),

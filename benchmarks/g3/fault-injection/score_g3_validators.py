@@ -10,7 +10,7 @@ that each of the four G3 threats is countered by a planted case that exists.
 
 It does NOT produce sensitivity or false-alarm numbers and never writes ``validators.yaml``.
 Planting a corrupted plan means replaying it through the MCP mutation tools against a live
-FreeCAD document and grading the part with the spec's assertions, which lands in Story 4.2. A rate
+FreeCAD document and grading the part with the spec's assertions, which lands in Story 4.2b. A rate
 reported from here would be a number no run produced.
 
 Exits 0 when the suite is structurally sound, 1 when it is not.
@@ -381,7 +381,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {item_id} [{owner}] {status}")
     print(
         "\n  NOT SCORED HERE: planting a corrupted plan means replaying it through the MCP "
-        "mutation\n  tools and grading the part, which lands in Story 4.2. No sensitivity, "
+        "mutation\n  tools and grading the part, which lands in Story 4.2b. No sensitivity, "
         "false_alarm or\n  validator_sha is computed and validators.yaml is not written."
     )
     return 0 if sound else 1

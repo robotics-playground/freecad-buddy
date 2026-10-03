@@ -47,9 +47,9 @@ mcp verify_shape { doc: <H>, object: <OBJ>, checks: [
 ```
 
 **Then** envelope status is `OK` — verify: `status` equals `OK` and `detail` is `null`  
-**And** five checks returned, one per `fn` — verify: `structured_content.checks` has ids `shape.volume`, `shape.bbox`, `shape.solid_count`, `shape.valid`, `shape.watertight`  
+**And** five checks returned, one per `fn` — verify: `structured_content.checks` has ids `assert.expect_volume`, `assert.expect_bbox`, `shape.solid_count`, `shape.valid`, `shape.watertight`  
 **And** every check passed — verify: no element of `structured_content.checks` has `passed: false`  
-**And** measured volume is the analytic 6000.0 — verify: the `shape.volume` check `measured` equals `6000.0`  
+**And** measured volume is the analytic 6000.0 — verify: the `assert.expect_volume` check `measured` equals `6000.0`  
 **And** verdict is derived, not asserted — verify: `structured_content.verdict` equals `OK` and equals the envelope `status`  
 **And** an unknown assertion `fn` is refused — verify: `mcp verify_shape { doc: <H>, object: <OBJ>, checks: [{ fn: "expect_genus", expect: 0 }] }` returns `INVALID_INPUT` with message `unknown assertion fn: 'expect_genus'`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -492,11 +492,11 @@ mcp verify_shape { doc: <H2>, object: <OBJ2>, checks: [
 mcp query_mass_properties { doc: <H2>, object: <OBJ2> }
 ```
 
-**Then** the genus-1 solid passes all three checks — verify: the first grade returns `status` equal to `OK` with `shape.volume` `measured` within 0.1 % of `15214.6018`  
+**Then** the genus-1 solid passes all three checks — verify: the first grade returns `status` equal to `OK` with `assert.expect_volume` `measured` within 0.1 % of `15214.6018`  
 **And** the through-hole export verifies — verify: the `verify_export_stl` returns `OK`  
 **And** the Euler check accepts genus 1 — verify: the `trimesh_stl.euler` check has `measured` equal to `0` and `passed: true`, proving the check tests parity and not a fixed value  
 **And** the compound passes with 2 solids — verify: the compound grade returns `status` equal to `OK` with the `shape.solid_count` check `measured` equal to `2`  
-**And** the compound volume is the analytic 2000.0 — verify: the compound grade's `shape.volume` `measured` is within 0.001 of `2000.0`  
+**And** the compound volume is the analytic 2000.0 — verify: the compound grade's `assert.expect_volume` `measured` is within 0.001 of `2000.0`  
 **And** the compound reports a null centre of mass — verify: the mass-properties read returns `status` equal to `OK` with `structured_content.com` equal to `null`  
 **And** a compound is not watertight under the single-solid rule — verify: `expect_watertight: true` on `<OBJ2>` returns `SPEC_FAILED`, because `_is_watertight` requires exactly one solid  
 **And** an outside tool reaches Euler characteristic 0 from the file itself — verify: `uv run python -c "import trimesh;m=trimesh.load('$RUN_DIR/evidence/tc-07-13-genus.stl');print(m.euler_number, m.is_watertight)"` prints `0 True`. The bridge's `trimesh_stl.euler` check is a claim by the code under test; `trimesh` invoked directly on the file is the outside witness.  
@@ -776,7 +776,7 @@ mcp verify_shape { doc: <H2>, object: <OBJ2>, checks: [
 ```
 
 **Then** `wrong-volume` is caught — verify: its `verify_shape` returns `status` equal to `SPEC_FAILED`, never `OK`  
-**And** the failing check names the planted defect — verify: the `shape.volume` check has `passed: false` with `measured` near `7200.0` against `expected` `6000.0` (a 12x20x30 box where the reference is 10x20x30)  
+**And** the failing check names the planted defect — verify: the `assert.expect_volume` check has `passed: false` with `measured` near `7200.0` against `expected` `6000.0` (a 12x20x30 box where the reference is 10x20x30)  
 **And** `non-watertight-open-shell` is caught — verify: its `verify_shape` returns `status` equal to `SPEC_FAILED`  
 **And** the watertight check is the primary signal — verify: the `shape.watertight` check has `passed: false` with `measured: false` against `expected: true`  
 **And** the solid-count diagnostic confirms it — verify: the `shape.solid_count` check has `measured` equal to `0`, an open shell carrying no solid  

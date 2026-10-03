@@ -17,7 +17,7 @@ import Sketcher
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import fingerprints_equal
-from freecad_buddy.usecases import fingerprint, verify
+from freecad_buddy.usecases import assertions, fingerprint, verify
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 BOX_L = 10.0
@@ -169,7 +169,7 @@ class VerifyShapeTest(_DocFixture):
         self.assertEqual(envelope["status"], "SPEC_FAILED")
         self.assertIsNotNone(envelope["detail"])
         self.assertEqual(envelope["detail"]["code"], "SPEC_FAILED")
-        self.assertIn("shape.volume", envelope["detail"]["message"])
+        self.assertIn("assert.expect_volume", envelope["detail"]["message"])
 
     def test_checkless_call_reports_measured_facts(self):
         self._add_box()
@@ -209,12 +209,28 @@ class VerifyShapeTest(_DocFixture):
         )
         self.assertEqual(envelope["status"], "INVALID_INPUT")
 
+    def test_should_compare_sorted_extents_when_expect_bbox_lists_them_in_another_order(self):
+        # Arrange
+        self._add_box()
+        reordered = {"fn": "expect_bbox", "expect": [BOX_H, BOX_L, BOX_W], "tol": {"rel": 0.001}}
+        wrong_length = {"fn": "expect_bbox", "expect": [BOX_L, BOX_W, 60.0], "tol": {"rel": 0.001}}
+
+        # Act
+        content = verify.verify_shape(
+            self.registry, doc=self.handle, object="Box", checks=[reordered, wrong_length]
+        )["structured_content"]
+
+        # Assert
+        self.assertEqual([c["passed"] for c in content["checks"]], [True, False])
+        for measured, expected in zip(content["checks"][0]["measured"], [BOX_L, BOX_W, BOX_H]):
+            self.assertAlmostEqual(measured, expected, places=6)
+
     def test_shape_floor_missing_tolerance_attr_is_benign_zero(self):
-        self.assertEqual(verify._shape_floor(_FakeShape(tolerance=None)), 0.0)
+        self.assertEqual(assertions.shape_floor(_FakeShape(tolerance=None)), 0.0)
 
     def test_shape_floor_raising_tolerance_raises_validation_error(self):
         with self.assertRaises(ValidationError):
-            verify._shape_floor(_FakeShape(tolerance="raise"))
+            assertions.shape_floor(_FakeShape(tolerance="raise"))
 
     def test_is_watertight_raising_isclosed_raises_validation_error(self):
         with self.assertRaises(ValidationError):
@@ -228,10 +244,9 @@ class VerifyShapeTest(_DocFixture):
             verify._is_watertight(_FakeShape(solids=1, is_closed=None))
 
     def test_shape_floor_clamps_comparison_to_tolerance_floor(self):
-        floor = 0.5
-        passed, detail = verify._tol_close(10.0, 10.4, {"abs": 0.01}, floor)
-        self.assertTrue(passed)
-        self.assertIn("clamped to shape tolerance floor", detail)
+        band, note = assertions._floored(0.01, 0.5)
+        self.assertEqual(band, 0.5)
+        self.assertIn("clamped to shape tolerance floor", note)
 
     def test_gettolerance_raise_through_dispatch_is_invalid_input(self):
         self._add_box()

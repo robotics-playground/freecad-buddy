@@ -30,6 +30,7 @@ from freecad_buddy.adapters.mcp_server import (
     registered_tools,
 )
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
+from freecad_buddy.contracts import ANCHOR_FRAME_KINDS
 from freecad_buddy.hosts.headless.entry import build_registry
 from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, tool_specs
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
@@ -235,6 +236,20 @@ def test_verify_tools_require_doc_and_reject_unknown_keys():
         assert "doc" in schema["required"], f"{name} does not require doc"
     assert "checks" in tools["verify_shape"].inputSchema["properties"]
     assert "sketch" in tools["verify_sketch"].inputSchema["required"]
+
+
+def test_should_declare_a_closed_anchor_frame_when_verify_shape_lists_its_input_schema():
+    # Arrange
+    caps = Capabilities(allow_exec=False)
+    tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
+
+    # Act
+    frame = tools["verify_shape"].inputSchema["properties"]["anchor_frame"]
+
+    # Assert
+    assert frame["required"] == ["kind"]
+    assert frame["properties"]["kind"]["enum"] == sorted(ANCHOR_FRAME_KINDS)
+    assert frame["additionalProperties"] is False
 
 
 def test_dispatch_verify_recompute_with_unknown_handle_is_invalid_input():

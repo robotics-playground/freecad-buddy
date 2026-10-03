@@ -27,7 +27,7 @@ src/freecad_buddy/contracts/
   document.py      # DocHandle, Selector types (AD-20)
   fingerprint.py   # FingerprintRecord (AD-6)
   rpc.py           # JSON-RPC frame types, Handshake (AD-2)
-  assertions.py    # assertion-vocabulary + anchor-frame declaration types (AD-13; full set lands P3)
+  assertions.py    # closed assertion vocabulary + anchor-frame types (AD-13; §5.1)
   jsonschema/      # generated *.schema.json, one per wire type
 ```
 
@@ -107,6 +107,7 @@ class ReportBanner(TypedDict, total=False):
     validator_sensitivity: dict | None  # {"sensitivity": float, "false_alarm": float,
                                         #  "n_faults": int, "suite_id": str}  (AD-13/AD-19)
     wilson_ci: WilsonCI | None      # present iff a rate is claimed (AD-14)
+    anchor_frame: AnchorFrame | None  # verify_shape: the frame the checks were measured in (§5.1)
 
 class Check(TypedDict, total=False):
     id: str                 # stable dotted id: "shape.volume", "sketch.fully_constrained",
@@ -128,6 +129,39 @@ class ValidationReport(TypedDict, total=False):
 ```
 
 **Verdict derivation (normative):** `OK` ⇔ every `checks[].passed` is true. Any failed spec/geometry check → `SPEC_FAILED`; a check that could not run because recompute failed → `RECOMPUTE_ERROR`; malformed inputs → `INVALID_INPUT`. `warnings` never affect the verdict (AD-8: redundant-constraint findings warn, never fail). An `UNSUPPORTED` TNP check is `passed: false` — never clean (AD-7) — surfacing as `SPEC_FAILED` with `detail.code="tnp.unsupported"`; an `element_map_version` bump re-baselines, it does not fail.
+
+### 5.1 Assertion vocabulary & anchor frame (`assertions.py`)
+
+The §7.2 primitive names (verification-design.md) form a closed vocabulary; the measurements live in
+`usecases/assertions.py`, the names and frame types here (**AD-13**).
+
+```python
+AssertionFn = Literal["is_valid_solid", "count_cylindrical_holes", "hole_diameter",
+                      "hole_position", "hole_spacing", "hole_through", "distance_between",
+                      "angle_between", "expect_bbox", "expect_extent", "expect_volume"]
+ASSERTION_FNS: frozenset[str]       # = get_args(AssertionFn); any other fn is malformed input
+
+AnchorFrameKind = Literal["named_datum", "base_sketch_plane", "largest_planar_face"]
+ANCHOR_FRAME_KINDS: frozenset[str]  # = get_args(AnchorFrameKind)
+
+class DeclaredAnchorFrame(TypedDict, total=False):   # what a spec / verify_shape input declares
+    kind: AnchorFrameKind           # required
+    ref: str | None                 # object Name, else unique Label; None for largest_planar_face
+
+class AnchorFrame(TypedDict, total=False):           # resolved; carried in ReportBanner
+    kind: AnchorFrameKind | Literal["global"]   # required; "global" ⇔ no frame declared
+    ref: str | None
+    entity: str | None              # object Name, or the face's mapped name (indexed name
+                                    #   when the shape carries no element map)
+    origin: list[float]             # [3], mm, document coordinates
+    axes: list[list[float]]         # frame X, Y, Z unit vectors in document coordinates
+    units: Literal["mm"]
+    unresolved: str | None          # why a declared frame did not resolve; origin/axes absent
+```
+
+An unresolved frame fails only the frame-dependent checks, each `passed: false` with
+`detail.code="invalid_input.unsupported_assertion"` (verdict `INVALID_INPUT`); a malformed check or
+frame declaration is refused before measuring (`INVALID_INPUT` envelope).
 
 ## 6. Audit record (`audit.py`) — append-only JSON-lines
 

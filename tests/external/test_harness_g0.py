@@ -92,6 +92,24 @@ def test_runner_file_path_invocation_exits_1():
     assert "FAILED" in result.stdout
 
 
+def test_should_hash_verify_shape_like_its_scorer_when_the_runner_checks_currency():
+    # Arrange: leg-b compares the committed validator_sha to the runner's hash, so the runner must
+    # hash the same sources as score_verify_shape.py byte for byte or the score reads stale.
+    sys.path.insert(0, str(FAULT_DIR))
+    import score_verify_shape
+
+    committed = yaml.safe_load(
+        (BENCHMARKS / "_registry" / "validators.yaml").read_text(encoding="utf-8")
+    )
+
+    # Act
+    mirrored = runner._validator_src_hasher("verify_shape")
+
+    # Assert
+    assert mirrored == score_verify_shape._validator_sha()
+    assert mirrored == committed["verify_shape"]["validator_sha"]
+
+
 # --------------------------------------------------------------------------- #
 # (b) fault inventory: >=10 defects + >=1 control, closed kinds, bound, fixtures exist
 # --------------------------------------------------------------------------- #

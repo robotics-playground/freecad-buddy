@@ -37,7 +37,10 @@ VALIDATORS_YAML = REPO_ROOT / "benchmarks" / "_registry" / "validators.yaml"
 # moment any of them changes, so a citation can never outlive the code it was measured over.
 _USECASES = SRC / "freecad_buddy" / "usecases"
 VALIDATOR_SOURCES = {
-    "assertions": (REPO_ROOT / "benchmarks" / "harness" / "assertions.py",),
+    "assertions": (
+        REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
+        _USECASES / "assertions.py",
+    ),
     "run_mutation": (_USECASES / "transaction.py",),
     "fingerprint": (_USECASES / "fingerprint.py",),
     "audit_references": (_USECASES / "tnp_guard.py",),

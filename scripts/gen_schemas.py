@@ -100,6 +100,7 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "TnpAuditBlock": ["status", "element_map_version", "findings"],
     "RefFinding": ["owner", "prop", "verdict", "layer"],
     "ReportBanner": ["freecad_version", "element_map_version"],
+    "AnchorFrame": ["kind"],
     "Check": ["passed"],
     "WilsonCI": ["rate", "low", "high", "n", "r"],
     "DocHandle": ["handle"],

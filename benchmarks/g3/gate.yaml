@@ -18,8 +18,9 @@ actor:
   profile: spec-to-part
 
 # Deterministic geometry assertions, re-executed by the runner against the stored part. Agent
-# claims are never echoed as results. The six §7.2 primitives `assertions.py` does not implement
-# yet land in Story 4.2, which also lands the anchor-frame resolver.
+# claims are never echoed as results. The eleven §7.2 primitives and the anchor-frame resolver
+# live in src/freecad_buddy/usecases/assertions.py (Story 4.2a); harness/assertions.py delegates
+# to them, so the grader and the MCP verify_shape tool measure with one implementation.
 grader:
   model: deterministic-geometry-assertions
   context: independent-grader
@@ -45,10 +46,10 @@ entry:
     owner: "4.1"
   - id: G3.E.3
     item: "Every spec's anchor frame resolves identically on the 1.0.x and 1.1.x legs"
-    owner: "4.2"
+    owner: "4.2b"
   - id: G3.E.4
     item: "Corrupted-plan suite scored at sensitivity >=95% / false-alarm <=5%, recorded with validator_sha"
-    owner: "4.2"
+    owner: "4.2b"
   - id: G3.E.5
     item: "Render and drawing path at the >=2048 px review floor"
     owner: "4.3"

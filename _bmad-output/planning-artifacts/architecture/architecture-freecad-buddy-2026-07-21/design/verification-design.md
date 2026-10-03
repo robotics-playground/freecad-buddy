@@ -281,7 +281,12 @@ Fixed, closed vocabulary in `contracts/` (names + signatures); measurement imple
 
 ### 7.1 Frame and selectors
 
-- `anchor_frame(spec) -> Frame` — declared per spec from the closed derivation set: **named datum | base sketch plane | largest planar face fallback**, resolved by one shared implementation. All subsequent measurements are transformed into this frame before comparison.
+- `anchor_frame(spec) -> Frame` — declared per spec as `{kind, ref}` from the closed derivation set: **named datum | base sketch plane | largest planar face fallback**, resolved by one shared implementation (`usecases/assertions.py`). All subsequent measurements are transformed into this frame before comparison. The shape is measured in document coordinates (a feature in a moved Body is placed by its global placement).
+  - `named_datum` / `base_sketch_plane`: `ref` names an object by `Name`, else by a `Label` exactly one object carries; the frame is that object's global placement.
+  - `largest_planar_face` (`ref: null`): the planar face of largest area; ties go to the lowest centroid Z, then the lowest mapped element name, then (without mapped names) the lowest centroid X, then Y. A tie that survives every rule leaves the frame unresolved. Origin at the face centroid, +Z from the face into the part, in-plane X = document X projected onto the face (document Y when the face is normal to X). In-plane positions therefore follow document X, not the part: a spec in this frame asserts positions on the centroid axis, where an in-plane rotation does not move them.
+  - The report banner records the resolved frame: kind, ref, the entity it came from (object `Name`, or the face's mapped name), origin and axes.
+  - A frame that does not resolve (ref absent or ambiguous, no planar face, surviving tie) fails only the frame-dependent checks, each with `detail.code = invalid_input.unsupported_assertion`; volume, validity and other frame-free checks are still measured.
+- A selector that matches nothing fails its check the same way (`invalid_input.unsupported_assertion`), never a pass and never a skip.
 - `HoleSelector` — a geometric query (radius band, axis direction relative to frame, position region), never an index. Resolution at assert-time yields logical holes after disambiguation (§7.3).
 
 ### 7.2 Primitive set
@@ -296,7 +301,7 @@ Fixed, closed vocabulary in `contracts/` (names + signatures); measurement imple
 | `hole_through` | `(shape, selector)` | axis exits both sides: `section()` at entry and exit faces both open, or axial extent (`Face.ParameterRange`) spans local thickness |
 | `distance_between` | `(shape, sel_a, sel_b, expected, tol)` | `Shape.distToShape` min distance |
 | `angle_between` | `(shape, sel_a, sel_b, expected, tol)` | face normals (`normalAt`) / edge directions; includes perpendicular/parallel as expected = 90°/0° |
-| `expect_bbox` | `(shape, frame, x, y, z, tol)` | `Shape.BoundBox` extents measured in the anchor frame (never the naive global bbox on non-axis-aligned parts) |
+| `expect_bbox` | `(shape, frame, x, y, z, tol)` | exact extents (`optimalBoundingBox`) measured in the anchor frame (never the naive global bbox on non-axis-aligned parts), compared sorted: the order of `x, y, z` is ignored |
 | `expect_extent` | `(shape, frame, direction, length, tol)` | oriented extent along a frame direction |
 | `expect_volume` | `(shape, expected, rel_tol)` | `Shape.Volume` |
 

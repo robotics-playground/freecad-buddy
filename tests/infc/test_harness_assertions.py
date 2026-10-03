@@ -21,6 +21,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.harness import assertions  # noqa: E402
+from freecad_buddy.usecases import assertions as primitives  # noqa: E402
 
 
 class _ShapeFixture(unittest.TestCase):
@@ -193,7 +194,7 @@ class GradingFailureIsReportedTest(_ShapeFixture):
         bore = Part.makeCylinder(3.0, 10.0, App.Vector(20, 20, 0), App.Vector(0, 0, 1))
         self.feature(plate.cut(bore))
 
-        original = assertions._cylindrical_faces
+        original = primitives._cylindrical_faces
 
         class _RangelessFace:
             """A cylindrical face that reports a full turn but no usable parameter range."""
@@ -205,23 +206,23 @@ class GradingFailureIsReportedTest(_ShapeFixture):
             def __getattr__(self, name):
                 return getattr(self._face, name)
 
-        assertions._cylindrical_faces = lambda shape: [
-            _RangelessFace(face) for face in original(shape)
+        primitives._cylindrical_faces = lambda shape: [
+            (index, _RangelessFace(face)) for index, face in original(shape)
         ]
         try:
             result = self.grade("count_cylindrical_holes", 1)
         finally:
-            assertions._cylindrical_faces = original
+            primitives._cylindrical_faces = original
 
         self.assertFalse(result["passed"], result["detail"])
         self.assertEqual(result["detail"].get("code"), assertions._INVALID_INPUT)
         self.assertIn("ParameterRange", result["detail"]["message"])
 
     def test_an_unmeasurable_extent_is_reported_rather_than_read_as_zero(self):
-        self.assertIsNone(assertions._extent_along([], (0.0, 0.0, 1.0)))
+        self.assertIsNone(primitives._extent_along([], (0.0, 0.0, 1.0)))
         point = App.Vector(1.0, 2.0, 3.0)
-        self.assertIsNone(assertions._extent_along([point], (0.0, 0.0, 1.0)))
-        self.assertEqual(assertions._extent_along([point, point], (0.0, 0.0, 1.0)), 0.0)
+        self.assertIsNone(primitives._extent_along([point], (0.0, 0.0, 1.0)))
+        self.assertEqual(primitives._extent_along([point, point], (0.0, 0.0, 1.0)), 0.0)
 
 
 if __name__ == "__main__":

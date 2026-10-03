@@ -146,7 +146,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
-| `verify_shape` | 0 | Measure volume/bbox/counts/validity vs. expected bands (G0.3 golden models) | no |
+| `verify_shape` | 0 | Measure a shape against the closed assertion vocabulary in a declared anchor frame (G0.3 golden models; §7.2 primitives for G3) | no |
 | `verify_recompute` | 0 | Assert no object left in error state after recompute | no |
 | `verify_sketch` | 0 | AD-8 pass signal: `FullyConstrained` + DoF + solver diagnostics (used by G2.5) | no |
 | `verify_fingerprint` | 0 | Compute/compare AD-6 document fingerprint (undo proof, G2.3) — **planned**; `usecases/fingerprint.py` exists and is called internally, but no `verify_fingerprint` tool is registered | no |
@@ -302,24 +302,40 @@ Dependency links by immutable `Name`. With `object` → `{object, in_list, out_l
 ```json
 { "inputSchema": { "type": "object", "properties": {
     "doc": { "type": "string" },
-    "object": { "type": "string", "description": "immutable Name; omit = whole-document Tip solids" },
-    "expect": { "type": "object", "properties": {
-      "volume": { "type": "object", "properties": { "quantity": { "$ref": "#/$defs/Quantity" }, "rel_tol": { "type": "number", "default": 0.001 } } },
-      "bbox": { "type": "object", "properties": { "x": {}, "y": {}, "z": {}, "tol": {} }, "description": "Quantity triplet + band" },
-      "counts": { "type": "object", "properties": { "faces": { "type": "integer" }, "edges": { "type": "integer" }, "solids": { "type": "integer" } } }
-    }, "description": "omit expect → measurement-only report" }
-  }, "required": ["doc"] },
-  "outputSchema-result": { "type": "object", "properties": {
-    "is_valid": { "type": "boolean" }, "watertight": { "type": "boolean" },
-    "measured": { "type": "object", "description": "volume/area/bbox/com/counts, explicit units" },
-    "assertions": { "type": "array", "items": { "type": "object", "properties": {
-      "field": { "type": "string" }, "expected": {}, "measured": {}, "tolerance": {}, "pass": { "type": "boolean" } } } },
-    "verdict": { "enum": ["PASS", "FAIL"] },
-    "banner": { "type": "object", "description": "ValidationReport banner (AD-17)" }
-  }, "required": ["is_valid", "measured", "verdict"] } }
+    "object": { "type": "string", "description": "immutable Name; omit = the document's first object" },
+    "checks": { "type": "array", "items": { "type": "object" },
+      "description": "{fn, expect, tol?, select?, select_a?, select_b?, direction?}; omit = measurement-only report" },
+    "anchor_frame": { "type": "object", "properties": {
+      "kind": { "enum": ["base_sketch_plane", "largest_planar_face", "named_datum"] },
+      "ref": { "type": ["string", "null"], "description": "object Name, else unique Label; null for largest_planar_face" }
+    }, "required": ["kind"], "additionalProperties": false,
+      "description": "omit = global frame" }
+  }, "required": ["doc"], "additionalProperties": false },
+  "result": "ValidationReport (AD-17): one Check {id, measured, expected, tolerance, passed, detail} per entry; banner.anchor_frame records the resolved frame" }
 ```
 
-Failure of any assertion → envelope `status: "SPEC_FAILED"`. Tolerances are never tighter than `Shape.getTolerance` (spine numeric-tolerance convention).
+**Vocabulary.** `fn` is closed: the eleven `verification-design.md` §7.2 primitives
+(`is_valid_solid`, `count_cylindrical_holes`, `hole_diameter`, `hole_position`, `hole_spacing`,
+`hole_through`, `distance_between`, `angle_between`, `expect_bbox`, `expect_extent`,
+`expect_volume`), named in `contracts.ASSERTION_FNS` and measured by `usecases/assertions.py`, plus
+`expect_solid_count`, `expect_valid` and `expect_watertight`. A §7.2 check id is `assert.<fn>`.
+Selector, `hole_diameter` and empty-match semantics follow `benchmarks/g3/README.md` §Assertion
+vocabulary. `expect_bbox` compares sorted extents measured in the frame; `expect_extent` measures
+along one frame `direction`.
+
+**Anchor frame.** `base_sketch_plane` and `named_datum` resolve `ref` to that object's global
+placement. `largest_planar_face` takes the largest planar face (ties: lowest centroid Z, then
+lowest mapped name; without mapped names, lowest centroid X, then Y), with its origin at the face
+centroid, +Z from the face into the part, and in-plane X along document X projected onto the face
+(document Y when that projection is degenerate). The shape is measured in document coordinates.
+
+**Failures.** An unknown `fn`, a key the `fn` does not take, a sub-element index selector
+(`Face6`), a wrong `expect` arity or a malformed `anchor_frame` raises `ValidationError` →
+envelope `INVALID_INPUT`. A selector that matches nothing, or a frame that does not resolve, fails
+that check with `detail.code = invalid_input.unsupported_assertion` (verdict `INVALID_INPUT`);
+checks that do not need the frame are still measured. Any other failed check → `SPEC_FAILED`.
+Tolerances default to linear ±0.05 mm, angle ±0.1°, volume ±1 %, and are never tighter than
+`Shape.getTolerance` (spine numeric-tolerance convention).
 
 ### 3.4 `verify_sketch` (shape per DoF research §5; AD-8)
 

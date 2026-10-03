@@ -22,7 +22,7 @@ from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.marshal import Marshal, ThreadExecutor
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.contracts import RenderPort, ViewportPort, with_framing_text
+from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, RenderPort, ViewportPort, with_framing_text
 from freecad_buddy.usecases import debug_exec as debug_exec_uc
 from freecad_buddy.usecases import (
     confirm,
@@ -1231,11 +1231,23 @@ def tool_specs() -> list[ToolSpec]:
                     "doc": _DOC_SCHEMA,
                     "object": {"type": "string"},
                     "checks": {"type": "array", "items": {"type": "object"}},
+                    "anchor_frame": {
+                        "type": "object",
+                        "properties": {
+                            "kind": {"enum": sorted(ANCHOR_FRAME_KINDS)},
+                            "ref": {"type": ["string", "null"]},
+                        },
+                        "required": ["kind"],
+                        "additionalProperties": False,
+                    },
                 },
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Measure a shape against expect_volume/bbox/solid_count/valid/watertight.",
+            "Measure a shape against the closed assertion vocabulary (is_valid_solid, "
+            "count_cylindrical_holes, hole_diameter/position/spacing/through, distance_between, "
+            "angle_between, expect_bbox/extent/volume, expect_solid_count/valid/watertight) in "
+            "an anchor_frame {kind: named_datum|base_sketch_plane|largest_planar_face, ref}.",
         ),
         _query_method(
             "verify_sketch",

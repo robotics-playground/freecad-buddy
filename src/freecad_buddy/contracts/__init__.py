@@ -3,7 +3,14 @@
 Single import surface for the data contract types and helpers.
 """
 
-from freecad_buddy.contracts.assertions import AnchorFrame
+from freecad_buddy.contracts.assertions import (
+    ANCHOR_FRAME_KINDS,
+    ASSERTION_FNS,
+    AnchorFrame,
+    AnchorFrameKind,
+    AssertionFn,
+    DeclaredAnchorFrame,
+)
 from freecad_buddy.contracts.audit import AuditRecord
 from freecad_buddy.contracts.capabilities import CapabilityBanner
 from freecad_buddy.contracts.confirm import ApprovalRecord, Confirm, PreviewTokenPayload
@@ -101,8 +108,12 @@ from freecad_buddy.contracts.sketch import (
 from freecad_buddy.contracts.status import ErrorDetail, JobState, TerminalStatus
 
 __all__ = [
+    "ANCHOR_FRAME_KINDS",
+    "ASSERTION_FNS",
     "AnchorFrame",
+    "AnchorFrameKind",
     "ApprovalRecord",
+    "AssertionFn",
     "AuditRecord",
     "BBoxDelta",
     "CapabilityBanner",
@@ -114,6 +125,7 @@ __all__ = [
     "ConstraintType",
     "CountDelta",
     "DatumKind",
+    "DeclaredAnchorFrame",
     "DiffCounts",
     "DiffDeltas",
     "DiffRender",

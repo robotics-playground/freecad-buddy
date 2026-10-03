@@ -80,7 +80,10 @@ _USECASES = SRC / "freecad_buddy" / "usecases"
 # score_g2_validators.VALIDATOR_SOURCES and runner._VALIDATOR_SOURCES so a clean working tree reads
 # as CURRENT rather than stale whichever path last wrote the block.
 VALIDATOR_SOURCES = {
-    "assertions": (REPO_ROOT / "benchmarks" / "harness" / "assertions.py",),
+    "assertions": (
+        REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
+        _USECASES / "assertions.py",
+    ),
     "run_mutation": (_USECASES / "transaction.py",),
     "fingerprint": (_USECASES / "fingerprint.py",),
     "audit_references": (_USECASES / "tnp_guard.py",),
