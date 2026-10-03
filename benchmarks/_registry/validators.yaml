@@ -159,12 +159,12 @@ verify_sketch:
 
 verify_render_tone:
   suite: g0/render-fault-injection/
-  validator_sha: "98828bab6f514bcbf1ece4b0d8b313dfe6ce4c8d464c7adbfee979b1d84b259a"
+  validator_sha: "016f1204c553a3f58ba0de51eaebb61a8658511f1a3606a85b2d9bb6ffefac7a"
   last_run:
-    run_id: rt-2026-09-13-1
+    run_id: rt-2026-10-03-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-09-13
+    date: 2026-10-03
     wilson_ci:
       rate: 1.0
       low: 0.6097

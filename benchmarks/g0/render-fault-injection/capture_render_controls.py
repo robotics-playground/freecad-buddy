@@ -33,6 +33,10 @@ SIZE = 240
 # The same explicit quaternion the in-FreeCAD camera sweep uses for `custom`.
 CUSTOM_QUAT = (0.2, 0.3, 0.1, 0.9273618)
 
+VIEW_PREFERENCES = "User parameter:BaseApp/Preferences/View"
+SHAPE_COLOR_KEY = "DefaultShapeColor"
+STOCK_SHAPE_COLOR = 0xCCCCE6FF
+
 
 def main() -> int:
     mode, reason = render_capability()
@@ -40,23 +44,37 @@ def main() -> int:
         sys.stderr.write(f"  no render context: {reason}\n")
         return 1
 
-    document = App.newDocument("render_controls")
-    box = document.addObject("Part::Box", "Box")
-    box.Length, box.Width, box.Height = BOX_L, BOX_W, BOX_H
-    document.recompute()
+    # Pin FreeCAD's stock box color so the captures do not depend on the developer's profile.
+    preferences = App.ParamGet(VIEW_PREFERENCES)
+    saved_color = (
+        preferences.GetUnsigned(SHAPE_COLOR_KEY)
+        if SHAPE_COLOR_KEY in preferences.GetUnsigneds()
+        else None
+    )
+    preferences.SetUnsigned(SHAPE_COLOR_KEY, STOCK_SHAPE_COLOR)
+    try:
+        document = App.newDocument("render_controls")
+        box = document.addObject("Part::Box", "Box")
+        box.Length, box.Width, box.Height = BOX_L, BOX_W, BOX_H
+        document.recompute()
 
-    port = OffscreenRenderPort()
-    cameras = dict(screenshot._CAMERA_QUATS)
-    cameras["custom"] = CUSTOM_QUAT
+        port = OffscreenRenderPort()
+        cameras = dict(screenshot._CAMERA_QUATS)
+        cameras["custom"] = CUSTOM_QUAT
 
-    for name, orientation in sorted(cameras.items()):
-        directory = HERE / f"clean-control-{name}"
-        directory.mkdir(parents=True, exist_ok=True)
-        scene = SceneSpec(objects=["Box"], orientation=orientation, width=SIZE, height=SIZE)
-        port.render(document, scene, str(directory / "render.png"))
-        sys.stderr.write(f"  captured clean-control-{name}/render.png\n")
+        for name, orientation in sorted(cameras.items()):
+            directory = HERE / f"clean-control-{name}"
+            directory.mkdir(parents=True, exist_ok=True)
+            scene = SceneSpec(objects=["Box"], orientation=orientation, width=SIZE, height=SIZE)
+            port.render(document, scene, str(directory / "render.png"))
+            sys.stderr.write(f"  captured clean-control-{name}/render.png\n")
 
-    App.closeDocument(document.Name)
+        App.closeDocument(document.Name)
+    finally:
+        if saved_color is None:
+            preferences.RemUnsigned(SHAPE_COLOR_KEY)
+        else:
+            preferences.SetUnsigned(SHAPE_COLOR_KEY, saved_color)
     return 0
 
 
