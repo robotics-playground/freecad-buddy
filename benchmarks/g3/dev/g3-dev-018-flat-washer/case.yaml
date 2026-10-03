@@ -1,0 +1,29 @@
+id: g3-dev-018-flat-washer
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = pi*(10.5^2 - 5.15^2)*2 = 526.075 mm^3
+# bbox = 21 x 21 x 2
+# one logical hole through the 2 mm thickness
+# wall: a washer is concentric, (21 - 10.3)/2 = 5.35 mm
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the wall check. Without it a bore off the washer axis passed.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  An M10 flat washer: 21 mm outside diameter, 10.3 mm bore and 2 mm thick.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-018-flat-washer.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 526.075, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [21.0, 21.0, 2.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_diameter, expect: 10.3, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 10.3}}, select_b: {face: {diameter: 21.0}}, expect: 5.35, tol: {abs: 0.05}}

@@ -95,8 +95,8 @@ development_status:
   3-7-confirmation-flow-verified-undo: done
   3-8-gate-g2-exit: done
   epic-3-retrospective: optional
-  epic-4: backlog
-  4-1-entry-gate-g3e-spec-set-assertions-fault-suite: backlog
+  epic-4: in-progress
+  4-1-entry-gate-g3e-spec-set-assertions-fault-suite: review
   4-2-assertion-primitives: backlog
   4-3-drawing-generator: backlog
   4-4-parametric-editability: backlog

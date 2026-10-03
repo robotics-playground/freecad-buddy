@@ -1,0 +1,41 @@
+id: g3-dev-014-extrusion-end-cap
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 20*20*5 - pi*2.75^2*5 = 2000 - 118.791 = 1881.209 mm^3
+# bbox = 20 x 20 x 5
+# one centred hole through the 5 mm thickness
+# edge distances: the hole at the centre of the 20 mm square is 10 - 2.75 = 7.25 mm from
+# the -X and -Y edge faces
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the two distance_between checks. The reused hole_position (0, 0) only pins the hole to
+# the frame origin, so an off-centre hole on a plate placed to put that hole at the origin
+# passed.
+# It adds a requirement the spec text states and relaxes none.
+#
+# Placement amendment, made after the reverted designer code existed: the sentence placing
+# the plate centred on the origin. Without it the reused hole_position (0, 0) graded a
+# centring the spec did not state, and failed a correct plate placed elsewhere. The hole
+# position (0, 0) follows: the hole is at the centre of a plate centred on the origin.
+spec: >-
+  An end cap for 20 mm by 20 mm aluminium extrusion: a 20 mm square plate 5 mm thick with a
+  single 5.5 mm through hole at the centre. Model the plate centred on the origin of the base
+  sketch plane.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-014-extrusion-end-cap.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 1881.209, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [20.0, 20.0, 5.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_diameter, expect: 5.5, tol: {abs: 0.05}}
+    - {fn: hole_position, expect: [0.0, 0.0], tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 5.5}}, select_b: {face: {normal: [-1, 0, 0]}}, expect: 7.25, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 5.5}}, select_b: {face: {normal: [0, -1, 0]}}, expect: 7.25, tol: {abs: 0.05}}

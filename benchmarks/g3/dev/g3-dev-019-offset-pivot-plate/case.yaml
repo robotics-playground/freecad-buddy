@@ -1,0 +1,40 @@
+id: g3-dev-019-offset-pivot-plate
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 60*60*6 - pi*5^2*6 = 21600 - 471.239 = 21128.761 mm^3
+# the hole centre is (20, 15) in the named corner datum's frame, by statement
+# an off-centre hole is why this spec declares a named_datum: under a largest_planar_face frame
+# the origin would be the face centre and (20, 15) would name a different point
+# bbox = 60 x 60 x 6
+# the datum sits on a plate corner with the plate's two edges from it along +X and +Y, so
+# the hole wall is 20 - 5 = 15 mm from the -X edge face and 15 - 5 = 10 mm from the -Y
+# edge face; these hold wherever the datum object itself was placed
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the datum's name and corner in the spec text, and the two distance_between checks.
+# Without them a datum placed anywhere but the corner passed: hole_position is
+# measured from the datum, so it reads (20, 15) wherever the datum is.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  A 60 mm square pivot plate 6 mm thick. A single 10 mm through hole is positioned 20 mm along X
+  and 15 mm along Y from the plate's corner datum. The hole is deliberately off-centre. The
+  corner datum is a coordinate system named PlateCornerDatum on one corner of the plate, with
+  the plate's two edges from that corner running along its +X and +Y axes.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-019-offset-pivot-plate.yaml
+assertions:
+  anchor_frame: {kind: named_datum, ref: 'PlateCornerDatum'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 21128.761, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [60.0, 60.0, 6.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_diameter, expect: 10.0, tol: {abs: 0.05}}
+    - {fn: hole_position, expect: [20.0, 15.0], tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 10.0}}, select_b: {face: {normal: [-1, 0, 0]}}, expect: 15.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 10.0}}, select_b: {face: {normal: [0, -1, 0]}}, expect: 10.0, tol: {abs: 0.05}}

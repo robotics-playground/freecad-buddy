@@ -1,0 +1,87 @@
+id: g3-fault-plan-hole-on-wrong-face
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan sketches the bore on a side face instead of the top face the spec names. The hole
+    is the right diameter and the right depth, but its axis is perpendicular to the intended
+    one. The block is placed with that side face on the XZ plane, which the spec's
+    largest-planar-face frame does not see. Three steps differ from a top-face build: step 3
+    places the block at y 0..50 so its side face lies on XZ, step 5 sketches the bore on XZ,
+    and step 6 puts the bore centre at mid-height. Step 5 is marked as the defect; steps 3 and 6
+    follow from it.
+  expectation: DETECT
+corruption_class: topology
+spec_ref: g3-dev-007-jig-block-blind-bore
+detected_by: hole_position
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 5
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-hole-on-wrong-face}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: BlockSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BlockSketch
+      geometry:
+        - {kind: line_segment, start: [-25.0, 0.0], end: [25.0, 0.0]}
+        - {kind: line_segment, start: [25.0, 0.0], end: [25.0, 50.0]}
+        - {kind: line_segment, start: [25.0, 50.0], end: [-25.0, 50.0]}
+        - {kind: line_segment, start: [-25.0, 50.0], end: [-25.0, 0.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 50.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 50.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+        - {type: PointOnObject, first: 0, first_pos: 1, second: -1}
+  # [4]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: BlockSketch
+      name: Block
+      length: {value: 25.0, unit: mm}
+      reversed: true
+  # [5] planted defect: bore sketched on the XZ plane, the block's side face
+  - {tool: sketch_create, args: {doc: '$doc', name: BoreSketch, plane: XZ, body: Body}}
+  # [6]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BoreSketch
+      geometry: [{kind: circle, center: [0.0, -12.5], radius: {value: 6.0, unit: mm}}]
+      constraints:
+        - {type: Radius, first: 0, value: {value: 6.0, unit: mm}}
+        - {type: PointOnObject, first: 0, first_pos: 3, second: -2}
+        - {type: DistanceY, first: 0, first_pos: 3, second: -1, second_pos: 1, value: {value: 12.5, unit: mm}}
+  # [7]
+  - tool: feature_pocket
+    args:
+      doc: '$doc'
+      body: Body
+      profile: BoreSketch
+      name: Bore
+      length: {value: 15.0, unit: mm}
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-hole-on-wrong-face.yaml

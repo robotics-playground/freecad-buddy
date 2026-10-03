@@ -1,0 +1,129 @@
+id: g3-fault-plan-control-equivalent-step-order
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: clean_control
+  description: >-
+    A faithful plan that pads the upper half of the block before the lower half, the reverse of
+    pocket-before-pad's lower-half-first order, and cuts the slot last. Reordering the two pads
+    preserves the geometry; moving the pocket ahead of a pad does not. A guard that flags any
+    reorder fails here; only measuring the produced part separates the two.
+  expectation: PASS_CLEAN
+corruption_class: none
+spec_ref: g3-dev-012-clamp-pad-slot
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. A clean control has no defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-control-equivalent-step-order}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: LowerSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: LowerSketch
+      geometry:
+        - {kind: line_segment, start: [-20.0, -20.0], end: [20.0, -20.0]}
+        - {kind: line_segment, start: [20.0, -20.0], end: [20.0, 20.0]}
+        - {kind: line_segment, start: [20.0, 20.0], end: [-20.0, 20.0]}
+        - {kind: line_segment, start: [-20.0, 20.0], end: [-20.0, -20.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 40.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 40.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+  # [4]
+  - {tool: sketch_create, args: {doc: '$doc', name: UpperSketch, plane: XY, body: Body}}
+  # [5]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: UpperSketch
+      geometry:
+        - {kind: line_segment, start: [-20.0, -20.0], end: [20.0, -20.0]}
+        - {kind: line_segment, start: [20.0, -20.0], end: [20.0, 20.0]}
+        - {kind: line_segment, start: [20.0, 20.0], end: [-20.0, 20.0]}
+        - {kind: line_segment, start: [-20.0, 20.0], end: [-20.0, -20.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 40.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 40.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+  # [6]
+  - {tool: sketch_create, args: {doc: '$doc', name: SlotSketch, plane: XY, body: Body}}
+  # [7]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: SlotSketch
+      geometry:
+        - {kind: line_segment, start: [-10.0, -25.0], end: [10.0, -25.0]}
+        - {kind: line_segment, start: [10.0, -25.0], end: [10.0, 25.0]}
+        - {kind: line_segment, start: [10.0, 25.0], end: [-10.0, 25.0]}
+        - {kind: line_segment, start: [-10.0, 25.0], end: [-10.0, -25.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 50.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 10.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+  # [8]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: UpperSketch
+      name: UpperHalf
+      length: {value: 10.0, unit: mm}
+  # [9]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: LowerSketch
+      name: LowerHalf
+      length: {value: 10.0, unit: mm}
+      reversed: true
+  # [10]
+  - tool: feature_pocket
+    args:
+      doc: '$doc'
+      body: Body
+      profile: SlotSketch
+      name: Slot
+      length: {value: 10.0, unit: mm}
+      reversed: true
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-control-equivalent-step-order.yaml

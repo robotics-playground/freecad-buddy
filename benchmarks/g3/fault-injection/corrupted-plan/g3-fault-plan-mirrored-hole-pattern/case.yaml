@@ -1,0 +1,87 @@
+id: g3-fault-plan-mirrored-hole-pattern
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan places the lever arm's hole pattern mirrored about the arm's mid-length, so the 12 mm
+    pivot bore and the 8 mm linkage hole swap ends. Both holes exist at the right spacing and the
+    right diameters; only which end each sits at is wrong.
+  expectation: DETECT
+corruption_class: topology
+spec_ref: g3-dev-011-lever-arm
+detected_by: hole_position
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 6
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-mirrored-hole-pattern}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: ArmSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: ArmSketch
+      geometry:
+        - {kind: line_segment, start: [-15.0, -10.0], end: [75.0, -10.0]}
+        - {kind: line_segment, start: [75.0, -10.0], end: [75.0, 10.0]}
+        - {kind: line_segment, start: [75.0, 10.0], end: [-15.0, 10.0]}
+        - {kind: line_segment, start: [-15.0, 10.0], end: [-15.0, -10.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 90.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 20.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 15.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 10.0, unit: mm}}
+  # [4]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: ArmSketch
+      name: Arm
+      length: {value: 8.0, unit: mm}
+      reversed: true
+  # [5]
+  - {tool: sketch_create, args: {doc: '$doc', name: BoreSketch, plane: XY, body: Body}}
+  # [6] planted defect: pivot circle at x=60, linkage circle at the origin
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BoreSketch
+      geometry:
+        - {kind: circle, center: [60.0, 0.0], radius: {value: 6.0, unit: mm}}
+        - {kind: circle, center: [0.0, 0.0], radius: {value: 4.0, unit: mm}}
+      constraints:
+        - {type: Radius, first: 0, value: {value: 6.0, unit: mm}}
+        - {type: DistanceX, first: -1, first_pos: 1, second: 0, second_pos: 3, value: {value: 60.0, unit: mm}}
+        - {type: PointOnObject, first: 0, first_pos: 3, second: -1}
+        - {type: Radius, first: 1, value: {value: 4.0, unit: mm}}
+        - {type: Coincident, first: 1, first_pos: 3, second: -1, second_pos: 1}
+  # [7]
+  - tool: feature_pocket
+    args:
+      doc: '$doc'
+      body: Body
+      profile: BoreSketch
+      name: Bores
+      up_to: ThroughAll
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-mirrored-hole-pattern.yaml

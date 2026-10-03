@@ -1,0 +1,36 @@
+id: g3-dev-006-bearing-base-pad
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 70*30*10 - 2*pi*4.5^2*10 = 21000 - 1272.345 = 19727.655 mm^3
+# holes 50 mm apart symmetric about centre -> each sits 10 mm from its end ((70-50)/2 = 10)
+# bbox = 70 x 30 x 10
+# edge distances: hole wall to each end face = 10 - 4.5 = 5.5 mm; on the centreline of
+# the 30 mm width, hole wall to each side face = 15 - 4.5 = 10.5 mm
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the four distance_between checks. Without them a hole pair off the centreline, or
+# 50 mm apart but not symmetric about the pad centre, passed.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  The base pad of a pillow-block bearing housing: a 70 mm by 30 mm pad, 10 mm thick, with two 9
+  mm mounting holes on the long centreline, 50 mm apart and symmetric about the pad centre.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-006-bearing-base-pad.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 19727.655, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [70.0, 30.0, 10.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 2}
+    - {fn: hole_spacing, expect: 50.0, tol: {abs: 0.05}}
+    - {fn: hole_diameter, expect: 9.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 9.0}}, select_b: {face: {normal: [-1, 0, 0]}}, expect: 5.5, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 9.0}}, select_b: {face: {normal: [1, 0, 0]}}, expect: 5.5, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 9.0}}, select_b: {face: {normal: [0, -1, 0]}}, expect: 10.5, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 9.0}}, select_b: {face: {normal: [0, 1, 0]}}, expect: 10.5, tol: {abs: 0.05}}

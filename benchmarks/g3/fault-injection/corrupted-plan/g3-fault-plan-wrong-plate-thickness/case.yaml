@@ -1,0 +1,96 @@
+id: g3-fault-plan-wrong-plate-thickness
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan pads the base sketch 8 mm where the spec states 6 mm. The part is a valid solid of
+    the right outline and hole pattern; only thickness and volume are wrong.
+  expectation: DETECT
+corruption_class: value
+spec_ref: g3-dev-001-mounting-plate
+detected_by: expect_bbox
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 4
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-wrong-plate-thickness}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: PlateSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: PlateSketch
+      geometry:
+        - {kind: line_segment, start: [-40.0, -30.0], end: [40.0, -30.0]}
+        - {kind: line_segment, start: [40.0, -30.0], end: [40.0, 30.0]}
+        - {kind: line_segment, start: [40.0, 30.0], end: [-40.0, 30.0]}
+        - {kind: line_segment, start: [-40.0, 30.0], end: [-40.0, -30.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 80.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 60.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 40.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 30.0, unit: mm}}
+  # [4] planted defect: 8 mm where the spec states 6 mm
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: PlateSketch
+      name: Plate
+      length: {value: 8.0, unit: mm}
+      reversed: true
+  # [5]
+  - {tool: sketch_create, args: {doc: '$doc', name: HoleSketch, plane: XY, body: Body}}
+  # [6]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: HoleSketch
+      geometry:
+        - {kind: circle, center: [-30.0, -20.0], radius: {value: 2.75, unit: mm}}
+        - {kind: circle, center: [-30.0, 20.0], radius: {value: 2.75, unit: mm}}
+        - {kind: circle, center: [30.0, -20.0], radius: {value: 2.75, unit: mm}}
+        - {kind: circle, center: [30.0, 20.0], radius: {value: 2.75, unit: mm}}
+      constraints:
+        - {type: Radius, first: 0, value: {value: 2.75, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 3, second: -1, second_pos: 1, value: {value: 30.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 3, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+        - {type: Radius, first: 1, value: {value: 2.75, unit: mm}}
+        - {type: DistanceX, first: 1, first_pos: 3, second: -1, second_pos: 1, value: {value: 30.0, unit: mm}}
+        - {type: DistanceY, first: -1, first_pos: 1, second: 1, second_pos: 3, value: {value: 20.0, unit: mm}}
+        - {type: Radius, first: 2, value: {value: 2.75, unit: mm}}
+        - {type: DistanceX, first: -1, first_pos: 1, second: 2, second_pos: 3, value: {value: 30.0, unit: mm}}
+        - {type: DistanceY, first: 2, first_pos: 3, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+        - {type: Radius, first: 3, value: {value: 2.75, unit: mm}}
+        - {type: DistanceX, first: -1, first_pos: 1, second: 3, second_pos: 3, value: {value: 30.0, unit: mm}}
+        - {type: DistanceY, first: -1, first_pos: 1, second: 3, second_pos: 3, value: {value: 20.0, unit: mm}}
+  # [7]
+  - tool: feature_hole
+    args:
+      doc: '$doc'
+      body: Body
+      profile: HoleSketch
+      name: ClearanceHoles
+      diameter: {value: 5.5, unit: mm}
+      depth_type: ThroughAll
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-wrong-plate-thickness.yaml

@@ -1,0 +1,39 @@
+id: g3-dev-017-counterbored-boss
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# through hole removes pi*3.25^2*20 = 663.661
+# counterbore removes the extra annulus pi*(5.5^2-3.25^2)*6 = 371.101
+# volume = 30*30*20 - both = 16965.238 mm^3
+# the counterbore is a larger coaxial cylinder on the same axis, so rule 4 of
+# verification-design 7.3 merges it into ONE logical hole -> count = 1
+# bbox = 30 x 30 x 20
+# anchor face: bottom 30*30 - pi*3.25^2 = 866.817 mm^2 beats the top 30*30 - pi*5.5^2 =
+# 804.967 mm^2 and each side 30*20 = 600 mm^2; its centroid is the boss axis, so the
+# through hole and the counterbore both sit at (0, 0) with their axis on the frame normal
+# a selector diameter matches a logical hole when any of its coaxial cylinders has it
+# (verification-design 7.3 rule 4), so 11.0 picks the counterbore
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the two hole_position checks and the hole_diameter check. Without them a hole off
+# the boss axis, with its counterbore coaxial to it, passed.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  A 30 mm square mounting boss 20 mm tall with a counterbored hole on its axis for an M6
+  socket-head screw: a 6.5 mm through hole with an 11 mm counterbore 6 mm deep in the top face.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-017-counterbored-boss.yaml
+assertions:
+  anchor_frame: {kind: largest_planar_face, ref: null}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 16965.238, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [30.0, 30.0, 20.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_through, expect: true}
+    - {fn: hole_diameter, select: {axis: [0, 0, 1]}, expect: 6.5, tol: {abs: 0.05}}
+    - {fn: hole_position, select: {diameter: 6.5, axis: [0, 0, 1]}, expect: [0.0, 0.0], tol: {abs: 0.05}}
+    - {fn: hole_position, select: {diameter: 11.0, axis: [0, 0, 1]}, expect: [0.0, 0.0], tol: {abs: 0.05}}

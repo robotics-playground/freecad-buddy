@@ -52,9 +52,9 @@ from benchmarks.harness.verdict import (  # noqa: E402
 from freecad_buddy.contracts.report import Check, require_wilson_ci_for_rates  # noqa: E402
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
-KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2"}
+KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2", "G3": "g3"}
 # Gates carrying a sealed held-out split. G0's suites are all open by design.
-_SEALABLE_GATES = frozenset({"G1", "G2"})
+_SEALABLE_GATES = frozenset({"G1", "G2", "G3"})
 
 _EXIT_USAGE = 2
 _EXIT_FAIL = 1
@@ -75,6 +75,7 @@ _EXIT_REPEATS = 10
 _FAULT_SCORERS = {
     "G1": Path("benchmarks") / "g1" / "fault-injection" / "score_grader.py",
     "G2": Path("benchmarks") / "g2" / "fault-injection" / "score_g2_validators.py",
+    "G3": Path("benchmarks") / "g3" / "fault-injection" / "score_g3_validators.py",
 }
 
 # The repeats a G2 dev run drives each command at (R=5, the G2.1 criterion's declared R).
@@ -826,10 +827,31 @@ def _g2_exit_precondition() -> None:
         )
 
 
-_EXIT_EVALUATORS = {"G1": _g1_exit_eval, "G2": _g2_exit_eval}
+def _g3_exit_eval(extract_dir: Path, run_dir: Path):
+    """Run G3's held-out eval; unreachable until the external agent harness actor lands.
+
+    Driving a held-out spec needs the actor the runner spawns (Story 4.5), so this stub only
+    raises. ``_g3_exit_precondition`` refuses first, so the set is never unsealed to reach it.
+    """
+    raise UsageError("G3 exit evaluation is not reachable without the external agent harness")
+
+
+def _g3_exit_precondition() -> None:
+    """Refuse every G3 exit before the unseal while ``_g3_exit_eval`` is the stub.
+
+    :raises UsageError: while the held-out evaluator is unimplemented.
+    """
+    if _EXIT_EVALUATORS.get("G3") is _g3_exit_eval:
+        raise UsageError(
+            "G3 --exit has no held-out evaluator: _g3_exit_eval is the unimplemented stub, so "
+            "the set would be unsealed for a run that measures nothing"
+        )
+
+
+_EXIT_EVALUATORS = {"G1": _g1_exit_eval, "G2": _g2_exit_eval, "G3": _g3_exit_eval}
 
 # Checked before the unseal: an exit that cannot be evaluated must not spend an unseal event.
-_EXIT_PRECONDITIONS = {"G2": _g2_exit_precondition}
+_EXIT_PRECONDITIONS = {"G2": _g2_exit_precondition, "G3": _g3_exit_precondition}
 
 
 def run_exit_command(gate: str, run_id: str) -> int:

@@ -1,0 +1,12 @@
+artifact: g3/dev/g3-dev-019-offset-pivot-plate/case
+kind: part-spec
+# A spec is a written requirement, not a shipped .FCStd: the artifact this manifest
+# binds to is the case.yaml above. check_provenance resolves a part-spec manifest
+# against <artifact>.yaml rather than <artifact>.FCStd.
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: >-
+  Adjustable pivot plate from a machine guard hinge; the off-centre pivot is the design intent,
+  which is why the spec names a corner datum rather than the centre.
+license_checked: {by: TanNT, date: 2026-09-13}

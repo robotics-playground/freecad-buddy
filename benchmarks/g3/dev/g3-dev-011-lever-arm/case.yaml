@@ -1,0 +1,37 @@
+id: g3-dev-011-lever-arm
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 90*20*8 - pi*6^2*8 - pi*4^2*8 = 14400 - 904.779 - 402.124 = 13093.097 mm^3
+# hole centre spacing = 90 - 15 - 15 = 60 mm
+# bbox = 90 x 20 x 8
+# positions in the base sketch plane frame: the pivot bore is centred on the origin, so (0, 0);
+# the arm runs along +X and the linkage hole is the 60 mm spacing further along it, so (60, 0)
+#
+# The placement sentence and both hole_position checks were ADDED after the reverted designer
+# code existed (DW-122). Without them the part has no handedness in its frame: swapping which
+# end carries which bore is the same part turned 180 degrees, and volume, bbox, count, spacing
+# and through-ness are all unchanged by the swap. Stating where the pivot sits gives a swapped
+# build a position to violate. Like g3-dev-002 (DW-129), this amends an entry-gate spec after
+# implementation existed; it adds a requirement and relaxes nothing.
+spec: >-
+  A lever arm from 8 mm plate, 90 mm long and 20 mm wide. A 12 mm pivot bore sits on the
+  centreline 15 mm from one end, and an 8 mm linkage hole sits on the centreline 15 mm from the
+  other end. Both holes go through. Model the arm on the base sketch plane with the pivot bore
+  centred on the origin and the arm running along +X.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-011-lever-arm.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 13093.097, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [90.0, 20.0, 8.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 2}
+    - {fn: hole_spacing, expect: 60.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: hole_position, select: {diameter: 12.0}, expect: [0.0, 0.0], tol: {abs: 0.05}}
+    - {fn: hole_position, select: {diameter: 8.0}, expect: [60.0, 0.0], tol: {abs: 0.05}}

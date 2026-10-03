@@ -1,0 +1,11 @@
+artifact: g3/fault-injection/corrupted-plan/g3-fault-plan-wrong-plate-thickness/case
+kind: fault-case
+# A fault case ships a recorded plan or planted run evidence, not a geometry file: the artifact
+# this manifest binds to is the case.yaml above. check_provenance resolves a fault-case manifest
+# against <artifact>.yaml rather than <artifact>.FCStd.
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: >-
+  Corrupts g3-dev-001: the mounting plate cut from 8 mm stock instead of 6 mm.
+license_checked: {by: claude-agent (not the operator), date: 2026-10-03}

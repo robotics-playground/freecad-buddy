@@ -669,13 +669,13 @@ A user hands over a written part spec and an agent returns an editable parametri
    **When** the gate runs against a stub
    **Then** every criterion fails honestly with `INVALID_INPUT`, never a vacuous pass
 
-2. **Given** each spec's declared anchor frame (named datum | base sketch plane | largest planar face with its tie-break)
-   **When** the frame resolves on the floor and primary FreeCAD legs
-   **Then** it resolves identically on both, or the spec is broken rather than the part failing
+2. **Given** the corrupted-plan fault suite (≥10 planted recorded plans plus clean controls, every G3 threat countered by a planted case)
+   **When** the structural check runs
+   **Then** it passes, and it fails naming the case or threat when any of those properties is broken
 
-3. **Given** the corrupted-plan fault suite (≥10 planted spec violations plus clean controls)
-   **When** scored
-   **Then** sensitivity ≥95 % and false-alarm ≤5 %, recorded with the validator hash
+3. **Given** the G3 entry gate
+   **When** its entry items are read
+   **Then** a recorded reuse survey exists, naming what was reused from earlier work, what was rejected, and why
 
 ### Story 4.2: Assertion Primitives
 
@@ -684,6 +684,12 @@ A user hands over a written part spec and an agent returns an editable parametri
 - The spec assertion vocabulary measures geometry — surface typing, axis/radius/spacing, bbox/volume — in the declared anchor frame, through one shared resolver.
 - Feature metadata is a diagnostic hint only; sub-element index selectors are refused in a spec.
 - An assertion that cannot be evaluated reports a failing `INVALID_INPUT` check, never a silent skip.
+- **Given** each spec's declared anchor frame (named datum | base sketch plane | largest planar face with its tie-break)
+  **When** the frame resolves on the floor and primary FreeCAD legs
+  **Then** it resolves identically on both, or the spec is broken rather than the part failing
+- **Given** the corrupted-plan fault suite (≥10 planted spec violations plus clean controls)
+  **When** scored
+  **Then** sensitivity ≥95 % and false-alarm ≤5 %, recorded with the validator hash
 
 ### Story 4.3: Drawing Generator
 

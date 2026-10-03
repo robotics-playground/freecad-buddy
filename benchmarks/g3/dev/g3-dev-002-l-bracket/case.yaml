@@ -1,0 +1,71 @@
+id: g3-dev-002-l-bracket
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# plate = 60*40*5 (horizontal) + 45*40*5 (vertical above the shared 5 mm) = 12000 + 9000 = 21000
+# hole = pi*4.5^2*5 = 318.086256 mm^3 through the 5 mm vertical leg
+# volume = 21000 - 318.086256 = 20681.913744 mm^3
+# bbox = 60 (X) x 40 (Y) x 50 (Z): the vertical leg sets Z, the horizontal sets X
+# the two leg faces are perpendicular by construction -> angle_between = 90 deg
+#
+# The clearance hole was ADDED to this spec, and the addition is deliberate (DW-127). Without it
+# the part is achiral: the vertical leg spans the full 40 mm width, so the solid is symmetric
+# about its own mid-plane in Y and a mirrored build is the same part turned 180 degrees about the
+# vertical axis. Measured — mirror the bare L, rotate it 180 degrees about Z, intersect with the
+# original, and the common volume is the full 21000 mm^3. That made
+# `g3-fault-visual-mirrored-part` unpassable: its defect was not a defect, and flagging it would
+# have contradicted `g3-fault-visual-control-symmetric-part-either-hand`, which expects
+# PASS_CLEAN on a genuinely symmetric part. Stating the hole and the edge it is measured from
+# gives the spec a handedness for a mirror to violate.
+#
+# Amending a dev spec is AD-19-sensitive, so note what it costs: any sensitivity previously
+# measured over this spec is STALE, because the population changed. No such number is recorded —
+# `visual_judge` is `not_scored` — and the assertion set below is still hand-derived from the
+# spec text, never captured from a tool, which is the property AD-19 protects.
+#
+# frame placement (stated below): underside on the plane, horizontal leg along +X, the
+# vertical leg at its -X end rising along +Z. Viewed with the horizontal leg pointing
+# towards you (looking along -X, +Z up), the left-hand edge is the -Y side face.
+# hole wall to the -Y side face = 12 - 9/2 = 7.5 mm; to the underside = 30 - 9/2 = 25.5 mm
+# hole_position is not used: the hole axis runs along X, parallel to the anchor plane, so
+# it projects onto the plane as a line rather than a point
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the placement sentence and the two distance_between checks. Without them a bracket
+# drilled 12 mm in from the RIGHT-hand edge, or at the wrong height, passed: the hole
+# count, diameter and volume are the same either way. The DW-127 paragraph above (the hole
+# amendment itself is recorded as DW-129) names two visual-judge fault cases and a
+# `visual_judge` validator. None of them was restored: they belonged to the reverted judge.
+# With the edge-distance check the geometry leg now catches a mirrored build on its own.
+# It adds a requirement the spec text states and relaxes none.
+# angle_between selectors: the vertical leg rises perpendicular to the horizontal leg, so its
+# back face (outward normal -X) meets the underside (outward normal -Z) at 90 deg
+#
+# Selector amendment, made after the reverted designer code existed: the angle_between check
+# gained `select_a` and `select_b`. verification-design 7.2 signs it with two selectors, so
+# without them it could not be evaluated and failed a faithful part. It relaxes nothing.
+spec: >-
+  An L-shaped angle bracket in 5 mm plate. The horizontal leg is 60 mm long and 40 mm wide. The
+  vertical leg rises 50 mm from the same 40 mm width, perpendicular to the horizontal leg. The
+  two legs share the corner, so the overall height is 50 mm. Drill one 9 mm clearance hole
+  through the vertical leg, 30 mm above the base and 12 mm in from the left-hand edge when the
+  bracket is viewed with the horizontal leg pointing towards you. Model the bracket with its
+  underside on the base sketch plane, the horizontal leg running along +X and the vertical leg
+  at its -X end rising along +Z.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-002-l-bracket.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 20681.913744, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [60.0, 40.0, 50.0], tol: {abs: 0.05}}
+    - {fn: angle_between, select_a: {face: {normal: [0, 0, -1]}}, select_b: {face: {normal: [-1, 0, 0]}}, expect: 90.0, tol: {abs: 0.1}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_diameter, expect: 9.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 9.0}}, select_b: {face: {normal: [0, -1, 0]}}, expect: 7.5, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 9.0}}, select_b: {face: {normal: [0, 0, -1]}}, expect: 25.5, tol: {abs: 0.05}}

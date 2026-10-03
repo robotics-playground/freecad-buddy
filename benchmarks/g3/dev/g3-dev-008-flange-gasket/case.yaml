@@ -1,0 +1,40 @@
+id: g3-dev-008-flange-gasket
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# ring volume = pi*(50^2 - 30^2)*2 = 10053.096 mm^3
+# six bolt holes remove 6*pi*4^2*2 = 603.186 mm^3
+# volume = 9449.911 mm^3
+# bolt-hole chord on an 80 mm PCD with 6 holes = 2*40*sin(pi/6) = 40.000 mm
+# 7 logical holes: the 60 mm bore plus the six 8 mm bolt holes
+# by diameter: one 60 mm bore and six 8 mm bolt holes
+# pitch circle: each bolt axis is 80/2 = 40 mm from the bore axis, and six holes spaced
+# evenly on it are 2*40*sin(pi/6) = 40 mm from their nearest neighbour
+# wall: the bore is concentric with the outside diameter, (100 - 60)/2 = 20 mm
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the checks by diameter, the pitch-circle checks and the wall check. Without them
+# seven holes of the right total area in any layout passed: only the count and the
+# volume were declared.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  A flange gasket ring 2 mm thick, 100 mm outside diameter with a 60 mm bore. Six 8 mm bolt
+  holes are spaced evenly on an 80 mm pitch circle.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-008-flange-gasket.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 9449.911, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [100.0, 100.0, 2.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 7}
+    - {fn: hole_through, expect: true}
+    - {fn: count_cylindrical_holes, select: {diameter: 60.0}, expect: 1}
+    - {fn: count_cylindrical_holes, select: {diameter: 8.0}, expect: 6}
+    - {fn: hole_spacing, select_a: {hole: {diameter: 60.0}}, select_b: {hole: {diameter: 8.0}}, expect: 40.0, tol: {abs: 0.05}}
+    - {fn: hole_spacing, select: {diameter: 8.0}, expect: 40.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 60.0}}, select_b: {face: {diameter: 100.0}}, expect: 20.0, tol: {abs: 0.05}}

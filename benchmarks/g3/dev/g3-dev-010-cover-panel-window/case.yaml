@@ -1,0 +1,32 @@
+id: g3-dev-010-cover-panel-window
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = 120*80*3 - 60*30*3 = 28800 - 5400 = 23400 mm^3
+# the window is rectangular, so no cylindrical hole is created -> count = 0
+# bbox = 120 x 80 x 3
+# window centred: material between the window and each outside edge is (120 - 60)/2 = 30
+# mm along X and (80 - 30)/2 = 25 mm along Y. A face with outward normal -X is either the
+# outside -X edge or the window's +X wall, so each +X face's nearest -X face is 30 mm away
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the two distance_between checks. Without them a window of the right size cut
+# off-centre passed.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  An enclosure cover panel 120 mm by 80 mm and 3 mm thick with a rectangular window 60 mm by 30
+  mm cut through the centre of the panel.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-010-cover-panel-window.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 23400.0, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [120.0, 80.0, 3.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 0}
+    - {fn: distance_between, select_a: {face: {normal: [-1, 0, 0]}}, select_b: {face: {normal: [1, 0, 0]}}, expect: 30.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {face: {normal: [0, -1, 0]}}, select_b: {face: {normal: [0, 1, 0]}}, expect: 25.0, tol: {abs: 0.05}}

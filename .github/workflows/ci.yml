@@ -27,6 +27,15 @@ jobs:
           if uv run python benchmarks/runner.py --gate G1 --stub; then
             echo "G1 runner unexpectedly green (should fail honestly against the stub)"; exit 1;
           fi
+      - name: Entry gate G3 fails honestly against the stub (AD-19)
+        # Exit 1 is the honest criterion failure; 2 is a usage/loader error and must not pass.
+        run: |
+          set +e
+          uv run python benchmarks/runner.py --gate G3 --stub
+          code=$?
+          if [ "$code" -ne 1 ]; then
+            echo "G3 stub run exited $code, expected exactly 1 (honest failure)"; exit 1;
+          fi
       - name: G1 grader clears sensitivity/FA bars (deterministic, no network)
         run: uv run python benchmarks/g1/fault-injection/score_grader.py --check
       - name: G1 read-only profile guarantee (G1.6, offline)

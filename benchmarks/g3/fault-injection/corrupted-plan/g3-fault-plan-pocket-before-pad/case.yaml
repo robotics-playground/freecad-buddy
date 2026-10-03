@@ -1,0 +1,131 @@
+id: g3-fault-plan-pocket-before-pad
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan runs the slot pocket after the lower half of the block is padded but before the
+    upper half. The pocket cuts empty space, and the upper pad then fills the region the slot
+    should occupy, so the finished block has no slot. Every step and every dimension is the one
+    equivalent-step-order uses; only their order is wrong.
+  expectation: DETECT
+corruption_class: ordering
+spec_ref: g3-dev-012-clamp-pad-slot
+detected_by: expect_volume
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 9
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-pocket-before-pad}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: LowerSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: LowerSketch
+      geometry:
+        - {kind: line_segment, start: [-20.0, -20.0], end: [20.0, -20.0]}
+        - {kind: line_segment, start: [20.0, -20.0], end: [20.0, 20.0]}
+        - {kind: line_segment, start: [20.0, 20.0], end: [-20.0, 20.0]}
+        - {kind: line_segment, start: [-20.0, 20.0], end: [-20.0, -20.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 40.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 40.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+  # [4]
+  - {tool: sketch_create, args: {doc: '$doc', name: UpperSketch, plane: XY, body: Body}}
+  # [5]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: UpperSketch
+      geometry:
+        - {kind: line_segment, start: [-20.0, -20.0], end: [20.0, -20.0]}
+        - {kind: line_segment, start: [20.0, -20.0], end: [20.0, 20.0]}
+        - {kind: line_segment, start: [20.0, 20.0], end: [-20.0, 20.0]}
+        - {kind: line_segment, start: [-20.0, 20.0], end: [-20.0, -20.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 40.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 40.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+  # [6]
+  - {tool: sketch_create, args: {doc: '$doc', name: SlotSketch, plane: XY, body: Body}}
+  # [7]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: SlotSketch
+      geometry:
+        - {kind: line_segment, start: [-10.0, -25.0], end: [10.0, -25.0]}
+        - {kind: line_segment, start: [10.0, -25.0], end: [10.0, 25.0]}
+        - {kind: line_segment, start: [10.0, 25.0], end: [-10.0, 25.0]}
+        - {kind: line_segment, start: [-10.0, 25.0], end: [-10.0, -25.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 50.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 10.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+  # [8]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: LowerSketch
+      name: LowerHalf
+      length: {value: 10.0, unit: mm}
+      reversed: true
+  # [9] planted defect: the slot pocket runs before the upper half it should cut exists
+  - tool: feature_pocket
+    args:
+      doc: '$doc'
+      body: Body
+      profile: SlotSketch
+      name: Slot
+      length: {value: 10.0, unit: mm}
+      reversed: true
+  # [10]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: UpperSketch
+      name: UpperHalf
+      length: {value: 10.0, unit: mm}
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-pocket-before-pad.yaml

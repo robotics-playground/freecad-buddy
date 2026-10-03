@@ -1,0 +1,18 @@
+id: g3-threat-banner-actor-mismatch
+gate: g3
+criterion: G3.1
+fault:
+  kind: planted_defect
+  description: >-
+    A run driven by one actor model whose report banner names a different one. A rate read off
+    this run would be cited for the wrong actor, so the citation is refused. A check that reads
+    the rate without comparing the banner's actor id against the run's actor fails this case.
+  expectation: DETECT
+spec_ref: g3-dev-001-mounting-plate
+# The planted state is the report banner, not the part: the part is the faithful control's build.
+plan_ref: g3-fault-plan-control-faithful-mounting-plate
+planted_evidence: {run_actor_model: actor-model-a, banner_actor_model: actor-model-b}
+# The run evidence this case plants is read by the Story 4.5 collector, so the fixture is
+# declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-threat-banner-actor-mismatch.yaml

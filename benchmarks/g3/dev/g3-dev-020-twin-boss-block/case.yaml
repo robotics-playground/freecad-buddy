@@ -1,0 +1,50 @@
+id: g3-dev-020-twin-boss-block
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# base = 80*30*10 = 24000; bosses add 2*pi*7^2*12 = 3694.513
+# each 6 mm hole runs 10 (block) + 12 (boss) = 22 mm; two remove 2*pi*3^2*22 = 1244.071
+# volume = 26450.442 mm^3
+# boss axis spacing 50 mm, symmetric about the 80 mm centre -> each 15 mm from its end
+# ((80-50)/2 = 15)
+# total height = 10 + 12 = 22 mm; bbox = 80 x 30 x 22
+# the bosses are NOT holes (material lies inside their cylinders, rule 1), so the hole count is
+# the two 6 mm bores only
+# symmetric about the block centre: each boss face is 15 - 7 = 8 mm from its end face
+# hole through each boss: hole wall to boss face = (14 - 6)/2 = 4 mm
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the boss-to-end checks and the hole-to-boss check. Without them bosses 50 mm apart
+# but nearer one end, or holes off the boss axes, passed.
+# It adds a requirement the spec text states and relaxes none.
+# boss-to-boss distance_between: the axes are 50 mm apart and each boss face sits 14/2 = 7 mm
+# off its axis, so the two boss faces are 50 - 7 - 7 = 36 mm apart
+#
+# Selector amendment, made after the reverted designer code existed: the reused
+# distance_between check carried no selectors and expected 50, the axis spacing. That value is
+# already graded by hole_spacing, and distance_between measures face to face, so the check now
+# names both boss faces and expects 36. verification-design 7.2 signs it with two selectors;
+# without them it could not be evaluated and failed a faithful part. It relaxes nothing.
+spec: >-
+  A spacer block 80 mm by 30 mm and 10 mm thick carrying two cylindrical bosses on its top face.
+  Each boss is 14 mm in diameter and 12 mm tall, and their axes are 50 mm apart, symmetric about
+  the block centre. A 6 mm hole runs through each boss and the block beneath it.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-020-twin-boss-block.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 26450.442, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [80.0, 30.0, 22.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 2}
+    - {fn: hole_spacing, expect: 50.0, tol: {abs: 0.05}}
+    - {fn: hole_diameter, expect: 6.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {face: {diameter: 14.0}}, select_b: {face: {diameter: 14.0}}, expect: 36.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {face: {diameter: 14.0}}, select_b: {face: {normal: [-1, 0, 0]}}, expect: 8.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {face: {diameter: 14.0}}, select_b: {face: {normal: [1, 0, 0]}}, expect: 8.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {hole: {diameter: 6.0}}, select_b: {face: {diameter: 14.0}}, expect: 4.0, tol: {abs: 0.05}}

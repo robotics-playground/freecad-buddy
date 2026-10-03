@@ -1,0 +1,53 @@
+id: g3-fault-plan-missing-bolt-holes
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan builds the gasket ring and its 60 mm bore but omits the six bolt holes the spec
+    requires: its profile carries the outside diameter and the bore circle only. The part is a
+    clean valid solid that simply lacks a required feature.
+  expectation: DETECT
+corruption_class: omission
+spec_ref: g3-dev-008-flange-gasket
+detected_by: count_cylindrical_holes
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 3
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-missing-bolt-holes}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: GasketSketch, plane: XY, body: Body}}
+  # [3] planted defect: the six bolt-hole circles are left out of the profile
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: GasketSketch
+      geometry:
+        - {kind: circle, center: [0.0, 0.0], radius: {value: 50.0, unit: mm}}
+        - {kind: circle, center: [0.0, 0.0], radius: {value: 30.0, unit: mm}}
+      constraints:
+        - {type: Radius, first: 0, value: {value: 50.0, unit: mm}}
+        - {type: Coincident, first: 0, first_pos: 3, second: -1, second_pos: 1}
+        - {type: Radius, first: 1, value: {value: 30.0, unit: mm}}
+        - {type: Coincident, first: 1, first_pos: 3, second: -1, second_pos: 1}
+  # [4]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: GasketSketch
+      name: Gasket
+      length: {value: 2.0, unit: mm}
+      reversed: true
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-missing-bolt-holes.yaml

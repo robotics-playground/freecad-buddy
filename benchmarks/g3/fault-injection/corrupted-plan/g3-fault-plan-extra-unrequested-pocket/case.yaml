@@ -1,0 +1,111 @@
+id: g3-fault-plan-extra-unrequested-pocket
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan adds a lightening pocket to the cover panel that the spec never asked for. Every
+    stated feature is present and correct; the part carries one that is not.
+  expectation: DETECT
+corruption_class: insertion
+spec_ref: g3-dev-010-cover-panel-window
+detected_by: expect_volume
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 7
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-extra-unrequested-pocket}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: PanelSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: PanelSketch
+      geometry:
+        - {kind: line_segment, start: [-60.0, -40.0], end: [60.0, -40.0]}
+        - {kind: line_segment, start: [60.0, -40.0], end: [60.0, 40.0]}
+        - {kind: line_segment, start: [60.0, 40.0], end: [-60.0, 40.0]}
+        - {kind: line_segment, start: [-60.0, 40.0], end: [-60.0, -40.0]}
+        - {kind: line_segment, start: [-30.0, -15.0], end: [30.0, -15.0]}
+        - {kind: line_segment, start: [30.0, -15.0], end: [30.0, 15.0]}
+        - {kind: line_segment, start: [30.0, 15.0], end: [-30.0, 15.0]}
+        - {kind: line_segment, start: [-30.0, 15.0], end: [-30.0, -15.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 120.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 80.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 60.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 40.0, unit: mm}}
+        - {type: Coincident, first: 4, first_pos: 2, second: 5, second_pos: 1}
+        - {type: Coincident, first: 5, first_pos: 2, second: 6, second_pos: 1}
+        - {type: Coincident, first: 6, first_pos: 2, second: 7, second_pos: 1}
+        - {type: Coincident, first: 7, first_pos: 2, second: 4, second_pos: 1}
+        - {type: Horizontal, first: 4}
+        - {type: Horizontal, first: 6}
+        - {type: Vertical, first: 5}
+        - {type: Vertical, first: 7}
+        - {type: DistanceX, first: 4, value: {value: 60.0, unit: mm}}
+        - {type: DistanceY, first: 5, value: {value: 30.0, unit: mm}}
+        - {type: DistanceX, first: 4, first_pos: 1, second: -1, second_pos: 1, value: {value: 30.0, unit: mm}}
+        - {type: DistanceY, first: 4, first_pos: 1, second: -1, second_pos: 1, value: {value: 15.0, unit: mm}}
+  # [4]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: PanelSketch
+      name: Panel
+      length: {value: 3.0, unit: mm}
+      reversed: true
+  # [5]
+  - {tool: sketch_create, args: {doc: '$doc', name: LighteningSketch, plane: XY, body: Body}}
+  # [6]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: LighteningSketch
+      geometry:
+        - {kind: line_segment, start: [35.0, -10.0], end: [55.0, -10.0]}
+        - {kind: line_segment, start: [55.0, -10.0], end: [55.0, 10.0]}
+        - {kind: line_segment, start: [55.0, 10.0], end: [35.0, 10.0]}
+        - {kind: line_segment, start: [35.0, 10.0], end: [35.0, -10.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 20.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 20.0, unit: mm}}
+        - {type: DistanceX, first: -1, first_pos: 1, second: 0, second_pos: 1, value: {value: 35.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 10.0, unit: mm}}
+  # [7] planted defect: a 20 x 20 x 1.5 mm pocket the spec never asks for
+  - tool: feature_pocket
+    args:
+      doc: '$doc'
+      body: Body
+      profile: LighteningSketch
+      name: LighteningPocket
+      length: {value: 1.5, unit: mm}
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-extra-unrequested-pocket.yaml

@@ -1,0 +1,11 @@
+artifact: g3/fault-injection/threat-counters/g3-threat-banner-actor-mismatch/case
+kind: fault-case
+# A fault case ships a recorded plan or planted run evidence, not a geometry file: the artifact
+# this manifest binds to is the case.yaml above. check_provenance resolves a fault-case manifest
+# against <artifact>.yaml rather than <artifact>.FCStd.
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: >-
+  Counter case for the G3 threat 'rate cited for the wrong actor': a banner whose actor id differs from the run's actor.
+license_checked: {by: claude-agent (not the operator), date: 2026-10-03}

@@ -1,0 +1,101 @@
+id: g3-fault-plan-control-named-datum-honoured
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: clean_control
+  description: >-
+    A faithful plan that measures the offsets from the named corner datum the spec declares.
+    Pairs with datum-origin-swapped: identical operation list, correct frame.
+  expectation: PASS_CLEAN
+corruption_class: none
+spec_ref: g3-dev-019-offset-pivot-plate
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. A clean control has no defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-control-named-datum-honoured}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: DatumSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: DatumSketch
+      geometry: [{kind: point, center: [25.0, 30.0]}]
+      constraints:
+        - {type: DistanceX, first: -1, first_pos: 1, second: 0, second_pos: 1, value: {value: 25.0, unit: mm}}
+        - {type: DistanceY, first: -1, first_pos: 1, second: 0, second_pos: 1, value: {value: 30.0, unit: mm}}
+  # [4]
+  - tool: feature_datum
+    args:
+      doc: '$doc'
+      body: Body
+      name: PlateCornerDatum
+      kind: cs
+      attachment: {kind: mapped_name, object: DatumSketch, mapped_name: Vertex1}
+      map_mode: Translate
+  # [5]
+  - {tool: sketch_create, args: {doc: '$doc', name: PlateSketch, plane: XY, body: Body}}
+  # [6]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: PlateSketch
+      geometry:
+        - {kind: line_segment, start: [25.0, 30.0], end: [85.0, 30.0]}
+        - {kind: line_segment, start: [85.0, 30.0], end: [85.0, 90.0]}
+        - {kind: line_segment, start: [85.0, 90.0], end: [25.0, 90.0]}
+        - {kind: line_segment, start: [25.0, 90.0], end: [25.0, 30.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 60.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 60.0, unit: mm}}
+        - {type: DistanceX, first: -1, first_pos: 1, second: 0, second_pos: 1, value: {value: 25.0, unit: mm}}
+        - {type: DistanceY, first: -1, first_pos: 1, second: 0, second_pos: 1, value: {value: 30.0, unit: mm}}
+  # [7]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: PlateSketch
+      name: Plate
+      length: {value: 6.0, unit: mm}
+      reversed: true
+  # [8]
+  - {tool: sketch_create, args: {doc: '$doc', name: HoleSketch, plane: XY, body: Body}}
+  # [9]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: HoleSketch
+      geometry: [{kind: circle, center: [45.0, 45.0], radius: {value: 5.0, unit: mm}}]
+      constraints:
+        - {type: Radius, first: 0, value: {value: 5.0, unit: mm}}
+        - {type: DistanceX, first: -1, first_pos: 1, second: 0, second_pos: 3, value: {value: 45.0, unit: mm}}
+        - {type: DistanceY, first: -1, first_pos: 1, second: 0, second_pos: 3, value: {value: 45.0, unit: mm}}
+  # [10]
+  - tool: feature_hole
+    args:
+      doc: '$doc'
+      body: Body
+      profile: HoleSketch
+      name: PivotHole
+      diameter: {value: 10.0, unit: mm}
+      depth_type: ThroughAll
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-control-named-datum-honoured.yaml

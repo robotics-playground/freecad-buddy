@@ -1,0 +1,11 @@
+artifact: g3/dev/g3-dev-016-perforated-cover/case
+kind: part-spec
+# A spec is a written requirement, not a shipped .FCStd: the artifact this manifest
+# binds to is the case.yaml above. check_provenance resolves a part-spec manifest
+# against <artifact>.yaml rather than <artifact>.FCStd.
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: >-
+  Electrical-enclosure ventilation cover; a perforated sheet part.
+license_checked: {by: TanNT, date: 2026-09-13}

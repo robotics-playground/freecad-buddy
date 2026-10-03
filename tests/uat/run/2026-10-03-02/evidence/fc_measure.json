@@ -1,0 +1,601 @@
+[
+ {
+  "doc": "g3-fault-plan-blind-hole-made-through",
+  "tip": "Bore",
+  "volume": 59672.567,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -25.0,
+   25.0,
+   -25.0,
+   25.0,
+   -25.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 12.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "area": 942.478
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-control-equivalent-step-order",
+  "tip": "Slot",
+  "volume": 24000.0,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -20.0,
+   20.0,
+   -20.0,
+   20.0,
+   -10.0,
+   10.0
+  ],
+  "cylinders": []
+ },
+ {
+  "doc": "g3-fault-plan-control-faithful-mounting-plate",
+  "tip": "ClearanceHoles",
+  "volume": 28229.801,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -40.0,
+   40.0,
+   -30.0,
+   30.0,
+   -6.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 103.673
+   },
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 103.673
+   },
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     20.0,
+     0.0
+    ],
+    "area": 103.673
+   },
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     20.0,
+     0.0
+    ],
+    "area": 103.673
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-control-named-datum-honoured",
+  "tip": "PivotHole",
+  "volume": 21128.761,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   25.0,
+   85.0,
+   30.0,
+   90.0,
+   -6.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 10.0,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     45.0,
+     45.0,
+     0.0
+    ],
+    "area": 188.496
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-control-tolerance-edge-hole",
+  "tip": "ClearanceHoles",
+  "volume": 28221.477,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -40.0,
+   40.0,
+   -30.0,
+   30.0,
+   -6.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 5.54,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 104.427
+   },
+   {
+    "d": 5.54,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 104.427
+   },
+   {
+    "d": 5.54,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     20.0,
+     0.0
+    ],
+    "area": 104.427
+   },
+   {
+    "d": 5.54,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     20.0,
+     0.0
+    ],
+    "area": 104.427
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-datum-origin-swapped",
+  "tip": "PivotHole",
+  "volume": 21128.761,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   25.0,
+   85.0,
+   30.0,
+   90.0,
+   -6.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 10.0,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     75.0,
+     75.0,
+     0.0
+    ],
+    "area": 188.496
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-extra-unrequested-pocket",
+  "tip": "LighteningPocket",
+  "volume": 22800.0,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -60.0,
+   60.0,
+   -40.0,
+   40.0,
+   -3.0,
+   0.0
+  ],
+  "cylinders": []
+ },
+ {
+  "doc": "g3-fault-plan-hole-on-wrong-face",
+  "tip": "Bore",
+  "volume": 60803.54,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -25.0,
+   25.0,
+   0.0,
+   50.0,
+   -25.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 12.0,
+    "axis": [
+     0.0,
+     -1.0,
+     -0.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     -12.5
+    ],
+    "area": 565.487
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-mirrored-hole-pattern",
+  "tip": "Bores",
+  "volume": 13093.097,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -15.0,
+   75.0,
+   -10.0,
+   10.0,
+   -8.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 8.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "area": 201.062
+   },
+   {
+    "d": 12.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     60.0,
+     0.0,
+     0.0
+    ],
+    "area": 301.593
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-missing-bolt-holes",
+  "tip": "Gasket",
+  "volume": 10053.096,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -49.838,
+   50.0,
+   -49.959,
+   49.959,
+   -2.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 100.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "area": 628.319
+   },
+   {
+    "d": 60.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "area": 376.991
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-pocket-before-pad",
+  "tip": "UpperHalf",
+  "volume": 32000.0,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -20.0,
+   20.0,
+   -20.0,
+   20.0,
+   -10.0,
+   10.0
+  ],
+  "cylinders": []
+ },
+ {
+  "doc": "g3-fault-plan-radius-for-diameter",
+  "tip": "Collar",
+  "volume": 6785.84,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -20.0,
+   20.0,
+   -20.0,
+   20.0,
+   -15.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 40.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "area": 1884.956
+   },
+   {
+    "d": 32.0,
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "center": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "area": 1507.964
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-wrong-hole-diameter",
+  "tip": "ClearanceHoles",
+  "volume": 27593.628,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -40.0,
+   40.0,
+   -30.0,
+   30.0,
+   -6.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 8.0,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 150.796
+   },
+   {
+    "d": 8.0,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 150.796
+   },
+   {
+    "d": 8.0,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     20.0,
+     0.0
+    ],
+    "area": 150.796
+   },
+   {
+    "d": 8.0,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     20.0,
+     0.0
+    ],
+    "area": 150.796
+   }
+  ]
+ },
+ {
+  "doc": "g3-fault-plan-wrong-plate-thickness",
+  "tip": "ClearanceHoles",
+  "volume": 37639.735,
+  "valid": true,
+  "solids": 1,
+  "bbox": [
+   -40.0,
+   40.0,
+   -30.0,
+   30.0,
+   -8.0,
+   0.0
+  ],
+  "cylinders": [
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 138.23
+   },
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     -20.0,
+     0.0
+    ],
+    "area": 138.23
+   },
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     -30.0,
+     20.0,
+     0.0
+    ],
+    "area": 138.23
+   },
+   {
+    "d": 5.5,
+    "axis": [
+     -0.0,
+     -0.0,
+     -1.0
+    ],
+    "center": [
+     30.0,
+     20.0,
+     0.0
+    ],
+    "area": 138.23
+   }
+  ]
+ }
+]

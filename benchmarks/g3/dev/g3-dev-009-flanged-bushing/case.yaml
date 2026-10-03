@@ -1,0 +1,36 @@
+id: g3-dev-009-flanged-bushing
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# flange = pi*15^2*4 = 2827.433; body = pi*9^2*16 = 4071.504
+# bore removes pi*5^2*20 = 1570.796
+# volume = 5328.141 mm^3
+# bbox = 30 x 30 x 20 (the flange sets both planar extents, the total length sets Z)
+# the bore is one logical hole even though the wall is stepped: coaxial grouping merges the
+# flange bore face and the body bore face (verification-design 7.3 rule 2)
+# walls: turned from one piece, so bore, body and flange share one axis; bore wall to
+# body face = (18 - 10)/2 = 4 mm, body face to flange face = (30 - 18)/2 = 6 mm
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the two wall checks. Without them a bore or a body off the flange axis passed.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  A flanged bushing turned from one piece. The flange is 30 mm in diameter and 4 mm thick. The
+  body is 18 mm in diameter and extends a further 16 mm from the flange. A 10 mm bore runs
+  through the whole 20 mm length.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-009-flanged-bushing.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XZ_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 5328.141, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [30.0, 30.0, 20.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_diameter, expect: 10.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 10.0}}, select_b: {face: {diameter: 18.0}}, expect: 4.0, tol: {abs: 0.05}}
+    - {fn: distance_between, select_a: {face: {diameter: 18.0}}, select_b: {face: {diameter: 30.0}}, expect: 6.0, tol: {abs: 0.05}}

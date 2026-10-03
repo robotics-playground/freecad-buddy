@@ -1,0 +1,31 @@
+id: g3-dev-003-shaft-collar
+gate: g3
+criterion: G3.1
+# Assertions hand-derived from the spec text below, never captured from a verify
+# tool (AD-13/AD-19). Derivations:
+# volume = pi*(20^2 - 8^2)*15 = pi*336*15 = 15833.627 mm^3
+# bbox = 40 x 40 x 15 (the OD sets both planar extents)
+# one logical hole: the 16 mm bore, through the 15 mm width
+# wall: an annular ring is concentric, so bore wall to outside face = (40 - 16)/2 = 12 mm
+#
+# Audit amendment, made after the reverted designer code existed (like DW-122 on 007/011):
+# the wall check. Without it an eccentric bore passed: volume, bbox, count, diameter
+# and through-ness do not change when the bore moves off the axis.
+# It adds a requirement the spec text states and relaxes none.
+spec: >-
+  A plain shaft collar: an annular ring 40 mm outside diameter, 16 mm bore and 15 mm wide. The
+  bore runs the full width of the collar.
+# The designer BUILDS this part from the spec text; there is no input document to
+# ship, so the case declares `fixture: none-spec-to-part`, which check_provenance exempts.
+fixture: none-spec-to-part
+provenance: ../../../_registry/provenance/g3-dev-003-shaft-collar.yaml
+assertions:
+  anchor_frame: {kind: base_sketch_plane, ref: 'XY_Plane'}
+  checks:
+    - {fn: is_valid_solid, expect: true}
+    - {fn: expect_volume, expect: 15833.627, tol: {rel: 0.001}}
+    - {fn: expect_bbox, expect: [40.0, 40.0, 15.0], tol: {abs: 0.05}}
+    - {fn: count_cylindrical_holes, expect: 1}
+    - {fn: hole_diameter, expect: 16.0, tol: {abs: 0.05}}
+    - {fn: hole_through, expect: true}
+    - {fn: distance_between, select_a: {hole: {diameter: 16.0}}, select_b: {face: {diameter: 40.0}}, expect: 12.0, tol: {abs: 0.05}}

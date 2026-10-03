@@ -1,0 +1,12 @@
+artifact: g3/dev/g3-dev-017-counterbored-boss/case
+kind: part-spec
+# A spec is a written requirement, not a shipped .FCStd: the artifact this manifest
+# binds to is the case.yaml above. check_provenance resolves a part-spec manifest
+# against <artifact>.yaml rather than <artifact>.FCStd.
+source:
+  kind: hand-authored
+  license: n/a-hand-authored
+real_world_basis: >-
+  M6 socket-head cap screw counterbore per ISO 4762 head clearance; a standard fastening
+  feature.
+license_checked: {by: TanNT, date: 2026-09-13}

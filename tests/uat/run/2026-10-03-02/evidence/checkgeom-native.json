@@ -1,0 +1,114 @@
+[
+ [
+  "blind-hole-made-through",
+  "DETECT",
+  59672.57,
+  59672.567,
+  60803.54,
+  "OUT of band"
+ ],
+ [
+  "control-equivalent-step-order",
+  "PASS_CLEAN",
+  24000.0,
+  24000.0,
+  24000.0,
+  "in band"
+ ],
+ [
+  "control-faithful-mounting-plate",
+  "PASS_CLEAN",
+  28229.8,
+  28229.801,
+  28229.801,
+  "in band"
+ ],
+ [
+  "control-named-datum-honoured",
+  "PASS_CLEAN",
+  21128.76,
+  21128.761,
+  21128.761,
+  "in band"
+ ],
+ [
+  "control-tolerance-edge-hole",
+  "PASS_CLEAN",
+  28221.48,
+  28221.477,
+  28229.801,
+  "in band"
+ ],
+ [
+  "datum-origin-swapped",
+  "DETECT",
+  21128.76,
+  21128.761,
+  21128.761,
+  "in band"
+ ],
+ [
+  "extra-unrequested-pocket",
+  "DETECT",
+  22800.0,
+  22800.0,
+  23400.0,
+  "OUT of band"
+ ],
+ [
+  "hole-on-wrong-face",
+  "DETECT",
+  60803.54,
+  60803.54,
+  60803.54,
+  "in band"
+ ],
+ [
+  "mirrored-hole-pattern",
+  "DETECT",
+  13093.1,
+  13093.097,
+  13093.097,
+  "in band"
+ ],
+ [
+  "missing-bolt-holes",
+  "DETECT",
+  10053.1,
+  10053.096,
+  9449.911,
+  "OUT of band"
+ ],
+ [
+  "pocket-before-pad",
+  "DETECT",
+  32000.0,
+  32000.0,
+  24000.0,
+  "OUT of band"
+ ],
+ [
+  "radius-for-diameter",
+  "DETECT",
+  6785.84,
+  6785.84,
+  15833.627,
+  "OUT of band"
+ ],
+ [
+  "wrong-hole-diameter",
+  "DETECT",
+  27593.63,
+  27593.628,
+  28229.801,
+  "OUT of band"
+ ],
+ [
+  "wrong-plate-thickness",
+  "DETECT",
+  37639.73,
+  37639.735,
+  28229.801,
+  "OUT of band"
+ ]
+]

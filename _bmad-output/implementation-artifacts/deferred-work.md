@@ -1410,3 +1410,39 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-harness-copy-install-proxy-discovery.md`
   summary: The "MCP proxy not auto-started" log message tells the operator to run `uv sync`, which is the wrong fix for a built-copy install whose `repo-root.txt` marker is missing or stale.
   evidence: `_start_mcp_proxy` logs "no .venv/venv interpreter found next to the addon ... Create the project venv (uv sync) so the addon can find it". For a copy install the cause is the marker, and the fix is a rebuild with `scripts/build_addon.py`. Message text predates this spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: Six external tests fail at baseline because `benchmarks/_registry/validators.yaml` carries stale `validator_sha` rows for the G1 `grader` and the G2 `verify_sketch` validators, so the CI `External suite` step is red before any new change.
+  evidence: `test_gate_g1_exit.py` (2), `test_gate_g2_exit.py` (1) and `test_harness_g1.py` (3) fail identically at `029a886` in a clean worktree and on `feat/epic-4-spec-to-part`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: Story 4.2 must define `expect_bbox`/`expect_extent` axis order in the anchor frame (sorted extents or frame-axis order) before grading, because `g3-dev-009` on `XZ_Plane` expects `[30.0, 30.0, 20.0]` and a frame-axis reading of a revolve about the sketch v-axis gives `[30, 20, 30]`.
+  evidence: Unverified — settled by the 4.2 `expect_bbox` definition and a replay of 009 on both legs.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: Story 4.2's plan replayer must convert each `{tool, args}` plan step to the `PlanStep` tuple, bind `'$doc'` to the handle `document_create` returns, run preview/confirm (AD-5), and confirm the plan assumptions (body plane named `XY_Plane`, XZ sketch normal -Y, a pocket that cuts nothing is accepted, the `select: {diameter, axis}` selector syntax, and a `largest_planar_face` origin at the face centroid).
+  evidence: `scripted_backend.py:26` `PlanStep = tuple[str, dict]`; the G3 plans store mappings and have only passed schema checks, never a FreeCAD replay.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: The 16 G3 fault-case provenance manifests record `license_checked: {by: claude-agent (not the operator)}` and need an operator countersign.
+  evidence: `benchmarks/_registry/provenance/g3-fault-plan-*.yaml` and `g3-threat-*.yaml`; the license check is an agent self-attestation until the operator signs.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: The sealed G3 held-out split (7 specs) was restored without being re-read and may carry the same weak-assertion defect that DW-122 and review pass 1 fixed in the dev specs.
+  evidence: `benchmarks/g3/heldout/SEAL.json` `unseal_events: []`; reading the specs spends an unseal event, so the check belongs to the operator before the G3 exit run.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: Planted corrupted plans for specs 003, 007, 008, 010 and 011 have no faithful control, so Story 4.2 must prove each planted plan grades PASS_CLEAN with its planted step reverted before a DETECT on it counts toward sensitivity.
+  evidence: Only 3 of 10 planted plans are pinned to a control (`PAIRED_WITH_CONTROL` in `tests/external/test_g3_benchmark.py`); `hole-on-wrong-face` also differs from `blind-hole-made-through` at steps 3 and 6. Settled by a FreeCAD replay with the planted step reverted.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: `.github/workflows/ci.yml` is invalid YAML because a step name contains an unquoted `: ` (`name: G2 fault fixtures are all materialized (no 'fixture: pending')`), so GitHub cannot parse the workflow and no CI job runs.
+  evidence: `yaml.safe_load` on `029a886:.github/workflows/ci.yml` fails at that line; introduced by `74fa25f` (2026-07-31). Quoting the name fixes the parse; the G3 stub step added by this story parses once it is quoted.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: `view_fit_viewport` frames a 1.81 mm x 0.86 mm region (an all-grey viewport) on a document whose body holds a coordinate-system datum attached to a one-point sketch, while FreeCAD's own Fit all frames the 60 mm plate correctly.
+  evidence: Live FreeCAD 1.1.1, replay of `g3-fault-plan-control-named-datum-honoured`; `tests/uat/run/2026-10-03-02/evidence/07-named-datum-control.png` (after `view_fit_viewport`, status bar "1.81 mm x 0.86 mm") vs `08-named-datum-fitall.png` (after the Fit all toolbar button). The fit likely bounds a datum or sketch object, not the solid.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-4-1-entry-gate-g3e-spec-set-assertions-fault-suite.md`
+  summary: `g3-dev-007` expects the volume of a flat-bottomed 15 mm blind bore, but the prose does not say flat-bottomed, so a faithful build with `feature_hole` (118 degree drill point) fails `expect_volume` by 135.9 mm^3, outside the 0.1 % band.
+  evidence: Live replay: a `feature_hole` build of the bore gave 60667.63 mm^3 against the spec's 60803.54; the plans now use `feature_pocket`. Needs a spec decision: state "flat-bottomed" in the prose, or include the drill-point cone in the expected volume.

@@ -1,0 +1,81 @@
+id: g3-fault-plan-blind-hole-made-through
+gate: g3
+criterion: G3.4
+targets_validator: assertions@harness.assertions.evaluate
+fault:
+  kind: planted_defect
+  description: >-
+    The plan gives the bore a Through-All depth where the spec states a 15 mm blind depth in 25
+    mm of material. Diameter and position are correct.
+  expectation: DETECT
+corruption_class: value
+spec_ref: g3-dev-007-jig-block-blind-bore
+detected_by: hole_through
+# A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
+# issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
+# `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
+# The repository never generates or repairs a plan. Story 4.2 replays this one, and the spec's
+# own assertions grade the part it produces (AD-35). Detection must come from measuring that
+# part, never from reading the plan (AD-13).
+planted_step: 7
+plan:
+  # [0]
+  - {tool: document_create, args: {label: g3-fault-plan-blind-hole-made-through}}
+  # [1]
+  - {tool: feature_body_create, args: {doc: '$doc', name: Body}}
+  # [2]
+  - {tool: sketch_create, args: {doc: '$doc', name: BlockSketch, plane: XY, body: Body}}
+  # [3]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BlockSketch
+      geometry:
+        - {kind: line_segment, start: [-25.0, -25.0], end: [25.0, -25.0]}
+        - {kind: line_segment, start: [25.0, -25.0], end: [25.0, 25.0]}
+        - {kind: line_segment, start: [25.0, 25.0], end: [-25.0, 25.0]}
+        - {kind: line_segment, start: [-25.0, 25.0], end: [-25.0, -25.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 50.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 50.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+  # [4]
+  - tool: feature_pad
+    args:
+      doc: '$doc'
+      body: Body
+      profile: BlockSketch
+      name: Block
+      length: {value: 25.0, unit: mm}
+      reversed: true
+  # [5]
+  - {tool: sketch_create, args: {doc: '$doc', name: BoreSketch, plane: XY, body: Body}}
+  # [6]
+  - tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BoreSketch
+      geometry: [{kind: circle, center: [0.0, 0.0], radius: {value: 6.0, unit: mm}}]
+      constraints:
+        - {type: Radius, first: 0, value: {value: 6.0, unit: mm}}
+        - {type: Coincident, first: 0, first_pos: 3, second: -1, second_pos: 1}
+  # [7] planted defect: Through-All where the spec states a 15 mm blind depth
+  - tool: feature_pocket
+    args:
+      doc: '$doc'
+      body: Body
+      profile: BoreSketch
+      name: Bore
+      up_to: ThroughAll
+# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-fault-plan-blind-hole-made-through.yaml

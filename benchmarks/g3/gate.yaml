@@ -1,0 +1,117 @@
+# Declarative mirror of the G3 exit-criteria table (spec-freecad-buddy/phase-gates.md:83-88).
+# The gate runner READS this — it never hardcodes the criteria. In --stub mode every criterion
+# FAILS honestly (INVALID_INPUT): no actor drives a spec and no collector reads a run yet (AD-19).
+#
+# Fault suites live BESIDE the dev/heldout split, never inside it (validation-harness-design.md
+# §1): they validate validators and never count toward the G3.1 pass rate.
+
+gate: G3
+
+# The actor is an external agent harness the runner spawns as a separate process. It drives the
+# bridge over MCP and holds its own plan -> execute -> measure -> repair loop (AD-35); nothing in
+# this repository plans or repairs. The exact model id is recorded per run in the report banner,
+# and a cited rate is valid only for the actor that produced it.
+actor:
+  model: external-agent-harness
+  context: spec-to-part-actor
+  transport: mcp
+  profile: spec-to-part
+
+# Deterministic geometry assertions, re-executed by the runner against the stored part. Agent
+# claims are never echoed as results. The six §7.2 primitives `assertions.py` does not implement
+# yet land in Story 4.2, which also lands the anchor-frame resolver.
+grader:
+  model: deterministic-geometry-assertions
+  context: independent-grader
+  implementation: benchmarks/harness/assertions.py
+
+# Gate-level required human token (validation-harness-design.md §7), checked for PRESENCE at exit
+# (Story 4.5), not here.
+required_tokens: [spot_audit]
+
+# The sealed held-out split is unsealed only at Gate G3 exit (Story 4.5); dev iteration touches
+# dev/ only. The runner must never sweep g3/heldout/.
+verdict:
+  heldout: sealed
+
+# The G3.E entry items (phase-gates.md:77) and the story that owns each. G3.E stays open until
+# every item has landed; an item whose story has not landed reports INVALID_INPUT.
+entry:
+  - id: G3.E.1
+    item: "Spec set with compiled assertions in a declared anchor frame, failing honestly against a stub"
+    owner: "4.1"
+  - id: G3.E.2
+    item: "Corrupted-plan fault suite: >=10 planted plans plus clean controls, every threat countered"
+    owner: "4.1"
+  - id: G3.E.3
+    item: "Every spec's anchor frame resolves identically on the 1.0.x and 1.1.x legs"
+    owner: "4.2"
+  - id: G3.E.4
+    item: "Corrupted-plan suite scored at sensitivity >=95% / false-alarm <=5%, recorded with validator_sha"
+    owner: "4.2"
+  - id: G3.E.5
+    item: "Render and drawing path at the >=2048 px review floor"
+    owner: "4.3"
+  - id: G3.E.6
+    item: "The design-loop, visual-review and spec-to-assertions skills exist"
+    owner: "6.5"
+  - id: G3.E.7
+    item: "Recorded reuse survey (phase-gates.md:3): benchmarks/g3/reuse-survey.md"
+    owner: "4.1"
+
+# Threats -> counters (phase-gates.md:90). Each threat names the planted cases that counter it;
+# a threat with no existing planted counter case leaves the gate uncitable
+# (validation-harness-design.md §6).
+threats:
+  - id: plan_looks_professional_part_deviates
+    text: "Plan looks professional, part deviates"
+    counter: "Assertions authored independently of the plan, from the spec text"
+    counter_cases:
+      - g3-fault-plan-blind-hole-made-through
+      - g3-fault-plan-datum-origin-swapped
+      - g3-fault-plan-extra-unrequested-pocket
+      - g3-fault-plan-hole-on-wrong-face
+      - g3-fault-plan-mirrored-hole-pattern
+      - g3-fault-plan-missing-bolt-holes
+      - g3-fault-plan-pocket-before-pad
+      - g3-fault-plan-radius-for-diameter
+      - g3-fault-plan-wrong-hole-diameter
+      - g3-fault-plan-wrong-plate-thickness
+  - id: agent_stopped_from_lack_of_patience
+    text: "Agent stopped because it ran out of patience"
+    counter: "Done is assertions passing, never an iteration count: a plan that stops one feature short leaves a failing part"
+    counter_cases: [g3-fault-plan-missing-bolt-holes]
+  - id: part_never_looked_at
+    text: "Part never looked at"
+    counter: "G3.5 reads the evidence trail; a run with no visual findings is incomplete"
+    counter_cases: [g3-threat-no-visual-findings]
+  - id: rate_cited_for_wrong_actor
+    text: "Cited a Sonnet rate for an Opus run"
+    counter: "The banner carries the actor model id; a mismatched banner refuses the citation"
+    counter_cases: [g3-threat-banner-actor-mismatch]
+
+criteria:
+  - id: G3.1
+    text: "Spec benchmark: drive the spec set end to end, one human plan approval, R>=10 on the sealed held-out split; grade with the compiled assertions"
+    pass_rule: ">=70% pass within <=3 repairs; dev/held-out gap <=15pp"
+    cited_validators: [assertions]
+  - id: G3.2
+    text: "Parts are sound: read verify_shape / verify_sketch / recompute reports for every passing part"
+    pass_rule: "Valid watertight solid, recompute-clean, all sketches FullyConstrained"
+    cited_validators: [verify_shape, verify_sketch, verify_recompute]
+  - id: G3.3
+    text: "Parametric editability: change one driving parameter per passing part; recompute; re-verify"
+    pass_rule: ">=90% recompute clean with the change reflected"
+    cited_validators: [verify_recompute]
+  - id: G3.4
+    text: "Corrupted-plan detection: drive the >=10 planted corrupted plans through the same loop"
+    pass_rule: ">=9/10 spec violations detected; zero silent bad parts"
+    cited_validators: [assertions]
+  - id: G3.5
+    text: "Visual review performed: read the run workdir for every passing part"
+    pass_rule: "Per-part visual findings present; a run with no visual evidence is incomplete, not passing (AD-21)"
+    cited_validators: []
+  - id: G3.6
+    text: "Budget: read the per-part wall-clock from the report banner"
+    pass_rule: "<=10 min median across all repair iterations, model time included (AD-24)"
+    cited_validators: []

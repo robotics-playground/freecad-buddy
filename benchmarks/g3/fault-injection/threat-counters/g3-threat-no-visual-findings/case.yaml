@@ -1,0 +1,18 @@
+id: g3-threat-no-visual-findings
+gate: g3
+criterion: G3.5
+fault:
+  kind: planted_defect
+  description: >-
+    A faithful mounting plate whose geometry assertions all pass, in a run workdir that holds no
+    visual findings for it. The part was never looked at, so the run is incomplete rather than
+    passing (AD-21). A G3.5 read that takes a geometry pass as done fails this case.
+  expectation: DETECT
+spec_ref: g3-dev-001-mounting-plate
+# The planted state is the run workdir, not the part: the part is the faithful control's build.
+plan_ref: g3-fault-plan-control-faithful-mounting-plate
+planted_evidence: {visual_findings: absent}
+# The run evidence this case plants is read by the Story 4.5 collector, so the fixture is
+# declared pending.
+fixture: pending
+provenance: ../../../../_registry/provenance/g3-threat-no-visual-findings.yaml

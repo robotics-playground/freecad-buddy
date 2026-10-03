@@ -15,6 +15,12 @@ Additionally flags:
   - a manifest whose ``source.kind`` is a non-``hand-authored`` closed-set kind but is missing
     a non-empty ``source.url``, ``source.license``, or ``source.attribution``.
 
+A manifest declaring ``kind: part-spec`` or ``kind: fault-case`` binds to a written case rather
+than a geometry file, so its artifact id resolves against ``<artifact>.yaml`` (the case file)
+instead of ``<artifact>.FCStd``. A Phase 3 spec case declares ``fixture: none-spec-to-part``: the
+part is built from the spec text, so there is no input document, and the case is exempt from the
+fixture-presence rule.
+
 On any violation: print ``path -- rule`` and exit 1. Clean tree: exit 0.
 
 Importable: ``check_tree(benchmarks_root)`` returns a list[str] of violations (unit-testable).
@@ -145,6 +151,27 @@ def _declares_pending_fixture(case_yaml: Path) -> bool:
     return isinstance(data, dict) and data.get("fixture") == "pending"
 
 
+# The fixture state a spec-to-part case declares. Distinct from `pending` (a fixture that does not
+# exist yet): a written spec has no input document and never will.
+_SPEC_TO_PART_FIXTURE = "none-spec-to-part"
+
+# The manifest kinds that bind to a case file rather than a geometry file.
+_CASE_FILE_MANIFEST_KINDS = frozenset({"part-spec", "fault-case"})
+
+
+def _declares_spec_to_part(case_yaml: Path) -> bool:
+    """Whether a case declares that it ships a written spec and no input document.
+
+    The exemption requires the state to be *declared*, matching the ``fixture: pending`` rule: a
+    case that simply omits its fixture is still flagged.
+    """
+    try:
+        data = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return False
+    return isinstance(data, dict) and data.get("fixture") == _SPEC_TO_PART_FIXTURE
+
+
 def _is_text_case(case_yaml: Path) -> bool:
     """Whether a case is a text case (a planted answer the grader judges), carrying no fixture.
 
@@ -182,6 +209,7 @@ def _check_missing_fixtures(benchmarks_root: Path) -> list[str]:
         if (
             _is_text_case(case_yaml)
             or _declares_pending_fixture(case_yaml)
+            or _declares_spec_to_part(case_yaml)
             or _reuses_an_existing_document(case_yaml)
         ):
             continue
@@ -206,31 +234,49 @@ def check_tree(benchmarks_root: Path) -> list[str]:
         if manifest is None:
             violations.append(f"{rel} -- no provenance manifest (artifact id '{artifact_id}')")
             continue
-        source = manifest.get("source")
-        kind = source.get("kind") if isinstance(source, dict) else None
-        if kind not in CLOSED_SOURCE_KINDS:
-            violations.append(
-                f"{rel} -- source.kind '{kind}' not in closed set "
-                f"({', '.join(sorted(CLOSED_SOURCE_KINDS))})"
-            )
-        elif kind != "hand-authored":
-            for field in ("url", "license", "attribution"):
-                value = source.get(field)
-                if not (isinstance(value, str) and value.strip()):
-                    violations.append(
-                        f"{rel} -- source.{field} required for non-hand-authored kind '{kind}'"
-                    )
+        violations.extend(_check_source(manifest, rel))
 
     for artifact_id, manifest_path in sorted(manifest_paths.items()):
         if any(part in _EXCLUDED_DIRS for part in Path(artifact_id).parts):
             continue
-        if not (benchmarks_root / (artifact_id + ".FCStd")).is_file():
-            manifest_rel = manifest_path.relative_to(benchmarks_root).as_posix()
+        manifest_rel = manifest_path.relative_to(benchmarks_root).as_posix()
+        # A case-file manifest is never reached by the .FCStd walk above, so its source block is
+        # checked here.
+        if manifests[artifact_id].get("kind") in _CASE_FILE_MANIFEST_KINDS:
+            suffix = ".yaml"
+            violations.extend(_check_source(manifests[artifact_id], manifest_rel))
+        else:
+            suffix = ".FCStd"
+        if not (benchmarks_root / (artifact_id + suffix)).is_file():
             violations.append(
                 f"{manifest_rel} -- orphan manifest "
-                f"(artifact '{artifact_id}' has no matching .FCStd)"
+                f"(artifact '{artifact_id}' has no matching {suffix})"
             )
 
+    return violations
+
+
+def _check_source(manifest: dict, rel: str) -> list[str]:
+    """The source-block violations of one manifest, reported against ``rel``.
+
+    ``source.kind`` must be in the closed set; a non-``hand-authored`` kind must also carry a
+    non-empty ``url``, ``license`` and ``attribution``.
+    """
+    violations: list[str] = []
+    source = manifest.get("source")
+    kind = source.get("kind") if isinstance(source, dict) else None
+    if kind not in CLOSED_SOURCE_KINDS:
+        violations.append(
+            f"{rel} -- source.kind '{kind}' not in closed set "
+            f"({', '.join(sorted(CLOSED_SOURCE_KINDS))})"
+        )
+    elif kind != "hand-authored":
+        for field in ("url", "license", "attribution"):
+            value = source.get(field)
+            if not (isinstance(value, str) and value.strip()):
+                violations.append(
+                    f"{rel} -- source.{field} required for non-hand-authored kind '{kind}'"
+                )
     return violations
 
 
