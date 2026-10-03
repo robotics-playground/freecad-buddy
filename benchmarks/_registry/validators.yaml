@@ -171,3 +171,20 @@ verify_render_tone:
       high: 1.0
       n: 6
       r: 6
+
+spec_assertions:
+  suite: g3/fault-injection/corrupted-plan/
+  validator_sha: "bd8a9e8b6d776799c8edd85fee5ec3527c4ee620122c71bc1c6d4181a3b80238"
+  last_run:
+    run_id: g3r-2026-10-03-1.1.x
+    sensitivity: 1.0
+    false_alarm: 0.0
+    date: 2026-10-03
+    planted: 10
+    controls: 14
+    wilson_ci:
+      rate: 1.0
+      low: 0.7225
+      high: 1.0
+      n: 10
+      r: 10

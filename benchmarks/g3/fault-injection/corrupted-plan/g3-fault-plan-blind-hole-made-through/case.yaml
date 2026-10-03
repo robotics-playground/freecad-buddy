@@ -1,7 +1,7 @@
 id: g3-fault-plan-blind-hole-made-through
 gate: g3
 criterion: G3.4
-targets_validator: assertions@harness.assertions.evaluate
+targets_validator: spec_assertions@usecases.assertions.evaluate_checks
 fault:
   kind: planted_defect
   description: >-
@@ -76,6 +76,17 @@ plan:
       profile: BoreSketch
       name: Bore
       up_to: ThroughAll
-# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+# `faithful_args` replaces the planted step's args with the ones the spec states; every other
+# step is unchanged. The scorer replays the plan planted and reverted, and the reverted build
+# must grade clean, so a detection is traced to the planted step. Added after the suite landed
+# (Story 4.2b); disclosed in benchmarks/g3/README.md.
+# Spec: a 15 mm deep blind bore.
+faithful_args:
+  doc: '$doc'
+  body: Body
+  profile: BoreSketch
+  name: Bore
+  length: {value: 15.0, unit: mm}
+# No .FCStd ships: the part exists only as the replay builds it, so the fixture is declared pending.
 fixture: pending
 provenance: ../../../../_registry/provenance/g3-fault-plan-blind-hole-made-through.yaml

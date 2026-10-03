@@ -47,6 +47,33 @@ entry:
   - id: G3.E.3
     item: "Every spec's anchor frame resolves identically on the 1.0.x and 1.1.x legs"
     owner: "4.2b"
+    # The specs whose frame is proven on a part the corrupted-plan suite builds (a control or a
+    # reverted planted plan) on both legs, against fault-injection/frames-reference.json.
+    proven_on_built_parts:
+      - g3-dev-001-mounting-plate
+      - g3-dev-003-shaft-collar
+      - g3-dev-007-jig-block-blind-bore
+      - g3-dev-008-flange-gasket
+      - g3-dev-010-cover-panel-window
+      - g3-dev-011-lever-arm
+      - g3-dev-012-clamp-pad-slot
+      - g3-dev-019-offset-pivot-plate
+    # No plan builds these specs, so their frames are NOT proven on a built part. Each declared
+    # (kind, ref) is resolved on a canonical fixture in tests/infc/test_assertion_primitives.py
+    # (CanonicalFrameTest), which runs on both legs; that proves the resolver, not the part.
+    not_proven_on_built_parts:
+      - g3-dev-002-l-bracket
+      - g3-dev-004-round-standoff
+      - g3-dev-005-rail-shim
+      - g3-dev-006-bearing-base-pad
+      - g3-dev-009-flanged-bushing
+      - g3-dev-013-pipe-stub
+      - g3-dev-014-extrusion-end-cap
+      - g3-dev-015-ribbed-pad
+      - g3-dev-016-perforated-cover
+      - g3-dev-017-counterbored-boss
+      - g3-dev-018-flat-washer
+      - g3-dev-020-twin-boss-block
   - id: G3.E.4
     item: "Corrupted-plan suite scored at sensitivity >=95% / false-alarm <=5%, recorded with validator_sha"
     owner: "4.2b"
@@ -95,7 +122,7 @@ criteria:
   - id: G3.1
     text: "Spec benchmark: drive the spec set end to end, one human plan approval, R>=10 on the sealed held-out split; grade with the compiled assertions"
     pass_rule: ">=70% pass within <=3 repairs; dev/held-out gap <=15pp"
-    cited_validators: [assertions]
+    cited_validators: [spec_assertions]
   - id: G3.2
     text: "Parts are sound: read verify_shape / verify_sketch / recompute reports for every passing part"
     pass_rule: "Valid watertight solid, recompute-clean, all sketches FullyConstrained"
@@ -107,7 +134,7 @@ criteria:
   - id: G3.4
     text: "Corrupted-plan detection: drive the >=10 planted corrupted plans through the same loop"
     pass_rule: ">=9/10 spec violations detected; zero silent bad parts"
-    cited_validators: [assertions]
+    cited_validators: [spec_assertions]
   - id: G3.5
     text: "Visual review performed: read the run workdir for every passing part"
     pass_rule: "Per-part visual findings present; a run with no visual evidence is incomplete, not passing (AD-21)"

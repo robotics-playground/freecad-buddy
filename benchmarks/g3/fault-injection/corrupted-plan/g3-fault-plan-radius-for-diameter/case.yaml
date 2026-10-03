@@ -1,7 +1,7 @@
 id: g3-fault-plan-radius-for-diameter
 gate: g3
 criterion: G3.4
-targets_validator: assertions@harness.assertions.evaluate
+targets_validator: spec_assertions@usecases.assertions.evaluate_checks
 fault:
   kind: planted_defect
   description: >-
@@ -47,6 +47,22 @@ plan:
       name: Collar
       length: {value: 15.0, unit: mm}
       reversed: true
-# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+# `faithful_args` replaces the planted step's args with the ones the spec states; every other
+# step is unchanged. The scorer replays the plan planted and reverted, and the reverted build
+# must grade clean, so a detection is traced to the planted step. Added after the suite landed
+# (Story 4.2b); disclosed in benchmarks/g3/README.md.
+# Spec: a 16 mm bore, so a radius-8 circle.
+faithful_args:
+  doc: '$doc'
+  sketch: CollarSketch
+  geometry:
+    - {kind: circle, center: [0.0, 0.0], radius: {value: 20.0, unit: mm}}
+    - {kind: circle, center: [0.0, 0.0], radius: {value: 8.0, unit: mm}}
+  constraints:
+    - {type: Radius, first: 0, value: {value: 20.0, unit: mm}}
+    - {type: Coincident, first: 0, first_pos: 3, second: -1, second_pos: 1}
+    - {type: Radius, first: 1, value: {value: 8.0, unit: mm}}
+    - {type: Coincident, first: 1, first_pos: 3, second: -1, second_pos: 1}
+# No .FCStd ships: the part exists only as the replay builds it, so the fixture is declared pending.
 fixture: pending
 provenance: ../../../../_registry/provenance/g3-fault-plan-radius-for-diameter.yaml

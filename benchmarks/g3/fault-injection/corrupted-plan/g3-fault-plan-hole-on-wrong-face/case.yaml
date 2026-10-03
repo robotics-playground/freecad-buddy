@@ -1,7 +1,7 @@
 id: g3-fault-plan-hole-on-wrong-face
 gate: g3
 criterion: G3.4
-targets_validator: assertions@harness.assertions.evaluate
+targets_validator: spec_assertions@usecases.assertions.evaluate_checks
 fault:
   kind: planted_defect
   description: >-
@@ -15,7 +15,10 @@ fault:
   expectation: DETECT
 corruption_class: topology
 spec_ref: g3-dev-007-jig-block-blind-bore
-detected_by: hole_position
+# detected_by was hole_position until Story 4.2b. That check's axis selector matches no hole on
+# a side-face bore, which is INVALID_INPUT and never a detection; g3-dev-007's angle_between
+# check measures the bore at 90 degrees to the top face. Disclosed in benchmarks/g3/README.md.
+detected_by: angle_between
 # A corrupted plan is a recorded plan: `plan` lists, in order, the {tool, args} calls an actor
 # issues through the MCP mutation tools to build `spec_ref`. `$doc` stands for the handle the
 # `document_create` step returns. `planted_step` is the 0-based index of the one defect step.
@@ -82,6 +85,48 @@ plan:
       profile: BoreSketch
       name: Bore
       length: {value: 15.0, unit: mm}
-# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+# `faithful_steps` maps a step index to the step the spec asks for, or to null to drop the step;
+# every other step is unchanged. The scorer replays the plan planted and reverted, and the
+# reverted build must grade clean, so a detection is traced to the planted defect. This defect
+# spans more than the one marked step, so the args of that step alone cannot revert it (see
+# benchmarks/g3/README.md). Added after the suite landed (Story 4.2b); disclosed there.
+# Spec: the bore enters the centre of the top face. Step 3 centres the block on the origin,
+# step 5 sketches the bore on XY (the top face), step 6 puts the bore centre on the origin. These
+# are the steps blind-hole-made-through uses.
+faithful_steps:
+  3:
+    tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BlockSketch
+      geometry:
+        - {kind: line_segment, start: [-25.0, -25.0], end: [25.0, -25.0]}
+        - {kind: line_segment, start: [25.0, -25.0], end: [25.0, 25.0]}
+        - {kind: line_segment, start: [25.0, 25.0], end: [-25.0, 25.0]}
+        - {kind: line_segment, start: [-25.0, 25.0], end: [-25.0, -25.0]}
+      constraints:
+        - {type: Coincident, first: 0, first_pos: 2, second: 1, second_pos: 1}
+        - {type: Coincident, first: 1, first_pos: 2, second: 2, second_pos: 1}
+        - {type: Coincident, first: 2, first_pos: 2, second: 3, second_pos: 1}
+        - {type: Coincident, first: 3, first_pos: 2, second: 0, second_pos: 1}
+        - {type: Horizontal, first: 0}
+        - {type: Horizontal, first: 2}
+        - {type: Vertical, first: 1}
+        - {type: Vertical, first: 3}
+        - {type: DistanceX, first: 0, value: {value: 50.0, unit: mm}}
+        - {type: DistanceY, first: 1, value: {value: 50.0, unit: mm}}
+        - {type: DistanceX, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+        - {type: DistanceY, first: 0, first_pos: 1, second: -1, second_pos: 1, value: {value: 25.0, unit: mm}}
+  5: {tool: sketch_create, args: {doc: '$doc', name: BoreSketch, plane: XY, body: Body}}
+  6:
+    tool: sketch_add_geometry
+    args:
+      doc: '$doc'
+      sketch: BoreSketch
+      geometry: [{kind: circle, center: [0.0, 0.0], radius: {value: 6.0, unit: mm}}]
+      constraints:
+        - {type: Radius, first: 0, value: {value: 6.0, unit: mm}}
+        - {type: Coincident, first: 0, first_pos: 3, second: -1, second_pos: 1}
+# No .FCStd ships: the part exists only as the replay builds it, so the fixture is declared pending.
 fixture: pending
 provenance: ../../../../_registry/provenance/g3-fault-plan-hole-on-wrong-face.yaml

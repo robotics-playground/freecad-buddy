@@ -120,6 +120,14 @@ _VALIDATOR_SOURCES = {
     "fingerprint": (_SRC / "usecases" / "fingerprint.py",),
     "audit_references": (_SRC / "usecases" / "tnp_guard.py",),
     "verify_sketch": (_SRC / "usecases" / "verify.py",),
+    # The G3 corrupted-plan suite graded through verify_shape's §7.2 checks, plus the scorer that
+    # classifies them. Its suite is folded in like a G2 validator's, then the dev specs its cases
+    # name, matching score_g3_replay.py's `validator_sha` byte for byte.
+    "spec_assertions": (
+        _SRC / "usecases" / "assertions.py",
+        _SRC / "usecases" / "verify.py",
+        _REPO_ROOT / "benchmarks" / "g3" / "fault-injection" / "score_g3_replay.py",
+    ),
 }
 
 # The G1 fault suite whose `case.yaml` set is folded into the `grader` hash.
@@ -127,12 +135,20 @@ _GRADER_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g1" / "fault-injection"
 
 # The G2 fault suite whose `case.yaml` set is folded into each G2 validator's hash.
 _G2_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g2" / "fault-injection"
+_G3_SUITE_ROOT = _REPO_ROOT / "benchmarks" / "g3" / "fault-injection" / "corrupted-plan"
+_G3_DEV_ROOT = _REPO_ROOT / "benchmarks" / "g3" / "dev"
 
-# The G2 validators, whose suite fold-in selects only the cases declaring that validator in
-# `targets_validator` — a validator with no cases folds in an explicit empty-suite marker.
-_G2_VALIDATORS = frozenset(
-    {"assertions", "run_mutation", "fingerprint", "audit_references", "verify_sketch"}
-)
+# The validators whose suite fold-in selects only the cases under their suite root declaring
+# that validator in `targets_validator` — a validator with no cases folds in an explicit
+# empty-suite marker.
+_TARGETED_SUITE_ROOTS = {
+    "assertions": _G2_SUITE_ROOT,
+    "run_mutation": _G2_SUITE_ROOT,
+    "fingerprint": _G2_SUITE_ROOT,
+    "audit_references": _G2_SUITE_ROOT,
+    "verify_sketch": _G2_SUITE_ROOT,
+    "spec_assertions": _G3_SUITE_ROOT,
+}
 
 
 class UsageError(Exception):
@@ -255,11 +271,13 @@ def _validator_src_hasher(name: str) -> str:
         suite = _grader_suite_sources()
         if not suite:
             return ""
-    elif name in _G2_VALIDATORS:
-        suite = _g2_suite_sources(name)
+    elif name in _TARGETED_SUITE_ROOTS:
+        suite = _targeted_suite_sources(name)
         if not suite:
             hasher.update(b"\x00no-fault-suite")
             return hasher.hexdigest()
+        if name == "spec_assertions":
+            suite = suite + _g3_dev_spec_sources(suite)
     else:
         return hasher.hexdigest()
     for identity, path in suite:
@@ -274,16 +292,17 @@ def _validator_src_hasher(name: str) -> str:
     return hasher.hexdigest()
 
 
-def _g2_suite_sources(validator: str) -> list[tuple[bytes, Path]]:
-    """The G2 fault cases targeting ``validator``, as (identity prefix, path) pairs.
+def _targeted_suite_sources(validator: str) -> list[tuple[bytes, Path]]:
+    """The fault cases targeting ``validator``, as (identity prefix, path) pairs.
 
-    Ordered by suite-relative POSIX path to match score_g2_validators.py's ordering. Only cases
-    whose ``targets_validator`` names this validator are folded in, so an edit to another
-    validator's suite does not stale this one.
+    Ordered by suite-relative POSIX path to match score_g2_validators.py's and
+    score_g3_replay.py's ordering. Only cases whose ``targets_validator`` names this validator
+    are folded in, so an edit to another validator's suite does not stale this one.
     """
+    root = _TARGETED_SUITE_ROOTS[validator]
     cases = sorted(
-        (p for p in _G2_SUITE_ROOT.rglob("case.yaml") if p.name == "case.yaml"),
-        key=lambda p: p.relative_to(_G2_SUITE_ROOT).as_posix(),
+        (p for p in root.rglob("case.yaml") if p.name == "case.yaml"),
+        key=lambda p: p.relative_to(root).as_posix(),
     )
     selected = []
     for path in cases:
@@ -293,8 +312,29 @@ def _g2_suite_sources(validator: str) -> list[tuple[bytes, Path]]:
             continue
         declared = data.get("targets_validator") if isinstance(data, dict) else None
         if isinstance(declared, str) and declared.split("@", 1)[0] == validator:
-            selected.append((path.relative_to(_G2_SUITE_ROOT).as_posix().encode("utf-8"), path))
+            selected.append((path.relative_to(root).as_posix().encode("utf-8"), path))
     return selected
+
+
+def _g3_dev_spec_sources(suite: list[tuple[bytes, Path]]) -> list[tuple[bytes, Path]]:
+    """Each distinct G3 dev spec the ``suite`` cases name, as (identity prefix, path) pairs.
+
+    Ordered by ``spec_ref`` under the identity ``dev/<spec_ref>/case.yaml``, matching
+    score_g3_replay.py's `validator_sha`. An unreadable case names no spec, so the digest
+    differs from the scorer's and reads as stale.
+    """
+    refs = set()
+    for _, path in suite:
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            continue
+        if isinstance(data, dict):
+            refs.add(str(data.get("spec_ref")))
+    return [
+        (f"dev/{ref}/case.yaml".encode("utf-8"), _G3_DEV_ROOT / ref / "case.yaml")
+        for ref in sorted(refs)
+    ]
 
 
 def _run_dir(gate: str, run_id: str) -> Path:
@@ -657,7 +697,7 @@ def attest_command(gate: str, run_id: str, token_type: str, outcome: str) -> int
     return _EXIT_OK
 
 
-def faults_command(gate: str) -> int:
+def faults_command(gate: str, frames_evidence: str | None = None) -> int:
     """Route ``faults <gate>`` to the gate's fault scorer as a subprocess; forward its exit code.
 
     G1's ``score_grader.py`` grades the planted suite with the independent validator, computes
@@ -669,6 +709,10 @@ def faults_command(gate: str) -> int:
     scorer (``score_g2_infc.py``) that produces the rates. That scorer is run by the operator
     under ``FreeCADCmd``, the same way G0's ``score_verify_shape.py`` is — the runner never
     spawns a FreeCAD interpreter.
+
+    G3's ``score_g3_validators.py`` checks the suite's structure and computes G3.E.3 and G3.E.4
+    from committed evidence. ``frames_evidence`` names the directory holding the per-leg
+    ``G3.E.3.<leg>.json`` files and is forwarded to it; it is a usage error for any other gate.
 
     An unknown gate or a gate with no scorer is a clean usage error (exit 2), never a traceback.
     """
@@ -683,7 +727,12 @@ def faults_command(gate: str) -> int:
     # NFR1: never score the grader while it collides with the actor — the identity guard applies
     # to the fault-scoring path too, not only the stub run.
     _preflight_actor_grader(gate)
-    completed = subprocess.run([sys.executable, str(scorer_path)])
+    command = [sys.executable, str(scorer_path)]
+    if frames_evidence is not None:
+        if gate != "G3":
+            raise UsageError("--frames-evidence applies to gate G3 only")
+        command += ["--frames-evidence", frames_evidence]
+    completed = subprocess.run(command)
     return completed.returncode
 
 
@@ -1320,6 +1369,11 @@ def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
     attest.add_argument("--outcome", default="PASS", help="token outcome (PASS/FAIL)")
     faults = sub.add_parser("faults")
     faults.add_argument("gate", help="gate id, e.g. G1")
+    faults.add_argument(
+        "--frames-evidence",
+        dest="frames_evidence",
+        help="G3 only: directory holding the per-leg G3.E.3.<leg>.json frame evidence",
+    )
     seal_parser = sub.add_parser("seal")
     seal_parser.add_argument("gate", help="gate id, e.g. G1")
     return parser.parse_args(argv)
@@ -1338,7 +1392,7 @@ def _run_subcommand(argv: list[str]) -> int:
         if args.command == "verdict":
             return verdict_command(args.gate, args.run_id)
         if args.command == "faults":
-            return faults_command(args.gate)
+            return faults_command(args.gate, args.frames_evidence)
         if args.command == "seal":
             return seal_command(args.gate)
         return attest_command(args.gate, args.run_id, args.token_type, args.outcome)

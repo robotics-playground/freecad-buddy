@@ -151,7 +151,7 @@ def test_should_list_every_g3e_item_with_its_owning_story_when_gate_yaml_is_read
     assert owners == ["4.1", "4.1", "4.2b", "4.2b", "4.3", "6.5", "4.1"]
 
 
-def test_should_report_invalid_input_for_other_stories_when_the_suite_is_sound():
+def test_should_report_invalid_input_for_stories_not_landed_when_the_suite_is_sound():
     # Arrange
     gate = SUITE["gate"]
 
@@ -164,7 +164,8 @@ def test_should_report_invalid_input_for_other_stories_when_the_suite_is_sound()
     assert "stub" in statuses["G3.E.1"]
     for item_id in ("G3.E.2", "G3.E.7"):
         assert statuses[item_id] == "OK (structural check only)"
-    for item_id in ("G3.E.3", "G3.E.4", "G3.E.5", "G3.E.6"):
+    assert statuses["G3.E.3"].startswith("INVALID_INPUT (no --frames-evidence")
+    for item_id in ("G3.E.5", "G3.E.6"):
         assert statuses[item_id].startswith("INVALID_INPUT")
 
 

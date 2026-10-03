@@ -17,6 +17,19 @@ criterion: G3.1
 # selector is what a side-face bore violates. Like g3-dev-002 (DW-129), this amends an entry-gate
 # assertion set after implementation existed; it adds a requirement the spec text already states
 # ("into the centre of the top face") and relaxes nothing.
+#
+# bore square to the top face: the anchor is the bottom face (it is the largest, the top face
+# having lost the bore opening), so frame +Z points up into the part and the top face's outward
+# normal is [0, 0, 1]. The bore floor faces the same way, so the selector matches both the top
+# face and the floor; the check pairs the bore with the nearer of them, and both are parallel to
+# the top face, so the angle is the same either way. A bore drilled into the centre of the top
+# face runs along that normal, so the angle between the bore axis and the face normal is 0
+# degrees.
+#
+# The angle_between check was ADDED after Story 4.2b first replayed the corrupted plans. The
+# hole_position check above catches a side-face bore only through an empty selector match, which
+# is INVALID_INPUT and never a detection; the angle measures 90 degrees on that bore. Like the
+# DW-122 amendment, it adds a requirement the spec text already states and relaxes nothing.
 spec: >-
   A 50 mm cube-section jig block 25 mm tall. Bore a single 12 mm hole 15 mm deep into the centre
   of the top face. The hole does not break through the bottom.
@@ -34,3 +47,4 @@ assertions:
     - {fn: hole_diameter, expect: 12.0, tol: {abs: 0.05}}
     - {fn: hole_through, expect: false}
     - {fn: hole_position, select: {diameter: 12.0, axis: [0, 0, 1]}, expect: [0.0, 0.0], tol: {abs: 0.05}}
+    - {fn: angle_between, select_a: {face: {normal: [0, 0, 1]}}, select_b: {hole: {diameter: 12.0}}, expect: 0.0, tol: {abs: 0.1}}

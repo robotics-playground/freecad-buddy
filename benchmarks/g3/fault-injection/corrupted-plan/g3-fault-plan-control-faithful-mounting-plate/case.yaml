@@ -1,7 +1,7 @@
 id: g3-fault-plan-control-faithful-mounting-plate
 gate: g3
 criterion: G3.4
-targets_validator: assertions@harness.assertions.evaluate
+targets_validator: spec_assertions@usecases.assertions.evaluate_checks
 fault:
   kind: clean_control
   description: >-
@@ -89,6 +89,6 @@ plan:
       name: ClearanceHoles
       diameter: {value: 5.5, unit: mm}
       depth_type: ThroughAll
-# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+# No .FCStd ships: the part exists only as the replay builds it, so the fixture is declared pending.
 fixture: pending
 provenance: ../../../../_registry/provenance/g3-fault-plan-control-faithful-mounting-plate.yaml

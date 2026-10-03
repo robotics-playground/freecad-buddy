@@ -1,23 +1,28 @@
-"""External-process structural checker for the G3 entry gate (run under uv).
+"""External-process checker for the G3 entry gate (run under uv).
 
-Checks the spec set and the fault suite without scoring them: that there are 20 dev specs, each
+Checks the spec set and the fault suite structurally: that there are 20 dev specs, each
 declaring a closed-set anchor frame and only the eleven closed §7.2 assertion functions, with no
 sub-element index selector and no feature-metadata verdict; that every corrupted plan names a dev
 spec and a check in that spec, carries a plan whose every step is a catalogued MCP tool called
-with arguments its input schema accepts, and marks exactly one planted step when it is a defect
-and none when it is a control; that at least ten planted plans exist beside clean controls; and
-that each of the four G3 threats is countered by a planted case that exists.
+with arguments its input schema accepts, and marks exactly one planted step, with either the
+``faithful_args`` or the ``faithful_steps`` that revert it, when it is a defect and none when it
+is a control; that at least ten planted plans exist beside clean controls; and that each of the
+four G3 threats is countered by a planted case that exists.
 
-It does NOT produce sensitivity or false-alarm numbers and never writes ``validators.yaml``.
-Planting a corrupted plan means replaying it through the MCP mutation tools against a live
-FreeCAD document and grading the part with the spec's assertions, which lands in Story 4.2b. A rate
-reported from here would be a number no run produced.
+It computes G3.E.3 and G3.E.4 from stored evidence and never measures a part. G3.E.4 reads the
+``spec_assertions`` block that ``score_g3_replay.py`` wrote to ``validators.yaml``: it is current
+when its ``validator_sha`` matches the measurement sources, the scorer, the corrupted-plan cases
+and the dev specs they name, and it must meet the sensitivity and false-alarm bars. G3.E.3
+compares each leg's ``G3.E.3.<leg>.json`` in ``--frames-evidence DIR`` with the committed
+``frames-reference.json``, after checking that the file was measured on that leg's FreeCAD.
 
-Exits 0 when the suite is structurally sound, 1 when it is not.
+Exits 1 when the suite is structurally unsound or a computed item reports ``FAIL``, else 0.
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -30,6 +35,10 @@ REPO_ROOT = HERE.parents[2]
 SRC = REPO_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+
+import score_g3_replay as replay  # noqa: E402
 
 # verification-design.md §7.2. A G3 spec grades a finished part against written text, which is
 # what this vocabulary was designed for, so G3 declares no extension (unlike G2).
@@ -61,8 +70,12 @@ G3_THREATS = frozenset(
 )
 EXPECTED_DEV_SPECS = 20
 MIN_PLANTED_PLANS = 10
-TARGET_VALIDATOR = "assertions@harness.assertions.evaluate"
+TARGET_VALIDATOR = "spec_assertions@usecases.assertions.evaluate_checks"
 OWNER_OF_THIS_SUITE = "4.1"
+FRAMES_ITEM = "G3.E.3"
+SCORE_ITEM = "G3.E.4"
+FRAMES_REFERENCE = HERE / "frames-reference.json"
+VALIDATORS_YAML = REPO_ROOT / "benchmarks" / "_registry" / "validators.yaml"
 # The entry item that claims the spec set fails honestly against a stub.
 STUB_ENTRY_ITEM = "G3.E.1"
 
@@ -234,8 +247,32 @@ def _check_fault_mapping(suite: dict) -> list[str]:
     return problems
 
 
+def _steps_to_check(case: dict, plan: list) -> list[tuple[str, object]]:
+    """Each plan step with its label, and each replacement step a planted case reverts with."""
+    steps = [(f"step {index}", step) for index, step in enumerate(plan)]
+    if not _is_planted(case):
+        return steps
+    marked = case.get("planted_step")
+    faithful = case.get("faithful_args")
+    if isinstance(faithful, dict) and type(marked) is int and 0 <= marked < len(plan):
+        planted = plan[marked]
+        if isinstance(planted, dict) and "tool" in planted:
+            steps.append(
+                (f"faithful_args of step {marked}", {"tool": planted["tool"], "args": faithful})
+            )
+    replacements = case.get("faithful_steps")
+    if isinstance(replacements, dict):
+        steps.extend(
+            (f"faithful_steps[{index}]", step)
+            for index, step in replacements.items()
+            if step is not None
+        )
+    return steps
+
+
 def _check_plan_steps(suite: dict, tools: dict[str, dict]) -> list[str]:
-    """Every plan step calls a catalogued tool with arguments that tool's input schema accepts."""
+    """Every plan step, and every reverted planted step, calls a catalogued tool with arguments
+    that tool's input schema accepts."""
     from jsonschema.validators import validator_for
 
     problems = []
@@ -244,8 +281,8 @@ def _check_plan_steps(suite: dict, tools: dict[str, dict]) -> list[str]:
         if not isinstance(plan, list) or not plan:
             problems.append(f"{case.get('id')}: carries no plan")
             continue
-        for index, step in enumerate(plan):
-            where = f"{case.get('id')}: step {index}"
+        for label, step in _steps_to_check(case, plan):
+            where = f"{case.get('id')}: {label}"
             if not isinstance(step, dict) or set(step) != {"tool", "args"}:
                 problems.append(f"{where}: must be exactly {{tool, args}}")
                 continue
@@ -268,11 +305,35 @@ def _check_planted_steps(suite: dict) -> list[str]:
         if not _is_planted(case):
             if marked is not None:
                 problems.append(f"{case.get('id')}: a clean control marks planted_step {marked}")
+            for field in ("faithful_args", "faithful_steps"):
+                if field in case:
+                    problems.append(f"{case.get('id')}: a clean control carries {field}")
             continue
         steps = case.get("plan") if isinstance(case.get("plan"), list) else []
         if type(marked) is not int or not 0 <= marked < len(steps):
             problems.append(f"{case.get('id')}: planted case marks no valid planted_step")
+        problems += _faithful_problems(case, len(steps))
     return problems
+
+
+def _faithful_problems(case: dict, plan_length: int) -> list[str]:
+    """A planted case reverts through exactly one of ``faithful_args`` and ``faithful_steps``."""
+    case_id = case.get("id")
+    has_args, has_steps = "faithful_args" in case, "faithful_steps" in case
+    if has_args == has_steps:
+        return [f"{case_id}: planted case must carry exactly one of faithful_args, faithful_steps"]
+    if has_args:
+        if not isinstance(case["faithful_args"], dict):
+            return [f"{case_id}: faithful_args is not a mapping"]
+        return []
+    replacements = case["faithful_steps"]
+    if not isinstance(replacements, dict) or not replacements:
+        return [f"{case_id}: faithful_steps is not a non-empty mapping"]
+    return [
+        f"{case_id}: faithful_steps index {index!r} is not a step of the plan"
+        for index in replacements
+        if type(index) is not int or not 0 <= index < plan_length
+    ]
 
 
 def _check_fault_counts(suite: dict) -> list[str]:
@@ -337,13 +398,71 @@ def check_suite(suite: dict, tools: dict[str, dict] | None = None) -> dict[str, 
     }
 
 
-def entry_status(gate: dict, sound: bool) -> list[tuple[str, str, str]]:
+def score_status(validators_yaml: Path = VALIDATORS_YAML) -> str:
+    """G3.E.4: the recorded ``spec_assertions`` score is current and meets both bars."""
+    registry = yaml.safe_load(validators_yaml.read_text(encoding="utf-8")) or {}
+    block = registry.get(replay.VALIDATOR)
+    if not isinstance(block, dict):
+        return f"INVALID_INPUT (no {replay.VALIDATOR} score recorded; run score_g3_replay.py)"
+    if block.get("validator_sha") != replay.validator_sha():
+        return (
+            f"FAIL (stale: the {replay.VALIDATOR} validator_sha does not match the measurement "
+            "sources, the scorer, the corrupted-plan cases and their dev specs; re-run "
+            "score_g3_replay.py)"
+        )
+    run = block.get("last_run") or {}
+    sensitivity, false_alarm = run.get("sensitivity"), run.get("false_alarm")
+    if not (
+        isinstance(sensitivity, float | int)
+        and isinstance(false_alarm, float | int)
+        and sensitivity >= replay.SENSITIVITY_BAR
+        and false_alarm <= replay.FALSE_ALARM_BAR
+    ):
+        return (
+            f"FAIL (sensitivity {sensitivity} / false alarm {false_alarm} miss the "
+            f">={replay.SENSITIVITY_BAR} / <={replay.FALSE_ALARM_BAR} bars)"
+        )
+    return (
+        f"OK (sensitivity {sensitivity}, false alarm {false_alarm}, "
+        f"validator_sha {block['validator_sha'][:12]})"
+    )
+
+
+def frames_status(evidence_dir: Path | None, reference_path: Path = FRAMES_REFERENCE) -> str:
+    """G3.E.3: every leg's resolved frames equal the committed reference."""
+    if not reference_path.is_file():
+        return f"INVALID_INPUT (no frames reference at {reference_path.name})"
+    if evidence_dir is None:
+        return "INVALID_INPUT (no --frames-evidence directory given)"
+    reference = json.loads(reference_path.read_text(encoding="utf-8"))["frames"]
+    for leg in replay.LEGS:
+        path = evidence_dir / f"G3.E.3.{leg}.json"
+        if not path.is_file():
+            return f"INVALID_INPUT (leg {leg} evidence absent: {path.name})"
+        evidence = json.loads(path.read_text(encoding="utf-8"))
+        if evidence.get("leg") != leg:
+            return f"INVALID_INPUT ({path.name} names leg {evidence.get('leg')!r})"
+        version = str(evidence.get("freecad_version"))
+        if version.split(".")[:2] != leg.split(".")[:2]:
+            return f"FAIL ({path.name} was measured on FreeCAD {version}, not leg {leg})"
+        drifts = replay.compare_frames(reference, evidence.get("frames") or {})
+        if drifts:
+            return f"FAIL (leg {leg}: {'; '.join(drifts)})"
+    return (
+        f"OK ({len(reference)} built parts resolve the reference frame on {', '.join(replay.LEGS)})"
+    )
+
+
+def entry_status(
+    gate: dict, sound: bool, frames_evidence: Path | None = None
+) -> list[tuple[str, str, str]]:
     """``(id, owner, status)`` per G3.E item.
 
     The items this suite owns read the structural result only. That the stub run fails honestly
     is not checked here: the CI G3 stub step and ``test_should_fail_all_six_criteria_with_invalid_
-    input_when_run_against_the_stub`` check it. Every other item reports ``INVALID_INPUT`` until
-    its owning story lands, so G3.E stays open.
+    input_when_run_against_the_stub`` check it. G3.E.3 and G3.E.4 are computed from stored
+    evidence. Every other item reports ``INVALID_INPUT`` until its owning story lands, so G3.E
+    stays open.
     """
     rows = []
     for item in gate.get("entry") or []:
@@ -356,6 +475,10 @@ def entry_status(gate: dict, sound: bool) -> list[tuple[str, str, str]]:
                     "test_should_fail_all_six_criteria_with_invalid_input_when_run_against_the_stub"
                 )
             status += ")"
+        elif item.get("id") == FRAMES_ITEM:
+            status = frames_status(frames_evidence)
+        elif item.get("id") == SCORE_ITEM:
+            status = score_status()
         else:
             status = f"INVALID_INPUT (owned by Story {owner}, not landed)"
         rows.append((item.get("id"), owner, status))
@@ -363,7 +486,12 @@ def entry_status(gate: dict, sound: bool) -> list[tuple[str, str, str]]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Check the G3 entry gate's structure, print the G3.E items, and refuse to score."""
+    """Check the G3 entry gate's structure and print the G3.E items."""
+    parser = argparse.ArgumentParser(description="G3 entry gate check")
+    parser.add_argument(
+        "--frames-evidence", type=Path, help="directory holding G3.E.3.<leg>.json per leg"
+    )
+    args = parser.parse_args([] if argv is None else argv)
     suite = load_suite()
     results = check_suite(suite)
     planted = sum(1 for case in suite["plans"] if _is_planted(case))
@@ -376,16 +504,17 @@ def main(argv: list[str] | None = None) -> int:
         for problem in problems:
             print(f"  {'':18s} {problem}")
     sound = not any(results.values())
+    rows = entry_status(suite["gate"], sound, args.frames_evidence)
     print("G3.E entry items:")
-    for item_id, owner, status in entry_status(suite["gate"], sound):
+    for item_id, owner, status in rows:
         print(f"  {item_id} [{owner}] {status}")
-    print(
-        "\n  NOT SCORED HERE: planting a corrupted plan means replaying it through the MCP "
-        "mutation\n  tools and grading the part, which lands in Story 4.2b. No sensitivity, "
-        "false_alarm or\n  validator_sha is computed and validators.yaml is not written."
+    computed_failed = any(
+        status.startswith("FAIL")
+        for item_id, _, status in rows
+        if item_id in (FRAMES_ITEM, SCORE_ITEM)
     )
-    return 0 if sound else 1
+    return 0 if sound and not computed_failed else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

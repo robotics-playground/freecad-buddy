@@ -14,12 +14,16 @@ g3/
   fault-injection/     validates the validators; never counts toward the G3.1 pass rate
     corrupted-plan/      10 planted corrupted plans + 4 clean controls
     threat-counters/     2 planted run-evidence cases for the threats no plan can counter
-    score_g3_validators.py   structural check only; computes no rate
+    score_g3_replay.py       operator-run replay scorer: sensitivity, false alarm, frames per leg
+    score_g3_validators.py   structural check; reads G3.E.3 and G3.E.4 from stored evidence
+    frames-reference.json    the anchor frame of every clean build, from the 1.1.x leg
 ```
 
 `runner run G3 --run <id>` and `runner --gate G3 --stub` fail all six criteria with
 `INVALID_INPUT`: no actor drives a spec and no collector reads a run yet. `runner faults G3` runs
-the structural check. `runner run G3 --exit` is refused before the unseal.
+the structural check and computes G3.E.3 and G3.E.4 from stored evidence;
+`runner faults G3 --frames-evidence DIR` reads the per-leg frame files from `DIR`.
+`runner run G3 --exit` is refused before the unseal.
 
 ## Entry gate G3.E
 
@@ -28,12 +32,12 @@ G3.E stays open after Story 4.1. Story 4.2a supplies the assertion primitives an
 resolver that G3.E.3 and G3.E.4 measure with. Story 4.2b owns both items: it replays the corrupted
 plans, scores the suite, and checks the frames on both legs.
 
-| Item | Owner | State after 4.1 |
+| Item | Owner | State after 4.2b |
 | --- | --- | --- |
 | Spec set with compiled assertions, failing honestly against a stub | 4.1 | landed |
 | Corrupted-plan fault suite, every threat countered | 4.1 | landed, `fixture: pending` |
-| Anchor frames resolve identically on the 1.0.x and 1.1.x legs | 4.2b | `INVALID_INPUT` |
-| Corrupted-plan sensitivity ≥95 % / false-alarm ≤5 % with `validator_sha` | 4.2b | `INVALID_INPUT` |
+| Anchor frames resolve identically on the 1.0.x and 1.1.x legs | 4.2b | computed from leg evidence |
+| Corrupted-plan sensitivity ≥95 % / false-alarm ≤5 % with `validator_sha` | 4.2b | computed from `validators.yaml` |
 | Render and drawing path at the ≥2048 px review floor | 4.3 | `INVALID_INPUT` |
 | `design-loop`, `visual-review`, `spec-to-assertions` skills | 6.5 | `INVALID_INPUT` |
 | Recorded reuse survey (`phase-gates.md:3`) | 4.1 | landed, `reuse-survey.md` |
@@ -41,6 +45,54 @@ plans, scores the suite, and checks the frames on both legs.
 `runner faults G3` reports the 4.1 items from the structural check only. That the stub run fails
 honestly is checked by the CI G3 stub step (exit code exactly 1) and
 `test_should_fail_all_six_criteria_with_invalid_input_when_run_against_the_stub`.
+
+- **G3.E.4** is `OK` when the `spec_assertions` block in `_registry/validators.yaml` is current
+  and meets sensitivity ≥0.95 and false alarm ≤0.05. Its `validator_sha` hashes
+  `usecases/assertions.py`, `usecases/verify.py`, `score_g3_replay.py`, every corrupted-plan
+  `case.yaml` and each dev spec a corrupted plan names; an edit to any of them reports
+  `FAIL (stale)` until `score_g3_replay.py` runs again.
+- **G3.E.3** is `OK` when `G3.E.3.1.0.x.json` and `G3.E.3.1.1.x.json` both hold the frames of
+  `frames-reference.json`. Without the reference or either leg file it reports `INVALID_INPUT`;
+  a leg file measured on another FreeCAD version, or a frame that differs, reports `FAIL` naming
+  the file, or the leg, the build and the field. Each CI headless leg runs
+  `score_g3_replay.py --check --frames-check` and uploads its run directory. CI proves the legs
+  agree only indirectly: each leg is compared with the committed reference, never with the
+  other leg. The joined read is `runner faults G3 --frames-evidence <dir>`, with both leg files
+  in `<dir>`.
+
+## Replay scoring
+
+`score_g3_replay.py` runs in an interpreter that has FreeCAD and `mcp`. It spawns the headless H1
+host over stdio and reaches FreeCAD only through MCP tools: each step goes through
+`preview_dry_run` and then the confirmed call (AD-5), and each part is graded by `verify_shape`
+with its spec's `checks` and `anchor_frame`. It reads no verdict off the plan (AD-13).
+
+Each planted plan is built twice: planted, and reverted to its faithful build. Each control is
+built once. A planted build is a detection only when a check of its `detected_by` fn fails with a
+measured value; a check that fails with an `invalid_input.*` code is a miss. A control or
+reverted build is a false alarm when its verdict is not `OK`. A step that does not return `OK`,
+or a reverted build that does not grade `OK`, makes the case `INVALID_INPUT`: it is listed,
+excluded from both rates, and the run exits non-zero. Reverted builds count as clean controls,
+so the false-alarm population is 14: the 4 controls and the 10 reverted plans.
+
+The run writes `cases.jsonl` and `G3.E.3.<leg>.json` to `gate-artifacts/g3/<run>/`. It merges
+the `spec_assertions` block into `validators.yaml` unless `--check` is passed or a case is
+`INVALID_INPUT`. `spec_assertions` is a separate validator id from G2's `assertions`: the same
+code measured over a different suite needs its own `validator_sha` and rates.
+
+### Anchor-frame coverage
+
+The frame comparison uses kind, origin and axes rounded to 1e-6 mm, and the entity only for
+`base_sketch_plane` and `named_datum`. A `largest_planar_face` entity is a mapped face name whose
+hasher tag changes between sessions, so it is never compared.
+
+Frames are proven on the 14 clean builds, which cover 8 specs: `g3-dev-001`, `-003`, `-007`,
+`-008`, `-010`, `-011`, `-012` and `-019`. `gate.yaml` lists them under G3.E.3
+`proven_on_built_parts`. No plan builds the other 12 specs, so their frames are not proven on a
+built part. `CanonicalFrameTest` in `tests/infc/test_assertion_primitives.py` resolves every
+declared `(kind, ref)` (`XY_Plane`, `XZ_Plane`, `PlateCornerDatum`, and a symmetric
+`largest_planar_face` part) to a hand-derived frame on both legs. That proves the resolver, not
+those parts.
 
 ## Specs
 
@@ -116,9 +168,22 @@ A corrupted plan is a recorded plan, in the `harness/scripted_backend.py` `PlanS
 ordered list of `{tool, args}` steps that build `spec_ref` through the MCP mutation tools.
 `$doc` stands for the handle the `document_create` step returns. A planted case marks its one
 defect step in `planted_step` (0-based); a clean control marks none. Every case targets
-`assertions@harness.assertions.evaluate`: Story 4.2b replays the plan, and the spec's own
-assertions grade the part it produces. Detection comes from measuring that part, never from
-reading the plan. Every case declares `fixture: pending` until that replay lands.
+`spec_assertions@usecases.assertions.evaluate_checks`: `score_g3_replay.py` replays the plan, and
+the spec's own assertions grade the part it produces. Detection comes from measuring that part,
+never from reading the plan. Every case declares `fixture: pending`: no `.FCStd` ships, and the
+part exists only as the replay builds it.
+
+A planted case also carries the faithful build its replay is reverted to. Seven cases carry
+`faithful_args`, the args the spec states for the planted step. Three cases carry
+`faithful_steps`, a map from step index to the step the spec asks for, or to null to drop that
+step, because their defect spans more than the one marked step:
+
+- `pocket-before-pad` is an ordering defect. A pocket at step 9 is filled by the upper pad at
+  step 10 whatever its args, so the revert swaps the two steps.
+- `hole-on-wrong-face` places the block, sketches the bore on XZ and centres it for that face
+  (steps 3, 5 and 6). With only step 5 changed, the bore misses the block. The revert takes the
+  three steps from `blind-hole-made-through`.
+- `extra-unrequested-pocket` is an insertion. The revert drops step 7; the unused sketch stays.
 
 The plans use base planes only. A plate is padded `reversed`, so it sits below the XY plane and
 its top face lies on it; a top-face feature is sketched on XY and cuts downwards. A sketch on the
@@ -141,7 +206,7 @@ renumber, and a plan is not graded by it.
 | `blind-hole-made-through` | 007 | value | `hole_through` |
 | `datum-origin-swapped` | 019 | frame | `hole_position` |
 | `extra-unrequested-pocket` | 010 | insertion | `expect_volume` |
-| `hole-on-wrong-face` | 007 | topology | `hole_position` |
+| `hole-on-wrong-face` | 007 | topology | `angle_between` |
 | `mirrored-hole-pattern` | 011 | topology | `hole_position` |
 | `missing-bolt-holes` | 008 | omission | `count_cylindrical_holes` |
 | `pocket-before-pad` | 012 | ordering | `expect_volume` |
@@ -187,12 +252,13 @@ pure data is reused. No loop, judge, designer or actor code is restored.
   its derivation and a disclosure comment in the case file.
 - **Rewritten:** the 14 corrupted-plan cases. Their `planted_op` and `driven-by-designer-loop`
   fields named reverted code and are dropped. Each now carries a recorded `plan`, targets
-  `assertions@harness.assertions.evaluate`, declares `fixture: pending`, and has a manifest. Five
-  descriptions were rewritten to match the plan that now plants the defect
+  `spec_assertions@usecases.assertions.evaluate_checks`, declares `fixture: pending`, and has a
+  manifest. Five descriptions were rewritten to match the plan that now plants the defect
   (`pocket-before-pad`, `control-equivalent-step-order`, `hole-on-wrong-face`,
   `mirrored-hole-pattern`, `missing-bolt-holes`). The `radius-for-diameter` description said an
   8 mm wall; a 32 mm bore in a 40 mm collar leaves 4 mm, and the text now says so. `id`,
-  `corruption_class`, `spec_ref` and `detected_by` are unchanged in all 14.
+  `corruption_class` and `spec_ref` are unchanged in all 14; `detected_by` is unchanged in 13
+  (see the `g3-dev-007` angle check below).
 - **DW-122, amended after the reverted code existed:** `g3-dev-007` gained a `hole_position`
   check whose selector pins the bore axis to the frame normal, and `g3-dev-011` gained a placement
   sentence and two `hole_position` checks. Without them `hole-on-wrong-face` and
@@ -237,6 +303,16 @@ pure data is reused. No loop, judge, designer or actor code is restored.
 - A `normal` selector already fixes a face's direction, so `angle_between` over two normal
   selectors mostly fails through an empty match (a tilted leg or rib matches no face) rather
   than through a measured angle off by more than 0.1°.
-- The `assertions` registry row in `_registry/validators.yaml` was measured over the G2 suite.
-  G3.1 and G3.4 cite the same validator name, so until Story 4.2b scores this suite and records
-  its own `validator_sha`, a G3 leg-b currency read reflects the G2 population.
+- **Faithful builds, added in Story 4.2b after the suite landed.** All 10 planted cases gained
+  `faithful_args` or `faithful_steps` (see Corrupted plans). The data was added after the plans
+  existed, and the three `faithful_steps` reverts change more than the planted step. Each
+  reverted build grades `OK` on both legs, which ties every detection to the planted defect.
+- **`g3-dev-007` angle check, added in Story 4.2b after the suite landed.** `hole-on-wrong-face`
+  named `hole_position` in `detected_by`. That check's selector pins the bore axis to the frame
+  normal, so a side-face bore matches nothing and the check fails `INVALID_INPUT`, which is never
+  a detection. `g3-dev-007` gained `angle_between` from the top face's normal to the 12 mm bore,
+  expected 0°, from the prose "into the centre of the top face". It measures 90° on the
+  side-face bore and 0° on the faithful one. The case's `detected_by` is now `angle_between`.
+  Every other check stays, and nothing is relaxed.
+- G3.1 and G3.4 cite `spec_assertions`, scored over this suite. The `assertions` registry row
+  is G2's and was measured over the G2 suite.

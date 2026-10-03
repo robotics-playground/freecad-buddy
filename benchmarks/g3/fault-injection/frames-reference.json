@@ -1,0 +1,412 @@
+{
+  "frames": {
+    "g3-fault-plan-blind-hole-made-through#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "#32:1;:Hf5,F",
+      "kind": "largest_planar_face",
+      "origin": [
+        0.0,
+        0.0,
+        -25.0
+      ],
+      "ref": null,
+      "spec_ref": "g3-dev-007-jig-block-blind-bore",
+      "units": "mm"
+    },
+    "g3-fault-plan-control-equivalent-step-order": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "#78:1;:Hffc,F",
+      "kind": "largest_planar_face",
+      "origin": [
+        0.0,
+        0.0,
+        -10.0
+      ],
+      "ref": null,
+      "spec_ref": "g3-dev-012-clamp-pad-slot",
+      "units": "mm"
+    },
+    "g3-fault-plan-control-faithful-mounting-plate": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-001-mounting-plate",
+      "units": "mm"
+    },
+    "g3-fault-plan-control-named-datum-honoured": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "PlateCornerDatum",
+      "kind": "named_datum",
+      "origin": [
+        25.0,
+        30.0,
+        0.0
+      ],
+      "ref": "PlateCornerDatum",
+      "spec_ref": "g3-dev-019-offset-pivot-plate",
+      "units": "mm"
+    },
+    "g3-fault-plan-control-tolerance-edge-hole": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-001-mounting-plate",
+      "units": "mm"
+    },
+    "g3-fault-plan-datum-origin-swapped#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "PlateCornerDatum",
+      "kind": "named_datum",
+      "origin": [
+        25.0,
+        30.0,
+        0.0
+      ],
+      "ref": "PlateCornerDatum",
+      "spec_ref": "g3-dev-019-offset-pivot-plate",
+      "units": "mm"
+    },
+    "g3-fault-plan-extra-unrequested-pocket#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-010-cover-panel-window",
+      "units": "mm"
+    },
+    "g3-fault-plan-hole-on-wrong-face#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "#32:1;:H38e,F",
+      "kind": "largest_planar_face",
+      "origin": [
+        0.0,
+        0.0,
+        -25.0
+      ],
+      "ref": null,
+      "spec_ref": "g3-dev-007-jig-block-blind-bore",
+      "units": "mm"
+    },
+    "g3-fault-plan-mirrored-hole-pattern#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-011-lever-arm",
+      "units": "mm"
+    },
+    "g3-fault-plan-missing-bolt-holes#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-008-flange-gasket",
+      "units": "mm"
+    },
+    "g3-fault-plan-pocket-before-pad#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "#78:1;:H490,F",
+      "kind": "largest_planar_face",
+      "origin": [
+        0.0,
+        0.0,
+        -10.0
+      ],
+      "ref": null,
+      "spec_ref": "g3-dev-012-clamp-pad-slot",
+      "units": "mm"
+    },
+    "g3-fault-plan-radius-for-diameter#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-003-shaft-collar",
+      "units": "mm"
+    },
+    "g3-fault-plan-wrong-hole-diameter#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-001-mounting-plate",
+      "units": "mm"
+    },
+    "g3-fault-plan-wrong-plate-thickness#reverted": {
+      "axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entity": "XY_Plane",
+      "kind": "base_sketch_plane",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "ref": "XY_Plane",
+      "spec_ref": "g3-dev-001-mounting-plate",
+      "units": "mm"
+    }
+  },
+  "freecad_version": "1.1.0",
+  "leg": "1.1.x"
+}

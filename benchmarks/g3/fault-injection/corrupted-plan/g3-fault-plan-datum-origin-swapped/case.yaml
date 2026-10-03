@@ -1,7 +1,7 @@
 id: g3-fault-plan-datum-origin-swapped
 gate: g3
 criterion: G3.4
-targets_validator: assertions@harness.assertions.evaluate
+targets_validator: spec_assertions@usecases.assertions.evaluate_checks
 fault:
   kind: planted_defect
   description: >-
@@ -99,6 +99,20 @@ plan:
       name: PivotHole
       diameter: {value: 10.0, unit: mm}
       depth_type: ThroughAll
-# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+# `faithful_args` replaces the planted step's args with the ones the spec states; every other
+# step is unchanged. The scorer replays the plan planted and reverted, and the reverted build
+# must grade clean, so a detection is traced to the planted step. Added after the suite landed
+# (Story 4.2b); disclosed in benchmarks/g3/README.md.
+# Spec: the hole 20 mm and 15 mm from the datum at (25, 30), so at (45, 45) (the paired
+# control's step 9).
+faithful_args:
+  doc: '$doc'
+  sketch: HoleSketch
+  geometry: [{kind: circle, center: [45.0, 45.0], radius: {value: 5.0, unit: mm}}]
+  constraints:
+    - {type: Radius, first: 0, value: {value: 5.0, unit: mm}}
+    - {type: DistanceX, first: -1, first_pos: 1, second: 0, second_pos: 3, value: {value: 45.0, unit: mm}}
+    - {type: DistanceY, first: -1, first_pos: 1, second: 0, second_pos: 3, value: {value: 45.0, unit: mm}}
+# No .FCStd ships: the part exists only as the replay builds it, so the fixture is declared pending.
 fixture: pending
 provenance: ../../../../_registry/provenance/g3-fault-plan-datum-origin-swapped.yaml

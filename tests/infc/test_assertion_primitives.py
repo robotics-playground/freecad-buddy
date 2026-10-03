@@ -689,6 +689,80 @@ class NamedFrameLabelTest(_PartFixture):
         self.assertIn("several objects", content["banner"]["anchor_frame"]["unresolved"])
 
 
+class CanonicalFrameTest(_PartFixture):
+    """Every ``(kind, ref)`` the 20 G3 dev specs declare resolves to a hand-derived frame.
+
+    The in-FreeCAD suite runs on both CI legs, so these fixtures are the cross-leg proof for the
+    specs no corrupted plan builds (G3.E.3). The entity of a ``largest_planar_face`` frame is a
+    mapped name on a Body shape and is not asserted.
+    """
+
+    IDENTITY = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+
+    def setUp(self):
+        super().setUp()
+        body = self.body()
+        box = body.newObject("PartDesign::AdditiveBox", "Box")
+        box.Length, box.Width, box.Height = 10, 40, 40
+        datum = body.newObject("PartDesign::CoordinateSystem", "PlateCornerDatum")
+        datum.MapMode = "Deactivated"
+        datum.Placement = App.Placement(V(25, 30, 0), App.Rotation())
+        self.document.recompute()
+
+    def frame(self, anchor_frame):
+        checks = [{"fn": "expect_volume", "expect": 16000.0}]
+        return self.measure(checks, anchor_frame, target="Box")["banner"]["anchor_frame"]
+
+    def test_should_resolve_the_origin_xy_plane_to_the_document_axes(self):
+        # Arrange
+        declared = XY_PLANE
+
+        # Act
+        frame = self.frame(declared)
+
+        # Assert
+        self.assertEqual(frame["entity"], "XY_Plane")
+        self.assertEqual(frame["origin"], [0.0, 0.0, 0.0])
+        self.assertEqual(frame["axes"], self.IDENTITY)
+
+    def test_should_resolve_the_origin_xz_plane_with_its_normal_along_minus_y(self):
+        # Arrange: a sketch on XZ maps (u, v) to (u, 0, v), so frame Y is document +Z and the
+        # right-handed normal is document -Y.
+        declared = {"kind": "base_sketch_plane", "ref": "XZ_Plane"}
+
+        # Act
+        frame = self.frame(declared)
+
+        # Assert
+        self.assertEqual(frame["entity"], "XZ_Plane")
+        self.assertEqual(frame["origin"], [0.0, 0.0, 0.0])
+        self.assertEqual(frame["axes"], [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]])
+
+    def test_should_resolve_the_plate_corner_datum_to_its_placement(self):
+        # Arrange
+        declared = {"kind": "named_datum", "ref": "PlateCornerDatum"}
+
+        # Act
+        frame = self.frame(declared)
+
+        # Assert
+        self.assertEqual(frame["entity"], "PlateCornerDatum")
+        self.assertEqual(frame["origin"], [25.0, 30.0, 0.0])
+        self.assertEqual(frame["axes"], self.IDENTITY)
+
+    def test_should_break_the_symmetric_face_tie_on_centroid_x_for_a_body_feature(self):
+        # Arrange: the 10 x 40 x 40 box's x=0 and x=10 faces tie on area and centroid Z; the
+        # x=0 face wins, and in-plane X falls back to document Y on a face normal to X.
+        declared = FACE_FRAME
+
+        # Act
+        frame = self.frame(declared)
+
+        # Assert
+        self.assertEqual(frame["origin"], [0.0, 20.0, 20.0])
+        self.assertEqual(frame["axes"], [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]])
+
+
 class ToleranceFloorTest(_PartFixture):
     def test_should_pass_within_the_shape_tolerance_when_it_exceeds_the_declared_band(self):
         # Arrange: a 0.5 mm shape tolerance floors the 0.05 mm band, so 0.3 mm passes.

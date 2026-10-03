@@ -118,6 +118,22 @@ jobs:
         with:
           name: g0-4-${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
           path: benchmarks/gate-artifacts/g0/ci-${{ github.sha }}/evidence/
+      # Replays the G3 corrupted-plan suite over the H1 stdio host, checks the bars, and compares
+      # every resolved anchor frame with the committed 1.1.x reference (G3.E.3). --check: CI never
+      # writes validators.yaml.
+      - name: G3 corrupted-plan replay and cross-leg frame check
+        timeout-minutes: 15
+        run: >-
+          micromamba run -n fc python benchmarks/g3/fault-injection/score_g3_replay.py
+          --leg ${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
+          --run ci-${{ github.sha }} --check
+          --frames-check benchmarks/g3/fault-injection/frames-reference.json
+      - name: Upload G3.E.3 leg evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g3-e3-${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
+          path: benchmarks/gate-artifacts/g3/ci-${{ github.sha }}/
 
   g0-verdict:
     # Aggregates BOTH headless-leg G0.4 artifacts into ONE run dir and runs run+verdict on the

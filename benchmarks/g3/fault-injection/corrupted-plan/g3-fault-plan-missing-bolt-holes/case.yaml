@@ -1,7 +1,7 @@
 id: g3-fault-plan-missing-bolt-holes
 gate: g3
 criterion: G3.4
-targets_validator: assertions@harness.assertions.evaluate
+targets_validator: spec_assertions@usecases.assertions.evaluate_checks
 fault:
   kind: planted_defect
   description: >-
@@ -48,6 +48,47 @@ plan:
       name: Gasket
       length: {value: 2.0, unit: mm}
       reversed: true
-# The replay that plants this fault lands in Story 4.2, so the fixture is declared pending.
+# `faithful_args` replaces the planted step's args with the ones the spec states; every other
+# step is unchanged. The scorer replays the plan planted and reverted, and the reverted build
+# must grade clean, so a detection is traced to the planted step. Added after the suite landed
+# (Story 4.2b); disclosed in benchmarks/g3/README.md.
+# Spec: six 8 mm bolt holes evenly on an 80 mm pitch circle, at 60 degree steps from +X:
+# (+-40, 0) and (+-20, +-40*sin(60 deg)) = (+-20, +-34.641016151377546).
+faithful_args:
+  doc: '$doc'
+  sketch: GasketSketch
+  geometry:
+    - {kind: circle, center: [0.0, 0.0], radius: {value: 50.0, unit: mm}}
+    - {kind: circle, center: [0.0, 0.0], radius: {value: 30.0, unit: mm}}
+    - {kind: circle, center: [40.0, 0.0], radius: {value: 4.0, unit: mm}}
+    - {kind: circle, center: [20.0, 34.641016151377546], radius: {value: 4.0, unit: mm}}
+    - {kind: circle, center: [-20.0, 34.641016151377546], radius: {value: 4.0, unit: mm}}
+    - {kind: circle, center: [-40.0, 0.0], radius: {value: 4.0, unit: mm}}
+    - {kind: circle, center: [-20.0, -34.641016151377546], radius: {value: 4.0, unit: mm}}
+    - {kind: circle, center: [20.0, -34.641016151377546], radius: {value: 4.0, unit: mm}}
+  constraints:
+    - {type: Radius, first: 0, value: {value: 50.0, unit: mm}}
+    - {type: Coincident, first: 0, first_pos: 3, second: -1, second_pos: 1}
+    - {type: Radius, first: 1, value: {value: 30.0, unit: mm}}
+    - {type: Coincident, first: 1, first_pos: 3, second: -1, second_pos: 1}
+    - {type: Radius, first: 2, value: {value: 4.0, unit: mm}}
+    - {type: DistanceX, first: -1, first_pos: 1, second: 2, second_pos: 3, value: {value: 40.0, unit: mm}}
+    - {type: PointOnObject, first: 2, first_pos: 3, second: -1}
+    - {type: Radius, first: 3, value: {value: 4.0, unit: mm}}
+    - {type: DistanceX, first: -1, first_pos: 1, second: 3, second_pos: 3, value: {value: 20.0, unit: mm}}
+    - {type: DistanceY, first: -1, first_pos: 1, second: 3, second_pos: 3, value: {value: 34.641016151377546, unit: mm}}
+    - {type: Radius, first: 4, value: {value: 4.0, unit: mm}}
+    - {type: DistanceX, first: 4, first_pos: 3, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+    - {type: DistanceY, first: -1, first_pos: 1, second: 4, second_pos: 3, value: {value: 34.641016151377546, unit: mm}}
+    - {type: Radius, first: 5, value: {value: 4.0, unit: mm}}
+    - {type: DistanceX, first: 5, first_pos: 3, second: -1, second_pos: 1, value: {value: 40.0, unit: mm}}
+    - {type: PointOnObject, first: 5, first_pos: 3, second: -1}
+    - {type: Radius, first: 6, value: {value: 4.0, unit: mm}}
+    - {type: DistanceX, first: 6, first_pos: 3, second: -1, second_pos: 1, value: {value: 20.0, unit: mm}}
+    - {type: DistanceY, first: 6, first_pos: 3, second: -1, second_pos: 1, value: {value: 34.641016151377546, unit: mm}}
+    - {type: Radius, first: 7, value: {value: 4.0, unit: mm}}
+    - {type: DistanceX, first: -1, first_pos: 1, second: 7, second_pos: 3, value: {value: 20.0, unit: mm}}
+    - {type: DistanceY, first: 7, first_pos: 3, second: -1, second_pos: 1, value: {value: 34.641016151377546, unit: mm}}
+# No .FCStd ships: the part exists only as the replay builds it, so the fixture is declared pending.
 fixture: pending
 provenance: ../../../../_registry/provenance/g3-fault-plan-missing-bolt-holes.yaml
