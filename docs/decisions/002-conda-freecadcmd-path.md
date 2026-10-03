@@ -19,3 +19,7 @@ stdlib-`unittest` suites under `tests/infc/` and runs them in a single process.
 - Per-leg bundled interpreter version: **3.11** on the 1.0.0 build? **3.12** on the 1.1.0 build?
 - Verified on the actual conda builds during the CI headless legs (print `sys.version` from within `FreeCADCmd`).
 - Confirm `FreeCADCmd tests/run_tests.py` exits 0 on an empty `tests/infc/` discovery on both legs.
+
+## Superseded in part by 016 (2026-10-03)
+
+One CI leg remains: FreeCAD 1.1.3. Its conda-forge linux-64 build runs Python 3.11; the local win-64 env runs Python 3.12.14, because conda-forge ships no win-64 1.1.3 build for 3.11. Both run the in-FreeCAD suite through `FreeCADCmd tests/run_tests.py`.

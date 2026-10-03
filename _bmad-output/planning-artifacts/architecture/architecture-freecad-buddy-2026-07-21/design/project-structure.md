@@ -177,7 +177,7 @@ dist/addon/FreeCADBuddy/
   <name>FreeCAD Buddy</name>
   <description>Verify-first MCP bridge for FreeCAD</description>
   <version>0.0.1</version>
-  <freecadmin>1.0</freecadmin>
+  <freecadmin>1.1</freecadmin>
   <content>
     <workbench>
       <classname>FreeCADBuddyWorkbench</classname>
@@ -201,13 +201,12 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 
 | Leg | FreeCAD | Python (matches bundled interpreter) | Source | Blocking |
 | --- | --- | --- | --- | --- |
-| floor | 1.0.x latest patch on conda-forge | 3.11 | micromamba conda-forge | yes |
-| primary | 1.1.x latest patch on conda-forge | 3.12 | micromamba conda-forge | yes |
+| headless | 1.1.x latest patch on conda-forge (1.1.3) | 3.11 | micromamba conda-forge | yes |
 | canary | 1.2-dev weekly | as shipped (do not pin) | conda-forge if published, else weekly AppImage | no (allowed-to-fail) |
-| render | 1.1.x (same env as primary) | 3.12 | micromamba + xvfb + Mesa sw GL | no (isolated) |
+| render | 1.1.x (same build as headless) | 3.11 | micromamba + xvfb + Mesa sw GL | no (isolated) |
 | arch/fast | none | 3.12 | uv only | yes |
 
-`requires-python = ">=3.11"`; no 3.10-or-lower syntax; 3.12-only syntax banned until the 1.0.x leg retires.
+`requires-python = ">=3.11"`; no 3.10-or-lower syntax; 3.12-only syntax banned while the CI 1.1.x leg runs Python 3.11.
 
 ## 4. Environments
 
@@ -244,7 +243,7 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 | Job | Matrix | Steps | Blocking |
 | --- | --- | --- | --- |
 | `arch-checks` | — (uv, py3.12) | `uv sync` → `check_imports.py` → `check_status_vocab.py` → `gen_schemas.py --check` → `check_provenance.py` → `ruff check` (T201 print ban) → `pytest tests/external` | yes |
-| `headless` | `{freecad: 1.0.x/py3.11, 1.1.x/py3.12}` `fail-fast: false` | micromamba (cached) → pip layer-in → `FreeCADCmd tests/run_tests.py` → `pytest tests/external` → `benchmarks/runner.py --gate G0` | yes (both legs, G0.4) |
+| `headless` | `{freecad: 1.1.x/py3.11}` | micromamba (cached) → pip layer-in → `FreeCADCmd tests/run_tests.py` → `pytest tests/external` → `benchmarks/runner.py --gate G0` | yes (G0.4) |
 | `render` | 1.1.x only | same env + `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1`, render-tagged tests only | no (`continue-on-error: true`) |
 
 ```yaml
@@ -256,8 +255,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { freecad: "1.0.*", python: "3.11" }
-          - { freecad: "1.1.*", python: "3.12" }
+          - { freecad: "1.1.*", python: "3.11" }
     steps:
       - uses: actions/checkout@v4
       - uses: mamba-org/setup-micromamba@v2

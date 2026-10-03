@@ -102,7 +102,7 @@ class WilsonCI(TypedDict):
     rate: float; low: float; high: float; n: int; r: int   # majority-of-R rate + 95% Wilson bounds
 
 class ReportBanner(TypedDict, total=False):
-    freecad_version: str            # e.g. "1.0.2" — required
+    freecad_version: str            # e.g. "1.1.3" — required
     element_map_version: int | None # required; None ⇔ no element map (gates AD-7 UNSUPPORTED)
     validator_sensitivity: dict | None  # {"sensitivity": float, "false_alarm": float,
                                         #  "n_faults": int, "suite_id": str}  (AD-13/AD-19)

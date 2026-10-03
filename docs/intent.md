@@ -147,7 +147,7 @@ A skill earns its place by moving a number, not by sounding wise. The standing t
 - [ ] ≥ 8 of the 12 Track A + B skills demonstrate a measurable benchmark improvement (pass-rate or named sub-metric) in ablation; the rest are revised or removed. Track W is exempt — without `design-loop` there is no loop to ablate against, so it is validated by the spec benchmark running at all.
 - [ ] `design-decomposition` specifically: spec-benchmark first-plan success rate (plan needs no structural rework) improves by ≥ 15 percentage points with the skill loaded vs without.
 - [ ] `freecad-troubleshooting` specifically: Phase 1 error-diagnosis cases pass rate with skill ≥ 9/10 at n=10 (vs the baseline 8/10 criterion), escalating to the full n=30 run on a 10/10 result (Wilson CI reported).
-- [ ] Each skill has an owner-reviewed accuracy pass against current FreeCAD documentation (version-pinned, same versions as CI matrix).
+- [ ] Each skill has an owner-reviewed accuracy pass against current FreeCAD documentation (version-pinned, same version as CI).
 
 **Achievable.** Source material exists (FreeCAD wiki/manual, community best practices, own benchmark failures — every Phase 2/3 failure analysis feeds a skill). Ablation reuses the existing benchmark harness.
 
@@ -349,7 +349,7 @@ Candidate directions — each will get its own SMART goal when selected:
 | LLM hallucinates FreeCAD API calls | Failed or wrong operations | Typed tool layer (no free-form `exec` in mutation path), per-step geometry verification, rollback on failure |
 | Workflow lives in skills, so a weak agent produces a weak result | Quality depends on the driving model, not only on this repo | Accepted and explicit: the bridge guarantees *verifiability*, not *design quality*. Deterministic assertions fail a bad part regardless of which agent built it; the skills raise the floor; the ablation rule measures whether they do |
 | Design loop reappears in the code because it is convenient | The rule erodes one helper at a time | Stated as a Guiding Principle with a concrete test (would behaviour change with a different model?); any loop, planner, judge, or model client in the source tree is a defect, not a feature |
-| FreeCAD version drift (API changes between 0.21/1.0+) | Bridge breakage | Pin supported versions, CI matrix across versions, thin adapter layer over version-sensitive calls |
+| FreeCAD version drift (API changes between 0.21/1.0+) | Bridge breakage | Pin the supported version (FreeCAD 1.1.x), CI on that build, thin adapter layer over version-sensitive calls |
 | Agent self-grades → thinks it's doing well when it isn't | False confidence, silent bad output | Validation-First Discipline: validation designed and fault-tested before implementation, actor never grades itself, held-out sets, human audit sampling |
 | Eval benchmarks too easy → inflated pass rates | False confidence | Validation Design Gate: benchmarks + assertions land before phase code; real-world provenance required; validator sensitivity ≥ 95% proven by fault injection |
 | Headless vs GUI behavior differences | Works in dev, fails unattended | Every phase's suite runs headless in CI from Phase 0 onward |

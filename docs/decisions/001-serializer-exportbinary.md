@@ -24,3 +24,7 @@ downstream code branches on FreeCAD version strings.
 - Is `TopoShape.exportBinary` Python-exposed on the conda-forge **1.1.0** build?
 - To be confirmed on the CI headless legs via `shim.export_binary_available()`; record per leg.
 - If absent on both, verify the `exportBrep` stream fallback produces stable, order-independent hashes.
+
+## Superseded in part by 016 (2026-10-03)
+
+FreeCAD 1.0.0 is no longer a leg. On FreeCAD 1.1.3 `shim.export_binary_available()` returns `True`, so the fingerprint serializer uses `exportBinary`.

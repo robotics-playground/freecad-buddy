@@ -33,3 +33,7 @@ Same use-case implementations in all topologies (AD-2). Source: `integration-mcp
   process main thread so inline dispatch is genuinely marshal-free (the H2 marshal-free premise).
 - To be confirmed on the CI headless legs; record per leg which host (H1 default vs H2 fallback)
   the leg resolves to.
+
+## Superseded in part by 016 (2026-10-03)
+
+The 1.0.0/py3.11 question is retired. On FreeCAD 1.1.3, H1 is viable: the env interpreter imports FreeCAD, and the G3 corrupted-plan replay runs over the H1 stdio host.

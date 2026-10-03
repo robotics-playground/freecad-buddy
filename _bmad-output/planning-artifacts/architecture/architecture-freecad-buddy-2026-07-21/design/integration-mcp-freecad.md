@@ -245,12 +245,12 @@ FreeCADCmd run_server.py            # or: xvfb-run -a FreeCADCmd run_server.py (
 
 ## 5. Version Shim (`usecases/shim.py`, AD-11)
 
-One module owns every version-sensitive call; capability probes cached per process (`functools.lru_cache`). All version-matrix findings (1.0.x floor / 1.1.x primary; `Support`→`AttachmentSupport` rename PR #12714; VarSet limited exposure issue #12531) reduce to:
+One module owns every version-sensitive call; capability probes cached per process (`functools.lru_cache`). All version findings for the supported FreeCAD 1.1.x build (the `Support`→`AttachmentSupport` rename PR #12714 predates 1.1; VarSet limited exposure issue #12531) reduce to:
 
 ```python
 def get_attachment(obj) -> list:
-    """Read attachment refs; probes hasattr(obj, 'AttachmentSupport') (1.x), falls back
-    to 'Support' (legacy leg only). Raises ShimUnsupported if neither exists."""
+    """Read attachment refs; probes hasattr(obj, 'AttachmentSupport').
+    Raises ShimUnsupported if it does not exist."""
 
 def set_attachment(obj, refs: list, map_mode: str = "FlatFace") -> None: ...
 

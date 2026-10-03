@@ -63,7 +63,7 @@ description: >-
   operations on solids (see freecad-partdesign) or for planning which
   sketches a part needs (see sketch-strategy).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope
@@ -101,7 +101,7 @@ Frontmatter fields:
 | `track` | yes | `A` \| `B` \| `R` (robot-description/sourcing, Phase 5); a later `C` (domain judgment) reserved |
 | `description` | yes | <1,024 chars; routing metadata per §3 |
 | `version` | yes | semver; bumped on any body change (ablation results cite skill versions — a delta measured on 0.1.0 is not evidence for 0.2.0) |
-| `freecad-versions` | yes | versions the content was accuracy-reviewed against (GS.5 owner review is version-pinned; matches CI matrix, AD-11) |
+| `freecad-versions` | yes | versions the content was accuracy-reviewed against (GS.5 owner review is version-pinned; matches the CI FreeCAD build, AD-11) |
 
 Section-order and heading names are exact (`Scope`, `Decision Rules`, `Worked Examples`, `Anti-Patterns`) — the CI check matches them literally.
 
@@ -165,7 +165,7 @@ Rules match on task text; multiple matches union their subsets, capped at 5 bodi
 
 > **Status: `scripts/check_skill_shape.py` is NOT yet built** (Story 6.1, AD-15). Everything in this section is the specification *for* that script. Until it lands every rule below is convention only, held by review rather than by CI — including the word cap, which currently passes by luck (all 15 bodies measure well under it).
 
-One script (external process, to run in the existing CI workflow), blocking on both matrix legs. It backs GS.E ("skill shape check wired into CI"), G1.5, and G2.6. Per SKILL.md:
+One script (external process, to run in the existing CI workflow), blocking on the 1.1.x CI leg. It backs GS.E ("skill shape check wired into CI"), G1.5, and G2.6. Per SKILL.md:
 
 | Check | Rule | Source |
 | --- | --- | --- |

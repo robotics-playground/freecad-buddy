@@ -17,8 +17,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ## Technology Stack & Versions
 
-- Python: match the CI leg's bundled FreeCAD interpreter — 3.11 (FreeCAD 1.0.x leg) / 3.12 (1.1.x leg). `requires-python = ">=3.11"`; no 3.12-only syntax until the 1.0.x leg retires.
-- FreeCAD: 1.0.x floor + 1.1.x primary (both blocking in CI, conda-forge via micromamba); 1.2-dev weekly canary allowed-to-fail. 0.21 unsupported — never write compat code for it.
+- Python: `requires-python = ">=3.11"`; CI runs FreeCAD 1.1.x on Python 3.11, so no 3.12-only syntax. A local Windows env may run 3.12 (no win-64 1.1.3 build for 3.11).
+- FreeCAD: 1.1.x only (blocking in CI, conda-forge via micromamba); 1.2-dev weekly canary allowed-to-fail. 1.0.x and 0.21 unsupported — never write compat code for them.
 - MCP: official `mcp` python-sdk, spec ≥2025-06-18 (elicitation required by preview flow). Exact pin decided at Phase 0 gate after SDK v2 — check `pyproject.toml`, don't assume.
 - PrefectHQ `fastmcp` ≠ official SDK `FastMCP` class — distinct projects; the repo pins one, check before importing.
 - Export oracles: trimesh + lib3mf (required); admesh optional Linux-only secondary (dormant upstream).
@@ -74,9 +74,9 @@ FreeCAD comes from the host (GUI install or conda env), never from pyproject. In
 ### Testing & CI Rules
 
 - Two test worlds, never mixed: `tests/infc/` runs under `FreeCADCmd` with stdlib `unittest` ONLY (one process, whole suite via `tests/run_tests.py`); `tests/external/` runs under pytest in the uv env. pytest inside FreeCADCmd = AD-12 violation.
-- Both blocking CI legs (1.0.x + 1.1.x) must stay green; a check that passes only in-GUI doesn't count — headless is the gate.
+- The blocking CI leg (1.1.x) must stay green; a check that passes only in-GUI doesn't count — headless is the gate.
 - Render tests are tagged and isolated in the non-blocking xvfb leg — never let a render assert block the core gate.
-- Round-trip fixtures are authored on FreeCAD 1.0 (1.1 core-datum files won't open in 1.0).
+- Round-trip fixtures authored on FreeCAD 1.0 still load on 1.1; author new fixtures on 1.1.
 - Fault-injection cases live beside dev/heldout, never inside them — they validate validators, never count toward pass rates.
 - Golden values in tests come from independent references (hand-computed, reference models), never captured from the implementation under test.
 - Manual GUI testing is agent work, driven with `cua-driver` (load `skill(name="cua-driver")` + its `WINDOWS.md` first). Snapshot the window, act through the fresh element token, verify the postcondition from fresh state — `unknown` is not success, and a tool call returning OK is not proof the application changed. Use it only for what the MCP bridge cannot reach (menus, dialogs, toolbars, tree view, the real viewport); model operations stay on `mcp__freecad-buddy__*`. Any visual claim needs a `cua-driver` screenshot of the real window, because the MCP render is a constructed scene (see the render rule above). Stop and report after 2–3 failed attempts; destructive GUI steps need operator approval.

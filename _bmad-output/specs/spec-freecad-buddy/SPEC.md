@@ -19,7 +19,7 @@ A vision to realize plus an opportunity to capture: FreeCAD is fully scriptable 
 
 - **CAP-1** — Bridge (Phase 0)
   - **intent:** A programmatic client can drive FreeCAD (documents, geometry queries, exports) and verify resulting geometry via MCP tools, identically in-GUI and headless.
-  - **success:** Gate **G0** passes (phase-gates.md), incl. ≥15 schema'd tools, 5 golden models verified ±0.1 %, ≥30 CI tests green on the 1.0/1.1 matrix.
+  - **success:** Gate **G0** passes (phase-gates.md), incl. ≥15 schema'd tools, 5 golden models verified ±0.1 %, ≥30 CI tests green on the FreeCAD 1.1.x CI leg.
 - **CAP-2** — Assistant (Phase 1)
   - **intent:** A user can ask about the open document — feature tree, selected objects, recompute errors, next-tool guidance — and get correct answers from read-only tools.
   - **success:** Gate **G1** passes: ≥80 % on the 50-question eval graded by an independent grader against a written rubric; error diagnosis ≥8/10 at n=10 (30-case set, escalates to n=30 on 10/10); two LLM backends.
@@ -119,7 +119,7 @@ depending on which model is talking to it.
 - The agent reaches the tools only through MCP. No in-process path into the use-case layer exists, for any caller.
 - Pass/fail is computed by deterministic harness code or an independent grader — the producing agent's self-assessment is never a result (AD-13).
 - A phase may not start until the previous phase's gate is fully green; phase implementation may not start until its entry gate lands (AD-19).
-- All gate runs execute headless in CI on the FreeCAD 1.0.x + 1.1.x matrix (AD-11); a check that only passes in-GUI does not count.
+- All gate runs execute headless in CI on the FreeCAD 1.1.x CI leg (AD-11); a check that only passes in-GUI does not count.
 - Statistics rules (AD-14): majority-of-R scoring, Wilson 95 % CI beside every rate, exact McNemar for ablations, dev/held-out gap >15pp blocks exit.
 - Benchmark artifacts only from commercial-clean, documented real-world provenance (AD-16).
 - Solo part-time development; phase timeboxes are durations, not dates.

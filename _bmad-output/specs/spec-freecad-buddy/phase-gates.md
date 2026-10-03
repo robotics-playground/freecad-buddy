@@ -25,7 +25,7 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 | G0.1 | MCP server reachable in both hosts | Headless: connect via stdio, `tools/list`, call one tool per namespace. GUI: same over streamable HTTP against addon-started listener | Both transports list + call successfully; GUI leg additionally carries human smoke token |
 | G0.2 | ≥15 tools across `query_`/`document_`/`export_` | Introspect tool registry; validate every tool has JSON schema + docstring | count ≥15 ∧ 100 % schema-valid |
 | G0.3 | `verify_shape` correct on golden models | Run golden suite: 5 reference models with known volume/bbox/counts | All fields within ±0.1 % on all 5 |
-| G0.4 | Headless CI green on matrix | Query CI run for HEAD: legs 1.0.x + 1.1.x | ≥30 tests, all green, both blocking legs |
+| G0.4 | Headless CI green | Query CI run for HEAD: leg 1.1.x | ≥30 tests, all green, on the blocking 1.1.x leg |
 | G0.5 | STEP round-trip fidelity | Run round-trip test: create → export STEP → re-import → compare | Volume ±0.1 %, `isValid`, topology counts equal |
 
 **Threats → counters:** "tool returned OK but geometry wrong" → G0.3 golden values authored independently from implementation; "works in dev, dies headless" → G0.4 runs only under FreeCADCmd.
@@ -62,7 +62,7 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 | G2.1 | Command benchmark | Run 40 commands × 8 op types on reference models, R=5; per-command geometry assertions [stats] | ≥85 % first-attempt pass |
 | G2.2 | Universal post-verify + rollback | Inject failing ops; read audit log + reports | 100 % of executed ops show post-verify record; every failed verify shows automatic rollback + human-readable explanation |
 | G2.3 | Exact undo | For every benchmark op: fingerprint before, mutate, undo, fingerprint after (AD-6) | Hash-identical in 100 % of cases (snapshot-restore path counts, and is reported when taken) |
-| G2.4 | TNP guard | Run 5 TNP-provoking scenarios through the guard | 5/5 flagged; zero false-clean; `UNSUPPORTED` never reported on matrix legs |
+| G2.4 | TNP guard | Run 5 TNP-provoking scenarios through the guard | 5/5 flagged; zero false-clean; `UNSUPPORTED` never reported on the 1.1.x leg |
 | G2.5 | Fully constrained sketches | Run sketch benchmark; read `verify_sketch` reports | `FullyConstrained == True` in ≥90 % (AD-8 pass signal; redundants warn only) |
 | G2.6 | Skills + ablation harness | Shape-check 6 newly drafted skills; run ablation with declared subsets | Harness reports per-skill paired deltas in AD-14 format |
 
