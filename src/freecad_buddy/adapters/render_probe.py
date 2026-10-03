@@ -27,9 +27,9 @@ _ACCENT_COLOR = (1.0, 0.55, 0.0)
 _FRAME_GROW = 1.2
 _MIN_FRAME_EXTENT = 1e-3
 
-# Headlight aim, as an offset from the camera's default -Z look axis, and the ambient fill.
-# Both are measured against a 10x20x30 box rendered at 240x240 from every named camera plus
-# `custom`, sampling the non-background pixels inside the middle 80% of each axis:
+# Headlight aim, as an offset from the camera's default -Z look axis, its intensity, and the
+# ambient fill. All three are measured against a 10x20x30 box rendered at 240x240 from every named
+# camera plus `custom`, sampling the non-background pixels inside the middle 80% of each axis:
 #
 #   * The offscreen renderer honors exactly ONE SoDirectionalLight. A second light — any
 #     direction, intensity, or child order — puts every axis-aligned camera back at pure white.
@@ -38,16 +38,22 @@ _MIN_FRAME_EXTENT = 1e-3
 #     ~1,276 edge-only samples, while (0.30, 0.20) lights the face at ~13,000 samples. The value
 #     below sits well past that cliff so a renderer or driver that shifts the threshold slightly
 #     does not silently reopen the white end.
-#   * Ambient and the offset trade against each other and cannot both be satisfied. An
-#     axis-aligned view is lit almost entirely by ambient plus a grazing diffuse term, while `iso`
-#     also gets a head-on diffuse term. Raising ambient to bring `iso` up to the live viewport's
-#     rgb(158,165,169) raises the axis-aligned views nearly one-for-one, and at 0.95 they overshoot
-#     the 235 ceiling (`right` measured 241.6 on blue). Light intensity does not separate them —
-#     it is already 1.0. So ambient is set for the ceiling, not for `iso`: at these values every
-#     camera holds >=24/255 of headroom below 235 and clears the background by >=57/255, while
-#     `iso` reads rgb(131,135,138) — darker than the viewport, which is the cost of keeping the
-#     axis-aligned views inside the band.
+#   * The ceiling is set by the brightest default material, FreeCAD's stock diffuse
+#     (0.8, 0.8, 0.9) (App/Material.cpp). A profile with no `DefaultShapeColor` preference — every
+#     fresh install and CI — renders with it, and its blue channel is what reaches 235 first.
+#   * The headlight intensity, not ambient, holds that ceiling. An axis-aligned view takes most of
+#     its tone from the headlight (~183/255 of `right`'s blue at full intensity) and `iso` only
+#     ~85/255, while ambient lifts every camera by the same amount. Dimming the light therefore
+#     pulls the brightest views down about twice as fast as `iso`. Measured on llvmpipe, FreeCAD
+#     1.1.3, stock material: at intensity 1.0 `right` reads blue 242.7 and `front` 236.0, both
+#     out of band; at 0.80 the brightest camera (`right`) reads 205.3, `iso` reads
+#     rgb(127,127,136) and the darkest (`custom`) 113.9. Holding the ceiling with ambient alone
+#     needs 0.30 and leaves `iso` at 112; widening the offset instead saturates one `iso` face to
+#     pure white once ambient reaches 0.65.
+#   * The darker steel-blue diffuse (0.68, 0.71, 0.74) a customised profile can carry renders every
+#     camera between 105 and 179 at these values, so both ends keep a wide margin.
 _HEADLIGHT_OFFSET = (0.55, 0.38, -1.0)
+_HEADLIGHT_INTENSITY = 0.80
 _AMBIENT_INTENSITY = 0.70
 
 # FreeCAD stores the 3D-view anti-aliasing choice as the ``AntiAliasing`` enum value under this
@@ -140,6 +146,7 @@ def _add_lighting(coin, root, orientation) -> None:
     offset.normalize()
     headlight = coin.SoDirectionalLight()
     headlight.direction.setValue(coin.SbRotation(*orientation).multVec(offset))
+    headlight.intensity.setValue(_HEADLIGHT_INTENSITY)
     environment = coin.SoEnvironment()
     environment.ambientIntensity.setValue(_AMBIENT_INTENSITY)
     root.addChild(environment)

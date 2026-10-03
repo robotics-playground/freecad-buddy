@@ -649,12 +649,19 @@ _TONE_VIEWPORT = 240
 # A quaternion no preset uses, so `custom` exercises the orientation path rather than a preset.
 _CUSTOM_QUAT = (0.2, 0.3, 0.1, 0.9273618)
 
-# `iso`'s tone under the shipped rig. The live viewport reads rgb(158,165,169) and `iso` matched it
-# while the headlight was on-axis, but that rig rendered every axis-aligned camera pure white.
-# Offsetting the headlight and lowering ambient to keep those cameras under the band's 235 ceiling
-# necessarily darkens `iso` too: it is lit by the same ambient term. This pins the tone so a later
-# lighting change cannot drift it unnoticed in either direction.
-_ISO_TONE = (131.3, 134.5, 137.8)
+# The golden box takes its color from the `DefaultShapeColor` preference, falling back to FreeCAD's
+# stock (0.8, 0.8, 0.9) when the profile has none (App/Material.cpp getDefaultAppearance). Left
+# unpinned, the sweep grades the running profile rather than the rig: a customised steel-blue
+# profile and a fresh one differ by ~33/255 on `right`. Pinning the stock value makes every leg
+# render the brightest default material, the one that sets the band's ceiling.
+_VIEW_PREFERENCES = "User parameter:BaseApp/Preferences/View"
+_SHAPE_COLOR_KEY = "DefaultShapeColor"
+_STOCK_SHAPE_COLOR = 0xCCCCE6FF
+
+# `iso`'s tone under the shipped rig and the stock material, measured on llvmpipe (FreeCAD 1.1.3).
+# The same rig reproduced the Windows GPU leg's `iso` within 0.3/255 for a shared material. This
+# pins the tone so a later lighting change cannot drift it unnoticed in either direction.
+_ISO_TONE = (126.8, 126.8, 135.5)
 _ISO_TOLERANCE = 6
 
 # The band's black end, asserted directly by the deliberately one-sided regression guard below.
@@ -672,6 +679,16 @@ class CameraToneTest(unittest.TestCase):
     """
 
     def setUp(self):
+        self.view_preferences = App.ParamGet(_VIEW_PREFERENCES)
+        self.saved_shape_color = (
+            self.view_preferences.GetUnsigned(_SHAPE_COLOR_KEY)
+            if _SHAPE_COLOR_KEY in self.view_preferences.GetUnsigneds()
+            else None
+        )
+        # Registered before the change, so the profile is restored even if a later setUp line
+        # raises and tearDown never runs.
+        self.addCleanup(self._restore_shape_color)
+        self.view_preferences.SetUnsigned(_SHAPE_COLOR_KEY, _STOCK_SHAPE_COLOR)
         self.registry = DocumentRegistry()
         self.port = OffscreenRenderPort()
         handle = self.registry.document_create("screenshot_tone")["structured_content"]["doc"]
@@ -683,6 +700,12 @@ class CameraToneTest(unittest.TestCase):
     def tearDown(self):
         for name in list(App.listDocuments().keys()):
             App.closeDocument(name)
+
+    def _restore_shape_color(self):
+        if self.saved_shape_color is None:
+            self.view_preferences.RemUnsigned(_SHAPE_COLOR_KEY)
+        else:
+            self.view_preferences.SetUnsigned(_SHAPE_COLOR_KEY, self.saved_shape_color)
 
     def _render_verdict(self, orientation):
         """Render the golden box at ``orientation`` and return the shared oracle's verdict.
