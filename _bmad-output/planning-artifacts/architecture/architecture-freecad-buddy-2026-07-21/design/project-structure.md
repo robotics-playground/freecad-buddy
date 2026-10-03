@@ -163,6 +163,7 @@ packages = ["src/freecad_buddy"]
 dist/addon/FreeCADBuddy/
 ├── package.xml           # copied from addon/package.xml
 ├── InitGui.py            # copied from src/freecad_buddy/hosts/InitGui.py
+├── repo-root.txt         # absolute repo path; lets a copied install find the project .venv
 └── freecad_buddy/        # full package copy from src/freecad_buddy/
 ```
 

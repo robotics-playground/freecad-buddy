@@ -17,6 +17,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SRC_PKG = REPO_ROOT / "src" / "freecad_buddy"
 PACKAGE_XML = REPO_ROOT / "addon" / "package.xml"
+# Read by hosts/gui_addon/bootstrap.py: a copied addon has no path relation to the repo, so this
+# marker is its only route back to the project .venv that runs the MCP proxy.
+REPO_ROOT_MARKER = "repo-root.txt"
 
 _INITGUI_SHIM = '''\
 """Generated addon shim: put freecad_buddy on sys.path and run the real InitGui."""
@@ -63,6 +66,7 @@ def build(dist_dir: Path | None = None) -> Path:
     )
     shutil.copy2(PACKAGE_XML, dist_dir / "package.xml")
     (dist_dir / "InitGui.py").write_text(_INITGUI_SHIM, encoding="utf-8")
+    (dist_dir / REPO_ROOT_MARKER).write_text(str(REPO_ROOT), encoding="utf-8")
     return dist_dir
 
 

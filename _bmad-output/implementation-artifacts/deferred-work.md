@@ -1398,3 +1398,15 @@ resolution: `_feature_schema` takes an optional `conditional` mapping a discrimi
 The catalog's first conditional schema, as the entry anticipated. No drift-checker change was needed — `gen_schemas --check` passes, because input schemas are hand-authored for the MCP client and are not generated from the contract types.
 
 Validated with a real `Draft202012Validator` rather than by reading the keywords: a linear call carrying `direction` and a polar call carrying `axis` are accepted, and each kind missing its selector is refused. Writing that test caught a mistake of my own — the first fixture used `{"object": "Pad"}`, which is not a valid selector: a selector carries its own `kind` (`mapped_name`/`geometric`), distinct from the pattern's.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-harness-copy-install-proxy-discovery.md`
+  summary: `AGENTS.md` §16 still describes proxy venv discovery as only a walk from the package `__file__`, without the `repo-root.txt` marker that a built-copy install now uses.
+  evidence: `AGENTS.md:440` reads "(walk from the package's `__file__` to the repo root) and run the serve module directly"; `CLAUDE.md:440` and `integration-mcp-freecad.md:136` gained the marker clause. Deferred because the fix edits an agent-context file, and `AGENTS.md` also carries the operator's own uncommitted edits.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-harness-copy-install-proxy-discovery.md`
+  summary: The `_discover_external_python` docstring promises the returned venv has `freecad_buddy` and `mcp` importable, but the code only checks that the interpreter file exists.
+  evidence: `bootstrap.py` docstring: "Returns the venv python whose ``freecad_buddy`` + ``mcp`` are importable, or ``None``."; the loop returns on `if candidate.is_file():`. A venv synced without the `mcp` extra passes discovery and the proxy then fails at spawn, visible only in `mcp-proxy.log`. Pre-existing line, unchanged by this spec.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-harness-copy-install-proxy-discovery.md`
+  summary: The "MCP proxy not auto-started" log message tells the operator to run `uv sync`, which is the wrong fix for a built-copy install whose `repo-root.txt` marker is missing or stale.
+  evidence: `_start_mcp_proxy` logs "no .venv/venv interpreter found next to the addon ... Create the project venv (uv sync) so the addon can find it". For a copy install the cause is the marker, and the fix is a rebuild with `scripts/build_addon.py`. Message text predates this spec.

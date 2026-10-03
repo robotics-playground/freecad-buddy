@@ -148,27 +148,37 @@ def _port_open(host: str, port: int) -> bool:
 
 
 _SERVE_ARGS = ["-m", "freecad_buddy.hosts.main", "serve", "--mode", "rpc", "--transport", "http"]
+# Written by scripts/build_addon.py into the addon root: one line, the absolute repo path.
+_REPO_ROOT_MARKER = "repo-root.txt"
 
 
-def _discover_external_python() -> Path | None:
+def _discover_external_python(here: Path | None = None) -> Path | None:
     """Find the external interpreter that can run the MCP proxy, from the addon's own location.
 
     The proxy imports ``mcp``/FastMCP, which AD-12 forbids inside FreeCAD's bundled Python, so it
     must run in a DIFFERENT interpreter. That interpreter is discovered — not configured — by
     walking from this package's install path to the repo root and probing the standard venv the
-    project ships (``.venv``/``venv``). Zero env vars: install the addon (a junction/copy of the
-    package under the repo), open FreeCAD, and the sibling ``.venv`` is found automatically.
+    project ships (``.venv``/``venv``). Zero env vars: install the addon (a junction to the repo
+    package, or a ``build_addon.py`` copy carrying the ``repo-root.txt`` marker), open FreeCAD, and
+    the repo ``.venv`` is found automatically.
 
     Returns the venv python whose ``freecad_buddy`` + ``mcp`` are importable, or ``None``.
     """
     # bootstrap.py is <root>/src/freecad_buddy/hosts/gui_addon/bootstrap.py — parents[4] is the
-    # repo root when installed as an editable src junction; a vendored copy resolves the same way
-    # (<Mod>/FreeCADBuddy/freecad_buddy/... → the addon root), so also probe two levels up.
-    here = Path(__file__).resolve()
+    # repo root when installed as an editable src junction. A built copy lives at
+    # <Mod>/FreeCADBuddy/freecad_buddy/... and shares no ancestor with the repo, so it finds the
+    # repo only through the marker build_addon.py writes into the addon root (parents[3]).
+    here = here or Path(__file__).resolve()
     roots: list[Path] = []
-    for up in (4, 2):
-        if up < len(here.parents):
-            roots.append(here.parents[up])
+    if len(here.parents) > 4:
+        roots.append(here.parents[4])
+    if len(here.parents) > 3:
+        try:
+            marked = (here.parents[3] / _REPO_ROOT_MARKER).read_text(encoding="utf-8-sig").strip()
+        except (OSError, UnicodeDecodeError):  # a bad marker must never break start_bridge
+            marked = ""
+        if marked:
+            roots.append(Path(marked))
     for override in (os.environ.get("FREECAD_BUDDY_REPO"), os.environ.get("FREECAD_BUDDY_SRC")):
         if override:
             base = Path(override)
