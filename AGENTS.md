@@ -194,6 +194,7 @@ Code is written for the standards, never compressed:
 - `skill(name="cua-driver")`
 - Directory: `tests/uat`
 - GUI end-to-end harness — launch, install modes, MCP over HTTP, canary, visual check, shutdown: [freecad-gui-e2e-harness](.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md). Read it before you launch FreeCAD for any test.
+- Native FreeCAD validation — prove a built part with FreeCAD's own Check Geometry, an in-FreeCAD kernel macro and Fit all screenshots, driven with `cua-driver`; includes a subagent brief and troubleshooting: [freecad-native-validation](.knowledge-base/technical/standards/testing/freecad-native-validation.md). Use it whenever a result must not rest on MCP output alone.
 - FreeCAD GUI operations:
   - Shutdown all FreeCAD instances before starting the tests. Verify that no FreeCAD processes are running.
   - Ensure no documents are open in the FreeCAD GUI before running UAT tests.

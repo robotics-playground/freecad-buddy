@@ -116,6 +116,9 @@ with what the run built.
 
 **Done when:** the real window shows the expected part, and no modal dialog is open.
 
+To prove measured values without trusting MCP output, follow
+[FreeCAD native validation](freecad-native-validation.md).
+
 ### 6. Prove the code under test is the code that ran
 
 A passing smoke does not prove the edited source ran. Use a **canary**: a temporary marker log
