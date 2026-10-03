@@ -49,8 +49,8 @@ jobs:
           echo "$out" | grep -q "live eval skipped" || {
             echo "live eval must be skipped in CI (no operator backend)"; exit 1;
           }
-      - name: G1 ReAct adapter + backend actor-run (offline, no key/secret/network/GGUF)
-        run: uv run pytest tests/external/test_react_adapter.py tests/external/test_react_backend_actor_run.py -q
+      - name: G1 scripted plan replayer + actor-run (offline, no key/secret/network)
+        run: uv run pytest tests/external/test_scripted_backend.py tests/external/test_actor_run_g1.py -q
       - name: G1 gate-exit machinery (seal/unseal/burn + leg-c, offline, no key/secret)
         run: uv run pytest tests/external/test_gate_g1_exit.py -q
       - name: G1 held-out holds only the sealed pair (no unsealed live case leaked)

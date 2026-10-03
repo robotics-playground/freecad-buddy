@@ -1,0 +1,4 @@
+{"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:tJ-JgQaNKBGPt6ZBmw1vug", "name": "Scratch6a", "label": "Scratch6a"}, "text": "doc: fcb-doc:tJ-JgQaNKBGPt6ZBmw1vug\nlabel: Scratch6a\nname: Scratch6a"}
+OK
+OK null
+close OK

@@ -1,0 +1,3621 @@
+{
+  "_note": "Prefer `elements` — `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+  "app_name": "freecad.exe",
+  "element_count": 189,
+  "elements": [
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 0,
+      "element_index": 0,
+      "element_token": "s000000cb:0",
+      "enabled": true,
+      "frame": {
+        "h": 1341,
+        "w": 1772,
+        "x": 1,
+        "y": 37
+      },
+      "label": " ProbeFit - FreeCAD 1.1.4",
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 1,
+      "element_token": "s000000cb:1",
+      "enabled": true,
+      "frame": {
+        "h": 35,
+        "w": 1753,
+        "x": 21,
+        "y": 3
+      },
+      "label": " ProbeFit - FreeCAD 1.1.4",
+      "parent_index": 0,
+      "role": "TitleBar",
+      "value": " ProbeFit - FreeCAD 1.1.4"
+    },
+    {
+      "actions": [
+        "expand"
+      ],
+      "depth": 3,
+      "element_index": 2,
+      "element_token": "s000000cb:2",
+      "enabled": true,
+      "frame": {
+        "h": 28,
+        "w": 28,
+        "x": 1,
+        "y": 9
+      },
+      "label": "System",
+      "parent_index": 1,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 2,
+      "element_index": 3,
+      "element_token": "s000000cb:3",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 60,
+        "x": 1596,
+        "y": 1
+      },
+      "label": "Minimize",
+      "parent_index": 1,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 2,
+      "element_index": 4,
+      "element_token": "s000000cb:4",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 59,
+        "x": 1656,
+        "y": 1
+      },
+      "label": "Maximize",
+      "parent_index": 1,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 2,
+      "element_index": 5,
+      "element_token": "s000000cb:5",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 60,
+        "x": 1715,
+        "y": 1
+      },
+      "label": "Close",
+      "parent_index": 1,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 6,
+      "element_token": "s000000cb:6",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 125,
+        "x": -123,
+        "y": -87
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QOpenGLWidget",
+      "parent_index": 0,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 7,
+      "element_token": "s000000cb:7",
+      "enabled": true,
+      "frame": {
+        "h": 1091,
+        "w": 1440,
+        "x": 333,
+        "y": 248
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea",
+      "parent_index": 0,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 8,
+      "element_token": "s000000cb:8",
+      "enabled": true,
+      "frame": {
+        "h": 412,
+        "w": 505,
+        "x": 333,
+        "y": 248
+      },
+      "label": "Start",
+      "parent_index": 7,
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 9,
+      "element_token": "s000000cb:9",
+      "enabled": true,
+      "frame": {
+        "h": 375,
+        "w": 500,
+        "x": 336,
+        "y": 283
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView",
+      "parent_index": 8,
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 10,
+      "element_token": "s000000cb:10",
+      "enabled": true,
+      "frame": {
+        "h": 375,
+        "w": 500,
+        "x": 336,
+        "y": 283
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget",
+      "parent_index": 9,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 11,
+      "element_token": "s000000cb:11",
+      "enabled": true,
+      "frame": {
+        "h": 375,
+        "w": 500,
+        "x": 336,
+        "y": 283
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget",
+      "parent_index": 10,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 12,
+      "element_token": "s000000cb:12",
+      "enabled": true,
+      "frame": {
+        "h": 315,
+        "w": 477,
+        "x": 347,
+        "y": 295
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea",
+      "parent_index": 11,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 13,
+      "element_token": "s000000cb:13",
+      "enabled": true,
+      "frame": {
+        "h": 295,
+        "w": 457,
+        "x": 348,
+        "y": 296
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport",
+      "parent_index": 12,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 8,
+      "element_index": 14,
+      "element_token": "s000000cb:14",
+      "enabled": true,
+      "frame": {
+        "h": 1596,
+        "w": 822,
+        "x": 348,
+        "y": 296
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget",
+      "parent_index": 13,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 9,
+      "element_index": 15,
+      "element_token": "s000000cb:15",
+      "enabled": true,
+      "frame": {
+        "h": 40,
+        "w": 800,
+        "x": 360,
+        "y": 307
+      },
+      "label": "New File",
+      "parent_index": 14,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 9,
+      "element_index": 16,
+      "element_token": "s000000cb:16",
+      "enabled": true,
+      "frame": {
+        "h": 255,
+        "w": 800,
+        "x": 360,
+        "y": 366
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow",
+      "parent_index": 14,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 17,
+      "element_token": "s000000cb:17",
+      "enabled": true,
+      "frame": {
+        "h": 80,
+        "w": 325,
+        "x": 360,
+        "y": 366
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton",
+      "parent_index": 16,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 11,
+      "element_index": 18,
+      "element_token": "s000000cb:18",
+      "enabled": true,
+      "frame": {
+        "h": 60,
+        "w": 60,
+        "x": 370,
+        "y": 376
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel",
+      "parent_index": 17,
+      "role": "Image"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 19,
+      "element_token": "s000000cb:19",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 225,
+        "x": 440,
+        "y": 376
+      },
+      "label": "Parametric Body",
+      "parent_index": 17,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 20,
+      "element_token": "s000000cb:20",
+      "enabled": true,
+      "frame": {
+        "h": 40,
+        "w": 225,
+        "x": 440,
+        "y": 396
+      },
+      "label": "Creates a body with the Part Design workbench",
+      "parent_index": 17,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 21,
+      "element_token": "s000000cb:21",
+      "enabled": true,
+      "frame": {
+        "h": 80,
+        "w": 325,
+        "x": 692,
+        "y": 366
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton",
+      "parent_index": 16,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 11,
+      "element_index": 22,
+      "element_token": "s000000cb:22",
+      "enabled": true,
+      "frame": {
+        "h": 60,
+        "w": 60,
+        "x": 702,
+        "y": 376
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel",
+      "parent_index": 21,
+      "role": "Image"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 23,
+      "element_token": "s000000cb:23",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 772,
+        "y": 376
+      },
+      "label": "Assembly",
+      "parent_index": 21,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 24,
+      "element_token": "s000000cb:24",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 772,
+        "y": 406
+      },
+      "label": "Creates an assembly project",
+      "parent_index": 21,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 25,
+      "element_token": "s000000cb:25",
+      "enabled": true,
+      "frame": {
+        "h": 80,
+        "w": 325,
+        "x": 360,
+        "y": 453
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton",
+      "parent_index": 16,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 11,
+      "element_index": 26,
+      "element_token": "s000000cb:26",
+      "enabled": true,
+      "frame": {
+        "h": 60,
+        "w": 60,
+        "x": 370,
+        "y": 463
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel",
+      "parent_index": 25,
+      "role": "Image"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 27,
+      "element_token": "s000000cb:27",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 440,
+        "y": 463
+      },
+      "label": "2D Draft",
+      "parent_index": 25,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 28,
+      "element_token": "s000000cb:28",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 440,
+        "y": 493
+      },
+      "label": "Creates a 2D Draft document",
+      "parent_index": 25,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 29,
+      "element_token": "s000000cb:29",
+      "enabled": true,
+      "frame": {
+        "h": 80,
+        "w": 325,
+        "x": 692,
+        "y": 453
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton",
+      "parent_index": 16,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 11,
+      "element_index": 30,
+      "element_token": "s000000cb:30",
+      "enabled": true,
+      "frame": {
+        "h": 60,
+        "w": 60,
+        "x": 702,
+        "y": 463
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel",
+      "parent_index": 29,
+      "role": "Image"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 31,
+      "element_token": "s000000cb:31",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 772,
+        "y": 463
+      },
+      "label": "BIM/Architecture",
+      "parent_index": 29,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 32,
+      "element_token": "s000000cb:32",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 772,
+        "y": 493
+      },
+      "label": "Creates an architectural project",
+      "parent_index": 29,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 33,
+      "element_token": "s000000cb:33",
+      "enabled": true,
+      "frame": {
+        "h": 80,
+        "w": 325,
+        "x": 360,
+        "y": 541
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton",
+      "parent_index": 16,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 11,
+      "element_index": 34,
+      "element_token": "s000000cb:34",
+      "enabled": true,
+      "frame": {
+        "h": 60,
+        "w": 60,
+        "x": 370,
+        "y": 551
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel",
+      "parent_index": 33,
+      "role": "Image"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 35,
+      "element_token": "s000000cb:35",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 440,
+        "y": 551
+      },
+      "label": "Empty File",
+      "parent_index": 33,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 36,
+      "element_token": "s000000cb:36",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 225,
+        "x": 440,
+        "y": 581
+      },
+      "label": "Creates a new empty FreeCAD file",
+      "parent_index": 33,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 37,
+      "element_token": "s000000cb:37",
+      "enabled": true,
+      "frame": {
+        "h": 80,
+        "w": 325,
+        "x": 692,
+        "y": 541
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton",
+      "parent_index": 16,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 11,
+      "element_index": 38,
+      "element_token": "s000000cb:38",
+      "enabled": true,
+      "frame": {
+        "h": 60,
+        "w": 60,
+        "x": 702,
+        "y": 551
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel",
+      "parent_index": 37,
+      "role": "Image"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 39,
+      "element_token": "s000000cb:39",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 225,
+        "x": 772,
+        "y": 551
+      },
+      "label": "Open File",
+      "parent_index": 37,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 11,
+      "element_index": 40,
+      "element_token": "s000000cb:40",
+      "enabled": true,
+      "frame": {
+        "h": 40,
+        "w": 225,
+        "x": 772,
+        "y": 571
+      },
+      "label": "Opens an existing CAD file or 3D model",
+      "parent_index": 37,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 9,
+      "element_index": 41,
+      "element_token": "s000000cb:41",
+      "enabled": true,
+      "frame": {
+        "h": 40,
+        "w": 800,
+        "x": 360,
+        "y": 640
+      },
+      "label": "Recent Files",
+      "parent_index": 14,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "set_value"
+      ],
+      "depth": 9,
+      "element_index": 42,
+      "element_token": "s000000cb:42",
+      "enabled": true,
+      "frame": {
+        "h": 288,
+        "w": 800,
+        "x": 360,
+        "y": 698
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 14,
+      "role": "List"
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 43,
+      "element_token": "s000000cb:43",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 381,
+        "y": 720
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 42,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 44,
+      "element_token": "s000000cb:44",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 588,
+        "y": 720
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 42,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 45,
+      "element_token": "s000000cb:45",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 796,
+        "y": 720
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 42,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 9,
+      "element_index": 46,
+      "element_token": "s000000cb:46",
+      "enabled": true,
+      "frame": {
+        "h": 40,
+        "w": 800,
+        "x": 360,
+        "y": 1006
+      },
+      "label": "Examples",
+      "parent_index": 14,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "set_value"
+      ],
+      "depth": 9,
+      "element_index": 47,
+      "element_token": "s000000cb:47",
+      "enabled": true,
+      "frame": {
+        "h": 816,
+        "w": 800,
+        "x": 360,
+        "y": 1065
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 14,
+      "role": "List"
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 48,
+      "element_token": "s000000cb:48",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 381,
+        "y": 1086
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 49,
+      "element_token": "s000000cb:49",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 588,
+        "y": 1086
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 50,
+      "element_token": "s000000cb:50",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 796,
+        "y": 1086
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 51,
+      "element_token": "s000000cb:51",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 381,
+        "y": 1350
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 52,
+      "element_token": "s000000cb:52",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 588,
+        "y": 1350
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 53,
+      "element_token": "s000000cb:53",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 796,
+        "y": 1350
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 54,
+      "element_token": "s000000cb:54",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 381,
+        "y": 1613
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 55,
+      "element_token": "s000000cb:55",
+      "enabled": true,
+      "frame": {
+        "h": 243,
+        "w": 187,
+        "x": 588,
+        "y": 1613
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView",
+      "parent_index": 47,
+      "role": "ListItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 56,
+      "element_token": "s000000cb:56",
+      "enabled": true,
+      "frame": {
+        "h": 17,
+        "w": 457,
+        "x": 348,
+        "y": 591
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_hcontainer",
+      "parent_index": 12,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value",
+        "set_value"
+      ],
+      "depth": 8,
+      "element_index": 57,
+      "element_token": "s000000cb:57",
+      "enabled": true,
+      "frame": {
+        "h": 17,
+        "w": 457,
+        "x": 348,
+        "y": 591
+      },
+      "label": "0",
+      "parent_index": 56,
+      "role": "ScrollBar",
+      "value": "0"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 58,
+      "element_token": "s000000cb:58",
+      "enabled": true,
+      "frame": {
+        "h": 295,
+        "w": 17,
+        "x": 806,
+        "y": 296
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_vcontainer",
+      "parent_index": 12,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value",
+        "set_value"
+      ],
+      "depth": 8,
+      "element_index": 59,
+      "element_token": "s000000cb:59",
+      "enabled": true,
+      "frame": {
+        "h": 295,
+        "w": 17,
+        "x": 806,
+        "y": 296
+      },
+      "label": "0",
+      "parent_index": 58,
+      "role": "ScrollBar",
+      "value": "0"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 60,
+      "element_token": "s000000cb:60",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 202,
+        "x": 347,
+        "y": 617
+      },
+      "label": "Open First Start Setup",
+      "parent_index": 11,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "toggle",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 61,
+      "element_token": "s000000cb:61",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 265,
+        "x": 560,
+        "y": 618
+      },
+      "label": "Do not show this Start page again (start with blank screen)",
+      "parent_index": 11,
+      "role": "CheckBox",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 62,
+      "element_token": "s000000cb:62",
+      "enabled": true,
+      "frame": {
+        "h": 1053,
+        "w": 1440,
+        "x": 333,
+        "y": 248
+      },
+      "label": "ProbeFit : 1",
+      "parent_index": 7,
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 63,
+      "element_token": "s000000cb:63",
+      "enabled": true,
+      "frame": {
+        "h": 1053,
+        "w": 1440,
+        "x": 333,
+        "y": 248
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor",
+      "parent_index": 62,
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 64,
+      "element_token": "s000000cb:64",
+      "enabled": true,
+      "frame": {
+        "h": 1053,
+        "w": 1440,
+        "x": 333,
+        "y": 248
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor.QStackedWidget",
+      "parent_index": 63,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 65,
+      "element_token": "s000000cb:65",
+      "enabled": true,
+      "frame": {
+        "h": 1053,
+        "w": 1440,
+        "x": 333,
+        "y": 248
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor.QStackedWidget.Gui::View3DInventorViewer",
+      "parent_index": 64,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 66,
+      "element_token": "s000000cb:66",
+      "enabled": true,
+      "frame": {
+        "h": 1053,
+        "w": 1440,
+        "x": 333,
+        "y": 248
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor.QStackedWidget.Gui::View3DInventorViewer.QOpenGLWidget",
+      "parent_index": 65,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 67,
+      "element_token": "s000000cb:67",
+      "enabled": true,
+      "frame": {
+        "h": 38,
+        "w": 1772,
+        "x": 1,
+        "y": 1340
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar",
+      "parent_index": 0,
+      "role": "StatusBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 68,
+      "element_token": "s000000cb:68",
+      "enabled": true,
+      "frame": {
+        "h": 15,
+        "w": 15,
+        "x": 1758,
+        "y": 1363
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar.QSizeGrip",
+      "parent_index": 67,
+      "role": "Thumb"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 2,
+      "element_index": 69,
+      "element_token": "s000000cb:69",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 1352,
+        "x": 3,
+        "y": 1343
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar.Gui::StatusBarLabel",
+      "parent_index": 67,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 70,
+      "element_token": "s000000cb:70",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 167,
+        "x": 1582,
+        "y": 1345
+      },
+      "label": "5.66 mm x 4.14 mm",
+      "parent_index": 67,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 2,
+      "element_index": 71,
+      "element_token": "s000000cb:71",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 7,
+        "x": 1363,
+        "y": 1343
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar.hintLabel",
+      "parent_index": 67,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 2,
+      "element_index": 72,
+      "element_token": "s000000cb:72",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 7,
+        "x": 1386,
+        "y": 1343
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar.rightSideLabel",
+      "parent_index": 67,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 73,
+      "element_token": "s000000cb:73",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 62,
+        "x": 1401,
+        "y": 1345
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar.notificationArea",
+      "parent_index": 67,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 74,
+      "element_token": "s000000cb:74",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 103,
+        "x": 1471,
+        "y": 1345
+      },
+      "label": "Revit  ",
+      "parent_index": 67,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 75,
+      "element_token": "s000000cb:75",
+      "enabled": true,
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.statusBar.StatusBarArea",
+      "parent_index": 67,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 76,
+      "element_token": "s000000cb:76",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 1772,
+        "x": 1,
+        "y": 37
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMenuBar",
+      "parent_index": 0,
+      "role": "MenuBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 77,
+      "element_token": "s000000cb:77",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 42,
+        "x": 8,
+        "y": 37
+      },
+      "label": "File",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 78,
+      "element_token": "s000000cb:78",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 46,
+        "x": 58,
+        "y": 37
+      },
+      "label": "Edit",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 79,
+      "element_token": "s000000cb:79",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 52,
+        "x": 112,
+        "y": 37
+      },
+      "label": "View",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 80,
+      "element_token": "s000000cb:80",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 55,
+        "x": 172,
+        "y": 37
+      },
+      "label": "Tools",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 81,
+      "element_token": "s000000cb:81",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 62,
+        "x": 235,
+        "y": 37
+      },
+      "label": "Macro",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 82,
+      "element_token": "s000000cb:82",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 63,
+        "x": 305,
+        "y": 37
+      },
+      "label": "Sketch",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 83,
+      "element_token": "s000000cb:83",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 96,
+        "x": 376,
+        "y": 37
+      },
+      "label": "Part Design",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 84,
+      "element_token": "s000000cb:84",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 81,
+        "x": 480,
+        "y": 37
+      },
+      "label": "Windows",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 85,
+      "element_token": "s000000cb:85",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 51,
+        "x": 568,
+        "y": 37
+      },
+      "label": "Help",
+      "parent_index": 76,
+      "role": "MenuItem"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 86,
+      "element_token": "s000000cb:86",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 125,
+        "x": -123,
+        "y": -87
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow._fc_action_widget_",
+      "parent_index": 0,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 87,
+      "element_token": "s000000cb:87",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 143,
+        "x": 1,
+        "y": 63
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.File",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 88,
+      "element_token": "s000000cb:88",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 15,
+        "y": 67
+      },
+      "label": "New Document",
+      "parent_index": 87,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 89,
+      "element_token": "s000000cb:89",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 57,
+        "y": 67
+      },
+      "label": "Open…",
+      "parent_index": 87,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 90,
+      "element_token": "s000000cb:90",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 100,
+        "y": 67
+      },
+      "label": "Save",
+      "parent_index": 87,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 91,
+      "element_token": "s000000cb:91",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 203,
+        "x": 145,
+        "y": 63
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Edit",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 92,
+      "element_token": "s000000cb:92",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 13,
+        "x": 273,
+        "y": 67
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Edit.QToolBarSeparator",
+      "parent_index": 91,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 93,
+      "element_token": "s000000cb:93",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 250,
+        "x": 348,
+        "y": 63
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Workbench",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "expand",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 94,
+      "element_token": "s000000cb:94",
+      "enabled": true,
+      "frame": {
+        "h": 30,
+        "w": 232,
+        "x": 362,
+        "y": 72
+      },
+      "label": "Part Design",
+      "parent_index": 93,
+      "role": "ComboBox",
+      "value": "Part Design"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 95,
+      "element_token": "s000000cb:95",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 1175,
+        "x": 598,
+        "y": 63
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.View",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 96,
+      "element_token": "s000000cb:96",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 612,
+        "y": 67
+      },
+      "label": "Fit All",
+      "parent_index": 95,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 97,
+      "element_token": "s000000cb:97",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 655,
+        "y": 67
+      },
+      "label": "Fit Selection",
+      "parent_index": 95,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 98,
+      "element_token": "s000000cb:98",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 697,
+        "y": 67
+      },
+      "label": "Standard Views",
+      "parent_index": 95,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 99,
+      "element_token": "s000000cb:99",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 756,
+        "y": 67
+      },
+      "label": "Align to Selection",
+      "parent_index": 95,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 100,
+      "element_token": "s000000cb:100",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 13,
+        "x": 798,
+        "y": 67
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.View.QToolBarSeparator",
+      "parent_index": 95,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 101,
+      "element_token": "s000000cb:101",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 813,
+        "y": 67
+      },
+      "label": "Draw Style",
+      "parent_index": 95,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 102,
+      "element_token": "s000000cb:102",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 872,
+        "y": 67
+      },
+      "label": "Selection Filter",
+      "parent_index": 95,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "toggle",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 103,
+      "element_token": "s000000cb:103",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 931,
+        "y": 67
+      },
+      "label": "Tree View Actions",
+      "parent_index": 95,
+      "role": "Button",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 104,
+      "element_token": "s000000cb:104",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 261,
+        "x": 1,
+        "y": 112
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Structure",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 105,
+      "element_token": "s000000cb:105",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 15,
+        "y": 116
+      },
+      "label": "New Part",
+      "parent_index": 104,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 106,
+      "element_token": "s000000cb:106",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 57,
+        "y": 116
+      },
+      "label": "Datums",
+      "parent_index": 104,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 107,
+      "element_token": "s000000cb:107",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 116,
+        "y": 116
+      },
+      "label": "New Group",
+      "parent_index": 104,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 108,
+      "element_token": "s000000cb:108",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 158,
+        "y": 116
+      },
+      "label": "Link Actions",
+      "parent_index": 104,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 109,
+      "element_token": "s000000cb:109",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 217,
+        "y": 116
+      },
+      "label": "Variable Set",
+      "parent_index": 104,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 110,
+      "element_token": "s000000cb:110",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 58,
+        "x": 262,
+        "y": 112
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Help",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 111,
+      "element_token": "s000000cb:111",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 276,
+        "y": 116
+      },
+      "label": "What's This?",
+      "parent_index": 110,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 112,
+      "element_token": "s000000cb:112",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 1452,
+        "x": 321,
+        "y": 112
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Part Design Helper Features",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 113,
+      "element_token": "s000000cb:113",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 335,
+        "y": 116
+      },
+      "label": "New Body",
+      "parent_index": 112,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 114,
+      "element_token": "s000000cb:114",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 377,
+        "y": 116
+      },
+      "label": "Create Datum",
+      "parent_index": 112,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 115,
+      "element_token": "s000000cb:115",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 521,
+        "y": 116
+      },
+      "label": "Sub-Shape Binder",
+      "parent_index": 112,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 116,
+      "element_token": "s000000cb:116",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 673,
+        "x": 1,
+        "y": 161
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 117,
+      "element_token": "s000000cb:117",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 15,
+        "y": 165
+      },
+      "label": "Pad",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 118,
+      "element_token": "s000000cb:118",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 57,
+        "y": 165
+      },
+      "label": "Revolve",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 119,
+      "element_token": "s000000cb:119",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 100,
+        "y": 165
+      },
+      "label": "Additive Loft",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 120,
+      "element_token": "s000000cb:120",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 142,
+        "y": 165
+      },
+      "label": "Additive Pipe",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 121,
+      "element_token": "s000000cb:121",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 185,
+        "y": 165
+      },
+      "label": "Additive Helix",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 122,
+      "element_token": "s000000cb:122",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 227,
+        "y": 165
+      },
+      "label": "Additive Primitive",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 123,
+      "element_token": "s000000cb:123",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 13,
+        "x": 286,
+        "y": 165
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolBarSeparator",
+      "parent_index": 116,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 124,
+      "element_token": "s000000cb:124",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 301,
+        "y": 165
+      },
+      "label": "Pocket",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 125,
+      "element_token": "s000000cb:125",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 343,
+        "y": 165
+      },
+      "label": "Hole",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 126,
+      "element_token": "s000000cb:126",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 386,
+        "y": 165
+      },
+      "label": "Groove",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 127,
+      "element_token": "s000000cb:127",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 428,
+        "y": 165
+      },
+      "label": "Subtractive Loft",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 128,
+      "element_token": "s000000cb:128",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 471,
+        "y": 165
+      },
+      "label": "Subtractive Pipe",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 129,
+      "element_token": "s000000cb:129",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 513,
+        "y": 165
+      },
+      "label": "Subtractive Helix",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 130,
+      "element_token": "s000000cb:130",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 57,
+        "x": 556,
+        "y": 165
+      },
+      "label": "Subtractive Primitive",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 131,
+      "element_token": "s000000cb:131",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 13,
+        "x": 615,
+        "y": 165
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolBarSeparator",
+      "parent_index": 116,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 132,
+      "element_token": "s000000cb:132",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 630,
+        "y": 165
+      },
+      "label": "Boolean Operation",
+      "parent_index": 116,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 133,
+      "element_token": "s000000cb:133",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 186,
+        "x": 675,
+        "y": 161
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Part Design Dress-Up Features",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 134,
+      "element_token": "s000000cb:134",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 688,
+        "y": 165
+      },
+      "label": "Fillet",
+      "parent_index": 133,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 135,
+      "element_token": "s000000cb:135",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 731,
+        "y": 165
+      },
+      "label": "Chamfer",
+      "parent_index": 133,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 136,
+      "element_token": "s000000cb:136",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 773,
+        "y": 165
+      },
+      "label": "Draft",
+      "parent_index": 133,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 137,
+      "element_token": "s000000cb:137",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 816,
+        "y": 165
+      },
+      "label": "Thickness",
+      "parent_index": 133,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 138,
+      "element_token": "s000000cb:138",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 912,
+        "x": 861,
+        "y": 161
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Part Design Transformation Features",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 139,
+      "element_token": "s000000cb:139",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 875,
+        "y": 165
+      },
+      "label": "Mirror",
+      "parent_index": 138,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 140,
+      "element_token": "s000000cb:140",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 917,
+        "y": 165
+      },
+      "label": "Linear Pattern",
+      "parent_index": 138,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 141,
+      "element_token": "s000000cb:141",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 960,
+        "y": 165
+      },
+      "label": "Polar Pattern",
+      "parent_index": 138,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 142,
+      "element_token": "s000000cb:142",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 41,
+        "x": 1002,
+        "y": 165
+      },
+      "label": "Multi-Transform",
+      "parent_index": 138,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 143,
+      "element_token": "s000000cb:143",
+      "enabled": true,
+      "frame": {
+        "h": 38,
+        "w": 1772,
+        "x": 1,
+        "y": 210
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Auto-Created Macro Toolbar",
+      "parent_index": 0,
+      "role": "ToolBar"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 144,
+      "element_token": "s000000cb:144",
+      "enabled": true,
+      "frame": {
+        "h": 31,
+        "w": 182,
+        "x": 15,
+        "y": 213
+      },
+      "label": "Download Classifications",
+      "parent_index": 143,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 145,
+      "element_token": "s000000cb:145",
+      "enabled": true,
+      "frame": {
+        "h": 1091,
+        "w": 325,
+        "x": 1,
+        "y": 248
+      },
+      "label": "Model",
+      "parent_index": 0,
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 146,
+      "element_token": "s000000cb:146",
+      "enabled": true,
+      "frame": {
+        "h": 1068,
+        "w": 325,
+        "x": 1,
+        "y": 271
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model",
+      "parent_index": 145,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 147,
+      "element_token": "s000000cb:147",
+      "enabled": true,
+      "frame": {
+        "h": 1068,
+        "w": 325,
+        "x": 1,
+        "y": 271
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter",
+      "parent_index": 146,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 148,
+      "element_token": "s000000cb:148",
+      "enabled": true,
+      "frame": {
+        "h": 567,
+        "w": 325,
+        "x": 1,
+        "y": 772
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView",
+      "parent_index": 147,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 149,
+      "element_token": "s000000cb:149",
+      "enabled": true,
+      "frame": {
+        "h": 567,
+        "w": 325,
+        "x": 1,
+        "y": 772
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab",
+      "parent_index": 148,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 150,
+      "element_token": "s000000cb:150",
+      "enabled": true,
+      "frame": {
+        "h": 533,
+        "w": 322,
+        "x": 2,
+        "y": 773
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_stackedwidget",
+      "parent_index": 149,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 151,
+      "element_token": "s000000cb:151",
+      "enabled": true,
+      "frame": {
+        "h": 533,
+        "w": 322,
+        "x": 2,
+        "y": 773
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_stackedwidget.propertyEditorData",
+      "parent_index": 150,
+      "role": "Tree"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 152,
+      "element_token": "s000000cb:152",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 91,
+        "x": 116,
+        "y": 1307
+      },
+      "label": "Data",
+      "parent_index": 149,
+      "role": "Tab"
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 153,
+      "element_token": "s000000cb:153",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 45,
+        "x": 116,
+        "y": 1307
+      },
+      "label": "View",
+      "parent_index": 152,
+      "role": "TabItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 154,
+      "element_token": "s000000cb:154",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 46,
+        "x": 161,
+        "y": 1307
+      },
+      "label": "Data",
+      "parent_index": 152,
+      "role": "TabItem",
+      "selected": true
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 155,
+      "element_token": "s000000cb:155",
+      "enabled": true,
+      "frame": {
+        "h": 490,
+        "w": 325,
+        "x": 1,
+        "y": 271
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::TreePanel",
+      "parent_index": 147,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 156,
+      "element_token": "s000000cb:156",
+      "enabled": true,
+      "frame": {
+        "h": 490,
+        "w": 325,
+        "x": 1,
+        "y": 271
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::TreePanel.Gui::TreeWidget",
+      "parent_index": 155,
+      "role": "Tree"
+    },
+    {
+      "actions": [
+        "invoke",
+        "select",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 157,
+      "element_token": "s000000cb:157",
+      "enabled": true,
+      "frame": {
+        "h": 27,
+        "w": 310,
+        "x": 16,
+        "y": 271
+      },
+      "label": "ProbeFit",
+      "parent_index": 156,
+      "role": "TreeItem",
+      "selected": false
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 158,
+      "element_token": "s000000cb:158",
+      "enabled": true,
+      "frame": {
+        "h": 11,
+        "w": 325,
+        "x": 1,
+        "y": 761
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.qt_splithandle_",
+      "parent_index": 147,
+      "role": "Thumb"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 159,
+      "element_token": "s000000cb:159",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 325,
+        "x": 1,
+        "y": 248
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle",
+      "parent_index": 145,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 160,
+      "element_token": "s000000cb:160",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 250,
+        "y": 250
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Overlay",
+      "parent_index": 159,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 161,
+      "element_token": "s000000cb:161",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 277,
+        "y": 250
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Float",
+      "parent_index": 159,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 162,
+      "element_token": "s000000cb:162",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 305,
+        "y": 250
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Close",
+      "parent_index": 159,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 163,
+      "element_token": "s000000cb:163",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 125,
+        "x": -748,
+        "y": -625
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.QMainWindowTabBar",
+      "parent_index": 0,
+      "role": "Tab"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 1,
+      "element_index": 164,
+      "element_token": "s000000cb:164",
+      "enabled": true,
+      "frame": {
+        "h": 876,
+        "w": 490,
+        "x": 1283,
+        "y": 426
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight",
+      "parent_index": 0,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 165,
+      "element_token": "s000000cb:165",
+      "enabled": true,
+      "frame": {
+        "h": 876,
+        "w": 491,
+        "x": 1282,
+        "y": 426
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.qt_tabwidget_stackedwidget",
+      "parent_index": 164,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 166,
+      "element_token": "s000000cb:166",
+      "enabled": true,
+      "frame": {
+        "h": 876,
+        "w": 491,
+        "x": 1282,
+        "y": 426
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.qt_tabwidget_stackedwidget.QWidget",
+      "parent_index": 165,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 167,
+      "element_token": "s000000cb:167",
+      "enabled": true,
+      "frame": {
+        "h": 851,
+        "w": 490,
+        "x": 1283,
+        "y": 450
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter",
+      "parent_index": 164,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 168,
+      "element_token": "s000000cb:168",
+      "enabled": true,
+      "frame": {
+        "h": 851,
+        "w": 490,
+        "x": 1283,
+        "y": 450
+      },
+      "label": "Tasks",
+      "parent_index": 167,
+      "role": "Window"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 169,
+      "element_token": "s000000cb:169",
+      "enabled": true,
+      "frame": {
+        "h": 828,
+        "w": 490,
+        "x": 1283,
+        "y": 472
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks",
+      "parent_index": 168,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 170,
+      "element_token": "s000000cb:170",
+      "enabled": true,
+      "frame": {
+        "h": 828,
+        "w": 490,
+        "x": 1283,
+        "y": 472
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea",
+      "parent_index": 169,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 6,
+      "element_index": 171,
+      "element_token": "s000000cb:171",
+      "enabled": true,
+      "frame": {
+        "h": 828,
+        "w": 490,
+        "x": 1283,
+        "y": 472
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport",
+      "parent_index": 170,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 7,
+      "element_index": 172,
+      "element_token": "s000000cb:172",
+      "enabled": true,
+      "frame": {
+        "h": 828,
+        "w": 490,
+        "x": 1283,
+        "y": 472
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel",
+      "parent_index": 171,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 8,
+      "element_index": 173,
+      "element_token": "s000000cb:173",
+      "enabled": true,
+      "frame": {
+        "h": 81,
+        "w": 480,
+        "x": 1288,
+        "y": 482
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox",
+      "parent_index": 172,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 9,
+      "element_index": 174,
+      "element_token": "s000000cb:174",
+      "enabled": true,
+      "frame": {
+        "h": 32,
+        "w": 480,
+        "x": 1288,
+        "y": 482
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QSint::TaskHeader",
+      "parent_index": 173,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 175,
+      "element_token": "s000000cb:175",
+      "enabled": true,
+      "frame": {
+        "h": 25,
+        "w": 435,
+        "x": 1295,
+        "y": 486
+      },
+      "label": "Start Part",
+      "parent_index": 174,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke"
+      ],
+      "depth": 10,
+      "element_index": 176,
+      "element_token": "s000000cb:176",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1737,
+        "y": 488
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QSint::TaskHeader.QLabel",
+      "parent_index": 174,
+      "role": "Text"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 9,
+      "element_index": 177,
+      "element_token": "s000000cb:177",
+      "enabled": true,
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QFrame",
+      "parent_index": 173,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 9,
+      "element_index": 178,
+      "element_token": "s000000cb:178",
+      "enabled": true,
+      "frame": {
+        "h": 48,
+        "w": 480,
+        "x": 1288,
+        "y": 515
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QFrame",
+      "parent_index": 173,
+      "role": "Custom"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 10,
+      "element_index": 179,
+      "element_token": "s000000cb:179",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 467,
+        "x": 1295,
+        "y": 520
+      },
+      "label": "New Body",
+      "parent_index": 178,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 4,
+      "element_index": 180,
+      "element_token": "s000000cb:180",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 490,
+        "x": 1283,
+        "y": 450
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle",
+      "parent_index": 168,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 181,
+      "element_token": "s000000cb:181",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1725,
+        "y": 451
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle.OBTN Overlay",
+      "parent_index": 180,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 5,
+      "element_index": 182,
+      "element_token": "s000000cb:182",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1752,
+        "y": 451
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle.OBTN Close",
+      "parent_index": 180,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 2,
+      "element_index": 183,
+      "element_token": "s000000cb:183",
+      "enabled": true,
+      "frame": {
+        "h": 25,
+        "w": 490,
+        "x": 1283,
+        "y": 426
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle",
+      "parent_index": 164,
+      "role": "Group"
+    },
+    {
+      "actions": [
+        "invoke",
+        "toggle",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 184,
+      "element_token": "s000000cb:184",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1382,
+        "y": 428
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.OBTN Transparent",
+      "parent_index": 183,
+      "role": "CheckBox",
+      "selected": true
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 185,
+      "element_token": "s000000cb:185",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1355,
+        "y": 428
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.OBTN AutoMode",
+      "parent_index": 183,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 186,
+      "element_token": "s000000cb:186",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1327,
+        "y": 428
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.OBTN Overlay",
+      "parent_index": 183,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 187,
+      "element_token": "s000000cb:187",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 1300,
+        "y": 428
+      },
+      "label": "Toggle Right",
+      "parent_index": 183,
+      "role": "Button"
+    },
+    {
+      "actions": [
+        "invoke",
+        "set_value"
+      ],
+      "depth": 3,
+      "element_index": 188,
+      "element_token": "s000000cb:188",
+      "enabled": true,
+      "frame": {
+        "h": 25,
+        "w": 7,
+        "x": 1285,
+        "y": 427
+      },
+      "label": "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.Gui::OverlaySizeGrip",
+      "parent_index": 183,
+      "role": "Group"
+    }
+  ],
+  "elements_complete": false,
+  "pid": 34776,
+  "returned_element_count": 189,
+  "snapshot_id": "s000000cb",
+  "total_element_count": 189,
+  "tree_markdown": "- [0] Window \" ProbeFit - FreeCAD 1.1.4\" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]\n  - [1] TitleBar [value=\" ProbeFit - FreeCAD 1.1.4\" actions=[set_value]]\n    - MenuBar \"System\"\n      - [2] MenuItem \"System\" [actions=[expand]]\n    - [3] Button \"Minimize\" [actions=[invoke]]\n    - [4] Button \"Maximize\" [actions=[invoke]]\n    - [5] Button \"Close\" [actions=[invoke]]\n  - [6] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QOpenGLWidget actions=[invoke,set_value]]\n  - [7] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea actions=[invoke,set_value]]\n    - [8] Window \"Start\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow actions=[invoke,set_value]]\n      - [9] Window [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView actions=[invoke,set_value]]\n        - [10] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget actions=[invoke,set_value]]\n          - [11] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget actions=[invoke,set_value]]\n            - [12] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea actions=[invoke,set_value]]\n              - [13] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport actions=[invoke,set_value]]\n                - [14] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget actions=[invoke,set_value]]\n                  - [15] Text \"New File\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.QLabel actions=[invoke]]\n                  - [16] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow actions=[invoke,set_value]]\n                    - [17] Button [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton actions=[invoke,set_value]]\n                      - [18] Image [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke,set_value]]\n                      - [19] Text \"Parametric Body\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                      - [20] Text \"Creates a body with the Part Design workbench\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                    - [21] Button [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton actions=[invoke,set_value]]\n                      - [22] Image [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke,set_value]]\n                      - [23] Text \"Assembly\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                      - [24] Text \"Creates an assembly project\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                    - [25] Button [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton actions=[invoke,set_value]]\n                      - [26] Image [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke,set_value]]\n                      - [27] Text \"2D Draft\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                      - [28] Text \"Creates a 2D Draft document\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                    - [29] Button [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton actions=[invoke,set_value]]\n                      - [30] Image [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke,set_value]]\n                      - [31] Text \"BIM/Architecture\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                      - [32] Text \"Creates an architectural project\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                    - [33] Button [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton actions=[invoke,set_value]]\n                      - [34] Image [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke,set_value]]\n                      - [35] Text \"Empty File\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                      - [36] Text \"Creates a new empty FreeCAD file\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                    - [37] Button [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton actions=[invoke,set_value]]\n                      - [38] Image [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke,set_value]]\n                      - [39] Text \"Open File\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                      - [40] Text \"Opens an existing CAD file or 3D model\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton.QLabel actions=[invoke]]\n                  - [41] Text \"Recent Files\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.QLabel actions=[invoke]]\n                  - [42] List [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[set_value]]\n                    - [43] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [44] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [45] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                  - [46] Text \"Examples\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.QLabel actions=[invoke]]\n                  - [47] List [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[set_value]]\n                    - [48] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [49] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [50] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [51] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [52] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [53] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [54] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n                    - [55] ListItem [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.StartGui::FileCardView actions=[invoke,select,set_value]]\n              - [56] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_hcontainer actions=[invoke,set_value]]\n                - [57] ScrollBar [value=\"0\" id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_hcontainer.QScrollBar actions=[invoke,set_value,set_value]]\n              - [58] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_vcontainer actions=[invoke,set_value]]\n                - [59] ScrollBar [value=\"0\" id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_vcontainer.QScrollBar actions=[invoke,set_value,set_value]]\n            - [60] Button \"Open First Start Setup\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QPushButton actions=[invoke,set_value]]\n            - [61] CheckBox \"Do not show this Start page again (start with blank screen)\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QCheckBox actions=[invoke,toggle,set_value]]\n    - [62] Window \"ProbeFit : 1\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow actions=[invoke,set_value]]\n      - [63] Window [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor actions=[invoke,set_value]]\n        - [64] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor.QStackedWidget actions=[invoke,set_value]]\n          - [65] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor.QStackedWidget.Gui::View3DInventorViewer actions=[invoke,set_value]]\n            - [66] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.Gui::View3DInventor.QStackedWidget.Gui::View3DInventorViewer.QOpenGLWidget actions=[invoke,set_value]]\n  - [67] StatusBar [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar actions=[invoke,set_value]]\n    - [68] Thumb [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.QSizeGrip actions=[invoke,set_value]]\n    - [69] Text [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.Gui::StatusBarLabel actions=[invoke]]\n    - [70] Button \"5.66 mm x 4.14 mm\" [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.Gui::DimensionWidget actions=[invoke,set_value]]\n    - [71] Text [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.hintLabel actions=[invoke]]\n    - [72] Text [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.rightSideLabel actions=[invoke]]\n    - [73] Button [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.notificationArea actions=[invoke,set_value]]\n    - [74] Button \"Revit  \" [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.NavigationIndicator actions=[invoke,set_value]]\n    - [75] Group [id=Gui::GUISingleApplication.Gui::MainWindow.statusBar.StatusBarArea actions=[invoke,set_value]]\n  - [76] MenuBar [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar actions=[invoke,set_value]]\n    - [77] MenuItem \"File\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&File actions=[invoke,expand,set_value]]\n    - [78] MenuItem \"Edit\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Edit actions=[invoke,expand,set_value]]\n    - [79] MenuItem \"View\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View actions=[invoke,expand,set_value]]\n    - [80] MenuItem \"Tools\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Tools actions=[invoke,expand,set_value]]\n    - [81] MenuItem \"Macro\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Macro actions=[invoke,expand,set_value]]\n    - [82] MenuItem \"Sketch\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Sketch actions=[invoke,expand,set_value]]\n    - [83] MenuItem \"Part Design\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design actions=[invoke,expand,set_value]]\n    - [84] MenuItem \"Windows\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Windows actions=[invoke,expand,set_value]]\n    - [85] MenuItem \"Help\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Help actions=[invoke,expand,set_value]]\n  - [86] Group [id=Gui::GUISingleApplication.Gui::MainWindow._fc_action_widget_ actions=[invoke,set_value]]\n  - [87] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.File actions=[invoke,set_value]]\n    - [88] Button \"New Document\" [id=Gui::GUISingleApplication.Gui::MainWindow.File.QToolButton help=\"Std_New\" actions=[invoke,set_value]]\n    - [89] Button \"Open…\" [id=Gui::GUISingleApplication.Gui::MainWindow.File.QToolButton help=\"Std_Open\" actions=[invoke,set_value]]\n    - [90] Button \"Save\" [id=Gui::GUISingleApplication.Gui::MainWindow.File.QToolButton help=\"Std_Save\" actions=[invoke,set_value]]\n  - [91] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Edit actions=[invoke,set_value]]\n    - Button \"Undo\"\n    - Button \"Redo\"\n    - [92] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Edit.QToolBarSeparator actions=[invoke,set_value]]\n    - Button \"Recompute\"\n  - [93] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Workbench actions=[invoke,set_value]]\n    - [94] ComboBox [value=\"Part Design\" id=Gui::GUISingleApplication.Gui::MainWindow.Workbench.Gui::WorkbenchComboBox help=\"Std_Workbench\" actions=[invoke,expand,set_value]]\n  - [95] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.View actions=[invoke,set_value]]\n    - [96] Button \"Fit All\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.QToolButton help=\"Std_ViewFitAll\" actions=[invoke,set_value]]\n    - [97] Button \"Fit Selection\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.QToolButton help=\"Std_ViewFitSelection\" actions=[invoke,set_value]]\n    - [98] Button \"Standard Views\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.qt_toolbutton_menubutton help=\"Std_ViewGroup\" actions=[invoke,set_value]]\n    - [99] Button \"Align to Selection\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.QToolButton help=\"Std_AlignToSelection\" actions=[invoke,set_value]]\n    - [100] Group [id=Gui::GUISingleApplication.Gui::MainWindow.View.QToolBarSeparator actions=[invoke,set_value]]\n    - [101] Button \"Draw Style\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.qt_toolbutton_menubutton help=\"Std_DrawStyle\" actions=[invoke,set_value]]\n    - [102] Button \"Selection Filter\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.qt_toolbutton_menubutton help=\"Part_SelectFilter\" actions=[invoke,set_value]]\n    - [103] Button \"Tree View Actions\" [id=Gui::GUISingleApplication.Gui::MainWindow.View.qt_toolbutton_menubutton help=\"Std_TreeViewActions\" actions=[invoke,toggle,set_value]]\n    - Button \"Measure\"\n  - [104] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Structure actions=[invoke,set_value]]\n    - [105] Button \"New Part\" [id=Gui::GUISingleApplication.Gui::MainWindow.Structure.QToolButton help=\"Std_Part\" actions=[invoke,set_value]]\n    - [106] Button \"Datums\" [id=Gui::GUISingleApplication.Gui::MainWindow.Structure.qt_toolbutton_menubutton help=\"Part_Datums\" actions=[invoke,set_value]]\n    - [107] Button \"New Group\" [id=Gui::GUISingleApplication.Gui::MainWindow.Structure.QToolButton help=\"Std_Group\" actions=[invoke,set_value]]\n    - [108] Button \"Link Actions\" [id=Gui::GUISingleApplication.Gui::MainWindow.Structure.qt_toolbutton_menubutton help=\"Std_LinkActions\" actions=[invoke,set_value]]\n    - [109] Button \"Variable Set\" [id=Gui::GUISingleApplication.Gui::MainWindow.Structure.QToolButton help=\"Std_VarSet\" actions=[invoke,set_value]]\n  - [110] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Help actions=[invoke,set_value]]\n    - [111] Button \"What's This?\" [id=Gui::GUISingleApplication.Gui::MainWindow.Help.QToolButton help=\"Std_WhatsThis\" actions=[invoke,set_value]]\n  - [112] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Helper Features actions=[invoke,set_value]]\n    - [113] Button \"New Body\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Helper Features.QToolButton help=\"PartDesign_Body\" actions=[invoke,set_value]]\n    - [114] Button \"Create Datum\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Helper Features.qt_toolbutton_menubutton help=\"PartDesign_CompDatums\" actions=[invoke,set_value]]\n    - Button \"Validate Sketch\"\n    - Button \"Check Geometry\"\n    - [115] Button \"Sub-Shape Binder\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Helper Features.QToolButton help=\"PartDesign_SubShapeBinder\" actions=[invoke,set_value]]\n    - Button \"Clone\"\n  - [116] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features actions=[invoke,set_value]]\n    - [117] Button \"Pad\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_Pad\" actions=[invoke,set_value]]\n    - [118] Button \"Revolve\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_Revolution\" actions=[invoke,set_value]]\n    - [119] Button \"Additive Loft\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_AdditiveLoft\" actions=[invoke,set_value]]\n    - [120] Button \"Additive Pipe\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_AdditivePipe\" actions=[invoke,set_value]]\n    - [121] Button \"Additive Helix\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_AdditiveHelix\" actions=[invoke,set_value]]\n    - [122] Button \"Additive Primitive\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.qt_toolbutton_menubutton help=\"PartDesign_CompPrimitiveAdditive\" actions=[invoke,set_value]]\n    - [123] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolBarSeparator actions=[invoke,set_value]]\n    - [124] Button \"Pocket\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_Pocket\" actions=[invoke,set_value]]\n    - [125] Button \"Hole\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_Hole\" actions=[invoke,set_value]]\n    - [126] Button \"Groove\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_Groove\" actions=[invoke,set_value]]\n    - [127] Button \"Subtractive Loft\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_SubtractiveLoft\" actions=[invoke,set_value]]\n    - [128] Button \"Subtractive Pipe\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_SubtractivePipe\" actions=[invoke,set_value]]\n    - [129] Button \"Subtractive Helix\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_SubtractiveHelix\" actions=[invoke,set_value]]\n    - [130] Button \"Subtractive Primitive\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.qt_toolbutton_menubutton help=\"PartDesign_CompPrimitiveSubtractive\" actions=[invoke,set_value]]\n    - [131] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolBarSeparator actions=[invoke,set_value]]\n    - [132] Button \"Boolean Operation\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Modeling Features.QToolButton help=\"PartDesign_Boolean\" actions=[invoke,set_value]]\n  - [133] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Dress-Up Features actions=[invoke,set_value]]\n    - [134] Button \"Fillet\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Dress-Up Features.QToolButton help=\"PartDesign_Fillet\" actions=[invoke,set_value]]\n    - [135] Button \"Chamfer\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Dress-Up Features.QToolButton help=\"PartDesign_Chamfer\" actions=[invoke,set_value]]\n    - [136] Button \"Draft\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Dress-Up Features.QToolButton help=\"PartDesign_Draft\" actions=[invoke,set_value]]\n    - [137] Button \"Thickness\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Dress-Up Features.QToolButton help=\"PartDesign_Thickness\" actions=[invoke,set_value]]\n  - [138] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Transformation Features actions=[invoke,set_value]]\n    - [139] Button \"Mirror\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Transformation Features.QToolButton help=\"PartDesign_Mirrored\" actions=[invoke,set_value]]\n    - [140] Button \"Linear Pattern\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Transformation Features.QToolButton help=\"PartDesign_LinearPattern\" actions=[invoke,set_value]]\n    - [141] Button \"Polar Pattern\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Transformation Features.QToolButton help=\"PartDesign_PolarPattern\" actions=[invoke,set_value]]\n    - [142] Button \"Multi-Transform\" [id=Gui::GUISingleApplication.Gui::MainWindow.Part Design Transformation Features.QToolButton help=\"PartDesign_MultiTransform\" actions=[invoke,set_value]]\n  - [143] ToolBar [id=Gui::GUISingleApplication.Gui::MainWindow.Auto-Created Macro Toolbar actions=[invoke,set_value]]\n    - [144] Button \"Download Classifications\" [id=Gui::GUISingleApplication.Gui::MainWindow.Auto-Created Macro Toolbar.QToolButton help=\"Downloads a package of BIM classification systems for use in FreeCAD\" actions=[invoke,set_value]]\n  - [145] Window \"Model\" [id=Gui::GUISingleApplication.Gui::MainWindow.Model actions=[invoke,set_value]]\n    - [146] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model actions=[invoke,set_value]]\n      - [147] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter actions=[invoke,set_value]]\n        - [148] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView actions=[invoke,set_value]]\n          - [149] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab actions=[invoke,set_value]]\n            - [150] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_stackedwidget actions=[invoke,set_value]]\n              - [151] Tree [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_stackedwidget.propertyEditorData actions=[set_value]]\n            - [152] Tab \"Data\" [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_tabbar actions=[invoke,set_value]]\n              - [153] TabItem \"View\" [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_tabbar actions=[invoke,select,set_value]]\n              - [154] TabItem \"Data\" [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_tabbar actions=[invoke,select,set_value]]\n        - [155] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::TreePanel actions=[invoke,set_value]]\n          - [156] Tree [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::TreePanel.Gui::TreeWidget actions=[set_value]]\n            - [157] TreeItem \"ProbeFit\" [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::TreePanel.Gui::TreeWidget actions=[invoke,select,set_value]]\n        - [158] Thumb [id=Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.qt_splithandle_ actions=[invoke,set_value]]\n    - [159] Group [id=Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle actions=[invoke,set_value]]\n      - [160] Button [id=Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Overlay actions=[invoke,set_value]]\n      - [161] Button [id=Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Float actions=[invoke,set_value]]\n      - [162] Button [id=Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Close actions=[invoke,set_value]]\n  - [163] Tab [id=Gui::GUISingleApplication.Gui::MainWindow.QMainWindowTabBar actions=[invoke,set_value]]\n  - [164] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight actions=[invoke,set_value]]\n    - [165] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.qt_tabwidget_stackedwidget actions=[invoke,set_value]]\n      - [166] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.qt_tabwidget_stackedwidget.QWidget actions=[invoke,set_value]]\n    - [167] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter actions=[invoke,set_value]]\n      - [168] Window \"Tasks\" [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks actions=[invoke,set_value]]\n        - [169] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks actions=[invoke,set_value]]\n          - [170] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea actions=[invoke,set_value]]\n            - [171] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport actions=[invoke,set_value]]\n              - [172] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel actions=[invoke,set_value]]\n                - [173] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox actions=[invoke,set_value]]\n                  - [174] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QSint::TaskHeader actions=[invoke,set_value]]\n                    - [175] Button \"Start Part\" [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QSint::TaskHeader.QSint::ActionLabel actions=[invoke,set_value]]\n                    - [176] Text [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QSint::TaskHeader.QLabel actions=[invoke]]\n                  - [177] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QFrame actions=[invoke,set_value]]\n                  - [178] Custom [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QFrame actions=[invoke,set_value]]\n                    - [179] Button \"New Body\" [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.Tasks.QScrollArea.qt_scrollarea_viewport.Gui::TaskView::TaskPanel.Gui::TaskView::TaskBox.QFrame.QSint::ActionLabel help=\"PartDesign_Body\" actions=[invoke,set_value]]\n        - [180] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle actions=[invoke,set_value]]\n          - [181] Button [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle.OBTN Overlay actions=[invoke,set_value]]\n          - [182] Button [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle.OBTN Close actions=[invoke,set_value]]\n    - [183] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle actions=[invoke,set_value]]\n      - [184] CheckBox [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.OBTN Transparent actions=[invoke,toggle,set_value]]\n      - [185] Button [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.OBTN AutoMode actions=[invoke,set_value]]\n      - [186] Button [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.OBTN Overlay actions=[invoke,set_value]]\n      - [187] Button \"Toggle Right\" [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.Gui::OverlayToolButton help=\"Std_DockOverlayToggleRight\" actions=[invoke,set_value]]\n      - [188] Group [id=Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.OverlayTitle.Gui::OverlaySizeGrip actions=[invoke,set_value]]\n",
+  "window_bounds": {
+    "height": 1380,
+    "width": 1775,
+    "x": 0,
+    "y": 0
+  },
+  "window_id": 2299982,
+  "window_title": " Unnamed - FreeCAD 1.1.4"
+}

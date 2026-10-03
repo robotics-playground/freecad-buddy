@@ -12,6 +12,7 @@ without a GUI stack; this is the only ring outside ``hosts/`` allowed those impo
 from __future__ import annotations
 
 import os
+import sys
 from functools import lru_cache
 
 from freecad_buddy.contracts.render import FocusSpec, RenderResult, SceneSpec
@@ -58,6 +59,20 @@ _AA_PREF_KEY = "AntiAliasing"
 _AA_ENUM_TO_SAMPLES = {0: 0, 1: 1, 2: 2, 3: 4, 4: 8, 5: 6}
 
 
+def _no_display_reason() -> str | None:
+    """Why Qt cannot open a platform plugin here, or ``None`` when it can.
+
+    On Linux, creating a ``QGuiApplication`` with no X11 or Wayland display and no explicit
+    ``QT_QPA_PLATFORM`` makes Qt abort the whole process ("no Qt platform plugin could be
+    initialized"). An abort cannot be caught, so the probe must refuse before it reaches Qt.
+    """
+    if not sys.platform.startswith("linux"):
+        return None
+    if any(os.environ.get(name) for name in ("DISPLAY", "WAYLAND_DISPLAY", "QT_QPA_PLATFORM")):
+        return None
+    return "no display server: DISPLAY, WAYLAND_DISPLAY and QT_QPA_PLATFORM are all unset"
+
+
 class RenderError(RuntimeError):
     """Raised when the offscreen render pipeline fails to produce an image."""
 
@@ -67,8 +82,9 @@ def render_capability() -> tuple[str, str | None]:
     """Detect the render capability once per process: ``(mode, reason)``.
 
     Ladder (detection-mcp-freecad §6): a live GUI is ``gui_constructed``; else a lazy
-    ``FreeCADGui`` import followed immediately by ``setupWithoutGUI()``, a ``QGuiApplication``,
-    and a successful 8x8 probe render is ``offscreen``; any import/GL/probe failure is ``none``
+    ``FreeCADGui`` import, a display check (no display on Linux is ``none``, since Qt would abort
+    the process), then ``setupWithoutGUI()``, a ``QGuiApplication``, and a successful 8x8 probe
+    render is ``offscreen``; any import/GL/probe failure is ``none``
     with the reason. ``reason`` is set only for ``none``.
     """
     try:
@@ -83,6 +99,10 @@ def render_capability() -> tuple[str, str | None]:
         import FreeCADGui
     except Exception as exc:  # noqa: BLE001 - no Gui module means no offscreen path
         return "none", f"FreeCADGui not importable: {exc}"
+
+    no_display = _no_display_reason()
+    if no_display:
+        return "none", no_display
 
     try:
         FreeCADGui.setupWithoutGUI()

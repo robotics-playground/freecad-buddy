@@ -12,6 +12,7 @@ rejected.
 from __future__ import annotations
 
 import os
+import sys
 
 import pytest
 
@@ -135,6 +136,29 @@ def test_render_capability_reports_none_with_reason_when_gui_absent():
     assert mode == "none"
     assert reason  # a non-empty explanation (no FreeCAD / no FreeCADGui)
     assert render_probe.render_capability_flag() == "none"
+
+
+def test_should_report_none_without_touching_qt_when_linux_has_no_display(monkeypatch):
+    # Arrange
+    class _Gui:
+        @staticmethod
+        def setupWithoutGUI():
+            raise AssertionError("the probe reached Qt with no display")
+
+    monkeypatch.setitem(sys.modules, "FreeCAD", type(sys)("FreeCAD"))
+    monkeypatch.setitem(sys.modules, "FreeCADGui", _Gui)
+    monkeypatch.setattr(render_probe.sys, "platform", "linux")
+    for name in ("DISPLAY", "WAYLAND_DISPLAY", "QT_QPA_PLATFORM"):
+        monkeypatch.delenv(name, raising=False)
+    render_probe.render_capability.cache_clear()
+
+    # Act
+    mode, reason = render_probe.render_capability()
+
+    # Assert
+    render_probe.render_capability.cache_clear()
+    assert mode == "none"
+    assert reason.startswith("no display server")
 
 
 def test_render_port_protocol_shape():
