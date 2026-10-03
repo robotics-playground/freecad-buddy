@@ -13,8 +13,8 @@ It computes G3.E.3 and G3.E.4 from stored evidence and never measures a part. G3
 ``spec_assertions`` block that ``score_g3_replay.py`` wrote to ``validators.yaml``: it is current
 when its ``validator_sha`` matches the measurement sources, the scorer, the corrupted-plan cases
 and the dev specs they name, and it must meet the sensitivity and false-alarm bars. G3.E.3
-compares each leg's ``G3.E.3.<leg>.json`` in ``--frames-evidence DIR`` with the committed
-``frames-reference.json``, after checking that the file was measured on that leg's FreeCAD.
+compares ``G3.E.3.1.1.x.json`` in ``--frames-evidence DIR`` with the committed
+``frames-reference.json``, after checking that the file was measured on FreeCAD 1.1.x.
 
 Exits 1 when the suite is structurally unsound or a computed item reports ``FAIL``, else 0.
 """
@@ -429,7 +429,7 @@ def score_status(validators_yaml: Path = VALIDATORS_YAML) -> str:
 
 
 def frames_status(evidence_dir: Path | None, reference_path: Path = FRAMES_REFERENCE) -> str:
-    """G3.E.3: every leg's resolved frames equal the committed reference."""
+    """G3.E.3: every built part's resolved frame equals the committed 1.1.x reference."""
     if not reference_path.is_file():
         return f"INVALID_INPUT (no frames reference at {reference_path.name})"
     if evidence_dir is None:
@@ -488,9 +488,7 @@ def entry_status(
 def main(argv: list[str] | None = None) -> int:
     """Check the G3 entry gate's structure and print the G3.E items."""
     parser = argparse.ArgumentParser(description="G3 entry gate check")
-    parser.add_argument(
-        "--frames-evidence", type=Path, help="directory holding G3.E.3.<leg>.json per leg"
-    )
+    parser.add_argument("--frames-evidence", type=Path, help="directory holding G3.E.3.1.1.x.json")
     args = parser.parse_args([] if argv is None else argv)
     suite = load_suite()
     results = check_suite(suite)

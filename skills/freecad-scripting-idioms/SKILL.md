@@ -10,7 +10,7 @@ description: >-
   use for the document/recompute mental model at a conceptual level (see
   freecad-fundamentals) or diagnosing a specific error (see freecad-troubleshooting).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

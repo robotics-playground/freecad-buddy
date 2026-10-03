@@ -4,7 +4,7 @@ Run it in an interpreter that has FreeCAD and ``mcp`` (the micromamba env, or a 
 leg)::
 
     python benchmarks/g3/fault-injection/score_g3_replay.py --leg 1.1.x
-    python benchmarks/g3/fault-injection/score_g3_replay.py --leg 1.0.x --check \
+    python benchmarks/g3/fault-injection/score_g3_replay.py --leg 1.1.x --check \
         --frames-check benchmarks/g3/fault-injection/frames-reference.json
 
 The scorer spawns the headless H1 host over stdio and reaches FreeCAD only through its MCP
@@ -65,7 +65,7 @@ from score_export_verify import merge_validators_yaml  # noqa: E402
 VALIDATOR = "spec_assertions"
 SENSITIVITY_BAR = 0.95
 FALSE_ALARM_BAR = 0.05
-LEGS = ("1.0.x", "1.1.x")
+LEGS = ("1.1.x",)
 # The measurement sources behind verify_shape's §7.2 checks, and this scorer, which classifies
 # what they measure. Mirrored byte for byte by
 # runner._VALIDATOR_SOURCES["spec_assertions"], so a clean tree reads as CURRENT.
@@ -353,7 +353,7 @@ def bars_met(totals: dict) -> bool:
 
 
 def comparable_frame(frame: dict | None) -> dict:
-    """The frame fields two legs must agree on: kind, rounded origin and axes, named entity."""
+    """The frame fields a build must reproduce: kind, rounded origin and axes, named entity."""
     frame = frame or {}
 
     def rounded(vector):
@@ -376,7 +376,7 @@ def compare_frames(reference: dict, frames: dict) -> list[str]:
     drifts = []
     for build_id in sorted(set(reference) | set(frames)):
         if build_id not in frames:
-            drifts.append(f"{build_id}: no frame on this leg")
+            drifts.append(f"{build_id}: no frame in this run")
             continue
         if build_id not in reference:
             drifts.append(f"{build_id}: not in the reference")

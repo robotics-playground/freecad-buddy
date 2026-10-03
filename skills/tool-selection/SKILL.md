@@ -9,7 +9,7 @@ description: >-
   this shape". Do NOT use for the parameters and failure modes of a chosen feature
   (see freecad-partdesign) or the whole build sequence (see design-decomposition).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

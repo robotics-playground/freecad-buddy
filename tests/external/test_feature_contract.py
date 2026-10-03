@@ -286,25 +286,16 @@ def test_the_use_case_ring_never_targets_the_active_document():
     assert "ActiveDocument" not in FEATURES_SOURCE.read_text(encoding="utf-8")
 
 
-def test_no_one_point_one_only_extrude_property_is_referenced():
-    # SideType, Type2, Offset2 and the second-direction taper/face/shape properties are absent
-    # from the 1.0.x floor leg; using any of them would break that blocking CI leg.
-    source = FEATURES_SOURCE.read_text(encoding="utf-8")
-    for banned in ("SideType", "Type2", "Offset2", "TaperAngle2", "UpToFace2", "UpToShape2"):
-        assert banned not in source, banned
-
-
 def test_symmetric_extrusion_goes_through_the_shim_rather_than_a_direct_write():
-    # Midplane is the property present on both legs, and the shim owns the write so the
-    # divergence never leaks into the use-case ring.
+    # The shim owns the symmetric write, so the property it uses never leaks into the use-case
+    # ring.
     source = FEATURES_SOURCE.read_text(encoding="utf-8")
     assert "shim.extrude_symmetric" in source
     assert "Midplane" not in source
 
 
 def test_no_extrude_type_enum_is_indexed_numerically():
-    # One enum position is a deprecation tombstone on the newer leg and a live member on the
-    # older one, so an index would select a different value per build.
+    # One enum position is a deprecation tombstone, so an index could select it.
     source = FEATURES_SOURCE.read_text(encoding="utf-8")
     assert "TwoLengths" not in source
     assert "setEnums" not in source
@@ -317,7 +308,7 @@ def test_every_enumerated_assignment_is_checked_against_the_live_enumeration():
         assert f'"{prop}"' in source, prop
 
 
-def test_the_shim_exposes_the_partdesign_probe_and_its_cross_leg_accessors():
+def test_the_shim_exposes_the_partdesign_probe_and_its_accessors():
     from freecad_buddy.usecases import shim
 
     for name in ("partdesign_available", "extrude_symmetric", "enum_values"):

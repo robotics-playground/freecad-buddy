@@ -11,7 +11,7 @@ description: >-
   individual sketch (see sketch-strategy) or choosing one feature operation
   (see tool-selection).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

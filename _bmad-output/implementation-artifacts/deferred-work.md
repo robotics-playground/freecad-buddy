@@ -1458,3 +1458,8 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-4-2b-replay-scoring-cross-leg-frames.md`
   summary: On FreeCAD 1.0.0 the in-FreeCAD suite has 2 failures and 1 error (`test_feature_tools` linear pattern with no occurrences gets 3, test expects 2; `test_document_lifecycle` capability probe expects a `?`-prefixed enum member that 1.0 does not list), so the CI 1.0.x headless leg stops before its later steps, including the G3 replay and frame check.
   evidence: `FreeCADCmd tests/run_tests.py` in a micromamba env with `freecad=1.0.0 python=3.11` gives `FAILED (failures=2, errors=1, skipped=17)` at both `479e44e` and the Story 4.2b tree; the same tests pass on 1.1. Settle by making the two tests version-aware or by fixing the default the tools rely on.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-drop-freecad-1-0-support.md`
+  summary: Resolves two entries above. (1) The FreeCAD 1.0.0 in-FreeCAD suite failures (2 failures, 1 error) that stopped the CI 1.0.x headless leg. (2) The unparseable `.github/workflows/ci.yml`.
+  evidence: (1) The 1.0.x leg is removed: the project targets FreeCAD 1.1 only (decision D1, 2026-10-03). `ci.yml` has one headless leg `{freecad: "1.1.3", python: "3.11"}`, and the 1.0-only tests are removed. On FreeCAD 1.1.3 the in-FreeCAD suite gives `Ran 672 tests ... OK (skipped=1)`. (2) The step name `"G2 fault fixtures are all materialized (no 'fixture: pending')"` is quoted. `yaml.safe_load` parses all three workflows, and `ci.yml` has jobs `arch-checks`, `headless`, `g0-verdict` and `render`.
+  resolution: resolved by spec-drop-freecad-1-0-support.

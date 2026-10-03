@@ -61,7 +61,7 @@ criteria:
     cited_validators: [fingerprint]
   - id: G2.4
     text: "TNP guard: run the 5 TNP-provoking scenarios through the guard"
-    pass_rule: "5/5 flagged; zero false-clean; UNSUPPORTED never reported on matrix legs"
+    pass_rule: "5/5 flagged; zero false-clean; UNSUPPORTED never reported on the 1.1.x leg"
     cited_validators: [audit_references]
   - id: G2.5
     text: "Fully constrained sketches: run the sketch benchmark, read verify_sketch reports"

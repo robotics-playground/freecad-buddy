@@ -9,7 +9,7 @@ description: >-
   simulation model", "world file". Do NOT use for URDF/ROS robot structure (see
   urdf-export) or MoveIt planning (SRDF — not yet supported).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

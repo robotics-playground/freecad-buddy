@@ -65,7 +65,7 @@ jobs:
           if [ -n "$(find benchmarks/g2/heldout -name case.yaml -print -quit)" ]; then
             echo "benchmarks/g2/heldout/ holds an unsealed case.yaml — the set is not sealed"; exit 1;
           fi
-      - name: G2 fault fixtures are all materialized (no 'fixture: pending')
+      - name: "G2 fault fixtures are all materialized (no 'fixture: pending')"
         run: |
           if grep -rn --include=case.yaml "fixture: pending" benchmarks/g2/; then
             echo "a G2 fault case still declares its fixture pending"; exit 1;
@@ -81,8 +81,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { freecad: "1.0.0", python: "3.11" }
-          - { freecad: "1.1.0", python: "3.12" }
+          - { freecad: "1.1.3", python: "3.11" }
     steps:
       - uses: actions/checkout@v4
       - uses: mamba-org/setup-micromamba@v2
@@ -111,33 +110,33 @@ jobs:
         run: >-
           python benchmarks/g0/emit_ci_evidence.py
           --run ci-${{ github.sha }}
-          --leg ${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
+          --leg 1.1.x
           --green true --tests 30
       - name: Upload G0.4 leg evidence
         uses: actions/upload-artifact@v4
         with:
-          name: g0-4-${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
+          name: g0-4-1.1.x
           path: benchmarks/gate-artifacts/g0/ci-${{ github.sha }}/evidence/
       # Replays the G3 corrupted-plan suite over the H1 stdio host, checks the bars, and compares
       # every resolved anchor frame with the committed 1.1.x reference (G3.E.3). --check: CI never
       # writes validators.yaml.
-      - name: G3 corrupted-plan replay and cross-leg frame check
+      - name: G3 corrupted-plan replay and frame check
         timeout-minutes: 15
         run: >-
           micromamba run -n fc python benchmarks/g3/fault-injection/score_g3_replay.py
-          --leg ${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
+          --leg 1.1.x
           --run ci-${{ github.sha }} --check
           --frames-check benchmarks/g3/fault-injection/frames-reference.json
       - name: Upload G3.E.3 leg evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: g3-e3-${{ matrix.freecad == '1.0.0' && '1.0.x' || '1.1.x' }}
+          name: g3-e3-1.1.x
           path: benchmarks/gate-artifacts/g3/ci-${{ github.sha }}/
 
   g0-verdict:
-    # Aggregates BOTH headless-leg G0.4 artifacts into ONE run dir and runs run+verdict on the
-    # same --run ci-<sha> the evidence landed in (non-blocking: the G0 gate is not yet green).
+    # Downloads the 1.1.x headless-leg G0.4 artifact into the run dir and runs run+verdict on
+    # the same --run ci-<sha> the evidence landed in (non-blocking: the G0 gate is not yet green).
     needs: [headless]
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -145,11 +144,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --all-extras
-      - name: Download both G0.4 leg artifacts into one run's evidence dir
+      - name: Download the G0.4 leg artifact into the run's evidence dir
         uses: actions/download-artifact@v4
         with:
-          pattern: g0-4-*
-          merge-multiple: true
+          name: g0-4-1.1.x
           path: benchmarks/gate-artifacts/g0/ci-${{ github.sha }}/evidence/
       - name: Consume G0.4 evidence via run + verdict (non-blocking)
         run: |
@@ -165,7 +163,7 @@ jobs:
         with:
           environment-name: fc
           create-args: >-
-            python=3.12 freecad=1.1.0
+            python=3.11 freecad=1.1.3
           condarc: |
             channels:
               - conda-forge

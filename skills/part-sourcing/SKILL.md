@@ -10,7 +10,7 @@ description: >-
   component". Do NOT use for modeling a custom part (see design-decomposition) or
   exporting a robot description (see urdf-export).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

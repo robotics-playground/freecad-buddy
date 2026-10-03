@@ -692,7 +692,7 @@ class NamedFrameLabelTest(_PartFixture):
 class CanonicalFrameTest(_PartFixture):
     """Every ``(kind, ref)`` the 20 G3 dev specs declare resolves to a hand-derived frame.
 
-    The in-FreeCAD suite runs on both CI legs, so these fixtures are the cross-leg proof for the
+    The in-FreeCAD suite runs on the 1.1.x CI leg, so these fixtures are the frame proof for the
     specs no corrupted plan builds (G3.E.3). The entity of a ``largest_planar_face`` frame is a
     mapped name on a Body shape and is not asserted.
     """

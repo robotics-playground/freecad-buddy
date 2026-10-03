@@ -159,12 +159,7 @@ class CapabilityProbeTest(unittest.TestCase):
                 self.assertTrue(enums[type_id][prop])
 
     def test_the_reported_values_match_the_live_reading(self):
-        """Asserted against the live probe, never a hardcoded list.
-
-        The values differ between supported builds — a linear pattern's Mode is
-        ``{"length", "offset"}`` on 1.0.x and ``["Extent", "Spacing"]`` on 1.1.x — so hardcoding
-        either spelling would fail the other leg and reintroduce the coupling this removes.
-        """
+        """Asserted against the live probe, never a hardcoded list."""
         import FreeCAD
 
         document = FreeCAD.newDocument("enum_probe", hidden=True)

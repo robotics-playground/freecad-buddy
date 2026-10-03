@@ -29,8 +29,8 @@ criteria:
     pass_rule: "All fields within ±0.1% on all 5"
     cited_validators: [verify_shape]
   - id: G0.4
-    text: "Headless CI green on the matrix (1.0.x + 1.1.x)"
-    pass_rule: "≥30 tests, all green, both blocking legs"
+    text: "Headless CI green on the 1.1.x leg"
+    pass_rule: "≥30 tests, all green, on the blocking 1.1.x leg"
     cited_validators: []
   - id: G0.5
     text: "STEP round-trip fidelity (create → export → re-import → compare)"

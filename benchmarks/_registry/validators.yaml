@@ -174,9 +174,9 @@ verify_render_tone:
 
 spec_assertions:
   suite: g3/fault-injection/corrupted-plan/
-  validator_sha: "bd8a9e8b6d776799c8edd85fee5ec3527c4ee620122c71bc1c6d4181a3b80238"
+  validator_sha: "e4abcf2bff1260d11aa70bb7394c7b9e80c55bda6da0b17ace1e0a30443e5d8b"
   last_run:
-    run_id: g3r-2026-10-03-1.1.x
+    run_id: g3r-2026-10-03-1.1.3
     sensitivity: 1.0
     false_alarm: 0.0
     date: 2026-10-03

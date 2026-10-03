@@ -14,8 +14,8 @@ PatternKind = Literal["linear", "polar"]
 DatumKind = Literal["plane", "axis", "point", "cs"]
 
 # Extrude Type values shared by Pad and Pocket. The live enum is the authority — each value is
-# validated against ``getEnumerationsOfProperty`` at call time, because the two blocking FreeCAD
-# legs spell and order the enum differently.
+# validated against ``getEnumerationsOfProperty`` at call time, because Pad and Pocket offer
+# different members and one position is a deprecation tombstone.
 ExtrudeType = Literal["Length", "ThroughAll", "UpToFirst", "UpToLast", "UpToFace"]
 
 

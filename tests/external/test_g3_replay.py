@@ -340,7 +340,7 @@ def test_should_report_a_build_missing_on_one_side_when_frames_are_compared():
     drifts = replay.compare_frames(reference, {"a": XY_FRAME, "c": XY_FRAME})
 
     # Assert
-    assert drifts == ["b: no frame on this leg", "c: not in the reference"]
+    assert drifts == ["b: no frame in this run", "c: not in the reference"]
 
 
 def _evidence_dir(tmp_path: Path, frames: dict) -> Path:
@@ -361,21 +361,18 @@ def test_should_report_invalid_input_when_the_frames_reference_is_missing(tmp_pa
     assert status.startswith("INVALID_INPUT (no frames reference")
 
 
-def test_should_report_invalid_input_when_a_leg_evidence_file_is_absent(tmp_path):
+def test_should_report_invalid_input_when_the_leg_evidence_file_is_absent(tmp_path):
     # Arrange
     reference = tmp_path / "reference.json"
     reference.write_text(json.dumps({"frames": {"case": XY_FRAME}}), encoding="utf-8")
     evidence = tmp_path / "evidence"
     evidence.mkdir()
-    (evidence / "G3.E.3.1.1.x.json").write_text(
-        json.dumps({"leg": "1.1.x", "frames": {"case": XY_FRAME}}), encoding="utf-8"
-    )
 
     # Act
     status = checker.frames_status(evidence, reference)
 
     # Assert
-    assert status == "INVALID_INPUT (leg 1.0.x evidence absent: G3.E.3.1.0.x.json)"
+    assert status == "INVALID_INPUT (leg 1.1.x evidence absent: G3.E.3.1.1.x.json)"
 
 
 def test_should_fail_naming_the_leg_case_and_field_when_a_leg_frame_drifts(tmp_path):
@@ -391,7 +388,7 @@ def test_should_fail_naming_the_leg_case_and_field_when_a_leg_frame_drifts(tmp_p
     status = checker.frames_status(evidence, reference)
 
     # Assert
-    assert status.startswith("FAIL (leg 1.0.x: case: axes")
+    assert status.startswith("FAIL (leg 1.1.x: case: axes")
 
 
 def test_should_fail_naming_the_file_when_a_leg_was_measured_on_another_freecad(tmp_path):
@@ -400,17 +397,17 @@ def test_should_fail_naming_the_file_when_a_leg_was_measured_on_another_freecad(
     reference.write_text(json.dumps({"frames": {"case": XY_FRAME}}), encoding="utf-8")
     (tmp_path / "evidence").mkdir()
     evidence = _evidence_dir(tmp_path / "evidence", {"case": XY_FRAME})
-    relabelled = {"leg": "1.0.x", "freecad_version": "1.1.0", "frames": {"case": XY_FRAME}}
-    (evidence / "G3.E.3.1.0.x.json").write_text(json.dumps(relabelled), encoding="utf-8")
+    relabelled = {"leg": "1.1.x", "freecad_version": "1.2.0", "frames": {"case": XY_FRAME}}
+    (evidence / "G3.E.3.1.1.x.json").write_text(json.dumps(relabelled), encoding="utf-8")
 
     # Act
     status = checker.frames_status(evidence, reference)
 
     # Assert
-    assert status == "FAIL (G3.E.3.1.0.x.json was measured on FreeCAD 1.1.0, not leg 1.0.x)"
+    assert status == "FAIL (G3.E.3.1.1.x.json was measured on FreeCAD 1.2.0, not leg 1.1.x)"
 
 
-def test_should_report_ok_when_both_legs_equal_the_reference(tmp_path):
+def test_should_report_ok_when_the_leg_equals_the_reference(tmp_path):
     # Arrange
     reference = tmp_path / "reference.json"
     reference.write_text(json.dumps({"frames": {"case": XY_FRAME}}), encoding="utf-8")
@@ -567,7 +564,7 @@ def test_should_compute_g3e3_and_g3e4_when_the_committed_evidence_is_read():
     assert statuses["G3.E.4"].startswith("OK (sensitivity 1.0, false alarm 0.0")
 
 
-def test_should_report_g3e3_ok_when_both_legs_carry_the_reference_frames(tmp_path):
+def test_should_report_g3e3_ok_when_the_leg_carries_the_reference_frames(tmp_path):
     # Arrange
     reference = json.loads(checker.FRAMES_REFERENCE.read_text(encoding="utf-8"))["frames"]
     evidence = _evidence_dir(tmp_path, reference)

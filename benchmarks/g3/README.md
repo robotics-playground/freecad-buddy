@@ -14,15 +14,18 @@ g3/
   fault-injection/     validates the validators; never counts toward the G3.1 pass rate
     corrupted-plan/      10 planted corrupted plans + 4 clean controls
     threat-counters/     2 planted run-evidence cases for the threats no plan can counter
-    score_g3_replay.py       operator-run replay scorer: sensitivity, false alarm, frames per leg
+    score_g3_replay.py       operator-run replay scorer: sensitivity, false alarm, frames
     score_g3_validators.py   structural check; reads G3.E.3 and G3.E.4 from stored evidence
     frames-reference.json    the anchor frame of every clean build, from the 1.1.x leg
 ```
 
+`frames-reference.json` was recorded on FreeCAD 1.1.0 and re-checked unchanged on FreeCAD 1.1.3
+(run `g3r-2026-10-03-1.1.3`).
+
 `runner run G3 --run <id>` and `runner --gate G3 --stub` fail all six criteria with
 `INVALID_INPUT`: no actor drives a spec and no collector reads a run yet. `runner faults G3` runs
 the structural check and computes G3.E.3 and G3.E.4 from stored evidence;
-`runner faults G3 --frames-evidence DIR` reads the per-leg frame files from `DIR`.
+`runner faults G3 --frames-evidence DIR` reads the 1.1.x leg frame file from `DIR`.
 `runner run G3 --exit` is refused before the unseal.
 
 ## Entry gate G3.E
@@ -30,13 +33,13 @@ the structural check and computes G3.E.3 and G3.E.4 from stored evidence;
 `gate.yaml` `entry:` lists every G3.E item from `phase-gates.md:77` and the story that owns it.
 G3.E stays open after Story 4.1. Story 4.2a supplies the assertion primitives and the anchor-frame
 resolver that G3.E.3 and G3.E.4 measure with. Story 4.2b owns both items: it replays the corrupted
-plans, scores the suite, and checks the frames on both legs.
+plans, scores the suite, and checks the frames on the 1.1.x leg.
 
 | Item | Owner | State after 4.2b |
 | --- | --- | --- |
 | Spec set with compiled assertions, failing honestly against a stub | 4.1 | landed |
 | Corrupted-plan fault suite, every threat countered | 4.1 | landed, `fixture: pending` |
-| Anchor frames resolve identically on the 1.0.x and 1.1.x legs | 4.2b | computed from leg evidence |
+| Every built part's anchor frame equals the committed 1.1.x reference | 4.2b | computed from leg evidence |
 | Corrupted-plan sensitivity ≥95 % / false-alarm ≤5 % with `validator_sha` | 4.2b | computed from `validators.yaml` |
 | Render and drawing path at the ≥2048 px review floor | 4.3 | `INVALID_INPUT` |
 | `design-loop`, `visual-review`, `spec-to-assertions` skills | 6.5 | `INVALID_INPUT` |
@@ -51,14 +54,13 @@ honestly is checked by the CI G3 stub step (exit code exactly 1) and
   `usecases/assertions.py`, `usecases/verify.py`, `score_g3_replay.py`, every corrupted-plan
   `case.yaml` and each dev spec a corrupted plan names; an edit to any of them reports
   `FAIL (stale)` until `score_g3_replay.py` runs again.
-- **G3.E.3** is `OK` when `G3.E.3.1.0.x.json` and `G3.E.3.1.1.x.json` both hold the frames of
-  `frames-reference.json`. Without the reference or either leg file it reports `INVALID_INPUT`;
-  a leg file measured on another FreeCAD version, or a frame that differs, reports `FAIL` naming
-  the file, or the leg, the build and the field. Each CI headless leg runs
-  `score_g3_replay.py --check --frames-check` and uploads its run directory. CI proves the legs
-  agree only indirectly: each leg is compared with the committed reference, never with the
-  other leg. The joined read is `runner faults G3 --frames-evidence <dir>`, with both leg files
-  in `<dir>`.
+- **G3.E.3** is `OK` when `G3.E.3.1.1.x.json` holds the frames of `frames-reference.json`.
+  Without the reference or the leg file it reports `INVALID_INPUT`; a leg file measured on
+  another FreeCAD version, or a frame that differs, reports `FAIL` naming the file, or the leg,
+  the build and the field. A frame that changes between runs or after a FreeCAD update therefore
+  fails G3.E.3. The CI headless leg runs `score_g3_replay.py --check --frames-check` and uploads
+  its run directory. The gate read is `runner faults G3 --frames-evidence <dir>`, with the leg
+  file in `<dir>`.
 
 ## Replay scoring
 
@@ -91,8 +93,8 @@ Frames are proven on the 14 clean builds, which cover 8 specs: `g3-dev-001`, `-0
 `proven_on_built_parts`. No plan builds the other 12 specs, so their frames are not proven on a
 built part. `CanonicalFrameTest` in `tests/infc/test_assertion_primitives.py` resolves every
 declared `(kind, ref)` (`XY_Plane`, `XZ_Plane`, `PlateCornerDatum`, and a symmetric
-`largest_planar_face` part) to a hand-derived frame on both legs. That proves the resolver, not
-those parts.
+`largest_planar_face` part) to a hand-derived frame on the 1.1.x leg. That proves the resolver,
+not those parts.
 
 ## Specs
 
@@ -306,7 +308,7 @@ pure data is reused. No loop, judge, designer or actor code is restored.
 - **Faithful builds, added in Story 4.2b after the suite landed.** All 10 planted cases gained
   `faithful_args` or `faithful_steps` (see Corrupted plans). The data was added after the plans
   existed, and the three `faithful_steps` reverts change more than the planted step. Each
-  reverted build grades `OK` on both legs, which ties every detection to the planted defect.
+  reverted build grades `OK` on the 1.1.x leg, which ties every detection to the planted defect.
 - **`g3-dev-007` angle check, added in Story 4.2b after the suite landed.** `hole-on-wrong-face`
   named `hole_position` in `detected_by`. That check's selector pins the bore axis to the frame
   normal, so a side-face bore matches nothing and the check fails `INVALID_INPUT`, which is never

@@ -86,9 +86,8 @@ _G2_DEV_SPLITS = ("dev", "fault-injection")
 
 # Criteria whose evidence is dropped by an external in-FreeCAD/CI collector into evidence/.
 _INGESTED_CRITERIA = {"G0.1", "G0.3", "G0.5"}
-# The G0.4 matrix legs that BOTH must be present + green: a single present green leg is never
-# enough (both blocking legs must be proven).
-_REQUIRED_G0_4_LEGS = ("1.0.x", "1.1.x")
+# The G0.4 CI leg that must be present + green. Evidence for any other leg is ignored.
+_REQUIRED_G0_4_LEGS = ("1.1.x",)
 _G0_4_MIN_TESTS = 30
 
 # Validator source sets, hashed the SAME way the fault scorers hash them (concatenated
@@ -358,11 +357,11 @@ def _atomic_write_json(path: Path, data: dict) -> None:
 
 
 def _ingest_g0_4(run_dir: Path) -> dict:
-    """Combine the pinned G0.4 matrix-leg evidence into ONE report — both legs required.
+    """Build the G0.4 report from the pinned 1.1.x CI-leg evidence.
 
     Emits one check per required leg (``_REQUIRED_G0_4_LEGS``): a leg whose
     ``evidence/G0.4.<leg>.json`` is ABSENT (or malformed, or not green, or below the test bar)
-    is a failing ``INVALID_INPUT`` check. A single present green leg can NEVER green G0.4.
+    is a failing ``INVALID_INPUT`` check. A file for a leg outside that roster is never read.
     """
     evidence_dir = run_dir / "evidence"
     checks: list[Check] = []
@@ -711,8 +710,8 @@ def faults_command(gate: str, frames_evidence: str | None = None) -> int:
     spawns a FreeCAD interpreter.
 
     G3's ``score_g3_validators.py`` checks the suite's structure and computes G3.E.3 and G3.E.4
-    from committed evidence. ``frames_evidence`` names the directory holding the per-leg
-    ``G3.E.3.<leg>.json`` files and is forwarded to it; it is a usage error for any other gate.
+    from committed evidence. ``frames_evidence`` names the directory holding the leg's
+    ``G3.E.3.1.1.x.json`` file and is forwarded to it; it is a usage error for any other gate.
 
     An unknown gate or a gate with no scorer is a clean usage error (exit 2), never a traceback.
     """
@@ -1372,7 +1371,7 @@ def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
     faults.add_argument(
         "--frames-evidence",
         dest="frames_evidence",
-        help="G3 only: directory holding the per-leg G3.E.3.<leg>.json frame evidence",
+        help="G3 only: directory holding the G3.E.3.1.1.x.json frame evidence",
     )
     seal_parser = sub.add_parser("seal")
     seal_parser.add_argument("gate", help="gate id, e.g. G1")

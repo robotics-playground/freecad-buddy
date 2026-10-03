@@ -10,7 +10,7 @@ description: >-
   sketch", "fix this". Do NOT use for planning a build (see design-decomposition)
   or the normal use of a specific feature (see freecad-partdesign).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

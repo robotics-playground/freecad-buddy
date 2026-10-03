@@ -317,13 +317,41 @@ def test_regression_e_non_string_name_malformed():
 
 
 def test_regression_f_one_red_g0_4_leg_fails(tmp_path):
-    """_ingest_g0_4 with one red leg -> combined G0.4 non-OK."""
+    """_ingest_g0_4 with the 1.1.x leg red -> combined G0.4 non-OK."""
     evidence = tmp_path / "evidence"
     evidence.mkdir()
-    (evidence / "G0.4.1.0.x.json").write_text(json.dumps({"green": True, "test_count": 42}))
     (evidence / "G0.4.1.1.x.json").write_text(json.dumps({"green": False, "test_count": 42}))
     report = runner._ingest_g0_4(tmp_path)
     assert report["verdict"] != "OK"
+
+
+def test_should_pass_g0_4_when_only_the_green_1_1_x_leg_is_present(tmp_path):
+    # Arrange
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    (evidence / "G0.4.1.1.x.json").write_text(json.dumps({"green": True, "test_count": 42}))
+
+    # Act
+    report = runner._ingest_g0_4(tmp_path)
+
+    # Assert
+    assert report["verdict"] == "OK"
+    assert [check["id"] for check in report["checks"]] == ["G0.4.1.1.x"]
+
+
+def test_should_ignore_a_legacy_leg_file_when_g0_4_is_ingested(tmp_path):
+    # Arrange
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    (evidence / "G0.4.1.1.x.json").write_text(json.dumps({"green": True, "test_count": 42}))
+    (evidence / "G0.4.1.0.x.json").write_text(json.dumps({"green": False, "test_count": 0}))
+
+    # Act
+    report = runner._ingest_g0_4(tmp_path)
+
+    # Assert
+    assert report["verdict"] == "OK"
+    assert [check["id"] for check in report["checks"]] == ["G0.4.1.1.x"]
 
 
 # --------------------------------------------------------------------------- #
@@ -354,11 +382,11 @@ def test_regression_h_empty_checks_at_verdict_time(tmp_path):
         compute_verdict(tmp_path, _gate_def(), _current_validators(), _hasher)
 
 
-def test_regression_i_one_roster_leg_present_fails(tmp_path):
-    """Only ONE roster leg present (green) -> combined G0.4 non-OK (missing blocking leg)."""
+def test_regression_i_roster_leg_absent_fails(tmp_path):
+    """The 1.1.x roster leg absent (only a non-roster leg green) -> combined G0.4 non-OK."""
     evidence = tmp_path / "evidence"
     evidence.mkdir()
-    (evidence / "G0.4.1.0.x.json").write_text(json.dumps({"green": True, "test_count": 42}))
+    (evidence / "G0.4.1.2.x.json").write_text(json.dumps({"green": True, "test_count": 42}))
     report = runner._ingest_g0_4(tmp_path)
     assert report["verdict"] != "OK"
 

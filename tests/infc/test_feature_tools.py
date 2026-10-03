@@ -18,7 +18,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import confirm, features, fingerprint, transaction
+from freecad_buddy.usecases import confirm, features, fingerprint, shim, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 
 # Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
@@ -624,8 +624,8 @@ class HoleTest(_FeatureFixture):
         self.assertAlmostEqual(state["shape_summary"]["bbox"][2], CYL_H, places=6)
 
     def test_depth_type_up_to_first_is_rejected_because_the_source_comments_it_out(self):
-        # DepthTypeEnums is {"Dimension", "ThroughAll"} on both supported builds; UpToFirst is
-        # commented out in the source, so it must never reach the property.
+        # DepthTypeEnums is {"Dimension", "ThroughAll"}; UpToFirst is commented out in the
+        # source, so it must never reach the property.
         body, _ = self.block()
         self.circle_sketch(body, "Centre", (5.0, 10.0), 3.0, z=BLOCK_H)
 
@@ -1199,8 +1199,7 @@ class PatternTest(_FeatureFixture):
         )
 
     def test_a_mode_outside_the_build_enum_is_rejected_before_the_bracket(self):
-        # The pattern Mode members are spelled differently across the supported builds, so the
-        # value is checked against the live enumeration rather than a hardcoded list.
+        # The value is checked against the live enumeration rather than a hardcoded list.
         self._plate_with_hole()
 
         self.assert_rejected_pre_bracket(
@@ -1217,6 +1216,105 @@ class PatternTest(_FeatureFixture):
             occurrences=3,
             mode="NotAPatternMode",
         )
+
+    def test_should_refuse_the_retired_length_spelling_when_mode_is_given(self):
+        # Arrange
+        self._plate_with_hole()
+        legal = shim.probe_object(
+            "PartDesign::LinearPattern", lambda probe: shim.enum_values(probe, "Mode")
+        )
+
+        # Act
+        with self.assertRaises(ValidationError) as caught:
+            features.feature_pattern(
+                self.registry,
+                doc=self.handle,
+                body="Body",
+                name="Bad",
+                kind="linear",
+                originals=["Bore"],
+                direction=whole("X_Axis"),
+                length=mm(10.0),
+                occurrences=3,
+                mode="length",
+            )
+
+        # Assert
+        self.assertEqual(str(caught.exception), f"mode 'length' is not one of {legal}")
+
+    def test_should_step_occurrences_by_the_offset_when_a_linear_pattern_uses_spacing(self):
+        # Arrange
+        self._plate_with_hole()
+
+        # Act
+        envelope = features.feature_pattern(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="Row",
+            kind="linear",
+            originals=["Bore"],
+            direction=whole("X_Axis"),
+            offset=mm(10.0),
+            occurrences=3,
+            mode="Spacing",
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        row = self.document().getObject("Row")
+        self.assertEqual(row.Mode, "Spacing")
+        self.assertAlmostEqual(row.Offset.Value, 10.0, places=6)
+        centres = sorted(
+            round(face.Surface.Center.x, 6)
+            for face in row.Shape.Faces
+            if type(face.Surface).__name__ == "Cylinder"
+        )
+        self.assertEqual(len(centres), 3)
+        self.assertAlmostEqual(centres[1] - centres[0], 10.0, places=6)
+        self.assertAlmostEqual(centres[2] - centres[1], 10.0, places=6)
+
+    def test_should_step_occurrences_by_the_offset_when_a_polar_pattern_uses_spacing(self):
+        # Arrange
+        body, _ = self.cylinder()
+        self.circle_sketch(body, "Recess", (3.0, 0.0), 1.0, z=CYL_H)
+        features.feature_hole(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Recess",
+            name="Dimple",
+            diameter=mm(2.0),
+            depth=mm(2.0),
+        )
+
+        # Act
+        envelope = features.feature_pattern(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="Ring",
+            kind="polar",
+            originals=["Dimple"],
+            axis=whole("Z_Axis"),
+            offset=deg(60.0),
+            occurrences=3,
+            mode="Spacing",
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        ring = self.document().getObject("Ring")
+        self.assertEqual(ring.Mode, "Spacing")
+        self.assertAlmostEqual(ring.Offset.Value, 60.0, places=6)
+        angles = sorted(
+            round(math.degrees(math.atan2(face.Surface.Center.y, face.Surface.Center.x)), 6)
+            for face in ring.Shape.Faces
+            if type(face.Surface).__name__ == "Cylinder" and abs(face.Surface.Radius - 1.0) < 1e-6
+        )
+        self.assertEqual(len(angles), 3)
+        self.assertAlmostEqual(angles[1] - angles[0], 60.0, places=6)
+        self.assertAlmostEqual(angles[2] - angles[1], 60.0, places=6)
 
 
 class FreeCADDefaultTest(_FeatureFixture):

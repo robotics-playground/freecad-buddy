@@ -1,8 +1,8 @@
 """CI helper (FreeCAD-free): emit one G0.4 matrix-leg evidence file.
 
-Each headless CI leg calls this to write ``evidence/G0.4.<leg>.json`` carrying that leg's
-green boolean + test count. The runner's ``_ingest_g0_4`` requires BOTH pinned roster legs
-(1.0.x, 1.1.x) present ∧ green ∧ >=30 tests; a single present green leg never greens G0.4.
+The headless CI leg calls this to write ``evidence/G0.4.<leg>.json`` carrying that leg's
+green boolean + test count. The runner's ``_ingest_g0_4`` requires the pinned roster leg
+(1.1.x) present ∧ green ∧ >=30 tests.
 
 Usage: ``python benchmarks/g0/emit_ci_evidence.py --run <id> --leg 1.1.x --green true \
         --tests 42``

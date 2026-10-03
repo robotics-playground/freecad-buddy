@@ -55,12 +55,11 @@ _PATTERN_TYPES = {
 }
 
 # The pattern Mode members, folded, that spread the occurrences across a total extent (driving
-# Length for a linear pattern and Angle for a polar one). "length" and "angle" are the older
-# spellings; "extent" is the newer one shared by both pattern types.
-_PATTERN_EXTENT_MODES = frozenset({"length", "angle", "extent"})
+# Length for a linear pattern and Angle for a polar one).
+_PATTERN_EXTENT_MODES = frozenset({"extent"})
 
 # The pattern Mode members, folded, that step the occurrences by a fixed Offset instead.
-_PATTERN_OFFSET_MODES = frozenset({"offset", "spacing"})
+_PATTERN_OFFSET_MODES = frozenset({"spacing"})
 
 _DATUM_TYPES = {
     "plane": "PartDesign::Plane",
@@ -407,8 +406,7 @@ def _feature_mutation(
 def _extrude_type(feature: object, up_to: object) -> str:
     """Return the extrude ``Type`` string, defaulting to ``Length``, checked against the build.
 
-    The enumeration is never indexed: its members differ in spelling between the supported
-    builds and one position carries a deprecation tombstone on the newer of them.
+    The enumeration is never indexed: one of its positions carries a deprecation tombstone.
     """
     requested = "Length" if up_to is None else up_to
     return _checked_enum(feature, "Type", requested, "up_to")
@@ -1262,12 +1260,13 @@ def _mode_drives_offset(probe: object, mode: str | None) -> bool:
     ``Offset``. FreeCAD marks the property the active mode does not read as read-only, so a write
     to the wrong one is silently discarded.
 
-    The offset mode is spelled differently across the supported builds, so the resolved member is
-    matched case-insensitively against the spellings each build uses rather than against a single
-    literal. ``None`` leaves the build default, which is the extent mode.
+    The live member is mapped to the dimension it drives: ``Extent`` to the extent dimension,
+    ``Spacing`` to ``Offset``. A live member outside that mapping, such as one a future build
+    adds, is refused rather than guessed. ``None`` leaves the build default, which is the extent
+    mode.
 
-    :raises ValidationError: the mode is outside the build's enumeration, or the build spells it
-        in a way this mapping does not recognise.
+    :raises ValidationError: the mode is outside the build's enumeration, or it is a live member
+        this mapping does not cover.
     """
     if mode is None:
         return False
@@ -1308,11 +1307,10 @@ def feature_pattern(
     ``angle / (occurrences - 1)``, so six occurrences over 360 degrees land 60 degrees apart.
 
     ``mode`` selects which dimension drives the spacing and is checked against the build's live
-    enumeration, whose members are spelled differently across the supported builds. The extent
-    mode spreads the occurrences across ``length`` (linear) or ``angle`` (polar); the offset mode
-    steps them by ``offset`` instead. Only the dimension the resolved mode reads may be supplied,
-    because FreeCAD marks the other one read-only. Omitting ``mode`` leaves the build's default,
-    which is the extent mode.
+    enumeration. The extent mode spreads the occurrences across ``length`` (linear) or ``angle``
+    (polar); the offset mode steps them by ``offset`` instead. Only the dimension the resolved
+    mode reads may be supplied, because FreeCAD marks the other one read-only. Omitting ``mode``
+    leaves the build's default, which is the extent mode.
 
     :raises ValidationError: the body is unknown, the name is taken, ``kind`` is not
         ``"linear"``/``"polar"``, the direction or axis target is unknown, an original is

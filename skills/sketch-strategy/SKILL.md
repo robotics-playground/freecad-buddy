@@ -10,7 +10,7 @@ description: >-
   in (see freecad-sketcher) or ordering the whole feature plan (see
   design-decomposition).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

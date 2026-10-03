@@ -18,9 +18,8 @@ T = TypeVar("T")
 _STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
 _STEP_SCHEMES = frozenset({"AP203", "AP214", "AP242"})
 
-# The (type_id, property) pairs the feature tools validate against a live enumeration. The
-# spellings differ between supported builds, so a caller cannot know the legal set without
-# reading it from the running one.
+# The (type_id, property) pairs the feature tools validate against a live enumeration. A caller
+# cannot know the legal set without reading it from the running build.
 _ENUM_PROPERTIES = (
     ("PartDesign::Pad", "Type"),
     ("PartDesign::Pocket", "Type"),
@@ -218,9 +217,9 @@ def probe_object(type_id: str, read: Callable[[object], T]) -> T:
 def enum_values(obj: object, prop: str) -> list[str]:
     """Return the live enumeration of ``obj.prop``, or ``[]`` when it exposes none.
 
-    Several PartDesign enumerations differ in spelling, ordering and length between the
-    supported FreeCAD builds, and ``Hole`` re-populates four of them whenever ``ThreadType``
-    changes, so every value is checked against this reading rather than a hardcoded list.
+    Several PartDesign enumerations carry deprecation tombstones, and ``Hole`` re-populates four
+    of them whenever ``ThreadType`` changes, so every value is checked against this reading
+    rather than a hardcoded list.
     """
     getter = getattr(obj, "getEnumerationsOfProperty", None)
     if not callable(getter):
@@ -416,7 +415,7 @@ def pin_step_config(ap: str) -> None:
     ``ap`` is the STEP application protocol (``"AP242"`` or ``"AP214"``). The unit is set
     through ``Part.setStaticValue("write.step.unit", "MM")``. The schema is set through the
     ``Mod/Part/STEP`` ``Scheme`` preference string, because ``setStaticValue`` raises on
-    ``write.step.schema`` on the 1.0/1.1 builds. Raises ``ValueError`` for an unknown ``ap``.
+    ``write.step.schema`` on the 1.1 builds. Raises ``ValueError`` for an unknown ``ap``.
     """
     if ap not in _STEP_SCHEMES:
         raise ValueError(f"unknown STEP application protocol: {ap!r}")

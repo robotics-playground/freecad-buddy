@@ -3,7 +3,7 @@
   <name>FreeCAD Buddy</name>
   <description>Verify-first MCP bridge for FreeCAD</description>
   <version>0.0.1</version>
-  <freecadmin>1.0</freecadmin>
+  <freecadmin>1.1</freecadmin>
   <content>
     <workbench>
       <classname>FreeCADBuddyWorkbench</classname>

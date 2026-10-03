@@ -45,10 +45,10 @@ entry:
     item: "Corrupted-plan fault suite: >=10 planted plans plus clean controls, every threat countered"
     owner: "4.1"
   - id: G3.E.3
-    item: "Every spec's anchor frame resolves identically on the 1.0.x and 1.1.x legs"
+    item: "Every built part's anchor frame equals the committed 1.1.x reference"
     owner: "4.2b"
     # The specs whose frame is proven on a part the corrupted-plan suite builds (a control or a
-    # reverted planted plan) on both legs, against fault-injection/frames-reference.json.
+    # reverted planted plan) on the 1.1.x leg, against fault-injection/frames-reference.json.
     proven_on_built_parts:
       - g3-dev-001-mounting-plate
       - g3-dev-003-shaft-collar
@@ -60,7 +60,7 @@ entry:
       - g3-dev-019-offset-pivot-plate
     # No plan builds these specs, so their frames are NOT proven on a built part. Each declared
     # (kind, ref) is resolved on a canonical fixture in tests/infc/test_assertion_primitives.py
-    # (CanonicalFrameTest), which runs on both legs; that proves the resolver, not the part.
+    # (CanonicalFrameTest), which runs on the 1.1.x leg; that proves the resolver, not the part.
     not_proven_on_built_parts:
       - g3-dev-002-l-bracket
       - g3-dev-004-round-standoff

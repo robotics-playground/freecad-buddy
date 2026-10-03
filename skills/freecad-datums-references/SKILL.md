@@ -10,7 +10,7 @@ description: >-
   Do NOT use for constraining a sketch (see freecad-sketcher) or the mutation
   transaction/audit itself (see verification-thinking).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

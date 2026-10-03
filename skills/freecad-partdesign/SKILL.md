@@ -10,7 +10,7 @@ description: >-
   did the fillet fail". Do NOT use for planning the whole feature sequence (see
   design-decomposition) or sketch constraints (see freecad-sketcher).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

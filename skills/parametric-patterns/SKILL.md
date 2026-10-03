@@ -10,7 +10,7 @@ description: >-
   for deciding which values are parameters (see design-intent) or splitting sketches
   (see sketch-strategy).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope

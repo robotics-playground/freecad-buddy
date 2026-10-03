@@ -10,7 +10,7 @@ description: >-
   NOT use for the parametric mechanism itself (see parametric-patterns) or splitting
   sketches (see sketch-strategy).
 version: 0.1.0
-freecad-versions: ['1.0', '1.1']
+freecad-versions: ['1.1']
 ---
 
 ## Scope
