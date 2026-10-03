@@ -28,7 +28,7 @@ jobs:
       - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install pytest
       - name: In-FreeCAD suite
         timeout-minutes: 15
-        run: micromamba run -n fc FreeCADCmd tests/run_tests.py
+        run: micromamba run -n fc freecadcmd tests/run_tests.py
       - name: External suite
         timeout-minutes: 15
         run: micromamba run -n fc pytest tests/external

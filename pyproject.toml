@@ -44,6 +44,8 @@ extend-exclude = [
     "_bmad",
     "_bmad-output",
     "docs/references",
+    # Recorded UAT run evidence: scripts snapshotted as they ran, kept unedited.
+    "tests/uat/run",
 ]
 
 [tool.ruff.lint]

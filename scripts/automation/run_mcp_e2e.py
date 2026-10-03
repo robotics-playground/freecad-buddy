@@ -5,7 +5,8 @@ over the MCP stdio protocol, exercises the whole tool surface against real golde
 geometry, captures the server's stderr, and writes a machine-readable report. No FreeCAD GUI,
 no manual restarts: this process owns the H1 subprocess lifecycle.
 
-Run from the uv env (which has the ``mcp`` client): ``uv run python scripts/automation/run_mcp_e2e.py``.
+Run from the uv env (which has the ``mcp`` client):
+``uv run python scripts/automation/run_mcp_e2e.py``.
 The H1 server runs under the conda ``fcb`` env python (which has FreeCAD + mcp + oracles).
 
 Outputs (under ``_automation/``):
@@ -171,14 +172,20 @@ async def _sweep(session: ClientSession, rep: Report) -> None:
             )
 
         # screenshot (offscreen render in H1) — best-effort visual
-        shot = await session.call_tool("query_screenshot", {"doc": handle, "view": {"camera": "iso"}})
+        shot = await session.call_tool(
+            "query_screenshot", {"doc": handle, "view": {"camera": "iso"}}
+        )
         srender = _payload(shot).get("render", {})
         link = srender.get("resource_link")
-        shot_ok = _status(shot) == "OK" and srender.get("available") and link and Path(link).is_file()
+        shot_ok = (
+            _status(shot) == "OK" and srender.get("available") and link and Path(link).is_file()
+        )
         rep.record(
             f"query_screenshot:{name}",
             bool(shot_ok),
-            f"link={link}" if shot_ok else f"available={srender.get('available')} reason={srender.get('reason')}",
+            f"link={link}"
+            if shot_ok
+            else f"available={srender.get('available')} reason={srender.get('reason')}",
             _status(shot),
         )
         if shot_ok:
@@ -215,7 +222,15 @@ async def _run() -> int:
 
     params = StdioServerParameters(
         command=py,
-        args=["-m", "freecad_buddy.hosts.main", "serve", "--mode", "inline", "--transport", "stdio"],
+        args=[
+            "-m",
+            "freecad_buddy.hosts.main",
+            "serve",
+            "--mode",
+            "inline",
+            "--transport",
+            "stdio",
+        ],
         env=child_env,
     )
     rep = Report()

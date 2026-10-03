@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync --all-extras
+      - run: uv sync --extra dev
       - name: Ring / Qt import enforcement
         run: uv run python scripts/check_imports.py
       - name: Status vocabulary enforcement
@@ -98,11 +98,12 @@ jobs:
       # `mcp` (pin CLOSED in decision 005) because the MCP-surface tests import the H1 host
       # wiring; add it alongside the test tools. H1 is a single process (FreeCAD + mcp in one
       # interpreter), so `mcp` living in this conda env is also what makes `--mode inline`
-      # servable on this leg.
-      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install "mcp>=1.28,<2" pytest jsonschema pyyaml
+      # servable on this leg. The export-oracle tests call trimesh and lib3mf, the package's own
+      # runtime deps, so they are installed here too.
+      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install "mcp>=1.28,<2" "trimesh==4.*" "lib3mf==2.*" pytest jsonschema pyyaml
       - name: In-FreeCAD suite (stdlib unittest, one process)
         timeout-minutes: 15
-        run: micromamba run -n fc FreeCADCmd tests/run_tests.py
+        run: micromamba run -n fc freecadcmd tests/run_tests.py
       - name: External suite (MCP surface, dispatch, audit)
         timeout-minutes: 15
         run: micromamba run -n fc pytest tests/external
@@ -143,7 +144,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync --all-extras
+      - run: uv sync --extra dev
       - name: Download the G0.4 leg artifact into the run's evidence dir
         uses: actions/download-artifact@v4
         with:
@@ -175,4 +176,4 @@ jobs:
           MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
         run: |
           xvfb-run -a -s "-screen 0 1024x768x24" \
-            micromamba run -n fc FreeCADCmd tests/run_tests.py
+            micromamba run -n fc freecadcmd tests/run_tests.py

@@ -357,6 +357,8 @@ def test_gui_active_document_not_flagged_through_an_import_alias(tmp_path):
 def test_active_document_attr_on_other_object_not_flagged(tmp_path):
     # ``registry.ActiveDocument`` (not a FreeCAD module binding) is not the banned form.
     root = _make_tree(tmp_path, {
-        "usecases/ok.py": "import FreeCAD\nd = FreeCAD.getDocument('h')\nx = registry.ActiveDocument\n",
+        "usecases/ok.py": (
+            "import FreeCAD\nd = FreeCAD.getDocument('h')\nx = registry.ActiveDocument\n"
+        ),
     })
     assert check_imports.check_tree(root) == []

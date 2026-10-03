@@ -189,8 +189,11 @@ async def _fault_shape_case(session: ClientSession, rep: Report, case: str) -> N
     handle = _payload(opened)["doc"]
     obj = await _sole_object(session, handle)
     r = await session.call_tool("verify_shape", {"doc": handle, "object": obj, "checks": checks})
-    # The defect must be caught: a clean OK on a planted fault is the failure we are guarding against.
-    rep.record(f"fault_shape:{case}", _status(r) == "SPEC_FAILED", f"status={_status(r)}", _status(r))
+    # The defect must be caught: a clean OK on a planted fault is the failure we are guarding
+    # against.
+    rep.record(
+        f"fault_shape:{case}", _status(r) == "SPEC_FAILED", f"status={_status(r)}", _status(r)
+    )
     await session.call_tool("document_close", {"doc": handle})
 
 
@@ -204,7 +207,15 @@ async def _run() -> int:
 
     params = StdioServerParameters(
         command=py,
-        args=["-m", "freecad_buddy.hosts.main", "serve", "--mode", "inline", "--transport", "stdio"],
+        args=[
+            "-m",
+            "freecad_buddy.hosts.main",
+            "serve",
+            "--mode",
+            "inline",
+            "--transport",
+            "stdio",
+        ],
         env=child_env,
     )
     rep = Report()
