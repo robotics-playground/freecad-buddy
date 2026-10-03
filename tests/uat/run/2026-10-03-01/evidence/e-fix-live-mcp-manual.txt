@@ -1,0 +1,24 @@
+  [PASS] tools_list_ge_20                   45 tools
+  [PASS] capabilities                       fc=1.1.1 render=gui_constructed
+  [PASS] mass:box-10-20-30                  vol=6000.0 solid=True
+  [PASS] verify_shape:box-10-20-30          OK
+  [FAIL] screenshot:box-10-20-30            available=True rendered=[]
+  [PASS] mass:cylinder-r5-h20               vol=1570.7963267948965 solid=True
+  [PASS] verify_shape:cylinder-r5-h20       OK
+  [FAIL] screenshot:cylinder-r5-h20         available=True rendered=[]
+  [PASS] mass:sphere-r10                    vol=4188.790204786392 solid=True
+  [PASS] verify_shape:sphere-r10            OK
+  [FAIL] screenshot:sphere-r10              available=True rendered=[]
+  [PASS] mass:box40-hole-r5                 vol=15214.601836602547 solid=True
+  [PASS] verify_shape:box40-hole-r5         OK
+  [FAIL] screenshot:box40-hole-r5           available=True rendered=[]
+  [PASS] mass:two-box-compound              vol=1999.9999999999995 solid=True
+  [PASS] verify_shape:two-box-compound      OK
+  [FAIL] screenshot:two-box-compound        available=True rendered=[]
+  [PASS] unknown_handle_INVALID             INVALID_INPUT
+  [PASS] open_bad_path_INVALID              INVALID_INPUT
+  [PASS] compound_com_null                  com=None solid=True
+  [PASS] fault:wrong-volume                 SPEC_FAILED
+  [PASS] fault:non-watertight-open-shell    SPEC_FAILED
+
+17/22 live-MCP checks passed

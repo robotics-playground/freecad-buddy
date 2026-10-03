@@ -1,0 +1,15 @@
+  [PASS] capabilities                 fc=1.1.1
+  [PASS] document_create              OK
+  [PASS] apply:feature_body_create    OK 
+  [PASS] apply:sketch_create          OK 
+  [PASS] apply:sketch_add_geometry    OK 
+  [PASS] apply:feature_pad            OK 
+  [PASS] mass Plate == 1000 mm3       vol=999.9999999999998
+  [PASS] verify_shape                 OK
+  [PASS] verify_recompute             OK
+  [PASS] export_step                  OK 
+  [PASS] verify_export_step           OK 
+  [PASS] view_fit_viewport            OK
+  [PASS] query_screenshot             {"scene": {"rendered_objects": ["Plate"], "focused_on": null}}
+DOC fcb-doc:9_nerPFfhR805avGkW7QYQ
+13/13 passed

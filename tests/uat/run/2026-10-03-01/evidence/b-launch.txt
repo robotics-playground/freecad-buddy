@@ -1,0 +1,7 @@
+tag=b pid=26444 window_id=661194 bridge_wait=2s
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       7052
+--- new addon.log lines ---
+2026-10-03 10:02:53,782 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-03 10:02:53,782 INFO freecad_buddy.hosts.gui_addon.bootstrap: HARNESS-CANARY-2026-10-03
+2026-10-03 10:02:53,976 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:50387
+2026-10-03 10:02:54,281 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 16044) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log

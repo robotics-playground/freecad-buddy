@@ -1,0 +1,7 @@
+tag=c pid=3632 window_id=792334 bridge_wait=90s
+NO :8765 LISTENER
+--- new addon.log lines ---
+2026-10-03 10:04:45,286 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-03 10:04:45,286 INFO freecad_buddy.hosts.gui_addon.bootstrap: HARNESS-CANARY-2026-10-03
+2026-10-03 10:04:45,479 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:56963
+2026-10-03 10:04:45,790 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy not auto-started: no .venv/venv interpreter found next to the addon and no FREECAD_BUDDY_MCP_CMD override. Create the project venv (uv sync) so the addon can find it, or set FREECAD_BUDDY_MCP_CMD. The RPC listener is up; start the proxy manually (serve --mode rpc) to reach it over MCP in the meantime.
