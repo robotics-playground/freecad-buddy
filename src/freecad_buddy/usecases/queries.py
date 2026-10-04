@@ -218,6 +218,21 @@ def _node_passes(obj: object, filters: dict) -> bool:
     return True
 
 
+def _prunes_subtree(obj: object, filters: dict) -> bool:
+    """Whether a failing ``obj`` takes its whole subtree with it instead of hoisting matches.
+
+    ``visible_only`` and ``exclude_types`` describe the container and everything in it: a hidden
+    Body hides its Pad, whose own ``Visibility`` stays true. An ``App::Link``'s ``OutList`` is
+    its target, which is not its content and may live in another document.
+    """
+    if _is_link(obj):
+        return True
+    exclude = filters.get("exclude_types")
+    if exclude is not None and str(getattr(obj, "TypeId", "")) in exclude:
+        return True
+    return bool(filters.get("visible_only")) and not bool(getattr(obj, "Visibility", False))
+
+
 def _sparse_node(
     obj: object,
     children: list,
@@ -323,8 +338,11 @@ def query_tree_summary(
     children are partitioned into structural ``children`` and ``App::Link`` ``links``; at the depth
     boundary a node reports only its ``children_count``/``links_count``. ``filters`` AND-stacks
     ``types``/``exclude_types``/``renderable_only``/``visible_only``/``name_pattern``;
-    ``exclude_types`` defaults to the datum/origin clutter set. Nodes are sparse — a field appears
-    only when it carries a value; ``name``/``label``/``type``/``visibility`` are always present.
+    ``exclude_types`` defaults to the datum/origin clutter set. A node that fails the filters is
+    dropped and its matching descendants, searched at any depth, take its place, each ``Name``
+    once per level; a node failing ``visible_only`` or ``exclude_types``, or a failing
+    ``App::Link``, drops its whole subtree instead. Nodes are sparse — a field appears only when
+    it carries a value; ``name``/``label``/``type``/``visibility`` are always present.
     """
     effective = dict(filters or {})
     effective.setdefault("exclude_types", list(_DATUM_EXCLUDE_DEFAULT))
@@ -342,20 +360,38 @@ def query_tree_summary(
 
         counter = {"n": 0}
 
+        def matching(candidates: list) -> list:
+            """``candidates`` that pass the filters, each failing one replaced by its matches.
+
+            The search under a failing object is not bounded by ``depth``: a Pad inside a Body
+            must be found when the Body itself fails the filter. It never descends where
+            :func:`_prunes_subtree` holds. The ``seen`` set returns each ``Name`` once and stops
+            on a cyclic ``OutList``.
+            """
+            found, seen = [], set()
+            stack = list(reversed(candidates))
+            while stack:
+                obj = stack.pop()
+                if obj.Name in seen:
+                    continue
+                seen.add(obj.Name)
+                if _node_passes(obj, effective):
+                    found.append(obj)
+                elif not _prunes_subtree(obj, effective):
+                    stack.extend(reversed(_out_list(obj)))
+            return found
+
         def build(obj: object, remaining: int) -> dict:
             out = _out_list(obj)
-            child_objs = [c for c in out if not _is_link(c)]
-            link_objs = [c for c in out if _is_link(c)]
             children, links = [], []
             if remaining > 1:
-                children = [
-                    build(c, remaining - 1) for c in child_objs if _node_passes(c, effective)
-                ]
-                links = [build(c, remaining - 1) for c in link_objs if _node_passes(c, effective)]
+                for match in matching(out):
+                    (links if _is_link(match) else children).append(build(match, remaining - 1))
             counter["n"] += 1
-            return _sparse_node(obj, children, links, len(child_objs), len(link_objs))
+            links_count = sum(1 for c in out if _is_link(c))
+            return _sparse_node(obj, children, links, len(out) - links_count, links_count)
 
-        tree = [build(o, depth) for o in roots if _node_passes(o, effective)]
+        tree = [build(o, depth) for o in matching(roots)]
         structured = {
             "doc": _handle,
             "total_objects": len(document.Objects),

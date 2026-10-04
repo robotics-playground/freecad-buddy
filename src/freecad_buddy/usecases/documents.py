@@ -12,12 +12,20 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import secrets
+import shutil
 import threading
 from pathlib import Path
 from typing import Callable, TypeVar
 
-from freecad_buddy.contracts import ResultEnvelope, massprops_equal, summary_text
+from freecad_buddy.contracts import (
+    ResultEnvelope,
+    fingerprints_equal,
+    massprops_equal,
+    summary_text,
+)
+from freecad_buddy.usecases.process import pid_alive
 
 T = TypeVar("T")
 
@@ -43,30 +51,40 @@ def workdir_root() -> Path:
     return Path(os.environ.get(_WORKDIR_ENV, _DEFAULT_WORKDIR))
 
 
+_TEMP_PREFIX = "FCB_TMP_"
+# Pid plus a per-process token: a recycled pid can never name a folder an earlier process left.
+_SESSION_DIR = re.compile(rf"{_TEMP_PREFIX}session_(\d{{1,10}})_[0-9a-f]+")
+_SESSION_TOKEN = secrets.token_hex(4)
+
+
 def temp_dir() -> str:
-    """The session temp directory (``<workdir>/tmp``), created on demand.
+    """This host's session temp directory, ``<workdir>/tmp/FCB_TMP_session_<pid>_<token>``.
 
     Every temp file the bridge creates is passed this as ``dir=``, which is what puts it inside
-    the tree :func:`sweep_temp_dir` owns. A creation failure is the caller's to report — a temp
-    file that cannot be placed inside the workdir must not silently fall back to the OS temp
-    directory, because nothing would then sweep it.
+    the tree :func:`sweep_temp_dir` owns. Each host process gets its own folder because a GUI and
+    a headless host can share one workdir, and a sweep must tell a live host's files from a dead
+    one's. A creation failure is the caller's to report — a temp file that cannot be placed inside
+    the workdir must not silently fall back to the OS temp directory, because nothing would then
+    sweep it.
     """
-    path = workdir_root() / "tmp"
+    path = workdir_root() / "tmp" / f"{_TEMP_PREFIX}session_{os.getpid()}_{_SESSION_TOKEN}"
     path.mkdir(parents=True, exist_ok=True)
     return str(path)
 
 
 def sweep_temp_dir() -> int:
-    """Remove the previous session's temp files from ``<workdir>/tmp``; return the count removed.
+    """Remove dead sessions' temp files from ``<workdir>/tmp``; return the count removed.
 
     Runs once at session start, never as an immediate unlink: a render link may still be being
     read when the call that returned it completes. The scope is exactly ``<workdir>/tmp`` — the OS
     temp directory is another session's territory and is never scanned.
 
-    Only regular files and the bridge's own snapshot directories are removed; the walk is one
-    level deep, so no path outside the workdir can be reached. An in-memory FreeCAD document
-    carrying a reserved ``FCB_TMP_`` name can never appear here, because this reads a real
-    directory and a document is not a directory entry.
+    Only ``FCB_TMP_`` entries are touched; anything else in the folder belongs to someone else. A
+    session folder is removed only when the pid in its name is dead, so a live host sharing the
+    workdir keeps its files. Any other ``FCB_TMP_`` entry sits outside every session folder, so no
+    live host owns it. An in-memory FreeCAD document carrying a reserved ``FCB_TMP_`` name can
+    never appear here, because this reads a real directory and a document is not a directory
+    entry.
 
     Every failure is logged and skipped rather than raised: one locked file must not keep the rest
     of the previous session's leftovers alive, and an unreadable workdir must not stop a host from
@@ -80,11 +98,14 @@ def sweep_temp_dir() -> int:
         logger.warning("session sweep could not read %s", root, exc_info=True)
         return 0
     for entry in entries:
+        if not entry.name.startswith(_TEMP_PREFIX):
+            continue
+        session = _SESSION_DIR.fullmatch(entry.name)
+        if session is not None and pid_alive(int(session.group(1))):
+            continue
         try:
-            if entry.is_dir():
-                for child in entry.iterdir():
-                    child.unlink()
-                entry.rmdir()
+            if entry.is_dir() and not entry.is_symlink():
+                shutil.rmtree(entry)
             else:
                 entry.unlink()
             removed += 1
@@ -117,8 +138,11 @@ def summarize_document_open(sc: dict) -> str:
 
 
 def summarize_document_save(sc: dict) -> str:
-    """One-line summary of a document_save result."""
-    return f"Saved {sc.get('name', '?')} (doc={sc.get('doc', '?')})."
+    """One-line summary of a document_save result: the label and path the save left."""
+    return (
+        f"Saved {sc.get('name', '?')} as {sc.get('label', '?')!r} to {sc.get('path', '?')} "
+        f"(doc={sc.get('doc', '?')})."
+    )
 
 
 def summarize_document_close(sc: dict) -> str:
@@ -126,13 +150,25 @@ def summarize_document_close(sc: dict) -> str:
     return f"Closed {sc.get('name', '?')} (doc={sc.get('doc', '?')})."
 
 
-def summarize_document_undo(sc: dict) -> str:
-    """One-line summary of a document_undo result: what was undone and whether it restored."""
+def summarize_document_undo(sc: dict, digest_only: bool = False) -> str:
+    """One-line summary of a document_undo result: what was undone and whether it restored.
+
+    ``digest_only`` marks a string expectation. A byte difference alone does not show the undo
+    failed — re-serializing an untouched shape changes the bytes too — so that mismatch is
+    reported as the measurement it is, never as a failed restore.
+    """
     matches = sc.get("matches_pre_op")
     if matches is None:
         verdict = "no pre-op digest supplied to compare against"
+    elif matches:
+        verdict = "restored the pre-op state"
+    elif digest_only:
+        verdict = (
+            "the digest differs from the expected one on byte comparison; pass the whole "
+            "FingerprintRecord as expect_fingerprint to also compare the geometry"
+        )
     else:
-        verdict = "restored the pre-op state" if matches else "did NOT restore the pre-op state"
+        verdict = "did NOT restore the pre-op state"
     return (
         f"Undid {sc.get('undone')!r} on {sc.get('name', '?')}: {verdict} "
         f"({str(sc.get('fingerprint_before'))[:12]} -> "
@@ -176,6 +212,103 @@ def _matches_pre_op(after: dict, expected: str | dict | None) -> bool | None:
     return after["digest"] == expected.get("digest") or massprops_equal(after, expected)
 
 
+_DIGEST = re.compile(r"[0-9a-f]{64}")
+
+
+def _check_expectation(expected: object, serializer: str) -> None:
+    """Refuse an ``expect_fingerprint`` that cannot be compared with this build's fingerprint.
+
+    An incomparable expectation can never match, so accepting one would report
+    ``matches_pre_op: false`` — "the undo did not restore" — for what is a caller error.
+
+    :raises ValidationError: naming the first defect found.
+    """
+    if isinstance(expected, str):
+        if not _DIGEST.fullmatch(expected):
+            raise ValidationError(
+                f"expect_fingerprint digest must be 64 lowercase hex characters, got {expected!r}"
+            )
+        return
+    if not isinstance(expected, dict):
+        raise ValidationError(
+            "expect_fingerprint must be a fingerprint digest string or a FingerprintRecord, "
+            f"got {type(expected).__name__}"
+        )
+    if not isinstance(expected.get("objects"), list):
+        raise ValidationError(
+            f"expect_fingerprint record must carry an 'objects' list; got keys {sorted(expected)}"
+        )
+    try:
+        fingerprints_equal(expected, {"serializer": serializer, "digest": ""})
+    except ValueError as exc:
+        raise ValidationError(f"expect_fingerprint record: {exc}") from exc
+    if not isinstance(expected["digest"], str):
+        raise ValidationError(
+            "expect_fingerprint record digest must be a string, got "
+            f"{type(expected['digest']).__name__}"
+        )
+    for index, entry in enumerate(expected["objects"]):
+        if not (
+            isinstance(entry, dict)
+            and isinstance(entry.get("name"), str)
+            and isinstance(entry.get("massprops"), dict)
+        ):
+            raise ValidationError(
+                f"expect_fingerprint record objects[{index}] must carry a 'name' string and a "
+                f"'massprops' object, got {entry!r}"
+            )
+
+
+def _fcstd_path(path: str) -> str:
+    """The file ``Document.saveAs(path)`` writes: FreeCAD appends ``.FCStd`` when it is missing.
+
+    Mirrors ``checkFileName`` (``App/Document.cpp:1677-1696``), including its
+    ``CheckExtension`` preference, so the target checked is the file FreeCAD will open.
+    """
+    import FreeCAD
+
+    preferences = FreeCAD.ParamGet("User parameter:BaseApp/Preferences/Document")
+    if not preferences.GetBool("CheckExtension", True) or path.lower().endswith(".fcstd"):
+        return path
+    return path + ("FCStd" if path.endswith(".") else ".FCStd")
+
+
+def _check_save_target(path: str) -> None:
+    """Refuse a save target FreeCAD would mishandle, before anything is written.
+
+    FreeCAD saves to a directory path as ``<dir>.FCStd``, creates a missing parent folder, and
+    sets the document's ``FileName`` before it finds a read-only target, so each is refused here.
+
+    :raises ValidationError: naming the bad path or folder.
+    """
+    if os.path.isdir(path):
+        raise ValidationError(f"save path is a directory, not a file: {path}")
+    target = _fcstd_path(path)
+    folder = os.path.dirname(os.path.abspath(target))
+    if not os.path.isdir(folder):
+        raise ValidationError(f"save folder does not exist: {folder}")
+    if os.path.isdir(target):
+        raise ValidationError(f"save path is a directory, not a file: {target}")
+    if os.path.exists(target) and not os.access(target, os.W_OK):
+        raise ValidationError(f"save target is not writable: {target}")
+
+
+def _save_as(document: object, path: str) -> None:
+    """``saveAs`` with a file-system failure reported as invalid input naming the path.
+
+    ``Document::saveAs`` sets ``FileName`` and ``Label`` before it writes
+    (``App/Document.cpp:1704-1710``), so a failed write would leave the document renamed to a
+    file that does not exist; both are put back before the refusal is raised.
+    """
+    file_name, label = document.FileName, document.Label
+    try:
+        document.saveAs(path)
+    except OSError as exc:
+        document.FileName = file_name
+        document.Label = label
+        raise ValidationError(f"cannot save to {path}: {exc}") from exc
+
+
 def _recompute_error_envelope(structured: dict, errors: list) -> ResultEnvelope:
     """A ``RECOMPUTE_ERROR`` envelope naming every object left in an error state."""
     names = [entry["name"] for entry in errors]
@@ -209,10 +342,10 @@ class DocumentRegistry:
     def _mint_handle(self) -> str:
         return f"fcb-doc:{secrets.token_urlsafe(16)}"
 
-    def _resolve(self, doc: str | None) -> tuple[str, object]:
-        """Return ``(handle, App.Document)`` for a caller-supplied handle, or raise.
+    def _lookup(self, doc: str | None) -> tuple[str, object]:
+        """Return ``(handle, bound object)`` for a caller-supplied handle, without probing it.
 
-        A missing handle or a stale/unknown handle both raise ``ValidationError``.
+        A missing handle or an unknown handle both raise ``ValidationError``.
         """
         if not doc:
             raise ValidationError("missing required 'doc' handle")
@@ -220,6 +353,27 @@ class DocumentRegistry:
         if document is None:
             raise ValidationError(f"unknown or stale document handle: {doc}")
         return doc, document
+
+    def _resolve(self, doc: str | None) -> tuple[str, object]:
+        """Return ``(handle, App.Document)`` for a caller-supplied handle, or raise.
+
+        A missing, unknown, or stale handle raises ``ValidationError``. A document closed outside
+        the registry — the GUI's File > Close — leaves a dead object behind its handle, and the
+        first attribute read on it raises ``ReferenceError``; every alias of it is dropped then.
+        """
+        handle, document = self._lookup(doc)
+        try:
+            document.Name
+        except ReferenceError:
+            self._release(document)
+            raise ValidationError(f"unknown or stale document handle: {doc}") from None
+        return handle, document
+
+    def _release(self, document: object) -> None:
+        """Drop every handle bound to ``document`` (lock held)."""
+        for alias in [h for h, d in self._by_handle.items() if d is document]:
+            del self._by_handle[alias]
+            self._transient.pop(alias, None)
 
     def with_document(self, doc: str | None, fn: Callable[[str, object], T]) -> T:
         """Resolve ``doc`` and run ``fn(handle, document)`` while holding the registry lock."""
@@ -232,16 +386,19 @@ class DocumentRegistry:
 
         The snapshot-restore rollback path closes the original document and reopens it from the
         snapshot, so the object a handle holds can be dead by the time a mutation returns. Every
-        mutation tool call site rebinds the document ``run_mutation`` returned. Rebinding to the
-        object the handle already holds is a no-op.
+        mutation tool call site rebinds the document ``run_mutation`` returned. Every alias of the
+        replaced object moves with ``doc``, so none stays on the dead original. Rebinding to the
+        object the handle already holds is a no-op. The bound object is not probed, because it
+        may be exactly that dead original.
 
-        :raises ValidationError: ``doc`` is missing, unknown, or stale.
+        :raises ValidationError: ``doc`` is missing or unknown.
         """
         with self._lock:
-            handle, existing = self._resolve(doc)
+            _, existing = self._lookup(doc)
             if existing is document:
                 return
-            self._by_handle[handle] = document
+            for alias in [h for h, d in self._by_handle.items() if d is existing]:
+                self._by_handle[alias] = document
 
     def _handle_for(self, document: object) -> str | None:
         """Return an existing handle already bound to ``document``, or ``None``."""
@@ -253,11 +410,17 @@ class DocumentRegistry:
     # -- lifecycle ops (each returns a ResultEnvelope) ----------------------------------
 
     def document_create(self, label: str, path: str | None = None) -> ResultEnvelope:
-        """Create a new document, mint and return its handle."""
+        """Create a new document, mint and return its handle.
+
+        With a ``path`` the document is saved there at once, and FreeCAD renames its ``Label``
+        to the file stem as GUI Save As does; the result reports that label and the file path.
+        """
         import FreeCAD
 
         if not label:
             raise ValidationError("document_create requires a non-empty 'label'")
+        if path:
+            _check_save_target(path)
         with self._lock:
             try:
                 document = FreeCAD.newDocument(label)
@@ -266,7 +429,7 @@ class DocumentRegistry:
             try:
                 document.Label = label
                 if path:
-                    document.saveAs(path)
+                    _save_as(document, path)
                 handle = self._mint_handle()
                 self._by_handle[handle] = document
                 self._transient[handle] = path is None
@@ -279,6 +442,8 @@ class DocumentRegistry:
                 "name": document.Name,
                 "label": document.Label,
             }
+            if path:
+                structured["path"] = document.FileName
             return _ok_envelope(structured)
 
     def document_open(self, path: str) -> ResultEnvelope:
@@ -312,19 +477,33 @@ class DocumentRegistry:
             return _ok_envelope(structured, summarize_document_open(structured))
 
     def document_save(self, doc: str | None = None, path: str | None = None) -> ResultEnvelope:
-        """Save (or save-as) the document named by ``doc``."""
+        """Save (or save-as) the document named by ``doc``.
+
+        A save-as renames the document's ``Label`` to the file stem, as GUI Save As does, and
+        FreeCAD appends ``.FCStd`` to a path without it; the result reports both as they are.
+        """
         with self._lock:
             handle, document = self._resolve(doc)
             if path:
-                document.saveAs(path)
+                _check_save_target(path)
+                _save_as(document, path)
                 self._transient[handle] = False
             else:
                 if self._transient.get(handle, False):
                     raise ValidationError(
                         "document has no save target; call document_save with a 'path' first"
                     )
-                document.save()
-            structured = {"doc": handle, "name": document.Name, "saved": True}
+                try:
+                    document.save()
+                except OSError as exc:
+                    raise ValidationError(f"cannot save to {document.FileName}: {exc}") from exc
+            structured = {
+                "doc": handle,
+                "name": document.Name,
+                "label": document.Label,
+                "path": document.FileName,
+                "saved": True,
+            }
             return _ok_envelope(structured, summarize_document_save(structured))
 
     def document_close(self, doc: str | None = None) -> ResultEnvelope:
@@ -335,9 +514,7 @@ class DocumentRegistry:
             handle, document = self._resolve(doc)
             name = document.Name
             FreeCAD.closeDocument(name)
-            for alias in [h for h, d in self._by_handle.items() if d is document]:
-                del self._by_handle[alias]
-                self._transient.pop(alias, None)
+            self._release(document)
             structured = {"doc": handle, "name": name, "closed": True}
             return _ok_envelope(structured, summarize_document_close(structured))
 
@@ -399,28 +576,15 @@ class DocumentRegistry:
             ``FingerprintRecord``, to compare the result against. A record also matches on the
             per-object geometric invariants, so an op that changed a shape's serialization
             without changing its geometry still reports the undo as restoring.
-        :raises ValidationError: ``doc`` is missing or stale, ``expect_fingerprint`` is neither a
-            digest string nor a record carrying an ``objects`` list, undo is unavailable on the
-            document, or there is nothing to undo.
+        :raises ValidationError: ``doc`` is missing or stale, ``expect_fingerprint`` is not a
+            64-hex digest string or a record comparable with this build's fingerprint, undo is
+            unavailable on the document, or there is nothing to undo.
         """
         from freecad_buddy.usecases import shim
         from freecad_buddy.usecases.fingerprint import fingerprint
 
-        # An expectation of any other type can never equal a digest and carries no comparable
-        # geometry, so accepting one would report matches_pre_op: false — "the undo did not
-        # restore" — for what is a caller type error.
-        if expect_fingerprint is not None and not isinstance(expect_fingerprint, (str, dict)):
-            raise ValidationError(
-                "expect_fingerprint must be a fingerprint digest string or a FingerprintRecord, "
-                f"got {type(expect_fingerprint).__name__}"
-            )
-        if isinstance(expect_fingerprint, dict) and not isinstance(
-            expect_fingerprint.get("objects"), list
-        ):
-            raise ValidationError(
-                "expect_fingerprint record must carry an 'objects' list; got keys "
-                f"{sorted(expect_fingerprint)}"
-            )
+        if expect_fingerprint is not None:
+            _check_expectation(expect_fingerprint, shim.serializer_tag())
 
         with self._lock:
             handle, document = self._resolve(doc)
@@ -478,7 +642,10 @@ class DocumentRegistry:
             }
             if errors:
                 return _recompute_error_envelope(structured, errors)
-            return _ok_envelope(structured, summarize_document_undo(structured))
+            return _ok_envelope(
+                structured,
+                summarize_document_undo(structured, isinstance(expect_fingerprint, str)),
+            )
 
     def document_list(self) -> ResultEnvelope:
         """List every open FreeCAD document with handle, name, label, and transient flag.

@@ -128,5 +128,92 @@ class TreeSummaryTest(unittest.TestCase):
         self.assertIn("objects", env["text"])
 
 
+class NestedFilterTest(unittest.TestCase):
+    """A filter must reach a match nested in a container that fails it (Body -> Sketch -> Pad)."""
+
+    def setUp(self):
+        import Part
+        import Sketcher
+
+        self.registry = DocumentRegistry()
+        self.handle = self.registry.document_create("nested")["structured_content"]["doc"]
+        doc = self.registry.with_document(self.handle, lambda h, d: d)
+        body = doc.addObject("PartDesign::Body", "Body")
+        sketch = body.newObject("Sketcher::SketchObject", "Sketch")
+        sketch.AttachmentSupport = (body.Origin.OriginFeatures[3], [""])  # XY_Plane
+        sketch.MapMode = "FlatFace"
+        sketch.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 5.0), False)
+        sketch.addConstraint(Sketcher.Constraint("Radius", 0, 5.0))
+        pad = body.newObject("PartDesign::Pad", "Pad")
+        pad.Profile = sketch
+        pad.Length = 10.0
+        doc.recompute()
+        self.assertFalse(pad.Shape.isNull(), "fixture must build a real Pad")
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _names(self, filters, depth=1, root=None):
+        sc = queries.query_tree_summary(
+            self.registry, doc=self.handle, depth=depth, root=root, filters=filters
+        )["structured_content"]
+        names = []
+
+        def walk(nodes):
+            for node in nodes:
+                names.append(node["name"])
+                walk(node.get("children", []))
+                walk(node.get("links", []))
+
+        walk(sc["tree"])
+        self.assertEqual(sc["returned_nodes"], len(names))
+        return names
+
+    def test_a_type_filter_returns_the_pad_nested_in_a_body(self):
+        names = self._names({"types": ["PartDesign::Pad"]})
+
+        self.assertEqual(names, ["Pad"])
+
+    def test_a_name_pattern_returns_the_pad_nested_in_a_body(self):
+        names = self._names({"name_pattern": "^Pad"})
+
+        self.assertEqual(names, ["Pad"])
+
+    def test_renderable_only_returns_the_pad_and_drops_its_containers(self):
+        names = self._names({"renderable_only": True})
+
+        self.assertEqual(names, ["Pad"])
+
+    def test_the_search_ignores_depth_and_returns_each_name_once(self):
+        names = self._names({"types": ["PartDesign::Pad", "Sketcher::SketchObject"]}, depth=1)
+
+        self.assertEqual(sorted(names), ["Pad", "Sketch"])
+
+    def test_a_hidden_body_under_visible_only_hides_its_whole_subtree(self):
+        doc = self.registry.with_document(self.handle, lambda h, d: d)
+        doc.getObject("Body").Visibility = False
+        self.assertTrue(doc.getObject("Pad").Visibility, "fixture must keep the Pad visible")
+
+        names = self._names({"visible_only": True})
+
+        self.assertEqual(names, [])
+
+    def test_an_excluded_body_drops_its_whole_subtree(self):
+        names = self._names({"exclude_types": ["PartDesign::Body"]})
+
+        self.assertEqual(names, [])
+
+    def test_a_failing_link_does_not_hoist_its_target(self):
+        doc = self.registry.with_document(self.handle, lambda h, d: d)
+        link = doc.addObject("App::Link", "BodyLink")
+        link.LinkedObject = doc.getObject("Body")
+        doc.recompute()
+
+        names = self._names({"types": ["PartDesign::Pad"]}, depth=3, root="BodyLink")
+
+        self.assertEqual(names, [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -17,6 +17,7 @@ from pathlib import Path
 
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.contracts.rpc import CHANNEL_ERROR_STATUS
+from freecad_buddy.usecases.process import pid_alive
 
 logger = logging.getLogger("freecad_buddy.rpc_client")
 
@@ -49,41 +50,6 @@ def _appdata_dir() -> Path:
         if versioned:
             return versioned[0]
     return base_path
-
-
-_PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-_STILL_ACTIVE = 259
-
-
-def _pid_alive(pid: int) -> bool:
-    """Cross-platform best-effort liveness check for a discovery-file ``pid``."""
-    if pid <= 0:
-        return False
-    if os.name == "nt":
-        try:
-            import ctypes
-
-            kernel32 = ctypes.windll.kernel32
-            process = kernel32.OpenProcess(_PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
-            if not process:
-                return False
-            # An exited process keeps its kernel object, and OpenProcess still succeeds, while
-            # any handle to it stays open; only the exit code tells it apart from a live one.
-            exit_code = ctypes.c_ulong()
-            queried = kernel32.GetExitCodeProcess(process, ctypes.byref(exit_code))
-            kernel32.CloseHandle(process)
-            return not queried or exit_code.value == _STILL_ACTIVE
-        except Exception:  # noqa: BLE001 - liveness is best-effort
-            return True
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    except OSError:
-        return False
-    return True
 
 
 def _worker_crashed(message: str, *, unreachable: bool = False) -> ResultEnvelope:
@@ -154,7 +120,7 @@ def discover(appdata_dir: str | Path | None = None) -> dict | None:
         except (OSError, ValueError):
             continue
         pid = record.get("pid")
-        if not isinstance(pid, int) or not _pid_alive(pid):
+        if not isinstance(pid, int) or not pid_alive(pid):
             continue
         return record
     return None

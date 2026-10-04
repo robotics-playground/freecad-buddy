@@ -6,6 +6,10 @@ explicit-handle enforcement through the dispatch boundary, and the live shim pro
 
 import builtins
 import math
+import os
+import shutil
+import stat
+import tempfile
 import unittest
 
 import FreeCAD as App
@@ -119,6 +123,215 @@ class DocumentLifecycleTest(unittest.TestCase):
         methods = self._dispatch_with_save()
         envelope = methods.dispatch("document_save", {"doc": handle})
         self.assertEqual(envelope["status"], "INVALID_INPUT")
+
+    def test_a_handle_to_a_document_closed_outside_the_registry_is_invalid_input(self):
+        # The GUI's File > Close goes straight to closeDocument; the registry never sees it.
+        handle = self.registry.document_create("gui_closed")["structured_content"]["doc"]
+        document = self.registry.with_document(handle, lambda h, d: d)
+        other = self.registry.document_create("gui_kept")["structured_content"]["doc"]
+        self.registry.rebind(other, document)
+        App.closeDocument(document.Name)
+        methods = MethodRegistry()
+        methods.register(
+            RpcMethod(
+                name="document_recompute", handler=self.registry.document_recompute, mutating=True
+            )
+        )
+
+        envelope = methods.dispatch("document_recompute", {"doc": handle})
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(f"unknown or stale document handle: {handle}", envelope["detail"]["message"])
+        self.assertNotIn(handle, self.registry._by_handle, "the stale handle survived")
+        self.assertNotIn(
+            other, self.registry._by_handle, "an alias of the closed document survived"
+        )
+
+    def test_rebinding_a_handle_moves_every_alias_of_the_replaced_document(self):
+        # A snapshot restore replaces the document object; an alias left on the dead original
+        # would be refused as stale on its next use.
+        handle = self.registry.document_create("original")["structured_content"]["doc"]
+        original = self.registry.with_document(handle, lambda h, d: d)
+        alias = self.registry.document_create("alias")["structured_content"]["doc"]
+        self.registry.rebind(alias, original)
+        replacement = App.newDocument("replacement")
+
+        self.registry.rebind(handle, replacement)
+
+        self.assertIs(self.registry.with_document(alias, lambda h, d: d), replacement)
+
+
+class SaveTargetTest(unittest.TestCase):
+    """``document_save`` and ``document_create`` refuse a bad target before anything is written."""
+
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.folder = tempfile.mkdtemp()
+        self.methods = MethodRegistry()
+        self.methods.register(
+            RpcMethod(name="document_save", handler=self.registry.document_save, mutating=True)
+        )
+        self.methods.register(
+            RpcMethod(name="document_create", handler=self.registry.document_create, mutating=True)
+        )
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+        for entry in os.listdir(self.folder):
+            os.chmod(os.path.join(self.folder, entry), stat.S_IWRITE | stat.S_IREAD)
+        shutil.rmtree(self.folder)
+
+    def _handle(self, label="save_target"):
+        return self.registry.document_create(label)["structured_content"]["doc"]
+
+    def test_save_as_reports_the_label_freecad_set_from_the_file_stem(self):
+        handle = self._handle("Bản vẽ ✓")
+        path = os.path.join(self.folder, "new-part.FCStd")
+
+        envelope = self.methods.dispatch("document_save", {"doc": handle, "path": path})
+
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(envelope["structured_content"]["label"], "new-part")
+        self.assertEqual(
+            os.path.normcase(envelope["structured_content"]["path"]), os.path.normcase(path)
+        )
+
+    def test_save_as_reports_the_path_freecad_actually_wrote(self):
+        handle = self._handle()
+        path = os.path.join(self.folder, "no-extension")
+
+        envelope = self.methods.dispatch("document_save", {"doc": handle, "path": path})
+
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(envelope["structured_content"]["path"], path + ".FCStd")
+        self.assertTrue(os.path.isfile(path + ".FCStd"))
+
+    def test_a_missing_folder_is_refused_and_never_created(self):
+        handle = self._handle()
+        missing = os.path.join(self.folder, "no-such-dir")
+
+        envelope = self.methods.dispatch(
+            "document_save", {"doc": handle, "path": os.path.join(missing, "out.FCStd")}
+        )
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(missing, envelope["detail"]["message"])
+        self.assertFalse(os.path.exists(missing), "the refused save created the folder")
+
+    def test_a_directory_path_is_refused_and_nothing_is_written(self):
+        handle = self._handle()
+        directory = os.path.join(self.folder, "a-directory")
+        os.mkdir(directory)
+
+        envelope = self.methods.dispatch("document_save", {"doc": handle, "path": directory})
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(directory, envelope["detail"]["message"])
+        self.assertFalse(os.path.exists(directory + ".FCStd"), "FreeCAD wrote a sibling file")
+
+    def _saved_handle(self) -> tuple[str, str]:
+        """A document already saved to ``first.FCStd``; return its handle and that path."""
+        handle = self._handle()
+        first = os.path.join(self.folder, "first.FCStd")
+        self.assertEqual(
+            self.methods.dispatch("document_save", {"doc": handle, "path": first})["status"], "OK"
+        )
+        return handle, first
+
+    def _read_only_file(self, name: str) -> str:
+        path = os.path.join(self.folder, name)
+        with open(path, "wb") as stream:
+            stream.write(b"not overwritten")
+        os.chmod(path, stat.S_IREAD)
+        return path
+
+    def _assert_read_only_target_refused(self, given_name: str):
+        handle, first = self._saved_handle()
+        locked = self._read_only_file("locked.FCStd")
+
+        envelope = self.methods.dispatch(
+            "document_save", {"doc": handle, "path": os.path.join(self.folder, given_name)}
+        )
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(locked, envelope["detail"]["message"])
+        document = self.registry.with_document(handle, lambda h, d: d)
+        self.assertEqual(os.path.normcase(document.FileName), os.path.normcase(first))
+
+    def test_a_read_only_target_is_refused_and_the_file_name_is_unchanged(self):
+        self._assert_read_only_target_refused("locked.FCStd")
+
+    def test_a_read_only_target_named_without_the_extension_is_refused(self):
+        self._assert_read_only_target_refused("locked")
+
+    def test_a_read_only_target_named_with_a_trailing_dot_is_refused(self):
+        self._assert_read_only_target_refused("locked.")
+
+    def test_a_plain_save_to_a_read_only_file_is_invalid_input_naming_it(self):
+        handle, first = self._saved_handle()
+        os.chmod(first, stat.S_IREAD)
+
+        envelope = self.methods.dispatch("document_save", {"doc": handle})
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(os.path.normcase(first), os.path.normcase(envelope["detail"]["message"]))
+
+    def test_a_failed_save_as_restores_the_file_name_and_label(self):
+        handle, first = self._saved_handle()
+        path = os.path.join(self.folder, "out.FCStd")
+        real = self.registry.with_document(handle, lambda h, d: d)
+        label = real.Label
+        self.registry.rebind(handle, _SaveAsFailsAfterRenaming(real))
+
+        envelope = self.methods.dispatch("document_save", {"doc": handle, "path": path})
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(path, envelope["detail"]["message"])
+        self.assertEqual(os.path.normcase(real.FileName), os.path.normcase(first))
+        self.assertEqual(real.Label, label)
+
+    def test_create_with_a_missing_folder_is_refused_and_creates_no_document(self):
+        missing = os.path.join(self.folder, "no-such-dir")
+        before = set(App.listDocuments())
+
+        envelope = self.methods.dispatch(
+            "document_create", {"label": "doomed", "path": os.path.join(missing, "out.FCStd")}
+        )
+
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertIn(missing, envelope["detail"]["message"])
+        self.assertEqual(set(App.listDocuments()), before)
+        self.assertFalse(os.path.exists(missing))
+
+    def test_create_with_a_path_reports_the_label_and_path(self):
+        path = os.path.join(self.folder, "created.FCStd")
+
+        envelope = self.methods.dispatch("document_create", {"label": "Bản vẽ", "path": path})
+
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(envelope["structured_content"]["label"], "created")
+        self.assertEqual(
+            os.path.normcase(envelope["structured_content"]["path"]), os.path.normcase(path)
+        )
+
+
+class _SaveAsFailsAfterRenaming:
+    """A document whose ``saveAs`` renames it as ``Document::saveAs`` does, then fails to write."""
+
+    def __init__(self, real):
+        object.__setattr__(self, "_real", real)
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+    def __setattr__(self, name, value):
+        setattr(self._real, name, value)
+
+    def saveAs(self, path):  # noqa: N802 - mirrors the FreeCAD API name
+        self._real.FileName = path
+        self._real.Label = "renamed"
+        raise OSError("disk full")
 
 
 class CapabilityProbeTest(unittest.TestCase):

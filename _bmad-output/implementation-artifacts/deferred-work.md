@@ -1475,3 +1475,10 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: none
   summary: GUI test recovery is blocked when FreeCAD and the `cua-driver` daemon run elevated but the agent shell does not — a modal dialog cannot be dismissed in the background (UIA timeout), and `WM_CLOSE`, `taskkill` and `kill_app` are all refused, so a stuck FreeCAD needs a human.
   evidence: UAT run `tests/uat/run/2026-10-03-04`, TC-99-08: FreeCAD pid 32296 stuck on a modal "Open document" dialog after `invoke_menu ["File","Open…"]` with MCP down; Cancel click `background_unavailable`, `WM_CLOSE` denied, `taskkill` Access denied, `kill_app` `foreign_process_termination_denied`. Settle in the GUI e2e harness standard: launch FreeCAD at the same integrity level as the agent shell, and avoid modal file dialogs in scripted steps (open documents through MCP or a path argument).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
+  summary: Correct UAT test cases TC-02-13 (save-as label becomes the file stem) and TC-15 (renders now sit in `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/`, not directly in `tmp/`) in Story 10.7.
+  evidence: `tests/uat/testcases/TC-02-document-ingestion-and-handles.md:528` expects the create label after reopen; `TC-15-self-verifying-fit-regression.md:273-279` counts files directly under `<workdir>/tmp`. Story 10.1 forbids UAT test-case edits.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
+  summary: The default workdir `freecad-buddy-workdir/` is cwd-relative and not git-ignored, so a host started from the repo root leaves it untracked there.
+  evidence: `git status` shows `?? freecad-buddy-workdir/` at the repo root before Story 10.1 started; `documents.py` `workdir_root` default is relative.

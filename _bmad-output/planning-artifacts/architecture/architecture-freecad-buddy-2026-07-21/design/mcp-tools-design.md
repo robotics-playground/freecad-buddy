@@ -233,14 +233,17 @@ Fragments show `result` payloads; each is wrapped in the `ResultEnvelope` (§1.3
   "outputSchema-result": { "type": "object", "properties": {
     "doc": { "type": "string", "description": "opaque handle — required by every subsequent call (AD-20)" },
     "name": { "type": "string", "description": "immutable FreeCAD document Name" },
-    "label": { "type": "string" },
+    "label": { "type": "string", "description": "with a path: the file stem, as FreeCAD's saveAs sets it" },
+    "path": { "type": "string", "description": "with a path: the file written (FreeCAD appends .FCStd when missing)" },
     "fingerprint": { "$ref": "#/$defs/Fingerprint", "description": "empty-doc baseline (AD-6)" }
   }, "required": ["doc", "name"] } }
 ```
 
+A save target is checked before FreeCAD writes. A directory, a missing parent folder, and an existing read-only file each return `INVALID_INPUT` naming the path; a refused call opens no document. `document_save` with a `path` follows the same rules and reports the resulting `label` and `path` too.
+
 ### 3.2 `query_tree_summary`
 
-Depth-bounded, filterable, nested tree walk (G1.3 context-overflow guard by explore-then-expand, not a flat node cap). `depth` expands N levels from the document roots (or from `root`); at the depth boundary a node reports only its counts. Children are partitioned into structural `children` and `App::Link` instance `links`. `filters` AND-stacks; `exclude_types` defaults to the datum/origin clutter set. Nodes are sparse — a field appears only when it carries a value; `name`/`label`/`type`/`visibility` are always present.
+Depth-bounded, filterable, nested tree walk (G1.3 context-overflow guard by explore-then-expand, not a flat node cap). `depth` expands N levels from the document roots (or from `root`); at the depth boundary a node reports only its counts. Children are partitioned into structural `children` and `App::Link` instance `links`. `filters` AND-stacks; `exclude_types` defaults to the datum/origin clutter set. A node that fails `types`, `name_pattern` or `renderable_only` is dropped, and its matching descendants, searched at any depth, take its place, each `Name` once. A node that fails `visible_only` or `exclude_types` drops its whole subtree, and a failing `App::Link` hoists nothing. Nodes are sparse — a field appears only when it carries a value; `name`/`label`/`type`/`visibility` are always present.
 
 ```json
 { "inputSchema": { "type": "object", "properties": {

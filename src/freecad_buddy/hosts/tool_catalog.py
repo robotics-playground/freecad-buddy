@@ -1044,7 +1044,9 @@ def tool_specs() -> list[ToolSpec]:
                 "required": ["label"],
                 "additionalProperties": False,
             },
-            "Create a new document; mint and return its opaque handle.",
+            "Create a new document; mint and return its opaque handle. With a path it is saved "
+            "there: the label becomes the file stem, .FCStd is appended when missing, and the "
+            "result reports label and path.",
             mutating=True,
         ),
         _doc_method(
@@ -1068,7 +1070,8 @@ def tool_specs() -> list[ToolSpec]:
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Save (or save-as) the document named by its handle.",
+            "Save (or save-as) the document named by its handle. A save-as sets the label to "
+            "the file stem and appends .FCStd when missing; the result reports label and path.",
             mutating=True,
         ),
         _doc_method(
@@ -1105,8 +1108,9 @@ def tool_specs() -> list[ToolSpec]:
                     "expect_fingerprint": {
                         "type": ["string", "object"],
                         "description": "the pre-mutation fingerprint to compare the result "
-                        "against; without it matches_pre_op is null. A digest string matches "
-                        "byte-exactly. A whole FingerprintRecord also matches on the per-object "
+                        "against; without it matches_pre_op is null. A digest string (64 "
+                        "lowercase hex) matches byte-exactly. A whole FingerprintRecord, which "
+                        "must carry this build's serializer, also matches on the per-object "
                         "geometric invariants, which an op that consumed a shape as a profile "
                         "changes the serialization of without changing the geometry",
                     },
@@ -1154,7 +1158,9 @@ def tool_specs() -> list[ToolSpec]:
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Depth-bounded, filterable feature-tree summary with nesting of children/App::Link.",
+            "Depth-bounded, filterable feature-tree summary with nesting of children/App::Link. "
+            "A filter searches below a container that fails types, name_pattern or "
+            "renderable_only at any depth.",
         ),
         _query_method(
             "query_object",

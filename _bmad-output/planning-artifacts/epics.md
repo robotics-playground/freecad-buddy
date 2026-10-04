@@ -1230,9 +1230,9 @@ The bridge does what the design says when a real agent drives it through the rea
 1. **Given** a Pad inside a Body
    **When** `query_tree_summary` runs with `types`, `name_pattern` or `renderable_only` filters
    **Then** matching children of a non-matching container are returned (F-01, `usecases/queries.py:352-358`; TC-02-05, TC-12-11)
-2. **Given** `document_save` to a new path
-   **When** the file is reopened
-   **Then** the document label is preserved (F-02, TC-02-13)
+2. **Given** `document_save` or `document_create` with a new path
+   **When** it runs
+   **Then** the label becomes the file stem, as GUI Save As does, and the result reports that `label` and the written `path` (F-02, TC-02-13)
 3. **Given** `document_save` to a missing folder, to a directory, or to a read-only file
    **When** it runs
    **Then** each case returns `INVALID_INPUT` naming the path, never a catch-all `RECOMPUTE_ERROR` and never a silent folder creation (F-03, TC-02-18)
@@ -1244,7 +1244,7 @@ The bridge does what the design says when a real agent drives it through the rea
    **Then** it returns `INVALID_INPUT`, not `RECOMPUTE_ERROR` (F-25, TC-12-13)
 6. **Given** `sweep_temp_dir`
    **When** it runs
-   **Then** it removes only `FCB_TMP_` entries under its own session workdir, never a non-prefixed sibling and never the live GUI's files (F-30; TC-02-15, TC-99-07)
+   **Then** it removes only `FCB_TMP_` entries: session folders of dead hosts and prefixed entries outside every session folder, never a non-prefixed sibling and never a live host's session folder (F-30; TC-02-15, TC-99-07)
 
 ### Story 10.2: Sketch and Verify Correctness
 

@@ -274,7 +274,11 @@ class ReportedComparisonTest(_UndoFixture):
         self.assertNotEqual(structured["fingerprint_before"], structured["fingerprint_after"])
 
     def test_a_digest_that_does_not_match_is_reported_false_never_claimed_restored(self):
-        """A wrong expectation must produce a measured ``false``, not an exception or a claim."""
+        """A wrong expectation must produce a measured ``false``, not an exception or a claim.
+
+        The string form compares bytes only, and a byte difference does not prove the undo
+        failed, so the text states the measurement and never claims a failed restore.
+        """
         self.add_box()
         self.run_mutation("add cylinder", _add_cylinder)
 
@@ -283,8 +287,22 @@ class ReportedComparisonTest(_UndoFixture):
 
         self.assertEqual(envelope["status"], "OK")
         self.assertIs(structured["matches_pre_op"], False)
-        self.assertIn("did NOT restore", envelope["text"])
+        self.assertNotIn("did NOT restore", envelope["text"])
+        self.assertIn("byte comparison", envelope["text"])
+        self.assertIn("FingerprintRecord", envelope["text"])
         self.assertEqual(structured["fingerprint_after"], fingerprint(self.document)["digest"])
+
+    def test_a_string_that_is_not_a_digest_is_refused_before_the_undo(self):
+        self.add_box()
+        self.run_mutation("add cylinder", _add_cylinder)
+        count = self.document.UndoCount
+        for bad in ("abc", "z" * 64, "0" * 63, "A" * 64):
+            with self.assertRaises(ValidationError, msg=repr(bad)) as caught:
+                self.registry.document_undo(doc=self.handle, expect_fingerprint=bad)
+            self.assertIn(repr(bad), str(caught.exception))
+
+        self.assertEqual(self.document.UndoCount, count)
+        self.assertIn("Cyl", self.object_names())
 
     def test_the_restored_object_set_is_reported_beside_the_digests(self):
         """A digest mismatch from a re-serialized shape is told apart from a missing object."""
@@ -403,11 +421,10 @@ class ExpectFingerprintRecordTest(_UndoFixture):
         pre_op = fingerprint(self.document)
         self.run_mutation("resize box", _resize_box)
 
-        structured = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)[
-            "structured_content"
-        ]
+        envelope = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)
 
-        self.assertTrue(structured["matches_pre_op"], structured)
+        self.assertTrue(envelope["structured_content"]["matches_pre_op"], envelope)
+        self.assertIn("restored the pre-op state", envelope["text"])
 
     def test_a_record_expectation_matches_on_geometry_when_the_bytes_differ(self):
         """Consuming a sketch as a profile makes OCCT store the edge several ways.
@@ -416,22 +433,7 @@ class ExpectFingerprintRecordTest(_UndoFixture):
         while volume, area, centre of mass and principal moments are unchanged. A digest-only
         expectation reports that as a failed restore; a record expectation does not.
         """
-        body = self.document.addObject("PartDesign::Body", "Body")
-        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
-        body.addObject(sketch)
-        sketch.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 5.0), False)
-        sketch.addConstraint(Sketcher.Constraint("Radius", 0, 5.0))
-        self.document.recompute()
-        pre_op = fingerprint(self.document)
-
-        def _pad(document):
-            pad = document.addObject("PartDesign::Pad", "Pad")
-            document.getObject("Body").addObject(pad)
-            pad.Profile = document.getObject("Sketch")
-            pad.Length = 10.0
-            return ["Pad"]
-
-        self.run_mutation("pad the sketch", _pad)
+        pre_op = self._pad_a_sketch()
         self.assertNotEqual(fingerprint(self.document)["digest"], pre_op["digest"])
 
         structured = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)[
@@ -448,17 +450,50 @@ class ExpectFingerprintRecordTest(_UndoFixture):
             f"geometry was restored but the record expectation reported otherwise: {structured}",
         )
 
+    def test_a_string_expectation_on_a_restoring_undo_states_the_byte_measurement(self):
+        """The undo restores the geometry; only the bytes differ, and the text says so."""
+        pre_op = self._pad_a_sketch()
+
+        envelope = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op["digest"])
+
+        self.assertIs(envelope["structured_content"]["matches_pre_op"], False)
+        self.assertNotIn("did NOT restore", envelope["text"])
+        self.assertIn("byte comparison", envelope["text"])
+        self.assertIn("FingerprintRecord", envelope["text"])
+
+    def _pad_a_sketch(self) -> dict:
+        """Pad a circle sketch through the bracket; return the pre-pad record."""
+        body = self.document.addObject("PartDesign::Body", "Body")
+        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
+        body.addObject(sketch)
+        sketch.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 5.0), False)
+        sketch.addConstraint(Sketcher.Constraint("Radius", 0, 5.0))
+        self.document.recompute()
+        pre_op = fingerprint(self.document)
+
+        def _pad(document):
+            pad = document.addObject("PartDesign::Pad", "Pad")
+            document.getObject("Body").addObject(pad)
+            pad.Profile = document.getObject("Sketch")
+            pad.Length = 10.0
+            return ["Pad"]
+
+        self.run_mutation("pad the sketch", _pad)
+        return pre_op
+
     def test_a_record_expectation_still_reports_a_real_geometry_change(self):
         """The cross-oracle must not turn every mismatch into a pass."""
         self.add_box()
         pre_op = fingerprint(self.document)
         self.run_mutation("add cylinder", _add_cylinder)
 
-        structured = self.registry.document_undo(
+        envelope = self.registry.document_undo(
             doc=self.handle, expect_fingerprint=_mutated_record(pre_op)
-        )["structured_content"]
+        )
 
-        self.assertFalse(structured["matches_pre_op"], structured)
+        self.assertFalse(envelope["structured_content"]["matches_pre_op"], envelope)
+        self.assertIn("did NOT restore", envelope["text"])
+        self.assertNotIn("byte comparison", envelope["text"])
 
     def test_a_malformed_expectation_is_still_refused(self):
         self.add_box()
@@ -466,6 +501,27 @@ class ExpectFingerprintRecordTest(_UndoFixture):
         for bad in (12345, ["not", "a", "record"], {"no": "objects key"}):
             with self.assertRaises(ValidationError, msg=repr(bad)):
                 self.registry.document_undo(doc=self.handle, expect_fingerprint=bad)
+
+    def test_a_record_that_cannot_be_compared_is_refused_before_the_undo(self):
+        """An incomparable record would read as ``matches_pre_op: false`` for a caller error."""
+        self.add_box()
+        self.run_mutation("add cylinder", _add_cylinder)
+        good = fingerprint(self.document)
+        count = self.document.UndoCount
+        malformed = {
+            "no serializer": {"objects": [], "digest": "0" * 64},
+            "foreign serializer": {**good, "serializer": "someOtherTag"},
+            "non-string digest": {**good, "digest": 0},
+            "entry not an object": {**good, "objects": ["Box"]},
+            "entry without massprops": {**good, "objects": [{"name": "Box"}]},
+            "entry without name": {**good, "objects": [{"massprops": {}}]},
+        }
+        for label, bad in malformed.items():
+            with self.assertRaises(ValidationError, msg=label):
+                self.registry.document_undo(doc=self.handle, expect_fingerprint=bad)
+
+        self.assertEqual(self.document.UndoCount, count)
+        self.assertIn("Cyl", self.object_names())
 
 
 def _mutated_record(record: dict) -> dict:
