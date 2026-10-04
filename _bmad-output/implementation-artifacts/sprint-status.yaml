@@ -60,6 +60,12 @@
 #   regression fixture. Story 9-1 carries DR-3 as well as DR-1 — the framing carve-out is not
 #   independently shippable, because a SPEC_FAILED without its ratio is less informative than the
 #   defect it replaces. Story 9-3 must also update design/integration-mcp-freecad.md's render rig.
+# - Epic 10 corrects shipped behaviour found by the first complete UAT run (2026-10-03-04), so it
+#   opens no gate and reopens no epic (AD-19). Epic 4 is paused after story 4-2: story 4-3 starts
+#   only when epic-10 is done. Ordering: 10-1..10-6 are parallel-eligible except 10-2 -> 10-3
+#   (both edit post-verify in usecases/transaction.py and usecases/verify.py); 10-7 runs alongside;
+#   10-7 -> 10-7b (the runner encodes the corrected test cases); 10-8 (full UAT re-run, Gate 1
+#   green, using the 10-7b runner) is last and closes the epic.
 
 project: freecad-buddy
 project_key: NOKEY
@@ -141,6 +147,17 @@ development_status:
   9-3-render-lighting-every-camera: done
   9-4-temp-files-inside-session-workdir: done
   epic-9-retrospective: optional
+  epic-10: backlog
+  10-1-documents-and-queries: backlog
+  10-2-sketch-and-verify-correctness: backlog
+  10-3-feature-tools-and-mutation-protocol: backlog
+  10-4-render-and-framing: backlog
+  10-5-step-export-schema: backlog
+  10-6-session-transport-and-bounded-execution: backlog
+  10-7-uat-suite-and-harness-maintenance: backlog
+  10-7b-scripted-uat-runner-and-freecad-probe: backlog
+  10-8-uat-gate-1-rerun: backlog
+  epic-10-retrospective: optional
 
 action_items:
   - epic: 1

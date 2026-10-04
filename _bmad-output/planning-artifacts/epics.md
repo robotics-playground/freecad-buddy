@@ -1206,3 +1206,223 @@ When the bridge says the human can see the model, the human can actually see it 
 6. **Given** the swallowed-error path
    **When** it is exercised
    **Then** the failure is surfaced (logged) rather than discarded, so the next occurrence is diagnosable. *(The survivors correlate with the snapshot-restore path, where `transaction.py:290 FreeCAD.openDocument` holds the file open; a forced undo-path rollback leaked nothing. Cause is indicated but **unverified** — do not encode it as fact without reproducing it.)*
+
+---
+
+## Epic 10: UAT Gate 1 Green
+
+The bridge does what the design says when a real agent drives it through the real FreeCAD window: queries return what matches, mutations that should fail do fail, rollback is proven, and every report states what actually happened. The UAT suite and its harness describe the product as it is.
+
+**Why now:** UAT run `2026-10-03-04` (HEAD `bece7ac`, FreeCAD 1.1.4) was the first to execute all of TC-01..TC-14. Gate 1 is red: 34 of 251 scenarios fail, 29 of them on product defects F-01..F-33 (`tests/uat/run/2026-10-03-04/report.md`, "Findings"). Most are the spine already being right and the code not matching it. The user requires Gate 1 green before Story 4.3.
+
+**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
+
+**Acceptance for the epic:** Story 10.8 — a full UAT run with Gate 1 green.
+
+**Rules for every story:** treat each finding as a hypothesis: reproduce it first (the report gives the request and the output), then fix with a regression test. A finding that does not reproduce is closed with evidence, not fixed. Re-run any validator score whose sources change.
+
+### Story 10.1: Documents and Queries
+
+> **As** an agent, **I want** document and query tools to report exactly what is in the document, **so that** I never act on a silently filtered tree or a stale handle.
+
+**Acceptance Criteria:**
+
+1. **Given** a Pad inside a Body
+   **When** `query_tree_summary` runs with `types`, `name_pattern` or `renderable_only` filters
+   **Then** matching children of a non-matching container are returned (F-01, `usecases/queries.py:352-358`; TC-02-05, TC-12-11)
+2. **Given** `document_save` to a new path
+   **When** the file is reopened
+   **Then** the document label is preserved (F-02, TC-02-13)
+3. **Given** `document_save` to a missing folder, to a directory, or to a read-only file
+   **When** it runs
+   **Then** each case returns `INVALID_INPUT` naming the path, never a catch-all `RECOMPUTE_ERROR` and never a silent folder creation (F-03, TC-02-18)
+4. **Given** `document_undo` with a malformed `expect_fingerprint`, or with the string form
+   **When** it runs
+   **Then** a malformed fingerprint is refused before the undo, and the string form never states a false "did NOT restore" (F-12, F-20; TC-05-14, TC-08-06)
+5. **Given** a document closed in the GUI
+   **When** a stale handle is used
+   **Then** it returns `INVALID_INPUT`, not `RECOMPUTE_ERROR` (F-25, TC-12-13)
+6. **Given** `sweep_temp_dir`
+   **When** it runs
+   **Then** it removes only `FCB_TMP_` entries under its own session workdir, never a non-prefixed sibling and never the live GUI's files (F-30; TC-02-15, TC-99-07)
+
+### Story 10.2: Sketch and Verify Correctness
+
+> **As** an agent, **I want** sketch tools and `verify_*` to accept what FreeCAD accepts and report what FreeCAD measures, **so that** a verdict can be trusted.
+
+**Acceptance Criteria:**
+
+1. **Given** `sketch_add_geometry {kind:"point", start:[x,y]}`
+   **When** it runs
+   **Then** the point is created (F-04, TC-03-05)
+2. **Given** a single-point `DistanceX`/`DistanceY` constraint
+   **When** it is added
+   **Then** it is accepted as FreeCAD accepts it (F-05, TC-03-05/06)
+3. **Given** the same constraint set added in any order
+   **When** the sketch is verified
+   **Then** the verdict is the same; redundancy warns and never fails by itself (F-06, `verification-design.md:213`)
+4. **Given** an under-constrained sketch opened from a file
+   **When** `verify_sketch` runs
+   **Then** the reported DoF is the solver's value after solving (F-17, TC-07-03)
+5. **Given** a sketch that FreeCAD marks in error
+   **When** a mutation's post-verify runs
+   **Then** `recompute_clean` is false (F-19)
+6. **Given** `verify_shape` with a nested `fn` mapping or `object: ""`
+   **When** it runs
+   **Then** both return `INVALID_INPUT` with the closed-vocabulary message (F-22, F-23; TC-09-10, TC-09-13)
+
+### Story 10.3: Feature Tools and the Mutation Protocol
+
+> **As** an agent, **I want** a mutation either to commit verified or to roll back with proof, **so that** AD-5 holds on every path.
+
+**Acceptance Criteria:**
+
+1. **Given** `feature_pad` with `second_length`, or the `TwoLengths` type
+   **When** it runs
+   **Then** the pad builds both lengths, or the input is refused before the transaction (F-07, TC-04-04)
+2. **Given** `feature_set_parameters` with a wrong-typed value
+   **When** it runs
+   **Then** it is refused before a transaction opens (F-08, TC-04-21)
+3. **Given** a pad on an under-constrained sketch
+   **When** it runs
+   **Then** post-verify covers the sketch the feature consumes, and the mutation is refused (F-09, AD-8; TC-04-23, TC-05-03)
+4. **Given** a failed mutation restored from its snapshot
+   **When** the rollback is proven
+   **Then** the proof compares a representation that survives reopening, and `rolled_back_via_snapshot` is reached (F-10, TC-05-06)
+5. **Given** UndoMode 0 and a broken feature
+   **When** the rollback is verified
+   **Then** null shapes are part of the fingerprint, and a broken Tip is never reported `rolled_back_verified` (F-11, TC-05-08)
+6. **Given** a TNP audit that did not run, or a reference that broke
+   **When** the mutation reports
+   **Then** the audit status is never `CLEAN` (F-13, TC-05-15..18)
+7. **Given** auto-approve
+   **When** the audit log is written
+   **Then** approval and mutation lines share one `params_digest` and carry `fingerprint_before` (F-21; TC-08-18, TC-11-08)
+
+### Story 10.4: Render and Framing
+
+> **As** an agent, **I want** a render and a framing verdict that describe what the window shows, without changing the document.
+
+**Acceptance Criteria:**
+
+1. **Given** `query_screenshot` with `include` naming a Body
+   **When** it renders
+   **Then** the PNG shows the Body, or the envelope reports `empty_scene: true` (F-14, TC-06-03)
+2. **Given** an `include` naming a hidden object
+   **When** it renders
+   **Then** the live document's visibility and modified state are unchanged (F-15, TC-13-03)
+3. **Given** a style with `transparency` and no colour
+   **When** it renders
+   **Then** the transparency applies (F-16, TC-06-04)
+4. **Given** a window whose visible area is smaller than the widget
+   **When** framing is measured
+   **Then** the verdict uses the visible area, and a clipped part is `fits: false` (F-27, TC-14-13)
+5. **Given** a document whose only geometry is a datum plane, a sketch or a mesh
+   **When** `view_fit_viewport` runs
+   **Then** it fits that geometry or reports why it cannot, never `OK` with `ratio: 0.0` (F-28; TC-02-08, TC-04-12/13)
+
+### Story 10.5: STEP Export Schema
+
+> **As** an agent, **I want** `export_step {ap:"AP242"}` to write AP242.
+
+**Acceptance Criteria:**
+
+1. **Given** `export_step` with `ap: "AP242"`, and with the default
+   **When** the file is written
+   **Then** its `FILE_SCHEMA` names AP242, and the paired verify checks it (F-18; TC-07-05, TC-09-08)
+
+### Story 10.6: Session, Transport and Bounded Execution
+
+> **As** an operator, **I want** the bridge to bound every call, own its port and log what happens, as AD-26 and AD-27 state.
+
+**Acceptance Criteria:**
+
+1. **Given** any tool in the headless host
+   **When** it runs past its registry `timeout_s`
+   **Then** it returns `TIMEOUT` and the session is quarantined per AD-27 (TC-10-11, `design/integration-mcp-freecad.md` §2.4)
+2. **Given** a `debug_exec` that timed out
+   **When** the next call arrives
+   **Then** it is refused or served without waiting on the abandoned body's registry lock (F-33)
+3. **Given** a second RPC client
+   **When** it connects while a session is active
+   **Then** it gets the AD-26 busy error, never a hang (TC-99-07)
+4. **Given** an unclean FreeCAD kill
+   **When** FreeCAD relaunches
+   **Then** the addon does not adopt an orphan or foreign server on `:8765`; it verifies `/healthz` session identity (F-26; TC-01-14, TC-10-12, TC-12-15, TC-99-08)
+5. **Given** a malformed first frame, a clean exit, or an in-flight call dropped by a kill
+   **When** the listener and proxy log
+   **Then** each event is logged once at the right level, with no traceback on a clean exit (F-24, F-31)
+6. **Given** the discovery file on Windows
+   **When** it is written
+   **Then** the code comment states the ACL protection actually applied (F-32)
+
+### Story 10.7: UAT Suite and Harness Maintenance
+
+> **As** a tester, **I want** the UAT test cases and harness to describe the shipped product and run without human rescue.
+
+**Acceptance Criteria:**
+
+1. **Given** the test-case defects in the report
+   **When** the test cases are updated
+   **Then** they read the build version and the tool count from the live bridge, use current field names, accept the MCP schema-layer refusal where the input is still refused, show golden models before fitting, use FreeCAD 1.1.4 edge numbering and menu labels, and build fixtures the bridge allows
+2. **Given** disputed TC-02-17, TC-08-14, TC-10-06, and TC-06-01 / TC-13-06 (render shading)
+   **When** the test cases are updated
+   **Then** they assert the shipped behaviour, citing the decision in the sprint change proposal of 2026-10-04
+3. **Given** TC-99-03/04/05 (AD-25 partly implemented)
+   **When** the test cases are updated
+   **Then** the implemented parts are promoted to Gate 1 and only the remaining gap stays expected-fail
+4. **Given** the harness findings
+   **When** the GUI harness standard is updated
+   **Then** it forbids opening modal dialogs through `invoke_menu`, requires FreeCAD to run at the agent shell's integrity level, and documents the background-input routes that work on 1.1.4
+5. **Given** `scripts/automation/uat_watchdog.py --since` with an offset-aware timestamp
+   **When** it runs
+   **Then** it does not crash
+6. **Given** TC-06-10 and TC-13-17 (BLOCKED: no route to a Touched document)
+   **When** the test cases are updated
+   **Then** they build the Touched state through a route the bridge offers, or are retired with the reason
+
+### Story 10.7b: Scripted UAT Runner and FreeCAD Probe
+
+> **As** a tester, **I want** the deterministic Thens measured by scripts through a channel independent of the bridge, with `cua-driver` kept for captures, re-checks and troubleshooting, **so that** a full UAT run takes minutes of scripted work plus targeted agent review instead of about 10 hours, without losing accuracy.
+
+**Why:** UAT run `2026-10-03-04` took about 10 h of active work for 251 scenarios. An LLM agent reasoned through every scenario, FreeCAD was relaunched 31 times (`evidence/launch-log.tsv`), the session limit stopped the run twice, UIA automation timed out and froze on modal dialogs, and desktop use forced background-only input.
+
+**Acceptance Criteria:**
+
+1. **Given** a running FreeCAD GUI
+   **When** the test-only probe is queried
+   **Then** it returns, read-only and from FreeCAD's own kernel and GUI state, each object's type, visibility, `Shape` validity, volume and bounding box, the document's modified flag, the active document, the camera and the visible view size; the probe shares no code with `src/freecad_buddy`, is not shipped in the addon, and loads only under the UAT launch profile
+2. **Given** a saved document
+   **When** it must be checked offline
+   **Then** a FreeCADCmd reader measures it from the `.FCStd` file without loading the bridge
+3. **Given** the probe's own fault set (planted wrong visibility, wrong volume, modified flag, wrong active document, clipped view)
+   **When** the probe runs against each planted state
+   **Then** it detects every one (the AD-13 sensitivity discipline applied to the oracle)
+4. **Given** a test-case scenario
+   **When** it is encoded as an executable scenario file (request, expected envelope fields, probe assertions, pixel checks)
+   **Then** the runner executes it with no LLM call, and the test-case markdown stays the human-readable source
+5. **Given** a window capture taken through `cua-driver` at a fixed window size and DPI
+   **When** it is graded
+   **Then** a scripted pixel check measures the non-background extent against the frame and colour samples at points projected from the probe's geometry, and compares against a golden capture where one exists
+6. **Given** a scripted check that fails, or a probe measurement that disagrees with the MCP output
+   **When** the runner reports it
+   **Then** the scenario goes to the escalation ladder: re-check through `cua-driver` (property panel or tree read, Part > Check Geometry, agent-read capture), then troubleshoot by driving FreeCAD with `cua-driver`; a disagreement is a finding, never a retry, and a scripted pass never stands without its capture
+7. **Given** scenarios that need different launch settings (auto-approve, exec, audit-log path)
+   **When** the runner schedules them
+   **Then** it groups them by launch configuration, launches FreeCAD non-elevated with a dedicated UAT profile (`-u`) so the developer's `user.cfg` is untouched, and never opens a modal dialog through `invoke_menu`
+8. **Given** `tests/uat/test-plan.md` §9
+   **When** it is updated
+   **Then** the agent reads the capture for every FAIL, every probe/MCP disagreement, the first scenario of each test case, and a random 20 % sample of the rest; every other scenario is graded by the scripted pixel check against its stored capture
+9. **Given** the 2026-10-03-04 run
+   **When** the runner replays every deterministic Then it covers
+   **Then** it reproduces the recorded verdicts, and any difference is explained
+
+### Story 10.8: UAT Gate 1 Re-run
+
+> **As** the team, **I want** a full UAT run that proves Gate 1 green before Epic 4 resumes.
+
+**Acceptance Criteria:**
+
+1. **Given** Stories 10.1-10.7b done and CI green
+   **When** the full suite TC-01..TC-14, TC-99 and the G3 live replay run on FreeCAD 1.1.4 through the Story 10.7b runner, with agent review per the updated §9 and the desktop free (or the GUI lane in an isolated Windows session)
+   **Then** Gate 1 is green (Critical 100 %, High ≥ 95 %), Gate 2 matches its documented deviations, and the G3 replay is unchanged; the report is committed under `tests/uat/run/`
