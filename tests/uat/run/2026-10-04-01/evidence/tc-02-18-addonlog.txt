@@ -1,0 +1,8 @@
+2026-10-04 18:07:27,540 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-04 18:07:27,549 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-04 18:07:27,557 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-04 18:07:27,566 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-04 18:07:27,578 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-04 18:08:57,537 INFO freecad_buddy.dispatch: INVALID_INPUT: save target is not writable: D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-readonly.FCStd
+2026-10-04 18:08:57,546 INFO freecad_buddy.dispatch: INVALID_INPUT: save folder does not exist: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-04-01\evidence\tc-02-18-no-such-dir
+2026-10-04 18:08:57,554 INFO freecad_buddy.dispatch: INVALID_INPUT: save path is a directory, not a file: D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence

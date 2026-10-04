@@ -1,0 +1,30 @@
+## click A row s00000873:197
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+## re-snapshot: A row selected=False after background click; title 'box-10-20-30 - FreeCAD 1.1.4' (A active)
+## invoke_menu File>Close 18:18:13
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+## list_windows 18:18:16
+[{"app_name": "freecad.exe", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true, "layer": 0, "minimized": false, "pid": 13352, "title": "* cylinder-r5-h20 - FreeCAD 1.1.4", "window_id": 4135230, "z_index": 0}]
+## verify_state label_contains box-10-20-30 exists:false 18:18:23
+verify_state predicate 0 element.exists=false is unsupported because element snapshots are not exhaustive
+## tree items after close
+['cylinder-r5-h20', 'Cylinder']
+any label containing box-10-20-30: []
+
+   Id MainWindowTitle                  
+   -- ---------------                  
+13352 * cylinder-r5-h20 - FreeCAD 1.1.4
+
+

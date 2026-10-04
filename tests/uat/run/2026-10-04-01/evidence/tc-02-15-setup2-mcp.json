@@ -1,0 +1,101 @@
+[
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:_df51Jku7JmKeZHoyPCFkQ"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:_df51Jku7JmKeZHoyPCFkQ",
+    "name": "box_10_20_30",
+    "closed": true
+   },
+   "text": "Closed box_10_20_30 (doc=fcb-doc:_df51Jku7JmKeZHoyPCFkQ)."
+  }
+ },
+ {
+  "tool": "document_open",
+  "args": {
+   "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA",
+    "name": "cylinder_r5_h20",
+    "label": "cylinder-r5-h20",
+    "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+   },
+   "text": "Opened cylinder-r5-h20 -> fcb-doc:5Y5mp3h-D_To0fYnBHhQHA."
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA",
+    "total_objects": 1,
+    "returned_nodes": 1,
+    "depth": 1,
+    "filters_applied": {
+     "exclude_types": [
+      "App::Plane",
+      "App::Line",
+      "App::Point",
+      "App::Origin"
+     ]
+    },
+    "tree": [
+     {
+      "name": "Cylinder",
+      "label": "Cylinder",
+      "type": "Part::Feature",
+      "visibility": false
+     }
+    ]
+   },
+   "text": "1 objects, 1 shown.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA",
+      "name": "cylinder_r5_h20",
+      "label": "cylinder-r5-h20",
+      "transient": false
+     }
+    ]
+   },
+   "text": "1 open document(s): cylinder-r5-h20."
+  }
+ }
+]

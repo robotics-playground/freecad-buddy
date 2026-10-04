@@ -1,0 +1,19 @@
+mass Pad {"name": "Pad", "solid": true, "volume": {"value": 12000.0, "unit": "mm^3"}, "area": {"value": 3199.9999999999995, "unit": "mm^2"}, "bbox": {"xmin": {"value": 0.0, "unit": "mm"}, "xmax": {"value": 20.0, "unit": "mm"}, "ymin": {"value": 0.0, "unit": "mm"}, "ymax": {"value": 20.0, "unit": "mm"}, "zmin": {"value": 0.0, "unit": "mm"}, "zmax": {"value": 30.0, "unit": "mm"}}, "com": {"x": {"value": 9.99
+tree {"doc": "fcb-doc:6QAFmRx0Rc7ei4fgnJD64w", "total_objects": 11, "returned_nodes": 1, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": true, "children_count": 3}]}
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "fitted": true,
+  "document": "TC0514",
+  "camera_recorded": true
+ },
+ "text": "fitted the live viewport to 'TC0514'",
+ "framing": {
+  "fits": true,
+  "ratio": 0.9505907626208379,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

@@ -1,0 +1,18 @@
+readonly sha after:
+94969ac4ff909a583c66f6c8091e828c905b6936805000b705f34c0273523136 *D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-readonly.FCStd
+no-such-dir:
+ls: cannot access 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-no-such-dir': No such file or directory
+evidence is dir:
+yes
+golden cylinder sha:
+0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617 *benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+query_tree_summary isError= False OK None
+   sc= {"doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA", "total_objects": 1, "returned_nodes": 1, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "Cylinder", "label": "Cylinder", "type": "Part::Feature", "visibility": true}]}
+document_save isError= False OK None
+   sc= {"doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA", "name": "cylinder_r5_h20", "label": "tc-02-18-writable", "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-writable.FCStd", "saved": true}
+query_capabilities isError= False OK None
+   sc= {"freecad_version": "1.1.4", "element_map_available": true, "serializer": "exportBinary", "varset_backend": "varset", "render": "gui_constructed", "sketcher_available": true, "partdesign_available": true, "enums": {"PartDesign::Pad": {"Type": ["Length", "UpToLast", "UpToFirst", "UpToFace", "?TwoLeng
+view_fit_viewport isError= False OK None
+   sc= {"fitted": true, "document": "cylinder_r5_h20", "camera_recorded": true}
+document_list isError= False OK None
+   sc= {"documents": [{"doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA", "name": "cylinder_r5_h20", "label": "tc-02-18-writable", "transient": false}]}

@@ -1,0 +1,200 @@
+[
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  }
+ },
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA",
+    "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width",
+    "label": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width"
+   },
+   "text": "doc: fcb-doc:5z_ti-o66n03P3nhWz9-FA\nlabel: 測試 ドキュメント 🔧 with spaces and a deliberately long label for width\nname: 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width"
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA",
+      "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width",
+      "label": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width",
+      "transient": true
+     }
+    ]
+   },
+   "text": "1 open document(s): 測試 ドキュメント 🔧 with spaces and a deliberately long label for width."
+  }
+ },
+ {
+  "tool": "document_save",
+  "args": {
+   "doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA",
+   "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA",
+    "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width",
+    "label": "tc-02-13-uat-unicode",
+    "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd",
+    "saved": true
+   },
+   "text": "Saved 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width as 'tc-02-13-uat-unicode' to D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd (doc=fcb-doc:5z_ti-o66n03P3nhWz9-FA).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA",
+    "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width",
+    "closed": true
+   },
+   "text": "Closed 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width (doc=fcb-doc:5z_ti-o66n03P3nhWz9-FA)."
+  }
+ },
+ {
+  "tool": "document_open",
+  "args": {
+   "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA",
+    "name": "tc_02_13_uat_unicode",
+    "label": "tc-02-13-uat-unicode",
+    "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd"
+   },
+   "text": "Opened tc-02-13-uat-unicode -> fcb-doc:4H4iywf50o2sTrbQVqc3MA."
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA",
+      "name": "tc_02_13_uat_unicode",
+      "label": "tc-02-13-uat-unicode",
+      "transient": false
+     }
+    ]
+   },
+   "text": "1 open document(s): tc-02-13-uat-unicode."
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA",
+    "total_objects": 0,
+    "returned_nodes": 0,
+    "depth": 1,
+    "filters_applied": {
+     "exclude_types": [
+      "App::Plane",
+      "App::Line",
+      "App::Point",
+      "App::Origin"
+     ]
+    },
+    "tree": []
+   },
+   "text": "0 objects, 0 shown.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "view_fit.unverified",
+    "message": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"
+   },
+   "structured_content": {
+    "fitted": false,
+    "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"
+   },
+   "text": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ }
+]

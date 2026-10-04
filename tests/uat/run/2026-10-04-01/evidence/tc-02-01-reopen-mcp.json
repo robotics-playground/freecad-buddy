@@ -1,0 +1,68 @@
+[
+ {
+  "tool": "document_open",
+  "args": {
+   "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-01-uat-roundtrip.FCStd"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:kTdGCHaJiqxObftmsQlVvA",
+    "name": "tc_02_01_uat_roundtrip",
+    "label": "tc-02-01-uat-roundtrip",
+    "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-01-uat-roundtrip.FCStd"
+   },
+   "text": "Opened tc-02-01-uat-roundtrip -> fcb-doc:kTdGCHaJiqxObftmsQlVvA."
+  }
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:kTdGCHaJiqxObftmsQlVvA"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "view_fit.unverified",
+    "message": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"
+   },
+   "structured_content": {
+    "fitted": false,
+    "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"
+   },
+   "text": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:kTdGCHaJiqxObftmsQlVvA",
+      "name": "tc_02_01_uat_roundtrip",
+      "label": "tc-02-01-uat-roundtrip",
+      "transient": false
+     }
+    ]
+   },
+   "text": "1 open document(s): tc-02-01-uat-roundtrip."
+  }
+ }
+]

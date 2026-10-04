@@ -1,0 +1,6 @@
+-r--r--r-- 1 thuan 197609 2215 Oct  4 18:08 D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-readonly.FCStd
+A    R               D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-04-01\evidence\tc-02-18-readonly.FCStd
+94969ac4ff909a583c66f6c8091e828c905b6936805000b705f34c0273523136 *D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-readonly.FCStd
+0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617 *benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+ls: cannot access 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-18-no-such-dir': No such file or directory
+0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617 *-

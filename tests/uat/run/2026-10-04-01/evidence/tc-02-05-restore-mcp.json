@@ -1,0 +1,96 @@
+[
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc_02_05_body",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc_02_05_body'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.9505907626208379,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg",
+   "depth": 3,
+   "filters": {
+    "visible_only": true
+   }
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg",
+    "total_objects": 11,
+    "returned_nodes": 4,
+    "depth": 3,
+    "filters_applied": {
+     "visible_only": true,
+     "exclude_types": [
+      "App::Plane",
+      "App::Line",
+      "App::Point",
+      "App::Origin"
+     ]
+    },
+    "tree": [
+     {
+      "name": "Body",
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "visibility": true,
+      "children_count": 3,
+      "children": [
+       {
+        "name": "Pad",
+        "label": "Pad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "children_count": 1,
+        "children": [
+         {
+          "name": "Sketch",
+          "label": "Sketch",
+          "type": "Sketcher::SketchObject",
+          "visibility": true
+         }
+        ]
+       },
+       {
+        "name": "Sketch",
+        "label": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true
+       }
+      ]
+     }
+    ]
+   },
+   "text": "11 objects, 4 shown.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.9505907626208379,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

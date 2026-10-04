@@ -1,0 +1,7 @@
+DOC fcb-doc:ZggaObEOU75TyoZZB7auKg
+feature_body_create OK None
+sketch_create OK None
+sketch_add_geometry OK None
+feature_pad OK None
+fit OK
+{"doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg", "total_objects": 11, "returned_nodes": 4, "depth": 3, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": true, "children_count": 3, "children": [{"name": "Pad", "label": "Pad", "type": "PartDesign::Pad", "visibility": true, "children_count": 1, "children": [{"name": "Sketch", "label": "Sketch", "type": "Sketcher::SketchObject", "visibility": true}]}, {"name": "Sketch", "label": "Sketch", "type": "Sketcher::SketchObject", "visibility": true}]}]}

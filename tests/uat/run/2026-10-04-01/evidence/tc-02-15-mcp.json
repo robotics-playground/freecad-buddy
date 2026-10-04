@@ -1,0 +1,428 @@
+[
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 405, in query_tree_summary\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_object",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle",
+   "object": "Box"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 461, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle",
+   "object": "Box"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 515, in query_mass_properties\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_dependencies",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 559, in query_dependencies\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_placement",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle",
+   "object": "Box"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 663, in query_placement\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_sketch_info",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle",
+   "sketch": "Sketch"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 617, in query_sketch_info\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "document_save",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 486, in document_save\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 514, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "document_recompute",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 529, in document_recompute\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 590, in document_undo\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "verify_shape",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 801, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\verify.py\", line 218, in verify_shape\n    return registry.with_document(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:not-a-real-handle"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 862, in <lambda>\n    return lambda **p: screenshot.query_screenshot(doc_registry, render_port, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\screenshot.py\", line 140, in query_screenshot\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 381, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 364, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 354, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "query_capabilities",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "freecad_version": "1.1.4",
+    "element_map_available": true,
+    "serializer": "exportBinary",
+    "varset_backend": "varset",
+    "render": "gui_constructed",
+    "sketcher_available": true,
+    "partdesign_available": true,
+    "enums": {
+     "PartDesign::Pad": {
+      "Type": [
+       "Length",
+       "UpToLast",
+       "UpToFirst",
+       "UpToFace",
+       "?TwoLengths",
+       "UpToShape"
+      ]
+     },
+     "PartDesign::Pocket": {
+      "Type": [
+       "Length",
+       "ThroughAll",
+       "UpToFirst",
+       "UpToFace",
+       "?TwoLengths",
+       "UpToShape"
+      ]
+     },
+     "PartDesign::Revolution": {
+      "Type": [
+       "Angle",
+       "UpToLast",
+       "UpToFirst",
+       "UpToFace",
+       "TwoAngles"
+      ]
+     },
+     "PartDesign::Hole": {
+      "ThreadType": [
+       "None",
+       "ISOMetricProfile",
+       "ISOMetricFineProfile",
+       "UNC",
+       "UNF",
+       "UNEF",
+       "NPT",
+       "BSP",
+       "BSW",
+       "BSF",
+       "ISOTyre"
+      ],
+      "HoleCutType": [
+       "None",
+       "Counterbore",
+       "Countersink",
+       "Counterdrill"
+      ],
+      "DepthType": [
+       "Dimension",
+       "ThroughAll"
+      ]
+     },
+     "PartDesign::Chamfer": {
+      "ChamferType": [
+       "Equal distance",
+       "Two distances",
+       "Distance and Angle"
+      ]
+     },
+     "PartDesign::LinearPattern": {
+      "Mode": [
+       "Extent",
+       "Spacing"
+      ],
+      "TransformMode": [
+       "Features",
+       "Whole shape"
+      ]
+     },
+     "PartDesign::PolarPattern": {
+      "Mode": [
+       "Extent",
+       "Spacing"
+      ]
+     }
+    },
+    "exec_enabled": false
+   },
+   "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: False\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA",
+    "total_objects": 1,
+    "returned_nodes": 1,
+    "depth": 1,
+    "filters_applied": {
+     "exclude_types": [
+      "App::Plane",
+      "App::Line",
+      "App::Point",
+      "App::Origin"
+     ]
+    },
+    "tree": [
+     {
+      "name": "Cylinder",
+      "label": "Cylinder",
+      "type": "Part::Feature",
+      "visibility": true
+     }
+    ]
+   },
+   "text": "1 objects, 1 shown.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.4092373791621912,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {},
+  "isError": true,
+  "envelope": {
+   "_raw": "Input validation error: 'doc' is a required property"
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA",
+      "name": "cylinder_r5_h20",
+      "label": "cylinder-r5-h20",
+      "transient": false
+     }
+    ]
+   },
+   "text": "1 open document(s): cylinder-r5-h20."
+  }
+ }
+]

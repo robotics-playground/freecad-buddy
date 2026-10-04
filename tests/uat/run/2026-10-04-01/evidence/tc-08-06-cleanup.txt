@@ -1,0 +1,2 @@
+close {'status': 'OK', 'detail': None, 'text': 'Closed TC0806 (doc=fcb-doc:zH9I9sszJQ3xgYqPkGA-vw).'}
+list {"status": "OK", "detail": null, "text": "0 open document(s)."}

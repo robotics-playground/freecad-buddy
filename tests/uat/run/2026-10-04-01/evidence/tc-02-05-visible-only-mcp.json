@@ -1,0 +1,123 @@
+[
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg",
+   "depth": 3,
+   "filters": {
+    "visible_only": true
+   }
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg",
+    "total_objects": 11,
+    "returned_nodes": 2,
+    "depth": 3,
+    "filters_applied": {
+     "visible_only": true,
+     "exclude_types": [
+      "App::Plane",
+      "App::Line",
+      "App::Point",
+      "App::Origin"
+     ]
+    },
+    "tree": [
+     {
+      "name": "Body",
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "visibility": true,
+      "children_count": 3,
+      "children": [
+       {
+        "name": "Sketch",
+        "label": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true
+       }
+      ]
+     }
+    ]
+   },
+   "text": "11 objects, 2 shown.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg",
+   "depth": 3
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ZggaObEOU75TyoZZB7auKg",
+    "total_objects": 11,
+    "returned_nodes": 4,
+    "depth": 3,
+    "filters_applied": {
+     "exclude_types": [
+      "App::Plane",
+      "App::Line",
+      "App::Point",
+      "App::Origin"
+     ]
+    },
+    "tree": [
+     {
+      "name": "Body",
+      "label": "Body",
+      "type": "PartDesign::Body",
+      "visibility": true,
+      "children_count": 3,
+      "children": [
+       {
+        "name": "Pad",
+        "label": "Pad",
+        "type": "PartDesign::Pad",
+        "visibility": false,
+        "children_count": 1,
+        "children": [
+         {
+          "name": "Sketch",
+          "label": "Sketch",
+          "type": "Sketcher::SketchObject",
+          "visibility": true
+         }
+        ]
+       },
+       {
+        "name": "Sketch",
+        "label": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true
+       }
+      ]
+     }
+    ]
+   },
+   "text": "11 objects, 4 shown.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ }
+]

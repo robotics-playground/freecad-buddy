@@ -1,0 +1,32 @@
+document_list False OK None
+   sc= {"documents": []}
+   text= 0 open document(s).
+document_create False OK None
+   sc= {"doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA", "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width", "label": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width"}
+   text= doc: fcb-doc:5z_ti-o66n03P3nhWz9-FA
+label: 測試 ドキュメント 🔧 with spaces and a deliberately long label for width
+name: 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width
+document_list False OK None
+   sc= {"documents": [{"doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA", "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width", "label": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width", "transient": true}]}
+   text= 1 open document(s): 測試 ドキュメント 🔧 with spaces and a deliberately long label for width.
+document_save False OK None
+   sc= {"doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA", "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width", "label": "tc-02-13-uat-unicode", "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd", "saved": true}
+   text= Saved 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width as 'tc-02-13-uat-unicode' to D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCSt
+document_close False OK None
+   sc= {"doc": "fcb-doc:5z_ti-o66n03P3nhWz9-FA", "name": "測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width", "closed": true}
+   text= Closed 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width (doc=fcb-doc:5z_ti-o66n03P3nhWz9-FA).
+document_open False OK None
+   sc= {"doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA", "name": "tc_02_13_uat_unicode", "label": "tc-02-13-uat-unicode", "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-13-uat-unicode.FCStd"}
+   text= Opened tc-02-13-uat-unicode -> fcb-doc:4H4iywf50o2sTrbQVqc3MA.
+document_list False OK None
+   sc= {"documents": [{"doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA", "name": "tc_02_13_uat_unicode", "label": "tc-02-13-uat-unicode", "transient": false}]}
+   text= 1 open document(s): tc-02-13-uat-unicode.
+query_tree_summary False OK None
+   sc= {"doc": "fcb-doc:4H4iywf50o2sTrbQVqc3MA", "total_objects": 0, "returned_nodes": 0, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": []}
+   text= 0 objects, 0 shown.
+view_fit_viewport True SPEC_FAILED the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure
+   sc= {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}
+   text= the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure
+create label == input: True | name: 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width True
+list label == input: True | backslash-u in text: False | ? in text: False | L in text: True
+reopened label: tc-02-13-uat-unicode | == input: False | bytes equal: False

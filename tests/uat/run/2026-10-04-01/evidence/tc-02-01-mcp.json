@@ -1,0 +1,156 @@
+[
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  }
+ },
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "uat-roundtrip"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g",
+    "name": "uat_roundtrip",
+    "label": "uat-roundtrip"
+   },
+   "text": "doc: fcb-doc:cUZdBT9RsRkG82VTwoZJ6g\nlabel: uat-roundtrip\nname: uat_roundtrip"
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g",
+      "name": "uat_roundtrip",
+      "label": "uat-roundtrip",
+      "transient": true
+     }
+    ]
+   },
+   "text": "1 open document(s): uat-roundtrip."
+  }
+ },
+ {
+  "tool": "document_save",
+  "args": {
+   "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g"
+  },
+  "isError": true,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "document has no save target; call document_save with a 'path' first",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1354, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 493, in document_save\n    raise ValidationError(\nfreecad_buddy.usecases.documents.ValidationError: document has no save target; call document_save with a 'path' first\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "tool": "document_save",
+  "args": {
+   "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g",
+   "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-01-uat-roundtrip.FCStd"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g",
+    "name": "uat_roundtrip",
+    "label": "tc-02-01-uat-roundtrip",
+    "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-01-uat-roundtrip.FCStd",
+    "saved": true
+   },
+   "text": "Saved uat_roundtrip as 'tc-02-01-uat-roundtrip' to D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-04-01/evidence/tc-02-01-uat-roundtrip.FCStd (doc=fcb-doc:cUZdBT9RsRkG82VTwoZJ6g).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": [
+     {
+      "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g",
+      "name": "uat_roundtrip",
+      "label": "tc-02-01-uat-roundtrip",
+      "transient": false
+     }
+    ]
+   },
+   "text": "1 open document(s): tc-02-01-uat-roundtrip."
+  }
+ },
+ {
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g"
+  },
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:cUZdBT9RsRkG82VTwoZJ6g",
+    "name": "uat_roundtrip",
+    "closed": true
+   },
+   "text": "Closed uat_roundtrip (doc=fcb-doc:cUZdBT9RsRkG82VTwoZJ6g)."
+  }
+ },
+ {
+  "tool": "document_list",
+  "args": {},
+  "isError": false,
+  "envelope": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "documents": []
+   },
+   "text": "0 open document(s)."
+  }
+ }
+]

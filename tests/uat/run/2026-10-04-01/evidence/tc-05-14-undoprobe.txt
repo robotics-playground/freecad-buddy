@@ -1,0 +1,2 @@
+UNDOPROBE_BEFORE 4 ['buddy: feature_pad Pad', 'buddy: add geometry to Sketch', 'buddy: create sketch Sketch', 'buddy: create body Body'] ['Body', 'Origin', 'Origin001', 'Pad', 'Sketch', 'XY_Plane', 'XZ_Plane', 'X_Axis', 'YZ_Plane', 'Y_Axis', 'Z_Axis']
+UNDOPROBE_AFTER 4 ['buddy: feature_pad Pad', 'buddy: add geometry to Sketch', 'buddy: create sketch Sketch', 'buddy: create body Body'] ['Body', 'Origin', 'Origin001', 'Pad', 'Sketch', 'XY_Plane', 'XZ_Plane', 'X_Axis', 'YZ_Plane', 'Y_Axis', 'Z_Axis']

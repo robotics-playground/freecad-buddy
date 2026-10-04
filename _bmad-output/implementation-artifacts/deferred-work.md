@@ -1482,3 +1482,6 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
   summary: The default workdir `freecad-buddy-workdir/` is cwd-relative and not git-ignored, so a host started from the repo root leaves it untracked there.
   evidence: `git status` shows `?? freecad-buddy-workdir/` at the repo root before Story 10.1 started; `documents.py` `workdir_root` default is relative.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
+  summary: Correct the test-case defects that UAT run 2026-10-04-01 found in TC-02-01, TC-02-15, TC-05-14, TC-08-06 and TC-12-13 (Story 10.7).
+  evidence: `tests/uat/run/2026-10-04-01/report.md` section "Test-case defects for Story 10.7" lists each Then, the actual product result, and why the product is correct.

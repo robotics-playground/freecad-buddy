@@ -1,0 +1,19 @@
+0 query_tree_summary isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+1 query_object isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+2 query_mass_properties isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+3 query_dependencies isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+4 query_placement isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+5 query_sketch_info isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+6 document_save isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+7 document_close isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+8 document_recompute isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+9 document_undo isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+10 verify_shape isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+11 query_screenshot isError= True schema= fcb.result-envelope/1 status= INVALID_INPUT code= INVALID_INPUT msg= 'unknown or stale document handle: fcb-doc:not-a-real-handle' MATCH= True
+12 query_capabilities isError= False schema= fcb.result-envelope/1 status= OK code= None msg= ''  
+    {"freecad_version": "1.1.4", "element_map_available": true, "serializer": "exportBinary", "varset_backend": "varset", "render": "gui_constructed", "sketcher_available": true, "partdesign_available": true, "enums": {"PartDesign::Pad": {"Type": ["Lengt
+13 query_tree_summary isError= False schema= fcb.result-envelope/1 status= OK code= None msg= ''  
+    {"doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA", "total_objects": 1, "returned_nodes": 1, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "Cylinder", "label": "Cylinder", "type": 
+14 query_tree_summary isError= True schema= None status= None code= None msg= "Input validation error: 'doc' is a required property"  
+15 document_list isError= False schema= fcb.result-envelope/1 status= OK code= None msg= ''  
+    {"documents": [{"doc": "fcb-doc:5Y5mp3h-D_To0fYnBHhQHA", "name": "cylinder_r5_h20", "label": "cylinder-r5-h20", "transient": false}]}
