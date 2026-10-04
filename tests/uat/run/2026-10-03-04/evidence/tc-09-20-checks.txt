@@ -1,0 +1,18 @@
+PASS | Given fresh writable audit target | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-20-append.jsonl
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:Sqwe61A2Ra_6shMNSF9bDA
+NOTE | roots ['Box']
+NOTE | three mutations: OK OK OK
+PASS | compare prints True True True | (True, True, [583, 1166, 1853])
+PASS | no earlier line rewritten: head -n len(snap1) of snap3 == snap1 | 2
+PASS | byte counts strictly increasing | [585, 1170, 1859]
+PASS | every line complete JSON | 6
+PASS | every schema == fcb.audit-record/1 | ['fcb.audit-record/1']
+PASS | lines >= 2x mutations; after lines carry verify_verdict, before lines do not | {'lines': 6, 'after': 3, 'before': 3}
+FAIL | grep for "w"|truncate|rotate|os.remove returns nothing | 7:truncates, rotates, or reads it.
+exit=0
+46:            with open(self._path, "a", encoding="utf-8") as handle:
+PASS | only open mode is 'a' at audit_log.py:46 | 7:truncates, rotates, or reads it.
+exit=0
+46:            with open(self._path, "a", encoding="utf-8") as handle:

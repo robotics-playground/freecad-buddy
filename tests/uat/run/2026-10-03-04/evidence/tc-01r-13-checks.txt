@@ -1,0 +1,19 @@
+== Then listener line
+2026-10-04 16:09:12,612 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:63180
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-26304.json
+== Then no proxy: :8765
+(no listener)
+== Then verbatim reason
+2026-10-04 16:09:12,612 INFO freecad_buddy.hosts.gui_addon.bootstrap: FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy
+== python processes
+(no python process besides this probe)
+== CLI 1: serve --mode rpc
+exit=2
+stderr:
+--mode rpc requires --transport http.
+== CLI 2: serve --transport http --mode inline
+exit=2
+stderr:
+transport 'http' is not available yet; use --transport stdio.
+== :8765 after CLI
+(no listener)

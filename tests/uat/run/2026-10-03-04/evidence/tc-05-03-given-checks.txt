@@ -1,0 +1,1 @@
+NOTE | fully constrained 20x20 Sketch built via MCP in TC0503 doc=fcb-doc:iBHRa5YgXFWqknrj0YpISA; next: delete its DistanceX, DistanceY and root Coincident in FreeCAD's Python console (fixture only, MCP cannot leave dof>0)

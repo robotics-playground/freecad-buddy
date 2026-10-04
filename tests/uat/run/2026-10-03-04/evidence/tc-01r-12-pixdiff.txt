@@ -1,0 +1,1 @@
+tc-01r-12-before.png tc-01r-12-after.png sizes (1568, 1219) (1568, 1219) differing_pixels 0 bbox None

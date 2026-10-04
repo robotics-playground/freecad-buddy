@@ -1,0 +1,132 @@
+{
+ "temp_snap_before": 10,
+ "work_snap_before": [],
+ "scratch_doc": "fcb-doc:h5kGBKwDfWvu2WEsZAcqbQ",
+ "calls": [
+  {
+   "tool": "document_create",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "feature_body_create",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": false,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "sketch_create",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": false,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "sketch_add_geometry",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": false,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "feature_pad",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "mutation.recompute_error",
+    "message": "recompute left 1 object(s) invalid: PadFail1: Resulting fused extrusion is null."
+   },
+   "snapshot_path": "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_95ae8gsm\\TC9905Scratch.FCStd",
+   "rolled_back": true,
+   "rollback_proven": "rolled_back_via_snapshot"
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "feature_pad",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "mutation.recompute_error",
+    "message": "recompute left 1 object(s) invalid: PadFail2: Resulting fused extrusion is null."
+   },
+   "snapshot_path": "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_q4mcbwbz\\TC9905Scratch.FCStd",
+   "rolled_back": true,
+   "rollback_proven": "rolled_back_via_snapshot"
+  },
+  {
+   "tool": "document_close",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  }
+ ],
+ "temp_snap_after": 10,
+ "work_snap_after": [],
+ "work_snap_after_contents": {},
+ "kept_paths": [
+  "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_95ae8gsm\\TC9905Scratch.FCStd",
+  "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_q4mcbwbz\\TC9905Scratch.FCStd"
+ ],
+ "kept_abs": [
+  "D:\\Work\\Personal\\Sources\\freecad-buddy\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_95ae8gsm\\TC9905Scratch.FCStd",
+  "D:\\Work\\Personal\\Sources\\freecad-buddy\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_q4mcbwbz\\TC9905Scratch.FCStd"
+ ],
+ "kept_exists_from_probe_cwd": [
+  false,
+  false
+ ],
+ "kept_exists_under_gui_workdir": [
+  false,
+  false
+ ],
+ "parents": [
+  "FCB_TMP_snap_95ae8gsm",
+  "FCB_TMP_snap_q4mcbwbz"
+ ]
+}

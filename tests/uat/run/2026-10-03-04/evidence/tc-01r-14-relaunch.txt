@@ -1,0 +1,28 @@
+== relaunch with the orphan proxy 37596/33828 still holding :8765 (no step in the TC stops it)
+tag=tc-01r-14-relaunch pid=13956 window_id=5838898 :8765 owner=33828 parent=37596
+{"pid": 13956, "window_id": 5838898, "proxy_listener_pid": 33828, "proxy_spawned_pid": 37596, "freecad_version": "1.1.4"}
+--- new addon.log lines ---
+2026-10-04 16:13:06,788 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 16:13:07,008 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:64713
+2026-10-04 16:13:07,020 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy already on http://127.0.0.1:8765/mcp; not spawning
+== new discovery file
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-13956.json
+new pid 13956 port 64713 token_sha256 16c221b49feb7114
+old pid 32068 port 58780 token_sha256 c99aac7b015c8fd4
+tokens differ: True
+== :8765
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       33828
+pid 37596 parent 32068 pythonw.exe: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 33828 parent 37596 pythonw.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+== MCP through :8765 after relaunch
+ "status": "OK",
+  "freecad_version": "1.1.4",
+== old token on the new listener (proxy stopped for the direct probe, AD-26)
+listener pid 33828 parent 37596 (pythonw)
+terminate 33828 -> True
+terminate 37596 -> True
+after: 0 :8765 listeners
+old token -> {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+== restart the proxy by hand with the addon's command
+restarted by hand: .venv/Scripts/pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       19516

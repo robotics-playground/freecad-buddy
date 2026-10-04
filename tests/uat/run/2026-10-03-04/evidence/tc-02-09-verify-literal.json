@@ -1,0 +1,5 @@
+{
+  "code": "invalid_arguments",
+  "detail": "invalid type: map, expected a sequence",
+  "tool": "verify_state"
+}

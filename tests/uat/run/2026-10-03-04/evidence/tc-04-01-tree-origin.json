@@ -1,0 +1,83 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:7zXEuS75u6eaWfpCZ3ix_A",
+  "total_objects": 9,
+  "returned_nodes": 9,
+  "depth": 3,
+  "filters_applied": {
+   "exclude_types": []
+  },
+  "tree": [
+   {
+    "name": "PlateBody",
+    "label": "PlateBody",
+    "type": "PartDesign::Body",
+    "visibility": true,
+    "children_count": 1,
+    "children": [
+     {
+      "name": "Origin",
+      "label": "Origin",
+      "type": "App::Origin",
+      "visibility": false,
+      "children_count": 7,
+      "children": [
+       {
+        "name": "X_Axis",
+        "label": "X-axis",
+        "type": "App::Line",
+        "visibility": true
+       },
+       {
+        "name": "Y_Axis",
+        "label": "Y-axis",
+        "type": "App::Line",
+        "visibility": true
+       },
+       {
+        "name": "Z_Axis",
+        "label": "Z-axis",
+        "type": "App::Line",
+        "visibility": true
+       },
+       {
+        "name": "XY_Plane",
+        "label": "XY-plane",
+        "type": "App::Plane",
+        "visibility": true
+       },
+       {
+        "name": "XZ_Plane",
+        "label": "XZ-plane",
+        "type": "App::Plane",
+        "visibility": true
+       },
+       {
+        "name": "YZ_Plane",
+        "label": "YZ-plane",
+        "type": "App::Plane",
+        "visibility": true
+       },
+       {
+        "name": "Origin001",
+        "label": "Origin001",
+        "type": "App::Point",
+        "visibility": true
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "text": "9 objects, 9 shown.",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

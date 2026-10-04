@@ -1,0 +1,13 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given body document opens | Opened tc-02-body -> fcb-doc:JxA85lEkhmhE8a5JTzmh1g.
+PASS | Given Body, Sketch, Pad named | ['Body', 'Pad', 'Sketch', 'Sketch']
+PASS | per-object keys exactly object,in_list,out_list | ['in_list', 'object', 'out_list']
+PASS | entries are Names of tree nodes, not labels | {'entries': ['Body', 'Sketch'], 'label_only_values': ['X-axis', 'XY-plane', 'XZ-plane', 'Y-axis', 'YZ-plane', 'Z-axis']}
+PASS | Pad out_list contains its Sketcher::SketchObject | ['Sketch']
+PASS | Pad in_list contains PartDesign::Body | ['Body']
+PASS | no duplicates in in_list/out_list | {'in': ['Body'], 'out': ['Sketch']}
+PASS | whole keys exactly edges,total_edges,returned_edges,truncated | ['edges', 'returned_edges', 'total_edges', 'truncated']
+PASS | every edge exactly {from,to} | 11
+PASS | not truncated at default cap | {'total_edges': 11, 'returned_edges': 11, 'truncated': False}
+PASS | views agree: every Pad out_list n has edge Pad->n | {'missing': []}
+PASS | deps view_fit_viewport OK | {'status': 'OK', 'detail': None}

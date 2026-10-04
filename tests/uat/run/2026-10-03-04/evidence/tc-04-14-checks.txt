@@ -1,0 +1,10 @@
+PASS | Given BlockPad vol 6000 | 6000.0
+NOTE | visual for the 10 -> 25 mm edit captured right after it (the later Thens change the pad again)
+PASS | edit OK rolled_back=false | {"status": "OK"}
+PASS | vol 15000 | 15000.0
+PASS | Length reads 25 mm | 25.0 mm
+PASS | post_verify passed is_valid recompute_clean | {"recompute_clean": true, "is_valid": true, "fully_constrained": null, "tnp_audit": {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": [{"owner": "BlockPad", "prop": "Profile", "mapped_before": null, "state_after": null, "verdict": "PASS", "layer": 1, "detail": "BlockPad.Profile na
+PASS | verify_shape OK, bbox [20,30,25] | OK bbox=[20.0, 30.0, 25.0] shape_summary_bbox=[20.0, 30.0, 25.0]
+PASS | Length 12 + Reversed true together OK, both read back | {"status": "OK"} Length=12.0 mm Reversed=True
+PASS | boolean Midplane and enum Type each OK | {"status": "OK"} {"status": "OK"}
+PASS | empty parameters INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "feature_set_parameters requires a non-empty 'parameters' object", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\Fr

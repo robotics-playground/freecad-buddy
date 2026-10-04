@@ -1,0 +1,31 @@
+== 'first frame was not rpc_hello' lines before: 0
+== When (proxy stopped first, AD-26)
+listener pid 29832 parent 13184 (pythonw)
+terminate 29832 -> True
+terminate 13184 -> True
+after: 0 :8765 listeners
+-- query_capabilities as first frame (id 3)
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: {"jsonrpc": "2.0", "id": 3, "method": "query_capabilities", "params": {}}
+frame1: {"jsonrpc": "2.0", "id": 3, "error": {"code": -32002, "message": "handshake required"}}
+frame2: ''
+elapsed 0.02
+-- 'not json' as first frame
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: not json
+frame1: {"jsonrpc": "2.0", "id": null, "error": {"code": -32002, "message": "handshake required"}}
+frame2: ''
+elapsed 0.02
+-- addon.log lines since this FreeCAD session
+2026-10-04 16:02:53,289 WARNING freecad_buddy.rpc_listener: first frame was not rpc_hello; closing
+-- listener alive? authenticated hello
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.01
+restarted by hand: .venv/Scripts/pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       34988
+== query_capabilities via restarted proxy
+ "status": "OK",

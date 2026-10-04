@@ -1,0 +1,9 @@
+NOTE | cleanup previous scenario: document_close TC0813 -> OK
+PASS | not-a-token -> 'confirm.preview_id is not a preview token' | {'status': 'INVALID_INPUT', 'message': 'confirm.preview_id is not a preview token'}
+PASS | onlybody / .sig / body. -> 'confirm.preview_id is malformed' | ['confirm.preview_id is malformed', 'confirm.preview_id is malformed', 'confirm.preview_id is malformed']
+FAIL | !!!!.!!!! -> 'confirm.preview_id is not decodable' | {'status': 'INVALID_INPUT', 'message': 'confirm.preview_id carries an invalid signature'}
+PASS | tampered signature -> 'confirm.preview_id carries an invalid signature' | {'status': 'INVALID_INPUT', 'message': 'confirm.preview_id carries an invalid signature'}
+FAIL | the four messages are four different strings | ['confirm.preview_id carries an invalid signature', 'confirm.preview_id is malformed', 'confirm.preview_id is not a preview token']
+FAIL | payload missing a field -> 'confirm.preview_id payload is missing [...]' | {'truncated_body_result': {'status': 'INVALID_INPUT', 'message': 'confirm.preview_id is not decodable'}, 'note': "a payload lacking a field needs a re-signed token; the secret is per-process, so the TC's own substitute (truncated body) can only fail the signature check"}
+PASS | non-string preview_id 12345 refused ('is not a preview token' or schema reject) | {'status': None, 'message': "Input validation error: 12345 is not of type 'string'"}
+PASS | no Pad after all variants | ['Body', 'Sketch']

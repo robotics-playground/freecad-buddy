@@ -1,0 +1,8 @@
+NOTE | cleanup previous scenario: document_close TC0819 -> OK
+PASS | Given document_list returns two handles | [{'doc': 'fcb-doc:FaRbXqbtXFfXVFFc4l7jxw', 'name': 'TC0820B', 'label': 'TC0820B', 'transient': True}, {'doc': 'fcb-doc:-wpdxQpVJXUFIHbMcvZRMw', 'name': 'TC0820A', 'label': 'TC0820A', 'transient': True}]
+PASS | args.doc == outer handle refused with exact message | operation.args must not carry 'doc'; the preview supplies it
+PASS | args.doc naming the other doc refused identically | operation.args must not carry 'doc'; the preview supplies it
+PASS | no FCB_TMP_prev_ dir after both calls | []
+PASS | neither document has a Pad | {'A': ['Body', 'Sketch'], 'B': ['Body', 'Sketch']}
+PASS | same preview without args.doc returns OK | {"status": "OK"}
+PASS | its token applied against B -> 'issued for a different document' | confirm.preview_id was issued for a different document

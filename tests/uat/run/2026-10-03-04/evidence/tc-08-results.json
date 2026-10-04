@@ -1,0 +1,212 @@
+[
+ {
+  "id": "TC-08-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-01-checks.txt",
+   "tc-08-01-after.png"
+  ],
+  "note": "Test-case defect: query_sketch_info has no fully_constrained field in the Given; diff assertions pass."
+ },
+ {
+  "id": "TC-08-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-02-checks.txt",
+   "tc-08-02-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-03-checks.txt",
+   "tc-08-03-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-04",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-04-checks.txt",
+   "tc-08-04-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-05",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-05-checks.txt",
+   "tc-08-05-after.png"
+  ],
+  "note": "Test-case defect: H1 default render is available (offscreen), not 'no render port'; render:'off' reported distinctly."
+ },
+ {
+  "id": "TC-08-06",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-08-06-checks.txt",
+   "tc-08-06-after.png"
+  ],
+  "note": "String-form document_undo returns matches_pre_op:false and text 'did NOT restore the pre-op state' for an undo that did restore (digest 80cc30.. expected, 646a68.. after; documented byte-exact limit, documents.py:163-173). Record form matched. expect_fingerprint:42 refused by MCP schema, not product message (test-case defect)."
+ },
+ {
+  "id": "TC-08-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-07-checks.txt",
+   "tc-08-07-after.png"
+  ],
+  "note": "Re-preview with same name collides ('an object named Probe already exists'); re-run as Probe2 (tc-08-07b) PASS. Single-use refusal PASS."
+ },
+ {
+  "id": "TC-08-08",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-08-checks.txt",
+   "tc-08-08-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-09-checks.txt",
+   "tc-08-09-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-10",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-10-checks.txt",
+   "tc-08-10-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-11",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-08-11-checks.txt",
+   "tc-08-11-after.png"
+  ],
+  "note": "Token bound to measured state: PASS. 'cannot read the state of <handle>' NOT RUN: no wire path makes an unserializable document (exec disabled)."
+ },
+ {
+  "id": "TC-08-12",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-12-checks.txt",
+   "tc-08-12-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-13",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-13-checks.txt",
+   "tc-08-13-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-14",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-08-14-checks.txt",
+   "tc-08-14-after.png"
+  ],
+  "note": "4 tampered/malformed/foreign tokens give only 3 distinct messages: '!!!!.!!!!' -> 'carries an invalid signature' (TC expects 'is not decodable'); 'payload is missing' unreachable over the wire because the signature is checked first. Likely test-case expectation vs signature-first design; needs a decision."
+ },
+ {
+  "id": "TC-08-15",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-15-checks.txt",
+   "tc-08-15-after.png"
+  ],
+  "note": "Undeclared confirm fields refused by MCP schema ('Additional properties are not allowed') before product message: test-case defect, behaviour correct."
+ },
+ {
+  "id": "TC-08-16",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-16-checks.txt",
+   "tc-08-16-after.png"
+  ],
+  "note": "Non-accept actions refused by MCP schema enum before product layer: test-case defect on message form."
+ },
+ {
+  "id": "TC-08-17",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-17-checks.txt",
+   "tc-08-17-after.png"
+  ],
+  "note": "All 19 gated tools fail closed. confirm:null refused by schema (different message: test-case defect). Sample feature_set_parameters Length 35 broke the fillet (RECOMPUTE_ERROR, rolled back, preview predicted it); extra sample PASS (17b)."
+ },
+ {
+  "id": "TC-08-18",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-18-checks.txt",
+   "tc-08-18-after.png"
+  ],
+  "note": "Unset/'true' fail closed; '=1' approves and logs SECURITY line. Audit approval line exists with nested approval.mode auto_approve (TC field path stale); capabilities has no auto-approve field (test-case defect). Finding: approval params_digest differs from mutation lines (audit_log.py:94-96 says they join)."
+ },
+ {
+  "id": "TC-08-19",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-19-checks.txt",
+   "tc-08-19-after.png"
+  ],
+  "note": "Missing tool / non-object args refused by MCP schema before product message (test-case defect); previewable list correct."
+ },
+ {
+  "id": "TC-08-20",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-08-20-checks.txt",
+   "tc-08-20-after.png"
+  ],
+  "note": ""
+ },
+ {
+  "id": "TC-08-21",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-08-21-checks.txt",
+   "tc-08-21-after.png"
+  ],
+  "note": "Undo of open transaction and no-history cases PASS. Two Thens NOT RUN: no wire path leaves UndoMode 0 on 1.1.4 GUI; no deterministic undo that leaves an object invalid."
+ }
+]

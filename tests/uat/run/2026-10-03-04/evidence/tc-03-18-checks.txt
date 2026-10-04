@@ -1,0 +1,13 @@
+NOTE | Given build: OK null
+PASS | Given HoleSpacing unit mm and RibAngle unit deg | [{"id": 4, "type": "Distance", "name": "HoleSpacing", "driving": true, "value": {"value": 40.0, "unit": "mm"}}, {"id": 8, "type": "Angle", "name": "RibAngle", "driving": true, "value": {"value": 45.0, "unit": "deg"}}]
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+FAIL | deg on Distance non-OK | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "Distance value unit must be one of ['mm'], got 'deg'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\
+PASS | refusal names the allowed unit for that constraint type | {"code": "INVALID_INPUT", "message": "Distance value unit must be one of ['mm'], got 'deg'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispa
+PASS | radius {2.5 deg} schema reject | {"_raw": "Input validation error: 'deg' is not one of ['mm']"}
+PASS | bare number radius schema reject | {"_raw": "Input validation error: 2.5 is not of type 'object'"}
+PASS | missing value schema reject | {"_raw": "Input validation error: 'value' is a required property"}
+PASS | extra key tolerance schema reject | {"_raw": "Input validation error: Additional properties are not allowed ('tolerance' was unexpected)"}
+PASS | HoleSpacing still {40 mm} | {"id": 4, "type": "Distance", "name": "HoleSpacing", "driving": true, "value": {"value": 40.0, "unit": "mm"}}
+PASS | RibAngle 30 deg OK | {"status": "OK"}
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+CORRECTION | deg on Distance non-OK -> PASS. Script also required isError=false; the envelope is status=INVALID_INPUT 'Distance value unit must be one of ['mm'], got 'deg'' (a non-OK status, as the Then asks); MCP isError=true is set for non-OK envelopes.

@@ -1,0 +1,10 @@
+== dead record picked: rpc-9756.json
+== Then pid dead
+(nothing)
+== When attach
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.05
+== Then file still exists
+-rw-r--r-- 1 thuan 197609 218 Sep 13 10:08 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-9756.json
+== Then live bridge
+ "status": "OK",

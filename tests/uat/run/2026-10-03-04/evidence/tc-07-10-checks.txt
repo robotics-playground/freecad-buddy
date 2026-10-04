@@ -1,0 +1,8 @@
+PASS	given: no stale targets	
+PASS	fine facets > coarse facets	[218, 10174]
+PASS	both verifies OK	["OK", "OK", null, null]
+PASS	coarse band = 50x fine band	[418.87902047863906, 8.377580409572781, 50.0]
+FAIL	fine band far below 0.1% (4.1888) and tolerance abs no rel	[8.377580409572781, 4.188790200000001, {"abs": 8.377580409572781}]
+PASS	coarse measured < 4188.7902 and passed	{"id": "trimesh_stl.volume_band", "measured": 3942.8770456790758, "expected": 4188.790204786392, "tolerance": {"abs": 418.87902047863906}, "passed": true}
+PASS	linear 1e-5 -> INVALID_INPUT 'deflection out of range:' and no file	["INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=1e-05, angular=0.5", false]
+PASS	outside trimesh: coarse < fine	[218, 10174]

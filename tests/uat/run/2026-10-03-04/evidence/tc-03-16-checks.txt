@@ -1,0 +1,14 @@
+PASS | Given dof=0 conflicting=[] | dof=0 conflicting=[]
+NOTE | Given constraint_count=11
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+FAIL | status=SPEC_FAILED | {"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: PlateProfile: Over-constrained sketch\nRemove at least one of the following conflicting constraints:10\n, 12\n"}}
+PASS | rolled_back=true | rolled_back=True proven=rolled_back_verified
+FAIL | explanation starts 'verify_sketch failed on PlateProfile (dof=' | recompute left 1 object(s) invalid: PlateProfile: Over-constrained sketch
+Remove at least one of the following conflicting constraints:10
+, 12
+
+PASS | failure detail or sketch_state names the conflicting solver ids | sketch_state.conflicting=[] detail={"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: PlateProfile: Over-constrained sketch\nRemove at least one of the following conflicting constraints:10\n, 12\n"}
+PASS | no ConflictWidth | 
+PASS | constraint_count back to Given | 11 vs 11
+PASS | OK dof=0 conflicting=[] | {"status": "OK"}
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

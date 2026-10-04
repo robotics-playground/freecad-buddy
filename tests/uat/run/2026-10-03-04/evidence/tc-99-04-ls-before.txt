@@ -1,0 +1,27 @@
+--- ls -R appdata freecad-buddy 14:20:00
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/:
+addon.log
+mcp-proxy.log
+rpc-11924.json
+rpc-1444.json
+rpc-1456.json
+rpc-19588.json
+rpc-20096.json
+rpc-21148.json
+rpc-21164.json
+rpc-32380.json
+rpc-33492.json
+rpc-34240.json
+rpc-38812.json
+rpc-9756.json
+--- workdir
+C:/Users/thuan/freecad-buddy-workdir:
+total 44
+drwxr-xr-x 1 thuan 197609 0 Sep 13 20:55 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:19 ../
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:15 tmp/
+
+C:/Users/thuan/freecad-buddy-workdir/tmp:
+total 4
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:15 ./
+drwxr-xr-x 1 thuan 197609 0 Sep 13 20:55 ../

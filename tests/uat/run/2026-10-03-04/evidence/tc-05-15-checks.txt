@@ -1,0 +1,13 @@
+NOTE | cleanup previous scenario: document_close TC0514 -> OK
+NOTE | fixture Fillet r2 on Pad.Edge1 -> {"status": "OK"}
+PASS | Given Fillet depends on Pad | 
+PASS | Given element map available (query_capabilities.element_map_available; no version field there) | {'element_map_available': True}
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | envelope status=RECOMPUTE_ERROR tnp_audit={"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}
+FAIL | status OK | {"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: Fillet: Invalid edge link: ;#f:2;:G;XTR;:Haab:7,E.Edge1"}}
+PASS | tnp_audit.status CLEAN | CLEAN
+PASS | every finding verdict in [PASS, RE_BASELINED] | []
+PASS | element_map_version non-null string | 15.70200.5
+FAIL | findings NOT empty (check 4 graded the fillet reference) | []
+PASS | Fillet query OK and still in tree | {'status': 'OK', 'vol': 11974.247779607693}
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

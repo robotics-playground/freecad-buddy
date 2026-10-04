@@ -1,0 +1,14 @@
+== final teardown: exit FreeCAD 32944, relaunch clean
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+no freecad
+no pythonw
+:8765 free
+rpc-32944.json deleted
+tag=final pid=32548 window_id=1380804 bridge_wait=4s
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       31608
+--- new addon.log lines ---
+2026-10-03 23:48:45,775 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-03 23:48:45,997 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:59314
+2026-10-03 23:48:46,304 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 34768) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+0 open
+0 open document(s).

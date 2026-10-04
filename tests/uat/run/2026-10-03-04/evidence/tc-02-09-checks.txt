@@ -1,0 +1,8 @@
+PASS | GUI opened it: verify_state satisfied (not unknown) | satisfied
+PASS | list reports 1 open document(s): box40-hole-r5. | 1 open document(s): box40-hole-r5.
+PASS | adopted entry doc matches ^fcb-doc: | fcb-doc:F7mIoWZAW8niOEiT3a1qZQ
+PASS | adopted entry transient false | [{'doc': 'fcb-doc:F7mIoWZAW8niOEiT3a1qZQ', 'name': 'box40_hole_r5', 'label': 'box40-hole-r5', 'transient': False}]
+PASS | adopted handle usable: tree[0] BoxHole | [{'name': 'BoxHole', 'label': 'BoxHole', 'type': 'Part::Feature', 'visibility': False}]
+PASS | volume 15214.6018 within 0.1% | 15214.601836602547
+PASS | second list: same doc string, one entry | [{'doc': 'fcb-doc:F7mIoWZAW8niOEiT3a1qZQ', 'name': 'box40_hole_r5', 'label': 'box40-hole-r5', 'transient': False}]
+PASS | adopted view_fit_viewport OK | {'status': 'OK', 'detail': None}

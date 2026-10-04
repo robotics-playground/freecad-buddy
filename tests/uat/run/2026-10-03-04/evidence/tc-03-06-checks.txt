@@ -1,0 +1,11 @@
+NOTE | Given build (5 elements, 5 Block pins): OK null
+PASS | Given ConstraintBed reports 5 geometry entries | count=5 types=['LineSegment', 'LineSegment', 'Circle', 'Circle', 'Point']
+FAIL | both calls return OK covering all 16 types | call1={"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[8].first geo_id 5 is outside the sketch (0..4, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File  || call2={"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[1] DistanceX with a first_pos also requires 'second' and 'second_pos'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\
+FAIL | first call's lowest returned constraint id is 1 | constraint_ids=None (Given pins hold ids [1, 2, 3, 4, 5])
+FAIL | read back ids run 1..16, no id=0 | ids=[1, 2, 3, 4, 5]
+FAIL | Radius reads {2.5 mm} and Angle reads {45 deg} | radius=[] angle=[]
+PASS | type Symmetry is a schema reject | {"_raw": "Input validation error: 'Symmetry' is not one of ['Coincident', 'Horizontal', 'Vertical', 'Parallel', 'Perpendicular', 'Tangent', 'Equal', 'Symmetric', 'PointOnObject', 'Block', 'Distance', 'DistanceX', 'DistanceY', 'Radius', 'Diameter', 'Angle']"}
+PASS | missing first is a schema reject | {"_raw": "Input validation error: 'first' is a required property"}
+PASS | first_pos 4 is a schema reject | {"_raw": "Input validation error: 4 is not one of [0, 1, 2, 3]"}
+FAIL | verify_sketch graded with constraint_count=16 | status=OK constraint_count=5 dof=0
+NOTE | fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

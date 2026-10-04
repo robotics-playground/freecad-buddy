@@ -1,0 +1,9 @@
+PASS | Given ClearanceHole verify_shape OK | {"status": "OK"}
+NOTE | objects before: ['ClearanceHole', 'HoleProfile', 'HoleProfile', 'PlateBody', 'PlatePad', 'PlatePad', 'PlatePad', 'PlateProfile', 'PlateProfile']
+PASS | occurrences 1 schema reject (minimum 2) | {"_raw": "Input validation error: 1 is less than the minimum of 2"}
+PASS | occurrences 0 schema reject | {"_raw": "Input validation error: 0 is less than the minimum of 2"}
+PASS | linear without direction refused by the if/then branch | {"_raw": "Input validation error: 'direction' is a required property"}
+PASS | polar without axis refused by the if/then branch | {"_raw": "Input validation error: 'axis' is a required property"}
+PASS | valid linear with direction and no axis OK (run on an equivalent plate) | {"status": "OK"}
+NOT RUN | occurrences 5000 -> INVALID_INPUT 'occurrences must be an integer between 2 and 1000' | NOT RUN: run rule caps pattern occurrences at 20 to protect FreeCAD's main thread. Code read: src/freecad_buddy/usecases/features.py:1324-1331 raises this ValidationError before any document access (_MAX_OCCURRENCES=1000 at :39)
+PASS | nothing created: same objects, none of OnePattern/ZeroPattern/NoDirection/NoAxis | ['ClearanceHole', 'HoleProfile', 'HoleProfile', 'PlateBody', 'PlatePad', 'PlatePad', 'PlatePad', 'PlateProfile', 'PlateProfile']

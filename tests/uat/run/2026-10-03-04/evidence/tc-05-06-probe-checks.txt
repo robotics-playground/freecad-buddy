@@ -1,0 +1,5 @@
+NOTE | body children: []
+NOTE | Body: status=OK volume=11224.247779607693
+NOTE | Pocket: status=OK volume=11224.247779607693
+NOTE | Pattern: status=OK volume=11224.247779607693
+NOTE | Body Tip="<PartDesign::Pocket>"

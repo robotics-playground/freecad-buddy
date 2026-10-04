@@ -1,0 +1,16 @@
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:J-GfAFVgsMx-RvM_xeVTjQ
+NOTE | roots ['Box']
+NOTE | edge sweep rerun exit 0; stderr copied to tc-09-21-edge.stderr.log
+NOTE | grep -c INVALID_INPUT = 7; grep -c ^Traceback = 0
+PASS | INVALID_INPUT envelope retains non-empty detail.data.traceback | 1555
+PASS | traceback length <= 4000 | 1555
+PASS | detail.data.exception == ValidationError | ValidationError
+PASS | INVALID_INPUT/TIMEOUT take logger.info (l.71) via _EXPECTED_CLIENT_STATUSES (l.28) | _EXPECTED_CLIENT_STATUSES = frozenset({"INVALID_INPUT", "TIMEOUT"})
+    if unexpected or status not in _EXPECTED_CLIENT_STATUSES:
+        sys.stderr.write(tb)
+    else:
+        logger.info("%s: %s", status, str(exc) or type(exc).__name__)
+PASS | stderr traceback only when status outside set or unexpected (l.68-69) | 
+PASS | unexpected fault: RECOMPUTE_ERROR from final except carries unexpected:true; INVALID_INPUT has no such key | {'status': 'RECOMPUTE_ERROR', 'msg': 'Directory does not exist', 'exception': 'OSError', 'unexpected': True}
+PASS | error channel readable: tracebacks far below call count | (0, 7)

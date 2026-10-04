@@ -1,0 +1,9 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given both labels listed | 2 open document(s): box-10-20-30, two-box-compound.
+PASS | GUI moved to B: active window title two-box-compound |  two-box-compound - FreeCAD 1.1.4
+PASS | handle string unchanged | fcb-doc:pcCp5rJ0wGL0Efm15EUpAQ
+PASS | re-read tree[0] Box identical to first | [[{'name': 'Box', 'label': 'Box', 'type': 'Part::Feature', 'visibility': False}], [{'name': 'Box', 'label': 'Box', 'type': 'Part::Feature', 'visibility': False}]]
+PASS | re-read structured_content equal field for field | equal
+PASS | B tree[0] TwoBoxCompound | [{'name': 'TwoBoxCompound', 'label': 'TwoBoxCompound', 'type': 'Part::Feature', 'visibility': False}]
+PASS | B volume 2000, counts.solids 2, com null | {'volume': 1999.9999999999995, 'counts': {'faces': 12, 'edges': 24, 'vertices': 16, 'solids': 2}, 'com': None}
+PASS | B view_fit_viewport OK | {'status': 'OK', 'detail': None}

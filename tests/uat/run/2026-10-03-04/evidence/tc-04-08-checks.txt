@@ -1,0 +1,10 @@
+PASS | Given ThreadProfile dof=0 | {"status": "OK"}
+PASS | Given ThreadType and HoleCutType enumerations known (query_capabilities) | {"ThreadType": ["None", "ISOMetricProfile", "ISOMetricFineProfile", "UNC", "UNF", "UNEF", "NPT", "BSP", "BSW", "BSF", "ISOTyre"], "HoleCutType": ["None", "Counterbore", "Countersink", "Counterdrill"], "DepthType": ["Dimension", "ThroughAll"]}
+PASS | threaded hole OK rolled_back=false | {"status": "OK"}
+PASS | ThreadType=ISOMetricProfile and HoleCutType=Counterbore | {'ThreadType': 'ISOMetricProfile', 'HoleCutType': 'Counterbore'}
+PASS | Threaded=true | True
+PASS | diameter + thread_type INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "'diameter' cannot be combined with thread_type='ISOMetricProfile': FreeCAD sizes a threaded hole from its ThreadSize table entry, so the requested diameter is stored but never reaches the geometry. Drop 'diameter', or use th
+PASS | cut_type outside the re-populated set INVALID_INPUT 'is not one of' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "cut_type 'Spotface' is not one of ['None', 'Counterbore', 'Countersink', 'Counterdrill', 'DIN 7984', 'ISO 10642', 'ISO 14583', 'ISO 14583 (partial)', 'ISO 2009', 'ISO 4762', 'ISO 4762 + 7089', 'ISO 7046']", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  F
+PASS | unknown thread_type INVALID_INPUT, no snapshot_path | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "thread_type 'ISOMetricFake' is not one of ['None', 'ISOMetricProfile', 'ISOMetricFineProfile', 'UNC', 'UNF', 'UNEF', 'NPT', 'BSP', 'BSW', 'BSF', 'ISOTyre']", "data": {"exception": "ValidationError", "traceback": "Traceback (
+NOTE | new temp snapshots during refusals: []
+PASS | verify_shape OK | {"status": "OK"}

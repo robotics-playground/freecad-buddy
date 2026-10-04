@@ -1,0 +1,21 @@
+PASS | Given session token held in memory (masked) | HaIW…(len 43)
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-16-before.png
+NOTE | statuses: [('query_capabilities', 'OK'), ('query_tree_summary', 'OK'), ('query_object', 'OK'), ('query_mass_properties', 'OK'), ('query_placement', 'OK'), ('query_dependencies', 'OK'), ('verify_shape', 'OK'), ('verify_recompute', 'OK'), ('query_screenshot', 'OK'), ('export_step', 'OK'), ('verify_export_step', 'OK'), ('preview_dry_run', 'OK'), ('feature_body_create', 'OK'), ('document_close', 'OK')]
+NOTE | query_screenshot render: {"available": true, "resource_link": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_k57jdacr.png", "reason": null, "dirty_document": false, "empty_scene": false}
+NOTE | stop proxy for a direct rpc_hello -> listener pid 31968 parent 35512 (pythonw) | terminate 31968 -> True | terminate 35512 -> True | after: 0 :8765 listeners | 
+NOTE | proxy restart: proxy listening
+PASS | Then no envelope carries the token (tc-11-16-e2e-report.json) | verdict only
+PASS | Then no render artifact carries it (tc-11-16-*.png) | ['tc-11-16-before.png', 'tc-11-16-render.png']
+PASS | Then the audit log does not carry it (scenario slice + whole inherited audit file) | {'slice_bytes': 6509, 'file': 'D:\\Work\\Personal\\Sources\\freecad-buddy\\_automation\\uat\\audit.jsonl'}
+PASS | Then addon.log does not carry it | 
+PASS | Then mcp-proxy.log does not carry it | 
+PASS | Then rpc_hello result has exactly keys contract_version, freecad_version, capabilities | ['capabilities', 'contract_version', 'freecad_version']
+PASS | Then query_capabilities structured_content has no value equal to the token | verdict only
+PASS | Then (extra) no file in the run evidence folder contains the live token | []
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-16-after.png
+PASS | Then (extra) after.png does not carry the token bytes | 

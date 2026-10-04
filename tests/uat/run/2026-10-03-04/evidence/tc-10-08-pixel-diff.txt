@@ -1,0 +1,3 @@
+tc-10-07-before.png tc-10-07-after.png (1568, 1219) (1568, 1219) diff bbox None nonzero px 0
+tc-10-08-before.png tc-10-08-after.png (1568, 1219) (1568, 1219) diff bbox None nonzero px 0
+tc-10-08-after.png tc-10-09-before.png (1568, 1219) (1568, 1219) diff bbox None nonzero px 0

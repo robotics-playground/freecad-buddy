@@ -1,0 +1,11 @@
+PASS | Given read-only target exists | {'size': 2215, 'sha': '94969ac4ff909a583c66f6c8091e828c905b6936805000b705f34c0273523136'}
+PASS | Given no document open | 0 open document(s).
+FAIL | read-only save refused, INVALID_INPUT or WORKER_CRASHED | ['RECOMPUTE_ERROR', 'Unable to save document because file is marked as read-only or write permission is not available.']
+PASS | read-only file byte-identical | True
+FAIL | missing-dir save refused (closed-set non-OK) and no dir created | ['OK', None, True]
+FAIL | dir-as-path save refused (closed-set non-OK); evidence still a dir | ['OK', None]
+PASS | source golden untouched | 
+PASS | handle usable: tree[0] Cylinder | [{'name': 'Cylinder', 'label': 'Cylinder', 'type': 'Part::Feature', 'visibility': False}]
+PASS | later writable save OK saved:true | ['OK', {'doc': 'fcb-doc:WKL6KnZDh4N_vzFev86umQ', 'name': 'cylinder_r5_h20', 'saved': True}]
+PASS | query_capabilities OK | OK
+PASS | cylinder view_fit_viewport OK | {'status': 'OK', 'detail': None}

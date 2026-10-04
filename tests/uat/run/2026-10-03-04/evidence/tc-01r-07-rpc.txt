@@ -1,0 +1,32 @@
+== 'token mismatch; closing' lines in addon.log before: 0
+== When (proxy stopped first, AD-26)
+listener pid 37660 parent 29812 (pythonw)
+terminate 37660 -> True
+terminate 29812 -> True
+after: 0 :8765 listeners
+-- wrong token + contract_version 99
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: {"jsonrpc": "2.0", "id": 7, "method": "rpc_hello", "params": {"token": "not-the-token", "contract_version": "99"}}
+frame1: {"jsonrpc": "2.0", "id": 7, "error": {"code": -32000, "message": "auth failed"}}
+frame2: ''
+elapsed 0.0
+-- token omitted + contract_version 99
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: {"jsonrpc": "2.0", "id": 7, "method": "rpc_hello", "params": {"contract_version": "99"}}
+frame1: {"jsonrpc": "2.0", "id": 7, "error": {"code": -32000, "message": "auth failed"}}
+frame2: ''
+elapsed 0.0
+-- addon.log 'token mismatch; closing' lines (all; this session started 15:56)
+2026-10-04 16:02:10,951 WARNING freecad_buddy.rpc_listener: token mismatch; closing
+2026-10-04 16:02:11,028 WARNING freecad_buddy.rpc_listener: token mismatch; closing
+-- listener alive? authenticated hello
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.0
+restarted by hand: .venv/Scripts/pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       29832
+== query_capabilities via restarted proxy
+ "status": "OK",

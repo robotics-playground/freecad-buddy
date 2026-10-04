@@ -1,0 +1,13 @@
+PASS | Given unwritable target: a directory used as the log file path | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-19-unwritable_dir
+NOTE | cleanup previous scenario: document_close tc-09-18-fixture -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:atFt9Ht5zTCZbJ_REGol4w
+NOTE | roots ['Box']
+PASS | mutating call returns a real envelope with closed-set status | ('OK', '', '')
+PASS | document_create still OK (audit sink does not turn it into an error) | OK
+NOTE | document_close under unwritable sink -> OK 
+PASS | read-only query_capabilities OK | OK
+PASS | audit write failure visible in server stderr | ['2026-10-04 11:43:40,156 INFO freecad_buddy.hosts.headless: audit log: D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-03-04\\evidence\\tc-09-19-unwritable_dir', '2026-10-04 11:43:40,176 ERROR freecad_buddy.mcp_server: audit write failed', '  File "D:\\Work\\Personal\\Sources\\freecad-buddy\\src\\freecad_buddy\\adapters\\mcp_server.py", line 233, in _audit_safe', '  File "D:\\Work\\Personal\\Sources\\freecad-buddy\\src\\freecad_buddy\\adapters\\audit_log.py", line 84, in before', '  File "D:\\Work\\Personal\\Sources\\freecad-buddy\\src\\freecad_buddy\\adapters\\audit_log.py", line 46, in _write', "PermissionError: [Errno 13] Permission denied: 'D:\\\\Work\\\\Personal\\\\Sources\\\\freecad-buddy\\\\tests\\\\uat\\\\run\\\\2026-10-03-04\\\\evidence\\\\tc-09-19-unwritable_dir'"]
+PASS | server survives: tools/list answered after the calls | 45
+NOTE | writable audit records: [('?', 'document_create'), ('?', 'document_create'), ('?', 'document_close'), ('?', 'document_close')]; keys: ['actor', 'event', 'fingerprint_before', 'params_digest', 'schema', 'tool', 'ts']
+PASS | writable path restores auditing: before and after records | {'n': 4, 'phases': [('?', 'document_create'), ('?', 'document_create'), ('?', 'document_close'), ('?', 'document_close')]}

@@ -1,0 +1,12 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given no stale preview TempDocs | []
+PASS | document_save -> "not a previewable mutation tool: 'document_save' (previewable: <sorted list>" | not a previewable mutation tool: 'document_save' (previewable: feature_body_create, feature_chamfer, feature_datum, feature_fillet, feature_hole, feature_mirror, feature_pad, feature_pattern, feature_pocket, feature_revolve, feature_set_parameters, sketch_add_constraint, sketch_add_external_geometry, sketch_add_geometry, sketch_create, sketch_remove_constraint, sketch_remove_geometry, sketch_set_d
+PASS | previewable list is exactly the 19 gated tools | {'listed': ['feature_body_create', 'feature_chamfer', 'feature_datum', 'feature_fillet', 'feature_hole', 'feature_mirror', 'feature_pad', 'feature_pattern', 'feature_pocket', 'feature_revolve', 'feature_set_parameters', 'sketch_add_constraint', 'sketch_add_external_geometry', 'sketch_add_geometry', 'sketch_create', 'sketch_remove_constraint', 'sketch_remove_geometry', 'sketch_set_datum', 'sketch_toggle_construction'], 'extra': [], 'missing': []}
+PASS | debug_exec refused the same way | not a previewable mutation tool: 'debug_exec' (previewable: feature_body_create, feature_chamfer, feature_datum, feature_fillet, feature_hole, feature_mirror, feature_pad, feature_pattern, feature_poc
+PASS | no_such_tool -> same message form with its own name | not a previewable mutation tool: 'no_such_tool' (previewable: feature_body_create, feature_chamfer, feature_datum, feature_fillet, feature_hole, feature_mirror, feature_pad, feature_pattern, feature_p
+FAIL | missing tool -> 'preview_dry_run requires operation.tool' | Input validation error: 'tool' is a required property
+FAIL | non-object args -> 'operation.args must be an object' | Input validation error: 'not an object' is not of type 'object'
+PASS | no FCB_TMP_prev_ dir after the five calls | []
+PASS | missing operation rejected by the schema (operation is required) | Input validation error: 'operation' is a required property
+PASS | no save file written by the refused document_save preview | False
+PASS | tree unchanged: Body + Sketch only | ['Body', 'Sketch']

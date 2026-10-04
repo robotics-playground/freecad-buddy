@@ -1,0 +1,4 @@
+--- grep entry.py
+rc=1
+--- grep proxy log
+0

@@ -1,0 +1,12 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given scratch document_create OK | fcb-doc:OXrOCKFlRBr0jNmjycZg-Q
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given golden open OK | fcb-doc:azoG7Ne5f-m8ITojZTbEng
+PASS | long label -> real envelope OK or INVALID_INPUT | {"status": "OK"}
+PASS | accepted label not truncated: document_list label length == 4096 | {'len': 4096, 'keys': ['doc', 'name', 'label', 'transient'], 'name_len': 4096}
+PASS | long nonexistent path -> INVALID_INPUT naming the path | {'status': 'INVALID_INPUT', 'msg_len': 16618, 'msg_head': "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-09-bbbbbbbbb"}
+PASS | long object name -> INVALID_INPUT 'unknown object: ccc...' | {'status': 'INVALID_INPUT', 'msg_len': 65552, 'head': 'unknown object: cccccccccccccccccccccccc'}
+PASS | detail.data.traceback <= 4000 chars | [4000, 4000]
+PASS | server survives: query_capabilities OK | OK
+PASS | no handshake/frame-size error in addon log | []
+NOTE | document_list after: ['TC0909Scratch..13', 'box-10-20-30..12', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa..4096']

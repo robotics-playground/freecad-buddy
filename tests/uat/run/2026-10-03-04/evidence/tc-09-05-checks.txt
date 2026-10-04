@@ -1,0 +1,15 @@
+NOTE | tool_surface.json regenerated from tools/list: 45 tools
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:PN1NDCmHdrMKzrL-aEbwZA
+NOTE | roots ['Box']
+PASS | surface command prints [] (every schema additionalProperties false) | []
+PASS | verify_shape + unknown key -> protocol rejection | Input validation error: Additional properties are not allowed ('strict' was unexpected)
+PASS | query_tree_summary + unknown key -> protocol rejection | Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)
+PASS | export_step + unknown key -> protocol rejection | Input validation error: Additional properties are not allowed ('overwrite' was unexpected)
+PASS | document_close + unknown key -> protocol rejection | Input validation error: Additional properties are not allowed ('force' was unexpected)
+PASS | query_capabilities + unknown key -> protocol rejection | Input validation error: Additional properties are not allowed ('verbose' was unexpected)
+PASS | document_close rejected: document_list still names <H> | ['fcb-doc:PN1NDCmHdrMKzrL-aEbwZA']
+PASS | query_capabilities empty-props schema still rejects extras | {'addProps': False, 'props': [], 'required': []}
+PASS | none of the five returned OK | ['SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT']
+PASS | (extra) export_step with unknown key wrote nothing | 

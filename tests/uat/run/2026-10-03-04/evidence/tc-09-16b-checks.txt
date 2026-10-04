@@ -1,0 +1,1 @@
+PASS | extra: absolute existing AGENTS.md (not FCStd) refused, no new handle | ('INVALID_INPUT', "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/AGENTS.md': Invalid project file D:/Work/Personal/Sources/freecad-buddy/AGENTS.md: ios_base::failbit set: iostream stream error\n", ['fcb-doc:bGuWmzkRCzpPfmeuroOWeA'], ['fcb-doc:bGuWmzkRCzpPfmeuroOWeA'])

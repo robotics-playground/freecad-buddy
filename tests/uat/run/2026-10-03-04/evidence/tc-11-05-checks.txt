@@ -1,0 +1,15 @@
+PASS | Given listener LISTENING on discovery port | ['TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732']
+PASS | Given LAN IPv4 known | 192.168.50.13
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-05-before.png
+NOTE | listener port from discovery rpc-32732.json: 50792; token ucUx…(len 43)
+PASS | Then netstat local address is 127.0.0.1:<port> | ['TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732']
+PASS | Then discovery host is 127.0.0.1 | 127.0.0.1
+PASS | Then LAN-IP connect refused or times out with no handshake | {'connected': False, 'error': 'ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it'}
+NOTE | stop proxy (AD-26 single client holds the listener) -> listener pid 4856 parent 34388 (pythonw) | terminate 4856 -> True | terminate 34388 -> True | after: 0 :8765 listeners | 
+PASS | Then loopback connect completes rpc_hello, contract_version "1" | {'keys': ['capabilities', 'contract_version', 'freecad_version'], 'contract_version': '1'}
+PASS | Then exactly one LISTENING line for the port | ['TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732']
+NOTE | script stopped at proxy-restart log rename (harness PermissionError, proxy restarted OK); closing visual run by tc11close.py -> tc-11-05-close-checks.txt

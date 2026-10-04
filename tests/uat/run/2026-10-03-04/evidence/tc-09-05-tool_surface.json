@@ -1,0 +1,613 @@
+{
+ "document_create": {
+  "addProps": false,
+  "props": [
+   "label",
+   "path"
+  ],
+  "required": [
+   "label"
+  ]
+ },
+ "document_open": {
+  "addProps": false,
+  "props": [
+   "path"
+  ],
+  "required": [
+   "path"
+  ]
+ },
+ "document_save": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "path"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "document_close": {
+  "addProps": false,
+  "props": [
+   "doc"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "document_recompute": {
+  "addProps": false,
+  "props": [
+   "doc"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "document_undo": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "expect_fingerprint"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "document_list": {
+  "addProps": false,
+  "props": [],
+  "required": []
+ },
+ "query_capabilities": {
+  "addProps": false,
+  "props": [],
+  "required": []
+ },
+ "query_screenshot": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "view"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "view_fit_viewport": {
+  "addProps": false,
+  "props": [
+   "doc"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "query_tree_summary": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "depth",
+   "root",
+   "filters"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "query_object": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "object"
+  ],
+  "required": [
+   "doc",
+   "object"
+  ]
+ },
+ "query_mass_properties": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "object"
+  ],
+  "required": [
+   "doc",
+   "object"
+  ]
+ },
+ "query_dependencies": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "object",
+   "max_edges"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "query_sketch_info": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch"
+  ],
+  "required": [
+   "doc",
+   "sketch"
+  ]
+ },
+ "query_placement": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "object"
+  ],
+  "required": [
+   "doc",
+   "object"
+  ]
+ },
+ "verify_shape": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "object",
+   "checks",
+   "anchor_frame"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "verify_sketch": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch"
+  ],
+  "required": [
+   "doc",
+   "sketch"
+  ]
+ },
+ "verify_recompute": {
+  "addProps": false,
+  "props": [
+   "doc"
+  ],
+  "required": [
+   "doc"
+  ]
+ },
+ "export_step": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "path",
+   "objects",
+   "ap"
+  ],
+  "required": [
+   "doc",
+   "path"
+  ]
+ },
+ "export_stl": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "path",
+   "objects",
+   "linear",
+   "angular"
+  ],
+  "required": [
+   "doc",
+   "path"
+  ]
+ },
+ "export_3mf": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "path",
+   "objects",
+   "linear",
+   "angular"
+  ],
+  "required": [
+   "doc",
+   "path"
+  ]
+ },
+ "verify_export_step": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "export_id"
+  ],
+  "required": [
+   "doc",
+   "export_id"
+  ]
+ },
+ "verify_export_stl": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "export_id"
+  ],
+  "required": [
+   "doc",
+   "export_id"
+  ]
+ },
+ "verify_export_3mf": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "export_id"
+  ],
+  "required": [
+   "doc",
+   "export_id"
+  ]
+ },
+ "sketch_create": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "name",
+   "plane",
+   "face",
+   "body",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "name"
+  ]
+ },
+ "sketch_add_geometry": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "geometry",
+   "constraints",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "geometry"
+  ]
+ },
+ "sketch_remove_geometry": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "geo_ids",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "geo_ids"
+  ]
+ },
+ "sketch_add_constraint": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "constraints",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "constraints"
+  ]
+ },
+ "sketch_remove_constraint": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "constraints",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "constraints"
+  ]
+ },
+ "sketch_set_datum": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "constraint",
+   "value",
+   "sense",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "constraint"
+  ]
+ },
+ "sketch_toggle_construction": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "geo_ids",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "geo_ids"
+  ]
+ },
+ "sketch_add_external_geometry": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "sketch",
+   "edge",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "sketch",
+   "edge"
+  ]
+ },
+ "feature_pad": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "profile",
+   "name",
+   "length",
+   "second_length",
+   "up_to",
+   "up_to_face",
+   "reversed",
+   "midplane",
+   "taper_angle",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name"
+  ]
+ },
+ "feature_pocket": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "profile",
+   "name",
+   "length",
+   "second_length",
+   "up_to",
+   "up_to_face",
+   "reversed",
+   "midplane",
+   "taper_angle",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name"
+  ]
+ },
+ "feature_revolve": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "profile",
+   "name",
+   "axis",
+   "angle",
+   "second_angle",
+   "up_to",
+   "reversed",
+   "midplane",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name",
+   "axis"
+  ]
+ },
+ "feature_hole": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "profile",
+   "name",
+   "diameter",
+   "depth",
+   "depth_type",
+   "thread_type",
+   "cut_type",
+   "cut_diameter",
+   "cut_depth",
+   "reversed",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name"
+  ]
+ },
+ "feature_fillet": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "base",
+   "name",
+   "edges",
+   "radius",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "base",
+   "name",
+   "edges"
+  ]
+ },
+ "feature_chamfer": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "base",
+   "name",
+   "edges",
+   "size",
+   "second_size",
+   "angle",
+   "chamfer_type",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "base",
+   "name",
+   "edges"
+  ]
+ },
+ "feature_pattern": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "name",
+   "kind",
+   "originals",
+   "direction",
+   "axis",
+   "length",
+   "angle",
+   "offset",
+   "occurrences",
+   "mode",
+   "reversed",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "name",
+   "kind"
+  ]
+ },
+ "feature_mirror": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "name",
+   "mirror_plane",
+   "originals",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "name",
+   "mirror_plane"
+  ]
+ },
+ "feature_datum": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "body",
+   "name",
+   "kind",
+   "attachment",
+   "map_mode",
+   "offset",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "body",
+   "name",
+   "kind",
+   "attachment"
+  ]
+ },
+ "feature_body_create": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "name",
+   "base_feature",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "name"
+  ]
+ },
+ "feature_set_parameters": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "feature",
+   "parameters",
+   "confirm"
+  ],
+  "required": [
+   "doc",
+   "feature",
+   "parameters"
+  ]
+ },
+ "preview_dry_run": {
+  "addProps": false,
+  "props": [
+   "doc",
+   "operation",
+   "render",
+   "view"
+  ],
+  "required": [
+   "doc",
+   "operation"
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+PASS | Given target paths do not exist | 
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:bGuWmzkRCzpPfmeuroOWeA
+NOTE | roots ['Box']
+PASS | missing file -> non-OK | ('INVALID_INPUT', "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-16-nope-missing.FCStd': File 'D:/Work/Personal/Sourc")
+PASS | missing dir -> non-OK | ('INVALID_INPUT', "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-16-no_such_dir/x.FCStd': File 'D:/Work/Personal/Sour")
+PASS | empty path -> non-OK | ('INVALID_INPUT', "document_open requires a 'path'")
+PASS | README.md -> non-OK | ('INVALID_INPUT', "document_open failed for 'README.md': File 'README.md' does not exist!")
+PASS | missing file/dir/empty -> INVALID_INPUT envelope | ['INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT']
+PASS | each message contains the path sent | [('ce/tc-09-16-nope-missing.FCStd', "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-16-nope-miss"), ('e/tc-09-16-no_such_dir/x.FCStd', "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-16-no_such_d"), ('', "document_open requires a 'path'"), ('README.md', "document_open failed for 'README.md': File 'README.md' does not exist!")]
+PASS | README.md refused, document_list names no new handle | (['fcb-doc:bGuWmzkRCzpPfmeuroOWeA'], ['fcb-doc:bGuWmzkRCzpPfmeuroOWeA'])
+PASS | no structured_content.doc on any refused open | 
+PASS | edge report open_bad_path passed | [{'tool': 'open_bad_path', 'ok': True, 'status': 'INVALID_INPUT', 'detail': ''}]

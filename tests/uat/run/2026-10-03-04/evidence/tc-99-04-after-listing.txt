@@ -1,0 +1,62 @@
+--- ls -R appdata after 14:20:32
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/:
+addon.log
+mcp-proxy.log
+rpc-11924.json
+rpc-1444.json
+rpc-1456.json
+rpc-19588.json
+rpc-20096.json
+rpc-21148.json
+rpc-21164.json
+rpc-32380.json
+rpc-33492.json
+rpc-34240.json
+rpc-38812.json
+rpc-9756.json
+--- workdir after
+C:/Users/thuan/freecad-buddy-workdir:
+total 44
+drwxr-xr-x 1 thuan 197609 0 Sep 13 20:55 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:19 ../
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:20 tmp/
+
+C:/Users/thuan/freecad-buddy-workdir/tmp:
+total 40
+drwxr-xr-x 1 thuan 197609     0 Oct  4 14:20 ./
+drwxr-xr-x 1 thuan 197609     0 Sep 13 20:55 ../
+-rw-r--r-- 1 thuan 197609 34929 Oct  4 14:20 FCB_TMP_shot_zv_lnazj.png
+--- grep workdir constant
+src/freecad_buddy/usecases/documents.py:1:"""Document lifecycle operations, the opaque-handle registry, and the session workdir.
+src/freecad_buddy/usecases/documents.py:7:This module also owns the session workdir (AD-25): every file the bridge writes on its own
+src/freecad_buddy/usecases/documents.py:31:# -- session workdir (AD-25) ------------------------------------------------------------
+src/freecad_buddy/usecases/documents.py:33:_WORKDIR_ENV = "FREECAD_BUDDY_WORKDIR"
+src/freecad_buddy/usecases/documents.py:34:_DEFAULT_WORKDIR = "freecad-buddy-workdir"
+src/freecad_buddy/usecases/documents.py:37:def workdir_root() -> Path:
+src/freecad_buddy/usecases/documents.py:38:    """The session workdir root, from ``FREECAD_BUDDY_WORKDIR`` or a cwd-relative default.
+src/freecad_buddy/usecases/documents.py:43:    return Path(os.environ.get(_WORKDIR_ENV, _DEFAULT_WORKDIR))
+src/freecad_buddy/usecases/documents.py:47:    """The session temp directory (``<workdir>/tmp``), created on demand.
+src/freecad_buddy/usecases/documents.py:51:    file that cannot be placed inside the workdir must not silently fall back to the OS temp
+src/freecad_buddy/usecases/documents.py:54:    path = workdir_root() / "tmp"
+src/freecad_buddy/usecases/documents.py:60:    """Remove the previous session's temp files from ``<workdir>/tmp``; return the count removed.
+src/freecad_buddy/usecases/documents.py:63:    read when the call that returned it completes. The scope is exactly ``<workdir>/tmp`` — the OS
+src/freecad_buddy/usecases/documents.py:67:    level deep, so no path outside the workdir can be reached. An in-memory FreeCAD document
+src/freecad_buddy/usecases/documents.py:72:    of the previous session's leftovers alive, and an unreadable workdir must not stop a host from
+src/freecad_buddy/usecases/documents.py:75:    root = workdir_root() / "tmp"
+src/freecad_buddy/usecases/preview.py:318:    The directory is minted inside the session workdir (AD-25) so a cleanup that fails leaves
+src/freecad_buddy/usecases/transaction.py:97:    The private directory is minted inside the session workdir (AD-25) so a cleanup that fails
+src/freecad_buddy/usecases/transaction.py:113:    session workdir, so the next session's sweep reaches what this call could not remove — an
+--- repo-root freecad-buddy-workdir (cwd-relative default from other hosts)
+freecad-buddy-workdir:
+total 12
+drwxr-xr-x 1 thuan 197609 0 Oct  3 14:09 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  3 23:24 ../
+drwxr-xr-x 1 thuan 197609 0 Oct  4 12:23 tmp/
+
+freecad-buddy-workdir/tmp:
+total 448
+drwxr-xr-x 1 thuan 197609      0 Oct  4 12:23 ./
+drwxr-xr-x 1 thuan 197609      0 Oct  3 14:09 ../
+--- audit tail
+{"actor": "operator", "doc": {"handle": "fcb-doc:BYDhIGe8bGhOM4RYevP_Dw"}, "event": "mutation", "fingerprint_before": null, "params_digest": "ffeda97850a74738584106208407866725aa8c0a2b9b5a2ca01c94dc841389c0", "schema": "fcb.audit-record/1", "tool": "export_step", "ts": "2026-10-04T07:20:19.945239+00:00"}
+{"actor": "operator", "doc": {"handle": "fcb-doc:BYDhIGe8bGhOM4RYevP_Dw"}, "event": "mutation", "fingerprint_after": null, "fingerprint_before": null, "params_digest": "ffeda97850a74738584106208407866725aa8c0a2b9b5a2ca01c94dc841389c0", "rollback": null, "schema": "fcb.audit-record/1", "tool": "export_step", "ts": "2026-10-04T07:20:19.963772+00:00", "verify_verdict": "OK"}

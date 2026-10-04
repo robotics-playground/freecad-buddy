@@ -1,0 +1,39 @@
+== stop proxy only (AD-26)
+listener pid 37048 parent 37080 (python)
+terminate 37048 -> True
+terminate 37080 -> True
+after: 0 :8765 listeners
+== attempt 1: query_capabilities as first frame
+discovery file: rpc-33184.json pid 33184 port 59314
+sent: {"jsonrpc": "2.0", "id": 3, "method": "query_capabilities", "params": {}}
+frame1: {"jsonrpc": "2.0", "id": 3, "error": {"code": -32002, "message": "handshake required"}}
+frame2: ''
+elapsed 0.0
+== attempt 2: 'not json' first frame
+discovery file: rpc-33184.json pid 33184 port 59314
+sent: not json
+frame1: {"jsonrpc": "2.0", "id": null, "error": {"code": -32002, "message": "handshake required"}}
+frame2: ''
+elapsed 0.0
+== new addon.log lines
+2026-10-03 23:37:56,212 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 243, in _serve_conn
+    line = reader.read_line()
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 78, in read_line
+    chunk = self._conn.recv(65536)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-10-03 23:37:58,522 WARNING freecad_buddy.rpc_listener: first frame was not rpc_hello; closing
+== grep first frame
+2026-10-03 23:37:58,522 WARNING freecad_buddy.rpc_listener: first frame was not rpc_hello; closing
+== listener survives: authenticated hello
+discovery file: rpc-33184.json pid 33184 port 59314
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.02
+== query_capabilities after refusals (restarted proxy)
+ "status": "OK",

@@ -1,0 +1,2 @@
+== Fit All toolbar
+{"error": "no Button labelled 'Fit All' in snapshot", "count": 120}

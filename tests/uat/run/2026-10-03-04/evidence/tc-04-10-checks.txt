@@ -1,0 +1,14 @@
+PASS | [main] Given PlatePad vol 12000 | 12000.0
+PASS | Given ChamferType enumeration known | ['Equal distance', 'Two distances', 'Distance and Angle']
+NOTE | step 3 literal chamfer_type 'Distance and angle' -> {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "chamfer_type 'Distance and angle' is not one of ['Equal distance', 'Two distances', 'Distance and Angle']", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan
+NOTE | substitute this build's member 'Distance and Angle'. Oracle: TwoSizeChamfer Edge5 is the 2.24 mm bottom edge of the new bevel face, Edge17 the vertical corner at (60,40); the main model uses Edge17, the literal Edge5 runs on a copy
+PASS | all three chamfers commit OK rolled_back=false | ['{"status": "OK"}', '{"status": "OK"}', '{"status": "OK"}']
+PASS | EqualChamfer vol 11994.4 | 11994.375
+PASS | each chamfer adds exactly one face | [6, 7, 8, 9]
+PASS | chamfer_type Bevel INVALID_INPUT 'chamfer_type 'Bevel' is not one of' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "chamfer_type 'Bevel' is not one of ['Equal distance', 'Two distances', 'Distance and Angle']", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Ro
+PASS | angle 200 INVALID_INPUT 'angle must be in' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "angle must be in (0.0, 180.0) degrees, got 200.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\
+PASS | size 0 INVALID_INPUT 'size must be positive' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "size must be positive, got 0.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\ada
+NOTE | new temp snapshots during refusals: []
+PASS | verify_shape AngleChamfer OK solid_count=1 | {"status": "OK"}
+PASS | [copy] Given PlatePad vol 12000 | 12000.0
+NOTE | literal Edge5 + 'Distance and Angle' on the copy -> {"status": "OK"} summary={"solid_count": 1, "face_count": 9, "edge_count": 21, "vertex_count": 14, "is_valid": true, "volume": 11984.86851020523, "area": 5782.5473138934585, "bbox": [60.0, 40.0, 5.0]} explanation=None

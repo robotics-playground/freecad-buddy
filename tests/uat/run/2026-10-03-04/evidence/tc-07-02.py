@@ -1,0 +1,20 @@
+import asyncio, json, importlib.util
+spec = importlib.util.spec_from_file_location("lib", "tc-07-lib.py"); lib = importlib.util.module_from_spec(spec); spec.loader.exec_module(lib)
+async def main():
+    async with lib.Session("tc-07-02") as s:
+        dl = await s.call("document_list", {})
+        s.check("given: cylinder not open", not any("cylinder" in json.dumps(d) for d in lib.sc(dl)["documents"]), lib.sc(dl))
+        H, OBJ = await s.open(lib.GOLD + "/cylinder-r5-h20.FCStd"); print(H, OBJ)
+        s.check("given: open + object named", bool(H and OBJ), [H, OBJ])
+        v = await s.call("verify_shape", {"doc": H, "object": OBJ})
+        c = lib.checks(v)
+        s.check("status OK", v["status"] == "OK", v["status"])
+        s.check("exactly five fact ids", sorted(c) == sorted(["shape.volume", "shape.bbox", "shape.solid_count", "shape.valid", "shape.watertight"]) and len(lib.sc(v)["checks"]) == 5, list(c))
+        s.check("no check has 'expected'", not any("expected" in x for x in c.values()), [list(x) for x in c.values()])
+        s.check("all passed true", all(x["passed"] is True for x in c.values()), [x["passed"] for x in c.values()])
+        vol = c.get("shape.volume", {}).get("measured")
+        s.check("volume within 0.001 of 1570.7963", isinstance(vol, (int, float)) and abs(vol - 1570.7963) <= 0.001, vol)
+        v2 = await s.call("verify_shape", {"doc": H, "object": OBJ, "checks": [{"fn": "expect_volume", "expect": 1.0}]})
+        s.check("expect_volume 1.0 -> SPEC_FAILED", v2.get("status") == "SPEC_FAILED", [v2.get("status"), v2.get("detail"), v2.get("_raw")])
+        open("tc-07-02-handle.txt", "w").write(H)
+asyncio.run(main())

@@ -1,0 +1,11 @@
+PASS | Given document_create Bracket returns a handle | fcb-doc:7zXEuS75u6eaWfpCZ3ix_A
+PASS | Given golden box opens, volume=6000.0 | doc=fcb-doc:WQtd_xn1nQy916E_UsFXhA vol=6000.0
+PASS | step 1 empty Body OK rolled_back=false | {"status": "OK"}
+PASS | empty Body has no Tip | Tip=null
+FAIL | PlateBody has an App::Origin child with planes/lines/point | {"doc": "fcb-doc:7zXEuS75u6eaWfpCZ3ix_A", "total_objects": 9, "returned_nodes": 1, "depth": 3, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "PlateBody", "label": "PlateBody", "type": "PartDesign::Body", "visibility": true, "children_count": 1}]}
+PASS | step 2 adoption OK rolled_back=false | {"status": "OK"}
+PASS | AdoptBody volume=6000.0 within 0.1% | 6000.0
+PASS | verify_shape AdoptBody OK | {"status": "OK"}
+PASS | double adoption INVALID_INPUT 'is already adopted by a Body' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "base_feature Box is already adopted by a Body", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\fre
+NOTE | shapeless base fixture: sketch_create LooseSketch -> OK
+PASS | shapeless base INVALID_INPUT 'carries no shape to adopt' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "base_feature LooseSketch carries no shape to adopt", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.

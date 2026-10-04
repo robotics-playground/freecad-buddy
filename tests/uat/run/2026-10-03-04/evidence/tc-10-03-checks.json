@@ -1,0 +1,19 @@
+{
+ "A_hello": true,
+ "A_long_read": {
+  "status": "OK",
+  "seconds": 0.302
+ },
+ "B_connect": "ok",
+ "B_recv_while_A": "timed out after 5 s, 0 bytes",
+ "B_hello_after_A_close": {
+  "seconds_after_A_close": 0.0,
+  "seconds_since_B_hello": 5.013,
+  "contract_version": "1",
+  "error": null
+ },
+ "B_ever_minus_32000": false,
+ "B_document_list": "OK",
+ "addon_log_new_lines": 0,
+ "connection_handler_crashed": []
+}

@@ -1,0 +1,12 @@
+== no 3D view on the Start page (no Fit All button in UIA tree: 129 elements). Open an empty document through FreeCAD's own File>New (GUI only, no MCP) to get a 3D view
+{"refusal":{"code":"menu_path_unavailable","message":"menupathsegment1wasnotfound"},"status":"refused"}
+[{"window_id": 661488, "title": "FreeCAD", "bounds": {"height": 549, "width": 300, "x": 9, "y": 64}, "is_on_screen": true}, {"window_id": 3872822, "title": "FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]
+== Fit All toolbar by element_token
+{"error": "no Fit All button", "element_count": 136}
+{"file": "tc-01r-13-after.png", "exists": true, "error": null}
+== invoke_menu File>New refused (menu_path_unavailable; live label is 'New Document') and left the File popup 661488 open; click 'New Document' in that popup by element_token (background UIA)
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+[{"window_id": 661488, "title": "FreeCAD", "bounds": {"height": 549, "width": 300, "x": 9, "y": 64}, "is_on_screen": true}, {"window_id": 3872822, "title": " Unnamed - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]
+== Fit All toolbar by element_token
+{"clicked": "Fit All", "effect": "unverifiable", "route": "accessibility"}
+{"file": "tc-01r-13-after.png", "exists": true, "error": null}

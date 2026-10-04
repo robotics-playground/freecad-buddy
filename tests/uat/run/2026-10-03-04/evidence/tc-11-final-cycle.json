@@ -1,0 +1,25 @@
+{
+ "quit": {
+  "old_pid": 35916,
+  "exit_menu": {
+   "effect": "unverifiable",
+   "error": null
+  },
+  "exited": true,
+  "discovery_file_after_quit_exists": false,
+  "orphan_proxy_stop": "listener pid 37488 parent 34876 (pythonw) | terminate 37488 -> True | terminate 34876 -> True | after: 0 :8765 listeners | ",
+  "port_8765_free": true
+ },
+ "relaunch": {
+  "launch_stdout": "tag=tc-11-final pid=34228 window_id=9640064 bridge_wait=4s\n  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       3236\n--- new addon.log lines ---\n2026-10-04 12:50:37,776 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)\n2026-10-04 12:50:37,999 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:59606\n2026-10-04 12:50:38,306 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 28952) -> http://127.0.0.1:8765/mcp; proxy log: C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\mcp-proxy.log\n",
+  "fc": {
+   "pid": 34228,
+   "window_id": 9640064,
+   "proxy_listener_pid": 3236,
+   "proxy_spawned_pid": 28952,
+   "freecad_version": "1.1.4"
+  },
+  "head": "bece7ac",
+  "src_dirty": false
+ }
+}

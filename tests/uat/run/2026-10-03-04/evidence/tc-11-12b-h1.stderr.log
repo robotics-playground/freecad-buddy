@@ -1,0 +1,5 @@
+2026-10-04 12:40:55,962 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 12:40:56,144 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\_automation\uat\audit.jsonl
+2026-10-04 12:40:56,144 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-04 12:40:56,905 INFO freecad_buddy.dispatch: INVALID_INPUT: geometry[0] start and end are the same point
+2026-10-04 12:40:56,930 INFO freecad_buddy.dispatch: INVALID_INPUT: geometry[0] radius must be positive, got 0.0

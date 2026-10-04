@@ -1,0 +1,386 @@
+[
+ {
+  "id": "TC-04-00-preconditions",
+  "priority": "n/a",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-00.py",
+   "tc-04-00-mcp.jsonl",
+   "tc-04-00-checks.txt",
+   "tc-04-00-schemas.json",
+   "tc-04-final-relaunch.txt",
+   "tc-04-final-posture.txt",
+   "tc-04-final-state.png",
+   "tc04lib.py",
+   "tc04zoom.py",
+   "tc-04-result.py"
+  ],
+  "note": "File preconditions. Proxy :8765 LISTENING. tools/list = 45 (TC says 44; RUN-CONTEXT 45 - stale TC). PartDesign available (feature_body_create ProbeBody OK). Auto-approve: FreeCAD launched through tc-03-fc-autoapprove.cmd (FREECAD_BUDDY_AUTO_APPROVE=1) via cua-driver launch_app, pid 35956; the addon.log banner the TC names is NOT written on the H2 path (it lives in adapters/mcp_server.py:162, the inline host), so the posture was proven by a mutation without confirm committing OK (tc-04-00-checks.txt). cua-driver get_window_state returns the window tree incl. the GL view. Evidence dir writable. Snapshot-dir note: the TC checks $TEMP/FCB_TMP_snap_*, which holds 10 stale dirs from 2026-09-22; the bridge writes snapshots to <FreeCAD cwd>/freecad-buddy-workdir/tmp (C:/Users/thuan/freecad-buddy-workdir/tmp), so every snapshot check compared before/after sets of both locations. Final: clean relaunch pid 2032 window 14751814 (launch.sh, no extra env), confirm gate active again (feature_body_create without confirm -> INVALID_INPUT 'this mutation requires a confirm; ...'), 0 documents open."
+ },
+ {
+  "id": "TC-04-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-01.py",
+   "tc-04-01-mcp.jsonl",
+   "tc-04-01-checks.txt",
+   "tc-04-01-tree-origin.json",
+   "tc-04-01-after.png",
+   "tc-04-01-cleanup.txt"
+  ],
+  "note": "All Thens pass. Empty PlateBody OK, Tip=null. Origin: default query_tree_summary excludes App::Origin/Plane/Line/Point (filters_applied shows it), so the TC literal 'depth 3 shows App::Origin' fails as written; with filters.exclude_types=[] the tree shows Origin with X/Y/Z_Axis, XY/XZ/YZ_Plane, Origin001 (tc-04-01-tree-origin.json) - test-case literal stale, behaviour correct. Adopt OK vol 6000.0, verify_shape OK, double adoption 'base_feature Box is already adopted by a Body', sketch base 'base_feature LooseSketch carries no shape to adopt'. view_fit_viewport OK. Visual: one tall 10x20x30 box wholly in view, Box hidden under AdoptBody; PlateBody is in the other doc (Bracket) and contributes nothing."
+ },
+ {
+  "id": "TC-04-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-02.py",
+   "tc-04-02-mcp.jsonl",
+   "tc-04-02-checks.txt",
+   "tc-04-02-after.png",
+   "tc-04-02-cleanup.txt"
+  ],
+  "note": "All Thens pass: OK rolled_back=false, vol 6000.0, verify_shape OK, shape_summary solid_count=1 is_valid=true bbox [20,30,10] faces/edges/verts 6/12/8, feature_state body=BlockBody is_tip=true, query_object Type=Length, post_verify passed/recompute_clean/is_valid true tnp CLEAN. view_fit_viewport OK. Visual: one box, footprint clearly wider than height, wholly in viewport (the floating Tasks 'Start Part' panel overlaps a small part of the far top edge), no second solid, no sketch outline."
+ },
+ {
+  "id": "TC-04-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-03.py",
+   "tc-04-03-mcp.jsonl",
+   "tc-04-03-checks.txt",
+   "tc-04-03-after.png",
+   "tc-04-03-after-axiscross.png",
+   "tc-04-03-cleanup.txt"
+  ],
+  "note": "All Thens pass: midplane pad OK rolled_back=false, vol 6000.0, shape_summary bbox [20,30,10], mass bbox z -5..+5, com.z 7.6e-17 mm (=0), verify_shape OK. view_fit_viewport OK. Visual: one 20x30x10 box; with FreeCAD View > Toggle Axis Cross the origin sits on the left vertical edge at mid-height and a line at z=0 runs round the side faces - half the solid above the XY plane, half below."
+ },
+ {
+  "id": "TC-04-04",
+  "priority": "High",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-04-04.py",
+   "tc-04-04-mcp.jsonl",
+   "tc-04-04-checks.txt",
+   "tc-04-04-after.png",
+   "tc-04-04-probe.py",
+   "tc-04-04-probe-mcp.jsonl",
+   "tc-04-04-probe-checks.txt",
+   "tc-04-04-cleanup.txt"
+  ],
+  "note": "second_length is a silent no-op. Request: feature_pad {body:TwoBody, profile:TwoProfile, name:TwoPad, length:{10,mm}, second_length:{4,mm}} -> status OK, rolled_back=false, but query_mass_properties TwoPad volume=6000.0 (expected >6000), bbox z 0..10; query_object Length2='4.0 mm' written while Type stays 'Length', so FreeCAD never reads it. Cause: src/freecad_buddy/usecases/features.py:483-484 writes feature.Length2 without selecting a two-sided mode; on 1.1.4 the Pad Type enum lists '?TwoLengths' (tombstone) and the two-sided switch moved to SideType. Probe (tc-04-04-probe-checks.txt): up_to='TwoLengths' -> INVALID_INPUT not one of [...'?TwoLengths'...]; up_to='?TwoLengths' -> RECOMPUTE_ERROR 'PadQ: Resulting fused extrusion is null.' So no MCP route yields a two-sided pad on 1.1.4. Reproduces every call. Product defect (accepts and drops a geometry parameter with OK). Other Thens pass: RevPad vol 6000 bbox z -10..0 Reversed=true (my automated check line mis-evaluated zmax=0.0 as falsy; values are correct), TaperPad vol 6447.6 TaperAngle 5.0 deg, verify_shape OK x3, taper 120 -> INVALID_INPUT 'taper_angle must be in (-90.0, 90.0) degrees, got 120.0' with no snapshot. view_fit_viewport OK. Visual: RevPad hangs below the sketch plane (its top lines up with TwoPad's base), TaperPad has sloped side faces, but TwoPad is the SAME height as RevPad, not taller - visual Then FAILS. Profiles offset at x=0/40/80 so the solids do not overlap; the empty BadTaperProfile outline (refusal fixture) is visible at x=120."
+ },
+ {
+  "id": "TC-04-05",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-05.py",
+   "tc-04-05-mcp.jsonl",
+   "tc-04-05-checks.txt",
+   "tc-04-05-after.png",
+   "tc-04-05-cleanup.txt"
+  ],
+  "note": "All Thens pass. Sketches attached to PlatePad Face6 (top). SlotPocket OK vol 11800.0; ThroughPocket (no length) OK vol 11300.0; shape_summary face_count 15 solid_count 1; verify_shape OK; Type=ThroughAll; up_to ThroughAll on feature_pad -> INVALID_INPUT \"up_to 'ThroughAll' is not one of ['Length', 'UpToLast', 'UpToFirst', 'UpToFace', '?TwoLengths', 'UpToShape']\". view_fit_viewport OK. Visual: 60x40x5 plate, left square recess with a visible floor, right square opening shows the white background through it."
+ },
+ {
+  "id": "TC-04-06",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-04-06.py",
+   "tc-04-06-mcp.jsonl",
+   "tc-04-06-checks.txt",
+   "tc-04-06-after.png",
+   "tc-04-06-cleanup.txt"
+  ],
+  "note": "One Then not met: query_object ShaftRev reports ReferenceAxis = [\"<Sketcher::SketchObject>\", [\"V_Axis\"]] - V_Axis is named but the target object is stringified to its type, so 'names ShaftProfile' cannot be confirmed. Cause: query_object stringifies non-JSON-safe property values (src/freecad_buddy/usecases/queries.py:407 docstring, _read_property); a link target loses its object Name. Reproduces on every link property. Suspected product limitation in query_object (identity of link targets lost), not in feature_revolve. All other Thens pass: revolve OK rolled_back=false, vol 1570.7963 (golden), shape_summary solid 1 / faces 3 / valid, verify_shape OK; Edge1 -> INVALID_INPUT \"axis on the profile sketch must be one of ['H_Axis', 'N_Axis', 'V_Axis'], got 'Edge1'\"; angle 400 -> INVALID_INPUT 'angle must be in (0.0, 360.0] degrees, got 400.0' no snapshot; second_angle -> \"second_angle is only read when up_to='TwoAngles'; got up_to=None\". view_fit_viewport OK. Visual: one closed full cylinder, height about twice its diameter, no wedge gap, flat top cap."
+ },
+ {
+  "id": "TC-04-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-07.py",
+   "tc-04-07-mcp.jsonl",
+   "tc-04-07-checks.txt",
+   "tc-04-07-after.png",
+   "tc-04-07-cleanup.txt"
+  ],
+  "note": "Behaviour correct; one literal Then is a test-case defect. Volume after the 5.5 x 3 mm blind hole = 11915.64, not 11928.7: query_object shows DrillPoint='Angled', DrillPointAngle='118.0 deg' (FreeCAD default), so the bore ends in a cone tip; analytic check 12000 - pi*2.75^2*3 (71.27) - cone (1/3)*pi*2.75^2*(2.75/tan59deg)=13.09 -> 11915.64, exact match. The TC's flat-bottom analytic ignores the default drill point. ThroughAll (no cone) gives 11881.21 = the TC value. Other Thens pass: OK rolled_back=false, DepthType=Dimension, solid_count 1 face_count 8, verify_shape OK, no-depth -> \"depth_type='Dimension' is depth-driven; 'depth' is required\", zero diameter -> 'diameter must be positive, got 0.0'. ThroughAll ran on a second identical plate (closed before capture) so the captured bore stays blind. view_fit_viewport OK. Visual: one round bore near the left short edge at mid-depth (x=10,y=20), interior grey with a floor, no daylight through it."
+ },
+ {
+  "id": "TC-04-08",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-08.py",
+   "tc-04-08-mcp.jsonl",
+   "tc-04-08-checks.txt",
+   "tc-04-08-after.png",
+   "tc-04-08-after-zoom.png",
+   "tc04zoom.py",
+   "tc-04-08-cleanup.txt"
+  ],
+  "note": "All Thens pass. ThreadedHole OK rolled_back=false; query_object ThreadType=ISOMetricProfile, HoleCutType=Counterbore (thread write did not clear the cut), Threaded=true; ThreadSize defaults to M1.2x0.25 (Diameter 0.95 mm, HoleCutDiameter 2.425 mm). diameter+thread -> INVALID_INPUT \"'diameter' cannot be combined with thread_type='ISOMetricProfile': ...\"; cut_type 'Spotface' -> \"cut_type 'Spotface' is not one of ['None', 'Counterbore', 'Countersink', 'Counterdrill', 'DIN 7984', 'ISO 10642', ...]\" (the re-populated set); thread_type 'ISOMetricFake' -> INVALID_INPUT, no snapshot. verify_shape OK. Enumerations read from query_capabilities. view_fit_viewport OK. Visual: at fit the M1.2 hole is small at plate centre (tc-04-08-after.png); after FreeCAD's own View > Zoom > Box Zoom (cua-driver UIA + drag) the hole shows a wide counterbore step with a smaller concentric bore below (tc-04-08-after-zoom.png) - two concentric diameters."
+ },
+ {
+  "id": "TC-04-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-09.py",
+   "tc-04-09-mcp.jsonl",
+   "tc-04-09-checks.txt",
+   "tc-04-09-after.png",
+   "tc-04-09-literal-after.png",
+   "tc-04-topology-oracle.py",
+   "tc-04-topology-oracle.txt",
+   "tc-04-09-cleanup.txt"
+  ],
+  "note": "Behaviour correct; the TC's edge names are a test-case defect. Literal call (Edge1, Edge3, Edge5, Edge7) committed OK but on 1.1.4 Edge3/Edge7 are horizontal 60/40 mm edges (outside oracle tc-04-topology-oracle.txt, confirmed live): vol 11907.11, area 5701.0, and the capture tc-04-09-literal-after.png shows two long edges rounded - not the four vertical corners. With the vertical corners Edge1, Edge2, Edge5, Edge8 every Then passes: OK rolled_back=false, vol 11982.83 (=12000-4(4-pi)5), face_count 10, solid_count 1 is_valid, verify_shape OK, area 5775.96 = analytic for four quarter-cylinders (note: area FALLS from 5800; the TC heading 'surface area rises' is wrong, its own consistency check passes). Refusals: \"dress-up base OtherPad is not in Body PlateBody; ...\", \"edges[0] names OtherPad, not the dress-up base CornerFillet\", \"edges[1] repeats Edge1\", no snapshot written. view_fit_viewport OK. Visual (tc-04-09-after.png): plate with all four vertical corners visibly rounded, none sharp; a thin sharp rectangle outline at the base is the PlateProfile sketch wire, not solid."
+ },
+ {
+  "id": "TC-04-10",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-10.py",
+   "tc-04-10-mcp.jsonl",
+   "tc-04-10-checks.txt",
+   "tc-04-10-after.png",
+   "tc-04-topology-oracle2.py",
+   "tc-04-topology-oracle2.txt",
+   "tc-04-10-cleanup.txt"
+  ],
+  "note": "All Thens pass after the conditional substitution the TC allows. Live ChamferType = ['Equal distance', 'Two distances', 'Distance and Angle']; the TC literal 'Distance and angle' -> INVALID_INPUT \"chamfer_type 'Distance and angle' is not one of [...]\" (spelling stale). Edge identities from the outside oracle (tc-04-topology-oracle2.txt): EqualChamfer Edge3 = vertical corner (60,0) - literal OK; TwoSizeChamfer Edge5 = 2.24 mm bottom edge of the new bevel face, so the main model used Edge17 (vertical corner 60,40); the literal Edge5 with 'Distance and Angle' was run on a copy and also committed OK (vol 11984.87, valid). Main: three chamfers OK rolled_back=false; EqualChamfer vol 11994.375; face_count 6->7->8->9; 'Bevel' -> \"chamfer_type 'Bevel' is not one of [...]\"; angle 200 -> 'angle must be in (0.0, 180.0) degrees, got 200.0'; size 0 -> 'size must be positive, got 0.0'; no snapshot; verify_shape AngleChamfer OK solid 1. view_fit_viewport OK. Visual: three vertical corners cut back by flat bevels of visibly different widths (front widest = 2/1 two-distance, right narrower = 2 mm at 30 deg, left smallest = 1.5 equal); fourth corner sharp; no rounds."
+ },
+ {
+  "id": "TC-04-11",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-11.py",
+   "tc-04-11-mcp.jsonl",
+   "tc-04-11-checks.txt",
+   "tc-04-11-after.png",
+   "tc-04-topology-oracle3.py",
+   "tc-04-topology-oracle3.txt",
+   "tc-04-11-cleanup.txt"
+  ],
+  "note": "All Thens pass. Plate drawn at x=40..100 so it does not overlap the r=30 disc centred on the origin (the polar axis is DiscProfile N_Axis); disc hole sketch on DiscPad Face3 (top, oracle tc-04-topology-oracle3.txt). Linear HoleRow (occurrences 2) OK, vol 11762.42 = plate - 2 bores (2 holes total, not 3), bbox [60,40,5]; polar HoleRing (6) OK, vol 13424.42 = disc - 6 bores; verify_shape OK both; kind 'mirror' -> schema reject \"'mirror' is not one of ['linear', 'polar']\"; originals omitted (separate equivalent doc) -> OK, vol 11762.42, Originals=['<PartDesign::Hole>'] (query_object stringifies the link, same limitation as TC-04-06). view_fit_viewport OK. Visual: plate shows exactly two through holes along its long axis about 40 mm apart; disc shows exactly six holes evenly spaced around its centre."
+ },
+ {
+  "id": "TC-04-12",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-12.py",
+   "tc-04-12-mcp.jsonl",
+   "tc-04-12-checks.txt",
+   "tc-04-12-after.png",
+   "tc-04-12-after-guifit.png",
+   "tc-04-12-after-top.png",
+   "tc-04-12-cleanup.txt"
+  ],
+  "note": "Behaviour correct; one literal Then is self-contradictory (test-case defect). All three mirrors OK rolled_back=false; PlaneMirror vol 12000.0, bbox [50,30,10]; whole-object selectors YZ_Plane (HalfBody) and MirrorPlane accepted without mapped_name; FacePad Face1 accepted; verify_shape OK x3; NoSuchPlane -> 'unknown object in mirror_plane: NoSuchPlane', no snapshot. shape_summary solid_count = [2, 2, 1]: PlaneMirror and DatumMirror are two disjoint solids because the Given places the original so its mirror does NOT overlap - 'solid_count=1 for each' cannot hold for them (FaceMirror, which touches its original, is 1). MirrorPlane = datum plane on DatumBody's YZ_Plane001, offset 30 mm (placement x=30); bodies placed apart in Y so results do not overlap. FIT: view_fit_viewport returned OK {fitted:true, framing:{fits:true, ratio:0.0}} but the window showed a 2.86 x 2.09 mm close-up of the yellow datum plane (tc-04-12-after.png) - the known deferred view_fit datum-framing defect; capture redone with FreeCAD Fit All (tc-04-12-after-guifit.png) and Top view via the navigation cube (tc-04-12-after-top.png). Visual (top view): HalfBody = two separated 20x30 blocks either side of x=0; DatumBody = two blocks either side of the yellow datum line at x=30; FaceBody = one 20x60 block (original + mirror across its y=120 face)."
+ },
+ {
+  "id": "TC-04-13",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-04-13.py",
+   "tc-04-13-mcp.jsonl",
+   "tc-04-13-checks.txt",
+   "tc-04-13b.py",
+   "tc-04-13b-mcp.jsonl",
+   "tc-04-13b-checks.txt",
+   "tc-04-13-after.png",
+   "tc-04-13-after-guifit.png",
+   "tc-04-13-cleanup.txt"
+  ],
+  "note": "Literal step 2 uses map modes that do not fit the literal subelements (test-case defect), and one Then is blocked by the query_object link limitation. Literal: EdgeAxis {kind:axis, Edge1, map_mode:ObjectXY} -> INVALID_INPUT \"map_mode 'ObjectXY' is not implemented for kind 'axis'; axis accepts [... 'TwoPointLine']\" (correct pre-transaction refusal); CornerPoint {kind:point, Vertex1, map_mode:ObjectOrigin} passes the kind check but OCCT refuses the vertex -> RECOMPUTE_ERROR 'recompute left 1 object(s) invalid: CornerPoint: AttachEngine3D::calculateAttachedPlacement: need either a conic section edge, or a whole object for ObjectXY-like modes.' with rolled_back=true, rollback_proven=rolled_back_verified (correct closed status + proven rollback; the pre-check validates mode-vs-kind, not mode-vs-subelement). With modes that fit (EdgeAxis TwoPointLine, CornerPoint Vertex; tc-04-13b) both commit OK and the tree lists RaisedPlane, FaceCS, EdgeAxis, CornerPoint under PlateBody. Passing Thens: RaisedPlane OK, query_placement z=15 mm, MapMode=FlatFace, datum has solid:false volume:null, kind 'curve' schema reject, point+FlatFace -> \"map_mode 'FlatFace' is not implemented for kind 'point'; ...\" no snapshot. NOT MET: 'AttachmentSupport names PlatePad and Face6' - query_object returns [[\"<PartDesign::Pad>\", [\"Face6\"]]] (Face6 named, object stringified; same limitation as TC-04-06, queries.py:407). FIT: view_fit_viewport OK {fits:true, ratio:0.0} framed a 1.93 mm close-up of the datum plane (known deferred defect); capture redone with FreeCAD Fit All. Visual (tc-04-13-after-guifit.png): yellow datum plane floating above the plate, datum axis line along the (0,0) vertical edge extended, CS axes at the top corner; plate solid unchanged."
+ },
+ {
+  "id": "TC-04-14",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-14.py",
+   "tc-04-14-mcp.jsonl",
+   "tc-04-14-checks.txt",
+   "tc-04-14-before.png",
+   "tc-04-14-after.png",
+   "tc-04-14-final.png",
+   "tc-04-14-cleanup.txt"
+  ],
+  "note": "All Thens pass. Length 10->25: OK rolled_back=false, vol 15000.0, query_object Length '25.0 mm', post_verify passed/is_valid/recompute_clean true, verify_shape OK bbox [20,30,25]; {Length 12 mm, Reversed true} OK and both read back; {Midplane true} OK, {Type 'Length'} OK; {} -> \"feature_set_parameters requires a non-empty 'parameters' object\". view_fit_viewport OK for all captures. Visual: before (10 mm) the box is a low slab; after the 25 mm edit (captured right after it, before the later Thens changed the pad again) the same 20x30 footprint is visibly taller, still one solid. tc-04-14-final.png shows the end state (12 mm midplane, line at the sketch plane)."
+ },
+ {
+  "id": "TC-04-15",
+  "priority": "High",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-04-15.py",
+   "tc-04-15-mcp.jsonl",
+   "tc-04-15-checks.txt",
+   "tc-04-15-after.png",
+   "tc-04-15-after-front.png",
+   "tc-04-15-cleanup.txt"
+  ],
+  "note": "Up-to-face works; one Then blocked by query_object's link stringification, and the literal face name exposed a rollback defect. Fixture: BasePad = 60x40x5 slab at z 20..25 (XZ sketch, midplane 40), RiserProfile 10x10 on XY at z=0 below it; target = BasePad Face1 (bottom, outside oracle). RiserPad up_to=UpToFace, no length: OK rolled_back=false; body bbox z 0..25, vol 14000.0 = 12000 + 10x10x20 (stopped exactly at z=20); Type=UpToFace; UpToFace = [\"<PartDesign::Pad>\", [\"Face1\"]] - face named, object stringified (NOT MET as worded, same limitation as TC-04-06); 'UpToInfinity' -> \"up_to 'UpToInfinity' is not one of ['Length', 'UpToLast', 'UpToFirst', 'UpToFace', '?TwoLengths', 'UpToShape']\", no snapshot_path, no BadTypePad; verify_shape OK. LITERAL Face5 (a side face parallel to the extrusion here) on a copy: status SPEC_FAILED, rolled_back=false, rollback_proven=null, snapshot_path 'freecad-buddy-workdir\\tmp\\FCB_TMP_snap__bj2bhr9\\UpToFaceLiteral.FCStd' kept; explanation 'recompute left 1 object(s) invalid: RiserPad: SketchBased: Up to face: Must not be parallel to extrusion direction!; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint 22573140766a...' (fingerprint_after acba6991f4a7...). A plain engine failure on a 2-feature body left the transaction unable to prove its rollback - see TC-04-16/24. Also: snapshots live in <FreeCAD cwd>/freecad-buddy-workdir/tmp (here C:/Users/thuan/freecad-buddy-workdir/tmp), not $TEMP as the TC's 'ls $TEMP/FCB_TMP_snap_*' assumes. view_fit_viewport OK. Visual: iso capture shows the post under the slab; FRONT view (navigation cube) shows a clean T - riser meets the slab underside flush, no gap, nothing pokes through; no second solid."
+ },
+ {
+  "id": "TC-04-16",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-16.py",
+   "tc-04-16-mcp.jsonl",
+   "tc-04-16-checks.txt",
+   "tc-04-16-before.png",
+   "tc-04-16-after.png",
+   "tc-04-16-literal-before.png",
+   "tc-04-16-literal-after.png",
+   "tc-04-16-cleanup.txt"
+  ],
+  "note": "Behaviour correct; the TC's edge is a test-case defect. Literal Edge1 is the 5 mm VERTICAL corner edge on 1.1.4 (oracle + TC-04-09 live volumes); a 20 mm round fits inside the 60/40 mm side faces, so the literal call COMMITTED (status OK, rolled_back=false) and tc-04-16-literal-after.png shows a large 20 mm round on that corner - the TC intent ('20 mm on a 5 mm thick plate') needs a horizontal edge. With Edge3 (60 mm bottom edge) every Then passes: status RECOMPUTE_ERROR, detail 'recompute left 1 object(s) invalid: TooBigFillet: BRep_API: command not done'; rolled_back=true, rollback_proven=rolled_back_verified; explanation names TooBigFillet and the OCCT string; no TooBigFillet in tree; PlatePad vol 12000.0; fingerprint_before == fingerprint_after (033c86bc...); no new snapshot dir in $TEMP or C:/Users/thuan/freecad-buddy-workdir/tmp (where the bridge actually writes them; the TC's $TEMP path is stale); verify_recompute OK. view_fit_viewport OK. Visual: before and after captures are the same plate with four sharp corners, no round, no partial fillet face."
+ },
+ {
+  "id": "TC-04-17",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-04-17.py",
+   "tc-04-17-mcp.jsonl",
+   "tc-04-17-checks.txt",
+   "tc-04-17-before.png",
+   "tc-04-17-after.png",
+   "tc-04-17-cleanup.txt"
+  ],
+  "note": "All executed Thens pass; one Then NOT RUN. Seam edge identified by the outside oracle: ShaftRev Edge3 (cylinder seam); the TC's literal 'Edge2' is the top circle, a real crease - on a copy it commits OK (vol 1564.36, 4 faces), so the literal edge name is a test-case defect. With the seam: step 1 -> INVALID_INPUT \"1 of 1 requested edge(s) on ShaftRev cannot be shown to survive the dress-up: ['Edge3']; each needs exactly two adjacent faces meeting at a measurable crease, and FreeCAD drops the rest without reporting it\"; no snapshot_path, no new snapshot dir; mixed [Edge1, Edge3] refused whole ('1 of 2 requested edge(s) ...'); tree has neither DropFillet nor MixedFillet; ShaftRev volume unchanged 1570.7963. NOT RUN: 'committed dress-up that dressed fewer edges than asked -> SPEC_FAILED dressed N of the M' - no input was found that gets past the up-front check and then drops an edge. view_fit_viewport OK. Visual: before and after captures identical - closed cylinder, sharp top and bottom circular edges, no round anywhere (Edge1 was not filleted on its own)."
+ },
+ {
+  "id": "TC-04-18",
+  "priority": "High",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-04-18.py",
+   "tc-04-18-mcp.jsonl",
+   "tc-04-18-checks.txt",
+   "tc-04-18-before.png",
+   "tc-04-18-after.png",
+   "tc-04-18-cleanup.txt"
+  ],
+  "note": "All executed Thens pass; one NOT RUN by the run's safety rule. occurrences 1 -> schema reject '1 is less than the minimum of 2'; 0 -> '0 is less than the minimum of 2'; linear without direction -> \"'direction' is a required property\"; polar without axis -> \"'axis' is a required property\"; valid linear with direction and no axis -> OK (on an equivalent plate, so the captured model stays untouched); object list identical before/after, no OnePattern/ZeroPattern/NoDirection/NoAxis. NOT RUN: occurrences 5000 - the run caps pattern occurrences at 20; code read shows src/freecad_buddy/usecases/features.py:1324-1331 raises 'occurrences must be an integer between 2 and 1000' before any document access (_MAX_OCCURRENCES=1000, :39). view_fit_viewport OK. Visual: before and after identical - plate with its single original hole, no extra bore."
+ },
+ {
+  "id": "TC-04-19",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-19.py",
+   "tc-04-19-mcp.jsonl",
+   "tc-04-19-checks.txt",
+   "tc-04-19-inf.py",
+   "tc-04-19-inf.txt",
+   "tc-04-19-tree-after-inf.json",
+   "tc-04-19-before.png",
+   "tc-04-19-after.png",
+   "tc-04-19-cleanup.txt"
+  ],
+  "note": "All Thens pass on merits; the non-finite one is a test-case defect. 0 -> INVALID_INPUT 'length must be positive, got 0.0'; -10 -> 'length must be positive, got -10.0'; no length -> \"up_to='Length' is length-driven; 'length' is required\"; no snapshot_path, no new snapshot dir ($TEMP + workdir/tmp); no ZeroPad/NegPad/NoLenPad; BlockBody Tip=null. Non-finite: JSON has no infinity literal. The python MCP client sends float('inf') as null, and a hand-written JSON-RPC body with the number 1e999 (tc-04-19-inf.py/.txt) is also turned into null by the server's parser; both are refused at schema validation with \"Input validation error: None is not of type 'number'\" - refused and nothing created (tc-04-19-tree-after-inf.json has no InfPad), but the product's own 'must be finite' guard is unreachable over the JSON transport, so that literal message cannot appear. view_fit_viewport SPEC_FAILED view_fit.unverified ('no visible shape-bearing objects to measure') as expected with no solid -> FreeCAD Fit All. Visual: before and after identical - only the flat 20x30 rectangle outline, no extruded material, no sliver."
+ },
+ {
+  "id": "TC-04-20",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-20.py",
+   "tc-04-20-mcp.jsonl",
+   "tc-04-20-checks.txt",
+   "tc-04-20-after.png",
+   "tc-04-20-zoom-fillet.png",
+   "tc-04-20-zoom-chamfer.png",
+   "tc-04-20-cleanup.txt"
+  ],
+  "note": "All Thens pass. Fillet on PlatePad Edge1 with no radius: OK, Radius '1.0 mm', vol 11998.927 (=12000-(1-pi/4)*5); chamfer on DefaultFillet Edge3 (vertical corner at (60,0) per the oracle; the literal name fits) with no size: OK, Size '1.0 mm'; verify_shape OK solid_count 1 (chamfered vol 11996.427). view_fit_viewport OK. Visual: at fit the left corner shows a small round and the front corner a small flat bevel; FreeCAD Box Zoom close-ups confirm a curved ~1 mm round (tc-04-20-zoom-fillet.png) and a flat bevel face (tc-04-20-zoom-chamfer.png) on different edges, both small against the plate."
+ },
+ {
+  "id": "TC-04-21",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-04-21.py",
+   "tc-04-21-mcp.jsonl",
+   "tc-04-21-checks.txt",
+   "tc-04-21-probe.py",
+   "tc-04-21-probe-mcp.jsonl",
+   "tc-04-21-probe-checks.txt",
+   "tc-04-21-before.png",
+   "tc-04-21-after.png",
+   "tc-04-21-cleanup.txt"
+  ],
+  "note": "Read-only Shape is not refused pre-transaction. Request: feature_set_parameters {feature:'BlockPad', parameters:{Shape: 1}} -> status SPEC_FAILED, detail {code:'mutation.spec_failed', message:\"TypeError: type must be 'Shape', not int\"}; the write entered the transaction (fingerprints taken, post_verify run) and was rolled back (rolled_back=true, rollback_proven=rolled_back_verified, snapshot_path null). Expected INVALID_INPUT 'BlockPad.Shape is read-only' before any transaction. Cause: src/freecad_buddy/usecases/features.py:1660 treats a property as read-only only when getEditorMode(prop) contains 'ReadOnly'; Shape is an output property without that editor flag, so it passes, and the FreeCAD TypeError (a caller error) is then classed SPEC_FAILED. Reproduces every call. Product defect. The TC's other example works: ShaftRev {Base: 1} -> INVALID_INPUT 'ShaftRev.Base is read-only', {Axis: 1} -> 'ShaftRev.Axis is read-only' (tc-04-21-probe-checks.txt). All other Thens pass: 'BlockPad has no property named 'Thickness''; \"Length value unit must be one of ['mm'], got 'deg'\"; 'Length value must be a quantity, number, boolean or enum string'; no snapshot_path, no new snapshot dir; vol 6000.0 after; mixed batch {Length 12, Thickness 3} refused and Length reads '10.0 mm'. view_fit_viewport OK. Visual: before and after identical - same 10 mm pad proportions."
+ },
+ {
+  "id": "TC-04-22",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-22.py",
+   "tc-04-22-mcp.jsonl",
+   "tc-04-22-checks.txt",
+   "tc-04-22-before.png",
+   "tc-04-22-after.png",
+   "tc-04-22-cleanup.txt"
+  ],
+  "note": "All Thens pass. 'unknown object in body: NoSuchBody'; 'unknown object in profile: NoSuchSketch'; 'unknown object in base: NoSuchPad'; 'object is not a PartDesign Body: PlateProfile' - all INVALID_INPUT, no snapshot_path, no new snapshot dir, tree identical (PlateBody, PlatePad, PlateProfile). Taken name: feature_pad name 'PlatePad' (profile = a new 10x10 sketch SecondProfile on the top face, the fixture for this check) -> 'an object named PlatePad already exists'. view_fit_viewport OK. Visual: before and after show the same single plate solid, no orphan pad, no fillet; the only difference is the thin outline of the SecondProfile fixture sketch on the top face (a sketch, no material)."
+ },
+ {
+  "id": "TC-04-23",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-04-23-given.py",
+   "tc-04-23-given-mcp.jsonl",
+   "tc-04-23-console-input.txt",
+   "tc-04-23-type-args.json",
+   "tc-04-23-console-open.png",
+   "tc-04-23-console-after.png",
+   "tc-04-23.py",
+   "tc-04-23-mcp.jsonl",
+   "tc-04-23-checks.txt",
+   "tc-04-23-before.png",
+   "tc-04-23-after.png",
+   "tc-04-23-cleanup.txt"
+  ],
+  "note": "Padding an under-constrained sketch COMMITS. Fixture: LooseProfile 20x30 rectangle built fully constrained through MCP, then its two position constraints (DistanceX/DistanceY to the root) deleted in FreeCAD's own Python console via cua-driver type_text (tc-04-23-console-input.txt, tc-04-23-console-after.png: 'LOOSE_CONSTRAINTS 10'); MCP cannot leave a sketch under-constrained (sketch_* post_verify rolls back). verify_sketch LooseProfile -> SPEC_FAILED 'sketch.fully_constrained', dof=2. Request: feature_pad {body:'LooseBody', profile:'LooseProfile', name:'LoosePad', length:{10,mm}} -> status OK, rolled_back=false, post_verify {recompute_clean:true, is_valid:true, fully_constrained:null, passed:true}; LoosePad in tree, LooseBody Tip=<PartDesign::Pad>, fingerprint changed. Expected SPEC_FAILED, rolled_back=true, explanation 'verify_sketch failed on LooseProfile (dof=2...'. Cause: post_verify grades only sketches in the op's touched list (src/freecad_buddy/usecases/transaction.py:246-266 via _sketches at :148), and the extrude op returns only [feature.Name, body_obj.Name] (src/freecad_buddy/usecases/features.py:491; same at :723, :865), so the profile is never verify_sketch-ed - AD-8 is not applied to feature tools. Reproduces deterministically. Product defect. Snapshot check passes (no new dir; nothing to delete). view_fit_viewport: SPEC_FAILED unverified before (no solid) -> Fit All; OK after. Visual: before = flat rectangle outline only; after = a solid 20x30x10 block - the exact failure the scenario guards against."
+ },
+ {
+  "id": "TC-04-24",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-04-24.py",
+   "tc-04-24b.py",
+   "tc-04-24-mcp.jsonl",
+   "tc-04-24-checks.txt",
+   "tc-04-24b-mcp.jsonl",
+   "tc-04-24b-checks.txt",
+   "tc-04-24-before.png",
+   "tc-04-24-after.png",
+   "tc-04-24-fillet-before.png",
+   "tc-04-24-fillet-after.png",
+   "tc-04-24-edge3-before.png",
+   "tc-04-24-edge3-after.png",
+   "tc-04-24-cleanup.txt"
+  ],
+  "note": "Behaviour correct; the TC's literal trigger is a test-case defect. Literal: SlotPocket Length 2 -> 500 mm (chain PlatePad -> SlotPocket -> CornerFillet) is not an engine failure - a 500 mm pocket just cuts through the 5 mm plate: status OK, rolled_back=false, Length reads 500.0 mm, capture shows the recess turned into a through hole (tc-04-24-before/after.png). The TC's other named trigger, 'a fillet whose radius consumes its face', with CornerFillet Radius 30 on a 5 mm vertical corner also commits OK (fits the 40/60 mm faces; tc-04-24-fillet-after.png). A real engine failure (tc-04-24b.py): EdgeFillet r=1 on the 60 mm bottom edge Edge3, then feature_set_parameters {Radius: 20 mm} -> status RECOMPUTE_ERROR, detail 'recompute left 1 object(s) invalid: EdgeFillet: BRep_API: command not done'; post_verify recompute_clean=false, fully_constrained='not_measured', is_valid=false (reported as false, not 'not_measured' - it is the isValid() result the recompute check itself read; TC wording expects not-measured); explanation starts 'recompute left' and names EdgeFillet; rolled_back=true, rollback_proven=rolled_back_verified; Radius reads 1.0 mm again; verify_recompute OK; no new snapshot dir. view_fit_viewport OK. Visual (edge3 before/after): identical plate with its small 1 mm round on the front bottom edge, no 20 mm round, no error marker on the tree."
+ }
+]

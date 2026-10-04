@@ -1,0 +1,28 @@
+== literal median command
+KeyError: 'duration_s'
+== grep -c TIMEOUT
+0
+== query_screenshot entries
+[('query_screenshot:box-10-20-30', 'OK'), ('query_screenshot:cylinder-r5-h20', 'OK'), ('query_screenshot:sphere-r10', 'OK'), ('query_screenshot:box40-hole-r5', 'OK'), ('query_screenshot:two-box-compound', 'OK')]
+== supplement
+{
+ "n": 43,
+ "median_s": 0.008,
+ "max_s": 0.645,
+ "timeouts_status": 0,
+ "non_ok": [],
+ "declared_timeouts": {
+  "document_list": null,
+  "query_capabilities": "30.0",
+  "query_dependencies": null,
+  "query_mass_properties": null,
+  "query_object": null,
+  "query_placement": null,
+  "query_screenshot": "60.0",
+  "query_tree_summary": null,
+  "verify_recompute": null,
+  "verify_shape": null
+ },
+ "over_budget": []
+}
+screenshot [('OK', 0.234), ('OK', 0.169), ('OK', 0.245), ('OK', 0.17), ('OK', 0.179)]

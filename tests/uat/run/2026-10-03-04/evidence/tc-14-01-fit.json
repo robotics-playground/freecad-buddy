@@ -1,0 +1,19 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "SPEC_FAILED",
+ "detail": {
+  "code": "view_fit.unverified",
+  "message": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"
+ },
+ "structured_content": {
+  "fitted": false,
+  "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"
+ },
+ "text": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

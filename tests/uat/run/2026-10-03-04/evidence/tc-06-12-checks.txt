@@ -1,0 +1,6 @@
+PASS | Given: render == gui_constructed | gui_constructed
+NOTE | user.cfg AntiAliasing line (file on disk; FreeCAD writes it on exit): '<FCInt Name="AntiAliasing" Value="4"/>'
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+PASS | render OK | {"status": "OK"}
+NOTE | viewport shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-12-viewport.png', 'exists': True, 'title': '- [0] Window "* TC0610 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-12-after.png', 'exists': True, 'title': '- [0] Window "* TC0610 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

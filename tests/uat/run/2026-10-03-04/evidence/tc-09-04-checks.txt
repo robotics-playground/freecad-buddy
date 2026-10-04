@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:aeV3_gNQ5MFvu5yDWJWNFQ
+NOTE | roots ['Box']
+PASS | depth as string -> protocol rejection | Input validation error: '1' is not of type 'integer'
+PASS | path as number -> protocol rejection | Input validation error: 42 is not of type 'string'
+PASS | objects as object -> protocol rejection | Input validation error: {'0': 'Box'} is not of type 'array'
+PASS | linear as string -> protocol rejection | Input validation error: '0.1' is not of type 'number'
+PASS | no coercion: none OK | ['SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT']
+PASS | nothing written tc-09-04-t.* | []

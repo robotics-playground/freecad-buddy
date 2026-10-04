@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close TC0804 -> OK
+PASS | Given GUI host query_screenshot iso OK with resource_link | {'status': 'OK', 'sc_keys': ['render', 'scene']}
+NOTE | H1 Given: Pad volume 12000.0
+PASS | render:off -> diff.render == {available:false, reason:'off'} | {'available': False, 'reason': 'off'}
+FAIL | headless default render -> reason 'no render port' | {'available': True, 'reason': None}
+PASS | 'off' never on a call without render:off | {'auto': {'available': True, 'reason': None}, 'headless': {'available': True, 'reason': None}}
+PASS | render:off call and headless call both envelope OK | {'off': 'OK', 'headless': 'OK'}
+PASS | render:auto on GUI host -> diff.render.available true | {'available': True, 'reason': None}
+PASS | render:'sometimes' rejected by schema (enum auto/off) | {"_raw": "Input validation error: 'sometimes' is not one of ['auto', 'off']"}
+PASS | live GUI Pad still 12000.0 after three previews (corroborating) | 12000.0

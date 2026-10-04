@@ -1,0 +1,2 @@
+ "text": "0 open document(s)."
+benchmarks/g0/golden-models/box40-hole-r5.FCStd

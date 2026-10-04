@@ -1,0 +1,2 @@
+NOTE | cleanup previous scenario: document_close tc-08-17-save -> OK
+PASS | Given golden box opened in GUI | {"status": "OK"}

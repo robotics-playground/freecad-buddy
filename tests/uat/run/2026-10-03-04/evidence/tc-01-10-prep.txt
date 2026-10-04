@@ -1,0 +1,16 @@
+== prep for TC-01-10: replace manual proxy with an addon-spawned one (stop manual proxy, exit, relaunch)
+ "text": "0 open document(s)."
+listener pid 28996 parent 37756 (python)
+terminate 28996 -> True
+terminate 37756 -> True
+after: 0 :8765 listeners
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+freecad gone
+rpc-33184.json deleted on clean exit
+11
+tag=tc-01-10-prep pid=35716 window_id=7018696 bridge_wait=4s
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       37032
+--- new addon.log lines ---
+2026-10-03 23:39:56,535 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-03 23:39:56,799 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:49250
+2026-10-03 23:39:57,106 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 33740) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log

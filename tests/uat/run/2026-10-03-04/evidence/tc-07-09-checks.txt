@@ -1,0 +1,13 @@
+PASS	given: lib3mf importable	
+PASS	given: no stale target	
+PASS	status OK	["OK", null]
+PASS	lib3mf four ids	["lib3mf.parses", "lib3mf.unit_millimeter", "lib3mf.manifold_and_oriented", "lib3mf.metadata_present"]
+PASS	trimesh_3mf five ids	["trimesh_3mf.watertight", "trimesh_3mf.winding_consistent", "trimesh_3mf.is_volume", "trimesh_3mf.volume_band", "trimesh_3mf.euler"]
+PASS	unit guard measured {unit:1, source_is_mm:true} passed	[{"id": "lib3mf.unit_millimeter", "measured": {"unit": 1, "source_is_mm": true}, "passed": true}, 1]
+PASS	manifold measured {meshes:1, non_manifold:0} passed	{"id": "lib3mf.manifold_and_oriented", "measured": {"meshes": 1, "non_manifold": 0}, "passed": true}
+PASS	metadata_present passed	{"id": "lib3mf.metadata_present", "measured": 1, "passed": true}
+PASS	self_read both passed, agreement {lib3mf:true}	[{"id": "self_read.facet_count", "measured": 100, "expected": 100, "passed": true, "detail": {"message": "facets 100 vs 100"}}, {"id": "self_read.vertex_count", "measured": 52, "expected": 52, "passed": true, "detail": {"message": "vertices 52 vs 52"}}, {"id": "oracle.agreement", "measured": {"lib3mf": true}, "passed": true, "detail": {"message": "oracles agree"}}]
+FAIL	mesh volume within band of 1570.7963 and band < 0.1% of volume	[1555.5508159141948, 52.35987755982988, 1.5707963, {"id": "trimesh_3mf.volume_band", "measured": 1555.5508159141948, "expected": 1570.7963267948965, "tolerance": {"abs": 52.35987755982988}, "passed": true}]
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-09-source.png]	["OK", {"fitted": true, "document": "cylinder_r5_h20", "camera_recorded": true}]
+PASS	NOTE windows	[[15866020, "FreeCAD"], [6625214, "FreeCAD"], [15407174, "* cylinder-r5-h20 - FreeCAD 1.1.4"]]

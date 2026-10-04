@@ -1,0 +1,3 @@
+NOTE | doc handles in GUI after proxy restart: ['box-10-20-30']
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-05-after.png

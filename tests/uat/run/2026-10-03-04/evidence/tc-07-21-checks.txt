@@ -1,0 +1,8 @@
+PASS	given: no stale targets	
+PASS	every write verified false	{"step": false, "stl": false, "3mf": false}
+PASS	each write text ends 'export written -> <path>.'	{"step": "STEP export written -> D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-21-pair.step.", "stl": "STL export written -> D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-21-pair.stl.", "3mf": "3MF export written -> D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-21-pair.3mf."}
+PASS	write results carry no checks	{"step": ["export_id", "path", "bytes", "verified"], "stl": ["export_id", "path", "bytes", "facets", "verified"], "3mf": ["export_id", "path", "bytes", "facets", "verified"]}
+PASS	verify schema fcb.validation-report/1 vs write fcb.result-envelope/1	[{"step": "fcb.validation-report/1", "stl": "fcb.validation-report/1", "3mf": "fcb.validation-report/1"}, {"step": "fcb.result-envelope/1", "stl": "fcb.result-envelope/1", "3mf": "fcb.result-envelope/1"}]
+PASS	verify verdict OK and every check passed	{"step": ["OK", []], "stl": ["OK", []], "3mf": ["OK", []]}
+PASS	after truncating STL to 0 B: write result unchanged, verify non-OK	["SPEC_FAILED", "trimesh_stl.readable; stl2.facets; stl2.manifold_edge_pairing; self_read.facet_count; self_read.vertex_count", 0]
+PASS	status set closed across calls	["OK", "OK", "OK", "OK", "OK", "OK", "SPEC_FAILED"]

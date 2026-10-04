@@ -1,0 +1,9 @@
+PASS | P1 :8765 LISTENING | ['TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       33976']
+FAIL | P2 query_capabilities reports auto_approve:false (literal field) | auto_approve key present=False keys=['element_map_available', 'enums', 'exec_enabled', 'freecad_version', 'partdesign_available', 'render', 'serializer', 'sketcher_available', 'varset_backend']
+PASS | P2b posture probe: no-confirm feature_body_create fails closed (not auto-approve) | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\
+PASS | P3 golden box present | D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd
+PASS | P4 no stale preview TempDocs (excluding pre-run 2026-09-22 dir) | []
+NOTE | $TEMP holds pre-existing FCB_TMP_prev_rtoduji3 dated 2026-09-22 15:57 (before this run); listing it is Permission denied
+PASS | P5 get_window_state returns QOpenGLWidget | ['  - [6] Group [id=Gui::GUISingleApplication.Gui::MainWindow.QOpenGLWidget actions=[invoke,set_value]]']
+FAIL | P6 Fit All toolbar button with element_token | []
+PASS | P7 evidence dir writable | D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-03-04\evidence

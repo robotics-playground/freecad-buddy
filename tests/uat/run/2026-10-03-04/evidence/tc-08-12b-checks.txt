@@ -1,0 +1,4 @@
+NOTE | post-deadline call at 1791062290.710; mint call 1791061388.538; elapsed 902.2 s; expires_at 2026-10-03T21:18:08.645832+00:00
+PASS | post-deadline spent+expired token refused as EXPIRED | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "confirm.preview_id has expired; re-run preview_dry_run", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBudd
+PASS | message is NOT the already-authorized message | confirm.preview_id has expired; re-run preview_dry_run
+PASS | tree lists exactly one Probe body | ['Body', 'Sketch', 'Probe']

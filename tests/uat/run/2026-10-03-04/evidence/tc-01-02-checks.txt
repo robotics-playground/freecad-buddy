@@ -1,0 +1,21 @@
+keys ['total', 'passed', 'failed', 'all_passed', 'checks']
+all_passed True
+== stderr grep
+(nothing)
+3 tests/uat/run/2026-10-03-04/evidence/tc-01-02-server.stderr.log
+== query_capabilities after sweep
+ "status": "OK",
+  "freecad_version": "1.1.4",
+ "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: False\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+[{"tool": "tools/list", "ok": true, "status": "OK", "detail": "45 tools"}, {"tool": "query_capabilities", "ok": "1.1.3", "status": "OK", "detail": "freecad=1.1.3 render=offscreen"}]
+{"tool": "query_mass_properties:box-10-20-30", "ok": true, "status": "OK", "detail": "volume=6000.0 (expect 6000.0, rel_ok=True)"}
+{"tool": "verify_export_step:box-10-20-30", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_stl:box-10-20-30", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_step:cylinder-r5-h20", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_stl:cylinder-r5-h20", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_step:sphere-r10", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_stl:sphere-r10", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_step:box40-hole-r5", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_stl:box40-hole-r5", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_step:two-box-compound", "ok": true, "status": "OK", "detail": ""}
+{"tool": "verify_export_stl:two-box-compound", "ok": true, "status": "OK", "detail": ""}

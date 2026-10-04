@@ -1,0 +1,11 @@
+== proxy log
+2026-10-03 23:42:52,006 INFO freecad_buddy.hosts.gui_external: freecad-buddy GUI-external MCP server on http://127.0.0.1:8765/mcp
+== Then FreeCAD alive
+freecad.exe                  35464 Console                    1    543,476 K
+== Then discovery unchanged
+port 53661 token_sha256 e1970d3cf8e7f31c started 2026-10-03T16:41:12.291198+00:00
+== Then :8765 new pid
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       4548
+query_capabilities OK None 1.1.4  
+query_tree_summary OK None  [('Box', True)] 
+document_list OK None   [('box-10-20-30', 'fcb-doc:IZMXBMdq1XfVYKPumV0QdA')]

@@ -1,0 +1,112 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "mutation": {
+   "schema": "fcb.mutation/1",
+   "transaction_id": "0",
+   "fingerprint_before": {
+    "schema": "fcb.fingerprint/1",
+    "serializer": "exportBinary",
+    "objects": [
+     {
+      "name": "Box",
+      "brep_sha256": "7bb9e38c91e5599e487fcb7d24162b9df200b0481e98e83df28055d7b164d8c1",
+      "massprops": {
+       "volume": 6000.0,
+       "area": 2200.0,
+       "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        20.0,
+        30.0
+       ],
+       "com": [
+        5.0,
+        10.0,
+        15.0
+       ],
+       "principal_moments": [
+        650000.0,
+        500000.0,
+        250000.0
+       ],
+       "quantum": 1e-06
+      }
+     }
+    ],
+    "digest": "33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c"
+   },
+   "fingerprint_after": {
+    "schema": "fcb.fingerprint/1",
+    "serializer": "exportBinary",
+    "objects": [
+     {
+      "name": "Box",
+      "brep_sha256": "7bb9e38c91e5599e487fcb7d24162b9df200b0481e98e83df28055d7b164d8c1",
+      "massprops": {
+       "volume": 6000.0,
+       "area": 2200.0,
+       "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        20.0,
+        30.0
+       ],
+       "com": [
+        5.0,
+        10.0,
+        15.0
+       ],
+       "principal_moments": [
+        650000.0,
+        500000.0,
+        250000.0
+       ],
+       "quantum": 1e-06
+      }
+     }
+    ],
+    "digest": "33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c"
+   },
+   "post_verify": {
+    "recompute_clean": true,
+    "is_valid": true,
+    "fully_constrained": null,
+    "tnp_audit": {
+     "status": "CLEAN",
+     "element_map_version": "15.70200.5",
+     "findings": []
+    },
+    "passed": true,
+    "explanation": null
+   },
+   "rolled_back": false,
+   "rollback_proven": null,
+   "snapshot_path": null,
+   "verify_verdict": "OK",
+   "params_digest": "9723bcfb732e0cb5d4fcc473532395c31762e7696012aec15249a087a0f4aa89",
+   "touched": [
+    "AuditB"
+   ]
+  },
+  "feature": "AuditB",
+  "feature_state": {
+   "schema": "fcb.feature-state/1",
+   "feature": "AuditB",
+   "readable": false
+  }
+ },
+ "text": "Mutation committed; fingerprint 33e870c051cd.",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

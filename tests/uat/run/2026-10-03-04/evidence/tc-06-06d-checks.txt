@@ -1,0 +1,4 @@
+NOTE | toggle 1: route=global_input bridge PadB vis @1s=True @3s=True default render=['PadA', 'PadB'] shot=tc-06-06-probe-toggle1.png
+NOTE | toggle 2: route=global_input bridge PadB vis @1s=False @3s=False default render=['PadA'] shot=tc-06-06-probe-toggle2.png
+NOTE | toggle 3: route=global_input bridge PadB vis @1s=True @3s=True default render=['PadA', 'PadB'] shot=tc-06-06-probe-toggle3.png
+NOTE | toggle 4: route=global_input bridge PadB vis @1s=False @3s=False default render=['PadA'] shot=tc-06-06-probe-toggle4.png

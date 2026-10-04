@@ -1,0 +1,28 @@
+{
+ "ws_before": 565301248,
+ "A_hello": true,
+ "A_send": "17 MiB sent",
+ "A_next_recv": "ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host",
+ "ws_after": 567767040,
+ "ws_delta": 2465792,
+ "B_hello": true,
+ "B_next_recv": "0 bytes b''",
+ "C_contract_version": "1",
+ "C_document_list": "OK",
+ "mutating_view_fit_on_open_doc": {
+  "status": "OK",
+  "message": null
+ },
+ "log_cap_line": [
+  "    raise ValueError(\"frame exceeds 16 MiB cap\")",
+  "ValueError: frame exceeds 16 MiB cap"
+ ],
+ "log_frame_read_failed": [
+  "2026-10-04 12:18:48,715 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection",
+  "2026-10-04 12:18:49,877 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection"
+ ],
+ "log_utf8": [
+  "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 64: invalid start byte"
+ ],
+ "ws_end": 558260224
+}

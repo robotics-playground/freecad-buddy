@@ -1,0 +1,2 @@
+grep -iE 'access violation|segfault|swig' addon.log:
+(no matches)

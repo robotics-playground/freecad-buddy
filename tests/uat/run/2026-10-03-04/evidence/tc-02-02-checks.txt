@@ -1,0 +1,12 @@
+PASS | Given golden exists | 
+PASS | Given no document open | 0 open document(s).
+PASS | open carries doc,name,label,path == input | {'doc': 'fcb-doc:NM2o5ZfnZ4SEGTXxohtC-Q', 'name': 'box_10_20_30', 'label': 'box-10-20-30', 'path': 'D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd'}
+PASS | text is shipped form | Opened box-10-20-30 -> fcb-doc:NM2o5ZfnZ4SEGTXxohtC-Q.
+PASS | total_objects 1, returned_nodes 1 | {'total_objects': 1, 'returned_nodes': 1}
+PASS | tree[0] Box Part::Feature | {'name': 'Box', 'label': 'Box', 'type': 'Part::Feature', 'visibility': False}
+PASS | tree[0] has no error key | ['name', 'label', 'type', 'visibility']
+PASS | query_object Box Part::Feature error null | {'name': 'Box', 'type': 'Part::Feature', 'error': None}
+PASS | properties JSON-safe object, no live pointer repr | {'count': 8, 'pointer_reprs': []}
+PASS | volume 6000 within 0.1% | 6000.0
+FAIL | box view_fit_viewport OK | {'status': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}}
+Box was hidden in golden; shown via View>Visibility>Show All Objects (invoke_menu, route accessibility), verified visibility true by query_tree_summary

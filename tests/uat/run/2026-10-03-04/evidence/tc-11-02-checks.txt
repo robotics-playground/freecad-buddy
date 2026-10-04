@@ -1,0 +1,24 @@
+NOTE | Operator acceptance: exec enablement limited to separate H1 headless processes, authorized by the run brief (defensive test of own bridge).
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-02-before.png
+NOTE | value=1: tools=46 debug_exec=True exec_enabled=True warn=True
+NOTE | value=true: tools=45 debug_exec=False exec_enabled=False warn=False
+NOTE | value=yes: tools=45 debug_exec=False exec_enabled=False warn=False
+NOTE | value=0: tools=45 debug_exec=False exec_enabled=False warn=False
+FAIL | Then =1 lists 45 tools (TC literal) | 46
+PASS | Then =1 debug_exec present | 46
+FAIL | Then true: tools/list length 44 (TC literal) | 45
+PASS | Then true: debug_exec absent | 45
+FAIL | Then yes: tools/list length 44 (TC literal) | 45
+PASS | Then yes: debug_exec absent | 45
+FAIL | Then 0: tools/list length 44 (TC literal) | 45
+PASS | Then 0: debug_exec absent | 45
+PASS | Then exec_enabled true on =1 only | {'1': True, 'true': False, 'yes': False, '0': False}
+PASS | Then =1 stderr has the SECURITY warning | 
+PASS | Then warning absent for true/yes/0 | 
+PASS | Then (extra) =1 surface = clean surface + debug_exec only | ['debug_exec']
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-02-after.png

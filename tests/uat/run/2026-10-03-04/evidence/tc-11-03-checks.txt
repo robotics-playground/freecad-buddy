@@ -1,0 +1,25 @@
+NOTE | Given FREECAD_BUDDY_ALLOW_EXEC=1 is set for the H1 child process of this scenario only; the shell and the GUI keep it unset.
+NOTE | Given audit-log path for this scenario: FREECAD_BUDDY_AUDIT_LOG=D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-03-audit.jsonl
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-03-before.png
+PASS | Given H1 child sees ALLOW_EXEC=1 (exec_enabled true) | True
+NOTE | debug_exec -> {"status": "OK"} value_repr=1 stdout='tc-11-03 exec ran\n'
+NOTE | TC reader output:
+mutation document_open 8e18487b83adf06225cfff78df1d670c96ad238fca632755bb7a830d45be4b5d
+mutation document_open 8e18487b83adf06225cfff78df1d670c96ad238fca632755bb7a830d45be4b5d
+exec debug_exec be8c30a85eacf9c16377d82aa9ee6848b29b6d7477beae4fd67510323c85d592
+exec debug_exec be8c30a85eacf9c16377d82aa9ee6848b29b6d7477beae4fd67510323c85d592
+
+PASS | Then grep -c '"tool": "debug_exec"' == 2 | 2
+PASS | Then both lines event exec | ['exec', 'exec']
+PASS | Then both carry 64-hex params_digest | ['be8c30a85eacf9c16377d82aa9ee6848b29b6d7477beae4fd67510323c85d592', 'be8c30a85eacf9c16377d82aa9ee6848b29b6d7477beae4fd67510323c85d592']
+PASS | Then before/after digests equal | 
+PASS | Then code field equals submitted code | ["result = len(doc.Objects)\nprint('tc-11-03 exec ran')\n", "result = len(doc.Objects)\nprint('tc-11-03 exec ran')\n"]
+PASS | Then after line has non-null verify_verdict | OK
+PASS | Then every line schema fcb.audit-record/1 | 
+NOTE | all audit lines in file: [('mutation', 'document_open'), ('mutation', 'document_open'), ('exec', 'debug_exec'), ('exec', 'debug_exec')]
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-03-after.png

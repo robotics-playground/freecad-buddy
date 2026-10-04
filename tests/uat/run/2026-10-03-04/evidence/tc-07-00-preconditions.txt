@@ -1,0 +1,5 @@
+tools: 45
+confirm-declaring: ['feature_body_create', 'feature_chamfer', 'feature_datum', 'feature_fillet', 'feature_hole', 'feature_mirror', 'feature_pad', 'feature_pattern', 'feature_pocket', 'feature_revolve', 'feature_set_parameters', 'sketch_add_constraint', 'sketch_add_external_geometry', 'sketch_add_geometry', 'sketch_create', 'sketch_remove_constraint', 'sketch_remove_geometry', 'sketch_set_datum', 'sketch_toggle_construction']
+export_* props: {'export_step': ['ap', 'doc', 'objects', 'path'], 'export_stl': ['angular', 'doc', 'linear', 'objects', 'path'], 'export_3mf': ['angular', 'doc', 'linear', 'objects', 'path']}
+export_* addlProps: {'export_step': False, 'export_stl': False, 'export_3mf': False}
+mut with confirm & export: []

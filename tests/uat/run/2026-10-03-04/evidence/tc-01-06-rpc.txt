@@ -1,0 +1,49 @@
+== v06 on live record, proxy connected
+discovery file: rpc-33184.json pid 33184 port 59314
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.05
+== stop proxy only
+listener pid 34584 parent 9380 (pythonw)
+stopped launcher 9380
+after: 1 :8765 listeners
+freecad.exe                  33184 Console                    1    138,568 K
+== v06 on live record, proxy stopped
+discovery file: rpc-33184.json pid 33184 port 59314
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.05
+== listener survives: authenticated hello
+discovery file: rpc-33184.json pid 33184 port 59314
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.02
+== stop proxy only (retry with TerminateProcess)
+listener pid 34584 parent 9380 (pythonw)
+after: 1 :8765 listeners
+freecad.exe                  33184 Console                    1    136,532 K
+pythonw.exe                   9380 Console                    1      4,152 K
+pythonw.exe                  34584 Console                    1     27,588 K
+== v06 on live record, proxy stopped
+discovery file: rpc-33184.json pid 33184 port 59314
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.03
+== stop proxy only (TerminateProcess; previous attempt hit the PowerShell 'Kill' alias)
+listener pid 34584 parent 9380 (pythonw)
+terminate 34584 -> True
+terminate 9380 -> False
+after: 0 :8765 listeners
+freecad.exe                  33184 Console                    1    139,396 K
+== v06 on live record, proxy stopped
+discovery file: rpc-33184.json pid 33184 port 59314
+sent: {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "99"}}
+frame1: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32004, "message": "contract version unsupported", "data": {"supported": ["1"]}}}
+frame2: ''
+elapsed 0.0
+== listener survives: authenticated hello (also TC-01-04 handshake exec_enabled cross-check)
+discovery file: rpc-33184.json pid 33184 port 59314
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.01
+== query_capabilities after refusal (through restarted proxy)
+ "status": "OK",
+  "freecad_version": "1.1.4",

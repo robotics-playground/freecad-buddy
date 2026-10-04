@@ -1,0 +1,1 @@
+{"count": 13, "view_fit_viewport_listed": false, "names": ["document_close", "document_list", "document_open", "query_capabilities", "query_dependencies", "query_mass_properties", "query_object", "query_placement", "query_sketch_info", "query_tree_summary", "verify_recompute", "verify_shape", "verify_sketch"]}

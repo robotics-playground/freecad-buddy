@@ -1,0 +1,16 @@
+NOTE | Operator acceptance: mutations without confirm only on separate H1 headless processes (authorized by the run brief); GUI never auto-approve here.
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-08-before.png
+PASS | Then stderr (=1) contains the auto-approve SECURITY warning | 
+PASS | Then mutation runs without confirm: status OK, no confirm-required message | {"status": "OK"}
+PASS | Then grep -c '"event": "approval"' == 1 | 1
+PASS | Then approval names the mutating tool | feature_body_create
+FAIL | Then approval fingerprint_before == mutation before line fingerprint_before | {'approval': 'None', 'before': 'None', 'after_line': 'None'}
+FAIL | Then approval params_digest == before/after digest | {'approval': '4800573f4165335d', 'before': 'a00e78f7c89e335e', 'after': 'a00e78f7c89e335e'}
+PASS | Then AUTO_APPROVE=true: no warning in stderr | 
+PASS | Then AUTO_APPROVE=true: unconfirmed mutation refused with exact message | {'status': 'INVALID_INPUT', 'message': 'this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id'}
+NOTE | approval record keys: ['actor', 'approval', 'doc', 'event', 'fingerprint_before', 'params_digest', 'schema', 'tool', 'ts']; approval block: {'args_digest': '381e371f01b2a39805f1a48b8a8153ff5292e516d6fd088d31a527ea679e093b', 'doc': 'fcb-doc:NEr9hXvJer_0p5hmnqddgA', 'fingerprint_before': None, 'mode': 'auto_approve', 'tool': 'feature_body_create'}
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-08-after.png

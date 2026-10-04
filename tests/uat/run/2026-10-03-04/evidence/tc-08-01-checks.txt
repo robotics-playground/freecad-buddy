@@ -1,0 +1,11 @@
+FAIL | Given query_sketch_info fully_constrained true | {"status": "OK"}
+PASS | Precondition P6 (with a 3D view open): Fit All toolbar button has element_token | [{'actions': ['invoke', 'set_value'], 'depth': 2, 'element_index': 95, 'element_token': 's000004aa:95', 'enabled': True, 'frame': {'h': 41, 'w': 41, 'x': 612, 'y': 67}, 'label': 'Fit All', 'parent_index': 94, 'role': 'Button'}]
+PASS | status OK, detail null, diff.schema fcb.geometry-diff/1 | OK None fcb.geometry-diff/1
+PASS | deltas.volume before 0.0 after 12000.0 delta 12000.0 units mm^3 | {'before': 0.0, 'after': 12000.0, 'delta': 12000.0, 'units': 'mm^3'}
+PASS | area mm^2, bbox mm, com mm | {'area': 'mm^2', 'bbox': 'mm', 'com': 'mm'}
+PASS | counts.solids 0->1 delta 1; faces.delta 6 | {'solids': {'before': 0, 'after': 1, 'delta': 1}, 'faces': {'before': 0, 'after': 6, 'delta': 6}}
+PASS | touched contains Pad, new contains Pad, deleted [] | {'touched': ['Body', 'Pad'], 'new': ['Pad'], 'deleted': []}
+PASS | validity is_valid true, recompute_clean true, status OK, explanation null | {'is_valid': True, 'recompute_clean': True, 'recompute_errors': [], 'pre_existing_errors': [], 'status': 'OK', 'explanation': None}
+PASS | tnp_precheck.status in CLEAN/FLAGGED/UNSUPPORTED and element_map_version present | {'status': 'CLEAN', 'element_map_version': '15.70200.5', 'findings': []}
+PASS | preview_id starts fcb-preview: ; expires_at ISO-8601 UTC | {'preview_id': 'fcb-preview:eyJhcmdzX2RpZ2VzdCI6IjZmNjlj', 'expires_at': '2026-10-03T21:10:40.416576+00:00'}
+PASS | live tree has no Pad after preview (corroborating) | ['Body', 'Sketch']

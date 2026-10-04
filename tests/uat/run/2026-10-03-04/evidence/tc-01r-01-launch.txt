@@ -1,0 +1,65 @@
+== TC-01-01 When launch_app 2026-10-04T15:56:42+07:00
+{
+  "active": false,
+  "bundle_id": null,
+  "name": "C:\\Program Files\\FreeCAD 1.1\\bin\\freecad.exe",
+  "pid": 28996,
+  "running": true,
+  "windows": [
+    {
+      "bounds": {
+        "height": 549,
+        "width": 716,
+        "x": 921,
+        "y": 445
+      },
+      "is_on_screen": true,
+      "layer": 0,
+      "title": "FreeCAD",
+      "window_id": 6297480,
+      "z_index": 0
+    }
+  ]
+}
+
+bridge_wait=4s pid=28996
+-- list_windows
+{
+  "_legacy_windows": [
+    {
+      "height": 1380,
+      "is_on_screen": true,
+      "minimized": false,
+      "pid": 28996,
+      "title": "FreeCAD 1.1.4",
+      "width": 1775,
+      "window_id": 3283362,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "current_space_id": null,
+  "windows": [
+    {
+      "app_name": "freecad.exe",
+      "bounds": {
+        "height": 1380,
+        "width": 1775,
+        "x": 0,
+        "y": 0
+      },
+      "is_on_screen": true,
+      "layer": 0,
+      "minimized": false,
+      "pid": 28996,
+      "title": "FreeCAD 1.1.4",
+      "window_id": 3283362,
+      "z_index": 0
+    }
+  ]
+}
+
+-- addon.log
+2026-10-04 15:56:44,673 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 15:56:44,912 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:55359
+2026-10-04 15:56:45,218 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 33720) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log

@@ -1,0 +1,6 @@
+$ grep -n 'open(self._path, "a"' src/freecad_buddy/adapters/audit_log.py
+46:            with open(self._path, "a", encoding="utf-8") as handle:
+$ grep -rn --include=*.py "FREECAD_BUDDY_AUDIT_LOG\|audit.jsonl" src/freecad_buddy/usecases/ src/freecad_buddy/contracts/
+src/freecad_buddy/usecases/documents.py:40:    Follows the ``FREECAD_BUDDY_AUDIT_LOG`` precedent: an operator overrides the location by
+$ grep -rniE "rotate|truncate|\"w\"|'w'" src/freecad_buddy/adapters/audit_log.py
+7:truncates, rotates, or reads it.

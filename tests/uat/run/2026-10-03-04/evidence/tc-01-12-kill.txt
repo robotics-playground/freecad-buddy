@@ -1,0 +1,13 @@
+== When: Stop-Process -Id 33068 (literal)
+Stop-Process : Cannot stop process "pythonw (33068)" because of the following error: Access is denied
+At line:1 char:1
+pythonw.exe                  36104 Console                    1      5,584 K
+pythonw.exe                  33068 Console                    1     62,240 K
+== fallback: TerminateProcess on the listener only (Stop-Process is refused from this shell)
+True
+== after kill: proxy processes
+(both gone: listener 33068 and launcher 36104)
+== :8765
+:8765 free
+== FreeCAD alive
+freecad.exe                  35464 Console                    1    543,820 K

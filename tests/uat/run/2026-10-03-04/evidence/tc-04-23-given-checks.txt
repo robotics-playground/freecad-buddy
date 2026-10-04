@@ -1,0 +1,2 @@
+NOTE | fully constrained LooseProfile built through MCP: add={"status": "OK"} verify={"status": "OK"} dof=0
+NOTE | MCP cannot leave a sketch under-constrained (sketch_* post_verify rolls back dof>0), so the two position constraints are deleted in FreeCAD's own Python console (GUI, cua-driver type_text) - fixture step only

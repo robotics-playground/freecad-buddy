@@ -1,0 +1,15 @@
+NOTE | verify_recompute (dirty?): {"subject": {"failing_objects": []}, "checks": [{"id": "recompute.clean", "measured": 0, "expected": 0, "passed": true, "detail": {"message": "no object left in an error state"}}], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15}, "verdict": "OK"}
+NOTE | BoxPad Length/State: {"Length": "25.0 mm", "State": null}
+PASS | dirty render status OK (not SPEC_FAILED/INVALID_INPUT) | {"status": "OK"}
+FAIL | dirty render dirty_document true | {'available': True, 'resource_link': 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_iavh3ulz.png', 'reason': None, 'dirty_document': False, 'empty_scene': False}
+PASS | dirty render: link non-null and PNG > 0 bytes | 38088
+FAIL | dirty render text contains 'Document dirty (pending/broken recompute)' | Rendered 1 objects.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Ca
+PASS | dirty_document present in structured_content.render | ['available', 'dirty_document', 'empty_scene', 'reason', 'resource_link']
+NOTE | document_recompute: {"status": "OK"}
+PASS | post-recompute render dirty_document false | {'available': True, 'resource_link': 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_juhdhk06.png', 'reason': None, 'dirty_document': False, 'empty_scene': False}
+PASS | dirty render rendered_objects == post-recompute list | {'dirty': ['BoxPad'], 'clean': ['BoxPad']}
+NOTE | BoxPad volume after recompute (expect 10*20*25=5000): {'value': 4999.999999999999, 'unit': 'mm^3'}
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-10-after.png', 'exists': True, 'title': '- [0] Window "* TC0610 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

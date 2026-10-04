@@ -1,0 +1,6 @@
+tag=tc-99-08-impostor pid=32296 window_id=7149960 bridge_wait=2s
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       37000
+--- new addon.log lines ---
+2026-10-04 14:23:56,047 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-04 14:23:56,270 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:60054
+2026-10-04 14:23:56,271 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy already on http://127.0.0.1:8765/mcp; not spawning

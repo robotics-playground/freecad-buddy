@@ -1,0 +1,8 @@
+PASS | :8765 LISTENING | 
+PASS | golden box present | 
+NOTE | query_capabilities keys=['element_map_available', 'enums', 'exec_enabled', 'freecad_version', 'partdesign_available', 'render', 'serializer', 'sketcher_available', 'varset_backend']; auto_approve field present=False
+PASS | host NOT auto-approve: mutation without confirm is refused | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\
+NOTE | $TEMP FCB_TMP_snap_* count=10 (pre-existing, dated 2026-09-22, not from this run): ['FCB_TMP_snap_5vfvwol0', 'FCB_TMP_snap_6trobotl', 'FCB_TMP_snap_8w4fs72c']...
+PASS | bridge workdir tmp free of FCB_TMP_snap_* | []
+PASS | cua-driver get_window_state reaches FreeCAD window | elements=121
+NOTE | QOpenGLWidget in tree: True (no 3D view open on Start page)

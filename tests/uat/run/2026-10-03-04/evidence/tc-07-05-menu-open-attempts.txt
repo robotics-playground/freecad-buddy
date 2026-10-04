@@ -1,0 +1,24 @@
+{
+  "refusal": {
+    "code": "menu_path_unavailable",
+    "message": "menu path segment 1 was not found"
+  },
+  "status": "refused"
+}
+{
+  "refusal": {
+    "code": "menu_path_unavailable",
+    "message": "menu path segment 1: InvokePattern.Invoke failed: Pattern not found (0x80131505)"
+  },
+  "status": "refused"
+}
+{
+  "refusal": {
+    "code": "menu_path_unavailable",
+    "message": "menu path segment 1 was not found"
+  },
+  "status": "refused"
+}
+[(15407174, '* Unnamed - FreeCAD 1.1.4')]
+
+[exited with code 0]

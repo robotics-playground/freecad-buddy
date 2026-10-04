@@ -1,0 +1,11 @@
+NOTE | query_sketch_info (TC verify) reports no dof field: keys=['constraints', 'geometry', 'sketch']; constraints=8
+PASS | Given Sketch dof > 0 (verify_sketch, second domain) | {'dof': 4, 'fully_constrained': False}
+NOTE | before fit={'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+NOTE | preview validity={"is_valid": true, "recompute_clean": true, "recompute_errors": [], "pre_existing_errors": [], "status": "OK", "explanation": null}
+NOTE | feature_pad -> status=OK rolled_back=False post_verify={"recompute_clean": true, "is_valid": true, "fully_constrained": null, "tnp_audit": {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}, "passed": true, "explanation": null}
+PASS | recompute_clean true | True
+PASS | is_valid true | True
+FAIL | fully_constrained false and explanation starts 'verify_sketch failed on Sketch (dof=' | {'fully_constrained': None, 'explanation': None}
+PASS | tnp_audit.findings == [] (short-circuit block) | {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}
+FAIL | status SPEC_FAILED | {"status": "OK"}
+FAIL | Pad not in tree | {"doc": "fcb-doc:iBHRa5YgXFWqknrj0YpISA", "total_objects": 11, "returned_nodes": 3, "depth": 2, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": true, "children_count": 3, "children": [{"name": "Pad", "label": "Pad", "type": "PartDesign::Pad", "visibility": true, "children_count": 1}, {"name": "Sketch", "label": "Sketch", "type": "Sketcher::SketchObject", "visibilit

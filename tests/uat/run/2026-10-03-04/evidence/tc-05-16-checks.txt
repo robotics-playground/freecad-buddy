@@ -1,0 +1,14 @@
+NOTE | cleanup previous scenario: document_close TC0515 -> OK
+NOTE | fixture Fillet -> {"status": "OK"}
+PASS | Given Fillet Base names Pad and Edge1 | ["<PartDesign::Pad>", ["Edge1"]]
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | preview validity={"is_valid": true, "recompute_clean": true, "recompute_errors": [], "pre_existing_errors": [], "status": "OK", "explanation": null} tnp_precheck={"status": "CLEAN", "element_map_version": "15.70200.5", "findings": [{"owner": "Fillet", "prop": "Base", "mapped_before": "#f:2;:G;XTR;:H613:7,E", "state_after": null, "verdict": "PASS", "layer": 2, "detail": "Edge1 descends from the same source element"}, {"owner": "Pad", "prop": "Profile", "mappe
+NOTE | envelope status=OK text='Mutation committed; fingerprint 7e54aa3e8cb3.' tnp={"status": "CLEAN", "element_map_version": "15.70200.5", "findings": [{"owner": "Fillet", "prop": "Base", "mapped_before": "#f:2;:G;XTR;:H613:7,E", "state_after": null, "verdict": "PASS", "layer": 2, "detail": "Edge1 descends from the same source element"}, {"owner": "Pad", "prop": "Profile", "mapped_before": null, "state_after": null, "verdict": "PASS", "layer": 1, "detail": "Pad.Profile names no element"}]}
+FAIL | tnp_audit.status FLAGGED | CLEAN
+FAIL | REPOINTED finding owned by Fillet | [{'owner': 'Fillet', 'prop': 'Base', 'mapped_before': '#f:2;:G;XTR;:H613:7,E', 'state_after': None, 'verdict': 'PASS', 'layer': 2, 'detail': 'Edge1 descends from the same source element'}, {'owner': 'Pad', 'prop': 'Profile', 'mapped_before': None, 'state_after': None, 'verdict': 'PASS', 'layer': 1, 'detail': 'Pad.Profile names no element'}]
+FAIL | finding layer 1 or 2 | []
+FAIL | recompute_clean true, is_valid true, explanation starts 'TNP audit flagged ' | {'recompute_clean': True, 'is_valid': True, 'explanation': None}
+FAIL | rolled_back true, proof verified/via_snapshot | {'rolled_back': False, 'rollback_proven': None}
+FAIL | Chamfer not in tree | True
+FAIL | preview diff.tnp_precheck.status FLAGGED | CLEAN
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

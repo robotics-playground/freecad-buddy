@@ -1,0 +1,4 @@
+2 open
+  sphere-r10           -> OK
+  Unnamed              -> OK
+0 open document(s).

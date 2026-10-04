@@ -1,0 +1,27 @@
+TC-06 findings (render vs window; the window is the referent). HEAD bece7ac, FreeCAD GUI 1.1.4 pid 30620 (launched at bece7ac, src clean).
+
+F1 (TC-06-01/02/07/09, quality) The render lights faces in a different order than the viewport.
+  Window iso (60x40x5 plate): top +Z rgb(159,165,170) brightest, front -Y rgb(149,155,161), right +X rgb(99,107,111).
+  Render iso: top +Z rgb(90,92,93) darkest, front -Y rgb(189,194,200) brightest, right +X rgb(99,101,103).
+  No face is black. Code: offset headlight _HEADLIGHT_OFFSET=(0.55,0.38,-1.0), _HEADLIGHT_INTENSITY=0.80 (render_probe.py:55-56), chosen for the AD-32 tone band (commit eb72dbb).
+  Evidence: tc-06-01-tones.txt, tc-06-01-after.png, tc-06-01-mcp.png. Design trade-off vs the TC tone-parity expectation; needs a decision.
+
+F3 (TC-06-03, defect) query_screenshot {view:{include:["BodyA"]}} returns status OK, rendered_objects ["BodyA"], empty_scene false, resource_link set, but the PNG is all background (fill 0.0).
+  Reproduced 3/3: include BodyA (iso), BodyA (front), BodyB. Evidence: tc-06-03-includeBodyA.png, tc-06-03b-checks.txt, tc-06-03-pngstats.txt.
+  The envelope claims a render that did not happen. Code: render_probe.py:221-231 adds FreeCADGui.subgraphFromObject(Body) and counts it as rendered without checking that it draws.
+
+F4 (TC-06-04, defect) A transparency-only style is ignored: styles [{object:PadA, transparency:100}] and transparency:0 renders are pixel-identical (diff bbox None); PadA stays opaque.
+  With colour + transparency 80 the transparency works. Code: render_probe.py _wrap_style calls material.setOverride(True) only when a colour is written, so the object's own material wins over the transparency field.
+  Evidence: tc-06-04-t0.png, tc-06-04-t100.png, tc-06-04-t0-t100-diff.txt.
+
+F5 (TC-06-02/06, design) The default render skips Sketcher::SketchObject (screenshot.py:47) while the window draws visible sketches.
+  Bottom view: window shows the TowerProfile square at top-left; default render shows a plain rectangle; render with include [Tower, TowerProfile] shows the same square (tc-06-02c-bottom-with-sketch.png).
+  Hidden PadB: window shows the SketchB outline; default render shows PadA only (tc-06-06-hidden2.png). Solids agree in both cases.
+
+F6 (TC-06-08, observation) Render width 800, height default 1920: the part occupies fill 0.03, bbox 270x282 px (tc-06-08-w800.png, tc-06-08-pngstats.txt). Square renders fill 0.41.
+
+Other observations
+- INVALID_INPUT envelopes carry a full Python traceback in detail.data.traceback (for example 'unknown object: NoSuchObject').
+- verify_recompute calls document.recompute() (verify.py:411), so the TC-06-10 step 'confirm dirty with verify_recompute' clears the dirty state it is meant to confirm.
+- Golden box-10-20-30.FCStd opens with Box hidden (known); renders return empty_scene true and view_fit_viewport SPEC_FAILED view_fit.unverified until View>Visibility>Show All Objects.
+- Render temp PNGs live in C:/Users/thuan/freecad-buddy-workdir/tmp, not $TEMP.

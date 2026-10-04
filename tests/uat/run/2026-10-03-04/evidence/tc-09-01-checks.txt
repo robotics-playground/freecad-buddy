@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:2RbquusY9BJGH1__dZP2OQ
+PASS | sweep all_passed True | True
+PASS | total == 14 | 14
+PASS | passed == total, failed 0 | (14, 14, 0)
+PASS | retired_max_nodes_rejected present, status SCHEMA_ERROR | [{'tool': 'retired_max_nodes_rejected', 'ok': True, 'status': 'SCHEMA_ERROR', 'detail': 'additionalProperties: False rejects the retired parameter'}]
+PASS | fault_shape:wrong-volume and :non-watertight-open-shell ok | {'fault_shape:wrong-volume': True, 'fault_shape:non-watertight-open-shell': True}
+PASS | exit code 0 | 0
+PASS | no crash signature in stderr | []

@@ -1,0 +1,6 @@
+NOTE | verify_shape Tower: {"subject": {"object": "Tower"}, "checks": [{"id": "shape.volume", "measured": 7499.999999999999, "passed": true}, {"id": "shape.bbox", "measured": [30.0, 20.0, 25.0], "passed": true}, {"id": "shape.solid_count", "measured": 1, "passed": true}, {"id": "shape.valid", "measured": true, "passed": true}, {"id": "shape.watertight", "measured": true, "passed": true}], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15, "anchor_frame": {"kind": "global", "ref": null, "entity": null, "origin": [0.0, 0.0, 0.0], "axes": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]
+PASS | opposite pair front/back renders differ | {'changed_fraction': 0.1573}
+FAIL | opposite pair top/bottom renders differ | {'changed_fraction': 0.0006}
+PASS | opposite pair left/right renders differ | {'changed_fraction': 0.1562}
+PASS | visual: view_fit_viewport returns OK (Isometric view) | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-02-after.png', 'exists': True, 'title': '- [0] Window "* TC0602 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

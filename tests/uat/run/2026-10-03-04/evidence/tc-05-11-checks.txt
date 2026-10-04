@@ -1,0 +1,16 @@
+NOTE | cleanup previous scenario: document_close TC0510 -> OK
+PASS | Given debug_exec NOT refused | {"status": "OK"}
+PASS | Given Sketch fully constrained dof 0 (verify_sketch) | 0
+NOTE | patch applied AFTER preview_dry_run (the preview runs the bracket on a copy and would consume the call counter)
+NOTE | literal TC patch -> {"status": "OK"}
+NOTE | envelope status=SPEC_FAILED text='Mutation failed and its rollback could not be proven: freecad-buddy-workdir\\tmp\\FCB_TMP_snap_wqhpg1ay\\TC0511.FCStd.'
+PASS | rolled_back false | False
+PASS | status SPEC_FAILED | SPEC_FAILED
+PASS | snapshot_path non-null | freecad-buddy-workdir\tmp\FCB_TMP_snap_wqhpg1ay\TC0511.FCStd
+PASS | snapshot file still on disk (in-process os.path.exists; shell is ACL-denied) | (True, 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_wqhpg1ay\\TC0511.FCStd', ['TC0511.FCStd'])
+NOTE | shell view: dir exists=True
+PASS | fingerprint_after null | None
+PASS | mutation really committed: Pad in tree, volume 12000.0 | 12000.0
+PASS | text is 'Mutation failed and its rollback could not be proven: {snapshot_path}.' never 'Mutation rolled back' | Mutation failed and its rollback could not be proven: freecad-buddy-workdir\tmp\FCB_TMP_snap_wqhpg1ay\TC0511.FCStd.
+NOTE | explanation='RuntimeError: injected serializer failure'
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

@@ -1,0 +1,3 @@
+RT tree [{'name': 'tc_07_09_legs', 'label': 'tc-07-09-legs', 'type': 'Mesh::Feature', 'visibility': True}]
+RT mass tc_07_09_legs INVALID_INPUT null object has no queryable shape: tc_07_09_legs
+RT view_fit_viewport SPEC_FAILED {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}

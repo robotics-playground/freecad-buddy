@@ -1,0 +1,6 @@
+NOTE | Body: status=OK vol=12000.0 detail=
+NOTE | Fillet: status=INVALID_INPUT vol=None detail=object has no queryable shape: Fillet
+NOTE | Pad: status=OK vol=12000.0 detail=
+NOTE | Body Tip="<PartDesign::Fillet>"
+NOTE | verify_recompute -> {"status": "RECOMPUTE_ERROR", "detail": {"code": "RECOMPUTE_ERROR", "message": "recompute.object; recompute.object", "objects": []}}
+NOTE | in-process object states: [('Body', 'PartDesign::Body', True, 'Touched', False), ('Sketch', 'Sketcher::SketchObject', True, 'Valid', False), ('Pad', 'PartDesign::Pad', True, 'Valid', False), ('Fillet', 'PartDesign::Fillet', False, 'BRep_API: command not done', True), ('Tip', 'Fillet'), ('UndoMode', 0)]

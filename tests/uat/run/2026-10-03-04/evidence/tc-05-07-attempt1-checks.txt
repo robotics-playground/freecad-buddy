@@ -1,0 +1,17 @@
+NOTE | cleanup previous scenario: document_close TC0506 -> OK
+PASS | Given swap payload sphere-r10.FCStd present | 
+NOTE | file-swap harness NOT armed: snapshot dirs are created by the FreeCAD process with an ACL this (non-elevated) shell cannot read or write (listdir/icacls -> Access is denied, tc-05-02b-snapwatch.log). Using the 'document known to take the snapshot-restore path' branch of the Given: feature_set_parameters Fillet Radius 400 (TC-05-06 reproducer) reached the unproven path in tc-05-06.
+NOTE | fixture Fillet r2 -> {"status": "OK"}
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | envelope: status=RECOMPUTE_ERROR text='Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Fillet: BRep_API: command not done'
+FAIL | rolled_back false | True
+FAIL | rollback_proven null | rolled_back_verified
+FAIL | status SPEC_FAILED | RECOMPUTE_ERROR
+FAIL | snapshot_path non-null | None
+NOTE | snapshot_path is relative (None); resolved against home -> None
+FAIL | snapshot dir still on disk (shell can see the dir; file listing is ACL-denied) | None
+FAIL | text exactly 'Mutation failed and its rollback could not be proven: {snapshot_path}.' and no 'rolled back'/'restored' | Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Fillet: BRep_API: command not done
+FAIL | explanation ends 'rollback could not be proven: ... pre-mutation fingerprint ' + before digest | recompute left 1 object(s) invalid: Fillet: BRep_API: command not done
+NOTE | Fillet volume after (r2 => 11974.2478): 11974.247779607693
+NOTE | before/after fingerprint object diffs: []
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

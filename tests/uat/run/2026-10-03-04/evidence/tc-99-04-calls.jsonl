@@ -1,0 +1,4 @@
+{"call": "mutation", "t": 1791098417.692, "status": "OK", "detail": null, "mutation": {"snapshot_path": null}, "paths": {}}
+{"call": "preview", "t": 1791098418.401, "status": "OK", "detail": null, "mutation": null, "paths": {}}
+{"call": "screenshot", "t": 1791098419.03, "status": "OK", "detail": null, "mutation": null, "paths": {}}
+{"call": "export", "t": 1791098419.939, "status": "OK", "detail": null, "mutation": null, "paths": {"path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-99-04-export.step"}}

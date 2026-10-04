@@ -1,0 +1,24 @@
+== Given proxy alive
+pythonw.exe                   9380 Console                    1      4,828 K
+pythonw.exe                  34584 Console                    1     56,944 K
+== Given ALLOW_EXEC
+unset
+ "status": "OK",
+  "doc": "fcb-doc:VkGdX8edIb4z4J1qtvQDig",
+== When query_capabilities
+status OK
+keys ['element_map_available', 'enums', 'exec_enabled', 'freecad_version', 'partdesign_available', 'render', 'serializer', 'sketcher_available', 'varset_backend']
+{'freecad_version': '1.1.4', 'element_map_available': True, 'serializer': 'exportBinary', 'varset_backend': 'varset', 'render': 'gui_constructed', 'sketcher_available': True, 'partdesign_available': True, 'exec_enabled': False}
+types {'freecad_version': 'str', 'element_map_available': 'bool', 'serializer': 'str', 'varset_backend': 'str', 'render': 'str', 'sketcher_available': 'bool', 'partdesign_available': 'bool', 'enums': 'dict', 'exec_enabled': 'bool'}
+== About dialog (desktop capture tc-01-04-about-desktop.png): Version 1.1.4, Revision 20260928, Hash 4fd3bf3
+== discovery grep
+"freecad_version": "1.1.4"
+== discovery keys
+['contract_version', 'freecad_version', 'host', 'pid', 'port', 'schema', 'started', 'token']
+== handshake capabilities (rpc_hello with discovery token)
+Traceback (most recent call last):
+  File "<string>", line 6, in <module>
+  File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out

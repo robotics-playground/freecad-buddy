@@ -1,0 +1,2 @@
+PASS | Given (second domain, verify_sketch) Sketch fully_constrained true, dof 0 | {'fully_constrained': True, 'dof': 0}
+PASS | cleanup document_close OK | {"status": "OK"}

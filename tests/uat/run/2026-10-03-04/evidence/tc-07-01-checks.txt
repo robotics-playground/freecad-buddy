@@ -1,0 +1,11 @@
+PASS	given: box not open	{"documents": []}
+PASS	given: document_open OK	OK
+PASS	status OK, detail null	["OK", null]
+PASS	five check ids	["assert.expect_volume", "assert.expect_bbox", "shape.solid_count", "shape.valid", "shape.watertight"]
+PASS	every check passed	[["assert.expect_volume", true], ["assert.expect_bbox", true], ["shape.solid_count", true], ["shape.valid", true], ["shape.watertight", true]]
+PASS	volume measured 6000.0	{"id": "assert.expect_volume", "measured": 6000.0, "expected": 6000.0, "tolerance": {"rel": 0.001}, "passed": true, "detail": {"message": "|6000.0 - 6000.0| = 0.0 <= 6.0 mm^3"}}
+PASS	verdict OK == status	OK
+PASS	unknown fn refused	["INVALID_INPUT", "unknown assertion fn: 'expect_genus'", null]
+FAIL	view_fit_viewport OK	["SPEC_FAILED", {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}]
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-01-after.png]	["OK", {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}]

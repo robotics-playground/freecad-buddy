@@ -1,0 +1,11 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:FZGp1jFcGCaol34IKVcMIw",
+  "name": "tc_02_01_uat_roundtrip",
+  "closed": true
+ },
+ "text": "Closed tc_02_01_uat_roundtrip (doc=fcb-doc:FZGp1jFcGCaol34IKVcMIw)."
+}

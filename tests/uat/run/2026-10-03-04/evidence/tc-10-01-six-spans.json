@@ -1,0 +1,49 @@
+{
+ "request_order": [
+  "query_tree_summary",
+  "query_object",
+  "query_mass_properties",
+  "query_placement",
+  "verify_shape",
+  "query_dependencies"
+ ],
+ "spans": [
+  {
+   "tool": "query_tree_summary",
+   "start": 1791089668.4884806,
+   "end": 1791089668.500877,
+   "status": "OK"
+  },
+  {
+   "tool": "query_object",
+   "start": 1791089668.500877,
+   "end": 1791089668.5089319,
+   "status": "OK"
+  },
+  {
+   "tool": "query_mass_properties",
+   "start": 1791089668.5089319,
+   "end": 1791089668.5175273,
+   "status": "OK"
+  },
+  {
+   "tool": "query_placement",
+   "start": 1791089668.5175273,
+   "end": 1791089668.526227,
+   "status": "OK"
+  },
+  {
+   "tool": "verify_shape",
+   "start": 1791089668.526227,
+   "end": 1791089668.5356658,
+   "status": "OK"
+  },
+  {
+   "tool": "query_dependencies",
+   "start": 1791089668.5356658,
+   "end": 1791089668.5439541,
+   "status": "OK"
+  }
+ ],
+ "overlaps": []
+}

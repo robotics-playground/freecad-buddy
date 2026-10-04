@@ -1,0 +1,2878 @@
+{
+ "document_create": {
+  "type": "object",
+  "properties": {
+   "label": {
+    "type": "string"
+   },
+   "path": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "label"
+  ],
+  "additionalProperties": false
+ },
+ "document_open": {
+  "type": "object",
+  "properties": {
+   "path": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "path"
+  ],
+  "additionalProperties": false
+ },
+ "document_save": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "path": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "document_close": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "document_recompute": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "document_undo": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "expect_fingerprint": {
+    "type": [
+     "string",
+     "object"
+    ],
+    "description": "the pre-mutation fingerprint to compare the result against; without it matches_pre_op is null. A digest string matches byte-exactly. A whole FingerprintRecord also matches on the per-object geometric invariants, which an op that consumed a shape as a profile changes the serialization of without changing the geometry"
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "document_list": {
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+ },
+ "query_capabilities": {
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+ },
+ "query_screenshot": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "view": {
+    "type": "object",
+    "properties": {
+     "include": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "exclude": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "styles": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "object": {
+         "type": "string"
+        },
+        "transparency": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 100
+        },
+        "color": {
+         "type": "array",
+         "items": {
+          "type": "number"
+         },
+         "minItems": 3,
+         "maxItems": 3
+        }
+       },
+       "required": [
+        "object"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "focus": {
+      "type": "object",
+      "properties": {
+       "object": {
+        "type": "string"
+       },
+       "element_type": {
+        "enum": [
+         "face",
+         "edge",
+         "vertex"
+        ]
+       },
+       "index": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "mapped_name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "object"
+      ],
+      "additionalProperties": false
+     },
+     "highlight": {
+      "type": "object",
+      "properties": {
+       "object": {
+        "type": "string"
+       },
+       "element_type": {
+        "enum": [
+         "face",
+         "edge",
+         "vertex"
+        ]
+       },
+       "index": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "mapped_name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "object"
+      ],
+      "additionalProperties": false
+     },
+     "camera": {
+      "enum": [
+       "iso",
+       "front",
+       "top",
+       "right",
+       "left",
+       "back",
+       "bottom",
+       "custom"
+      ],
+      "default": "iso"
+     },
+     "custom_orientation": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+     },
+     "width": {
+      "type": "integer",
+      "default": 1920,
+      "maximum": 1920
+     },
+     "height": {
+      "type": "integer",
+      "default": 1920,
+      "maximum": 1920
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "view_fit_viewport": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "query_tree_summary": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "depth": {
+    "type": "integer",
+    "default": 1,
+    "minimum": 1
+   },
+   "root": {
+    "type": "string"
+   },
+   "filters": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+     "types": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "exclude_types": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "renderable_only": {
+      "type": "boolean"
+     },
+     "visible_only": {
+      "type": "boolean"
+     },
+     "name_pattern": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "query_object": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "object": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "object"
+  ],
+  "additionalProperties": false
+ },
+ "query_mass_properties": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "object": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "object"
+  ],
+  "additionalProperties": false
+ },
+ "query_dependencies": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "object": {
+    "type": "string"
+   },
+   "max_edges": {
+    "type": "integer",
+    "minimum": 1,
+    "default": 2000
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "query_sketch_info": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "sketch"
+  ],
+  "additionalProperties": false
+ },
+ "query_placement": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "object": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "object"
+  ],
+  "additionalProperties": false
+ },
+ "verify_shape": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "object": {
+    "type": "string"
+   },
+   "checks": {
+    "type": "array",
+    "items": {
+     "type": "object"
+    }
+   },
+   "anchor_frame": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "base_sketch_plane",
+       "largest_planar_face",
+       "named_datum"
+      ]
+     },
+     "ref": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "required": [
+     "kind"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "verify_sketch": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "sketch"
+  ],
+  "additionalProperties": false
+ },
+ "verify_recompute": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   }
+  },
+  "required": [
+   "doc"
+  ],
+  "additionalProperties": false
+ },
+ "export_step": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "path": {
+    "type": "string"
+   },
+   "objects": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "ap": {
+    "enum": [
+     "AP214",
+     "AP242"
+    ],
+    "default": "AP242"
+   }
+  },
+  "required": [
+   "doc",
+   "path"
+  ],
+  "additionalProperties": false
+ },
+ "export_stl": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "path": {
+    "type": "string"
+   },
+   "objects": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "linear": {
+    "type": "number"
+   },
+   "angular": {
+    "type": "number"
+   }
+  },
+  "required": [
+   "doc",
+   "path"
+  ],
+  "additionalProperties": false
+ },
+ "export_3mf": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "path": {
+    "type": "string"
+   },
+   "objects": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "linear": {
+    "type": "number"
+   },
+   "angular": {
+    "type": "number"
+   }
+  },
+  "required": [
+   "doc",
+   "path"
+  ],
+  "additionalProperties": false
+ },
+ "verify_export_step": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "export_id": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "export_id"
+  ],
+  "additionalProperties": false
+ },
+ "verify_export_stl": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "export_id": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "export_id"
+  ],
+  "additionalProperties": false
+ },
+ "verify_export_3mf": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "export_id": {
+    "type": "string"
+   }
+  },
+  "required": [
+   "doc",
+   "export_id"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_create": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "name": {
+    "type": "string"
+   },
+   "plane": {
+    "enum": [
+     "XY",
+     "XZ",
+     "YZ"
+    ]
+   },
+   "face": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "body": {
+    "type": "string",
+    "description": "PartDesign Body Name to adopt the sketch into"
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "name"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_add_geometry": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "geometry": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "enum": [
+        "line_segment",
+        "circle",
+        "arc_of_circle",
+        "point"
+       ]
+      },
+      "start": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 3
+      },
+      "end": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 3
+      },
+      "center": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       },
+       "minItems": 2,
+       "maxItems": 3
+      },
+      "radius": {
+       "type": "object",
+       "properties": {
+        "value": {
+         "type": "number"
+        },
+        "unit": {
+         "enum": [
+          "mm"
+         ],
+         "description": "explicit unit"
+        }
+       },
+       "required": [
+        "value",
+        "unit"
+       ],
+       "additionalProperties": false
+      },
+      "start_angle": {
+       "type": "object",
+       "properties": {
+        "value": {
+         "type": "number"
+        },
+        "unit": {
+         "enum": [
+          "deg"
+         ],
+         "description": "explicit unit"
+        }
+       },
+       "required": [
+        "value",
+        "unit"
+       ],
+       "additionalProperties": false
+      },
+      "end_angle": {
+       "type": "object",
+       "properties": {
+        "value": {
+         "type": "number"
+        },
+        "unit": {
+         "enum": [
+          "deg"
+         ],
+         "description": "explicit unit"
+        }
+       },
+       "required": [
+        "value",
+        "unit"
+       ],
+       "additionalProperties": false
+      },
+      "construction": {
+       "type": "boolean",
+       "default": false
+      }
+     },
+     "required": [
+      "kind"
+     ],
+     "additionalProperties": false
+    },
+    "minItems": 1
+   },
+   "constraints": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "type": {
+       "enum": [
+        "Coincident",
+        "Horizontal",
+        "Vertical",
+        "Parallel",
+        "Perpendicular",
+        "Tangent",
+        "Equal",
+        "Symmetric",
+        "PointOnObject",
+        "Block",
+        "Distance",
+        "DistanceX",
+        "DistanceY",
+        "Radius",
+        "Diameter",
+        "Angle"
+       ]
+      },
+      "first": {
+       "type": "integer",
+       "description": "sketch geo_id; -1 HAxis, -2 VAxis"
+      },
+      "first_pos": {
+       "enum": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "description": "PointPos: 0 none, 1 start, 2 end, 3 mid"
+      },
+      "second": {
+       "type": "integer"
+      },
+      "second_pos": {
+       "enum": [
+        0,
+        1,
+        2,
+        3
+       ]
+      },
+      "third": {
+       "type": "integer"
+      },
+      "third_pos": {
+       "enum": [
+        0,
+        1,
+        2,
+        3
+       ]
+      },
+      "value": {
+       "type": "object",
+       "properties": {
+        "value": {
+         "type": "number"
+        },
+        "unit": {
+         "enum": [
+          "mm",
+          "deg"
+         ],
+         "description": "explicit unit"
+        }
+       },
+       "required": [
+        "value",
+        "unit"
+       ],
+       "additionalProperties": false
+      },
+      "name": {
+       "type": "string",
+       "description": "intent-bearing constraint name"
+      },
+      "driving": {
+       "type": "boolean",
+       "default": true
+      }
+     },
+     "required": [
+      "type",
+      "first"
+     ],
+     "additionalProperties": false
+    },
+    "description": "applied in the same transaction as the geometry"
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "geometry"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_remove_geometry": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "geo_ids": {
+    "type": "array",
+    "items": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "minItems": 1
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "geo_ids"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_add_constraint": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "constraints": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "type": {
+       "enum": [
+        "Coincident",
+        "Horizontal",
+        "Vertical",
+        "Parallel",
+        "Perpendicular",
+        "Tangent",
+        "Equal",
+        "Symmetric",
+        "PointOnObject",
+        "Block",
+        "Distance",
+        "DistanceX",
+        "DistanceY",
+        "Radius",
+        "Diameter",
+        "Angle"
+       ]
+      },
+      "first": {
+       "type": "integer",
+       "description": "sketch geo_id; -1 HAxis, -2 VAxis"
+      },
+      "first_pos": {
+       "enum": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "description": "PointPos: 0 none, 1 start, 2 end, 3 mid"
+      },
+      "second": {
+       "type": "integer"
+      },
+      "second_pos": {
+       "enum": [
+        0,
+        1,
+        2,
+        3
+       ]
+      },
+      "third": {
+       "type": "integer"
+      },
+      "third_pos": {
+       "enum": [
+        0,
+        1,
+        2,
+        3
+       ]
+      },
+      "value": {
+       "type": "object",
+       "properties": {
+        "value": {
+         "type": "number"
+        },
+        "unit": {
+         "enum": [
+          "mm",
+          "deg"
+         ],
+         "description": "explicit unit"
+        }
+       },
+       "required": [
+        "value",
+        "unit"
+       ],
+       "additionalProperties": false
+      },
+      "name": {
+       "type": "string",
+       "description": "intent-bearing constraint name"
+      },
+      "driving": {
+       "type": "boolean",
+       "default": true
+      }
+     },
+     "required": [
+      "type",
+      "first"
+     ],
+     "additionalProperties": false
+    },
+    "minItems": 1
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "constraints"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_remove_constraint": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "constraints": {
+    "type": "array",
+    "items": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1,
+       "description": "1-based solver id"
+      },
+      {
+       "type": "string",
+       "description": "constraint Name"
+      }
+     ]
+    },
+    "minItems": 1
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "constraints"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_set_datum": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "constraint": {
+    "anyOf": [
+     {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based solver id"
+     },
+     {
+      "type": "string",
+      "description": "constraint Name"
+     }
+    ]
+   },
+   "value": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm",
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "sense": {
+    "enum": [
+     "autodecide",
+     "external",
+     "internal"
+    ],
+    "description": "tangency for a Tangent or Perpendicular constraint"
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "constraint"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_toggle_construction": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "geo_ids": {
+    "type": "array",
+    "items": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "minItems": 1
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "geo_ids"
+  ],
+  "additionalProperties": false
+ },
+ "sketch_add_external_geometry": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "sketch": {
+    "type": "string"
+   },
+   "edge": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "sketch",
+   "edge"
+  ],
+  "additionalProperties": false
+ },
+ "feature_pad": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string",
+    "description": "target PartDesign Body Name"
+   },
+   "profile": {
+    "type": "string",
+    "description": "sketch Name"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "length": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "second_length": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "up_to": {
+    "type": "string",
+    "description": "extrude Type; validated against the live enum"
+   },
+   "up_to_face": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "reversed": {
+    "type": "boolean",
+    "default": false
+   },
+   "midplane": {
+    "type": "boolean",
+    "default": false
+   },
+   "taper_angle": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name"
+  ],
+  "additionalProperties": false
+ },
+ "feature_pocket": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string",
+    "description": "target PartDesign Body Name"
+   },
+   "profile": {
+    "type": "string",
+    "description": "sketch Name"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "length": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "second_length": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "up_to": {
+    "type": "string",
+    "description": "extrude Type; validated against the live enum"
+   },
+   "up_to_face": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "reversed": {
+    "type": "boolean",
+    "default": false
+   },
+   "midplane": {
+    "type": "boolean",
+    "default": false
+   },
+   "taper_angle": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name"
+  ],
+  "additionalProperties": false
+ },
+ "feature_revolve": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "profile": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "axis": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false,
+    "description": "the profile sketch's V_Axis/H_Axis/N_Axis, or an edge"
+   },
+   "angle": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "second_angle": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "up_to": {
+    "type": "string"
+   },
+   "reversed": {
+    "type": "boolean",
+    "default": false
+   },
+   "midplane": {
+    "type": "boolean",
+    "default": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name",
+   "axis"
+  ],
+  "additionalProperties": false
+ },
+ "feature_hole": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "profile": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "diameter": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "depth": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "depth_type": {
+    "type": "string",
+    "description": "Dimension or ThroughAll"
+   },
+   "thread_type": {
+    "type": "string"
+   },
+   "cut_type": {
+    "type": "string"
+   },
+   "cut_diameter": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "cut_depth": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "reversed": {
+    "type": "boolean",
+    "default": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "profile",
+   "name"
+  ],
+  "additionalProperties": false
+ },
+ "feature_fillet": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "base": {
+    "type": "string",
+    "description": "feature carrying the edges"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "edges": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "enum": [
+        "mapped_name",
+        "geometric"
+       ]
+      },
+      "object": {
+       "type": "string",
+       "description": "immutable object Name"
+      },
+      "mapped_name": {
+       "type": "string"
+      },
+      "element_map_version": {
+       "type": "integer"
+      },
+      "element_type": {
+       "enum": [
+        "face",
+        "edge",
+        "vertex"
+       ]
+      },
+      "query": {
+       "type": "object"
+      }
+     },
+     "required": [
+      "kind",
+      "object"
+     ],
+     "additionalProperties": false
+    },
+    "minItems": 1,
+    "description": "edges on the base feature; an edge FreeCAD would silently drop is rejected"
+   },
+   "radius": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "base",
+   "name",
+   "edges"
+  ],
+  "additionalProperties": false
+ },
+ "feature_chamfer": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "base": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "edges": {
+    "type": "array",
+    "items": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "enum": [
+        "mapped_name",
+        "geometric"
+       ]
+      },
+      "object": {
+       "type": "string",
+       "description": "immutable object Name"
+      },
+      "mapped_name": {
+       "type": "string"
+      },
+      "element_map_version": {
+       "type": "integer"
+      },
+      "element_type": {
+       "enum": [
+        "face",
+        "edge",
+        "vertex"
+       ]
+      },
+      "query": {
+       "type": "object"
+      }
+     },
+     "required": [
+      "kind",
+      "object"
+     ],
+     "additionalProperties": false
+    },
+    "minItems": 1,
+    "description": "edges on the base feature; an edge FreeCAD would silently drop is rejected"
+   },
+   "size": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "second_size": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "angle": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "chamfer_type": {
+    "type": "string"
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "base",
+   "name",
+   "edges"
+  ],
+  "additionalProperties": false
+ },
+ "feature_pattern": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "kind": {
+    "enum": [
+     "linear",
+     "polar"
+    ]
+   },
+   "originals": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    },
+    "description": "feature Names; defaults to the Body Tip"
+   },
+   "direction": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "axis": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "length": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "angle": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "offset": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm",
+       "deg"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "occurrences": {
+    "type": "integer",
+    "minimum": 2
+   },
+   "mode": {
+    "type": "string"
+   },
+   "reversed": {
+    "type": "boolean",
+    "default": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "name",
+   "kind"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+   {
+    "if": {
+     "properties": {
+      "kind": {
+       "const": "linear"
+      }
+     },
+     "required": [
+      "kind"
+     ]
+    },
+    "then": {
+     "required": [
+      "direction"
+     ]
+    }
+   },
+   {
+    "if": {
+     "properties": {
+      "kind": {
+       "const": "polar"
+      }
+     },
+     "required": [
+      "kind"
+     ]
+    },
+    "then": {
+     "required": [
+      "axis"
+     ]
+    }
+   }
+  ]
+ },
+ "feature_mirror": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "mirror_plane": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "originals": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "name",
+   "mirror_plane"
+  ],
+  "additionalProperties": false
+ },
+ "feature_datum": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "body": {
+    "type": "string"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "kind": {
+    "enum": [
+     "plane",
+     "axis",
+     "point",
+     "cs"
+    ]
+   },
+   "attachment": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "mapped_name",
+       "geometric"
+      ]
+     },
+     "object": {
+      "type": "string",
+      "description": "immutable object Name"
+     },
+     "mapped_name": {
+      "type": "string"
+     },
+     "element_map_version": {
+      "type": "integer"
+     },
+     "element_type": {
+      "enum": [
+       "face",
+       "edge",
+       "vertex"
+      ]
+     },
+     "query": {
+      "type": "object"
+     }
+    },
+    "required": [
+     "kind",
+     "object"
+    ],
+    "additionalProperties": false
+   },
+   "map_mode": {
+    "type": "string",
+    "default": "FlatFace"
+   },
+   "offset": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "number"
+     },
+     "unit": {
+      "enum": [
+       "mm"
+      ],
+      "description": "explicit unit"
+     }
+    },
+    "required": [
+     "value",
+     "unit"
+    ],
+    "additionalProperties": false
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "body",
+   "name",
+   "kind",
+   "attachment"
+  ],
+  "additionalProperties": false
+ },
+ "feature_body_create": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "name": {
+    "type": "string",
+    "description": "intent-bearing feature name; becomes the Label and the object Name"
+   },
+   "base_feature": {
+    "type": "string",
+    "description": "existing solid Name for the Body to adopt"
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "name"
+  ],
+  "additionalProperties": false
+ },
+ "feature_set_parameters": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "feature": {
+    "type": "string"
+   },
+   "parameters": {
+    "type": "object",
+    "description": "property name -> Quantity, number, boolean or enum string; validated against the live feature"
+   },
+   "confirm": {
+    "type": "object",
+    "description": "required: this mutation is refused without it. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned. Omit only against a host running the operator auto-approve posture.",
+    "properties": {
+     "preview_id": {
+      "type": "string",
+      "description": "the signed token preview_dry_run returned for this exact operation"
+     },
+     "elicitation_action": {
+      "enum": [
+       "accept"
+      ],
+      "description": "recorded outcome; decline/cancel never reach a mutation tool"
+     }
+    },
+    "required": [
+     "preview_id"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "feature",
+   "parameters"
+  ],
+  "additionalProperties": false
+ },
+ "preview_dry_run": {
+  "type": "object",
+  "properties": {
+   "doc": {
+    "type": "string",
+    "description": "opaque fcb-doc handle"
+   },
+   "operation": {
+    "type": "object",
+    "properties": {
+     "tool": {
+      "type": "string",
+      "description": "a registered sketch_/feature_ mutation tool"
+     },
+     "args": {
+      "type": "object",
+      "description": "that tool's input, minus doc/confirm"
+     }
+    },
+    "required": [
+     "tool",
+     "args"
+    ],
+    "additionalProperties": false
+   },
+   "render": {
+    "enum": [
+     "auto",
+     "off"
+    ],
+    "default": "auto"
+   },
+   "view": {
+    "type": "object",
+    "properties": {
+     "include": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "exclude": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "styles": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "object": {
+         "type": "string"
+        },
+        "transparency": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 100
+        },
+        "color": {
+         "type": "array",
+         "items": {
+          "type": "number"
+         },
+         "minItems": 3,
+         "maxItems": 3
+        }
+       },
+       "required": [
+        "object"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "focus": {
+      "type": "object",
+      "properties": {
+       "object": {
+        "type": "string"
+       },
+       "element_type": {
+        "enum": [
+         "face",
+         "edge",
+         "vertex"
+        ]
+       },
+       "index": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "mapped_name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "object"
+      ],
+      "additionalProperties": false
+     },
+     "highlight": {
+      "type": "object",
+      "properties": {
+       "object": {
+        "type": "string"
+       },
+       "element_type": {
+        "enum": [
+         "face",
+         "edge",
+         "vertex"
+        ]
+       },
+       "index": {
+        "type": "integer",
+        "minimum": 0
+       },
+       "mapped_name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "object"
+      ],
+      "additionalProperties": false
+     },
+     "camera": {
+      "enum": [
+       "iso",
+       "front",
+       "top",
+       "right",
+       "left",
+       "back",
+       "bottom",
+       "custom"
+      ],
+      "default": "iso"
+     },
+     "custom_orientation": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+     },
+     "width": {
+      "type": "integer",
+      "default": 1920,
+      "maximum": 1920
+     },
+     "height": {
+      "type": "integer",
+      "default": 1920,
+      "maximum": 1920
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  "required": [
+   "doc",
+   "operation"
+  ],
+  "additionalProperties": false
+ }
+}

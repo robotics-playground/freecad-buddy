@@ -1,0 +1,2 @@
+PASS	trimesh outside (uv run --with networkx; repo env lacks networkx for 3MF):     raise exc_type(*exc_args)
+PASS	trimesh outside (uv run --with networkx --with lxml; 3MF loads as Scene so force='mesh'): literal 3mf type: Scene 976 976 True True 4128.755 4128.755 

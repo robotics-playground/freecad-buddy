@@ -1,0 +1,7 @@
+NOTE | second document_open of the same path returned the SAME handle (FreeCAD reuses an open document). Compensating step: open a byte-identical copy of box-10-20-30.FCStd from a second path, a truly independent document.
+NOTE | copy open -> {"status": "OK"} handle=fcb-doc:ZaEQqjH5Luw5CY2DmKc6ew name=box_copy_b
+PASS | independent handle for the copy | ['fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ', 'fcb-doc:ZaEQqjH5Luw5CY2DmKc6ew']
+NOTE | handle-a already holds the committed empty Body 'Probe'; compare the copy against a fresh state instead:
+PASS | same-handle repeat digest stable | ['33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c', '33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c']
+PASS | byte-identical documents (fresh copy vs. first open's pre-mutation digest 33e870c0...) give identical digests | 33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c
+NOTE | copy closed -> OK

@@ -1,0 +1,2 @@
+NOTE | 3rd sample feature_set_parameters Pad Length 35 was AUTHORIZED but returned RECOMPUTE_ERROR (Fillet edge link broke, rolled back; preview predicted it). Extra sample: sketch_add_geometry on Sketch2.
+PASS | extra sample sketch_add_geometry (Sketch2, fully constrained point): preview + token -> OK | {'preview': 'OK', 'apply': '{"status": "OK"}'}

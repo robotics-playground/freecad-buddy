@@ -1,0 +1,43 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:lhQ03S-MunfAe3xk5Vc_bg",
+  "total_objects": 10,
+  "returned_nodes": 2,
+  "depth": 3,
+  "filters_applied": {
+   "exclude_types": [
+    "App::Plane",
+    "App::Line",
+    "App::Point",
+    "App::Origin"
+   ]
+  },
+  "tree": [
+   {
+    "name": "BlockBody",
+    "label": "BlockBody",
+    "type": "PartDesign::Body",
+    "visibility": true,
+    "children_count": 2,
+    "children": [
+     {
+      "name": "BlockProfile",
+      "label": "BlockProfile",
+      "type": "Sketcher::SketchObject",
+      "visibility": true
+     }
+    ]
+   }
+  ]
+ },
+ "text": "10 objects, 2 shown.",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

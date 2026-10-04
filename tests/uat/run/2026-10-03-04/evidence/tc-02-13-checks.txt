@@ -1,0 +1,10 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given target absent | 
+PASS | create OK with handle | fcb-doc:G7BajoszCjOS436LlxeAMg
+PASS | label survives create exactly | 測試 ドキュメント 🔧 with spaces and a deliberately long label for width
+FAIL | name is FreeCAD-legal identifier and != label | 測試_ドキュメント___with_spaces_and_a_deliberately_long_label_for_width
+PASS | listing label unmangled (structured and text) | 1 open document(s): 測試 ドキュメント 🔧 with spaces and a deliberately long label for width.
+FAIL | label survives save and reopen | tc-02-13-uat-unicode
+FAIL | reopened label byte-equal to input (UTF-8) | {'input_utf8': 'e6b8ace8a9a620e38389e382ade383a5e383a1e3', 'got_utf8': '74632d30322d31332d7561742d756e69636f6465'}
+PASS | reopened tree OK total_objects 0 | ['OK', 0]
+FAIL | unicode reopened view_fit_viewport OK | {'status': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}}

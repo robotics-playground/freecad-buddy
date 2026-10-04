@@ -1,0 +1,10 @@
+== windows of new pid
+[{"window_id": 5838898, "title": "FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]
+== killed pid capture
+No window with window_id 661460 exists. Call `list_windows({"pid": 32068})` for candidates.
+
+ls: cannot access 'tc-01r-14-killed.png': No such file or directory
+== open box in the relaunched FreeCAD
+open: OK fcb-doc:8trJyvx572nR8CNSrfbFow
+showall: {"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 5838898, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+fit: {"status": "OK", "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "computed", "stale_reason": null}, "text": "fitted the live viewport to 'box_10_20_30'"}

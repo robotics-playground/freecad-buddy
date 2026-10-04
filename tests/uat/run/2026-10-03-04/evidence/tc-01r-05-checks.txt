@@ -1,0 +1,20 @@
+rows: 45
+== distinct budgets
+120.0 180.0 30.0 60.0 
+== 180
+preview_dry_run	180.0	False
+== 30
+document_close document_create document_list query_capabilities query_dependencies query_mass_properties query_object query_placement query_sketch_info query_tree_summary view_fit_viewport 
+== 60
+document_open query_screenshot verify_shape verify_sketch 
+== sketch/feature/export not 120
+(end)
+== query/verify mutating True
+(end)
+== sketch/feature/export mutating not True
+(end)
+== document_open/close
+document_close	30.0	True
+document_open	60.0	True
+== debug_exec row
+(not in catalog)

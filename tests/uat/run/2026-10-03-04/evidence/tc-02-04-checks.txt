@@ -1,0 +1,13 @@
+PASS | Given both goldens exist | 
+PASS | Given no document open | 0 open document(s).
+PASS | two distinct ^fcb-doc: handles | ['fcb-doc:5AZK9BKQTdq1aRQo0Fo5fA', 'fcb-doc:_MPVQJ2n8Jn9z0f6O9EE7g']
+PASS | list: 2 open document(s): box-10-20-30, sphere-r10. | 2 open document(s): box-10-20-30, sphere-r10.
+PASS | GUI active doc is B (title) |  sphere-r10 - FreeCAD 1.1.4
+PASS | A tree[0] Box while B active | [{'name': 'Box', 'label': 'Box', 'type': 'Part::Feature', 'visibility': False}]
+PASS | B tree[0] Sphere | [{'name': 'Sphere', 'label': 'Sphere', 'type': 'Part::Feature', 'visibility': False}]
+PASS | query_object A Box / B Sphere OK | ['OK', 'OK']
+PASS | A Sphere -> INVALID_INPUT unknown object: Sphere | ['INVALID_INPUT', 'unknown object: Sphere']
+PASS | B Box -> INVALID_INPUT unknown object: Box | ['INVALID_INPUT', 'unknown object: Box']
+PASS | mass A 6000 / B 4188.7902 | [6000.0, 4188.790204786392]
+PASS | after close A, B tree OK | ['OK', 'OK']
+PASS | sphere B view_fit_viewport OK | {'status': 'OK', 'detail': None}

@@ -1,0 +1,8 @@
+NOTE | cleanup previous scenario: document_close TC0814 -> OK
+FAIL | single undeclared field refused: confirm carries field(s) the schema does not declare: ['autoApprove'] | Input validation error: Additional properties are not allowed ('autoApprove' was unexpected)
+FAIL | two undeclared fields listed sorted: ['autoApprove', 'force'] | Input validation error: Additional properties are not allowed ('autoApprove', 'force' were unexpected)
+PASS | single-field call not OK and no Pad in tree (not silently dropped) | ['Body', 'Sketch']
+PASS | confirm 'yes' refused (schema reject for non-object, or 'confirm must be an object') | Input validation error: 'yes' is not of type 'object'
+PASS | token survives: same token with preview_id alone -> OK | {"status": "OK"}
+PASS | only two declared fields accepted: a third key refused; fresh token + accept OK (side doc TC0815b) | {'accept': 'OK', 'third_key': "Input validation error: Additional properties are not allowed ('note' was unexpected)"}
+NOTE | side doc TC0815b closed -> OK

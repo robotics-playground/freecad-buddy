@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close tc-09-17-fixture -> OK
+PASS | Given broken-reference fixture opens (Pad whose Sketch was deleted) | OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | failing_objects contains Pad | ('RECOMPUTE_ERROR', ['Body', 'Pad'])
+NOTE | checks: [{'id': 'recompute.object', 'measured': 'Touched', 'expected': None, 'passed': False, 'detail': {'code': 'recompute.error', 'message': 'Body: Touched', 'objects': ['Body']}}, {'id': 'recompute.object', 'measured': 'No object linked', 'expected': None, 'passed': False, 'detail': {'code': 'recompute.error', 'message': 'Pad: No object linked', 'objects': ['Pad']}}]
+PASS | measured == FreeCAD getStatusString (headless build: 'No object linked') | No object linked
+PASS | detail.message == '<Name>: <status string>' | {'code': 'recompute.error', 'message': 'Pad: No object linked', 'objects': ['Pad']}
+PASS | detail.objects == ['Pad'] | ['Pad']
+PASS | one check per failing object | (2, 2)
+PASS | status string non-empty | No object linked
+PASS | dependency query OK; graph shows the missing target | {'status': 'OK', 'sc': {'edges': [{'from': 'Body', 'to': 'Pad'}, {'from': 'Body', 'to': 'Origin'}, {'from': 'Origin', 'to': 'X_Axis'}, {'from': 'Origin', 'to': 'Y_Axis'}, {'from': 'Origin', 'to': 'Z_Axis'}, {'from': 'Origin', 'to': 'XY_Plane'}, {'from': 'Origin', 'to': 'XZ_Plane'}, {'from': 'Origin', 'to': 'YZ_Plane'}, {'from': 'Origin', 'to': 'Origin001'}], 'total_edges': 9, 'returned_edges': 9, 'truncated': False}}

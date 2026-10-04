@@ -1,0 +1,4 @@
+2 open
+  fixture              -> OK
+  fixture              -> OK
+0 open document(s).

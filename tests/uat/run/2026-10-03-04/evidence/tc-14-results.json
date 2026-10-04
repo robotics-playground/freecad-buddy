@@ -1,0 +1,213 @@
+[
+ {
+  "id": "TC-14-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-01-schema.json",
+   "tc-14-01-readonly.txt",
+   "tc-14-01-open.json",
+   "tc-14-01-fit.json",
+   "tc-14-01-fit2.json",
+   "tc-14-01-after.png"
+  ],
+  "note": "Schema: properties ['doc'], required ['doc'], no confirm (grep count 0), additionalProperties false. Read-only: build_readonly_profile() registry has 13 tools, view_fit_viewport absent (no CLI to start an assistant surface; built the registry it consumes). Golden Box opened hidden -> first fit SPEC_FAILED view_fit.unverified 'no visible shape-bearing objects to measure' (honest). After View>Visibility>Show All Objects (invoke_menu, route accessibility; driver reported delivery mode foreground) fit OK fits:true ratio 0.949. PNG read: one grey box, isometric, whole, fills viewport height (~237..895 px of 220..912), no edge cut."
+ },
+ {
+  "id": "TC-14-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-02-open.json",
+   "tc-14-02-fit.json",
+   "tc-14-02-after.png"
+  ],
+  "note": "Box shown first (golden fixture hidden; View>Visibility>Show All Objects). Envelope: status OK, fitted true, document box_10_20_30 (=Name, not handle), camera_recorded true, text exactly \"fitted the live viewport to 'box_10_20_30'\", detail null. PNG read: one box, isometric, whole, centred in viewport (centre ~931,566 of viewport centre ~931,566)."
+ },
+ {
+  "id": "TC-14-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-03-before-tree.json",
+   "tc-14-03-before.png",
+   "tc-14-03-batch.json",
+   "tc-14-03-fit-and-read.json",
+   "tc-14-03-after.png"
+  ],
+  "note": "Zoom state set through GUI: View>Zoom>Zoom In then Zoom Out x4 (invoke_menu, accessibility). The hard Zoom In state read fits:false ratio:null (corners discarded as implausible, by design framing.py:146-150), so the camera was backed off until a numeric ratio existed: ratio_before 2.649 fits:false. Fit OK fitted:true; first read after fit in the same MCP session: fits:true checked:computed ratio 0.949 (0.85..1.0, closer to 1 than 2.649). PNG before: top view, only one box corner visible at viewport centre, box runs off top and right edges. PNG after: whole box, isometric, inside frame."
+ },
+ {
+  "id": "TC-14-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-04.py",
+   "tc-14-04.jsonl",
+   "tc-14-04-after.png"
+  ],
+  "note": "document_create takes label (TC says name: stale literal). Bar built via feature_body_create/sketch_create/sketch_add_geometry/feature_pad with preview+confirm, volume 1279999.99999. Pre-fit framing fits:false ratio:null. ONE view_fit_viewport: OK fitted:true; next query_tree_summary fits:true ratio 0.9515 computed (>=0.85, <=1.0, no overshoot). PNG read: long bar, isometric, spans ~237..895 px of the 220..912 viewport height (~95%), both ends inside, not a speck."
+ },
+ {
+  "id": "TC-14-05",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-14-05.py",
+   "tc-14-05.jsonl",
+   "tc-14-05-before.png",
+   "tc-14-05-after.png",
+   "tc-14-05-render.png",
+   "tc-14-05-incident-recovered.png",
+   "tc-14-findings.txt"
+  ],
+  "note": "Bar from TC-14-04 (vol 1279999.99999). Camera moved off via GUI (View>Standard Views>Axonometric>Trimetric + View>Zoom>Zoom In x3): fits:false ratio 1.736. Fit OK fits:true 0.951. cmp: before/after differ. PNG before: trimetric, bar runs off top and bottom edges, ends not visible. PNG after: whole bar, both ends inside, ~95% of viewport height, isometric with three faces (top, left, right). Render read: same bar, isometric, whole, three faces; agrees with window on shape/orientation/framing, differs in face shading (F3). Animation-preference Then NOT RUN: user.cfg UseNavigationAnimations=1 before and after, a non-falsifying substitute (F2). Incident F1: invoke_menu Edit>Preferences blocked UIA; one authorised background Escape closed it."
+ },
+ {
+  "id": "TC-14-06",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-06.py",
+   "tc-14-06.jsonl",
+   "tc-14-06-before.png",
+   "tc-14-06-after.png"
+  ],
+  "note": "DocA (30x20x10 pad) and DocB (20x20x40 pad) built via document_create(label)+feature tools. Fit DocA OK before DocB existed; window title \"* DocB - FreeCAD 1.1.4\"; fit DocB OK ratio 0.9489. view_fit_viewport{DocA}: INVALID_INPUT, message verbatim \"the live viewport is showing 'DocB', not the targeted 'DocA'; call view_fit_viewport with the handle for 'DocB', or open a 3D view for 'DocA'\". DocB ratio after = 0.9489 (cached, camera key matched). PNG before and after byte-identical (cmp): DocB block whole, same size/position, DocB tab active, DocB in title. Observation: detail.data carries a full Python traceback for this expected refusal."
+ },
+ {
+  "id": "TC-14-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-07.py",
+   "tc-14-07.jsonl",
+   "tc-14-07-after.png"
+  ],
+  "note": "Good box shown (Show All Objects) and fitted OK. Stale handle from cylinder open+close. no-such-handle -> INVALID_INPUT \"unknown or stale document handle: no-such-handle\"; stale -> INVALID_INPUT same wording with the handle; {} -> schema reject \"Input validation error: 'doc' is a required property\". No message mentions viewport/3D view. Fit good handle OK after refusals. PNG read: box whole, isometric, inside frame, no dialog/popup; only window is the main window."
+ },
+ {
+  "id": "TC-14-08",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-08.py",
+   "tc-14-08.jsonl",
+   "tc-14-08-before.png",
+   "tc-14-08-after.png"
+  ],
+  "note": "Both rejects are hard schema rejects at the MCP layer, not INVALID_INPUT envelopes: factor -> \"Input validation error: Additional properties are not allowed ('factor' was unexpected)\"; confirm -> same with 'confirm'. The literal INVALID_INPUT in the TC is a stale expectation (test-case defect; same as other schema rejects in this run); behaviour on merits is correct (not silently ignored). ratio 0.9489 before and after. PNG before/after byte-identical (cmp); after read: box whole, same size/position/orientation, no dialog."
+ },
+ {
+  "id": "TC-14-09",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-09-h1ok.txt",
+   "tc-14-09.py",
+   "tc-14-09.jsonl",
+   "tc-14-09-h1.stderr.log",
+   "tc-14-09-before.png",
+   "tc-14-09-after.png"
+  ],
+  "note": "H1 ok (FCB_PYTHON reports FreeCAD 1.1.3). GUI box fitted OK, before captured. H1 (stdio inline) open box -> view_fit_viewport: SPEC_FAILED, detail {code view_fit.no_viewport, message \"this host has no live viewport: no camera to fit\"}, structured_content {fitted false, reason same sentence}. H1 envelope carries framing: null (key present). query_tree_summary on same H1 handle OK. H1 stderr: 3 INFO lines, no Traceback (one says \"session-start sweep removed 5 leftover temp artifact(s)\" - the H1 sweep ran while the GUI host was live). PNG before/after byte-identical; after read: GUI box unchanged, whole, same size/position/orientation. Note: GUI handle equals TC-14-08 handle (that doc was left open; document_open of the same path returned the existing handle)."
+ },
+ {
+  "id": "TC-14-10",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-10-fc-auditlog.cmd",
+   "tc-14-10.py",
+   "tc-14-10.jsonl",
+   "tc-14-10-audit.jsonl",
+   "tc-14-10-before.png",
+   "tc-14-10-after.png"
+  ],
+  "note": "FreeCAD relaunched via launch_app path=tc-14-10-fc-auditlog.cmd (FREECAD_BUDDY_AUDIT_LOG=evidence/tc-14-10-audit.jsonl; file absent before). Camera off-model via GUI (Trimetric + Zoom In x4): fits:false ratio:null. Fit #1 OK -> 3 new records, all tool view_fit_viewport: generic before (fingerprint_before null, params_digest 4ff40150...), camera record with camera_before (OrthographicCamera, height 1.8611817, trimetric orientation), generic after (verify_verdict OK). camera_pre had no MCP/GUI string readout; substituted the GUI status-bar view size: before '3.42 mm x 1.86 mm' = camera_before height 1.8611817; after '71.14 mm x 38.68 mm' = post-fit camera (fit #2 camera_before height 38.681652), so record #1 holds the pre-fit, not post-fit camera. Fit #2 from the fitted camera: params_digest identical (camera not in digest). fingerprint_before null, no camera text. audit-record.schema.json required = [schema, ts, actor, event] (camera_before optional). PNG before: empty viewport, box out of view; after: box whole, isometric, in frame."
+ },
+ {
+  "id": "TC-14-11",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-11.py",
+   "tc-14-11.jsonl",
+   "tc-14-11-attempt1.jsonl",
+   "tc-14-11-before.png",
+   "tc-14-11-after.png"
+  ],
+  "note": "Attempt 1 setup miss (GUI Fit All + Zoom In x2 left fits:true ratio 0.80; call1 then correctly had no warning) - kept as tc-14-11-attempt1.jsonl. Attempt 2: GUI Fit All + Zoom In x1 -> fits:false ratio 1.199. Call1 text = '1 objects, 1 shown.' + blank line + exact envelope.py:101-104 sentence. After view_fit_viewport OK, call2 fits:true 0.949, text '1 objects, 1 shown.' with no Warning. Golden cylinder (object hidden on open) -> framing checked:unavailable fits:null stale_reason 'no visible shape-bearing objects to measure', no Warning. PNG before: box cut off at top and bottom viewport edges (warning true); after: same box whole (no warning, true)."
+ },
+ {
+  "id": "TC-14-12",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-12.py",
+   "tc-14-12.jsonl",
+   "tc-14-12-h1.stderr.log",
+   "tc-14-12-after.png"
+  ],
+  "note": "H1 (stdio inline, FreeCAD 1.1.3) query_tree_summary on golden box: envelope keys [detail, schema, status, structured_content, text] - no framing key; text '1 objects, 1 shown.' with no Warning. GUI query_tree_summary: framing {fits:false, ratio:null, checked:computed, stale_reason:null} (fresh-open camera). fits values only true/false/null; no null without unavailable. GUI fit OK. H1 stderr: no Traceback. PNG read: real 3D view, box drawn whole, isometric. Contrast note: H1 view_fit_viewport (TC-14-09) carries framing: null as a present key, while H1 query_tree_summary omits the key."
+ },
+ {
+  "id": "TC-14-13",
+  "priority": "High",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-14-13.py",
+   "tc-14-13.jsonl",
+   "tc-14-13-before.png",
+   "tc-14-13-after.png",
+   "tc-14-13-restored.png",
+   "tc-14-13-repro.py",
+   "tc-14-13-repro.jsonl",
+   "tc-14-13-repro-small-after-fit.png"
+  ],
+  "note": "Fit OK fits:true ratio_before 0.9489; second read cached, stale_reason names geometry (PASS). set_window_frame {width 640,height 400} -> list_windows 640x643: FreeCAD clamps the minimum window height, so the literal 640x400 cannot land (Then FAIL, test-case defect). Third read computed (PASS), ratio 0.952 > 0.9489 (PASS, marginal). VISUAL FAIL: after.png shows the window at 640x643 with the MDI area showing scrollbars and a ~285x165 px visible view; only the top-left part of the box is visible, cut off at the right and bottom edges - while framing reported fits:true ratio 0.952 checked computed. The 3D view widget did not shrink to the visible MDI area; framing measures the widget (getSize), not what the human sees. Suspected product defect (framing blind to MDI-area clipping, framing.py _viewport_size) plus TC defect (640x400 unreachable). Cleanup: frame restored to 1775x1380 (confirmed); dock layout changed (Python console shorter); box whole in restored.png. See tc-14-findings.txt F4. Reproduced: in the small window view_fit_viewport returns OK fitted:true, framing fits:true ratio 0.9467, while the capture shows the box clipped (tc-14-13-repro-small-after-fit.png)."
+ },
+ {
+  "id": "TC-14-14",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-14.py",
+   "tc-14-14.jsonl",
+   "tc-14-14-audit.jsonl",
+   "tc-14-14-h1.stderr.log",
+   "tc-14-14-before.png",
+   "tc-14-14-after.png"
+  ],
+  "note": "Host: inline (H1 stdio --mode inline, adapters/mcp_server.py) with FREECAD_BUDDY_ALLOW_EXEC=1 and FREECAD_BUDDY_AUDIT_LOG=evidence/tc-14-14-audit.jsonl. debug_exec 45 s busy body -> TIMEOUT after 30.4 s ('...the document is now suspect: do not blind-retry...'). Following debug_exec -> 'document-suspect: a prior call timed out...'. Audit tail = 6 lines. view_fit_viewport on the suspect handle -> INVALID_INPUT 'document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating', returned in 0.13 s while the busy body still held the document (query read only returned at 45 s). Two TC literals are stale (judged on merits): (1) TC expects 'the document is now suspect: ...' - that is the TIMEOUT wording; the refusal wording is 'document-suspect: ...' (mcp_server.py:200-207). (2) TC expects no new view_fit_viewport audit record; the inline host deliberately audits the refused attempt: 2 new records (generic before + after verify_verdict INVALID_INPUT, no camera_before). No camera record and the 0.13 s return show the fit was refused before dispatch. No stderr Traceback. Visual: GUI Start page, no document, no dialog, before/after byte-identical (cmp); the suspect document lives on the inline host, which has no window, so this comparison cannot show a camera move (TC design gap)."
+ },
+ {
+  "id": "TC-14-15",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-14-15.py",
+   "tc-14-15-before.jsonl",
+   "tc-14-15-after.jsonl",
+   "tc-14-15-git-status-before.txt",
+   "tc-14-15-gate.txt",
+   "tc-14-15-before.png",
+   "tc-14-15-after.png"
+  ],
+  "note": "Given 'git status --porcelain empty' not met literally: 2153 lines (UAT run artifacts, freecad-buddy-workdir, deferred-work.md edit by others); 'git status --porcelain src' empty, which is what the gate reads. check_imports on shipped tree: 'check_imports OK' exit=0. Planted usecases/_tc14_probe.py: exit=1, 'usecases/_tc14_probe.py:2 -- 'FreeCADGui.ActiveDocument' is banned; operate on the explicit doc handle...' (plus the ring-import violation on line 1). Probe removed at once; git status src empty again. FREECAD_MODULE_ALIASES (check_imports.py:52, TC cites :41) = {FreeCAD, App, FreeCADGui}. grep FreeCADGui.ActiveDocument src/ is not empty: 2 docstring mentions in hosts/gui_addon/viewport.py:16,158 (plus .pyc) - prose, no code use (stale literal, TC defect). GUI fit OK before and after; PNG before/after byte-identical; after read: box whole, no error dialog or addon popup."
+ },
+ {
+  "id": "TC-14-16",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-14-16.py",
+   "tc-14-16.jsonl",
+   "tc-14-16-attempt1.jsonl",
+   "tc-14-16b.py",
+   "tc-14-16b.jsonl",
+   "tc-14-16-after.png"
+  ],
+  "note": "Attempt 1 called query_mass_properties without object (TC literal) -> schema reject \"'object' is a required property\" (stale literal); rerun with object Box. verify_shape returns no digest field (checks volume 6000, bbox [10,20,30], solid_count 1, valid, watertight); the whole structured_content was compared before/after the fit: identical. Volume 6000.0 before and after. verify_recompute OK, recompute.clean measured 0. Modified-state Then NOT RUN (cannot falsify): the golden Box must be shown first (View>Visibility>Show All Objects), which already marks the document '*'; a save to evidence/tc-14-16-box-saved.FCStd (since deleted) still left the title '* tc-14-16-box-saved' (the save renames the label to the file stem, TC-02-13), so no clean baseline existed. Title was unchanged across the fit. PNG read (after a second fit in 16b): one box 10x20x30 proportions, isometric, whole, no added/removed/deformed feature."
+ }
+]

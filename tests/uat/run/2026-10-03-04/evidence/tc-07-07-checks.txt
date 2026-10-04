@@ -1,0 +1,9 @@
+PASS	given: no stale target	
+PASS	status OK and verdict OK	["OK", "OK", null]
+PASS	exactly three check ids	["export_step.volume", "export_step.valid", "export_step.topology_counts"]
+PASS	volume tolerance {rel:0.001}	{"id": "export_step.volume", "measured": 15214.601836602547, "expected": 15214.601836602547, "tolerance": {"rel": 0.001}, "passed": true, "detail": {"message": "|15214.601836602547 - 15214.601836602547| <= 15.214601836602547"}}
+PASS	volume within 0.1% of 15214.6018	15214.601836602547
+PASS	valid measured true passed	{"id": "export_step.valid", "measured": true, "expected": true, "tolerance": null, "passed": true, "detail": {"message": "isValid() True"}}
+PASS	topology counts equal for faces/edges/solids	{"id": "export_step.topology_counts", "measured": {"faces": 7, "edges": 15, "solids": 1}, "expected": {"faces": 7, "edges": 15, "solids": 1}, "tolerance": null, "passed": true, "detail": {"message": "faces 7 vs 7, edges 15 vs 15, solids 1 vs 1"}}
+PASS	subject export_id/path	{"export_id": "fcb-export:A3qBb8wlBwplFIgnyWEj8Q", "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-07-rt.step"}
+PASS	no FCB_TMP_ doc left	[["box40_hole_r5", "box40-hole-r5"]]

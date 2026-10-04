@@ -1,0 +1,320 @@
+[
+ {
+  "id": "TC-03-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-01.py",
+   "tc-03-01-mcp.jsonl",
+   "tc-03-01-checks.txt",
+   "tc-03-01-after.png",
+   "tc-03-01-edit-PlateProfileXY.png",
+   "tc-03-01-edit-RibProfileXZ.png",
+   "tc-03-01-edit-EndProfileYZ.png"
+  ],
+  "note": "All non-visual Thens pass (rotation check corrected in checks.txt: YZ axis (0.577,0.577,0.577) 120 deg vs XY (0,0,1) 0 deg). ZX is a schema reject. view_fit_viewport SPEC_FAILED view_fit.unverified (no shape-bearing objects) -> GUI Fit All. Visual: the 3D view shows nothing for empty sketches (FreeCAD draws no axis cross outside Sketcher edit) - TC literal stale; each sketch opened in FreeCAD's own edit mode (tree double-click): TOP, FRONT, RIGHT orientations, each 'Empty sketch', no geometry, no dialog."
+ },
+ {
+  "id": "TC-03-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-02.py",
+   "tc-03-02-mcp.jsonl",
+   "tc-03-02-checks.txt",
+   "tc-03-02-after.png",
+   "tc-03-02-after-tree.png",
+   "tc-03-02-edit-PlateProfile.png"
+  ],
+  "note": "All Thens pass (PlateProfile child of PlateBody, Tip=null, dof=0, NoSuchBody INVALID_INPUT 'unknown object in body: NoSuchBody', no snapshot_path). Fit: MCP SPEC_FAILED unverified -> Fit All. Visual: no solid; tree shows PlateProfile under PlateBody; edit mode shows empty XY (TOP) sketch."
+ },
+ {
+  "id": "TC-03-03",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-03.py",
+   "tc-03-03-mcp.jsonl",
+   "tc-03-03-checks.txt",
+   "tc-03-03-after.png",
+   "tc-03-03-edit-BossProfile-iso.png"
+  ],
+  "note": "Face6 sketch OK, position.z={5 mm}, fully_constrained=true; plane+face, geometric kind, cylindrical Face1 all INVALID_INPUT with the exact messages. Given 'query_object lists face names' FAIL as written: query_object returns type/label/properties only (mcp-tools-design.md:127) - test-case defect. view_fit_viewport OK. Visual: shaded 60x40x5 plate; edit-mode iso view shows sketch axes on the plate top face corner, not at z=0."
+ },
+ {
+  "id": "TC-03-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-04.py",
+   "tc-03-04-mcp.jsonl",
+   "tc-03-04-checks.txt",
+   "tc-03-04-after.png",
+   "tc-03-04-edit-PlateProfile.png"
+  ],
+  "note": "All 9 Thens pass. Visual: 3D view shows closed black parallelogram (FreeCAD shows colours/labels only in edit mode); edit mode: closed green rectangle, corner on origin, labels PlateWidth = 60 mm / PlateDepth = 40 mm, 'Fully constrained'."
+ },
+ {
+  "id": "TC-03-05",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-03-05.py",
+   "tc-03-05-asis-mcp.jsonl",
+   "tc-03-05-asis-checks.txt",
+   "tc-03-05-center-mcp.jsonl",
+   "tc-03-05-origin-mcp.jsonl",
+   "tc-03-05-final.py",
+   "tc-03-05-mcp.jsonl",
+   "tc-03-05-checks.txt",
+   "tc-03-05-repro.py",
+   "tc-03-05-repro-mcp.jsonl",
+   "tc-03-05-repro-tcorder-mcp.jsonl",
+   "tc-03-05-after.png",
+   "tc-03-05-edit-MixedProfile.png"
+  ],
+  "note": "As written: INVALID_INPUT 'geometry[3].center must be a list of 2 or 3 numbers, got None' (point read from center while schema exposes start; sketches.py:204-205). With center: INVALID_INPUT 'constraints[3] DistanceX with a first_pos also requires second and second_pos' (single-point DistanceX/Y refused, sketches.py:442-445; FreeCAD accepts this form). With origin form: SPEC_FAILED 'verify_sketch failed on MixedProfile (dof=0): sketch.fully_constrained'. The TC's 4 arc-endpoint datums over-constrain the arc (TC data), but the same 15 constraints commit OK in another order with redundant=[9] (repro x2 each) -> order-dependent; redundancy must WARN, never fail (verification-design.md:213; gate uses FreeCAD FullyConstrained flag, verify.py:333,352). Final variant: geo 0..3, geo_ids [0,1,2,3], dof 0; types 'LineSegment/Circle/ArcOfCircle/Point', not 'Part::Geom*' (queries.py:559; TC literal). Schema rejects pass. Visual (final variant, edit): green line from origin, small circle, open quarter arc, single point; no fifth shape."
+ },
+ {
+  "id": "TC-03-06",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-03-06.py",
+   "tc-03-06-mcp.jsonl",
+   "tc-03-06-checks.txt",
+   "tc-03-06-after.png",
+   "tc-03-06-edit-ConstraintBed.png",
+   "tc-03-06-probe.py",
+   "tc-03-06-probe-mcp.jsonl",
+   "tc-03-06-probe-checks.txt"
+  ],
+  "note": "As written: call 1 INVALID_INPUT 'constraints[8].first geo_id 5 is outside the sketch (0..4, or -1/-2 axes)' (TC data: Given has 5 entries but When uses geo 4 as a line and geo 5 as the point); call 2 INVALID_INPUT single-point DistanceX (same product gap as TC-03-05). The Given needs 5 Block pins (AD-8), so ids cannot start at 1. Schema rejects (Symmetry, missing first, first_pos 4) pass. Probe on merits: all 16 types accepted one by one, ids 1-based, Radius {2.5 mm}, Angle {90 deg}. Visual (as-written state): edit shows 2 lines, 2 touching equal circles, a point and Block glyphs; no dimension labels because both calls were refused."
+ },
+ {
+  "id": "TC-03-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-07.py",
+   "tc-03-07-mcp.jsonl",
+   "tc-03-07-checks.txt",
+   "tc-03-07-before.png",
+   "tc-03-07-after.png",
+   "tc-03-07-edit-TabProfile.png"
+  ],
+  "note": "All Thens pass: volume 2000 -> 5000.0, verify_shape OK, value+sense and non-driving ('constraint 12 is not driving; its datum is read-only') refused. Visual: before narrow long tab, after visibly wider slab; edit: green closed rectangle, TabWidth = 25 mm, reference TabDiagRef grey."
+ },
+ {
+  "id": "TC-03-08",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-08.py",
+   "tc-03-08-mcp.jsonl",
+   "tc-03-08-checks.txt",
+   "tc-03-08-before.png",
+   "tc-03-08-mid.png",
+   "tc-03-08-after.png",
+   "tc-03-08-edit-before.png",
+   "tc-03-08-edit-mid.png",
+   "tc-03-08-edit-after.png"
+  ],
+  "note": "All Thens pass with exact messages. Visual: edit before/after diagonal solid green like the edges; the intermediate capture shows the diagonal as a dashed light-blue construction line, so the toggle reached the screen. 3D view shows 5 lines."
+ },
+ {
+  "id": "TC-03-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-09.py",
+   "tc-03-09-mcp.jsonl",
+   "tc-03-09-checks.txt",
+   "tc-03-09-before.png",
+   "tc-03-09-after.png",
+   "tc-03-09-edit-after.png"
+  ],
+  "note": "SPEC_FAILED, rolled_back, 'verify_sketch failed on LooseProfile (dof=4)', geometry=[], digests equal. %TEMP% holds 10 FCB_TMP_snap_* dirs dated 2026-09-22 (environment, pre-existing); none added by this run. Visual: before/after empty viewport; edit after shows only the axes, 'Empty sketch', no line."
+ },
+ {
+  "id": "TC-03-10",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-10.py",
+   "tc-03-10-mcp.jsonl",
+   "tc-03-10-checks.txt",
+   "tc-03-10-before.png",
+   "tc-03-10-after.png",
+   "tc-03-10-edit-after.png"
+  ],
+  "note": "Remove edge -> SPEC_FAILED dof=1, rolled back, 4 geo / 11 constraints restored; cascade on CascadeProfile 3 -> 1; geo 7 and [] refused. Visual: rectangle closed in both; edit after green with both labels. The extra line in the after image is the CascadeProfile sketch built for the cascade Then."
+ },
+ {
+  "id": "TC-03-11",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-11.py",
+   "tc-03-11-mcp.jsonl",
+   "tc-03-11-checks.txt",
+   "tc-03-11-before.png",
+   "tc-03-11-after.png",
+   "tc-03-11-edit-before.png",
+   "tc-03-11-edit-after.png"
+  ],
+  "note": "Removal by id 12 and by 'SpareWidth' OK, count 13 -> 12 -> 11; [0] and {id:3} schema rejects; unknown-name message exact. Visual: edit before orange 'Redundant constraints: (12, 13)' with overlapping PlateWidth/SpareWidth label; after green, single PlateWidth = 60 mm label, edges intact."
+ },
+ {
+  "id": "TC-03-12",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-12.py",
+   "tc-03-12-mcp.jsonl",
+   "tc-03-12-checks.txt",
+   "tc-03-12-before.png",
+   "tc-03-12-after.png",
+   "tc-03-12-edit-before.png",
+   "tc-03-12-edit-after.png"
+  ],
+  "note": "All non-visual Thens pass (OK, warning sketch.redundant with exact message, redundant=[id 12], fully_constrained check passed, count 11 -> 12, dof 0). Visual: same rectangle, but in edit mode FreeCAD draws it ORANGE with 'Redundant constraints: (12)'. The TC literal 'not orange' contradicts FreeCAD's fixed redundancy colour and AD-8 (keep the constraint) -> test-case defect. No modal dialog. The extra Horizontal glyph overlaps the existing one."
+ },
+ {
+  "id": "TC-03-13",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-13.py",
+   "tc-03-13-mcp.jsonl",
+   "tc-03-13-checks.txt",
+   "tc-03-13-before.png",
+   "tc-03-13-after.png",
+   "tc-03-13-edit-after.png",
+   "tc-03-13-edge2-edit-after.png",
+   "tc-03-13-edge3.py",
+   "tc-03-13-edge3-mcp.jsonl",
+   "tc-03-13-edge3-edit-after.png"
+  ],
+  "note": "Edge1 projection OK, dof 0, element_map_version 15.70200.5, dependency BossProfile -> PlatePad, NoSuchPad and Face1 messages exact. Literal 'findings=[]' fails: status CLEAN but findings lists 2 PASS-verdict entries (TC literal stale). Given 'query_object lists edge names' is a TC defect (see TC-03-03). Visual: Edge1 and Edge2 are vertical edges and project to a single magenta point at a corner (correct FreeCAD behaviour; TC data defect). Edge3 variant shows a magenta external line along the plate bottom edge, on the solid."
+ },
+ {
+  "id": "TC-03-14",
+  "priority": "High",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-03-14.py",
+   "tc-03-14-mcp.jsonl",
+   "tc-03-14-checks.txt",
+   "tc-03-14-before.png",
+   "tc-03-14-after.png",
+   "tc-03-14-edit-B.png"
+  ],
+  "note": "Given unreachable: the unpinned rectangle is rolled back by AD-8 (SPEC_FAILED dof=2), so both as-written calls got INVALID_INPUT 'geo_id 0 is outside the sketch (0..-1, or -1/-2 axes)'. 'dof falls' NOT RUN (state cannot exist). On merits: rectangle pinned only by PointOnObject to -1 and -2 commits OK, dof 0, ids 11/12; Coincident first=-1 accepted; second=-9 INVALID_INPUT ('names external geometry the sketch has not projected'). Visual (edit B): green rectangle, bottom corners on the H axis and left corners on the V axis with point-on-object glyphs. Test-case defect."
+ },
+ {
+  "id": "TC-03-15",
+  "priority": "High",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-03-15.py",
+   "tc-03-15-mcp.jsonl",
+   "tc-03-15-checks.txt",
+   "tc-03-15-before.png",
+   "tc-03-15-after.png",
+   "tc-03-15-edit-before.png",
+   "tc-03-15-edit-after.png"
+  ],
+  "note": "Zero radius INVALID_INPUT 'Radius value must be positive', no mutation; -5 SPEC_FAILED rolled back (message 'ValueError: Invalid constraint index: 3' is misleading); 1e9 committed OK with dof 0 (TC allows). BossRadius stays 2.5. Infinity NOT RUN: the MCP client sends inf as null -> schema reject 'None is not of type number'; the 'must be finite' path is unreachable from this harness. Visual: the TC literal contradicts its own 1e9 Then: after the commit HoleSpacing = 1,000 km and the circles are 1000 km apart (3D view at 1367 km scale); BossRadius label R2.5; no dialog."
+ },
+ {
+  "id": "TC-03-16",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-16.py",
+   "tc-03-16-mcp.jsonl",
+   "tc-03-16-checks.txt",
+   "tc-03-16-before.png",
+   "tc-03-16-after.png",
+   "tc-03-16-edit-before.png",
+   "tc-03-16-edit-after.png"
+  ],
+  "note": "Status RECOMPUTE_ERROR (not SPEC_FAILED): 'recompute left 1 object(s) invalid: PlateProfile: Over-constrained sketch ... conflicting constraints:10, 12', rolled_back_verified. data-contracts-design.md:131 maps a failed recompute to RECOMPUTE_ERROR, so the TC literal (SPEC_FAILED, 'verify_sketch failed...') is stale. Ids named in the message; ConflictWidth gone; count 11; OK dof 0. Visual: green 60x40 rectangle, single PlateWidth = 60 mm label, no red."
+ },
+ {
+  "id": "TC-03-17",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-17.py",
+   "tc-03-17-mcp.jsonl",
+   "tc-03-17-checks.txt",
+   "tc-03-17-before.png",
+   "tc-03-17-after.png",
+   "tc-03-17-edit-after.png"
+  ],
+  "note": "Three INVALID_INPUT with exact messages, no snapshot_path, tree unchanged. Given '%TEMP% holds no FCB_TMP_snap_*' fails on 10 pre-existing 2026-09-22 dirs (environment); none added. Visual: identical plate before/after; edit shows the PlateProfile rectangle intact, no stray point."
+ },
+ {
+  "id": "TC-03-18",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-18.py",
+   "tc-03-18-mcp.jsonl",
+   "tc-03-18-checks.txt",
+   "tc-03-18-before.png",
+   "tc-03-18-after.png",
+   "tc-03-18-edit-before.png",
+   "tc-03-18-edit-after.png"
+  ],
+  "note": "deg on Distance INVALID_INPUT \"Distance value unit must be one of ['mm'], got 'deg'\" (checks.txt correction: the script wrongly required isError=false); radius deg, bare number, missing value and extra key are schema rejects; HoleSpacing stays 40; RibAngle 30 OK. Visual: no new circle; HoleSpacing = 40 mm; rib swung from 45 to 30 deg."
+ },
+ {
+  "id": "TC-03-19",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-19.py",
+   "tc-03-19-mcp.jsonl",
+   "tc-03-19-checks.txt",
+   "tc-03-19-before.png",
+   "tc-03-19-after.png",
+   "tc-03-19-edit-before-PlateProfile.png",
+   "tc-03-19-edit-after-PlateProfile.png",
+   "tc-03-19-edit-after-ScrapProfile.png"
+  ],
+  "note": "Stale geo_id INVALID_INPUT pre-transaction; mixed batch INVALID_INPUT 'geo_id 88 is outside', constraints unchanged, malformed [], dof 0, no new snapshot. Visual: PlateProfile green and unchanged; ScrapProfile shows one point (was two)."
+ },
+ {
+  "id": "TC-03-20",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-03-20.py",
+   "tc-03-20-mcp.jsonl",
+   "tc-03-20-checks.txt",
+   "tc-03-20-before.png",
+   "tc-03-20-after.png",
+   "tc-03-20-edit-after.png",
+   "tc-03-20-delete-gui.txt",
+   "tc-03-20-after-delete.png"
+  ],
+  "note": "feature_set_parameters Length 30 -> SPEC_FAILED 'TNP audit flagged 1 reference(s): BossProfile.AttachmentSupport REPOINTED', rolled back (volume 12000). The verdict is REPOINTED, not BROKEN. Second When INVALID_INPUT: BossProfile has no own geo 0 (TC data). BROKEN, RE_BASELINED and delete-source steps NOT RUN (no delete tool; GUI tree select + Delete key did not delete). verify_recompute OK. Visual: plate unchanged (rollback; the TC expects a change - stale), external magenta line on a real edge, no dialog."
+ },
+ {
+  "id": "TC-03-21",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-03-21.py",
+   "tc-03-21-mcp.jsonl",
+   "tc-03-21-checks.txt",
+   "tc-03-21-before.png",
+   "tc-03-21-after.png",
+   "tc-03-21-edit-after.png"
+  ],
+  "note": "All four unknown keys rejected at the schema ('Additional properties are not allowed (visible|color|weight|hint ...)'), no status and no mutation; tree and sketch unchanged. Visual: identical plate; edit shows the unchanged rectangle, no dot, no external curve."
+ }
+]

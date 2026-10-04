@@ -1,0 +1,14 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:CuIIzQ9n0RJ36H6oxpielA
+NOTE | roots ['Box']
+NOTE | e2e exit 0; edge exit 0; edge stderr copied to tc-09-22-edge.stderr.log (fresh run of the log TC names tc-09-01-edge.stderr.log)
+PASS | no crash signature in any log | {'tc-09-22-server.stderr.log': [], 'tc-09-22-edge.stderr.log': [], 'tc-09-01-edge.stderr.log': []}
+PASS | access violation absent in server log | 
+PASS | swig absent | 
+PASS | segfault and fatal absent | 
+NOTE | tc-09-22-edge.stderr.log: ^Traceback=0 ValidationError=0
+NOTE | tc-09-01-edge.stderr.log: ^Traceback=0 ValidationError=0
+PASS | every Traceback in edge log followed by ValidationError | 0 tracebacks
+PASS | no traceback terminates in mcp_server.py or rpc_listener.py | {'server_tracebacks': 0, 'bad': []}
+PASS | both sweep gates all_passed True | {'e2e': (29, 29), 'edge': (14, 14)}

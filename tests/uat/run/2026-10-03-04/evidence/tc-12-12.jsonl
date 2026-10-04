@@ -1,0 +1,48 @@
+{"t": "15:45:13", "kind": "netstat_before", "rows": ["TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       36996"]}
+{"t": "15:45:13", "kind": "mcp", "tool": "document_list", "args": {}, "elapsed_s": 0.036, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": []}, "text": "0 open document(s)."}}
+{"t": "15:45:13", "kind": "poll", "i": 0, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:13", "kind": "poll", "i": 1, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:16", "kind": "poll", "i": 2, "status": "OK", "elapsed": 2.845, "listening": true}
+{"t": 3.749, "kind": "open_example", "r": {"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "synthetic_events"}}
+{"t": "15:45:18", "kind": "poll", "i": 3, "status": "OK", "elapsed": 2.03, "listening": true}
+{"t": "15:45:20", "kind": "poll", "i": 4, "status": "OK", "elapsed": 1.129, "listening": true}
+{"t": "15:45:20", "kind": "poll", "i": 5, "status": "OK", "elapsed": 0.056, "listening": true}
+{"t": "15:45:21", "kind": "poll", "i": 6, "status": "OK", "elapsed": 0.015, "listening": true}
+{"t": "15:45:21", "kind": "poll", "i": 7, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:21", "kind": "poll", "i": 8, "status": "OK", "elapsed": 0.015, "listening": true}
+{"t": 8.249, "kind": "busy_grab", "degraded": null, "n": 197}
+{"t": "15:45:22", "kind": "poll", "i": 9, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:22", "kind": "poll", "i": 10, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:22", "kind": "poll", "i": 11, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:23", "kind": "poll", "i": 12, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:23", "kind": "poll", "i": 13, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:23", "kind": "poll", "i": 14, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:24", "kind": "poll", "i": 15, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:24", "kind": "poll", "i": 16, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:24", "kind": "poll", "i": 17, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:25", "kind": "poll", "i": 18, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:25", "kind": "poll", "i": 19, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:25", "kind": "poll", "i": 20, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:26", "kind": "poll", "i": 21, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:26", "kind": "poll", "i": 22, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:45:26", "kind": "poll", "i": 23, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:27", "kind": "poll", "i": 24, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:27", "kind": "poll", "i": 25, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:27", "kind": "poll", "i": 26, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:45:28", "kind": "poll", "i": 27, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:28", "kind": "poll", "i": 28, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:28", "kind": "poll", "i": 29, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:29", "kind": "poll", "i": 30, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:45:29", "kind": "poll", "i": 31, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:29", "kind": "poll", "i": 32, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:45:30", "kind": "poll", "i": 33, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:45:30", "kind": "poll", "i": 34, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:30", "kind": "poll", "i": 35, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:31", "kind": "poll", "i": 36, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:31", "kind": "poll", "i": 37, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:45:31", "kind": "poll", "i": 38, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:32", "kind": "poll", "i": 39, "status": "OK", "elapsed": 0.015, "listening": true}
+{"t": "15:45:33", "kind": "netstat_after", "rows": ["TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       36996"]}
+{"t": "15:45:33", "kind": "mcp", "tool": "document_list", "args": {}, "elapsed_s": 0.013, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:wQvDKL0ObMGlLHfnwQjEvw", "name": "ArchDetail", "label": "ArchDetail", "transient": false}]}, "text": "1 open document(s): ArchDetail."}}
+{"t": "15:45:33", "kind": "mcp", "tool": "query_tree_summary", "args": {"doc": "fcb-doc:wQvDKL0ObMGlLHfnwQjEvw"}, "elapsed_s": 0.044, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:wQvDKL0ObMGlLHfnwQjEvw", "total_objects": 435, "returned_nodes": 6, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "MaterialContainer", "label": "Materials", "type": "App::DocumentObjectGroupPython", "visibility": true, "children_count": 40}, {"name": "Draft_Construction", "label": "Construction", "type": "App::DocumentObjectGroup", "visibility": false, "children_count": 3}, {"name": "Group", "label": "Reference drawings", "type": "App::DocumentObjectGroup", "visibility": true, "children_count": 1}, {"name": "Section", "label": "Elevation", "type": "App::FeaturePython", "visibility": false, "children_count": 1}, {"name": "WPProxy", "label": "Detail view WP", "type": "App::FeaturePython", "visibility": true}, {"name": "Page", "label": "A4 sheet", "type": "TechDraw::DrawPage", "visibility": true, "children_count": 2}]}, "text": "435 objects, 6 shown.", "framing": {"fits": null, "ratio": null, "checked": "unavailable", "stale_reason": "viewport size unreadable: AttributeError"}}}
+{"t": "15:45:33", "kind": "tree_brief", "doc": "ArchDetail", "status": "OK", "total": 435}

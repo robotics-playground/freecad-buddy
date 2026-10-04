@@ -1,0 +1,5 @@
+3 open
+  box40-hole-r5        -> OK
+  two-box-compound     -> OK
+  Unnamed              -> OK
+0 open document(s).

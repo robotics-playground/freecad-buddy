@@ -1,0 +1,12 @@
+PASS	given: no stale targets	
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-11-before.png]	["OK", {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}]
+PASS	NOTE windows	[[15407174, "* box-10-20-30 - FreeCAD 1.1.4"]]
+PASS	all three INVALID_INPUT	{"export_step": "INVALID_INPUT", "export_stl": "INVALID_INPUT", "export_3mf": "INVALID_INPUT"}
+PASS	message 'export supports a single object; got multiple'	{"export_step": "export supports a single object; got multiple", "export_stl": "export supports a single object; got multiple", "export_3mf": "export supports a single object; got multiple"}
+PASS	no partial file	[]
+PASS	unknown object -> INVALID_INPUT 'unknown object: NoSuchObject'	["INVALID_INPUT", "unknown object: NoSuchObject"]
+PASS	empty doc -> INVALID_INPUT 'document has no objects to export'	["INVALID_INPUT", "document has no objects to export"]
+PASS	tree unchanged by refusals	[[{"name": "Box", "label": "Box", "type": "Part::Feature", "visibility": true}], [{"name": "Box", "label": "Box", "type": "Part::Feature", "visibility": true}]]
+PASS	visual: view_fit_viewport {doc} OK [tc-07-11-after.png]	["OK", {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}]
+PASS	NOTE windows	[[15407174, "* box-10-20-30 - FreeCAD 1.1.4"]]

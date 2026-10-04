@@ -1,0 +1,6 @@
+{"t": 1791091163.49, "tag": "final-list", "client": "gui", "event": "connect", "port": 51254}
+{"t": 1791091163.49, "tag": "final-list", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"t": 1791091163.49, "tag": "final-list", "client": "gui", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"t": 1791091163.49, "tag": "final-list", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 2, "method": "document_list", "params": {}}}
+{"t": 1791091163.49, "tag": "final-list", "client": "gui", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": []}, "text": "0 open document(s)."}}}
+{"t": 1791091163.49, "tag": "final-list", "client": "gui", "event": "close"}

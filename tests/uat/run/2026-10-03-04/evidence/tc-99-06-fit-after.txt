@@ -1,0 +1,1 @@
+SPEC_FAILED {'fits': False, 'ratio': 0.9323116219667944, 'checked': 'computed', 'stale_reason': None}

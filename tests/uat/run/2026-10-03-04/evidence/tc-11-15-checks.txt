@@ -1,0 +1,18 @@
+PASS | Given scratch audit-log path set for the H1 children | FREECAD_BUDDY_AUDIT_LOG=D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-15-append.jsonl
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-15-before.png
+NOTE | after batch 1: 22 lines, sha256 3176f1b919c69910
+PASS | Then second batch only appended: first N lines byte-identical | N=22
+PASS | Then line count grew | 22 -> 44
+PASS | Then digest of first N lines == batch-1 digest | 3176f1b919c69910
+PASS | Then file opened append-only: grep returns line 46 | 46:            with open(self._path, "a", encoding="utf-8") as handle:
+FAIL | Then no bridge tool reads the audit log: grep returns nothing (TC literal) | src/freecad_buddy/usecases/documents.py:40:    Follows the ``FREECAD_BUDDY_AUDIT_LOG`` precedent: an operator overrides the location by
+NOTE | grep hit is a docstring in documents.py:40 (workdir env-var precedent), not a read of the audit file
+FAIL | Then no rotation/truncation: grep returns nothing (TC literal) | 7:truncates, rotates, or reads it.
+NOTE | grep hit is the module docstring audit_log.py:7 'never truncates, rotates, or reads it' - no code path
+PASS | Then concurrent two-writer run: every line parses as JSON, no interleaved partial line | {'lines': 44, 'unparsable': [], 'per_doc': {'-': 4, 'fcb-doc:U_HQlerqu1gaXzuRDkS5dQ': 20, 'fcb-doc:yGjDdwMHNmwWo4XuVqi7uQ': 20}}
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-15-after.png

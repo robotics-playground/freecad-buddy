@@ -1,0 +1,16 @@
+PASS | Given $TEMP/not-reserved lists keep-a.txt and keep-b.txt | ['keep-a.txt', 'keep-b.txt']
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-13-before.png
+PASS | Then named snapshot file removed (keep-a.txt gone) | ['keep-b.txt']
+PASS | Then sibling survived snapshot helper (keep-b.txt) | ['keep-b.txt']
+PASS | Then non-reserved directory survived | C:\Users\thuan\AppData\Local\Temp\not-reserved
+PASS | Then preview helper removed nothing (keep-b.txt still there) | ['keep-b.txt']
+PASS | Then neither helper raised (both exit 0) | {'rc1': 0, 'rc2': 0, 'out': ''}
+PASS | Then reserved-prefix FCB_TMP_snap_* dir (minted for this check) removed with all contents | minted C:\Users\thuan\AppData\Local\Temp\FCB_TMP_snap_tc1113_eiye0lxq ['Doc.FCStd', 'Doc.FCStd.FCBak', 'extra.txt']
+exists_after False
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-13-after.png
+NOTE | Cleanup run: rm -rf $TEMP/not-reserved (created by this scenario) -> gone. tc-11-13-helpers-dryrun.txt is an earlier out-of-order run of the same helper commands (before the baseline); same results.

@@ -1,0 +1,3 @@
+NOTE | one call, 15 constraints (attempt 1): OK null
+NOTE | one call, 15 constraints (attempt 2): OK null
+NOTE | 13 then +2: OK / OK; verify OK redundant=[{'id': 9, 'name': '', 'type': 'Radius'}] warnings=[{"id": "sketch.redundant", "measured": {"redundant": [9], "partially_redundant": []}, "passed": false, "detail": {"message": "redundant constraints present (warning only)"}}]

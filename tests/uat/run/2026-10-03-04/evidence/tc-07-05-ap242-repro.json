@@ -1,0 +1,18 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "export_id": "fcb-export:DqD9ywgoYZxn3tBh79SnFA",
+  "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-05-ap242-repro.step",
+  "bytes": 6854,
+  "verified": false
+ },
+ "text": "STEP export written -> D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-05-ap242-repro.step.",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close TC0906 -> OK
+PASS | Given query_sketch_info OK for <SK> | 4
+NOTE | <P> = fcb-preview:eyJhcmdzX2RpZ2VzdCI6IjU1ZmQzNzdkOWI0ZjY3ZWJmNWE2YTZlODk5YjJiMTdiZGFjNmQxYzJkNjFkZWRjYThlM2RiNjRkY2YxOTI1Y2MiLCJkb2MiOiJmY2ItZG9jOnVpSVRjcHZ6eFViTHE1X245bzJBR0EiLCJleHAiOjE3OTEwODkxMTEsImZpbmdlcnByaW50X2JlZm9yZSI6IjgwY2MzMDIxYzYxODE4MWQwMjhhZTU0YTdhZTc2Y2E4Y2JkMTFkZDU4ODZiNzIwYTRjMTEyMzY1MzZiNjcwZGEiLCJqdGkiOiJCQXJZTXZkWDFtbU43bHkxS2JobjZnIiwidG9vbCI6InNrZXRjaF9hZGRfZ2VvbWV0cnkifQ.qTcSaW7CW2u9KcNvEtEauz83GUStvTA5v3rLx6ZF2to (preview status OK)
+PASS | empty geometry -> protocol rejection (minItems 1) | Input validation error: [] should be non-empty
+PASS | 1-element coord -> protocol rejection (minItems 2) | Input validation error: [0] is too short
+PASS | 4-element coord -> protocol rejection (maxItems 3) | Input validation error: [0, 0, 0, 0] is too long
+PASS | bounds distinct: both rejected, neither envelope, different messages | ['Input validation error: [0] is too short', 'Input validation error: [0, 0, 0, 0] is too long']
+PASS | empty objects[] on export -> real envelope (not schema error) | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "document has multiple objects; specify 'objects' with the one to export", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\
+NOTE | export objects[] wrote file: False
+PASS | sketch geometry_count unchanged | (4, 4, 'no geometry_count field: len(geometry)')

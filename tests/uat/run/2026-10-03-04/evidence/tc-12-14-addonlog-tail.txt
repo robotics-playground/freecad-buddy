@@ -1,0 +1,25 @@
+2026-10-04 15:19:53,636 INFO freecad_buddy.dispatch: INVALID_INPUT: operation.args must not carry 'doc'; the preview supplies it
+2026-10-04 15:20:01,833 INFO freecad_buddy.dispatch: INVALID_INPUT: Box has no property named 'Length'
+2026-10-04 15:21:58,460 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Cube
+2026-10-04 15:23:23,610 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in feature: Cube
+2026-10-04 15:23:27,437 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Cube
+2026-10-04 15:23:27,494 INFO freecad_buddy.dispatch: INVALID_INPUT: this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+2026-10-04 15:25:12,089 INFO freecad_buddy.dispatch: INVALID_INPUT: this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+2026-10-04 15:31:04,415 INFO freecad_buddy.dispatch: INVALID_INPUT: length must be a {value, unit} quantity, got 5
+2026-10-04 15:42:12,518 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:euh_LiHysDA3u5VUeUy2wg
+2026-10-04 15:42:12,526 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:euh_LiHysDA3u5VUeUy2wg
+2026-10-04 15:42:12,534 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:euh_LiHysDA3u5VUeUy2wg
+2026-10-04 15:48:20,804 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:iYStL44Ungd-9zYjE1YS7Q
+2026-10-04 15:48:20,825 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:iYStL44Ungd-9zYjE1YS7Q
+2026-10-04 15:49:50,796 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:U2bTLgF8nRNJNOQHKzBUxg
+2026-10-04 15:49:50,804 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:U2bTLgF8nRNJNOQHKzBUxg
+2026-10-04 15:49:50,813 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:U2bTLgF8nRNJNOQHKzBUxg
+2026-10-04 15:50:43,114 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 243, in _serve_conn
+    line = reader.read_line()
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 78, in read_line
+    chunk = self._conn.recv(65536)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host

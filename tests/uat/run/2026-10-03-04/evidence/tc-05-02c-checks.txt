@@ -1,0 +1,7 @@
+NOTE | cleanup previous scenario: document_close TC0509 -> OK
+NOTE | supplementary in-process observation for TC-05-02 (the shell cannot read FreeCAD-created snapshot dirs: ACL Access is denied). debug_exec wraps transaction._delete_snapshot once to list the snapshot dir just before the commit deletes it.
+NOTE | spy -> 'armed'
+NOTE | feature_pad -> {"status": "OK"}; spy record -> ({'path': 'freecad-buddy-workdir\\tmp\\FCB_TMP_snap_f2n0hg2l\\TC0502c.FCStd', 'listing_before_delete': ['TC0502c.FCStd'], 'size': 7956}, False)
+PASS | snapshot dir held <DocumentName>.FCStd (TC0502c.FCStd) while the bracket was open | ({'path': 'freecad-buddy-workdir\\tmp\\FCB_TMP_snap_f2n0hg2l\\TC0502c.FCStd', 'listing_before_delete': ['TC0502c.FCStd'], 'size': 7956}, False)
+PASS | snapshot dir gone after commit (in-process os.path.exists -> False) | ['TC0502c.FCStd'], 'size': 7956}, False)
+NOTE | close -> OK

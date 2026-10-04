@@ -1,0 +1,4 @@
+2 open
+  box-10-20-30         -> OK
+  Unnamed              -> OK
+0 open document(s).

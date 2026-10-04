@@ -1,0 +1,32 @@
+== dead pid 9756: tasklist
+(no process 9756)
+-- attach
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.02
+-- file after
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-9756.json
+== dead pid 36912: tasklist
+(no process 36912)
+-- attach
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.03
+-- file after
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-36912.json
+== live bridge
+ "status": "OK",
+== corroboration: shipped _pid_alive and discover() on every discovery file
+rpc_client module: D:\Work\Personal\Sources\freecad-buddy\src\freecad_buddy\adapters\rpc_client.py
+rpc-11924.json: _pid_alive=False tasklist_image=-
+rpc-1444.json: _pid_alive=False tasklist_image=-
+rpc-1456.json: _pid_alive=False tasklist_image=-
+rpc-19588.json: _pid_alive=False tasklist_image=-
+rpc-20096.json: _pid_alive=False tasklist_image=-
+rpc-21148.json: _pid_alive=False tasklist_image=-
+rpc-21164.json: _pid_alive=False tasklist_image=-
+rpc-31584.json: _pid_alive=True tasklist_image=freecad.exe
+rpc-32380.json: _pid_alive=False tasklist_image=-
+rpc-33492.json: _pid_alive=False tasklist_image=-
+rpc-36912.json: _pid_alive=False tasklist_image=-
+rpc-38812.json: _pid_alive=False tasklist_image=-
+rpc-9756.json: _pid_alive=False tasklist_image=-
+discover() -> {'pid': 31584, 'port': 64386}

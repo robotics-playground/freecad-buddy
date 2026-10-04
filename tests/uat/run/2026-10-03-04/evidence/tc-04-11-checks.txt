@@ -1,0 +1,12 @@
+NOTE | plate drawn at x=40..100 so it does not overlap the r=30 disc centred on the origin (polar axis = DiscProfile N_Axis)
+PASS | Given ClearanceHole (through) vol 11881.2 | 11881.208527786135
+PASS | Given DiscHole verify_shape OK | {"status": "OK"}
+PASS | Given DiscHole removes one bore | 14018.375468940203
+PASS | linear pattern OK rolled_back=false | {"status": "OK"}
+PASS | HoleRow vol 11762.4 (two bores total) | 11762.41705557227
+PASS | HoleRow bbox unchanged [60,40,5] | [60.0, 40.0, 5.0]
+PASS | polar pattern OK rolled_back=false | {"status": "OK"}
+PASS | HoleRing removes exactly 6 bores | vol=13424.418107870879 expected=13424.42
+PASS | verify_shape OK for HoleRow and HoleRing | ['OK', 'OK']
+PASS | kind mirror is a schema reject | {"_raw": "Input validation error: 'mirror' is not one of ['linear', 'polar']"}
+PASS | originals omitted -> OK, patterns the Tip (ClearanceHole) | {"status": "OK"} Originals=['<PartDesign::Hole>'] vol=11762.41705557227

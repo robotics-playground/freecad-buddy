@@ -1,0 +1,12 @@
+NOTE | literal TC args {geometry:[0]} were refused (sketch_remove_geometry() got an unexpected keyword argument 'geometry'; tc-05-17-checks.txt). Shipped parameter is geo_ids (sketches.py:848). Same document, unchanged.
+NOTE | preview={"status": "OK"} validity={"is_valid": false, "recompute_clean": false, "recompute_errors": [{"object": "Pad", "error": "Wire is not closed."}], "pre_existing_errors": [], "status": "RECOMPUTE_ERROR", "explanation": "recompute left 1 object(s) invalid: Pad: Wire is not closed."} tnp_precheck={"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}
+NOTE | envelope status=RECOMPUTE_ERROR text='Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Pad: Wire is not closed.'
+NOTE | post_verify={"recompute_clean": false, "is_valid": false, "fully_constrained": "not_measured", "tnp_audit": {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}, "passed": false, "explanation": "recompute left 1 object(s) invalid: Pad: Wire is not closed."}
+FAIL | tnp_audit.status FLAGGED | CLEAN
+FAIL | a BROKEN finding present | []
+FAIL | BROKEN finding at layer 0 or 1 | []
+FAIL | BROKEN owner == 'Fillet' | []
+PASS | rolled_back true | {'rolled_back': True, 'rollback_proven': 'rolled_back_verified'}
+PASS | Fillet intact after rollback: query_mass_properties OK | {'status': 'OK', 'vol': 11974.247779607693}
+FAIL | if recompute_clean false, tnp_audit.status is not CLEAN | {'recompute_clean': False, 'tnp': 'CLEAN'}
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

@@ -1,0 +1,10 @@
+PASS | Given LooseProfile verify_sketch non-OK with dof > 0 | {"status": "SPEC_FAILED", "detail": {"code": "SPEC_FAILED", "message": "sketch.fully_constrained", "objects": []}} dof=2
+NOTE | snapshot dirs before: ['C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__bj2bhr9', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_5vfvwol0', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_6trobotl', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_8w4fs72c', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap__3t9_knt', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_bkkqvw10', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_bo15ri4_', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_hbam9tic', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_p3jwakfm', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_sm8btlw3', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_yjuiim6p']
+FAIL | status SPEC_FAILED | {"status": "OK"}
+FAIL | rolled_back=true and post_verify.passed=false | {'rolled_back': False, 'rollback_proven': None}
+FAIL | explanation starts 'verify_sketch failed on LooseProfile (dof=' non-zero | 
+FAIL | recompute_clean=true, is_valid=true, fully_constrained=false | {'recompute_clean': True, 'is_valid': True, 'fully_constrained': None}
+FAIL | no LoosePad in tree | 
+FAIL | LooseBody Tip null | <PartDesign::Pad>
+FAIL | fingerprint before == after, or rolled_back_via_snapshot | before=e396db84d0291cf377e60d8f223f6811a4ca66bc5ab90940f2d1562584bff3eb after=83f944414ce5ebd5d8850a5a004d71785d6d2d88e647d27914263978eb484e50 rollback_proven=None
+PASS | snapshot deleted (no new snapshot dir) | new=[]

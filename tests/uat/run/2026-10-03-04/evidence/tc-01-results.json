@@ -1,0 +1,218 @@
+[
+ {
+  "id": "TC-01-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-00-preconditions.txt",
+   "tc-01r-01-given.txt",
+   "tc-01r-01-launch.txt",
+   "tc-01r-01-checks.txt",
+   "tc-01r-01-mcp.jsonl",
+   "tc01r_cmdline.py",
+   "tc-01r-01-after.png"
+  ],
+  "note": "HEAD bece7ac. launch_app pid 28996 win 3283362. Listener 127.0.0.1:55359; addon log 'spawned MCP proxy (pid 33720) -> http://127.0.0.1:8765/mcp'; no 'failed to spawn'. :8765 LISTENING owner 27448, whose parent is 33720 (the .venv pythonw launcher spawns the uv base pythonw): literal 'owner equals spawn pid' is a test-case defect (known from first run); both command lines are '-m freecad_buddy.hosts.main serve --mode rpc --transport http', 33720 runs .venv\\Scripts\\pythonw.exe; no other serve process. query_capabilities OK. Visual: box fixture opens hidden (known fixture defect), so View>Visibility>Show All Objects via invoke_menu first; view_fit_viewport OK ratio 0.948. PNG read: FreeCAD 1.1.4 main window, one isometric box solid, all corners inside the view, no dialog (docked Tasks panel only)."
+ },
+ {
+  "id": "TC-01-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-02-given.txt",
+   "tc-01r-02-sweep.stdout.txt",
+   "tc-01r-02-exit.txt",
+   "tc-01r-02-e2e_report.json",
+   "tc-01r-02-server.stderr.log",
+   "tc-01r-02-checks.txt",
+   "tc-01r-02-mcp.jsonl",
+   "tc-01r-02-before.png",
+   "tc-01r-02-after.png"
+  ],
+  "note": "5 golden models; no fcb process before. run_mcp_e2e.py exit 0, 29/29, all_passed True; box volume=6000.0; all 10 verify_export_step/stl OK; server stderr 3 INFO lines, no fault strings. GUI query_capabilities OK (1.1.4) after the sweep. Fixture defect re-confirmed: view_fit_viewport before Show All -> SPEC_FAILED view_fit.unverified 'no visible shape-bearing objects to measure'; after invoke_menu View>Visibility>Show All Objects -> OK ratio 0.948 (after-sweep fit served from cache, 'unverified key component(s): geometry'). Both PNGs read: identical, one whole isometric box, tree 'box-10-20-30 > Box', one window, no new document, no dialog. Sweep report copied from _automation/ (script output path)."
+ },
+ {
+  "id": "TC-01-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-03-list.py",
+   "tc-01r-03-checks.txt",
+   "tc-01r-03-tools_list.keep.json",
+   "tc-01r-03-additionalProperties.json",
+   "tc-01r-03-mcp.jsonl",
+   "tc-01r-03-after.png"
+  ],
+  "note": "45 tools (same set as 00-tools-list.json); no export_self_read_*; no debug_exec; families document_ 7, query_ 8, verify_ 6, export_ 3, sketch_ 8, feature_ 11, preview_ 1, view_ 1; 13 read-only names present; additionalProperties False on all 45. Visual: Show All Objects then view_fit_viewport OK; PNG read: one whole isometric box, no dialog. Cleanup kept the list as .keep.json."
+ },
+ {
+  "id": "TC-01-04",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-01r-04-checks.txt",
+   "tc-01r-04-capabilities.json",
+   "tc-01r-04-handshake.txt",
+   "tc-01r-04-proxy-restart.log",
+   "tc-01r-04-mcp.jsonl",
+   "tc-01r-04-after.png"
+  ],
+  "note": "Banner keys exactly the 9 named; freecad_version '1.1.4' str, element_map_available true bool, serializer 'exportBinary', render 'gui_constructed', exec_enabled false, sketcher/partdesign true; rpc-28996.json freecad_version 1.1.4; handshake capabilities exec_enabled false (direct rpc_hello with the proxy stopped, AD-26; proxy then restarted by hand with the addon's command, query_capabilities OK). BLOCKED: the About-dialog cross-check (Help>About is modal; opening and dismissing it needs a keystroke or foreground click: desktop in use). Corroborated without the GUI dialog: window title 'FreeCAD 1.1.4' (list_windows) and the discovery file both say 1.1.4; freecad.exe has no ProductVersion resource. TC literal 1.1.1 is stale (test-case defect). Visual: Show All Objects + view_fit_viewport OK; PNG read: one whole isometric box, no About dialog, no popup."
+ },
+ {
+  "id": "TC-01-05",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-05-given.txt",
+   "tc-01r-05-budgets.txt",
+   "tc-01r-05-checks.txt",
+   "tc-01r-05-mcp.jsonl",
+   "tc-01r-05-after.png"
+  ],
+  "note": "Budgets {30,60,120,180}; only preview_dry_run is 180; 60 set exactly document_open, query_screenshot, verify_shape, verify_sketch; all sketch_/feature_/export_ are 120 and mutating True; all query_/verify_ mutating False; document_open (60) and document_close (30) mutating True. The 30 s set has 11 names: the TC's 10 plus view_fit_viewport (30.0, mutating True): stale list, test-case defect (same as first run). Addon junction -> src/freecad_buddy. Visual: Show All Objects + view_fit_viewport OK; PNG read: one whole isometric box, no dialog."
+ },
+ {
+  "id": "TC-01-06",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-06-given.txt",
+   "tc-01r-06-rpc.txt",
+   "tc-01r-06-proxy-restart.log",
+   "tc-01r-06-mcp.jsonl",
+   "tc-01r-06-before.png",
+   "tc-01r-06-after.png",
+   "tc-01r-06-pixdiff.txt"
+  ],
+  "note": "Reply {jsonrpc,id:1,error:{code:-32004,message:'contract version unsupported',data:{supported:['1']}}}: no result, no capabilities, no freecad_version; second readline ''. Listener survived (authenticated hello -> result with capabilities) and query_capabilities OK through the restarted proxy. Deviations (known, test-case defects): the TC command picks sorted(glob)[-1] = rpc-9756.json (dead pid) -> ConnectionRefusedError in 2.03 s; the probe used rpc-<live pid 28996>.json. AD-26: proxy stopped (TerminateProcess) for the probe and restarted by hand with the addon's command. Visual: Show All + view_fit_viewport OK before and after; both PNGs read: same whole isometric box, no dialog; pixel diff 0."
+ },
+ {
+  "id": "TC-01-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-07-given.txt",
+   "tc-01r-07-rpc.txt",
+   "tc-01r-07-proxy-restart.log",
+   "tc-01r-07-mcp.jsonl",
+   "tc-01r-07-before.png",
+   "tc-01r-07-after.png",
+   "tc-01r-07-pixdiff.txt"
+  ],
+  "note": "Wrong token + contract_version 99 -> {error:{code:-32000,message:'auth failed'}} (not -32004); token omitted -> same; neither frame has capabilities, freecad_version or supported; socket closed (frame2 ''). addon.log: 0 'token mismatch; closing' lines before, exactly 2 after (16:02:10,951 and 16:02:11,028). Listener survived (authenticated hello OK), query_capabilities OK through the restarted proxy. AD-26 proxy stop/restart as in TC-01-06; probe used the live pid's discovery file. Visual: both PNGs read: same whole isometric box, no dialog; pixel diff 0."
+ },
+ {
+  "id": "TC-01-08",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-08-given.txt",
+   "tc-01r-08-rpc.txt",
+   "tc-01r-08-proxy-restart.log",
+   "tc-01r-08-mcp.jsonl",
+   "tc-01r-08-before.png",
+   "tc-01r-08-after.png",
+   "tc-01r-08-pixdiff.txt"
+  ],
+  "note": "query_capabilities as first frame -> {id:3,error:{code:-32002,message:'handshake required'}}, no result/structured_content, frame2 ''; 'not json' -> {id:null,error:{code:-32002,message:'handshake required'}}, frame2 ''. addon.log 'first frame was not rpc_hello; closing' 0 before, 1 after (case 1; the malformed-JSON refusal logs no line, same as first run; the TC asks only for one line). Listener survived; query_capabilities OK via the restarted proxy. AD-26 proxy stop/restart; live pid's discovery file. Visual: both PNGs read: same whole isometric box, no dialog; pixel diff 0."
+ },
+ {
+  "id": "TC-01-09",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-09-given.txt",
+   "tc-01r-09-discovery.json",
+   "tc-01r-09-checks.txt",
+   "tc-01r-09-proxy-restart.log",
+   "tc-01r-09-mcp.jsonl",
+   "tc-01r-09-after.png"
+  ],
+  "note": "rpc-28996.json under %APPDATA%/FreeCAD/v1-1/freecad-buddy; legacy %APPDATA%/FreeCAD/Mod empty. Keys exactly schema,pid,host,port,token,contract_version,freecad_version,started. pid 28996 = list_windows pid, tasklist freecad.exe; 127.0.0.1:55359 LISTENING owned by 28996; contract_version '1'; freecad_version 1.1.4 = query_capabilities (TC literal 1.1.1 stale: test-case defect). Token authenticates: rpc_hello -> result with capabilities (proxy stopped for the probe, AD-26, then restarted). Windows mode -rw-r--r--, ACL SYSTEM/Administrators/user FullControl: recorded, not failed (TC allows). Token masked in evidence copy. Visual: capture of pid 28996 (discovery pid) read: FreeCAD main window, one whole isometric box, no dialog."
+ },
+ {
+  "id": "TC-01-10",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-10-prep.txt",
+   "tc-01r-10-given.txt",
+   "tc-01r-10-before.png",
+   "tc-01r-10-checks.txt",
+   "tc-01r-10-other-rpc-before.txt",
+   "tc-01r-10-other-rpc-after.txt",
+   "tc-01r-10-mcp.jsonl"
+  ],
+  "note": "FreeCAD 34164 (addon-spawned proxy launcher 31676, listener 27032) exited within 1 s of invoke_menu File>Exit; rpc-34164.json deleted; 31676 and 27032 gone; :8765 has no listener; the other 12 rpc-*.json unchanged (identical list); list_windows has no freecad.exe window; get_window_state on the dead pid fails ('No window with window_id 3872788 exists'). Before PNG read (Fit All toolbar, top view): FreeCAD main window, box rectangle whole in the 3D view, no dialog. Deviations: FreeCAD relaunched first so the proxy under test was addon-spawned (TC-01-06..09 replaced it by hand); the Show-All edit dirtied the box document, so it was closed via MCP after the before capture and before Exit, to avoid a save dialog. Observation: on clean exit the listener logs ERROR 'frame read failed; closing connection' with a ConnectionResetError traceback (addon.log 16:06:15,776)."
+ },
+ {
+  "id": "TC-01-11",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-11-given.txt",
+   "tc-01r-11-attach.py",
+   "tc-01r-11-pidalive.py",
+   "tc-01r-11-checks.txt",
+   "tc-01r-11-mcp.jsonl",
+   "tc-01r-11-before.png",
+   "tc-01r-11-after.png",
+   "tc-01r-11-pixdiff.txt"
+  ],
+  "note": "13 rpc files vs 1 freecad.exe. TC attach script on rpc-9756.json (pid absent from tasklist): 'refused: ConnectionRefusedError' in 2.02 s; repeated on rpc-36912.json (the newest stale record, left by an unclean TerminateProcess kill earlier in this run): refused in 2.03 s; no 'reply:' line, both < 5 s; both files still present; live query_capabilities OK. Port-reuse assertion: connect never succeeded, so the conditional does not apply. Corroboration of the bece7ac _pid_alive change: the shipped rpc_client._pid_alive (src path) returns False for all 12 dead pids and True only for live freecad.exe 31584; discover() returns pid 31584 port 64386 (the live listener), so the proxy cannot pick a stale record. Visual: both PNGs read: same whole isometric box, no dialog; pixel diff 489 px confined to one toolbar icon at (879-904, 62-92), 3D view unchanged."
+ },
+ {
+  "id": "TC-01-12",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-12-given.txt",
+   "tc-01r-12-kill.txt",
+   "tc-01r-12-proxy-restart.log",
+   "tc-01r-12-checks.txt",
+   "tc-01r-12-mcp.jsonl",
+   "tc-01r-12-before.png",
+   "tc-01r-12-after.png",
+   "tc-01r-12-pixdiff.txt"
+  ],
+  "note": "Literal 'Stop-Process -Id 28436' -> 'Access is denied' (harness limit, as in first run); TerminateProcess on the listener 28436 only; the .venv launcher 19852 exited with it. FreeCAD 31584 survived; rpc-31584.json unchanged (port 64386, same token sha256 prefix d1e75b03e6f32b85, same started); proxy restarted with the TC command (.venv/Scripts/python.exe ... serve --mode rpc --transport http), :8765 LISTENING on new pid 32716; query_capabilities freecad_version 1.1.4 (same); query_tree_summary on the pre-restart handle OK (Box); document_list shows box-10-20-30; view_fit_viewport OK through the restarted proxy. Visual: both PNGs read: same window, one whole isometric box, tree label box-10-20-30, no dialog; pixel diff 0."
+ },
+ {
+  "id": "TC-01-13",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-13-given.txt",
+   "tc-01-13-launcher.cmd",
+   "tc-01r-13-launch.json",
+   "tc-01r-13-launch.txt",
+   "tc-01r-13-checks.txt",
+   "tc-01r-13-cli1.stderr",
+   "tc-01r-13-cli2.stderr",
+   "tc-01r-13-fit.txt",
+   "tc-01r-13-after.png",
+   "tc-01r-13-popup.png",
+   "tc-01r-13-cleanup.txt"
+  ],
+  "note": "launch_app has no env field, so FREECAD_BUDDY_NO_AUTO_MCP=no was set by the .cmd wrapper passed as launch_app path (pid 26304). addon.log: 'RPC listener started on 127.0.0.1:63180', rpc-26304.json written, verbatim 'FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy'; no :8765 listener and no python process: truthiness holds for 'no'. CLI: 'serve --mode rpc' -> exit 2, stderr '--mode rpc requires --transport http.'; 'serve --transport http --mode inline' -> exit 2, stderr \"transport 'http' is not available yet; use --transport stdio.\"; :8765 still free. Visual: the Start page has no 3D view and no Fit All button (test-case defect: scenario opens no document), so an empty document was made with FreeCAD's own File > New Document (GUI only, no MCP), then Fit All toolbar by element_token (route accessibility, console shows Std_ViewFitAll). PNG read: main window with menu bar, Model tree 'Unnamed', empty 3D view with navigation cube, no error dialog, no splash. Harness note: invoke_menu ['File','New'] was refused (live label 'New Document') and left the File popup open (tc-01r-13-popup.png); the 'New Document' and later 'Exit' items were clicked in that popup by element_token. Cleanup kill_app refused (foreign_process_termination_denied, FreeCAD started through cmd); exited cleanly via File > Exit instead (rpc-26304.json removed)."
+ },
+ {
+  "id": "TC-01-14",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-01r-14-launch.txt",
+   "tc-01r-14-given.txt",
+   "tc-01r-14-before.png",
+   "tc-01r-14-kill.txt",
+   "tc-01r-14-relaunch.txt",
+   "tc-01r-14-proxy-restart.log",
+   "tc-01r-14-after-relaunch.txt",
+   "tc-01r-14-mcp.jsonl",
+   "tc-01r-14-after.png",
+   "tc-01r-14-cleanup.txt"
+  ],
+  "note": "FreeCAD 32068 launched directly by cua-driver launch_app, yet kill_app refused (foreign_process_termination_denied); used TerminateProcess (no shutdown handlers; allowed by RUN-CONTEXT for this TC). After the kill: 32068 gone; old RPC port 58780 -> ConnectionRefusedError in 2.03 s; addon proxy 37596/33828 orphaned but alive; first MCP call -> WORKER_CRASHED 'listener connection dropped' (rpc unreachable), second -> WORKER_CRASHED 'no live listener discovery file': no fabricated OK, and the bece7ac _pid_alive now makes discover() skip the stale rpc-32068.json (first run on fe4b8af had only the first message). Stale rpc-32068.json kept (recorded state). Relaunch 13956 wrote rpc-13956.json; token differs (sha256 prefixes 16c221b4 vs c99aac7b); old token on the new listener -> -32000 'auth failed'; :8765 LISTENING. Killed pid not capturable ('No window with window_id 661460 exists'). Before PNG read: killed session window, top view, box rectangle whole. After PNG read: new pid 13956, one whole isometric box (Show All + view_fit_viewport OK), no crash or recovery dialog. Finding reproduced from first run: the relaunched addon logs 'MCP proxy already on http://127.0.0.1:8765/mcp; not spawning' and the orphan proxy (parent = dead 32068) re-attaches to the new FreeCAD, so the new session is served by a proxy that is not its child and will not end with it (product behaviour; TC asserts only that :8765 returns to LISTENING). Orphan stopped for the old-token probe (AD-26), proxy restarted by hand."
+ }
+]

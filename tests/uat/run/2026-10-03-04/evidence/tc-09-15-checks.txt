@@ -1,0 +1,17 @@
+NOTE | cleanup previous scenario: document_close TC0914 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:OLXttxIe8c-5xWKdvlyxFQ
+NOTE | roots ['Box']
+NOTE | inline host verify_recompute doc schema: {'type': 'string', 'description': 'opaque fcb-doc handle'}
+FAIL | inline: envelope INVALID_INPUT 'doc handle must be a string' | {'status': None, 'msg': "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'", 'raw': "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'", 'isError': True}
+NOTE | H2 recorded divergence: status=SCHEMA_REJECT raw=Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string' msg=Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'
+PASS | H2 result recorded (divergence is not a failure) | {'status': 'SCHEMA_REJECT', 'raw': "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'", 'sc': False}
+PASS | guard string in mcp_server.py, not in usecases | 195:            envelope = _invalid_input_envelope("doc handle must be a string")
+---
+---
+src/freecad_buddy/hosts/gui_external/entry.py:137:    async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:
+src/freecad_buddy/adapters/mcp_server.py:176:    async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:
+PASS | two distinct _call_tool implementations | src/freecad_buddy/hosts/gui_external/entry.py:137:    async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:
+src/freecad_buddy/adapters/mcp_server.py:176:    async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:
+PASS | both hosts still answer tools/list | (45, 45)
+PASS | no registry lookup message (type problem, not missing handle) | ("Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'", "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'")

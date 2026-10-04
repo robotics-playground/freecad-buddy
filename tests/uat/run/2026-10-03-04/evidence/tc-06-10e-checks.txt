@@ -1,0 +1,14 @@
+PASS | dirty render status OK (not SPEC_FAILED/INVALID_INPUT) | {"status": "OK"}
+FAIL | dirty render dirty_document true | {'available': True, 'resource_link': 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_qkl3s8li.png', 'reason': None, 'dirty_document': False, 'empty_scene': False}
+PASS | dirty render: link non-null and PNG > 0 bytes | 34929
+FAIL | dirty render text contains 'Document dirty (pending/broken recompute)' | Rendered 1 objects.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Ca
+PASS | guard-skip signal lives in structured_content.render.dirty_document | ['available', 'dirty_document', 'empty_scene', 'reason', 'resource_link']
+NOTE | verify_recompute AFTER the dirty render (it recomputes itself, verify.py:411): {"subject": {"failing_objects": []}, "checks": [{"id": "recompute.clean", "measured": 0, "expected": 0, "passed": true, "detail": {"message": "no object left in an error state"}}], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15}, "verdict": "OK"
+NOTE | document_recompute: {"status": "OK"}
+PASS | post-recompute render dirty_document false | {'available': True, 'resource_link': 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_lz37e2ds.png', 'reason': None, 'dirty_document': False, 'empty_scene': False}
+PASS | dirty render rendered_objects == post-recompute list | {'dirty': ['BoxPad'], 'clean': ['BoxPad']}
+NOTE | BoxPad volume after recompute: {'value': 6000.0, 'unit': 'mm^3'}
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-10-after.png', 'exists': True, 'title': '- [0] Window "* TC0610 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

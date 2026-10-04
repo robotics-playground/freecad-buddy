@@ -1,0 +1,15 @@
+== Given caps
+ "status": "OK",
+  "freecad_version": "1.1.4",
+== Given open
+open: OK fcb-doc:yijyBv9puH1WT7l9htnQKg
+showall: {"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 5445682, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+fit: {"status": "OK", "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "computed", "stale_reason": null}, "text": "fitted the live viewport to 'box_10_20_30'"}
+== Given proxy pid
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       28436
+pid 19852 parent 31584 pythonw.exe: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 28436 parent 19852 pythonw.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 5976 parent 34656 python.exe: "D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\python.exe" tc01r_cmdline.py
+pid 35084 parent 5976 python.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe" tc01r_cmdline.py
+== discovery file before (token masked, sha256 of token)
+{'schema': 1, 'pid': 31584, 'host': '127.0.0.1', 'port': 64386, 'contract_version': '1', 'freecad_version': '1.1.4', 'started': '2026-10-04T09:06:45.433966+00:00'} token_sha256 d1e75b03e6f32b85

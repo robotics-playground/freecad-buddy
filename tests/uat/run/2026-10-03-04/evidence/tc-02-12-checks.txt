@@ -1,0 +1,11 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given body document opens | Opened tc-02-body -> fcb-doc:zbrdPbF-YHrBgZmPABvQow.
+PASS | Given total_edges >= 2 | 11
+PASS | uncapped: truncated false, returned == total | {'total_edges': 11, 'returned_edges': 11, 'truncated': False}
+PASS | max_edges 1: one edge, returned_edges 1 | {'returned_edges': 1, 'edges': [{'from': 'Body', 'to': 'Pad'}]}
+PASS | capped truncated true | True
+PASS | capped total_edges == uncapped total | [11, 11]
+PASS | kept edge == uncapped edges[0] | [{'from': 'Body', 'to': 'Pad'}, {'from': 'Body', 'to': 'Pad'}]
+PASS | max_edges 0 refused (record layer) | protocol: Input validation error: 0 is less than the minimum of 1
+PASS | max_edges -5 refused same way | protocol: Input validation error: -5 is less than the minimum of 1
+PASS | max_edges 1.5 refused | protocol: Input validation error: 1.5 is not of type 'integer'

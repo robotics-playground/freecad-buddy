@@ -1,0 +1,264 @@
+{
+ "n": 43,
+ "median_s": 0.008,
+ "max_s": 0.645,
+ "timeouts_status": 0,
+ "non_ok": [],
+ "screenshot": [
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.234
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.169
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.245
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.17
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.179
+  }
+ ],
+ "declared_timeouts": {
+  "document_list": null,
+  "query_capabilities": "30.0",
+  "query_dependencies": null,
+  "query_mass_properties": null,
+  "query_object": null,
+  "query_placement": null,
+  "query_screenshot": "60.0",
+  "query_tree_summary": null,
+  "verify_recompute": null,
+  "verify_shape": null
+ },
+ "over_budget": [],
+ "rows": [
+  {
+   "tool": "query_capabilities",
+   "status": "OK",
+   "duration_s": 0.645
+  },
+  {
+   "tool": "document_list",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_tree_summary",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "query_object",
+   "status": "OK",
+   "duration_s": 0.006
+  },
+  {
+   "tool": "query_mass_properties",
+   "status": "OK",
+   "duration_s": 0.012
+  },
+  {
+   "tool": "query_placement",
+   "status": "OK",
+   "duration_s": 0.006
+  },
+  {
+   "tool": "query_dependencies",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "verify_shape",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "verify_recompute",
+   "status": "OK",
+   "duration_s": 0.011
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.234
+  },
+  {
+   "tool": "query_tree_summary",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "query_object",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_mass_properties",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_placement",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_dependencies",
+   "status": "OK",
+   "duration_s": 0.009
+  },
+  {
+   "tool": "verify_shape",
+   "status": "OK",
+   "duration_s": 0.009
+  },
+  {
+   "tool": "verify_recompute",
+   "status": "OK",
+   "duration_s": 0.006
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.169
+  },
+  {
+   "tool": "query_tree_summary",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "query_object",
+   "status": "OK",
+   "duration_s": 0.007
+  },
+  {
+   "tool": "query_mass_properties",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_placement",
+   "status": "OK",
+   "duration_s": 0.011
+  },
+  {
+   "tool": "query_dependencies",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "verify_shape",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "verify_recompute",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.245
+  },
+  {
+   "tool": "query_tree_summary",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "query_object",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_mass_properties",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_placement",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_dependencies",
+   "status": "OK",
+   "duration_s": 0.009
+  },
+  {
+   "tool": "verify_shape",
+   "status": "OK",
+   "duration_s": 0.01
+  },
+  {
+   "tool": "verify_recompute",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.17
+  },
+  {
+   "tool": "query_tree_summary",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_object",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_mass_properties",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "query_placement",
+   "status": "OK",
+   "duration_s": 0.006
+  },
+  {
+   "tool": "query_dependencies",
+   "status": "OK",
+   "duration_s": 0.008
+  },
+  {
+   "tool": "verify_shape",
+   "status": "OK",
+   "duration_s": 0.012
+  },
+  {
+   "tool": "verify_recompute",
+   "status": "OK",
+   "duration_s": 0.004
+  },
+  {
+   "tool": "query_screenshot",
+   "status": "OK",
+   "duration_s": 0.179
+  },
+  {
+   "tool": "document_list",
+   "status": "OK",
+   "duration_s": 0.008
+  }
+ ]
+}

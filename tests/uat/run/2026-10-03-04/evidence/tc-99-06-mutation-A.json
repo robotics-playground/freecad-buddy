@@ -1,0 +1,112 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "mutation": {
+   "schema": "fcb.mutation/1",
+   "transaction_id": "0",
+   "fingerprint_before": {
+    "schema": "fcb.fingerprint/1",
+    "serializer": "exportBinary",
+    "objects": [
+     {
+      "name": "Box",
+      "brep_sha256": "d4df9a121d68ce2c64319c591e1cad564f219de3ac809de201bc7dac0f9848d8",
+      "massprops": {
+       "volume": 6000.0,
+       "area": 2200.0,
+       "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        20.0,
+        30.0
+       ],
+       "com": [
+        5.0,
+        10.0,
+        15.0
+       ],
+       "principal_moments": [
+        650000.0,
+        500000.0,
+        250000.0
+       ],
+       "quantum": 1e-06
+      }
+     }
+    ],
+    "digest": "f8e1ba5a5d462098fe79417d91d264f772e032882545f9275910abafe29f4dd5"
+   },
+   "fingerprint_after": {
+    "schema": "fcb.fingerprint/1",
+    "serializer": "exportBinary",
+    "objects": [
+     {
+      "name": "Box",
+      "brep_sha256": "d4df9a121d68ce2c64319c591e1cad564f219de3ac809de201bc7dac0f9848d8",
+      "massprops": {
+       "volume": 6000.0,
+       "area": 2200.0,
+       "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        20.0,
+        30.0
+       ],
+       "com": [
+        5.0,
+        10.0,
+        15.0
+       ],
+       "principal_moments": [
+        650000.0,
+        500000.0,
+        250000.0
+       ],
+       "quantum": 1e-06
+      }
+     }
+    ],
+    "digest": "f8e1ba5a5d462098fe79417d91d264f772e032882545f9275910abafe29f4dd5"
+   },
+   "post_verify": {
+    "recompute_clean": true,
+    "is_valid": true,
+    "fully_constrained": null,
+    "tnp_audit": {
+     "status": "CLEAN",
+     "element_map_version": "15.70200.5",
+     "findings": []
+    },
+    "passed": true,
+    "explanation": null
+   },
+   "rolled_back": false,
+   "rollback_proven": null,
+   "snapshot_path": null,
+   "verify_verdict": "OK",
+   "params_digest": "3682fcb8e7fac6dc8d9eb37233c8992501cce9b8559d6950e89ba927b767da92",
+   "touched": [
+    "AuditA"
+   ]
+  },
+  "feature": "AuditA",
+  "feature_state": {
+   "schema": "fcb.feature-state/1",
+   "feature": "AuditA",
+   "readable": false
+  }
+ },
+ "text": "Mutation committed; fingerprint f8e1ba5a5d46.",
+ "framing": {
+  "fits": true,
+  "ratio": 0.9489144316730523,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

@@ -1,0 +1,14 @@
+{
+  "elapsed_ms": 4099,
+  "predicates": [
+    {
+      "index": 0,
+      "observed_json": "{\"element_index\":1,\"enabled\":true,\"frame\":{\"h\":35,\"w\":1753,\"x\":21,\"y\":3},\"label\":\" box40-hole-r5 - FreeCAD 1.1.4\",\"role\":\"TitleBar\",\"value\":\" box40-hole-r5 - FreeCAD 1.1.4\"}",
+      "status": "satisfied",
+      "unknown_reason": null
+    }
+  ],
+  "samples": 2,
+  "stable": true,
+  "status": "satisfied"
+}

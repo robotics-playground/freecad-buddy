@@ -1,0 +1,4 @@
+ok   cua-session: cua session 'uat' REVIVED (was dead)
+ok   freecad-window: FreeCAD pid 32440 window ok ('FreeCAD 1.1.4')
+ok   mcp-proxy: MCP proxy on :8765 answered initialize
+ok   temp-hygiene: temp: 10 snapshot dir(s) total, 0 render file(s)

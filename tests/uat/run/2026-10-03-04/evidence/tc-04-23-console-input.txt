@@ -1,0 +1,1 @@
+s=App.getDocument('Loose').getObject('LooseProfile');s.delConstraint(s.ConstraintCount-1);s.delConstraint(s.ConstraintCount-1);App.getDocument('Loose').recompute();print('LOOSE_CONSTRAINTS',s.ConstraintCount)

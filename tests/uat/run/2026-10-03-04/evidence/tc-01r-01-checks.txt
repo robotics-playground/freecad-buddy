@@ -1,0 +1,13 @@
+== Then1 listener line
+2026-10-04 15:56:44,912 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:55359
+== Then2 spawn line
+2026-10-04 15:56:45,218 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 33720) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+== Then3 netstat :8765
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       27448
+== Then4/5 every python process (pid, parent, command line via NtQueryInformationProcess)
+pid 33720 parent 28996 pythonw.exe: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 27448 parent 33720 pythonw.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 34876 parent 32784 python.exe: "D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\python.exe" tests/uat/run/2026-10-03-04/evidence/tc01r_cmdline.py
+pid 10192 parent 34876 python.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe" tests/uat/run/2026-10-03-04/evidence/tc01r_cmdline.py
+== Then7 failed to spawn
+(none)

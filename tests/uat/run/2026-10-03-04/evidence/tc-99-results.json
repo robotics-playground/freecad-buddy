@@ -1,0 +1,126 @@
+[
+ {
+  "id": "TC-99-01",
+  "priority": "Critical",
+  "verdict": "EXPECTED-FAIL",
+  "evidence": [
+   "tc-99-01-probe.py",
+   "tc-99-01-probe.json",
+   "tc-99-01-greps.txt",
+   "tc-99-01-before.png",
+   "tc-99-01-after.png"
+  ],
+  "note": "AD-3 gap as documented. curl POST /mcp -> 307, follow -> 400 {-32600 'Bad Request: Missing session ID'}. Unauthenticated MCP session lists 45 tools (TC text says 44; the build has 45 per 00-tools-list.json, a TC-text staleness, not a behaviour change). Wrong 'Authorization: Bearer garbage' session served identically (45 tools). Unauthenticated preview_dry_run + feature_body_create committed OK: tree went Box -> Box+UnauthBody (1 -> 10 objects). Fingerprint digest unchanged (f8e1ba5a...) because the fingerprint covers shape-bearing objects and an empty Body has none; the mutation ran, which is the documented failure. grep middleware/Bearer in entry.py: no match; grep unauthorized/401 in mcp-proxy.log: 0 lines. Visual: before/after show the same 10x20x30 box at identical pixel corners, fully painted, no dialog, no Not Responding; after shows UnauthBody in tree. Harness note: golden box opened hidden; invoke_menu View>Visibility>Show All Objects refused (menu_path_unavailable segment 2) on this pid, so Visibility was toggled through the property editor (double_click on the Visibility value cell; driver reported route global_input)."
+ },
+ {
+  "id": "TC-99-02",
+  "priority": "Critical",
+  "verdict": "EXPECTED-FAIL",
+  "evidence": [
+   "tc-99-02-baseline.json",
+   "tc-99-02-probe.txt",
+   "tc-99-02-toolslist-httpsattackerexample.txt",
+   "tc-99-02-toolslist-httplocalhost3000.txt",
+   "tc-99-02-before.png",
+   "tc-99-02-after.png"
+  ],
+  "note": "AD-3 Origin gap as documented. The TC's literal curl to /mcp returns 307 -> /mcp/ for any Origin (same redirect as TC-99-01). On /mcp/ with Origin: https://attacker.example, initialize -> 200 with mcp-session-id, tools/list -> 200 with 45 tool names; Origin: http://localhost:3000 served identically (passes vacuously). OPTIONS preflight with the foreign origin -> 405 {-32600 'Method Not Allowed'}, no Access-Control-Allow-Origin header (no CORS handling at all). grep -rn Origin src/freecad_buddy/hosts/ adapters/ -> no match. Visual: before/after identical box, same pixel corners, fully painted, no dialog, no Not Responding."
+ },
+ {
+  "id": "TC-99-03",
+  "priority": "Critical",
+  "verdict": "FAILS-DIFFERENTLY",
+  "evidence": [
+   "tc-99-03-baseline.json",
+   "tc-99-03-netstat-before.txt",
+   "tc-99-03-probe.py",
+   "tc-99-03-probe.json",
+   "tc-99-03-netstat-during.txt",
+   "tc-99-03-greps.txt",
+   "tc-99-03-before.png",
+   "tc-99-03-after.png"
+  ],
+  "note": "AD-26 gap still present (no -32000, no busy path), but the failure shape differs from the documented one. Documented: second connect refused with ConnectionRefusedError [WinError 10061]. Observed (pid 34240, listener 127.0.0.1:59794 from rpc-34240.json, proxy pid 35052 holding one ESTABLISHED pair): socket.create_connection(timeout=5) -> 'ok' in 0.0 s; netstat shows the second pair 51552<->59794 ESTABLISHED on both sides (queued in the listen(1) backlog); a valid rpc_hello was sent and NO frame arrived within the 10 s deadline (read timed out, 0 bytes). So checkpoint 1 (can connect) passes; checkpoints 2-4 (error frame, -32000, busy detail) fail because no frame is ever sent; checkpoint 5 (busy vs not running): the client sees a silent hang instead of a refusal, still not diagnosable as busy. This matches the TC-10-03 pinned behaviour (B_connect ok, B_recv_while_A timed out) and the AD-26 'B waits' shape, not the 2026-09-12 WinError 10061 observation. grep busy rpc_listener.py: none; listen(1) now at rpc_listener.py:146 (TC cites :145); -32000 only at :284 'auth failed' (TC cites :283). GUI Fit All while the second client was blocked: returned at once (route accessibility), console shows a second Std_ViewFitAll. Visual: before/after identical top-view box, same pixels, fully painted, no dialog, no Not Responding. After release the MCP path still answered (document_list OK)."
+ },
+ {
+  "id": "TC-99-04",
+  "priority": "Critical",
+  "verdict": "FAILS-DIFFERENTLY",
+  "evidence": [
+   "tc-99-04-ls-before.txt",
+   "tc-99-04-baseline.json",
+   "tc-99-04-probe.py",
+   "tc-99-04-calls.jsonl",
+   "tc-99-04-files.json",
+   "tc-99-04-after-listing.txt",
+   "tc-99-04-before.png",
+   "tc-99-04-after.png"
+  ],
+  "note": "AD-25 workdir is now PARTLY implemented; the documented 'no session workdir exists anywhere in the code' no longer holds. Code: usecases/documents.py:33-55 _WORKDIR_ENV='FREECAD_BUDDY_WORKDIR', _DEFAULT_WORKDIR='freecad-buddy-workdir' (cwd-relative), temp_dir() = <workdir>/tmp; snapshot (transaction.py:100), preview (preview.py:321), fingerprint (fingerprint.py:74) and screenshot (screenshot.py:172) temps all pass dir=temp_dir(). Observed: ls -R %APPDATA%/FreeCAD/v1-1/freecad-buddy holds addon.log, mcp-proxy.log and 12 rpc-<pid>.json (11 from dead pids) - no session directory there (documented part holds). The GUI workdir is C:/Users/thuan/freecad-buddy-workdir (FreeCAD cwd), with only tmp/; a second one exists at the repo root (freecad-buddy-workdir/, created by hosts started from the repo), so the location follows the cwd and is not session-named. Checkpoints: session-named dir FAIL; snap/ FAIL; exports/ FAIL; tmp/ PASSES (exists); audit.log FAIL (audit went to the inherited FREECAD_BUDDY_AUDIT_LOG=_automation/uat/audit.jsonl); snapshot under the workdir: snapshot path not reported (mutation.snapshot_path null on commit) and too short-lived for the 20 ms watcher, but code puts it in <workdir>/tmp/FCB_TMP_snap_* - so it is no longer under the process temp dir as documented, and not in snap/ either; preview copy under workdir tmp/ PASSES (watcher saw C:/Users/thuan/freecad-buddy-workdir/tmp/FCB_TMP_prev_0p6mnbx7); screenshot temp FCB_TMP_shot_zv_lnazj.png in <workdir>/tmp; export written to the caller path only; grep workdir constant PASSES (documents.py:33-43). Probe calls all OK (feature_body_create committed Body04, preview_dry_run, query_screenshot, export_step). Visual: before/after same box at identical pixel corners, fully painted, no dialog, no Not Responding; Body04 visible in tree."
+ },
+ {
+  "id": "TC-99-05",
+  "priority": "Critical",
+  "verdict": "FAILS-DIFFERENTLY",
+  "evidence": [
+   "tc-99-05-baseline.json",
+   "tc-99-05-probe.py",
+   "tc-99-05-probe-run1.json",
+   "tc-99-05-probe-run2.json",
+   "tc-99-05-greps.txt",
+   "tc-99-05-before.png",
+   "tc-99-05-after.png"
+  ],
+  "note": "Still not in a session snap/ (AD-25 gap remains), but the snapshot no longer goes to $TEMP as documented. Mutation used (scratch doc TC9905Scratch, so the baseline stays untouched): body + fully constrained 20x30 sketch, then feature_pad up_to='?TwoLengths' x2 -> RECOMPUTE_ERROR 'PadFailN: Resulting fused extrusion is null.' Both returned rollback_proven='rolled_back_via_snapshot', so the snapshot was deleted (transaction.py:603 path) and the 'unproven rollback, snapshot kept' precondition was NOT reached; no kept-snapshot path was found. Observed: (1) mutation.snapshot_path = 'freecad-buddy-workdir\\tmp\\FCB_TMP_snap_95ae8gsm\\TC9905Scratch.FCStd' - a cwd-RELATIVE path (relative to FreeCAD's cwd C:/Users/thuan, so a client resolves it wrongly, e.g. to the repo root) and it names a file already deleted; (2) a 2 ms watcher saw each snapshot dir appear at C:/Users/thuan/freecad-buddy-workdir/tmp/FCB_TMP_snap_<random> (10 dirs for 5 previews + 5 mutating calls), each its own fresh mkdtemp dir (as documented), parent basename FCB_TMP_snap_<random> (as documented); (3) $TEMP FCB_TMP_snap_* count 10 -> 10 (documented: +1 per kept snapshot; now the code passes dir=temp_dir(), transaction.py:100); (4) grep 'snap/' transaction.py -> none (as documented; mkdtemp now at :100, prefix at :42, TC cites :94/:39). Visual: before/after identical box, same pixel corners, no added/removed feature, fully painted, no dialog, no Not Responding."
+ },
+ {
+  "id": "TC-99-06",
+  "priority": "Critical",
+  "verdict": "EXPECTED-FAIL",
+  "evidence": [
+   "tc-99-06-fc-dirA.cmd",
+   "tc-99-06-fc-dirB.cmd",
+   "tc-99-06-launch-A.txt",
+   "tc-99-06-launch-B.txt",
+   "tc-99-06-mutation-A.json",
+   "tc-99-06-mutation-B.json",
+   "tc-99-06-audit-locate.txt",
+   "tc-99-06-audit-dirA.jsonl",
+   "tc-99-06-audit-dirB.jsonl",
+   "tc-99-06-before.png",
+   "tc-99-06-after.png",
+   "tc-99-06-after-mcpfit.png"
+  ],
+  "note": "AD-25 audit gap as documented. FreeCAD launched twice through cua-driver launch_app with a .cmd wrapper that unsets FREECAD_BUDDY_AUDIT_LOG and cd's into scratch dir A (pid 26984) then B (pid 34220). One feature_body_create per session committed OK (cwd writable, so the documented PermissionError severity case was not exercised). Located audit files: A/freecad-buddy-audit.jsonl (12 lines) and B/freecad-buddy-audit.jsonl (7 lines) - the path follows the cwd; fixed undated basename; different parents (A/ vs B/); no record in either carries a session field (keys: actor, approval, camera_before, doc, event, fingerprint_after, fingerprint_before, params_digest, rollback, schema, tool, ts, verify_verdict); default is the bare relative 'freecad-buddy-audit.jsonl' at adapters/audit_log.py:24. The search also found older cwd-default logs at C:/Users/thuan/freecad-buddy-audit.jsonl (308 lines), D:/Work/Personal/Sources/freecad-buddy/freecad-buddy-audit.jsonl (284) and D:/Work/Personal/Sources/3d-modeling/freecad-buddy-audit.jsonl (2). The session workdir followed the cwd too (A/freecad-buddy-workdir/tmp created). Visual: before = framed box (session A). After (session B, box reopened, Show All Objects): mcp view_fit_viewport returned SPEC_FAILED fits:false ratio 0.932 and left the box clipped at the left/bottom edge (tc-99-06-after-mcpfit.png) because Show All also revealed AuditB's origin planes; GUI Fit All then framed the whole box (tc-99-06-after.png): box drawn whole, fully painted, no permission-error or other dialog, no Not Responding; same box, slightly smaller because the body origin glyph at the box corner is included in the fit. Harness: invoke_menu calls report delivery.mode 'foreground' and the FreeCAD title bar shows as active after them."
+ },
+ {
+  "id": "TC-99-07",
+  "priority": "Critical",
+  "verdict": "FAILS-DIFFERENTLY",
+  "evidence": [
+   "tc-99-07-pre-start.txt",
+   "tc-99-07-launch.txt",
+   "tc-99-07-post-start.txt",
+   "tc-99-07-before.png",
+   "tc-99-07-after.png"
+  ],
+  "note": "AD-25 sweep is now PARTLY implemented, so the documented 'no sweep exists' deviation no longer holds. A start sweep exists: hosts/gui_addon/bootstrap.py:91 logger.info(\"session-start sweep removed %s leftover temp artifact(s)\", sweep_temp_dir()); sweep_temp_dir at usecases/documents.py:59. Its scope is <workdir>/tmp (workdir = cwd-relative 'freecad-buddy-workdir', documents.py:34/43; resolved to C:/Users/thuan/freecad-buddy-workdir for this GUI launch), not $TEMP. Observed: planted 2 FCB_TMP_snap_tc9907a/b dirs (each with box.FCStd) in BOTH $TEMP and <workdir>/tmp, plus a non-prefixed dir tc9907_not_prefixed/keep.txt in both. After launch (pid 34240): addon.log 14:15:35 'session-start sweep removed 7 leftover temp artifact(s)'; <workdir>/tmp empty; $TEMP FCB_TMP_snap_* count 12 -> 12 (by design: the sweep never scans $TEMP). Checkpoints: (a) orphan count 0 -> PASSES for <workdir>/tmp, fails for $TEMP as documented; (b) grep -i 'swept|orphan' addon.log -> 0 lines (log says 'sweep', so the TC grep misses an existing log line); (c) reserved-prefix only -> REAL FAIL, not vacuous: the non-prefixed sibling tc9907_not_prefixed/ inside <workdir>/tmp was deleted; documents.py:79-88 removes every entry one level deep with no FCB_TMP_ prefix check, although the docstring (documents.py:65) says only regular files and the bridge's own snapshot directories are removed; (d) grep sweep in hosts/ -> match (bootstrap.py:29,91), passes; (e) no .FCStd under FCB_TMP_snap_* after start -> passes in workdir, fails in $TEMP. Visual: before/after identical box, same pixel corners, fully painted, no startup/addon error dialog, no Not Responding."
+ },
+ {
+  "id": "TC-99-08",
+  "priority": "Critical",
+  "verdict": "EXPECTED-FAIL",
+  "evidence": [
+   "tc-99-08-baseline.json",
+   "tc-99-08-probe.txt",
+   "tc-99-08-impostor-netstat.txt",
+   "tc-99-08-launch.txt",
+   "tc-99-08-addonlog.txt",
+   "tc-99-08-impostor.log",
+   "tc-99-08-escape.txt",
+   "tc-99-08-before.png",
+   "tc-99-08-after.png"
+  ],
+  "note": "AD-24 gap as documented. curl -i http://127.0.0.1:8765/healthz -> 'HTTP/1.1 404 Not Found' body 'Not Found' (uvicorn), no session id. grep -rn healthz src/ -> none. Already-served check is a raw TCP connect: hosts/gui_addon/bootstrap.py:143-147 _port_open() connect_ex, used at :248-250. Impostor: python -m http.server bound 127.0.0.1:8765 (pid 37000), FreeCAD relaunched (pid 32296): addon.log 14:23:56 'MCP proxy already on http://127.0.0.1:8765/mcp; not spawning' - the impostor was accepted as the bridge; impostor.log shows no /healthz probe from the addon. Visual: before = framed box (MCP fit OK). After (impostor holding :8765): FreeCAD window coherent, Start page fully painted, no port-conflict or addon-failure dialog, no Not Responding - BUT the baseline box is not shown: the restart in the When drops the open document and MCP is unreachable through the impostor, so the 'same box' half of the visual is BLOCKED (TC design gap: the scenario restarts the host after the before capture). Reopening via invoke_menu File>Open… deadlocked on the modal 'Open document' dialog (UIA Invoke does not return; dialog UIA unresponsive; background Cancel click, WM_CLOSE, taskkill, kill_app all refused); team-lead authorized one background press_key Escape to window 2103610, which closed the dialog (route synthetic_events). Start-page recent-file card click (UIA) does not open the file."
+ }
+]

@@ -1,0 +1,9 @@
+NOTE | cleanup previous scenario: document_close TC0815 -> OK
+PASS | 'decline' refused (gate message or JSON-Schema enum rejection) | {'status': None, 'message': "Input validation error: 'decline' is not one of ['accept']"}
+PASS | 'cancel' refused (gate message or JSON-Schema enum rejection) | {'status': None, 'message': "Input validation error: 'cancel' is not one of ['accept']"}
+PASS | None refused (gate message or JSON-Schema enum rejection) | {'status': None, 'message': "Input validation error: None is not one of ['accept']"}
+FAIL | rejected value quoted back as Python repr (gate layer) | {"'decline'": "Input validation error: 'decline' is not one of ['accept']", "'cancel'": "Input validation error: 'cancel' is not one of ['accept']", 'None': "Input validation error: None is not one of ['accept']"}
+PASS | no Pad after declining calls | ['Body', 'Sketch']
+PASS | token survives: same token with accept -> OK | {"status": "OK"}
+PASS | omitting elicitation_action defaults to accept: fresh token alone -> OK (side doc TC0816b) | {"status": "OK"}
+NOTE | side doc TC0816b closed -> OK

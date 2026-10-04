@@ -1,0 +1,363 @@
+[
+ {
+  "id": "TC-07-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-01-after.png",
+   "tc-07-01-checks.txt",
+   "tc-07-01-cleanup.txt",
+   "tc-07-01-mcp.jsonl",
+   "tc-07-01.py"
+  ],
+  "note": "all 8 Thens pass; first view_fit SPEC_FAILED view_fit.unverified because golden Box opens hidden (known); after Show All Objects fit OK; visual: one closed box ~1:2:3"
+ },
+ {
+  "id": "TC-07-02",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-02-after.png",
+   "tc-07-02-checks.txt",
+   "tc-07-02-cleanup.txt",
+   "tc-07-02-mcp.jsonl",
+   "tc-07-02.py"
+  ],
+  "note": "all Thens pass; vol 1570.79633; visual: one round cylinder ~2x tall as wide, flat ends"
+ },
+ {
+  "id": "TC-07-03",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-07-03-after-objectmode.png",
+   "tc-07-03-after.png",
+   "tc-07-03-build-fixture.py",
+   "tc-07-03-build-fixture.txt",
+   "tc-07-03-checks.txt",
+   "tc-07-03-cleanup.png",
+   "tc-07-03-cleanup.txt",
+   "tc-07-03-edit-probe.png",
+   "tc-07-03-fcb-dof.py",
+   "tc-07-03-fcb-dof.txt",
+   "tc-07-03-mcp.jsonl",
+   "tc-07-03-repro-checks.txt",
+   "tc-07-03-repro-mcp.jsonl",
+   "tc-07-03-repro.txt",
+   "tc-07-03-sketchmenu.png",
+   "tc-07-03-underconstrained.FCStd",
+   "tc-07-03-verify_recompute.json",
+   "tc-07-03-ws.json",
+   "tc-07-03-ws2.json",
+   "tc-07-03-ws3.json",
+   "tc-07-03a.py",
+   "tc-07-03b.py",
+   "tc-07-03c-repro.py"
+  ],
+  "note": "dof Then FAIL (product): verify_sketch on under-constrained sketch opened from file reports subject.dof=0 and message dof=0 while FullyConstrained=false (verify.py:331-333 reads DoF after document.recompute(), which does not solve an untouched sketch; fcb-env shows DoF 0 after open+recompute, 4 after solve()); reproduced twice. TC When stale: sketch_add_geometry of an unconstrained line rolls back (SPEC_FAILED dof=4, sketches.py:787-789) so under-constrained sketch built as file fixture with fcb FreeCAD. Other Thens PASS (SPEC_FAILED, OK after constraints, dof 0, redundant->warnings, non-sketch refused). Visual: segment from origin with 10 mm + horizontal glyphs, drawn orange (redundant colour, after the TC-mandated duplicate Horizontal), not white. Observed: after dup Horizontal FreeCAD marks Sketch in error (tree red !, verify_recompute RECOMPUTE_ERROR failing_objects [Sketch]) while that mutation post_verify said recompute_clean true. view_fit_viewport on sketch-only doc SPEC_FAILED (no shape-bearing objects); GUI Fit All used"
+ },
+ {
+  "id": "TC-07-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-04-after.png",
+   "tc-07-04-checks.txt",
+   "tc-07-04-cleanup.txt",
+   "tc-07-04-dialog.png",
+   "tc-07-04-dlg.json",
+   "tc-07-04-mcp.jsonl",
+   "tc-07-04.py"
+  ],
+  "note": "all Thens pass (rerun after relaunch; first run also all-pass on pid 30620); visual: box with round bore, no tree error marker"
+ },
+ {
+  "id": "TC-07-05",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-07-05-after.png",
+   "tc-07-05-ap214.step",
+   "tc-07-05-ap242-repro.json",
+   "tc-07-05-ap242-repro.step",
+   "tc-07-05-ap242.step",
+   "tc-07-05-checks.txt",
+   "tc-07-05-cleanup.txt",
+   "tc-07-05-mcp.jsonl",
+   "tc-07-05-menu-open-attempts.txt",
+   "tc-07-05-opendlg.json",
+   "tc-07-05-outside-read.jsonl",
+   "tc-07-05-rt.txt",
+   "tc-07-05-step-headers.txt",
+   "tc-07-05.py"
+  ],
+  "note": "Product: ap:\"AP242\" is not honored - both AP242 and AP214 files carry FILE_SCHEMA AUTOMOTIVE_DESIGN (AP214); grep -c AP242 = 0; reproduced with a 3rd export (tc-07-05-ap242-repro.step). shim.pin_step_config (shim.py:412-426) sets the Mod/Part/STEP Scheme preference, which Shape.exportStep (exports.py:150) does not read. Other Thens PASS: both OK, verified false, distinct ids, bytes=6854=stat, AP203 schema rejection (isError, no envelope, no file), text exact. TC defects: AP214 file never contains literal \"AP214\" (header says AUTOMOTIVE_DESIGN); document_open is FCStd-only (INVALID_INPUT Invalid project file) so re-import done by FreeCAD GUI File>Open (ImportGui) + fcb-env Part.read: volume 6000.0 valid 1 solid; bridge query_mass_properties on GUI-imported doc 6000.0. Visual: one closed box ~1:2:3, isometric. Export files kept as evidence."
+ },
+ {
+  "id": "TC-07-06",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-06-after.png",
+   "tc-07-06-checks.txt",
+   "tc-07-06-cleanup.txt",
+   "tc-07-06-guiopen.json",
+   "tc-07-06-mcp.jsonl",
+   "tc-07-06-outside-read.jsonl",
+   "tc-07-06-rt.txt",
+   "tc-07-06-trimesh.txt",
+   "tc-07-06.py"
+  ],
+  "note": "all Thens pass: STL/3MF OK, facets 976=976, verified false, files 48884/9898 B, both verifies OK, self_read 976=976, angular 0 -> INVALID_INPUT deflection out of range. Outside: trimesh 976/976 watertight (needed uv --with networkx lxml and force=mesh: TC command defect, 3MF loads as Scene); fcb-env Mesh 976/976. Re-import by FreeCAD GUI File>Open (document_open is FCStd-only, TC defect). view_fit_viewport on Mesh::Feature doc SPEC_FAILED no shape-bearing objects -> GUI Fit All. Visual: closed faceted sphere, no hole"
+ },
+ {
+  "id": "TC-07-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-07-after-top.png",
+   "tc-07-07-after.png",
+   "tc-07-07-checks.txt",
+   "tc-07-07-cleanup.txt",
+   "tc-07-07-guiopen.json",
+   "tc-07-07-mcp.jsonl",
+   "tc-07-07-outside-read.jsonl",
+   "tc-07-07-rt.txt",
+   "tc-07-07.py"
+  ],
+  "note": "all Thens pass: OK/verdict OK, 3 checks, tol rel 0.001, vol 15214.6018, valid, topology 7/15/1 equal, subject ok, no FCB_TMP_ doc. Outside: fcb-env Part.read 15214.6018 valid faces7 edges15; GUI-imported doc measured 15214.6018 by bridge; MCP fit OK. Visual: iso box with bore; top view shows background through the round hole"
+ },
+ {
+  "id": "TC-07-08",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-08-after.png",
+   "tc-07-08-checks.txt",
+   "tc-07-08-cleanup.txt",
+   "tc-07-08-guiopen.json",
+   "tc-07-08-mcp.jsonl",
+   "tc-07-08-outside-read.jsonl",
+   "tc-07-08-rt.txt",
+   "tc-07-08.py"
+  ],
+  "note": "all Thens pass: OK, trimesh 5 + stl2 4 + self_read 2 ids, agreement {trimesh_stl:true,stdlib_stl:true}, band 146.667=(2/3)*0.1*2200 abs tolerance, tess {0.1,0.5}, truncated->SPEC_FAILED, outside trimesh True True 6000.0; fcb-env Mesh 12 facets vol 6000. Re-import via GUI File>Open; MCP fit SPEC_FAILED on mesh -> GUI Fit All. Visual: closed box mesh, no gap or dark inverted patch"
+ },
+ {
+  "id": "TC-07-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-09-after.png",
+   "tc-07-09-checks.txt",
+   "tc-07-09-cleanup.txt",
+   "tc-07-09-guiopen.json",
+   "tc-07-09-mcp.jsonl",
+   "tc-07-09-outside.txt",
+   "tc-07-09-rt.txt",
+   "tc-07-09-source.png",
+   "tc-07-09.py"
+  ],
+  "note": "All product Thens pass: lib3mf 4 ids, trimesh_3mf 5 ids, unit {unit:1,source_is_mm:true}, manifold {meshes:1,non_manifold:0}, metadata passed, self_read 100/52 + agreement {lib3mf:true}, mesh vol 1555.55 inside band 52.36. TC defect: \"band smaller than 0.1% of volume\" (1.571) contradicts design verification-design.md:349 band=(2/3)*linear*area = 52.36 at default linear 0.1 (code exports.py:284 matches design). Outside: lib3mf unit 1, 1 mesh 100 tris manifold; trimesh True 100 faces 1555.55 (needs uv --with networkx lxml and force=mesh; literal command fails ModuleNotFoundError networkx); fcb-env Mesh 100 facets. Visual: re-imported faceted cylinder ~2:1 closed ends, view extent 44.99x24.47 mm vs source 47.42x25.78 mm (same scale, no unit lie)"
+ },
+ {
+  "id": "TC-07-10",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-10-after.png",
+   "tc-07-10-checks.txt",
+   "tc-07-10-cleanup.txt",
+   "tc-07-10-coarse.png",
+   "tc-07-10-guiopen-coarse.json",
+   "tc-07-10-guiopen-fine.json",
+   "tc-07-10-mcp.jsonl",
+   "tc-07-10-outside-read.jsonl",
+   "tc-07-10-rt.txt",
+   "tc-07-10.py"
+  ],
+  "note": "Product Thens pass: facets 218 < 10174, both verifies OK, band ratio 50.0 (418.879/8.3776), abs tolerance no rel, coarse vol 3942.88 < 4188.79 passed, linear 1e-5 -> INVALID_INPUT deflection out of range and no file, trimesh 218<10174, fcb-env Mesh 218/10174. TC defect: \"fine band far below 0.001*4188.79=4.19\" is false by the design formula: (2/3)*0.01*1256.6=8.378 (verification-design.md:349, exports.py:284). MCP fit on mesh docs SPEC_FAILED -> GUI Fit All. Visual: coarse sphere shows large flat plates and angular outline; fine sphere reads smooth and round"
+ },
+ {
+  "id": "TC-07-11",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-11-after.png",
+   "tc-07-11-before.png",
+   "tc-07-11-checks.txt",
+   "tc-07-11-cleanup.txt",
+   "tc-07-11-mcp.jsonl",
+   "tc-07-11a.py",
+   "tc-07-11b.py"
+  ],
+  "note": "all Thens pass: 3x INVALID_INPUT \"export supports a single object; got multiple\", no partial file, NoSuchObject -> \"unknown object: NoSuchObject\", empty doc -> \"document has no objects to export\", tree unchanged. Visual: before/after identical single box, same framing (71.14x38.68 mm), no dialog"
+ },
+ {
+  "id": "TC-07-12",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-12-after.png",
+   "tc-07-12-build-multi.py",
+   "tc-07-12-checks.txt",
+   "tc-07-12-cleanup.txt",
+   "tc-07-12-default-compound.step",
+   "tc-07-12-guiopen.json",
+   "tc-07-12-mcp.jsonl",
+   "tc-07-12-outside-read.jsonl",
+   "tc-07-12-rt.txt",
+   "tc-07-12-two-objects.FCStd",
+   "tc-07-12.py",
+   "tc-07-12b.py"
+  ],
+  "note": "Product behaviour correct. Omitted objects -> OK, verify OK vol 6000.0, objects [] same OK result (6854 B), re-import (GUI File>Open) 6000.0 by bridge and fcb-env. TC defect: two-box-compound.FCStd holds ONE object (TwoBoxCompound Part::Feature, a 2-solid compound), so the omitted-objects export there is unambiguous and returns OK, writing tc-07-12-default-compound.step (vol 2000, 2 solids) - the \"multiple objects\" Then and \"wrote nothing\" Then cannot hold with this fixture. Supplementary: a genuine 2-object doc (tc-07-12-two-objects.FCStd, fcb-env built) -> INVALID_INPUT \"document has multiple objects; specify 'objects' with the one to export\", no file. Visual: one box ~1:2:3"
+ },
+ {
+  "id": "TC-07-13",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-13-after-top.png",
+   "tc-07-13-after.png",
+   "tc-07-13-checks.txt",
+   "tc-07-13-cleanup.txt",
+   "tc-07-13-guiopen.json",
+   "tc-07-13-mcp.jsonl",
+   "tc-07-13-outside-read.jsonl",
+   "tc-07-13-rt.txt",
+   "tc-07-13-trimesh.txt",
+   "tc-07-13.py"
+  ],
+  "note": "all Thens pass: genus-1 grade OK vol 15214.6018, STL verify OK, trimesh_stl.euler 0 passed, compound OK solid_count 2, vol 1999.99999999 (within 0.001), mass props com null, compound expect_watertight -> SPEC_FAILED; outside trimesh \"0 True\"; fcb-env Mesh 120 facets solid. MCP fit on mesh SPEC_FAILED -> GUI Fit All. Visual: iso box with bore; top view shows background through the hole"
+ },
+ {
+  "id": "TC-07-14",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-14-after.png",
+   "tc-07-14-checks.txt",
+   "tc-07-14-cleanup.txt",
+   "tc-07-14-guiopen.json",
+   "tc-07-14-mcp.jsonl",
+   "tc-07-14-outside-read.jsonl",
+   "tc-07-14-rt.txt",
+   "tc-07-14.py"
+  ],
+  "note": "all Thens pass: Unicode path export OK, file at exact path, path echoed unmodified, verify OK subject.path unicode, bytes 6854=stat; 200-char name (full path > 260) -> RECOMPUTE_ERROR \"Writing of STEP failed\", no file. Re-import: GUI File>Open typed the Unicode path; bridge measured 6000.0; fcb-env 6000.0; MCP fit OK. Visual: one closed box ~1:2:3"
+ },
+ {
+  "id": "TC-07-15",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-15-after.png",
+   "tc-07-15-checks.txt",
+   "tc-07-15-cleanup.txt",
+   "tc-07-15-guiopen.json",
+   "tc-07-15-mcp.jsonl",
+   "tc-07-15-outside-read.jsonl",
+   "tc-07-15-rt.txt",
+   "tc-07-15-trimesh.txt",
+   "tc-07-15.py",
+   "tc-07-15b.py"
+  ],
+  "note": "Product behaviour correct. All three writes OK, bytes==stat each write (684), third==B1 and facets==coarse, 3 distinct ids, outside trimesh True 1 body 6000.0 (needs uv --with networkx for split()). TC defect: on the planar box, linear 0.5 and 0.01 give the identical 12-facet mesh (B1=B2=684), so \"B2 not B1+B2\" is weak and the stale coarse id verifies OK (file content truly unchanged) instead of SPEC_FAILED. Supplementary on sphere-r10: coarse 304 facets/15284 B, fine 10106/505384 B, stat==B2 after overwrite, stale coarse id -> SPEC_FAILED self_read.facet_count (10106 vs 304). Visual: single closed box mesh, no overlap or tear (12-facet box shows no visible faceting)"
+ },
+ {
+  "id": "TC-07-16",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-16-after.png",
+   "tc-07-16-checks.txt",
+   "tc-07-16-cleanup.txt",
+   "tc-07-16-guiopen.json",
+   "tc-07-16-mcp.jsonl",
+   "tc-07-16-outside-read.jsonl",
+   "tc-07-16-rt.txt",
+   "tc-07-16.py"
+  ],
+  "note": "all Thens pass: 5 failures non-OK (4 INVALID_INPUT, missing dir RECOMPUTE_ERROR \"Writing of STEP failed\"), no file, no zero-byte stub, no dir created, no export_id minted, recovery export OK; re-import (GUI File>Open) bridge 6000.0, fcb-env 6000.0 valid 1 solid; MCP fit OK. Visual: one closed box ~1:2:3, no stray fragment"
+ },
+ {
+  "id": "TC-07-17",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-17-after.png",
+   "tc-07-17-before.png",
+   "tc-07-17-checks.txt",
+   "tc-07-17-cleanup.txt",
+   "tc-07-17-mcp.jsonl",
+   "tc-07-17a.py",
+   "tc-07-17b.py"
+  ],
+  "note": "all Thens pass: 3 bogus ids -> INVALID_INPUT \"unknown or stale export_id: fcb-export:bogus\", exception ValidationError; empty id -> \"missing required 'export_id'\"; reopened doc gets a NEW handle and the old id is refused \"export_id <EID> does not belong to document <H2>\"; query_capabilities OK; trimesh True 6000.0. Visual: before/after same single box, no dialog. Harness: on the reopened doc View>Visibility>Show All Objects was refused (menu segment 2 not found) - Box shown by foreground click on its tree eye icon"
+ },
+ {
+  "id": "TC-07-18",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-18-after.png",
+   "tc-07-18-checks.txt",
+   "tc-07-18-cleanup.txt",
+   "tc-07-18-guiopen.json",
+   "tc-07-18-mcp.jsonl",
+   "tc-07-18-outside-read.jsonl",
+   "tc-07-18-rt.txt",
+   "tc-07-18.py"
+  ],
+  "note": "all Thens pass: 6 crossed -> INVALID_INPUT with exact \"export_id <id> is not a <fmt> export\", no checks in crossed envelopes, own pairings OK, sizes unchanged (6856/684/1112), trimesh True 6000.0; re-import (GUI File>Open) 6000.0; MCP fit OK. Visual: one whole box ~1:2:3"
+ },
+ {
+  "id": "TC-07-19",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-19-after.png",
+   "tc-07-19-checks.txt",
+   "tc-07-19-cleanup.txt",
+   "tc-07-19-guiopen.json",
+   "tc-07-19-mcp.jsonl",
+   "tc-07-19-outside-read.jsonl",
+   "tc-07-19-rt.txt",
+   "tc-07-19.py"
+  ],
+  "note": "all Thens pass: cross-doc verify INVALID_INPUT \"export_id <EID_A> does not belong to document <HB>\", no checks/subject, own pairing OK, symmetric refusal, verify_recompute both OK; outside fcb-env own.step 6000.0 (box), own-b.step 4188.79 (sphere); GUI re-import 6000.0; MCP fit OK. Visual: rectangular body with flat faces and straight edges"
+ },
+ {
+  "id": "TC-07-20",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-20-checks.txt",
+   "tc-07-20-cleanup.txt",
+   "tc-07-20-fixture-probe.py",
+   "tc-07-20-fixture-probe.txt",
+   "tc-07-20-mcp.jsonl",
+   "tc-07-20-open-shell.png",
+   "tc-07-20-outside.txt",
+   "tc-07-20.py"
+  ],
+  "note": "All product Thens pass with case.yaml checks: wrong-volume SPEC_FAILED expect_volume measured 7200.0 vs 6000; open-shell SPEC_FAILED watertight false, solid_count 0; bare checks on wrong-volume -> OK; detail.code SPEC_FAILED, message lists failed ids; clean-control OK. Outside: trimesh wrong-volume STL volume 7200.0, open-shell STL is_watertight False (fcb-env Mesh agrees). TC defect (visual wording): the non-watertight-open-shell fixture is ONE planar face 10x1 mm (Shell, 1 face, 0 solids, area 10), not a body with one face missing. Visual: a single thin flat open sheet, no enclosed body - the open-shell defect is visible as an open surface"
+ },
+ {
+  "id": "TC-07-21",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-07-21-after.png",
+   "tc-07-21-checks.txt",
+   "tc-07-21-cleanup.txt",
+   "tc-07-21-guiopen.json",
+   "tc-07-21-mcp.jsonl",
+   "tc-07-21-outside-read.jsonl",
+   "tc-07-21-rt.txt",
+   "tc-07-21.py"
+  ],
+  "note": "all Thens pass: 3 writes verified false, text \"<FMT> export written -> <path>.\", no checks in write results, verify schema fcb.validation-report/1 vs write fcb.result-envelope/1, verify verdict OK all checks passed, truncating STL to 0 B leaves write result unchanged and verify -> SPEC_FAILED, statuses closed set; re-import (GUI File>Open) 6000.0 by bridge and fcb-env. Visual: one closed box ~1:2:3"
+ }
+]

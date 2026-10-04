@@ -1,0 +1,19 @@
+NOTE | cleanup previous scenario: document_close TC0601 -> OK
+PASS | fixture: PlatePad committed | {"status": "OK"}
+PASS | Given: document_list returns a handle | fcb-doc:7-9z6kqikHqXfeUpOMR8Yg
+PASS | Given: query_tree_summary names PlatePad | 
+FAIL | Given (literal): query_mass_properties {doc} returns volume+bbox | {"_raw": "Input validation error: 'object' is a required property"}
+PASS | Given: mass properties volume + bbox | {'volume': {'value': 12000.0, 'unit': 'mm^3'}, 'bbox': {'xmin': {'value': 0.0, 'unit': 'mm'}, 'xmax': {'value': 60.0, 'unit': 'mm'}, 'ymin': {'value': 0.0, 'unit': 'mm'}, 'ymax': {'value': 40.0, 'unit': 'mm'}, 'zmin': {'value': 0.0, 'unit': 'mm'}, 'zmax': {'value': 5.0, 'unit': 'mm'}}}
+NOTE | toolbar Button labels: ["7.62 mm x 4.14 mm", "Additive Helix", "Additive Loft", "Additive Pipe", "Additive Primitive", "Align to Selection", "Boolean Operation", "Chamfer", "Close", "Create Datum", "Datums", "Download Classifications", "Draft", "Draw Style", "Fillet", "Fit All", "Fit Selection", "Groove", "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Close", "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Float", "Gui::GUISingleApplication.Gui::MainWindow.Model.OverlayTitle.OBTN Overlay", "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle.OBTN Close", "Gui::GUISingleApplication.Gui::MainWindow.OverlayRight.Gui::OverlaySplitter.Tasks.OverlayTitle.OBTN Overlay", "Gui::GUISingleApplication.Gui::MainWindow.Python console.OverlayTitle.OBTN Close", "Gui::GUISingleApplication.Gui::MainWindow.Python console.OverlayTitle.OBTN Float", "Gui::GUISingleApplication.Gui::MainWindow.Python console.OverlayTitle.OBTN Overlay", "Gui::GUISingleApplication.Gui::MainWindow.QMdiArea.QWidget.QMdiSubWindow.StartView.QStackedWidget.QWidget.QScrollArea.qt_scrollarea_viewport.QWidget.CreateNewRow.newFileButton", "Gui::GUISingleApplication.Gui::MainWindow.statusBar.notificationArea", "Hole", "Linear Pattern", "Link Actions", "Maximize", "Measure", "Minimize", "Mirror", "Multi-Transform", "New Body", "New Document", "New Group", "New Part", "Open First Start Setup", "Open\u2026", "Pad", "Pocket", "Polar Pattern", "Revit  ", "Revolve", "Save", "Selection Filter", "Standard Views", "Start Part", "Sub-Shape Binder", "Subtractive Helix", "Subtractive Loft", "Subtractive Pipe", "Subtractive Primitive", "Thickness", "Tree View Actions", "Undo", "Variable Set", "What's This?"]
+NOTE | button 'Standard Views': 1 hit(s)
+NOTE | button 'Isometric': 0 hit(s)
+NOTE | Standard Views toolbar click (default action = viewIsometric per Python console): {'clicked': 'Standard Views', 'effect': 'unverifiable', 'route': 'accessibility'}
+NOTE | Fit All toolbar click: {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+PASS | render status OK | {"status": "OK"}
+PASS | scene.rendered_objects contains PlatePad | ['PlatePad']
+NOTE | render block: {'available': True, 'resource_link': 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_4ym5yuqt.png', 'reason': None, 'dirty_document': False, 'empty_scene': False}
+PASS | default render: no Body/Sketch/Origin leaked into rendered_objects | ['PlatePad']
+NOTE | mcp png stats: {'size': [1920, 1920], 'bg': (255, 255, 255), 'fill': 0.3223, 'bbox': [20, 364, 1900, 1556]}
+NOTE | AntiAliasing in user.cfg: '<FCInt Name="AntiAliasing" Value="4"/>'
+NOTE | doc handle fcb-doc:7-9z6kqikHqXfeUpOMR8Yg left open for visual review

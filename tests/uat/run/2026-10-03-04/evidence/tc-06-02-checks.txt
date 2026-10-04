@@ -1,0 +1,12 @@
+NOTE | cleanup previous scenario: document_close TC0601 -> OK
+PASS | fixture: Base and Tower pads committed | {"status": "OK"}{"status": "OK"}
+PASS | Given: bbox has three different extents | {'extents_xyz': [30.0, 20.0, 25.0], 'volume': {'value': 7499.999999999999, 'unit': 'mm^3'}}
+NOTE | doc=fcb-doc:vSpNViFpcu6SgNbFm5XhiA
+PASS | render camera=iso: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | render camera=front: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | render camera=top: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | render camera=right: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | render camera=left: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | render camera=back: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | render camera=bottom: OK + resource_link | {'status': 'OK', 'objs': ['Tower']}
+PASS | camera 'oblique' rejected INVALID_INPUT | {"_raw": "Input validation error: 'oblique' is not one of ['iso', 'front', 'top', 'right', 'left', 'back', 'bottom', 'custom']"}

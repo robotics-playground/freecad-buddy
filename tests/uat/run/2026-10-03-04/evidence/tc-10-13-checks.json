@@ -1,0 +1,27 @@
+{
+ "A_hello": true,
+ "addon_log_new": [
+  "2026-10-04 12:17:50,605 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection",
+  "  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_listener.py\", line 243, in _serve_conn",
+  "    line = reader.read_line()",
+  "           ^^^^^^^^^^^^^^^^^^",
+  "  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_listener.py\", line 81, in read_line",
+  "    raise ValueError(\"connection closed mid-frame\")",
+  "ValueError: connection closed mid-frame"
+ ],
+ "frame_read_failed_line": [
+  "2026-10-04 12:17:50,605 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection"
+ ],
+ "closed_mid_frame_in_traceback": true,
+ "fresh_connect": "ok",
+ "fresh_contract_version": "1",
+ "fresh_document_list": "OK",
+ "document_suspect_in_log": [],
+ "menu_query": [
+  "Edit",
+  "File",
+  "Help",
+  "Tools",
+  "View"
+ ]
+}

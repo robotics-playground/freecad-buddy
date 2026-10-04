@@ -1,0 +1,21 @@
+PASS | Given FREECAD_BUDDY_ALLOW_EXEC unset in this shell | None
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-01-before.png
+NOTE | run_mcp_e2e.py exit=0 tools/list check=[{'tool': 'tools/list', 'ok': True, 'status': 'OK', 'detail': '45 tools'}] all_passed=True
+FAIL | Then H1 surface lists 44 tools (TC literal) | actual 45
+PASS | Then debug_exec absent from H1 listing | 45
+PASS | Then direct call refused: status INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)", "data": {}}}
+PASS | Then detail.message exact | debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)
+PASS | Then no code executed: fingerprint unchanged | 33e870c051cd2fe4 -> 33e870c051cd2fe4
+PASS | Then (extra) payload doc TC11_PWNED absent from H1 document_list | ['box-10-20-30']
+PASS | Then denied attempt audited: before/after exec pair | [('exec', 'debug_exec', None), ('exec', 'debug_exec', 'INVALID_INPUT')]
+FAIL | Then proxy tools/list returns 44 tools (TC literal) | actual 45
+PASS | Then proxy listing has no debug_exec | 45
+PASS | Then H1 and proxy surfaces identical | {'only_h1': [], 'only_proxy': []}
+PASS | Then (extra) proxy direct debug_exec refused | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown method: debug_exec", "data": {"exception": "ValidationError", "traceback": "freecad_buddy.usecases.documents.ValidationError: unknown method: debug_exec\n"}}}
+PASS | Then (extra) GUI document_list has no TC11_PWNED | ['box-10-20-30']
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-01-after.png

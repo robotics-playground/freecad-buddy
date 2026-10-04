@@ -1,0 +1,226 @@
+[
+ {
+  "id": "TC-11-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-01-before.png",
+   "tc-11-01-after.png",
+   "tc-11-01-mcp.jsonl",
+   "tc-11-01-checks.txt",
+   "tc-11-01-audit.jsonl",
+   "tc-11-01-e2e_report.json",
+   "tc-11-01-h1.stderr.log"
+  ],
+  "note": "All Thens executed. H1 (run_mcp_e2e.py + own clean-env H1) and proxy tools/list = 45, debug_exec absent; TC literal 44 is stale (45 on this build, RUN-CONTEXT) -> test-case defect, not product. Direct H1 debug_exec -> INVALID_INPUT with exact message; audit before/after exec pair; fingerprint 33e870c0 unchanged; payload doc never created (H1 and GUI document_list). Extra: proxy direct call refused with different message \"unknown method: debug_exec\" (proxy registry lacks the method). Golden box opens hidden; shown via GUI View>Visibility>Show All Objects before fit. Visual: before/after identical, single grey box whole and framed, tree Box only, no dialog."
+ },
+ {
+  "id": "TC-11-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-02-before.png",
+   "tc-11-02-after.png",
+   "tc-11-02-mcp.jsonl",
+   "tc-11-02-checks.txt",
+   "tc-11-02-h1-1.stderr.log",
+   "tc-11-02-h1-true.stderr.log",
+   "tc-11-02-h1-yes.stderr.log",
+   "tc-11-02-h1-0.stderr.log"
+  ],
+  "note": "All Thens executed on 4 H1 (FCB_PYTHON) runs. =1: 46 tools incl debug_exec, exec_enabled true, stderr has SECURITY: debug_exec ENABLED by operator flag. true/yes/0: 45 tools, no debug_exec, exec_enabled false, no warning. =1 surface = clean surface + debug_exec only. TC literals 45/44 are stale by +1 (surface is 45 without exec on this build) -> test-case defect. Operator acceptance recorded as the run brief (exec limited to separate H1 processes; GUI never exec-enabled). TC uses uv python for H1; uv env has no FreeCAD, so FCB_PYTHON used per RUN-CONTEXT. Visual: before/after identical single box, framed, no dialog."
+ },
+ {
+  "id": "TC-11-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-03-before.png",
+   "tc-11-03-after.png",
+   "tc-11-03-mcp.jsonl",
+   "tc-11-03-checks.txt",
+   "tc-11-03-audit.jsonl",
+   "tc-11-03-h1.stderr.log"
+  ],
+  "note": "All Thens executed. One debug_exec (OK, value_repr 1) on H1 ALLOW_EXEC=1 -> exactly 2 debug_exec audit lines, both event exec, schema fcb.audit-record/1, identical 64-hex params_digest be8c30a8..., code field = submitted source, after verify_verdict OK. File also holds the document_open mutation pair (expected). Cleanup rm of tc-11-03-audit.jsonl skipped on purpose: it is this run evidence. Visual: before/after identical, single box framed, no dialog."
+ },
+ {
+  "id": "TC-11-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-04-before.png",
+   "tc-11-04-after.png",
+   "tc-11-04-mcp.jsonl",
+   "tc-11-04-checks.txt",
+   "tc-11-04-tool-surface.json"
+  ],
+  "note": "All Thens executed. grep exec/eval: single hit tool_catalog.py:1031 audit_event=\"exec\" inside DEBUG_EXEC_SPEC. preview_dry_run(debug_exec) and (run_python) -> INVALID_INPUT \"not a previewable mutation tool: ... (previewable: <19 feature_/sketch_ names>)\". All 45 H1 input schemas additionalProperties false (TC path .../tool_surface.json does not exist; schema dumped from live tools/list to tc-11-04-tool-surface.json). Undeclared keys -> MCP Input validation error, no envelope. Mutating-prefix Then: view_fit_viewport is declared mutating (camera move, audited) and has prefix view_ -> the literal Then fails; judged a test-case defect (TC prefix list predates the typed, closed-schema camera tool; it changes no geometry). Visual: before/after identical, single box framed, no dialog."
+ },
+ {
+  "id": "TC-11-05",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-05-before.png",
+   "tc-11-05-after.png",
+   "tc-11-05-mcp.jsonl",
+   "tc-11-05-checks.txt",
+   "tc-11-05-close-checks.txt",
+   "tc-10-tc11-05-proxy-restart.log"
+  ],
+  "note": "All Thens executed. Listener port 50792 (discovery rpc-32732.json, host 127.0.0.1). netstat: exactly one LISTENING line 127.0.0.1:50792 (pid 32732). Connect to LAN 192.168.50.13:50792 -> ConnectionRefusedError WinError 10061. Loopback rpc_hello (proxy stopped first: AD-26 single client holds the listener) -> contract_version 1, keys capabilities/contract_version/freecad_version. Harness: addon proxy (4856/34388) terminated, restarted by hand with the addon command (.venv pythonw, orphan of FreeCAD); restart log kept under tc-10-tc11-05-proxy-restart.log (file locked by proxy). Visual: before/after identical, single box framed, no dialog."
+ },
+ {
+  "id": "TC-11-06",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-06-before.png",
+   "tc-11-06-after.png",
+   "tc-11-06-mcp.jsonl",
+   "tc-11-06-checks.txt"
+  ],
+  "note": "All Thens executed. netstat: one line 127.0.0.1:8765 LISTENING. curl POST to 192.168.50.13:8765 -> rc 7 Could not connect. Loopback curl -> HTTP 307 (redirect /mcp -> /mcp/; curl rc 23 is the Windows /dev/null write, code still real). --host 0.0.0.0 -> rc 2 \"unrecognized arguments: --host 0.0.0.0\"; proxy unaffected. entry.py:38-39 _HOST=\"127.0.0.1\", _PORT=8765; only os.environ use is entry.py:175 Capabilities.from_env (not the bind). No Bearer/Authorization/Origin/CORS in entry.py (gap held by TC-99-01/02, not double-counted). Framing by GUI Fit All per TC; view is top orthographic (box seen as 10x20 rectangle). Visual: before/after identical, box whole and framed, no dialog."
+ },
+ {
+  "id": "TC-11-07",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-07-before.png",
+   "tc-11-07-after.png",
+   "tc-11-07-mcp.jsonl",
+   "tc-11-07-checks.txt",
+   "tc-11-07-cycle.json",
+   "tc-11-07-relaunch.json"
+  ],
+  "note": "All Thens executed. One discovery file for live pid (rpc-32732.json); 11 other rpc-*.json exist for dead pids, all dated 2026-08-01..2026-09-14 (pre-date this run, not deleted - not run files). Windows: os.stat mode 0o666, read-only bit NOT set (chmod(0o600) keeps S_IWRITE, so it changes nothing on Windows; comment rpc_listener.py:197-198 \"toggles the read-only bit\" is inaccurate); effective control: ACL inherited from %APPDATA% = SYSTEM, Administrators, owner only (no Everyone/Users). token non-empty (masked ucUx..., len 43), contract_version 1. Wrong-token rpc_hello -> {code -32000, message \"auth failed\"}, no data/result/capabilities. After File>Exit the file rpc-32732.json was gone. Visual pair captured before the quit: identical single box, framed, no dialog. FreeCAD relaunched clean (pid 34340)."
+ },
+ {
+  "id": "TC-11-08",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-11-08-before.png",
+   "tc-11-08-after.png",
+   "tc-11-08-mcp.jsonl",
+   "tc-11-08-checks.txt",
+   "tc-11-08-approve.jsonl",
+   "tc-11-08-h1-1.stderr.log",
+   "tc-11-08-h1-true.stderr.log"
+  ],
+  "note": "2 Thens FAIL, rest PASS. Request: H1 FREECAD_BUDDY_AUTO_APPROVE=1, feature_body_create {doc, name:\"Tc11Body\"} with no confirm -> OK; stderr warning present; exactly 1 approval line, tool feature_body_create. FAIL-1 params_digest: approval 4800573f... vs mutation before/after a00e78f7... The approval digests the use-case params dict incl. defaults {doc,name,base_feature:None,confirm:None} (features.py:1633 -> confirm.audit_approval, features.py:372); the before/after lines digest the wire args {doc,name} (mcp_server.py:213/221). Recomputed both hashes offline to confirm. Contradicts audit_log.py approval() docstring (same digest so an auditor can pair them). Product defect, deterministic. FAIL-2 fingerprint: approval fingerprint_before null; mutation before/after lines also null (mcp_server before/after pass none; confirm.gate_mutation reads the fingerprint only on the token path). Equality null==null holds, but the approval does not carry the pre-mutation fingerprint the Then requires. Product defect, or design gap if no fingerprint is intended on auto-approve. AUTO_APPROVE=true: no warning; same call refused INVALID_INPUT with the exact confirm message. Visual: before/after identical, single box, no Tc11Body in GUI tree, no dialog. Cleanup rm skipped (FAIL: evidence kept)."
+ },
+ {
+  "id": "TC-11-09",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-09-before.png",
+   "tc-11-09-after.png",
+   "tc-11-09-mcp.jsonl",
+   "tc-11-09-checks.txt"
+  ],
+  "note": "All Thens executed. Old token (pid 34340) Q9UD..len43; FreeCAD quit via File>Exit and relaunched clean (pid 35916); new token HaIW..len43, differs (compared in memory, only masks logged). With proxy stopped: OLD token rpc_hello -> error -32000 \"auth failed\", next recv 0 bytes (closed); OLD token + contract_version 99 -> \"auth failed\" (auth checked before version); new token -> contract_version 1, result keys capabilities/contract_version/freecad_version. rpc-34340.json gone after quit. Proxy restarted by hand afterwards (orphan). Golden reopened; before/after both framed with GUI Fit All (top view): identical 10x20 rectangle, tree Box only, no dialog."
+ },
+ {
+  "id": "TC-11-10",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-10-before.png",
+   "tc-11-10-after.png",
+   "tc-11-10-mcp.jsonl",
+   "tc-11-10-checks.txt",
+   "tc-11-10-h1probe-mcp.jsonl",
+   "tc-11-10-h1probe-checks.txt",
+   "tc-11-10-H2-box.step",
+   "tc-11-10-H1-box.step"
+  ],
+  "note": "All Thens executed on H2 (GUI) and H1. document_list before/after identical (only box-10-20-30), no FCB_TMP_ handle after preview_dry_run (OK) and verify_export_step (OK); no new FCB_TMP_* entry in $TEMP or workdir tmp. Fingerprint: H2 f8e1ba5a unchanged; H1 changed 33e870c0->f8e1ba5a, isolated (tc-11-10-h1probe) to export_step recompute of a not-yet-recomputed file doc (geometry identical, vol 6000); preview and verify_export_step leave it unchanged -> Then PASS on merits. Test-case defect: verify_export_step needs an export_id, so the When must include export_step (missing in TC). Observation: $TEMP holds 1835 pre-existing FCB_TMP_* dirs (1824 FCB_TMP_export_test_* from 2026-09-12..10-03 21:57, 10 snap, 1 prev from 2026-09-22) - none from this scenario, not deleted. Visual: before/after identical, tree only box-10-20-30/Box, no FCB_TMP_ item, console shows FCB_TMP_prev_ doc opened then closed, no dialog. Cleanup rm FCB_TMP_prev_* skipped: would delete the pre-existing 2026-09-22 dir (non-run file)."
+ },
+ {
+  "id": "TC-11-11",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-11-before.png",
+   "tc-11-11-after.png",
+   "tc-11-11-mcp.jsonl",
+   "tc-11-11-checks.txt",
+   "tc-11-11b-mcp.jsonl",
+   "tc-11-11b-checks.txt"
+  ],
+  "note": "All Thens executed on H1 (FREECAD_BUDDY_WORKDIR=evidence/tc-11-11-workdir; product puts TempDocs in <workdir>/tmp per AD-25, TC names $TEMP: both watched). FCB_TMP_prev_* set unchanged after success (feature_pad OK), failure (oversized fillet r=50, tc-11-11b) and raise (profile NoSuchSketch -> INVALID_INPUT \"unknown object in profile: NoSuchSketch\"); only the pre-existing 2026-09-22 $TEMP dir present throughout. document_list never showed FCB_TMP_prev_. Failure preview: envelope status OK, failure carried in diff.validity {status RECOMPUTE_ERROR, explanation \"recompute left 1 object(s) invalid: BigFillet: BRep_API: command not done\"}, not raised, cause not masked. The TC literal (envelope status SPEC_FAILED/RECOMPUTE_ERROR) conflicts with mcp-tools-design.md 3.8 (preview returns diff.validity) -> test-case defect. Harness note: first failure attempt (feature_pocket with no base) did not fail - FreeCAD 1.1.4 builds a 2000 mm3 solid from a first-feature pocket (diff +2000 mm3, valid). Visual: before/after identical, tree only box-10-20-30/Box, no FCB_TMP item, no dialog. Cleanup rm skipped (would delete pre-existing $TEMP dir)."
+ },
+ {
+  "id": "TC-11-12",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-11-12-before.png",
+   "tc-11-12-after.png",
+   "tc-11-12-mcp.jsonl",
+   "tc-11-12-checks.txt",
+   "tc-11-12b-mcp.jsonl",
+   "tc-11-12b-checks.txt"
+  ],
+  "note": "Executed Thens PASS, 5 NOT RUN, none failed. H1 (default cwd-relative workdir = evidence/freecad-buddy-workdir/tmp, plus $TEMP; baseline 10 = the pre-existing 2026-09-22 $TEMP snap dirs): commit (feature_fillet r2) OK, snapshot_path null, count 10->10; fail+rollback (fillet r50) RECOMPUTE_ERROR rolled_back_verified, count unchanged; also Radius 0 and GUI Radius 400 -> rolled_back_verified, counts unchanged. NOT RUN: (a) commit-that-raises - every candidate was refused before the bracket (degenerate line \"geometry[0] start and end are the same point\", zero circle \"radius must be positive\") or failed recompute instead of raising; (b) UNPROVEN keep-case - feature_set_parameters Fillet Radius 400 (TC-05-06 reproducer) now rolls back verified on H1 and on the GUI, so no kept snapshot; (c) committed-but-unhashable - needs a fault-injected fingerprint, no typed-tool route; (d) keep-case path absolute and (e) both keep-cases named - depend on (b)/(c). Visual: before/after identical single box, framed; scratch GUI doc TC1112 closed before the capture; no dialog."
+ },
+ {
+  "id": "TC-11-13",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-13-before.png",
+   "tc-11-13-after.png",
+   "tc-11-13-mcp.jsonl",
+   "tc-11-13-checks.txt",
+   "tc-11-13-helpers-dryrun.txt"
+  ],
+  "note": "All Thens executed (uv interpreter, as written). _delete_snapshot($TEMP/not-reserved/keep-a.txt) removed only keep-a.txt; keep-b.txt and the dir survived; _remove_tempdir($TEMP/not-reserved/keep-b.txt) removed nothing; both exit 0. _delete_snapshot on a freshly minted FCB_TMP_snap_tc1113_* dir holding Doc.FCStd/.FCBak/extra.txt removed the whole dir (did not touch the pre-existing snap dirs). Visual: before/after identical single box, framed, document present, no dialog. Cleanup run (own dir removed). Note: helpers were first run once before the baseline by mistake (tc-11-13-helpers-dryrun.txt), then re-run in order."
+ },
+ {
+  "id": "TC-11-14",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-14-before.png",
+   "tc-11-14-after.png",
+   "tc-11-14-mcp.jsonl",
+   "tc-11-14-checks.txt"
+  ],
+  "note": "All Thens executed on H2 and H1, each against its own user folder (evidence/tc-11-14-userdocs-H2|H1 holding bracket-v3.FCStd + notes.txt). Read-only sweep (document_open, query_capabilities/tree_summary/object/mass_properties/dependencies/sketch_info/placement/screenshot, verify_shape/sketch/recompute/export_step/stl/3mf, preview_dry_run, document_close): same names and identical mtime_ns before/after; no FCB_TMP_prev_/snap_ entries. export_stl with explicit path added exactly tc11-export.stl. document_save changed only bracket-v3.FCStd mtime and added FreeCAD timestamped backup bracket-v3.20261004-124259.FCBak (script name check was too literal; reclassified). No freecad-buddy-audit.jsonl in either folder (FREECAD_BUDDY_AUDIT_LOG inherited = _automation/uat/audit.jsonl). Visual: before/after identical, single box framed, tree only box-10-20-30 (bracket_v3 opened and closed per console), no dialog. Cleanup rm of tc11-export.stl skipped: folders are run evidence."
+ },
+ {
+  "id": "TC-11-15",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-15-before.png",
+   "tc-11-15-after.png",
+   "tc-11-15-mcp.jsonl",
+   "tc-11-15-checks.txt",
+   "tc-11-15-append.jsonl",
+   "tc-11-15-concurrent.jsonl",
+   "tc-11-15-greps.txt"
+  ],
+  "note": "All Thens executed. Two sequential H1 batches (body+sketch+pad, preview+confirm) on evidence/tc-11-15-append.jsonl: 22 -> 44 lines, first 22 lines byte-identical, sha256 3176f1b9 unchanged. audit_log.py:46 open(self._path, \"a\"). Two literal greps return lines, but both hits are prose, not code: documents.py:40 docstring names FREECAD_BUDDY_AUDIT_LOG as the workdir env-var precedent (no read of the audit file), audit_log.py:7 module docstring \"never truncates, rotates, or reads it\" -> test-case defect (grep too broad); behaviour judged on merits PASS. Concurrent run: two H1 processes writing the same file at once -> 44 lines, all parse as JSON, 20 per document. Visual: before/after identical single box, framed, no dialog. Cleanup rm of tc-11-15-append.jsonl skipped (run evidence)."
+ },
+ {
+  "id": "TC-11-16",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-11-16-before.png",
+   "tc-11-16-after.png",
+   "tc-11-16-render.png",
+   "tc-11-16-mcp.jsonl",
+   "tc-11-16-checks.txt",
+   "tc-11-16-e2e-report.json",
+   "tc-11-16-audit.jsonl"
+  ],
+  "note": "All Thens executed; token held in memory only (mask HaIW..len43), byte search, verdicts only. Sweep on GUI proxy: 6 query_*, verify_shape, verify_recompute, query_screenshot (render copied to tc-11-16-render.png), export_step + verify_export_step, one mutation (feature_body_create via preview+confirm on scratch doc tc11-16-scratch, then closed) - all OK. Token absent from e2e report, all tc-11-16-*.png, scenario audit slice and the whole inherited _automation/uat/audit.jsonl, addon.log, mcp-proxy.log, query_capabilities values, and every file in the run evidence folder. Direct rpc_hello (proxy stopped/restarted) result keys exactly capabilities/contract_version/freecad_version. Visual: before/after identical single box, tree only box-10-20-30/Box, console shows only document names, no token text, no dialog."
+ }
+]

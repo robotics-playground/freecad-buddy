@@ -1,0 +1,12 @@
+== prep: stop manual proxy, exit FreeCAD
+listener pid 4548 parent 3772 (python)
+terminate 4548 -> True
+terminate 3772 -> True
+after: 0 :8765 listeners
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+== Given freecad
+(nothing)
+== Given :8765
+(no listener; TIME_WAIT ignored)
+== Given rotate
+rotated

@@ -1,0 +1,4 @@
+TC0917Broken clean pad volume 3999.999999999999 state ['Up-to-date']
+17 after emptying sketch: pad state ['Touched', 'Invalid'] status Linked shape object is empty valid False
+TC0918Broken clean pad volume 3999.999999999999 state ['Up-to-date']
+18 after deleting sketch: pad state ['Touched', 'Invalid'] status No object linked profile None

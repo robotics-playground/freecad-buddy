@@ -1,0 +1,4 @@
+{'h': 27, 'w': 280, 'x': 46, 'y': 353}
+{'delivery': {'mode': 'foreground'}, 'effect': 'unverifiable', 'route': 'global_input'}
+{'delivery': {'mode': 'foreground'}, 'effect': 'unverifiable', 'route': 'global_input'}
+[(792504, '* BracketPlate - FreeCAD 1.1.4', {'height': 1380, 'width': 1775, 'x': 0, 'y': 0})]

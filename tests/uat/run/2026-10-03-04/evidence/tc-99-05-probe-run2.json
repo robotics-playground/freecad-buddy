@@ -1,0 +1,174 @@
+{
+ "temp_snap_before": 10,
+ "work_snap_before": [],
+ "scratch_doc": "fcb-doc:S8bUc3spgtJZYl5Ov0j0JA",
+ "snap_dirs_seen_during_run": {
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_tkisz00w": {
+   "t": 1791098550.511,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_fn2z1anv": {
+   "t": 1791098550.557,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_rg5soyrf": {
+   "t": 1791098550.665,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_64nt8fua": {
+   "t": 1791098550.707,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_706x3_y9": {
+   "t": 1791098550.808,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_4b6rbo_n": {
+   "t": 1791098550.862,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_32ivtiiy": {
+   "t": 1791098551.038,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_f1o5ot5t": {
+   "t": 1791098551.234,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_soz4a2ie": {
+   "t": 1791098551.478,
+   "contents": null
+  },
+  "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_53goqmod": {
+   "t": 1791098551.674,
+   "contents": null
+  }
+ },
+ "calls": [
+  {
+   "tool": "document_create",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "feature_body_create",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": false,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "sketch_create",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": false,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "sketch_add_geometry",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": false,
+   "rollback_proven": null
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "feature_pad",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "mutation.recompute_error",
+    "message": "recompute left 1 object(s) invalid: PadFail1: Resulting fused extrusion is null."
+   },
+   "snapshot_path": "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_f1o5ot5t\\TC9905Scratch.FCStd",
+   "rolled_back": true,
+   "rollback_proven": "rolled_back_via_snapshot"
+  },
+  {
+   "tool": "preview_dry_run",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  },
+  {
+   "tool": "feature_pad",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "mutation.recompute_error",
+    "message": "recompute left 1 object(s) invalid: PadFail2: Resulting fused extrusion is null."
+   },
+   "snapshot_path": "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_53goqmod\\TC9905Scratch.FCStd",
+   "rolled_back": true,
+   "rollback_proven": "rolled_back_via_snapshot"
+  },
+  {
+   "tool": "document_close",
+   "status": "OK",
+   "detail": null,
+   "snapshot_path": null,
+   "rolled_back": null,
+   "rollback_proven": null
+  }
+ ],
+ "temp_snap_after": 10,
+ "work_snap_after": [],
+ "work_snap_after_contents": {},
+ "kept_paths": [
+  "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_f1o5ot5t\\TC9905Scratch.FCStd",
+  "freecad-buddy-workdir\\tmp\\FCB_TMP_snap_53goqmod\\TC9905Scratch.FCStd"
+ ],
+ "kept_abs": [
+  "D:\\Work\\Personal\\Sources\\freecad-buddy\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_f1o5ot5t\\TC9905Scratch.FCStd",
+  "D:\\Work\\Personal\\Sources\\freecad-buddy\\freecad-buddy-workdir\\tmp\\FCB_TMP_snap_53goqmod\\TC9905Scratch.FCStd"
+ ],
+ "kept_exists_from_probe_cwd": [
+  false,
+  false
+ ],
+ "kept_exists_under_gui_workdir": [
+  false,
+  false
+ ],
+ "parents": [
+  "FCB_TMP_snap_f1o5ot5t",
+  "FCB_TMP_snap_53goqmod"
+ ]
+}

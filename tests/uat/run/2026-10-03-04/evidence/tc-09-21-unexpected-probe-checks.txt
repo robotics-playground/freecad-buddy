@@ -1,0 +1,1 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK

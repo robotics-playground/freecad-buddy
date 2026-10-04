@@ -1,0 +1,89 @@
+== Given: tasklist freecad
+(nothing)
+== Given: netstat :8765
+  TCP    127.0.0.1:63908        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:63909        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:63910        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:63911        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:63912        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:63913        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:63914        127.0.0.1:8765         TIME_WAIT       0
+== Given: rotate addon.log
+rotated
+addon.log.prev
+mcp-proxy.log
+rpc-11924.json
+rpc-1444.json
+rpc-1456.json
+rpc-19588.json
+rpc-20096.json
+rpc-21148.json
+rpc-21164.json
+rpc-32380.json
+rpc-33492.json
+rpc-38812.json
+rpc-9756.json
+== When: launch_app
+2026-10-03T23:22:21+07:00
+Provide one of: bundle_id, name, aumid, path, launch_path, or urls to identify the app to launch.
+== When: launch_app (retry with file payload _automation/uat/launch.json; first echo payload rejected by the CLI)
+{"path": "C:\\Program Files\\FreeCAD 1.1\\bin\\freecad.exe"}
+
+2026-10-03T23:22:28+07:00
+{
+  "active": false,
+  "bundle_id": null,
+  "name": "C:\\Program Files\\FreeCAD 1.1\\bin\\freecad.exe",
+  "pid": 33184,
+  "running": true,
+  "windows": [
+    {
+      "bounds": {
+        "height": 570,
+        "width": 763,
+        "x": 899,
+        "y": 435
+      },
+      "is_on_screen": true,
+      "layer": 0,
+      "title": "FreeCAD",
+      "window_id": 596108,
+      "z_index": 0
+    }
+  ]
+}
+== list_windows (waited 1x2s for :8765)
+{
+  "_legacy_windows": [
+    {
+      "height": 1380,
+      "is_on_screen": true,
+      "minimized": false,
+      "pid": 33184,
+      "title": "FreeCAD 1.1.4",
+      "width": 1775,
+      "window_id": 1513560,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "current_space_id": null,
+  "windows": [
+    {
+      "app_name": "freecad.exe",
+      "bounds": {
+        "height": 1380,
+        "width": 1775,
+        "x": 0,
+        "y": 0
+      },
+      "is_on_screen": true,
+      "layer": 0,
+      "minimized": false,
+      "pid": 33184,
+      "title": "FreeCAD 1.1.4",
+      "window_id": 1513560,
+      "z_index": 0
+    }
+  ]
+}

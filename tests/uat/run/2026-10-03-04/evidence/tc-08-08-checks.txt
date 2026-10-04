@@ -1,0 +1,7 @@
+NOTE | cleanup previous scenario: document_close TC0807 -> OK
+PASS | Given sketch fully constrained (verify_sketch; query_sketch_info has no fully_constrained field) | 0
+PASS | pocket refused with tool-binding message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "confirm.preview_id was issued for 'feature_pad', not 'feature_pocket'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return m
+PASS | minting tool named first, called tool second | confirm.preview_id was issued for 'feature_pad', not 'feature_pocket'
+PASS | tree lists neither Pad nor a pocket | ['Body', 'Sketch']
+PASS | refusal is not an argument complaint | confirm.preview_id was issued for 'feature_pad', not 'feature_pocket'
+PASS | same token on feature_pad with same args returns OK | {"status": "OK"}

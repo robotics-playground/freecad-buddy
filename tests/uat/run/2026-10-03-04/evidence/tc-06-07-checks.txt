@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close TC0604 -> OK
+PASS | Given: document_list returns a handle (L-block built) | fcb-doc:-Vjl_pkEptO2T_emUUYzHQ
+PASS | valid quaternion -> OK + link | {"status": "OK"}
+PASS | custom quaternion render == iso render (pixel diff bbox None) | None
+PASS | missing orientation -> INVALID_INPUT exact detail | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "camera 'custom' requires custom_orientation (a 4-float quaternion)", "data": {"exception": "ValidationError", "traceback": "Traceback (most rece
+PASS | 3 numbers rejected (schema minItems 4) | {"_raw": "Input validation error: [0.0, 0.0, 1.0] is too short"}
+PASS | 5 numbers rejected (schema maxItems 4) | {"_raw": "Input validation error: [0, 0, 0, 1, 0] is too long"}
+PASS | zero quaternion -> INVALID_INPUT 'custom_orientation is degenerate (zero norm)' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "custom_orientation is degenerate (zero norm): [0, 0, 0, 0]", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call 
+NOTE | Standard Views (isometric): {'clicked': 'Standard Views', 'effect': 'unverifiable', 'route': 'accessibility'}
+PASS | visual: view_fit_viewport returns OK (Isometric) | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-07-after.png', 'exists': True, 'title': '- [0] Window "* TC0607 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

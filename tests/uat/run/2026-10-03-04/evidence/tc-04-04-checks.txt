@@ -1,0 +1,12 @@
+NOTE | profiles are identical 20x30 rectangles, placed at x=0, x=40, x=80 so the three solids do not overlap in the view
+PASS | Given RevProfile dof=0 | {"status": "OK"}
+PASS | Given TwoProfile dof=0 | {"status": "OK"}
+PASS | Given TaperProfile dof=0 | {"status": "OK"}
+PASS | all three commit OK rolled_back=false | ['{"status": "OK"}', '{"status": "OK"}', '{"status": "OK"}']
+FAIL | RevPad vol 6000 and bbox z -10..0 | vol=6000.0 bbox={'xmin': 0.0, 'xmax': 20.0, 'ymin': 0.0, 'ymax': 30.0, 'zmin': -10.0, 'zmax': 0.0}
+PASS | RevPad Reversed=true | True
+FAIL | TwoPad vol > 6000 and Length2 = 4 mm | vol=6000.0 Length2=4.0 mm Type=Length bbox={'xmin': 40.0, 'xmax': 60.0, 'ymin': 0.0, 'ymax': 30.0, 'zmin': 0.0, 'zmax': 10.0}
+PASS | TaperPad vol != 6000 and TaperAngle = 5 deg | vol=6447.649005957026 TaperAngle=5.0 deg
+PASS | verify_shape OK x3 | ['OK', 'OK', 'OK']
+PASS | taper 120 deg INVALID_INPUT 'taper_angle must be in', no snapshot_path | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "taper_angle must be in (-90.0, 90.0) degrees, got 120.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBud
+NOTE | BadTaperBody/BadTaperProfile (fixture for the refusal) is deleted from the view by closing? no - left; it holds only a sketch

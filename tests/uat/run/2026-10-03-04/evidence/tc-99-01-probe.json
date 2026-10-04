@@ -1,0 +1,154 @@
+{
+ "curl_status": "307",
+ "curl_follow": "HTTP/1.1 307 Temporary Redirect\ndate: Sun, 04 Oct 2026 07:11:46 GMT\nserver: uvicorn\ncontent-length: 0\nlocation: http://127.0.0.1:8765/mcp/\n\nHTTP/1.1 400 Bad Request\ndate: Sun, 04 Oct 2026 07:11:46 GMT\nserver: uvicorn\ncontent-type: application/json\nmcp-session-id: 3f54f1468afd4a4ba8af648eadd9c9c5\ncontent-length: 105\n\n{\"jsonrpc\":\"2.0\",\"id\":\"server-error\",\"error\":{\"code\":-32600,\"message\":\"Bad Request: Missing session ID\"}}",
+ "curl_slash_status_body": "HTTP/1.1 400 Bad Request\ndate: Sun, 04 Oct 2026 07:11:46 GMT\nserver: uvicorn\ncontent-type: application/json\nmcp-session-id: 7e98cce957dd4ba8a6caff696bcd7236\ncontent-length: 105\n\n{\"jsonrpc\":\"2.0\",\"id\":\"server-error\",\"error\":{\"code\":-32600,\"message\":\"Bad Request: Missing session ID\"}}",
+ "unauth_session": {
+  "session_id": "442333e8f7d34a99a0a80c841b180ec2",
+  "server": "freecad-buddy-gui-external",
+  "tool_count": 45,
+  "tools_sample": [
+   "document_close",
+   "document_create",
+   "document_list",
+   "document_open",
+   "document_recompute"
+  ],
+  "tree_before": {
+   "doc": "fcb-doc:S1SC2irVy-Bcy-GpjgHVVA",
+   "total_objects": 1,
+   "returned_nodes": 1,
+   "depth": 1,
+   "filters_applied": {
+    "exclude_types": [
+     "App::Plane",
+     "App::Line",
+     "App::Point",
+     "App::Origin"
+    ]
+   },
+   "tree": [
+    {
+     "name": "Box",
+     "label": "Box",
+     "type": "Part::Feature",
+     "visibility": true
+    }
+   ]
+  },
+  "preview_status": "OK",
+  "mutation_status": "OK",
+  "mutation_detail": null,
+  "mutation_fp": {
+   "fingerprint_before": {
+    "schema": "fcb.fingerprint/1",
+    "serializer": "exportBinary",
+    "objects": [
+     {
+      "name": "Box",
+      "brep_sha256": "d4df9a121d68ce2c64319c591e1cad564f219de3ac809de201bc7dac0f9848d8",
+      "massprops": {
+       "volume": 6000.0,
+       "area": 2200.0,
+       "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        20.0,
+        30.0
+       ],
+       "com": [
+        5.0,
+        10.0,
+        15.0
+       ],
+       "principal_moments": [
+        650000.0,
+        500000.0,
+        250000.0
+       ],
+       "quantum": 1e-06
+      }
+     }
+    ],
+    "digest": "f8e1ba5a5d462098fe79417d91d264f772e032882545f9275910abafe29f4dd5"
+   },
+   "fingerprint_after": {
+    "schema": "fcb.fingerprint/1",
+    "serializer": "exportBinary",
+    "objects": [
+     {
+      "name": "Box",
+      "brep_sha256": "d4df9a121d68ce2c64319c591e1cad564f219de3ac809de201bc7dac0f9848d8",
+      "massprops": {
+       "volume": 6000.0,
+       "area": 2200.0,
+       "bbox": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        20.0,
+        30.0
+       ],
+       "com": [
+        5.0,
+        10.0,
+        15.0
+       ],
+       "principal_moments": [
+        650000.0,
+        500000.0,
+        250000.0
+       ],
+       "quantum": 1e-06
+      }
+     }
+    ],
+    "digest": "f8e1ba5a5d462098fe79417d91d264f772e032882545f9275910abafe29f4dd5"
+   },
+   "committed": null
+  },
+  "tree_after": {
+   "doc": "fcb-doc:S1SC2irVy-Bcy-GpjgHVVA",
+   "total_objects": 10,
+   "returned_nodes": 2,
+   "depth": 1,
+   "filters_applied": {
+    "exclude_types": [
+     "App::Plane",
+     "App::Line",
+     "App::Point",
+     "App::Origin"
+    ]
+   },
+   "tree": [
+    {
+     "name": "Box",
+     "label": "Box",
+     "type": "Part::Feature",
+     "visibility": true
+    },
+    {
+     "name": "UnauthBody",
+     "label": "UnauthBody",
+     "type": "PartDesign::Body",
+     "visibility": true,
+     "children_count": 1
+    }
+   ]
+  }
+ },
+ "wrong_bearer_session": {
+  "session_id": "58abde4290f24c28b5682f3f1a78edc5",
+  "server": "freecad-buddy-gui-external",
+  "tool_count": 45,
+  "tools_sample": [
+   "document_close",
+   "document_create",
+   "document_list",
+   "document_open",
+   "document_recompute"
+  ]
+ }
+}

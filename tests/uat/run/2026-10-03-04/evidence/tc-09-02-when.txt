@@ -1,0 +1,31 @@
+## When 1: status vocabulary
+['OK', 'SPEC_FAILED', 'RECOMPUTE_ERROR', 'TIMEOUT', 'OOM_KILLED', 'WORKER_CRASHED', 'INVALID_INPUT', 'QUEUED', 'RUNNING']
+## When 2: observed statuses
+['INVALID_INPUT', 'OK', 'SCHEMA_ERROR', 'SPEC_FAILED']
+## When 3: check_status_vocab
+check_status_vocab OK
+exit=0
+## near-miss grep
+grep_exit=1
+## OOM_KILLED / WORKER_CRASHED emitters
+src/freecad_buddy/adapters/rpc_client.py:6:parse, lookup, or socket failure is synthesized into an envelope (``WORKER_CRASHED`` for an
+src/freecad_buddy/adapters/rpc_client.py:96:        "status": "WORKER_CRASHED",
+src/freecad_buddy/adapters/rpc_client.py:97:        "detail": {"code": "WORKER_CRASHED", "message": message, "data": data},
+src/freecad_buddy/adapters/rpc_client.py:107:    code (e.g. a dropped/auth-failed connection) falls back to ``WORKER_CRASHED``.
+src/freecad_buddy/adapters/rpc_dispatch.py:67:    # for the RECOMPUTE_ERROR/WORKER_CRASHED class so the error channel stays readable.
+src/freecad_buddy/adapters/rpc_listener.py:31:    RPC_ERROR_WORKER_CRASHED,
+src/freecad_buddy/adapters/rpc_listener.py:284:            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, "auth failed")
+src/freecad_buddy/contracts/rpc.py:17:RPC_ERROR_WORKER_CRASHED = -32000  # listener/marshal crash or dropped connection
+src/freecad_buddy/contracts/rpc.py:24:    RPC_ERROR_WORKER_CRASHED: "WORKER_CRASHED",
+src/freecad_buddy/contracts/status.py:16:    "OOM_KILLED",
+src/freecad_buddy/contracts/status.py:17:    "WORKER_CRASHED",
+## rpc_dispatch boundary
+108:    def dispatch(self, name: str, params: dict) -> ResultEnvelope:
+112:            return _error_envelope("INVALID_INPUT", ValidationError(f"unknown method: {name}"))
+115:        except ValidationError as exc:
+116:            return _error_envelope("INVALID_INPUT", exc)
+117:        except MarshalTimeout as exc:
+124:        except (TypeError, ValueError, KeyError) as exc:
+126:            return _error_envelope("INVALID_INPUT", exc)
+127:        except Exception as exc:  # noqa: BLE001 - single boundary: nothing raises past here
+128:            return _error_envelope("RECOMPUTE_ERROR", exc, unexpected=True)

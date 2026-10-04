@@ -1,0 +1,11 @@
+== preconditions 2026-10-04T15:56:16+07:00 HEAD bece7ac src-status:[]
+C:/Program Files/FreeCAD 1.1/bin/freecad.exe*
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py
+.venv/Scripts/python.exe*
+.venv/Scripts/pythonw.exe*
+Cua Driver daemon is running
+  socket: \\.\pipe\cua-driver
+ModuleNotFoundError: No module named 'FreeCAD'
+tests/uat/run/2026-10-03-04/evidence/
+== fcb env with APPENDIX-B step 3 patch
+fcb ok ['1', '1', '3']

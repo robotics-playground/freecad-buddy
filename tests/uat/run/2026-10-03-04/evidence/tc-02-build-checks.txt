@@ -1,0 +1,1 @@
+PASS | Given no document open | 0 open document(s).

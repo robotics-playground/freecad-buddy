@@ -1,0 +1,32 @@
+import asyncio, json, os, importlib.util
+spec = importlib.util.spec_from_file_location("lib", "tc-07-lib.py"); lib = importlib.util.module_from_spec(spec); spec.loader.exec_module(lib)
+P = lib.EV + "/tc-07-09-legs.3mf"
+async def main():
+    if os.path.exists(P): os.remove(P)
+    async with lib.Session("tc-07-09") as s:
+        import lib3mf
+        s.check("given: lib3mf importable", True)
+        s.check("given: no stale target", not os.path.exists(P))
+        H, OBJ = await s.open(lib.GOLD + "/cylinder-r5-h20.FCStd"); print(H, OBJ)
+        e = await s.call("export_3mf", {"doc": H, "path": P, "objects": [OBJ]})
+        EID = lib.sc(e).get("export_id"); print("export", e["status"], json.dumps(lib.sc(e)))
+        v = await s.call("verify_export_3mf", {"doc": H, "export_id": EID})
+        c = lib.checks(v); scv = lib.sc(v)
+        print("ids:", list(c))
+        s.check("status OK", v["status"] == "OK", [v["status"], v.get("detail")])
+        s.check("lib3mf four ids", all(k in c for k in ("lib3mf.parses", "lib3mf.unit_millimeter", "lib3mf.manifold_and_oriented", "lib3mf.metadata_present")), [k for k in c if k.startswith("lib3mf")])
+        s.check("trimesh_3mf five ids", all(k in c for k in ("trimesh_3mf.watertight", "trimesh_3mf.winding_consistent", "trimesh_3mf.is_volume", "trimesh_3mf.volume_band", "trimesh_3mf.euler")), [k for k in c if k.startswith("trimesh")])
+        mm = int(lib3mf.ModelUnit.MilliMeter)
+        u = c.get("lib3mf.unit_millimeter", {})
+        s.check("unit guard measured {unit:%d, source_is_mm:true} passed" % mm, u.get("measured") == {"unit": mm, "source_is_mm": True} and u.get("passed") is True, [u, mm])
+        mo = c.get("lib3mf.manifold_and_oriented", {})
+        s.check("manifold measured {meshes:1, non_manifold:0} passed", mo.get("measured") == {"meshes": 1, "non_manifold": 0} and mo.get("passed") is True, mo)
+        md = c.get("lib3mf.metadata_present", {})
+        s.check("metadata_present passed", md.get("passed") is True, md)
+        ag = c.get("oracle.agreement", {})
+        s.check("self_read both passed, agreement {lib3mf:true}", c.get("self_read.facet_count", {}).get("passed") is True and c.get("self_read.vertex_count", {}).get("passed") is True and ag.get("measured") == {"lib3mf": True} and ag.get("passed") is True, [c.get("self_read.facet_count"), c.get("self_read.vertex_count"), ag])
+        band = scv.get("volume_band"); vb = c.get("trimesh_3mf.volume_band", {})
+        mv = vb.get("measured")
+        s.check("mesh volume within band of 1570.7963 and band < 0.1% of volume", isinstance(mv, (int, float)) and band is not None and abs(mv - 1570.7963) <= band and band < 0.001 * 1570.7963, [mv, band, 0.001 * 1570.7963, vb])
+        open("tc-07-09-handle.txt", "w").write(H)
+asyncio.run(main())

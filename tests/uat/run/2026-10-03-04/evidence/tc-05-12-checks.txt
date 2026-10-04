@@ -1,0 +1,15 @@
+NOTE | TC-05-11 cleanup: rm snapshot dirs in-process -> ['C:\\Users\\thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap_wqhpg1ay']
+NOTE | cleanup previous scenario: document_close TC0511 -> OK
+PASS | Given debug_exec NOT refused | {"status": "OK"}
+PASS | Given Pad volume 12000.0 | 12000.0
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | literal TC patch (after preview) -> {"status": "OK"}
+NOTE | envelope status=SPEC_FAILED text='Mutation failed and its rollback could not be proven: None.' explanation='RuntimeError: injected setup failure'
+PASS | fingerprint_before null | None
+PASS | fingerprint_after null | None
+PASS | rolled_back false, rollback_proven null | {'rolled_back': False, 'rollback_proven': None}
+PASS | touched == [] | []
+PASS | snapshot_path null and no snapshot dir | {'sp': None, 'dirs': []}
+NOTE | after fit (BEFORE document_undo) = {'view_fit_viewport': 'OK', 'detail': None}
+PASS | document untouched: Pad 12000.0, no Fillet | 12000.0
+PASS | document_undo undone == last successful mutation label ('buddy: feature_pad Pad'), not the failed one | {'status': 'OK', 'undone': 'buddy: feature_pad Pad'}

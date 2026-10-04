@@ -1,0 +1,4 @@
+180:2026-10-04 02:09:44,803 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+196:2026-10-04 02:25:32,382 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 3 leftover temp artifact(s)
+197:2026-10-04 02:25:32,601 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:57914
+198:2026-10-04 02:25:32,907 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 37092) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log

@@ -1,0 +1,3 @@
+RT tree [{'name': 'tc_07_06_same', 'label': 'tc-07-06-same', 'type': 'Mesh::Feature', 'visibility': True}]
+RT mass tc_07_06_same INVALID_INPUT null object has no queryable shape: tc_07_06_same
+RT view_fit_viewport SPEC_FAILED {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}

@@ -1,0 +1,4 @@
+PASS | restored: PadB visibility true, labels intact | True
+PASS | restored default render lists PadB again | ['PadA', 'PadB']
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-06-after.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

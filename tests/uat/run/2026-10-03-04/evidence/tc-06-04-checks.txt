@@ -1,0 +1,14 @@
+NOTE | cleanup previous scenario: document_close TC0603 -> OK
+PASS | fixture: PadA and PadB committed | {"status": "OK"}{"status": "OK"}
+PASS | Given: tree names PadA and PadB | 
+PASS | visual: view_fit_viewport returns OK (before the before.png) | {"status": "OK"}
+NOTE | before shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-04-before.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+PASS | red render OK | {"status": "OK"}
+PASS | red t80 render OK | {"status": "OK"}
+NOTE | styled viewport shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-04-styled.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+PASS | transparency 150 rejected (schema maximum 100) | {"_raw": "Input validation error: 150 is greater than the maximum of 100"}
+PASS | two-element color rejected (schema minItems 3) | {"_raw": "Input validation error: [1.0, 0.0] is too short"}
+PASS | transparency 0 and 100 both OK | {"status": "OK"}{"status": "OK"}
+PASS | style on NoSuchObject -> INVALID_INPUT 'unknown object: NoSuchObject' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object: NoSuchObject", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  
+PASS | visual: view_fit_viewport returns OK (before after.png) | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-04-after.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

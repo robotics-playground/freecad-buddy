@@ -1,0 +1,1 @@
+NOTE | GUI golden box volume after headless runs: 6000.0

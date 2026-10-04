@@ -1,0 +1,8 @@
+['View', 'Standard views'] {"refusal": {"code": "menu_path_unavailable", "message": "menu path segment 1 was not found"}, "status": "refused"}
+  windows [(5773620, {'height': 1380, 'width': 1775, 'x': 0, 'y': 0})]
+['View', 'Standard Views'] {"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "accessibility"}
+  windows [(5773620, {'height': 1380, 'width': 1775, 'x': 0, 'y': 0})]
+['View', 'Standard views', 'Front'] {"refusal": {"code": "menu_path_unavailable", "message": "menu path segment 1 was not found"}, "status": "refused"}
+  windows [(5773620, {'height': 1380, 'width': 1775, 'x': 0, 'y': 0})]
+{"refusal": {"code": "menu_path_unavailable", "message": "menu path segment 2 was not found"}, "status": "refused"}
+{'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-02-probe-menufront.png', 'exists': True, 'title': '- [0] Window "* TC0601 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

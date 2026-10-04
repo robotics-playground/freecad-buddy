@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close TC0517 -> OK
+NOT RUN | CONDITIONAL build with no element map | NOT RUN: this build reports element_map_available=True
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | preview -> {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object in base: NoSuchFeature", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n        diff present=False
+FAIL | preview diff.tnp_precheck.status == UNSUPPORTED | None
+FAIL | UNSUPPORTED carries findings == [] | None
+FAIL | element_map_version present on the precheck | None
+PASS | across TC-05 envelopes no tnp block is CLEAN with element_map_version null (271 blocks scanned) | []
+NOTE | Fillet in tree after refused preview: False
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

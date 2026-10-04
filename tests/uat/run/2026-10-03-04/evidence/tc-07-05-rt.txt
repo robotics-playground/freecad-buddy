@@ -1,0 +1,3 @@
+RT tree [{'name': 'Part__Feature', 'label': 'Open CASCADE STEP translator 7.8 1', 'type': 'Part::Feature', 'visibility': True}]
+RT mass Part__Feature OK {"value": 6000.0, "unit": "mm^3"} None
+RT view_fit_viewport OK {"fitted": true, "document": "Unnamed", "camera_recorded": true}

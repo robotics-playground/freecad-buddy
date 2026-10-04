@@ -1,0 +1,3 @@
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-33184.json
+ "status": "OK",
+  "doc": "fcb-doc:D9A0QN3LF5Wqgplp2hKVRg",

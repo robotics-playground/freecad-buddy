@@ -1,0 +1,30 @@
+{
+ "prev_dirs_before": [
+  "C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_prev_rtoduji3"
+ ],
+ "handle": "fcb-doc:GpnwiZ-i5Lx4XDlWEVewgg",
+ "preview": {
+  "status": "OK",
+  "seconds": 100.07,
+  "keys": [
+   "detail",
+   "schema",
+   "status",
+   "structured_content",
+   "text"
+  ],
+  "preview_id": "fcb-preview:eyJhcmdzX2RpZ2VzdCI6ImQxMmJmMjNmMDljZDY1ODI2ODZhZWM0YTQzZThlYmZhZTczMDIwYThlNGI1NWM3M2NhYzBjYWY3YmJjYzQzY2IiLCJkb2MiOiJmY2ItZG9jOkdwbndpWi1pNUx4NFhEbFdFVmV3Z2ciLCJleHAiOjE3OTEwOTA5NzUsImZpbmdlcnByaW50X2JlZm9yZSI6IjIzMjQwYjAzYjQ1ZmQzZjQ3YThhOWI4MTBmMzFhOGY4MzYyNGQ2NzlmOWU1ODVlMDViM2Q2NTc0YjIwNjRkMjAiLCJqdGkiOiI1ZjlFUkJNX3pkSmxrY2ltamhKM2RBIiwidG9vbCI6ImZlYXR1cmVfYm9keV9jcmVhdGUifQ.ORUM7qR6FZ7l_99bMg0IrC8xD-mys7arJu7rzEShPIo",
+  "detail": null
+ },
+ "document_list_same_session": "OK",
+ "handles_listed": [
+  [
+   "tc-10-slow-100",
+   "tc_10_slow_100"
+  ]
+ ],
+ "FCB_TMP_prev_in_list": [],
+ "prev_dirs_after": [
+  "C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_prev_rtoduji3"
+ ]
+}

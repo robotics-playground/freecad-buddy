@@ -1,0 +1,9 @@
+NOTE | cleanup previous scenario: document_close TC0808 -> OK
+PASS | 60 mm with 30 mm token refused 'issued for different arguments' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "confirm.preview_id was issued for different arguments", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy
+PASS | tree does not list Pad | ['Body', 'Sketch']
+PASS | name Pad1 (one char) refused with same message | confirm.preview_id was issued for different arguments
+PASS | refusal is NOT 'issued for a different document' | ['confirm.preview_id was issued for different arguments', 'confirm.preview_id was issued for different arguments']
+PASS | same token + elicitation_action accept + 30 mm args -> OK (confirm excluded from digest) | {"status": "OK"}
+PASS | FRESH 30 mm token with 30 mm args -> OK (side doc TC0809b; Pad already exists in TC0809) | {"status": "OK"}
+NOTE | side doc TC0809b closed -> OK
+NOTE | TC0809 Pad volume after authorized apply: 12000.0 (bbox {"xmin": {"value": 0.0, "unit": "mm"}, "xmax": {"value": 20.0, "unit": "mm"}, "ymin": {"value": 0.0, "unit": "mm"}, "ymax": {"value": 20.0, "unit": "mm"}, "zmin": {"value": 0.0, "unit": "mm"}, "zmax":)

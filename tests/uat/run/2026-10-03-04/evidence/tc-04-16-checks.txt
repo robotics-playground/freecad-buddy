@@ -1,0 +1,21 @@
+NOTE | Literal Edge1 is a 5 mm VERTICAL corner edge on 1.1.4 (oracle); a 20 mm round on it fits inside the 60/40 mm side faces. The TC intent (20 mm on a 5 mm thick plate) is a horizontal edge: Edge3 (60 mm bottom edge) is also run.
+PASS | [literal Edge1] Given PlatePad vol 12000 | 12000.0
+NOTE | [literal Edge1] snapshot dirs before (TEMP + workdir/tmp): ['C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__bj2bhr9', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_5vfvwol0', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_6trobotl', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_8w4fs72c', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap__3t9_knt', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_bkkqvw10', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_bo15ri4_', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_hbam9tic', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_p3jwakfm', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_sm8btlw3', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_yjuiim6p']
+FAIL | [literal Edge1] non-OK status RECOMPUTE_ERROR or SPEC_FAILED | {"status": "OK"}
+FAIL | [literal Edge1] mutation.rolled_back=true | {'rolled_back': False, 'rollback_proven': None, 'snapshot_path': None}
+FAIL | [literal Edge1] explanation non-empty, names TooBigFillet and the engine status | 
+FAIL | [literal Edge1] tree names no TooBigFillet | 
+PASS | [literal Edge1] PlatePad vol 12000 again | 12000.0
+FAIL | [literal Edge1] fingerprint before == after, or rolled_back_via_snapshot | before=033c86bcd991474f7ae512bdc9464114f4cd4f586b6aa038b3311fb0d35f3387 after=0559997851dcda85bf4e75b416f35bdbc47dd9634a70c305d3efdf1a420ba97f rollback_proven=None
+PASS | [literal Edge1] snapshot deleted (no new snapshot dir) | new=[]
+PASS | [literal Edge1] verify_recompute OK | {"status": "OK"}
+PASS | [horizontal Edge3] Given PlatePad vol 12000 | 12000.0
+NOTE | [horizontal Edge3] snapshot dirs before (TEMP + workdir/tmp): ['C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__bj2bhr9', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_5vfvwol0', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_6trobotl', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_8w4fs72c', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap__3t9_knt', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_bkkqvw10', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_bo15ri4_', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_hbam9tic', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_p3jwakfm', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_sm8btlw3', 'C:\\Users\\thuan\\AppData\\Local\\Temp\\FCB_TMP_snap_yjuiim6p']
+PASS | [horizontal Edge3] non-OK status RECOMPUTE_ERROR or SPEC_FAILED | {"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: TooBigFillet: BRep_API: command not done"}}
+PASS | [horizontal Edge3] mutation.rolled_back=true | {'rolled_back': True, 'rollback_proven': 'rolled_back_verified', 'snapshot_path': None}
+PASS | [horizontal Edge3] explanation non-empty, names TooBigFillet and the engine status | recompute left 1 object(s) invalid: TooBigFillet: BRep_API: command not done
+PASS | [horizontal Edge3] tree names no TooBigFillet | 
+PASS | [horizontal Edge3] PlatePad vol 12000 again | 12000.0
+PASS | [horizontal Edge3] fingerprint before == after, or rolled_back_via_snapshot | before=033c86bcd991474f7ae512bdc9464114f4cd4f586b6aa038b3311fb0d35f3387 after=033c86bcd991474f7ae512bdc9464114f4cd4f586b6aa038b3311fb0d35f3387 rollback_proven=rolled_back_verified
+PASS | [horizontal Edge3] snapshot deleted (no new snapshot dir) | new=[]
+PASS | [horizontal Edge3] verify_recompute OK | {"status": "OK"}

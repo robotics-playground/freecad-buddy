@@ -1,0 +1,10 @@
+NOTE | chain: PlatePad -> EdgeFillet r=1 on Edge3 (60 mm bottom edge; TC-04-16 showed r=20 there fails in OCCT): {"status": "OK"}
+PASS | [EdgeFillet Radius 20] Given verify_recompute OK | {"status": "OK"}
+PASS | [EdgeFillet Radius 20] status RECOMPUTE_ERROR | {"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: EdgeFillet: BRep_API: command not done"}}
+PASS | [EdgeFillet Radius 20] recompute_clean=false | False
+PASS | [EdgeFillet Radius 20] is_valid and fully_constrained not measured | {'is_valid': False, 'fully_constrained': 'not_measured'}
+PASS | [EdgeFillet Radius 20] explanation starts 'recompute left' and names EdgeFillet | recompute left 1 object(s) invalid: EdgeFillet: BRep_API: command not done
+PASS | [EdgeFillet Radius 20] rolled_back=true | {'rolled_back': True, 'rollback_proven': 'rolled_back_verified', 'snapshot_path': None}
+PASS | [EdgeFillet Radius 20] old Radius restored | before=1.0 mm after=1.0 mm
+PASS | [EdgeFillet Radius 20] verify_recompute OK again | {"status": "OK"}
+PASS | [EdgeFillet Radius 20] snapshot deleted | new=[]

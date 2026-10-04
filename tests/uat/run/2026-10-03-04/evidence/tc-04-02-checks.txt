@@ -1,0 +1,10 @@
+PASS | Given BlockBody in tree | 
+PASS | Given BlockProfile verify_sketch OK dof=0 | {"status": "OK"}
+PASS | pad OK rolled_back=false | {"status": "OK"}
+PASS | volume 6000.0 within 0.1% | 6000.0
+PASS | verify_shape OK; shape_summary solid_count=1 is_valid=true | verify=OK summary={"solid_count": 1, "face_count": 6, "edge_count": 12, "vertex_count": 8, "is_valid": true, "volume": 6000.0, "area": 2200.0, "bbox": [20.0, 30.0, 10.0]}
+PASS | bbox=[20,30,10] within 0.1% | [20.0, 30.0, 10.0]
+PASS | face/edge/vertex 6/12/8 | (6, 12, 8)
+PASS | feature_state body=BlockBody is_tip=true | {'body': 'BlockBody', 'is_tip': True}
+PASS | query_object Type=Length | "Length"
+PASS | post_verify passed/recompute_clean/is_valid true, tnp CLEAN | {"recompute_clean": true, "is_valid": true, "fully_constrained": null, "tnp_audit": {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}, "passed": true, "explanation": null}

@@ -1,0 +1,7 @@
+== Given caps
+ "status": "OK",
+== recorded: freecad pid 33732, proxy listener 22056 (spawned 32456)
+rpc port 53333 token_sha256 c1b49339618e7046
+== open golden model so the window has a 3D view for Fit All
+ "status": "OK",
+  "doc": "fcb-doc:0DpZNxcC4YFQ7FxZReaq2g",

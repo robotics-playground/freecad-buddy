@@ -1,0 +1,13 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "WORKER_CRASHED",
+ "detail": {
+  "code": "WORKER_CRASHED",
+  "message": "listener connection dropped",
+  "data": {
+   "rpc": "unreachable"
+  }
+ },
+ "structured_content": {},
+ "text": ""
+}

@@ -1,0 +1,12 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given Body Placement non-identity (query_object) | Placement [Pos=(30,15,0), Yaw-Pitch-Roll=(30,0,0)]
+PASS | shape keys exactly object,local,global | [['global', 'local', 'object'], ['global', 'local', 'object']]
+PASS | positions {value, unit: mm} | {'x': {'value': 0.0, 'unit': 'mm'}, 'y': {'value': 0.0, 'unit': 'mm'}, 'z': {'value': 0.0, 'unit': 'mm'}}
+PASS | axis bare float triple, no unit | {'x': 0.0, 'y': 0.0, 'z': 1.0}
+PASS | angle {value, unit: deg} | {'value': 0.0, 'unit': 'deg'}
+PASS | Pad global differs from local | {'local': [0.0, 0.0, 0.0], 'global': [30.0, 15.0, 0.0]}
+PASS | Body global == local field for field | {'local': {'position': {'x': {'value': 30.0, 'unit': 'mm'}, 'y': {'value': 15.0, 'unit': 'mm'}, 'z': {'value': 0.0, 'unit': 'mm'}}, 'axis': {'x': 0.0, 'y': 0.0, 'z': 1.0}, 'angle': {'value': 29.999999999999996, 'unit': 'deg'}}, 'global': {'position': {'x': {'value': 30.0, 'unit': 'mm'}, 'y': {'value': 15.0, 'unit': 'mm'}, 'z': {'value': 0.0, 'unit': 'mm'}}, 'axis': {'x': 0.0, 'y': 0.0, 'z': 1.0}, 'angle': {'value': 29.999999999999996, 'unit': 'deg'}}}
+PASS | Pad global == Body placement applied to Pad local (1e-6) | {'expected': [30.0, 15.0, 0.0], 'global': [30.0, 15.0, 0.0]}
+PASS | (extra) DatumPlane global composes too | {'local': [0.0, 0.0, 8.0], 'expected': [30.0, 15.0, 8.0], 'global': [30.0, 15.0, 8.0]}
+PASS | object without Placement -> INVALID_INPUT object has no placement: <name> | ['INVALID_INPUT', 'object has no placement: Group']
+PASS | placed view_fit_viewport OK | {'status': 'OK', 'detail': None}

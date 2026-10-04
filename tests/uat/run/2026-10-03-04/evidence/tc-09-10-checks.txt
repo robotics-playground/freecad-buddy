@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:XxQLby6o7zoho47D5Yh-rQ
+NOTE | roots ['Box']
+NOTE | mcp client refuses to serialize the 100-deep payload (pydantic: Circular reference detected (depth exceeded)); sent over raw httpx
+FAIL | 100-deep fn -> handler INVALID_INPUT 'unknown assertion fn:' | {'status': 'NO_STATUS', 'msg': '{"jsonrpc": "2.0", "id": 2, "error": {"code": -32602, "message": "Invalid request parameters", "data": ""}}', 'raw': '{"jsonrpc": "2.0", "id": 2, "error": {"code": -32602, "message": "Invalid request parameters", "data": ""}}'}
+FAIL | non-object check -> INVALID_INPUT "check must be an object, got 'expect_volume'" | {'status': 'SCHEMA_REJECT', 'msg': "Input validation error: 'expect_volume' is not of type 'object'", 'raw': "Input validation error: 'expect_volume' is not of type 'object'"}
+PASS | nested tol -> real envelope (INVALID_INPUT via TypeError/ValueError, not unhandled) | {'status': 'INVALID_INPUT', 'msg': 'expect_volume.tol.rel must be a non-negative number', 'exc': 'ValidationError', 'unexpected': None}
+FAIL | no protocol rejection among the three | ['NO_STATUS', 'SCHEMA_REJECT', 'INVALID_INPUT']
+PASS | server survives: bare verify_shape OK | OK
+PASS | no RecursionError in edge stderr or addon log | 

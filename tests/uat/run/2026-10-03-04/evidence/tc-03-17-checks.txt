@@ -1,0 +1,11 @@
+PASS | Given PlateProfile reports 4 entries | 4
+FAIL | Given %TEMP% holds no FCB_TMP_snap_* | 10 pre-existing dirs dated 2026-09-22 (not this run)
+NOTE | before fit: {'view_fit_viewport': 'OK', 'detail': None}
+PASS | unknown sketch INVALID_INPUT naming 'unknown object: NoSuchSketch' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object: NoSuchSketch", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapt
+PASS | geo_id 99 INVALID_INPUT naming 'is outside the sketch (0..3)' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "geo_id 99 is outside the sketch (0..3)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_bu
+PASS | non-sketch INVALID_INPUT naming 'object is not a sketch: PlatePad' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "object is not a sketch: PlatePad", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\a
+PASS | none carries mutation.snapshot_path | 
+PASS | no new FCB_TMP_snap_* written | 10
+PASS | tree unchanged | 
+PASS | each status exactly INVALID_INPUT | ['INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT']
+NOTE | after fit: {'view_fit_viewport': 'OK', 'detail': None}

@@ -1,0 +1,9 @@
+== Given golden models
+D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd
+D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box40-hole-r5.FCStd
+D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/sphere-r10.FCStd
+D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/two-box-compound.FCStd
+5
+== Given no fcb python
+(no micromamba/envs/fcb process)

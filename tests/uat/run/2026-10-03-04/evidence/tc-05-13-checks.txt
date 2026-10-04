@@ -1,0 +1,15 @@
+NOTE | cleanup previous scenario: document_close TC0512 -> OK
+PASS | Given golden box present | D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd
+NOTE | open #1 -> {"status": "OK"} fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ name=box_10_20_30; open #2 -> {"status": "OK"} fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ name=box_10_20_30
+FAIL | two independent handles | ['fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ', 'fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ']
+PASS | identical documents give identical digests | ['33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c', '33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c']
+PASS | digest matches ^[0-9a-f]{64}$ | 33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c
+NOTE | feature_body_create Probe on handle-a -> {"status": "OK"}
+PASS | serializer tag non-null non-empty on fingerprint_before | exportBinary
+PASS | serializer before == after | ['exportBinary', 'exportBinary']
+PASS | objects list, each with name, brep_sha256, massprops | [['brep_sha256', 'massprops', 'name']]
+PASS | real geometry change moves the digest (feature_pad) | ['80cc3021c618181d028ae54a7ae76ca8cbd11dd5886b720a4c11236536b670da', '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8']
+NOTE | TC0513pad closed -> OK
+NOTE | fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ: {"doc": "fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ", "total_objects": 10, "returned_nodes": 2, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": 
+NOTE | fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ: {"doc": "fcb-doc:cdyrGTpZHhY1C_FjmnkJIQ", "total_objects": 10, "returned_nodes": 2, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": 
+NOTE | after fit (handle-a) = {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

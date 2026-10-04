@@ -1,0 +1,14 @@
+NOTE | TC's literal patch is impossible on this build: 'cannot set commitTransaction attribute of immutable type App.Document' (TypeError), and the instance attribute is read-only (tc-05-10-probe). Equivalent injection: a one-shot wrapper on transaction.run_mutation hands the bracket a delegating proxy whose commitTransaction raises RuntimeError('injected commit failure'); every other call reaches the real document.
+NOTE | inject -> {"status": "OK"} 'armed'
+NOTE | envelope status=SPEC_FAILED text='Mutation rolled back (None): RuntimeError: injected commit failure' isError=True
+PASS | failure reported as ResultEnvelope with status SPEC_FAILED | {"status": "SPEC_FAILED", "detail": {"code": "mutation.spec_failed", "message": "RuntimeError: injected commit failure"}}
+PASS | explanation == 'RuntimeError: injected commit failure' | RuntimeError: injected commit failure
+PASS | rolled_back true | True
+PASS | snapshot_path null and no new snapshot dir | {'snapshot_path': None, 'dirs': []}
+PASS | fingerprint_after null, fingerprint_before full record | {'after': None, 'before_keys': ['digest', 'objects', 'schema', 'serializer']}
+NOTE | rollback_proven=None (commit-failure path reports rolled_back without a re-hash proof)
+NOTE | Pad in tree after injected failure: False
+NOTE | Body mass after injected failure: status=INVALID_INPUT vol=None
+NOTE | after fit (taken BEFORE the closing feature_pad) = {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+PASS | bracket closed: subsequent well-formed feature_pad OK on same handle | {"status": "OK"}
+NOTE | closing pad capture fit={'view_fit_viewport': 'OK', 'detail': None}

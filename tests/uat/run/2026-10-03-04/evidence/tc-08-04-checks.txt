@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close TC0803 -> OK
+PASS | Given Pad volume 12000.0 | 12000.0
+PASS | envelope status OK, detail null | {"status": "OK"}
+PASS | validity.is_valid false and status SPEC_FAILED or RECOMPUTE_ERROR | {'is_valid': False, 'recompute_clean': False, 'recompute_errors': [{'object': 'Fillet', 'error': 'BRep_API: command not done'}], 'pre_existing_errors': [], 'status': 'RECOMPUTE_ERROR', 'explanation': 'recompute left 1 object(s) invalid: Fillet: BRep_API: command not done'}
+PASS | validity.explanation non-empty string | recompute left 1 object(s) invalid: Fillet: BRep_API: command not done
+PASS | deltas.volume has before/after/delta/units | {'before': 12000.0, 'after': 12000.0, 'delta': 0.0, 'units': 'mm^3'}
+PASS | diff.new is [] | {'new': [], 'touched': ['Body']}
+PASS | preview_id non-null | fcb-preview:eyJhcmdzX2RpZ2VzdCI6Ijg1NTRl
+PASS | live Pad volume 12000.0 | 12000.0
+PASS | live tree has no Fillet (corroborating) | 

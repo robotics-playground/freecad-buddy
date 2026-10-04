@@ -1,0 +1,16 @@
+== When: Stop-Process -Id 28436 (literal)
+Stop-Process : Cannot stop process "pythonw (28436)" because of the following error: Access is denied
+At line:1 char:1
++ Stop-Process -Id 28436
+pythonw.exe                  19852 Console                    1      5,656 K
+pythonw.exe                  28436 Console                    1     61,652 K
+== fallback: TerminateProcess on the listener 28436 only
+True
+== after kill
+(listener 28436 and launcher 19852 gone)
+== FreeCAD alive
+freecad.exe                  31584 Console                    1    531,516 K
+== :8765
+:8765 free
+== restart with the TC command: .venv/Scripts/python.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       32716

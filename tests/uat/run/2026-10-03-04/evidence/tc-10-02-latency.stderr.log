@@ -1,0 +1,3 @@
+2026-10-04 11:55:34,378 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 11:55:34,559 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\_automation\uat\audit.jsonl
+2026-10-04 11:55:34,561 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)

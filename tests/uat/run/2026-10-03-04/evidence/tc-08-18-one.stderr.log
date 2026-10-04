@@ -1,0 +1,4 @@
+2026-10-04 04:22:50,597 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 04:22:50,779 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-03-04\evidence\tc-08-18-approve.jsonl
+2026-10-04 04:22:50,779 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED by operator flag
+2026-10-04 04:22:50,779 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)

@@ -1,0 +1,34 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:ni70E8MwImrnBMxQrM6UgQ",
+  "total_objects": 1,
+  "returned_nodes": 1,
+  "depth": 1,
+  "filters_applied": {
+   "exclude_types": [
+    "App::Plane",
+    "App::Line",
+    "App::Point",
+    "App::Origin"
+   ]
+  },
+  "tree": [
+   {
+    "name": "Box",
+    "label": "Box",
+    "type": "Part::Feature",
+    "visibility": false
+   }
+  ]
+ },
+ "text": "1 objects, 1 shown.",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

@@ -1,0 +1,11 @@
+NOTE | Given extras (redundant Horizontal + SpareWidth): OK ids=[12, 13] null
+PASS | Given lists SpareWidth and a Horizontal at a known id (12) | [(1, 'Coincident', ''), (2, 'Coincident', ''), (3, 'Coincident', ''), (4, 'Coincident', ''), (5, 'Horizontal', ''), (6, 'Horizontal', ''), (7, 'Vertical', ''), (8, 'Vertical', ''), (9, 'Coincident', ''), (10, 'DistanceX', 'PlateWidth'), (11, 'DistanceY', 'PlateDepth'), (12, 'Horizontal', ''), (13, 'Distance', 'SpareWidth')]
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+PASS | id branch: OK rolled_back=false | {"status": "OK"}
+PASS | name branch: OK rolled_back=false | {"status": "OK"}
+PASS | count drops by one each time | 13 -> 12 -> 11
+PASS | no constraint named SpareWidth | 
+PASS | constraints [0] schema reject | {"_raw": "Input validation error: 0 is less than the minimum of 1"}
+PASS | unknown name INVALID_INPUT naming message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "no constraint named 'NoSuchConstraint' in the sketch", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\
+PASS | constraints [{id:3}] schema reject | {"_raw": "Input validation error: {'id': 3} is not valid under any of the given schemas"}
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

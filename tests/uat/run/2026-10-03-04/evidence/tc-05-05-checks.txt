@@ -1,0 +1,13 @@
+NOTE | cleanup previous scenario: document_close TC0504 -> OK
+PASS | Given Pad volume 12000.0 | 12000.0
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | preview validity={"is_valid": false, "recompute_clean": false, "recompute_errors": [{"object": "Fillet", "error": "BRep_API: command not done"}], "pre_existing_errors": [], "status": "RECOMPUTE_ERROR", "explanation": "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"}
+FAIL | returned a ResultEnvelope, not MCP isError | {"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"}}
+PASS | rolled_back true, rollback_proven 'rolled_back_verified' | {'rolled_back': True, 'rollback_proven': 'rolled_back_verified'}
+PASS | snapshot_path null | None
+PASS | fingerprint_after.digest == preview diff.fingerprint_before | {'after': '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8', 'preview_before': '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8'}
+PASS | status SPEC_FAILED or RECOMPUTE_ERROR, detail.code == 'mutation.'+lower | {'status': 'RECOMPUTE_ERROR', 'code': 'mutation.recompute_error'}
+PASS | text starts 'Mutation rolled back (rolled_back_verified): ' | Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Fillet: BRep_API: command not done
+PASS | Pad volume still 12000.0 and no Fillet in tree | {'vol': 12000.0, 'fillet': False}
+PASS | snapshot cleaned up (no new FCB_TMP_snap_*) | []
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

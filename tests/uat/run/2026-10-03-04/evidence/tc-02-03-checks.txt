@@ -1,0 +1,9 @@
+PASS | Given golden exists | 
+PASS | Given target absent | 
+PASS | new file written non-empty | 3704
+PASS | golden untouched (size, mtime, sha) | {'before': (1923, 1784644677589930000, '0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617'), 'after': (1923, 1784644677589930000, '0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617')}
+PASS | save response doc == open handle | {'open': 'fcb-doc:HGTBAeecssqDaMwgpufF7g', 'save': 'fcb-doc:HGTBAeecssqDaMwgpufF7g'}
+PASS | handle resolves after rebind: OK total_objects 1 | 1
+PASS | tree[0] Cylinder | [{'name': 'Cylinder', 'label': 'Cylinder', 'type': 'Part::Feature', 'visibility': False}]
+PASS | reopen fresh handle; volume 1570.7963 within 0.1% | {'fresh': 'fcb-doc:67MdmvPhoIC-8qHvfhE0TQ', 'volume': 1570.7963267948965}
+PASS | reopened cylinder view_fit_viewport OK | {'status': 'OK', 'detail': None}

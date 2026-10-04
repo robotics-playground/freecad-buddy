@@ -1,0 +1,31 @@
+== path
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-28996.json
+legacy $APPDATA/FreeCAD/Mod:
+(end)
+== keys
+['contract_version', 'freecad_version', 'host', 'pid', 'port', 'schema', 'started', 'token']
+{'schema': 1, 'pid': 28996, 'host': '127.0.0.1', 'port': 55359, 'contract_version': '1', 'freecad_version': '1.1.4', 'started': '2026-10-04T08:56:44.911047+00:00'}
+== tasklist pid
+freecad.exe                  28996 Console                    1    462,400 K
+== netstat 127.0.0.1:55359
+  TCP    127.0.0.1:55359        0.0.0.0:0              LISTENING       28996
+== query_capabilities freecad_version
+  "freecad_version": "1.1.4",
+== token authenticates (proxy stopped, AD-26)
+listener pid 34988 parent 36804 (pythonw)
+terminate 34988 -> True
+terminate 36804 -> True
+after: 0 :8765 listeners
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.0
+restarted by hand: .venv/Scripts/pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       32864
+== mode
+-rw-r--r-- 1 thuan 197609 219 Oct  4 15:56 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-28996.json
+NT AUTHORITY\SYSTEM FullControl
+BUILTIN\Administrators FullControl
+Tan-PC\thuan FullControl

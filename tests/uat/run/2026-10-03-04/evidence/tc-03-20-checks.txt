@@ -1,0 +1,14 @@
+PASS | Given dependency BossProfile -> PlatePad | ext=OK
+PASS | Given add_external_geometry tnp_audit.status=CLEAN | {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": [{"owner": "BossProfile", "prop": "AttachmentSupport", "mapped_before": "#14:1;:G0;XTR;:H966:8,F", "state_after": null, "verdict": "PASS", "layer": 2, "detail": "Face6 descends from the same source element"}, {"owner": "PlatePad", 
+NOTE | before fit: {'view_fit_viewport': 'OK', 'detail': None}
+NOTE | feature_set_parameters: SPEC_FAILED tnp={"status": "FLAGGED", "element_map_version": "15.70200.5", "findings": [{"owner": "BossProfile", "prop": "AttachmentSupport", "mapped_before": "#14:1;:G0;XTR;:H966:8,F", "state_after": "('Face', 0.0, 0.0, 30.0, 60.0, 40.0, 30.0)", "verdict": "REPOINTED", "layer": 1, "detail": "BossProfile.AttachmentSupport entry Face6 resolves to a sub-shape whose witness moved: ('Face', 0.0, 0.0, 5.0, 60.0, 40.0,
+NOTE | sketch_add_constraint: INVALID_INPUT {"code": "INVALID_INPUT", "message": "constraints[0].first geo_id 0 is outside the sketch (0..-1, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call la tnp=null
+FAIL | each mutation envelope carries tnp_audit with status and findings | feature_set_parameters has=True; sketch_add_constraint status=INVALID_INPUT has_mutation=False
+FAIL | a BROKEN finding names BossProfile as owner | [{"owner": "BossProfile", "prop": "AttachmentSupport", "mapped_before": "#14:1;:G0;XTR;:H966:8,F", "state_after": "('Face', 0.0, 0.0, 30.0, 60.0, 40.0, 30.0)", "verdict": "REPOINTED", "layer": 1, "detail": "BossProfile.AttachmentSupport entry Face6 resolves to a sub-shape whose witness moved: ('Face', 0.0, 0.0, 5.0, 60.0, 40.0, 5.0) -> ('Face', 0.0, 0.0, 30.0, 60.0, 40.0, 30.0)"}, {"owner": "BossProfile", "prop": "ExternalGeometry", "mapped_before": "#b:1;:H966,E", "state_after": null, "verdict"
+NOT RUN | BROKEN fails the mutation (SPEC_FAILED rolled_back) | no BROKEN finding was produced, so not reachable
+NOT RUN | explanation starts 'TNP audit flagged' | not reachable
+NOT RUN | RE_BASELINED leaves status=OK | no RE_BASELINED finding produced
+PASS | element_map_version non-empty on clean and flagged readings | clean=15.70200.5 after=15.70200.5
+PASS | verify_recompute OK after | {"status": "OK"}
+NOTE | PlatePad volume after: 12000.0
+NOTE | after fit: {'view_fit_viewport': 'OK', 'detail': None}

@@ -1,0 +1,9 @@
+{
+ "quit": {
+  "old_pid": 32732,
+  "exit_menu": "File>Exit invoked after document_close (MCP)",
+  "exited": true,
+  "discovery_file_after_quit_exists": false,
+  "note": "first relaunch attempt failed: Python subprocess resolved bash to a non-Git bash; quit facts checked by hand: no freecad process, rpc-32732.json not found, :8765 free"
+ }
+}

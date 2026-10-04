@@ -1,0 +1,6 @@
+RT tree [{'name': 'tc_07_10_coarse', 'label': 'tc-07-10-coarse', 'type': 'Mesh::Feature', 'visibility': True}]
+RT mass tc_07_10_coarse INVALID_INPUT null object has no queryable shape: tc_07_10_coarse
+RT view_fit_viewport INVALID_INPUT {"code": "INVALID_INPUT", "message": "the live viewport is showing 'Unnamed1', not the targeted 'Unnamed'; call view_fit_viewport with the handle for 'Unnamed1', or open a 3D view for 'Unnamed'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\
+RT tree [{'name': 'tc_07_10_fine', 'label': 'tc-07-10-fine', 'type': 'Mesh::Feature', 'visibility': True}]
+RT mass tc_07_10_fine INVALID_INPUT null object has no queryable shape: tc_07_10_fine
+RT view_fit_viewport SPEC_FAILED {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}

@@ -1,0 +1,22 @@
+PASS | Given: PadA and PadB visibility true | {'PadA': True, 'PadB': True}
+PASS | Given: accessibility tree lists a Tree role element | ['Button', 'CheckBox', 'ComboBox', 'Custom', 'Edit', 'Group', 'Image', 'List', 'ListItem', 'MenuBar', 'MenuItem', 'ScrollBar', 'StatusBar', 'Tab', 'TabItem', 'Text', 'Thumb', 'TitleBar', 'ToolBar', 'Tree', 'TreeItem', 'Window']
+NOTE | default before: ['PadA', 'PadB']
+NOTE | expand BodyB: {'expand': 'BodyB', 'xy': [17, 300], 'effect': 'unverifiable', 'items_before': 3, 'items_after': 5}
+NOTE | hide attempt 1: {'select': ['unverifiable', 'accessibility'], 'space': ['unverifiable', 'global_input'], 'token_role': 'TreeItem', 'token_label': 'PadB'}
+NOTE | after hide attempt 1: PadB visibility=True, labels ok=True
+NOTE | hide attempt 2: {'select': ['unverifiable', 'accessibility'], 'space': ['unverifiable', 'global_input'], 'token_role': 'TreeItem', 'token_label': 'PadB'}
+NOTE | after hide attempt 2: PadB visibility=True, labels ok=False
+NOTE | hide attempt 3: PadB TreeItem not in snapshot
+NOTE | after hide attempt 3: PadB visibility=True, labels ok=False
+NOTE | hide attempt 4: PadB TreeItem not in snapshot
+NOTE | after hide attempt 4: PadB visibility=True, labels ok=False
+PASS | hide landed: verify_state label_contains PadB satisfied | {"elapsed_ms": 4494, "predicates": [{"index": 0, "observed_json": "{\"matches\":2}", "status": "satisfied", "unknown_reason": null}], "samples": 2, "stable": true, "status": "satisfied"}
+FAIL | bridge sees PadB visibility false | 
+FAIL | post-hide default render lacks PadB | ['PadA', 'PadB']
+PASS | explicit include PadB == ['PadB'] + link | ['PadB']
+NOTE | fit before hidden.png: {"status": "OK"}
+NOTE | restore attempt 1: PadB TreeItem not in snapshot
+PASS | restored: PadB visibility true | 
+FAIL | labels intact (no stray rename) | 
+PASS | restored default render lists PadB again | ['PadA', 'PadB']
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}

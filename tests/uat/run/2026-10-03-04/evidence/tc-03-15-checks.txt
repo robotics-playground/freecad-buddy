@@ -1,0 +1,11 @@
+NOTE | Given build: OK null
+PASS | Given BossRadius and HoleSpacing driving=true | [{"id": 2, "type": "Radius", "name": "BossRadius", "driving": true, "value": {"value": 2.5, "unit": "mm"}}, {"id": 4, "type": "Distance", "name": "HoleSpacing", "driving": true, "value": {"value": 40.0, "unit": "mm"}}]
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+PASS | zero radius non-OK | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraint 2 Radius value must be positive, got 0.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\
+PASS | zero radius pre-transaction (no mutation.snapshot_path) | mutation={}
+PASS | negative distance INVALID_INPUT or SPEC_FAILED rolled_back | {"status": "SPEC_FAILED", "detail": {"code": "mutation.spec_failed", "message": "ValueError: Invalid constraint index: 3"}}
+PASS | 1e9: INVALID_INPUT, or OK with dof=0 malformed=[] | {"status": "OK"} verify dof=0 malformed=[]
+PASS | BossRadius still {2.5 mm} | BossRadius={'value': 2.5, 'unit': 'mm'} HoleSpacing={'value': 1000000000.0, 'unit': 'mm'}
+FAIL | 1e999 (infinity) INVALID_INPUT naming 'must be finite' | {"_raw": "Input validation error: None is not of type 'number'"}
+PASS | no FCB_TMP_snap_* orphaned by this run | before=10 after=10
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

@@ -1,0 +1,6 @@
+NOTE | cleanup previous scenario: document_close TC0811 -> OK
+PASS | advertised TTL is 900 s (expires_at - call time, within clock skew) | {'expires_at': '2026-10-03T21:18:08.645832+00:00', 'call': 1791061388.5382476, 'ttl_vs_call': 900.108, 'ttl_vs_return': 899.98}
+PASS | first apply (spends token) OK | {"status": "OK"}
+PASS | 1 s after apply (spent, not expired) -> already-authorized message | confirm.preview_id has already authorized a mutation; re-run preview_dry_run
+PASS | fresh unexpired unspent token applied within TTL -> OK (side doc TC0812b) | {"status": "OK"}
+NOTE | side doc TC0812b closed -> OK

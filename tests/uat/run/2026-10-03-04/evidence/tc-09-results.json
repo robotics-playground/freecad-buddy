@@ -1,0 +1,308 @@
+[
+ {
+  "id": "TC-09-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-01-mcp.jsonl",
+   "tc-09-01-checks.txt",
+   "tc-09-01-edge_report.json",
+   "tc-09-01-edge.stderr.log",
+   "tc-09-01-before.png",
+   "tc-09-01-after.png"
+  ],
+  "note": "Sweep 14/14 all_passed, exit 0, retired_max_nodes_rejected=SCHEMA_ERROR, both fault_shape ok, no crash signature. Golden Box opens hidden: View>Visibility>Show All Objects (cua invoke_menu) before fit; view_fit_viewport OK. Before/after identical: whole grey box, iso, no dialog. Sweep writes to _automation/ (copied to evidence); TC cleanup rm paths do not exist (no-op)."
+ },
+ {
+  "id": "TC-09-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-02-when.txt",
+   "tc-09-02-mcp.jsonl",
+   "tc-09-02-before.png",
+   "tc-09-02-after.png"
+  ],
+  "note": "TerminalStatus (status.py:11) = 7 members exactly (regex also prints JobState QUEUED/RUNNING, not terminal). Observed sweep statuses {INVALID_INPUT,OK,SCHEMA_ERROR,SPEC_FAILED} all inside set + harness marker. Near-miss grep empty. check_status_vocab exit 0. OOM_KILLED declared only, never emitted. WORKER_CRASHED is emitted by rpc_client.py:96 (H2 proxy side, not in-process) -> consistent with TC. dispatch at rpc_dispatch.py:108 maps ValidationError/TypeError/ValueError/KeyError->INVALID_INPUT, MarshalTimeout->TIMEOUT, final except Exception (l.127)->RECOMPUTE_ERROR. Visual: before/after identical whole box, no dialog."
+ },
+ {
+  "id": "TC-09-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-03-mcp.jsonl",
+   "tc-09-03-checks.txt",
+   "tc-09-03-before.png",
+   "tc-09-03-after.png"
+  ],
+  "note": "4 missing-required calls -> isError, structuredContent null, \"Input validation error: <field> is a required property\". Contrast verify_export_stl bogus id -> envelope INVALID_INPUT \"unknown or stale export_id: fcb-export:bogus\" (also carries isError=true with structuredContent). Visual identical whole box, no dialog."
+ },
+ {
+  "id": "TC-09-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-04-mcp.jsonl",
+   "tc-09-04-checks.txt",
+   "tc-09-04-before.png",
+   "tc-09-04-after.png"
+  ],
+  "note": "4 wrong-type calls -> isError, structuredContent null, \"Input validation error: ... is not of type integer/string/array/number\". No coercion, no tc-09-04-t.* file. Visual identical whole box."
+ },
+ {
+  "id": "TC-09-05",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-05-tool_surface.json",
+   "tc-09-05-mcp.jsonl",
+   "tc-09-05-checks.txt",
+   "tc-09-05-before.png",
+   "tc-09-05-after.png"
+  ],
+  "note": "tool_surface.json regenerated from tools/list (45 tools); every inputSchema additionalProperties false (list empty). 5 unknown-key calls -> \"Additional properties are not allowed (<key> was unexpected)\", structuredContent null. document_close{force} rejected, document_list still names H. query_capabilities (props []) rejects verbose. Visual identical whole box still shown."
+ },
+ {
+  "id": "TC-09-06",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-06-mcp.jsonl",
+   "tc-09-06-checks.txt",
+   "tc-09-06-before.png",
+   "tc-09-06-after.png"
+  ],
+  "note": "Scratch TC0906 Body+Sketch (rect). [] -> \"[] should be non-empty\"; [0] -> \"is too short\"; [0,0,0,0] -> \"is too long\"; all isError, structuredContent null. export_step objects:[] -> real envelope INVALID_INPUT \"document has multiple objects; specify objects...\" (no file). Sketch unchanged 4 geometries. TC defect: query_sketch_info has no geometry_count field (returns geometry list; used len). view_fit_viewport SPEC_FAILED on sketch-only doc (known) -> GUI Fit All. Visual: same rhombus sketch, no stray line, no dialog."
+ },
+ {
+  "id": "TC-09-07",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-07-mcp.jsonl",
+   "tc-09-07-checks.txt",
+   "tc-09-07-addonlog.txt",
+   "tc-09-07-before.png",
+   "tc-09-07-after.png"
+  ],
+  "note": "box40-hole-r5 (root BoxHole). depth 0/-1, max_edges 0/-1, occurrences 0/1 -> \"Input validation error: N is less than the minimum of M\", structuredContent null. depth 2147483647 OK returned_nodes 1 == counted 1; depth 1 OK returned_nodes==len(tree)=1. max_edges 1 OK edges [] (total_edges 0: fixture has no dependency edges, so truncation itself not exercised). Addon log since mark empty (log is live: INVALID_INPUT INFO lines elsewhere) -> no ValidationError traceback. Visual: same single plate with one hole, identical, no copies, no dialog (Tasks panel overlaps top-right corner in both)."
+ },
+ {
+  "id": "TC-09-08",
+  "priority": "High",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-09-08-mcp.jsonl",
+   "tc-09-08-checks.txt",
+   "tc-09-08-n.step",
+   "tc-09-08-before.png",
+   "tc-09-08-after.png"
+  ],
+  "note": "Only failing Then: export_step with ap absent returns OK but the file is AP214: FILE_SCHEMA((AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 })), grep -c AP242 = 0. Same product defect as TC-07-05 (default/explicit AP242 writes AP214; usecases/shim.py pin_step_config ~l.412). All 6 null/absent pairs behave as TC says: checks absent and [] -> OK same 5 fact ids, no expected key; checks/depth/ap null -> Input validation error (None is not of type array / integer / not one of [AP214,AP242]); depth absent -> returned_nodes 1 == roots. Visual PASS: same box, identical, no dialog. Cleanup not run: tc-09-08-n.step kept as evidence."
+ },
+ {
+  "id": "TC-09-09",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-09-mcp.jsonl",
+   "tc-09-09-checks.txt",
+   "tc-09-09-addonlog.txt",
+   "tc-09-09-before.png",
+   "tc-09-09-after.png",
+   "tc-09-09-after-golden.png",
+   "tc-09-09b-mcp.jsonl"
+  ],
+  "note": "4096-char label -> OK; document_list label len 4096 identical (name also 4096). 8192-char missing path -> INVALID_INPUT \"document_open failed for <path>...\" (message 16618 chars, names path). 65536-char object -> INVALID_INPUT \"unknown object: ccc...\". traceback len 4000 / 4000 (capped). query_capabilities OK after. No handshake/frame error in addon log. Visual: after.png shows the legitimately created long-label doc active (view_fit_viewport{doc:H} -> INVALID_INPUT \"the live viewport is showing aaa...\", GUI Fit All used); tree lists only scratch, golden, long doc - refused open added no doc/tab, no dialog. Extra capture after closing the long doc (cleanup step 1 run early): golden box whole, framed, identical to before."
+ },
+ {
+  "id": "TC-09-10",
+  "priority": "Medium",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-09-10-mcp.jsonl",
+   "tc-09-10-checks.txt",
+   "tc-09-10-depthprobe-mcp.jsonl",
+   "tc-09-10-depthprobe.py",
+   "tc-09-10-addonlog.txt",
+   "tc-09-10-before.png",
+   "tc-09-10-after.png"
+  ],
+  "note": "(1) 100-deep fn: mcp python client refuses to serialize it (pydantic Circular reference detected (depth exceeded)); sent over raw HTTP -> JSON-RPC error -32602 Invalid request parameters from the proxy MCP SDK layer, no envelope (transport pre-empts handler: test-case defect). Depth probe 10..95 reaches the handler and returns INVALID_INPUT with message \"unhashable type: dict\", NOT \"unknown assertion fn:\" -> product defect (low): usecases/verify.py:252 \"fn not in ASSERTION_FNS\" raises TypeError for a non-hashable fn, mapped to INVALID_INPUT at rpc_dispatch.py:124 with a raw Python message. (2) checks:[\"expect_volume\"] -> schema reject \"expect_volume is not of type object\" (schema items type object; TC Given claims untyped: test-case defect; refusal correct). (3) nested tol -> INVALID_INPUT \"expect_volume.tol.rel must be a non-negative number\" (ValidationError, real envelope) PASS. Server survives (bare verify_shape OK), no RecursionError. Visual PASS: identical box, no dialog, viewport painted."
+ },
+ {
+  "id": "TC-09-11",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-11-mcp.jsonl",
+   "tc-09-11-checks.txt",
+   "tc-09-11-before.png",
+   "tc-09-11-after.png"
+  ],
+  "note": "max_nodes 0 and 50 -> \"Additional properties are not allowed (max_nodes was unexpected)\", structuredContent null; no OK/nodes/truncated. props == [doc,depth,root,filters]. Successful call keys [doc,total_objects,returned_nodes,depth,filters_applied,tree] - no truncated. depth 1 returned_nodes 1 == len(tree). Edge report retired_max_nodes_rejected ok. Visual identical box, no dialog, tree unchanged."
+ },
+ {
+  "id": "TC-09-12",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-12-mcp.jsonl",
+   "tc-09-12-checks.txt",
+   "tc-09-12-before.png",
+   "tc-09-12-after.png"
+  ],
+  "note": "query_tree_summary/verify_recompute/query_object/document_close with fcb-doc:does-not-exist -> INVALID_INPUT envelope, detail.code INVALID_INPUT, message \"unknown or stale document handle: fcb-doc:does-not-exist\". cylinder opened+closed: stale handle -> INVALID_INPUT, second close INVALID_INPUT. Malformed \"not-a-handle at all\" -> INVALID_INPUT same message (registry lookup). Visual identical box, nothing closed, no dialog."
+ },
+ {
+  "id": "TC-09-13",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-09-13-mcp.jsonl",
+   "tc-09-13-checks.txt",
+   "tc-09-13-before.png",
+   "tc-09-13-after.png"
+  ],
+  "note": "Failing Then: verify_shape {doc:H, object:\"\"} returns OK and verifies Box (subject.object Box, volume 6000) instead of INVALID_INPUT \"missing required object name\". Cause: usecases/verify.py:238 \"if object:\" treats \"\" as omitted and falls back to document.Objects[0]; the guard in _resolve_object (verify.py:102-103) is never reached on this path. Reproduces deterministically. Product defect (empty explicit name silently retargets). Passing: 4 reads NoSuchObject -> INVALID_INPUT \"unknown object: NoSuchObject\"; export same message, no file; \"box\" -> \"unknown object: box\". Visual PASS identical box, nothing selected, no dialog."
+ },
+ {
+  "id": "TC-09-14",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-14-mcp.jsonl",
+   "tc-09-14-checks.txt",
+   "tc-09-14-addonlog.txt",
+   "tc-09-14-before.png",
+   "tc-09-14-after.png"
+  ],
+  "note": "Scratch TC0914 Body/Sketch/Pad(20x20x10). verify_sketch & query_sketch_info NoSuchSketch -> INVALID_INPUT \"unknown object: NoSuchSketch\"; verify_sketch Body -> \"object is not a sketch: Body\". Unknown feature: host is not auto-approve, so preview_dry_run of the op already refuses INVALID_INPUT \"unknown object in feature: NoSuchFeature\" and mints no token; feature_set_parameters with placeholder token -> INVALID_INPUT \"confirm.preview_id is malformed\" (token gate fires before the feature lookup). Never RECOMPUTE_ERROR. verify_recompute OK, total_objects 11 -> 11. Addon log: 5 INFO INVALID_INPUT lines, no traceback. Visual identical solid block, same size, no dialog."
+ },
+ {
+  "id": "TC-09-15",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-15-mcp.jsonl",
+   "tc-09-15-checks.txt",
+   "tc-09-15-grep.txt",
+   "tc-09-15-inline.stderr.log",
+   "tc-09-15-before.png",
+   "tc-09-15-after.png"
+  ],
+  "note": "Test-case defect: verify_recompute declares doc {type: string} on BOTH hosts (no union type), so {doc:{handle:...}} is refused at the MCP input-schema layer on the inline host AND on H2 with the same text \"Input validation error: {handle: fcb-doc:x} is not of type string\" (isError, structuredContent null). The pre-dispatch guard \"doc handle must be a string\" exists only in adapters/mcp_server.py:192-198 (not in usecases) and is unreachable over MCP because the schema gate fires first. Recorded H2 status: SCHEMA_REJECT (no envelope) - no divergence observed. Two distinct _call_tool: gui_external/entry.py:137 and adapters/mcp_server.py:176. Both hosts answer tools/list (45/45). Refusal correct on merits. Visual identical box, no dialog."
+ },
+ {
+  "id": "TC-09-16",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-16-mcp.jsonl",
+   "tc-09-16-checks.txt",
+   "tc-09-16b-mcp.jsonl",
+   "tc-09-16-before.png",
+   "tc-09-16-after.png"
+  ],
+  "note": "Missing file / missing dir -> INVALID_INPUT \"document_open failed for <path>: File <path> does not exist!\"; empty path -> INVALID_INPUT \"document_open requires a path\" (no document created); README.md -> INVALID_INPUT \"File README.md does not exist!\" (TC defect: no README.md in repo root and relative paths resolve against FreeCAD cwd). Extra probe with an existing non-FCStd file (absolute AGENTS.md) -> INVALID_INPUT \"Invalid project file ...\", no new handle, no dialog window. No structured_content.doc on any refusal; document_list unchanged; edge report open_bad_path ok. Visual identical box, single document tab, no dialog."
+ },
+ {
+  "id": "TC-09-17",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-17-mcp.jsonl",
+   "tc-09-17-checks.txt",
+   "tc-09-17-18-build-fixtures.py",
+   "tc-09-17-18-build-fixtures.log",
+   "tc-09-17-fixture.FCStd",
+   "tc-09-17-after.png",
+   "tc-09-17-pad-icon.jpg"
+  ],
+  "note": "Runner override FAIL->PASS: every envelope Then passed (RECOMPUTE_ERROR, failing object named). The visual Then expects an unbuilt shape, but FreeCAD 1.1.4 keeps the last valid shape on a failed recompute and marks the object with the error icon in the tree (seen in the capture). Test-case defect. Executor note: Fixture built headless (fcb FreeCAD 1.1.3): Body/Sketch/Pad 20x20x10, then sketch.deleteAllGeometry() -> Pad State [Touched, Invalid], status \"Linked shape object is empty\". All non-visual Thens PASS: verify_recompute RECOMPUTE_ERROR twice, verdict == status, checks recompute.object passed:false detail.code recompute.error (Pad \"Linked shape object is empty\", Body \"Touched\"), text \"Recompute: 2 error(s): Body, Pad.\", failing_objects [Body, Pad] stable, clean box OK. _RECOMPUTE_ERROR_STATES at verify.py:21 (TC says :24) includes Touched. view_fit_viewport SPEC_FAILED view_fit.not_framed -> GUI Fit All. FAILING Then (visual): viewport shows an intact 20x20x10 block, not a missing/unbuilt pad; only the tree Pad icon carries a small red overlay. Suspected cause: FreeCAD keeps the last valid shape of a failed feature on screen (stock behaviour), so the TC visual expectation is a likely test-case defect; the envelope claim itself is corroborated by the headless build log. Not cleaned up (state left until next scenario close_all)."
+ },
+ {
+  "id": "TC-09-18",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-18-mcp.jsonl",
+   "tc-09-18-checks.txt",
+   "tc-09-17-18-build-fixtures.log",
+   "tc-09-18-fixture.FCStd",
+   "tc-09-18-after.png"
+  ],
+  "note": "Runner override FAIL->PASS: every envelope Then passed (RECOMPUTE_ERROR, failing object named). The visual Then expects an unbuilt shape, but FreeCAD 1.1.4 keeps the last valid shape on a failed recompute and marks the object with the error icon in the tree (seen in the capture). Test-case defect. Executor note: Fixture: Body/Sketch/Pad, Sketch removed headless -> Pad status \"No object linked\". verify_recompute RECOMPUTE_ERROR, failing_objects [Body, Pad]; Pad check measured \"No object linked\" == getStatusString from build log; detail.message \"Pad: No object linked\"; detail.objects [Pad]; 2 checks == 2 failing objects; query_dependencies OK. Not met: (a) \"graph shows the missing target\" - no Pad->Sketch edge exists because FreeCAD cleared Pad.Profile on delete (likely test-case defect); (b) visual: viewport shows intact 20x20x10 block (FreeCAD keeps last valid shape), not unbuilt/absent; tree shows Pad with no child (sketch gone) and a red overlay icon. Same suspected test-case defect as TC-09-17; envelope claim corroborated by headless build log."
+ },
+ {
+  "id": "TC-09-19",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-19-mcp.jsonl",
+   "tc-09-19-checks.txt",
+   "tc-09-19-unwritable.stderr.log",
+   "tc-09-19-writable.stderr.log",
+   "tc-09-19-before.png",
+   "tc-09-19-after.png"
+  ],
+  "note": "H1 (fcb FreeCAD 1.1.3, inline stdio) with FREECAD_BUDDY_AUDIT_LOG = a directory: document_create OK, document_close OK, query_capabilities OK, tools/list 45. stderr: \"ERROR freecad_buddy.mcp_server: audit write failed\" with traceback via mcp_server.py:233 _audit_safe -> audit_log.py:84. Writable path: 4 records (before+after for create and close; after lines carry verify_verdict). Note: the TC When snippet sets the env var on mkdir (shell no-op); env was passed to the H1 server instead. Visual identical box, no dialog. Cleanup run (dir and audit file removed)."
+ },
+ {
+  "id": "TC-09-20",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-20-mcp.jsonl",
+   "tc-09-20-checks.txt",
+   "tc-09-20-grep.txt",
+   "tc-09-20-h1.stderr.log",
+   "tc-09-20-before.png",
+   "tc-09-20-after.png"
+  ],
+  "note": "H1 server with FREECAD_BUDDY_AUDIT_LOG=tc-09-20-append.jsonl; 3 mutations (create A, create B, close A) all OK. Prefix compare True True True; first 2 lines of snap3 == snap1; sizes 585<1170<1859; 6 lines all JSON, schema fcb.audit-record/1; 3 before (no verify_verdict) + 3 after (with verify_verdict). Test-case defect: grep -nE \"w|truncate|rotate|os.remove\" audit_log.py matches line 7, the module docstring \"never truncates, rotates, or reads it\"; the only open() is mode \"a\" at audit_log.py:46. Visual identical box, no dialog. Cleanup run."
+ },
+ {
+  "id": "TC-09-21",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-21-mcp.jsonl",
+   "tc-09-21-checks.txt",
+   "tc-09-21-edge.stderr.log",
+   "tc-09-21-dispatch-lines.txt",
+   "tc-09-21-unexpected-probe-mcp.jsonl",
+   "tc-09-21-before.png",
+   "tc-09-21-after.png"
+  ],
+  "note": "Edge sweep rerun exit 0: stderr has 7 one-line INFO INVALID_INPUT records and 0 tracebacks. H2 query_object NoSuchObject: detail.data.traceback 1555 chars (<=4000), exception ValidationError, no unexpected key. rpc_dispatch.py:28 _EXPECTED_CLIENT_STATUSES {INVALID_INPUT,TIMEOUT}, l.68-71 stderr only when outside set or unexpected, else logger.info. Unexpected path exercised: export_stl to Z:/no/such/drive -> RECOMPUTE_ERROR \"Directory does not exist\", exception OSError, unexpected:true (probe also: export_step -> OCCError, document_save -> FreeCADError, both unexpected:true). Visual identical box; only FreeCAD notification counter 9->10 (no modal)."
+ },
+ {
+  "id": "TC-09-22",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-22-mcp.jsonl",
+   "tc-09-22-checks.txt",
+   "tc-09-22-e2e_report.json",
+   "tc-09-22-server.stderr.log",
+   "tc-09-22-edge_report.json",
+   "tc-09-22-edge.stderr.log",
+   "tc-09-22-before.png",
+   "tc-09-22-after.png"
+  ],
+  "note": "run_mcp_e2e.py exit 0 (29/29 all_passed), run_mcp_edge_cases.py exit 0 (14/14). No access violation/swig/segfault/fatal in server or edge stderr (fresh copies + tc-09-01). 0 tracebacks in either log (product now logs client errors as one INFO line; TC wording \"tracebacks present are the deliberate ValidationError ones\" is stale but vacuously satisfied). No traceback ends in mcp_server.py/rpc_listener.py. Edge stderr of the fresh run saved as tc-09-22-edge.stderr.log (TC-09-01 copy left intact). Visual identical box, no crash popup. Cleanup paths in TC do not exist (sweeps write to _automation/)."
+ },
+ {
+  "id": "TC-09-23",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-09-23-mcp.jsonl",
+   "tc-09-23-checks.txt",
+   "tc-09-23-before.png",
+   "tc-09-23-after.png"
+  ],
+  "note": "FreeCAD pid 32440 alive through the whole TC-09 series (no relaunch). tools/list 45 tools, debug_exec absent (TC says 44: stale count, run context confirms 45 = test-case defect). Round trip open/verify_shape(expect_volume 6000)/export_step/verify_export_step/close all OK; export_step.volume 6000.0 (0.0% error), valid, faces 6/edges 12/solids 1. document_list empty after; no FCB_TMP_snap_/prev_ newer than series start in TEMP or bridge workdir tmp (TEMP holds 1824 old FCB_TMP_export_* + 10 old snap + 1 old prev, all pre-series). Before (no fit) and after: whole box, 3D view painting normally, no dialog/crash popup. Cleanup run."
+ }
+]

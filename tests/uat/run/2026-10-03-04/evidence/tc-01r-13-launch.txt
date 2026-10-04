@@ -1,0 +1,6 @@
+tag=tc-01r-13 NO_AUTO_MCP=no via tc-01-13-launcher.cmd pid=26304 window_id=3872822 :8765 owner=none parent=none
+{"pid": 26304, "window_id": 3872822, "proxy_listener_pid": null, "proxy_spawned_pid": null, "freecad_version": "1.1.4"}
+--- new addon.log lines ---
+2026-10-04 16:09:12,392 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 16:09:12,612 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:63180
+2026-10-04 16:09:12,612 INFO freecad_buddy.hosts.gui_addon.bootstrap: FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy

@@ -1,0 +1,7 @@
+{
+  "refusal": {
+    "code": "menu_path_unavailable",
+    "message": "menu path segment 1: InvokePattern.Invoke failed: Pattern not found (0x80131505)"
+  },
+  "status": "refused"
+}

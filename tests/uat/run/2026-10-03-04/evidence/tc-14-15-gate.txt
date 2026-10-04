@@ -1,0 +1,32 @@
+== run 1 (shipped tree)
+check_imports OK
+exit=0
+== run 2 (planted probe)
+usecases/_tc14_probe.py:2 -- 'FreeCADGui.ActiveDocument' is banned; operate on the explicit doc handle, never the process-global active document
+usecases/_tc14_probe.py:1 -- Qt/FreeCADGui/PySide import 'FreeCADGui' allowed only in hosts/** and adapters/render_probe.py
+exit=1
+== probe removed
+ls: cannot access 'src/freecad_buddy/usecases/_tc14_probe.py': No such file or directory
+== git status --porcelain src
+== aliases
+52:FREECAD_MODULE_ALIASES = frozenset({"FreeCAD", "App", "FreeCADGui"})
+53-ACTIVE_DOCUMENT_ATTRS = frozenset({"ActiveDocument", "setActiveDocument"})
+54-
+55-# Raw pivy renderer ban (decision 003): the offscreen path must go through
+56-# ``FreeCADGui.SoQtOffscreenRenderer``, never the raw pivy ``SoOffscreenRenderer``.
+57-_RAW_RENDERER_ATTR = "SoOffscreenRenderer"
+58-
+--
+172:        if isinstance(base, ast.Name) and base.id in FREECAD_MODULE_ALIASES:
+173-            violations.append(
+174-                Violation(
+175-                    relpath, node.lineno,
+176-                    f"'{base.id}.{node.attr}' is banned; operate on the explicit doc handle, "
+177-                    f"never the process-global active document",
+178-                )
+== grep src
+src/freecad_buddy/hosts/gui_addon/viewport.py:16:    ``FreeCADGui.ActiveDocument``: a viewport belongs to whichever document the GUI has active, so
+src/freecad_buddy/hosts/gui_addon/viewport.py:158:    The view is always resolved from this ``Name``, never from ``FreeCADGui.ActiveDocument``.
+Binary file src/freecad_buddy/hosts/gui_addon/__pycache__/viewport.cpython-311.pyc matches
+Binary file src/freecad_buddy/hosts/gui_addon/__pycache__/viewport.cpython-312.pyc matches
+grep_exit=0

@@ -1,0 +1,22 @@
+PASS	given: document_list names the handle	fcb-doc:goOnZIK5rU0UUJ1Ecm9ndA
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-17-before.png]	["OK", {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}]
+PASS	NOTE windows	[[15407174, "* box-10-20-30 - FreeCAD 1.1.4"]]
+PASS	three unknown-id calls INVALID_INPUT	["INVALID_INPUT", "INVALID_INPUT", "INVALID_INPUT"]
+PASS	message 'unknown or stale export_id: fcb-export:bogus'	["unknown or stale export_id: fcb-export:bogus", "unknown or stale export_id: fcb-export:bogus", "unknown or stale export_id: fcb-export:bogus"]
+PASS	detail.data.exception == ValidationError	["ValidationError", "ValidationError", "ValidationError"]
+PASS	empty export_id -> INVALID_INPUT 'missing required 'export_id''	["INVALID_INPUT", "missing required 'export_id'", null]
+PASS	reopened-handle verify refused: starts 'export_id ' contains 'does not belong to document'	["INVALID_INPUT", "export_id fcb-export:tAO2KYF4tloFhBQIxZBulQ does not belong to document fcb-doc:kzFsmWPYizWAdrjMomx7iA", "{}"]
+PASS	no crash: query_capabilities OK	OK
+PASS	outside trimesh: True, volume near 6000	[true, 6000.0]
+PASS	NOTE showall	View>Visibility>Show All Objects -> None None 
+FAIL	visual: view_fit_viewport {doc} OK [tc-07-17-after.png]	["SPEC_FAILED", {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}]
+PASS	NOTE guifit	FreeCAD Fit All toolbar: {"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+PASS	NOTE windows	[[15407174, " box-10-20-30 - FreeCAD 1.1.4"]]
+PASS	NOTE showall	View>Visibility>Show All Objects -> None None 
+FAIL	visual: view_fit_viewport {doc} OK [tc-07-17-after.png]	["SPEC_FAILED", {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}]
+PASS	NOTE guifit	FreeCAD Fit All toolbar: {"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+PASS	NOTE windows	[[15407174, " box-10-20-30 - FreeCAD 1.1.4"]]
+NOTE	Show All Objects menu refused (segment 2 not found) twice on reopened doc; Box shown instead by foreground click on its tree eye icon (visibility True per query_tree_summary)
+PASS	visual: view_fit_viewport {doc} OK [tc-07-17-after.png]	["OK", {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}]
+PASS	NOTE windows	[[15407174, "* box-10-20-30 - FreeCAD 1.1.4"]]

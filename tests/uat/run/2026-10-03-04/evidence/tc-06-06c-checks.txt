@@ -1,0 +1,6 @@
+NOTE | deselect click: accessibility
+NOTE | PadB TreeItems: [{'h': 26, 'w': 180, 'x': 127, 'y': 675}, {'h': 27, 'w': 280, 'x': 46, 'y': 381}]
+NOTE | space -> global_input; PadB visibility=False; BodyB visibility=True
+NOTE | BodyB props: {"Group": ["<Sketcher::SketchObject>", "<PartDesign::Pad>"], "Tip": "<PartDesign::Pad>", "Visibility": true}
+NOTE | hidden2 shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-06-hidden2.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+NOTE | default render while hidden: ['PadA']

@@ -1,0 +1,1 @@
+s=App.getDocument('TC0503').getObject('Sketch');[s.delConstraint(s.ConstraintCount-1) for i in range(3)];App.getDocument('TC0503').recompute();print('LOOSE_CONSTRAINTS',s.ConstraintCount)

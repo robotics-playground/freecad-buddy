@@ -1,0 +1,78 @@
+=== POST /mcp tools/list Origin: https://attacker.example (as written in TC)
+HTTP/1.1 307 Temporary Redirect
+date: Sun, 04 Oct 2026 07:17:18 GMT
+server: uvicorn
+content-length: 0
+location: http://127.0.0.1:8765/mcp/
+
+
+=== POST /mcp/ initialize Origin: https://attacker.example
+HTTP/1.1 200 OK
+date: Sun, 04 Oct 2026 07:17:18 GMT
+server: uvicorn
+cache-control: no-cache, no-transform
+connection: keep-alive
+content-type: text/event-stream
+mcp-session-id: 9a440f2a32dc4f749c02725066a6749e
+x-accel-buffering: no
+Transfer-Encoding: chunked
+
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26","capabilities":{"experimental":{},"tools":{"listChanged":false}},"serverInfo":{"name":"freecad-buddy-gui-external","version":"1.28.1"}}}
+=== POST /mcp/ tools/list with session, Origin: https://attacker.example
+HTTP/1.1 200 OK
+date: Sun, 04 Oct 2026 07:17:18 GMT
+server: uvicorn
+cache-control: no-cache, no-transform
+connection: keep-alive
+content-type: text/event-stream
+tool names in body: 45
+=== POST /mcp tools/list Origin: http://localhost:3000 (as written in TC)
+HTTP/1.1 307 Temporary Redirect
+date: Sun, 04 Oct 2026 07:17:18 GMT
+server: uvicorn
+content-length: 0
+location: http://127.0.0.1:8765/mcp/
+
+
+=== POST /mcp/ initialize Origin: http://localhost:3000
+HTTP/1.1 200 OK
+date: Sun, 04 Oct 2026 07:17:18 GMT
+server: uvicorn
+cache-control: no-cache, no-transform
+connection: keep-alive
+content-type: text/event-stream
+mcp-session-id: 454cd398d4f04b9e9d2f92cc3d166f0b
+x-accel-buffering: no
+Transfer-Encoding: chunked
+
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26","capabilities":{"experimental":{},"tools":{"listChanged":false}},"serverInfo":{"name":"freecad-buddy-gui-external","version":"1.28.1"}}}
+=== POST /mcp/ tools/list with session, Origin: http://localhost:3000
+HTTP/1.1 200 OK
+date: Sun, 04 Oct 2026 07:17:19 GMT
+server: uvicorn
+cache-control: no-cache, no-transform
+connection: keep-alive
+content-type: text/event-stream
+tool names in body: 45
+=== OPTIONS preflight /mcp/ foreign origin
+HTTP/1.1 405 Method Not Allowed
+date: Sun, 04 Oct 2026 07:17:19 GMT
+server: uvicorn
+content-type: application/json
+allow: GET, POST, DELETE
+mcp-session-id: bc76277dc49543c9b50ddfcc21f3d1ec
+content-length: 92
+
+{"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Method Not Allowed"}}
+=== OPTIONS preflight /mcp foreign origin
+HTTP/1.1 307 Temporary Redirect
+date: Sun, 04 Oct 2026 07:17:19 GMT
+server: uvicorn
+content-length: 0
+location: http://127.0.0.1:8765/mcp/
+
+
+=== grep Origin hosts/ adapters/
+rc=1

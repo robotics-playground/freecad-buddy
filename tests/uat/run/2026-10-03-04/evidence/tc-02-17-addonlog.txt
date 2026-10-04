@@ -1,0 +1,7 @@
+2026-10-04 00:20:52,943 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-does-not-exist.FCStd': File 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-does-not-exist.FCStd' does not exist!
+2026-10-04 00:20:53,000 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-not-fcstd.txt': Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-not-fcstd.txt: ios_base::failbit set: iostream stream error
+
+2026-10-04 00:20:53,067 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-corrupt.FCStd': Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-corrupt.FCStd: ios_base::failbit set: iostream stream error
+
+2026-10-04 00:20:53,090 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open requires a 'path'
+2026-10-04 00:20:53,143 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence': Invalid project file

@@ -1,0 +1,10 @@
+== Given discovery
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-35716.json
+== other discovery files (count, names)
+11
+== proxy pid
+2026-10-03 23:22:34,356 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 9380) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-03 23:39:57,106 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 33740) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+== open golden model for the before capture
+ "status": "OK",
+  "doc": "fcb-doc:_AYJ8XnD2Tv1QARwNhSXww",

@@ -1,0 +1,30 @@
+--- post-start 14:15:50
+TEMP snap dirs: 12
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_tc9907a:
+box.FCStd
+
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_tc9907b:
+box.FCStd
+
+C:/Users/thuan/AppData/Local/Temp/tc9907_not_prefixed:
+keep.txt
+workdir tmp listing:
+total 4
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:15 ./
+drwxr-xr-x 1 thuan 197609 0 Sep 13 20:55 ../
+grep swept|orphan addon.log:
+0
+grep 'session-start sweep' (last):
+2026-10-04 14:15:35,263 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 7 leftover temp artifact(s)
+grep source:
+src/freecad_buddy/hosts/gui_addon/bootstrap.py:29:from freecad_buddy.usecases.documents import DocumentRegistry, sweep_temp_dir
+src/freecad_buddy/hosts/gui_addon/bootstrap.py:91:    logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
+src/freecad_buddy/hosts/gui_addon/bootstrap.py:316:        app = QtCore.QCoreApplication.instance()
+src/freecad_buddy/hosts/gui_addon/pump.py:30:        QtCore.QCoreApplication.postEvent(self, _CallEvent(fn))
+src/freecad_buddy/hosts/headless/entry.py:31:from freecad_buddy.usecases.documents import DocumentRegistry, sweep_temp_dir
+src/freecad_buddy/hosts/headless/entry.py:85:    logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
+--- recount 14:16:18
+12
+total 4
+drwxr-xr-x 1 thuan 197609 0 Oct  4 14:15 ./
+drwxr-xr-x 1 thuan 197609 0 Sep 13 20:55 ../

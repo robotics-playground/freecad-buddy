@@ -1,0 +1,10 @@
+PASS | Given App::Part and App::Link nodes at depth 5 | ['App::Part', 'App::Part', 'Part::Box', 'App::Link', 'Part::Box']
+PASS | children and links are separate keys on a node with both | [('Inner', ['Box'], ['BoxLink'])]
+PASS | only App::Link* in links arrays | [('BoxLink', 'App::Link')]
+PASS | depth 1 root reports children_count, no expanded arrays | {'name': 'Outer', 'label': 'Outer', 'type': 'App::Part', 'visibility': True, 'children_count': 2}
+PASS | leaf omits children_count and links_count | [{'name': 'Box', 'label': 'Box', 'type': 'Part::Box', 'visibility': True}, {'name': 'Box', 'label': 'Box', 'type': 'Part::Box', 'visibility': True}]
+PASS | depth 5: Outer children contains Inner, which carries its own children | {'outer_children': ['Inner'], 'inner': {'name': 'Inner', 'label': 'Inner', 'type': 'App::Part', 'visibility': True, 'children_count': 2, 'links_count': 1, 'children': [{'name': 'Box', 'label': 'Box', 'type': 'Part::Box', 'visibility': True}], 'links': [{'name': 'BoxLink', 'label': 'BoxLink', 'type': 'App::Link', 'visibility': True, 'children_count': 1, 'children': [{'name': 'Box', 'label': 'Box', 'type': 'Part::Box', 'visibility': True}]}]}}
+FAIL | root Inner: one tree entry, returned_nodes < whole walk at same depth | {'tree': ['Inner'], 'returned_nodes': 4}
+PASS | no cycle: d5 returns < 30 s, finite and stable across two calls | {'seconds': 0.015, 'n': [5, 5]}
+PASS | link target reachable as root | [{'name': 'Box', 'label': 'Box', 'type': 'Part::Box', 'visibility': True}]
+PASS | nested view_fit_viewport OK | {'status': 'OK', 'detail': None}

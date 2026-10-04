@@ -1,0 +1,65 @@
+{"t": "15:45:55", "kind": "poll", "i": 0, "status": "OK", "elapsed": 0.034, "listening": true}
+{"t": "15:45:56", "kind": "poll", "i": 1, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:56", "kind": "poll", "i": 2, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:56", "kind": "poll", "i": 3, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:57", "kind": "poll", "i": 4, "status": "OK", "elapsed": 0.02, "listening": true}
+{"t": "15:45:57", "kind": "poll", "i": 5, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": 1.197, "kind": "busy_grab", "degraded": null, "n": 197}
+{"t": "15:45:57", "kind": "poll", "i": 6, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:45:57", "kind": "poll", "i": 7, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:58", "kind": "poll", "i": 8, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:58", "kind": "poll", "i": 9, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:58", "kind": "poll", "i": 10, "status": "OK", "elapsed": 0.086, "listening": true}
+{"t": "15:45:59", "kind": "poll", "i": 11, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:59", "kind": "poll", "i": 12, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:45:59", "kind": "poll", "i": 13, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:00", "kind": "poll", "i": 14, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:00", "kind": "poll", "i": 15, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:00", "kind": "poll", "i": 16, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:00", "kind": "poll", "i": 17, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:01", "kind": "poll", "i": 18, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:01", "kind": "poll", "i": 19, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:01", "kind": "poll", "i": 20, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:01", "kind": "poll", "i": 21, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:02", "kind": "poll", "i": 22, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:02", "kind": "poll", "i": 23, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:02", "kind": "poll", "i": 24, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:03", "kind": "poll", "i": 25, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:03", "kind": "poll", "i": 26, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:03", "kind": "poll", "i": 27, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:03", "kind": "poll", "i": 28, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:04", "kind": "poll", "i": 29, "status": "OK", "elapsed": 0.015, "listening": true}
+{"t": "15:46:04", "kind": "poll", "i": 30, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:04", "kind": "poll", "i": 31, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:05", "kind": "poll", "i": 32, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:05", "kind": "poll", "i": 33, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:05", "kind": "poll", "i": 34, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:05", "kind": "poll", "i": 35, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:06", "kind": "poll", "i": 36, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:06", "kind": "poll", "i": 37, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:06", "kind": "poll", "i": 38, "status": "OK", "elapsed": 0.024, "listening": true}
+{"t": "15:46:07", "kind": "poll", "i": 39, "status": "OK", "elapsed": 0.083, "listening": true}
+{"t": "15:46:07", "kind": "poll", "i": 40, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:07", "kind": "poll", "i": 41, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:07", "kind": "poll", "i": 42, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:08", "kind": "poll", "i": 43, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:08", "kind": "poll", "i": 44, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:08", "kind": "poll", "i": 45, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:09", "kind": "poll", "i": 46, "status": "OK", "elapsed": 0.016, "listening": true}
+{"t": "15:46:09", "kind": "poll", "i": 47, "status": "OK", "elapsed": 0.014, "listening": true}
+{"t": "15:46:09", "kind": "poll", "i": 48, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:09", "kind": "poll", "i": 49, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:10", "kind": "poll", "i": 50, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:10", "kind": "poll", "i": 51, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:10", "kind": "poll", "i": 52, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:11", "kind": "poll", "i": 53, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:11", "kind": "poll", "i": 54, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:11", "kind": "poll", "i": 55, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:11", "kind": "poll", "i": 56, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:12", "kind": "poll", "i": 57, "status": "OK", "elapsed": 0.012, "listening": true}
+{"t": "15:46:12", "kind": "poll", "i": 58, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": "15:46:12", "kind": "poll", "i": 59, "status": "OK", "elapsed": 0.013, "listening": true}
+{"t": 49.525, "kind": "refresh_menu", "r": {"refusal": {"code": "menu_path_unavailable", "message": "menu path segment 1 was not found"}, "status": "refused", "_attempt": 6}}
+{"t": "15:46:54", "kind": "netstat_after", "rows": ["TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       36996"]}
+{"t": "15:46:54", "kind": "mcp", "tool": "query_tree_summary", "args": {"doc": "fcb-doc:wQvDKL0ObMGlLHfnwQjEvw"}, "elapsed_s": 0.017, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:wQvDKL0ObMGlLHfnwQjEvw", "total_objects": 435, "returned_nodes": 6, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "MaterialContainer", "label": "Materials", "type": "App::DocumentObjectGroupPython", "visibility": true, "children_count": 40}, {"name": "Draft_Construction", "label": "Construction", "type": "App::DocumentObjectGroup", "visibility": false, "children_count": 3}, {"name": "Group", "label": "Reference drawings", "type": "App::DocumentObjectGroup", "visibility": true, "children_count": 1}, {"name": "Section", "label": "Elevation", "type": "App::FeaturePython", "visibility": false, "children_count": 1}, {"name": "WPProxy", "label": "Detail view WP", "type": "App::FeaturePython", "visibility": true}, {"name": "Page", "label": "A4 sheet", "type": "TechDraw::DrawPage", "visibility": true, "children_count": 2}]}, "text": "435 objects, 6 shown.", "framing": {"fits": null, "ratio": null, "checked": "unavailable", "stale_reason": "viewport size unreadable: AttributeError"}}}
+{"t": "15:46:55", "kind": "mcp", "tool": "verify_recompute", "args": {"doc": "fcb-doc:wQvDKL0ObMGlLHfnwQjEvw"}, "elapsed_s": 1.071, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"subject": {"failing_objects": []}, "checks": [{"id": "recompute.clean", "measured": 0, "expected": 0, "passed": true, "detail": {"message": "no object left in an error state"}}], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15}, "verdict": "OK"}, "text": "Recompute clean: no errors.", "framing": {"fits": null, "ratio": null, "checked": "unavailable", "stale_reason": "viewport size unreadable: AttributeError"}}}

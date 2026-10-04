@@ -1,0 +1,6 @@
+2026-10-04 12:07:25,368 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 12:07:25,546 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-03-04\evidence\tc-10-10-audit-full.jsonl
+2026-10-04 12:07:25,551 WARNING freecad_buddy.mcp_server: SECURITY: debug_exec ENABLED by operator flag
+2026-10-04 12:07:25,551 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-04 12:07:56,235 INFO freecad_buddy.dispatch: TIMEOUT: marshaled call exceeded 30.0s
+2026-10-04 12:08:38,301 INFO freecad_buddy.dispatch: TIMEOUT: marshaled call exceeded 30.0s

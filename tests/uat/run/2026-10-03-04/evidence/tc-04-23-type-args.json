@@ -1,0 +1,1 @@
+{"pid": 35956, "window_id": 2758532, "x": 700, "y": 1150, "text": "s=App.getDocument('Loose').getObject('LooseProfile');s.delConstraint(s.ConstraintCount-1);s.delConstraint(s.ConstraintCount-1);App.getDocument('Loose').recompute();print('LOOSE_CONSTRAINTS',s.ConstraintCount)", "delivery_mode": "foreground"}

@@ -1,0 +1,27 @@
+NOTE | user document folders: {'H2': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-14-userdocs-H2', 'H1': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-14-userdocs-H1'}; audit log env FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\_automation\uat\audit.jsonl
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-14-before.png
+NOTE | [H2] read-only sweep statuses: {'document_open': 'OK', 'query_capabilities': 'OK', 'query_tree_summary': 'OK', 'query_object': 'OK', 'query_mass_properties': 'OK', 'query_dependencies': 'OK', 'query_sketch_info': 'INVALID_INPUT', 'query_placement': 'OK', 'query_screenshot': 'OK', 'verify_shape': 'OK', 'verify_sketch': 'INVALID_INPUT', 'verify_recompute': 'OK', 'verify_export_step': 'INVALID_INPUT', 'verify_export_stl': 'INVALID_INPUT', 'verify_export_3mf': 'INVALID_INPUT', 'preview_dry_run': 'OK', 'document_close': 'OK'}
+PASS | [H2] reads created no file (same names) | {'added': [], 'removed': []}
+PASS | [H2] reads modified no file (mtimes equal) | []
+PASS | [H2] no FCB_TMP_prev_ entry in folder | ['bracket-v3.FCStd', 'notes.txt']
+PASS | [H2] no FCB_TMP_snap_ entry in folder | 
+NOTE | [H2] export_stl OK; document_save {"status": "OK"}
+PASS | [H2] explicit export wrote exactly one new file (the requested path) | ['tc11-export.stl']
+FAIL | [H2] document_save touched only the .FCStd (+ .FCBak allowed) | {'changed': ['bracket-v3.FCStd'], 'added': ['bracket-v3.20261004-124259.FCBak']}
+PASS | [H2] no freecad-buddy-audit.jsonl in folder | ['bracket-v3.20261004-124259.FCBak', 'bracket-v3.FCStd', 'notes.txt', 'tc11-export.stl']
+NOTE | [H1] read-only sweep statuses: {'document_open': 'OK', 'query_capabilities': 'OK', 'query_tree_summary': 'OK', 'query_object': 'OK', 'query_mass_properties': 'OK', 'query_dependencies': 'OK', 'query_sketch_info': 'INVALID_INPUT', 'query_placement': 'OK', 'query_screenshot': 'OK', 'verify_shape': 'OK', 'verify_sketch': 'INVALID_INPUT', 'verify_recompute': 'OK', 'verify_export_step': 'INVALID_INPUT', 'verify_export_stl': 'INVALID_INPUT', 'verify_export_3mf': 'INVALID_INPUT', 'preview_dry_run': 'OK', 'document_close': 'OK'}
+PASS | [H1] reads created no file (same names) | {'added': [], 'removed': []}
+PASS | [H1] reads modified no file (mtimes equal) | []
+PASS | [H1] no FCB_TMP_prev_ entry in folder | ['bracket-v3.FCStd', 'notes.txt']
+PASS | [H1] no FCB_TMP_snap_ entry in folder | 
+NOTE | [H1] export_stl OK; document_save {"status": "OK"}
+PASS | [H1] explicit export wrote exactly one new file (the requested path) | ['tc11-export.stl']
+FAIL | [H1] document_save touched only the .FCStd (+ .FCBak allowed) | {'changed': ['bracket-v3.FCStd'], 'added': ['bracket-v3.20261004-124259.FCBak']}
+PASS | [H1] no freecad-buddy-audit.jsonl in folder | ['bracket-v3.20261004-124259.FCBak', 'bracket-v3.FCStd', 'notes.txt', 'tc11-export.stl']
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-14-after.png
+RECLASSIFIED PASS | [H2]/[H1] document_save touched only the .FCStd (+ .FCBak): the script expected the literal name bracket-v3.FCStd.FCBak; FreeCAD writes its timestamped backup bracket-v3.20261004-124259.FCBak (FreeCAD backup naming). Only bracket-v3.FCStd mtime changed; the one added file is that .FCBak -> Then satisfied.

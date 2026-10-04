@@ -1,0 +1,7 @@
+PASS	given: dir exists	
+PASS	unicode export OK	["OK", null]
+PASS	file exists at exact path	["boîte-立方体.step"]
+PASS	path echoed unmodified	["D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-14 exports/boîte-立方体.step", "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-14 exports/boîte-立方体.step"]
+PASS	verify OK with subject.path == unicode path	["OK", {"export_id": "fcb-export:xnaw6L2-GiNc6E3vKU3B8A", "path": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-14 exports/boîte-立方体.step"}, null]
+PASS	long name written cleanly or refused cleanly	["RECOMPUTE_ERROR", false, "Writing of STEP failed", null, null, null]
+PASS	bytes == stat size for unicode path	[6854, 6854]

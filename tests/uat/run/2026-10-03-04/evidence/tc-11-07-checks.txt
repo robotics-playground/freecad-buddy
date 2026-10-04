@@ -1,0 +1,20 @@
+PASS | Given discovery file for running pid exists | rpc-32732.json
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-07-before.png
+NOTE | ls rpc-*.json: ['rpc-11924.json', 'rpc-1444.json', 'rpc-1456.json', 'rpc-19588.json', 'rpc-20096.json', 'rpc-21148.json', 'rpc-21164.json', 'rpc-32380.json', 'rpc-32732.json', 'rpc-33492.json', 'rpc-38812.json', 'rpc-9756.json']
+PASS | Then exactly one discovery file for the live listener pid, named rpc-<pid>.json | ['rpc-32732.json']
+NOTE | 11 other rpc-*.json files exist, none for a live pid: True; newest mtime 1789358322 (pre-date this run)
+PASS | Then not world-readable (Windows: record what chmod did; ACL is owner/SYSTEM/Administrators only) | {'mode': '0o666', 'readonly_bit': False, 'attrib': 'A                    C:\\Users\\', 'acl_principals': ['C', 'BUILTIN\\Administrators', 'TAN-PC\\thuan']}
+PASS | Then record carries non-empty token (masked) | ucUx…(len 43)
+PASS | Then contract_version is "1" | 1
+NOTE | stop proxy -> listener pid 26768 parent 33108 (pythonw) | terminate 26768 -> True | terminate 33108 -> True | after: 0 :8765 listeners | 
+PASS | Then wrong token refused: error frame message exactly 'auth failed' | {'jsonrpc': '2.0', 'id': 1, 'error': {'code': -32000, 'message': 'auth failed'}}
+PASS | Then refusal discloses nothing (no data.supported, no capabilities, no result) | {'error_keys': ['code', 'message'], 'data': None}
+NOTE | proxy restart: proxy listening
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-07-after.png
+PASS | Then discovery file removed when the listener stops: after File>Exit of pid 32732, rpc-32732.json not found (ls: No such file or directory); see tc-11-07-cycle.json
+NOTE | relaunched clean: pid 34340 window 988610, proxy :8765 owner 35772 spawned by addon (13268); tc-11-07-relaunch.json

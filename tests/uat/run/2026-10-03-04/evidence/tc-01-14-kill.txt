@@ -1,0 +1,49 @@
+== When: kill_app 33732
+2026-10-03T23:46:54+07:00
+{"refusal":{"code":"foreign_process_termination_denied","message":"standardmodemayterminateonlyaprocessproventohavebeenlaunchedbythisCuaruntime"},"status":"refused"}
+== Then FreeCAD gone
+freecad.exe                  33732 Console                    1    555,492 K
+== When: connect to recorded RPC port 53333
+connected
+elapsed 0.0
+== proxy processes after parent kill
+pythonw.exe                  32456 Console                    1      5,580 K
+pythonw.exe                  22056 Console                    1     61,820 K
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       22056
+== When: one MCP call through the endpoint
+ },
+ "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: False\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+}
+exit=0
+== Then stale discovery file remains
+-rw-r--r-- 1 thuan 197609 219 Oct  3 23:45 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-33732.json
+== killed pid capture
+{
+  "_note": "Prefer `elements` — `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+  "app_name": "freecad.exe",
+
+== kill_app refused (foreign_process_termination_denied in standard permission mode); above post-kill lines ran against a live FreeCAD and are void
+== When (fallback allowed by RUN-CONTEXT for TC-01-14): TerminateProcess(33732), equivalent to taskkill /F
+2026-10-03T23:47:13+07:00
+True
+== Then FreeCAD gone
+(nothing)
+== When: connect to recorded RPC port 53333
+refused: ConnectionRefusedError
+elapsed 2.03
+== proxy processes after parent kill
+pythonw.exe                  32456 Console                    1      5,580 K
+pythonw.exe                  22056 Console                    1     63,128 K
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       22056
+== When: one MCP call through the endpoint
+exit=0
+  }
+ },
+ "structured_content": {},
+ "text": ""
+}
+== Then stale discovery file remains
+-rw-r--r-- 1 thuan 197609 219 Oct  3 23:45 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-33732.json
+== killed pid capture
+No window with window_id 2365638 exists. Call `list_windows({"pid": 33732})` for candidates.
+ls: cannot access 'tests/uat/run/2026-10-03-04/evidence/tc-01-14-killed-capture.png': No such file or directory

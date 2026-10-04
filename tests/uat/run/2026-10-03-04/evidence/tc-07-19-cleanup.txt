@@ -1,0 +1,5 @@
+3 open
+  box-10-20-30         -> OK
+  sphere-r10           -> OK
+  Unnamed              -> OK
+0 open document(s).

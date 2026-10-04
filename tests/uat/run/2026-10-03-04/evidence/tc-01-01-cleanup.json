@@ -1,0 +1,11 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:ni70E8MwImrnBMxQrM6UgQ",
+  "name": "box_10_20_30",
+  "closed": true
+ },
+ "text": "Closed box_10_20_30 (doc=fcb-doc:ni70E8MwImrnBMxQrM6UgQ)."
+}

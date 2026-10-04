@@ -1,0 +1,15 @@
+== handshake capabilities (direct rpc_hello, proxy stopped per AD-26)
+listener pid 27448 parent 33720 (pythonw)
+terminate 27448 -> True
+terminate 33720 -> True
+after: 0 :8765 listeners
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.03
+restarted by hand: .venv/Scripts/pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       8676
+== after restart query_capabilities
+ "status": "OK",

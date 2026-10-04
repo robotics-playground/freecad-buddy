@@ -1,0 +1,12 @@
+NOTE | Given recorded FreeCAD pid before the series: 32440 (fc.json 32440); no relaunch during TC-09
+NOTE | before capture without fit: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-09-23-before.png', 'exists': True, 'title': '- [0] Window "* box-10-20-30 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+NOTE | TC-09-22 cleanup: document_close box-10-20-30 -> OK
+PASS | tools/list answers | 45
+FAIL | full surface: 44 tools + debug_exec only with ALLOW_EXEC (TC); run context says 45 | {'count': 45, 'debug_exec': False}
+PASS | pid unchanged and alive | freecad.exe                  32440 Console                    1  1,460,508 K
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+NOTE | verify_export_step checks: [('export_step.volume', 6000.0, True), ('export_step.valid', True, True), ('export_step.topology_counts', {'faces': 6, 'edges': 12, 'solids': 1}, True)]
+PASS | round trip: every call OK | ['OK', 'OK', 'OK', 'OK', 'OK']
+PASS | export_step.volume within 0.1% of 6000 | 6000.0
+PASS | no document left open; no FCB_TMP_ document | []
+PASS | no FCB_TMP_snap_/prev_ left by this series | []

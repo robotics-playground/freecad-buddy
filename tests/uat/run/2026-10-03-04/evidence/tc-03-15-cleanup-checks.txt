@@ -1,0 +1,1 @@
+NOTE | document_close BracketPlate -> OK

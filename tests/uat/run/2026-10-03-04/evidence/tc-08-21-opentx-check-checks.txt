@@ -1,0 +1,1 @@
+PASS | open GUI transaction refused with exact message | {'status': 'INVALID_INPUT', 'message': 'TC0821T has an open transaction; undo would commit it and revert the transaction beneath it. Commit or abort it first.', 'sc': {}}

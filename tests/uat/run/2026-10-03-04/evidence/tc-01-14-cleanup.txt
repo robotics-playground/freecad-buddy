@@ -1,0 +1,11 @@
+      2       "title": "* box-10-20-30 - FreeCAD 1.1.4",
+== cleanup: document_close
+ "status": "OK",
+== old token vs new listener (stop orphan proxy first: AD-26)
+listener pid 22056 parent 32456 (pythonw)
+terminate 22056 -> True
+terminate 32456 -> True
+after: 0 :8765 listeners
+old token on new listener: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+== cleanup: rm stale rpc-33732.json
+removed

@@ -1,0 +1,8 @@
+== CLI 1: serve --mode rpc
+exit=2
+stderr: [--mode rpc requires --transport http.]
+== CLI 2: serve --transport http --mode inline
+exit=2
+stderr: [transport 'http' is not available yet; use --transport stdio.]
+== :8765 still free
+(nothing)

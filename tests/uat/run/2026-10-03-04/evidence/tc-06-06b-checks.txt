@@ -1,0 +1,16 @@
+PASS | pre: labels PadA/PadB intact after Ctrl+Z, both visible | 
+NOTE | PadB volume after undo (expect 6000): {'value': 6000.0, 'unit': 'mm^3'}
+NOTE | default before: ['PadA', 'PadB']
+NOTE | hide attempt 1 via space_padb: {'space': ['unverifiable', 'global_input'], 'frame': {'h': 26, 'w': 180, 'x': 127, 'y': 675}} -> PadB visibility=False, label intact=True
+PASS | hide landed: verify_state label_contains PadB satisfied | {"elapsed_ms": 4523, "predicates": [{"index": 0, "observed_json": "{\"matches\":4}", "status": "satisfied", "unknown_reason": null}], "samples": 2, "stable": true, "status": "satisfied"}
+PASS | bridge sees PadB visibility false (route: space_padb) | space_padb
+PASS | post-hide default render lacks PadB | ['PadA']
+PASS | explicit include PadB == ['PadB'] + link | ['PadB']
+NOTE | fit before hidden.png: {"status": "OK"}
+NOTE | hidden shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-06-hidden.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+NOTE | restore attempt 1 via space_padb: {'space': ['unverifiable', 'global_input'], 'frame': {'h': 26, 'w': 180, 'x': 127, 'y': 675}} -> PadB visibility=False, label intact=True
+NOTE | restore attempt 2 via space_padb: {'space': ['unverifiable', 'global_input'], 'frame': {'h': 26, 'w': 180, 'x': 127, 'y': 675}} -> PadB visibility=True, label intact=True
+PASS | restored: PadB visibility true (route: space_padb) | space_padb
+PASS | restored default render lists PadB again | ['PadA', 'PadB']
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-06-after.png', 'exists': True, 'title': '- [0] Window "* TC0604 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

@@ -1,0 +1,58 @@
+{
+ "before": {
+  "preview_status": "OK",
+  "fingerprint": "33e870c051cd2fe4846c52b78a1dae3a033720012ffa97bcf6efaaa56af9dc7c",
+  "objects": [
+   "Box"
+  ]
+ },
+ "mutation": {
+  "status": "TIMEOUT",
+  "seconds": 30.32,
+  "message": "marshaled call exceeded 30.0s; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds",
+  "no_blind_retry_text": true
+ },
+ "waited_idle_s": 11.9,
+ "after": {
+  "clearing_read": "OK",
+  "objects": [
+   "Box",
+   "LateBox"
+  ],
+  "preview_status": "OK",
+  "fingerprint": "ba8da106b13b6da38d432835a4c4670b5f4535589cf28276f7368d1ff6e9f19c"
+ },
+ "landed": true,
+ "digest_differs": true,
+ "audit_debug_exec": [
+  {
+   "verdict": null,
+   "digest": "9f32e7ec79bbd4e0",
+   "ts": "2026-10-04T05:07:25.988393+00:00"
+  },
+  {
+   "verdict": "TIMEOUT",
+   "digest": "9f32e7ec79bbd4e0",
+   "ts": "2026-10-04T05:07:56.247724+00:00"
+  }
+ ],
+ "audit_counts_before_manual_retry": {
+  "before_lines": 1,
+  "after_lines": 1,
+  "distinct_digests": 1
+ },
+ "save_for_gui_visual": "OK",
+ "manual_retry": {
+  "status": "TIMEOUT",
+  "seconds": 30.1,
+  "terminal": true,
+  "waited_idle_s": 11.9
+ },
+ "h1_view_fit_viewport": {
+  "status": "INVALID_INPUT",
+  "message": "document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating"
+ },
+ "grep_retry": [
+  "src/freecad_buddy/adapters/mcp_server.py:136:        \"the document is now suspect: do not blind-retry, run a query_* read first to confirm \""
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "read_only_call": {
+  "tool": "verify_recompute",
+  "seconds": 130.01,
+  "status": "OK",
+  "message": "",
+  "marshal_timeout": null,
+  "contains_no_mutation_text": false,
+  "contains_may_still_run": false,
+  "contains_now_suspect": false
+ },
+ "mutation": {
+  "status": "OK",
+  "message": null,
+  "refused_document_suspect": false
+ },
+ "h1_view_fit_viewport": {
+  "status": "SPEC_FAILED",
+  "message": "this host has no live viewport: no camera to fit"
+ },
+ "save_for_gui_visual": "OK"
+}

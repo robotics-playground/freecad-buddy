@@ -1,0 +1,4 @@
+2026-10-04 14:23:56,271 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy already on http://127.0.0.1:8765/mcp; not spawning
+2026-10-04 14:34:41,486 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 14:34:41,707 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:62671
+2026-10-04 14:34:42,013 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 29440) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log

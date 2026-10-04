@@ -1,0 +1,6 @@
+tag=tc-01-10-cleanup pid=31584 window_id=5445682 :8765 owner=28436 parent=19852
+{"pid": 31584, "window_id": 5445682, "proxy_listener_pid": 28436, "proxy_spawned_pid": 19852, "freecad_version": "1.1.4"}
+--- new addon.log lines ---
+2026-10-04 16:06:45,215 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 16:06:45,434 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:64386
+2026-10-04 16:06:45,741 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 19852) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log

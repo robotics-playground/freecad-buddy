@@ -1,0 +1,4 @@
+2026-10-04 12:37:52,709 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 12:37:52,892 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\_automation\uat\audit.jsonl
+2026-10-04 12:37:52,892 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-04 12:37:53,844 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in profile: NoSuchSketch

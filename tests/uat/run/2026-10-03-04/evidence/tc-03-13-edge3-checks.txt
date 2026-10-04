@@ -1,0 +1,12 @@
+PASS | Given PlatePad volume near 12000 | volume=12000.0
+PASS | Given BossProfile on top face verify OK | create=OK verify=OK
+FAIL | Given query_object PlatePad lists edge names | query_object returns properties only (no sub-element list); see TC-03-03
+NOTE | before fit: {'view_fit_viewport': 'OK', 'detail': None}
+PASS | projection commits OK rolled_back=false | {"status": "OK"}
+PASS | verify_sketch OK dof=0 | {"status": "OK"}
+FAIL | tnp_audit.status=CLEAN findings=[] | {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": [{"owner": "BossProfile", "prop": "AttachmentSupport", "mapped_before": "#14:1;:G0;XTR;:H1186:8,F", "state_after": null, "verdict": "PASS", "layer": 2, "detail": "Face6 descends from the same source element"}, {"owner": "PlatePad", "prop": "Profile", "mapped_before": null, "state_after": null, "verdict": "PASS", "layer": 1, "detail": "PlatePad.Profile names no element"}]}
+PASS | tnp_audit.element_map_version non-empty | "15.70200.5"
+PASS | query_dependencies shows BossProfile -> PlatePad | {"edges": [{"from": "PlateBody", "to": "PlatePad"}, {"from": "PlateBody", "to": "Origin"}, {"from": "PlateBody", "to": "PlateProfile"}, {"from": "PlateBody", "to": "BossProfile"}, {"from": "Origin", "to": "X_Axis"}, {"from": "Origin", "to": "Y_Axis"}, {"from": "Origin", "to": "Z_Axis"}, {"from": "Origin", "to": "XY_Plane"}, {"from": "Origin", "to": "XZ_Plane"}, {"from": "Origin", "to": "YZ_Plane"}, {"from": "Origin", "to": "Origin001"}, {"from": "PlatePad", "to": "PlateProfile"}, {"from": "BossProfile", "to": "PlatePad"}], "total_edges": 13, "returned_edges": 13, "truncated": false}
+PASS | unknown source INVALID_INPUT naming 'unknown object in edge selector: NoSuchPad' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object in edge selector: NoSuchPad", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freeca
+PASS | face selector INVALID_INPUT naming 'resolves to a Face, not an Edge' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "edge selector 'Face1' resolves to a Face, not an Edge", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy
+NOTE | after fit: {'view_fit_viewport': 'OK', 'detail': None}

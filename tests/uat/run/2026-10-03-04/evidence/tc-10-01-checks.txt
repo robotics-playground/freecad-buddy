@@ -1,0 +1,14 @@
+== tool sequence
+['tools/list', 'query_capabilities', 'query_mass_properties:box-10-20-30', 'verify_shape:box-10-20-30', 'verify_export_step:box-10-20-30', 'verify_export_stl:box-10-20-30', 'query_screenshot:box-10-20-30', 'query_mass_properties:cylinder-r5-h20', 'verify_shape:cylinder-r5-h20', 'verify_export_step:cylinder-r5-h20', 'verify_export_stl:cylinder-r5-h20', 'query_screenshot:cylinder-r5-h20', 'query_mass_properties:sphere-r10', 'verify_shape:sphere-r10', 'verify_export_step:sphere-r10', 'verify_export_stl:sphere-r10', 'query_screenshot:sphere-r10', 'query_mass_properties:box40-hole-r5', 'verify_shape:box40-hole-r5', 'verify_export_step:box40-hole-r5', 'verify_export_stl:box40-hole-r5', 'query_screenshot:box40-hole-r5', 'query_mass_properties:two-box-compound', 'verify_shape:two-box-compound', 'verify_export_step:two-box-compound', 'verify_export_stl:two-box-compound', 'query_screenshot:two-box-compound', 'document_save', 'document_open(reopen)']
+keys of a check: ['detail', 'ok', 'status', 'tool']
+== grep -c marshal
+0
+== all_passed
+True
+== reentrant|deadlock|already in marshal
+(exit 1)
+== stderr log lines
+3
+0
+== six-read stderr
+0

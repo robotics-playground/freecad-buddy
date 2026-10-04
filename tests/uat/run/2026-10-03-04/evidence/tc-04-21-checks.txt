@@ -1,0 +1,9 @@
+PASS | Given BlockPad vol 6000 | 6000.0
+PASS | unknown property 'BlockPad has no property named 'Thickness'' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "BlockPad has no property named 'Thickness'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freeca
+FAIL | read-only 'BlockPad.Shape is read-only' | {"status": "SPEC_FAILED", "detail": {"code": "mutation.spec_failed", "message": "TypeError: type must be 'Shape', not int"}}
+PASS | wrong unit "Length value unit must be one of ['mm'], got 'deg'" | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "Length value unit must be one of ['mm'], got 'deg'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.
+PASS | unsupported type 'Length value must be a quantity, number, boolean or enum string' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "Length value must be a quantity, number, boolean or enum string", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\Fr
+PASS | no envelope carries snapshot_path | 
+PASS | no snapshot written | new=[]
+PASS | BlockPad vol 6000 again | 6000.0
+PASS | whole batch refused when one entry is bad; Length still 10 mm | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "BlockPad has no property named 'Thickness'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freeca Length=10.0 mm

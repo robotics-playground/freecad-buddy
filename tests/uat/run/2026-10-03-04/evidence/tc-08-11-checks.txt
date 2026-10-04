@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close TC0810A -> OK
+NOTE | cleanup previous scenario: document_close TC0810B -> OK
+PASS | Given 20x20 sketch with named Width constraint committed | {"status": "OK"}
+PASS | stale token refused with fingerprint message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "the document has changed since the preview was taken; re-run preview_dry_run", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\
+PASS | sketch_set_datum apply OK and query_sketch_info Width == 40 mm | {'apply': 'OK', 'width': [{'id': 9, 'type': 'DistanceX', 'name': 'Width', 'driving': True, 'value': {'value': 40.0, 'unit': 'mm'}}]}
+PASS | no Pad in tree | ['Body', 'Sketch']
+PASS | refusal not a spent-token complaint | the document has changed since the preview was taken; re-run preview_dry_run
+PASS | re-preview + apply returns OK | {"status": "OK"}
+NOTE | recovered pad volume 24000.0 (40x20x30 expected 24000)
+NOT RUN | unreadable live state refusal 'cannot read the state of <handle>' | NOT RUN: no wire-reachable way to make a document whose shape cannot be serialized (debug_exec disabled, exec_enabled:false)

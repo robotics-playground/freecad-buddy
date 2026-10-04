@@ -1,0 +1,20 @@
+keys ['total', 'passed', 'failed', 'all_passed', 'checks']
+all_passed True
+== grep fault strings in stderr
+(none)
+3 tests/uat/run/2026-10-03-04/evidence/tc-01r-02-server.stderr.log
+== GUI query_capabilities after sweep
+ "status": "OK",
+  "freecad_version": "1.1.4",
+ "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: False\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+query_mass_properties:box-10-20-30 OK volume=6000.0 (expect 6000.0, rel_ok=True)
+verify_export_step:box-10-20-30 OK 
+verify_export_stl:box-10-20-30 OK 
+verify_export_step:cylinder-r5-h20 OK 
+verify_export_stl:cylinder-r5-h20 OK 
+verify_export_step:sphere-r10 OK 
+verify_export_stl:sphere-r10 OK 
+verify_export_step:box40-hole-r5 OK 
+verify_export_stl:box40-hole-r5 OK 
+verify_export_step:two-box-compound OK 
+verify_export_stl:two-box-compound OK 

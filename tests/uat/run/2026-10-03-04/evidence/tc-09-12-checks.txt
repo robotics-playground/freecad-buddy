@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given handle not listed | 
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:G626fRDs42LyH4BpRXb7Pw
+NOTE | roots ['Box']
+PASS | all four never-issued handle calls -> INVALID_INPUT envelope | ['INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT']
+PASS | each detail.message contains the handle | ['unknown or stale document handle: fcb-doc:does-not-exist', 'unknown or stale document handle: fcb-doc:does-not-exist', 'unknown or stale document handle: fcb-doc:does-not-exist', 'unknown or stale document handle: fcb-doc:does-not-exist']
+PASS | detail.code == INVALID_INPUT | 
+PASS | stale handle after close -> INVALID_INPUT; second close INVALID_INPUT no crash | ['OK', 'OK', 'INVALID_INPUT', 'unknown or stale document handle: fcb-doc:Rz5SZsGPDt_gC1f2twLooQ', 'INVALID_INPUT']
+PASS | malformed string also INVALID_INPUT (registry lookup, not format) | ('INVALID_INPUT', 'unknown or stale document handle: not-a-handle at all')

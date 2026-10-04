@@ -1,0 +1,1 @@
+NOTE | cleanup step 1 run early: document_close long-labelled doc -> OK

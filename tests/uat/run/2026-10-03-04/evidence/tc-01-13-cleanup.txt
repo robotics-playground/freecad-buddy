@@ -1,0 +1,19 @@
+== cleanup: kill_app 36284
+{"refusal":{"code":"foreign_process_termination_denied","message":"standardmodemayterminateonlyaprocessproventohavebeenlaunchedbythisCuaruntime"},"status":"refused"}
+freecad.exe                  36284 Console                    1    524,924 K
+addon.log.prev removed
+== cleanup: launch_app freecad (no extra env)
+tag=tc-01-13-cleanup pid=33732
+36284 window_id=131674 bridge_wait=4s
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       22056
+--- new addon.log lines ---
+2026-10-03 23:45:56,466 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-03 23:45:56,693 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:53333
+2026-10-03 23:45:56,999 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 32456) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+== kill_app refused; exit the NO_AUTO_MCP instance 36284 through File > Exit instead
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+freecad.exe                  33732 Console                    1    551,468 K
+rpc-33732.json
+      "title": "FreeCAD 1.1.4",
+      "window_id": 2365638,
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       22056

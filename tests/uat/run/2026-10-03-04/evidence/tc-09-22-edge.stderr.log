@@ -1,0 +1,10 @@
+2026-10-04 11:46:50,428 INFO freecad_buddy.hosts.headless: session-start sweep removed 5 leftover temp artifact(s)
+2026-10-04 11:46:50,608 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\_automation\audit.jsonl
+2026-10-04 11:46:50,608 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-04 11:46:50,628 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+2026-10-04 11:46:50,653 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchObject
+2026-10-04 11:46:50,678 INFO freecad_buddy.dispatch: INVALID_INPUT: export supports a single object; got multiple
+2026-10-04 11:46:50,682 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:bogus
+2026-10-04 11:46:50,728 INFO freecad_buddy.dispatch: INVALID_INPUT: export_id fcb-export:evtOylXeqs0R2OedIZMrsA is not a step export
+2026-10-04 11:46:51,620 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:1VQKnvdeQUieHFDVhyUPQw
+2026-10-04 11:46:51,624 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:\\Work\\Personal\\Sources\\freecad-buddy\\_automation\\nope-missing.FCStd': File 'D:\Work\Personal\Sources\freecad-buddy\_automation\nope-missing.FCStd' does not exist!

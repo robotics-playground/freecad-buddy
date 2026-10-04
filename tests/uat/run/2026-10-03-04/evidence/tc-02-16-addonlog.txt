@@ -1,0 +1,2 @@
+2026-10-04 00:20:12,863 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:yd3hUwrYJOOQi8ua3e5saw
+2026-10-04 00:20:12,874 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:yd3hUwrYJOOQi8ua3e5saw

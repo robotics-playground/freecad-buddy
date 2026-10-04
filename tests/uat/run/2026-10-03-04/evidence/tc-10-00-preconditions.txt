@@ -1,0 +1,12 @@
+== fcb import FreeCAD, mcp
+ok ['1', '1', '3']
+== golden
+benchmarks/g0/golden-models/box-10-20-30.FCStd
+== :8765 http code
+307
+== evidence writable
+yes
+== git
+bece7ac
+== fc.json
+{"pid":32440,"window_id":15407174,"proxy_listener_pid":33976,"proxy_spawned_pid":35324,"freecad_version":"1.1.4"}

@@ -1,0 +1,18 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given body document opens | Opened tc-02-body -> fcb-doc:-fscoohLRTcjB0CpxwptAg.
+PASS | Given Body node with children at depth 3 | PartDesign::Body
+PASS | before view_fit_viewport OK | {'status': 'OK', 'detail': None}
+PASS | depth1: root has children_count, no children; returned_nodes == roots | {'keys': ['name', 'label', 'type', 'visibility', 'children_count'], 'returned_nodes': 1, 'roots': 1}
+PASS | depth3: returned_nodes > depth1 and root has children | [1, 4]
+PASS | root Body: single tree entry named Body; returned_nodes counts subtree | {'returned_nodes': 3, 'counted': 3, 'names': ['Body', 'Pad', 'Sketch']}
+PASS | unknown root -> INVALID_INPUT unknown object: NoSuchObject | ['INVALID_INPUT', 'unknown object: NoSuchObject']
+FAIL | types allow-list: every node PartDesign::Pad | []
+PASS | exclude_types replaces default: filters_applied exact and datum nodes appear | {'filters_applied': {'exclude_types': ['Sketcher::SketchObject']}, 'types': ['PartDesign::Body', 'PartDesign::Pad', 'App::Origin', 'App::Line', 'App::Line', 'App::Line', 'App::Plane', 'App::Plane', 'App::Plane', 'App::Point']}
+PASS | default filters_applied.exclude_types is datum set | {'exclude_types': ['App::Plane', 'App::Line', 'App::Point', 'App::Origin']}
+PASS | renderable_only drops Body, Sketch, Origin* | []
+FAIL | name_pattern ^Pad: only nodes whose name or label starts with Pad | []
+PASS | filters AND-stack: subset of each single-filter result | {'stacked': [], 'rend': [], 'name': []}
+PASS | unknown filter key is protocol reject (isError, no envelope) | {'_raw': "Input validation error: Additional properties are not allowed ('unknown_filter' was unexpected)", '_isError': True}
+FAIL | visible_only drops the hidden Pad while plain walk keeps it | {'hidden': False, 'visible_only': ['Body', 'Pad', 'Sketch', 'Sketch'], 'plain': ['Body', 'Pad', 'Sketch', 'Sketch']}
+PASS | Pad restored to visible through GUI | 
+PASS | after view_fit_viewport OK | {'status': 'OK', 'detail': None}

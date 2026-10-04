@@ -1,0 +1,2 @@
+geo 1 cons 0 solve 0 FullyConstrained False
+saved D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-03-underconstrained.FCStd

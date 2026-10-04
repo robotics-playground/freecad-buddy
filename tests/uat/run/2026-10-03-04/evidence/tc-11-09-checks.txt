@@ -1,0 +1,20 @@
+NOTE | Operator acceptance of a FreeCAD restart: given by the run brief (relaunch procedure in RUN-CONTEXT).
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box OK | {"status": "OK"}
+NOTE | GUI Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given framed via GUI Fit All (same path as the after capture) | {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}
+PASS | Given baseline captured | tc-11-09-before.png
+NOTE | old token (pid 34340): Q9UD…(len 43)
+NOTE | new token (pid 35916): HaIW…(len 43)
+PASS | Then second token differs from the first (compared in memory) | {'old': 'Q9UD…(len 43)', 'new': 'HaIW…(len 43)'}
+NOTE | stop addon proxy so the listener accepts a raw client -> listener pid 10420 parent 35064 (pythonw) | terminate 10420 -> True | terminate 35064 -> True | after: 0 :8765 listeners | 
+PASS | Then OLD token refused: error message exactly 'auth failed' | {'jsonrpc': '2.0', 'id': 1, 'error': {'code': -32000, 'message': 'auth failed'}}
+PASS | Then connection closed after refusal: next recv returns zero bytes | recv returned 0 bytes
+PASS | Then auth before version: OLD token + contract_version 99 -> 'auth failed' | {'jsonrpc': '2.0', 'id': 1, 'error': {'code': -32000, 'message': 'auth failed'}}
+PASS | Then new token accepted: contract_version "1" | {'result_keys': ['capabilities', 'contract_version', 'freecad_version']}
+PASS | Then stale discovery rpc-<old pid>.json no longer exists | rpc-34340.json exists=False
+NOTE | proxy restart by hand: proxy listening
+PASS | Then (visual) golden model reopened after restart | {"status": "OK"}
+NOTE | GUI Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Then (visual) framed via GUI Fit All (TC prefers GUI path after restart) | {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}
+PASS | Then (visual) after captured | tc-11-09-after.png

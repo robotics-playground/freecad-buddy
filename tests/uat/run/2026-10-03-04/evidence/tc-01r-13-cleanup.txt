@@ -1,0 +1,9 @@
+== Cleanup 2026-10-04T16:11:31+07:00: kill_app per TC
+{  "refusal": {    "code": "foreign_process_termination_denied",    "message": "standard mode may terminate only a process proven to have been launched by this Cua runtime"  },  "status": "refused"}
+freecad.exe                  26304 Console                    1    528,124 K
+-- kill_app did not end it; the File popup is still open from the refused invoke_menu, so click its 'Exit' item by element_token (background UIA)
+token s00000844:18
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+26304 present: 0
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-26304.json': No such file or directory
+addon.log.prev removed

@@ -1,0 +1,11 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:roeBDMCOEqAskMSe0ogRKQ",
+  "name": "uat_nested",
+  "label": "uat-nested"
+ },
+ "text": "doc: fcb-doc:roeBDMCOEqAskMSe0ogRKQ\nlabel: uat-nested\nname: uat_nested"
+}

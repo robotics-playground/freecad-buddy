@@ -1,0 +1,11 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given body document opens | Opened tc-02-body -> fcb-doc:1RO_kk_aC7TLxFiUuhYGpA.
+PASS | Given depth 2 shows a children array | None
+PASS | depth 1 OK with depth 1 | ['OK', 1]
+PASS | depth defaults to 1 | 1
+PASS | depth 0 protocol reject | {'_raw': 'Input validation error: 0 is less than the minimum of 1', '_isError': True}
+PASS | depth -1 protocol reject | {'_raw': 'Input validation error: -1 is less than the minimum of 1', '_isError': True}
+PASS | max_nodes:0 protocol reject (not OK envelope) | {'_raw': "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", '_isError': True}
+PASS | max_nodes:5 with depth 2 protocol reject | {'_raw': "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", '_isError': True}
+PASS | schema closed: additionalProperties false; properties exactly doc,depth,root,filters | {'additionalProperties': False, 'properties': ['depth', 'doc', 'filters', 'root']}
+PASS | valid call after rejections OK | OK

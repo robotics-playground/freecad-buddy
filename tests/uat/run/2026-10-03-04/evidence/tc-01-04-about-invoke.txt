@@ -1,0 +1,4 @@
+{"refusal":{"code":"menu_path_unavailable","message":"menupathsegment1:InvokePattern.Invokefailed:Patternnotfound(0x80131505)"},"status":"refused"}
+1513560 ' box-10-20-30 - FreeCAD 1.1.4' {'height': 1380, 'width': 1775, 'x': 0, 'y': 0}
+
+[exited with code 0]

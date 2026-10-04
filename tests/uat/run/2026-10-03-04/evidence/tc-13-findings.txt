@@ -1,0 +1,30 @@
+TC-13 findings (UAT 2026-10-03-04, FreeCAD 1.1.4 pid 17732, src bece7ac clean). The window is the referent.
+
+F13-1 (TC-13-03, defect, reproduces 2/2) query_screenshot {view:{include:["Box"]}} on a HIDDEN object leaves that object
+  VISIBLE in the live document and marks the document modified.
+  Repro (tc-13-03-repro.jsonl): document_open box-10-20-30 -> query_tree_summary Box visibility false; window: Box row greyed,
+  eye struck, empty viewport, title 'box-10-20-30' (tc-13-03-repro-1-opened.png). query_screenshot include [Box] -> OK,
+  rendered_objects [Box]. Then query_tree_summary Box visibility TRUE; window: eye open, box drawn in viewport,
+  title '* box-10-20-30' and tab 'box-10-20-30 : 1*' (tc-13-03-repro-2-after-include-render.png).
+  First occurrence: tc-13-03.jsonl + tc-13-03-hidden.png (box drawn, title '*' after the include render).
+  Contract broken: render_probe.py:187 "never mutates the document, object Visibility, or the live viewport".
+  Suspected mechanism (not verified in FreeCAD source): render_probe.py:226 FreeCADGui.subgraphFromObject(obj) builds a new
+  view provider whose default Visibility=true is written back to obj.Visibility.
+  Both sides AGREE after the call (parity holds); the defect is that a read-only query changed the user's document.
+
+F12-13 (TC-12-13, defect, reproduces 2/2) After a document is closed in the GUI (invoke_menu [File,Close]), its MCP handle
+  is NOT refused cleanly until something calls document_list: query_tree_summary / query_screenshot / query_mass_properties /
+  document_close on the stale handle return RECOMPUTE_ERROR "Cannot access attribute 'Objects' (or 'getObject' / 'Name')
+  of deleted object". After one document_list call the same handle returns INVALID_INPUT
+  "unknown or stale document handle: ...". Evidence: tc-12-13.jsonl, tc-12-13-repro.jsonl.
+  Code: DocumentRegistry._resolve (usecases/documents.py:212-222) returns the cached App.Document without a liveness check;
+  only document_list prunes closed documents (_prune_closed, documents.py:493 and :511).
+  TC-13-18 passed only because its literal order calls document_list before the stale reads.
+
+Harness notes (not product defects)
+  - invoke_menu is intermittent on this desktop: the same leaf ([Edit,Select All]) resolved at 15:08 and 15:19 and was refused
+    menu_path_unavailable 20+ times between; invoke_menu reports delivery 'foreground' (it needs the menu popup).
+  - Background window-targeted pixel clicks work where no UIA element is hit (route synthetic_events): viewport object
+    selection, tree/property disclosure arrows, Start-page card double-click. A pixel click inside a UIA TreeItem/Tab frame
+    becomes a UIA invoke and does nothing (no selection, no tab switch, no tab close).
+  - set_value on property-editor value rows works (Label rename, View>Visibility true/false).

@@ -1,0 +1,10 @@
+{
+ "schema": 1,
+ "pid": 33184,
+ "host": "127.0.0.1",
+ "port": 59314,
+ "token": "<masked, 43 chars>",
+ "contract_version": "1",
+ "freecad_version": "1.1.4",
+ "started": "2026-10-03T16:22:34.047356+00:00"
+}

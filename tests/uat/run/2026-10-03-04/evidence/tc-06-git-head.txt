@@ -1,0 +1,1 @@
+bece7ac test(render): recapture the render-tone clean controls on the dimmed rig

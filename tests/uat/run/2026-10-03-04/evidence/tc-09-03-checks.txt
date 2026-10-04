@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:tdQFb674Tf06dLQ67D2JzQ
+NOTE | roots ['Box']
+PASS | Given sole object resolved | Box
+PASS | missing path -> protocol rejection (isError, no envelope) | Input validation error: 'path' is a required property
+PASS | missing doc -> protocol rejection (isError, no envelope) | Input validation error: 'doc' is a required property
+PASS | missing export_id -> protocol rejection (isError, no envelope) | Input validation error: 'export_id' is a required property
+PASS | missing object -> protocol rejection (isError, no envelope) | Input validation error: 'object' is a required property
+PASS | none of the four has a status | ['SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT', 'SCHEMA_REJECT']
+PASS | contrast: bogus export_id -> envelope INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown or stale export_id: fcb-export:bogus", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\free

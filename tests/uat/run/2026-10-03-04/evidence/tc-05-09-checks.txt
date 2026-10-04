@@ -1,0 +1,27 @@
+NOTE | cleanup previous scenario: document_close TC0508 -> OK
+PASS | Given Pad volume 12000.0 | 12000.0
+NOTE | fixture Loose sketch (dof>0) via debug_exec -> {"status": "OK"} ('Loose', 0, 8)
+NOTE | verify_sketch Loose -> status=SPEC_FAILED dof=4
+NOTE | path1 under-constrained pad -> status=OK rolled_back=False expl=None
+NOTE | path1 COMMITTED (known defect: profile sketch not graded); undid it to restore the fixture -> {"status": "OK"} undone=buddy: feature_pad LoosePad
+PASS | [after under-constrained] GoodFillet status OK | {"status": "OK"}
+PASS | [after under-constrained] GoodFillet transaction_id '0' | 0
+PASS | [after under-constrained] no snapshot leaked | []
+PASS | [after under-constrained] document_undo NOT refused 'has an open transaction; undo would commit it' | {"status": "OK"}
+PASS | [after under-constrained] undone == 'buddy: <follow-up label>' (GoodFillet) | buddy: feature_fillet GoodFillet
+NOTE | path2 impossible fillet -> status=RECOMPUTE_ERROR proof=rolled_back_verified
+PASS | [after impossible fillet] GoodFillet status OK | {"status": "OK"}
+PASS | [after impossible fillet] GoodFillet transaction_id '0' | 0
+PASS | [after impossible fillet] no snapshot leaked | []
+PASS | [after impossible fillet] document_undo NOT refused 'has an open transaction; undo would commit it' | {"status": "OK"}
+PASS | [after impossible fillet] undone == 'buddy: <follow-up label>' (GoodFillet) | buddy: feature_fillet GoodFillet
+NOTE | path3 missing base -> preview={"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object in base: NoSuchPad", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\ apply={"status": "NO_TOKEN", "detail": "{\"status\": \"INVALID_INPUT\", \"detail\": {\"code\": \"INVALID_INPUT\", \"message\": \"unknown object in base: NoSuchPad\", \"data\": {\"exception\": \"ValidationError\", \"traceback\": \"Traceback (most recent call last):\\n  File \\\"C:\\\\Users\\\\thuan\\\\AppD
+NOTE | path3 apply without a token -> {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\
+PASS | [after missing base] GoodFillet status OK | {"status": "OK"}
+PASS | [after missing base] GoodFillet transaction_id '0' | 0
+PASS | [after missing base] no snapshot leaked | []
+PASS | [after missing base] document_undo NOT refused 'has an open transaction; undo would commit it' | {"status": "OK"}
+PASS | [after missing base] undone == 'buddy: <follow-up label>' (GoodFillet) | buddy: feature_fillet GoodFillet
+PASS | final GoodFillet re-applied OK for the visual | {"status": "OK"}
+PASS | no snapshot after the successful follow-up | []
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

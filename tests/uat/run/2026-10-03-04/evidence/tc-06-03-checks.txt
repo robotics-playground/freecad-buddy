@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close TC0602 -> OK
+PASS | fixture: PadA and PadB committed | {"status": "OK"}{"status": "OK"}
+PASS | Given: tree depth 2 lists PadA, PadB and a Body | 
+PASS | default skips containers/sketches/datums | ['PadA', 'PadB']
+PASS | include is the exact set ['PadA'] | ['PadA']
+PASS | exclude removes exactly PadA | {'exclude': ['PadB'], 'default': ['PadA', 'PadB']}
+PASS | unknown include -> INVALID_INPUT 'unknown object: NoSuchObject' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object: NoSuchObject", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n           ^^^^^
+PASS | explicit include of BodyA renders it | {'status': 'OK', 'objs': ['BodyA'], 'detail': ''}
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-03-after.png', 'exists': True, 'title': '- [0] Window "* TC0603 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

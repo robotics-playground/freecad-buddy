@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:2WvTiMiYADsRzTAFI830zw
+NOTE | roots ['Box']
+PASS | max_nodes 0 -> protocol rejection | Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)
+PASS | max_nodes 50 -> protocol rejection | Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)
+PASS | old behaviour gone: neither OK, no nodes, no truncated | 
+PASS | property list == ['doc','depth','root','filters'] | ['doc', 'depth', 'root', 'filters']
+PASS | successful call has no 'truncated' key | ['doc', 'total_objects', 'returned_nodes', 'depth', 'filters_applied', 'tree']
+PASS | depth 1 -> roots only, returned_nodes == len(tree) | (1, 1)
+PASS | edge report names retired_max_nodes_rejected as passed | [{'tool': 'retired_max_nodes_rejected', 'ok': True, 'status': 'SCHEMA_ERROR', 'detail': 'additionalProperties: False rejects the retired parameter'}]

@@ -1,0 +1,12 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:_AYJ8XnD2Tv1QARwNhSXww",
+  "name": "box_10_20_30",
+  "label": "box-10-20-30",
+  "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+ },
+ "text": "Opened box-10-20-30 -> fcb-doc:_AYJ8XnD2Tv1QARwNhSXww."
+}

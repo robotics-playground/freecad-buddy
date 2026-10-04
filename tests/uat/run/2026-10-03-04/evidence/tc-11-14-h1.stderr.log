@@ -1,0 +1,8 @@
+2026-10-04 12:43:06,572 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 12:43:06,755 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\_automation\uat\audit.jsonl
+2026-10-04 12:43:06,755 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-04 12:43:07,472 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Box
+2026-10-04 12:43:07,728 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Box
+2026-10-04 12:43:07,736 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:none
+2026-10-04 12:43:07,745 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:none
+2026-10-04 12:43:07,748 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:none

@@ -1,0 +1,12 @@
+PASS | Given PlateProfile geometry_count=4 malformed=[] | 4 []
+PASS | Given ScrapProfile reports its entries | build=OK entries=2
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+NOTE | remove ScrapProfile geo 1: OK null
+PASS | stale geo_id INVALID_INPUT naming outside the sketch | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[0].first geo_id 1 is outside the sketch (0..0, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-
+PASS | stale refusal pre-transaction (no snapshot_path) | 
+PASS | mixed batch non-OK | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[1].first geo_id 88 is outside the sketch (0..3, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1
+PASS | PlateProfile constraints unchanged by the batch | 11 -> 11
+PASS | malformed=[] | []
+PASS | OK dof=0 | {"status": "OK"}
+PASS | no FCB_TMP_snap_* left by this run | 10 -> 10
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

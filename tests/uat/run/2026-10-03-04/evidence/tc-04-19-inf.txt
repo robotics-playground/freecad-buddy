@@ -1,0 +1,3 @@
+REQUEST {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"feature_pad","arguments":{"doc":"fcb-doc:lhQ03S-MunfAe3xk5Vc_bg","body":"BlockBody","profile":"BlockProfile","name":"InfPad","length":{"value":1e999,"unit":"mm"}}}}
+STATUS 200 text/event-stream 'event: message\r\ndata: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"Input validation error: None is not of type \'number\'"}],"isError":true}}\r\n\r\n'
+RESPONSE {"jsonrpc": "2.0", "id": 2, "result": {"content": [{"type": "text", "text": "Input validation error: None is not of type 'number'"}], "isError": true}}

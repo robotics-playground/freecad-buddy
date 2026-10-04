@@ -1,0 +1,9 @@
+PASS | Given verify_sketch PlateProfile OK | {"status": "OK"}
+NOTE | before fit: {'view_fit_viewport': 'OK', 'detail': None}
+PASS | top-level visible rejected at schema (protocol error, no status, no mutation) | {"_raw": "Input validation error: Additional properties are not allowed ('visible' was unexpected)"}
+PASS | geometry color rejected at schema (protocol error, no status, no mutation) | {"_raw": "Input validation error: Additional properties are not allowed ('color' was unexpected)"}
+PASS | constraint weight rejected at schema (protocol error, no status, no mutation) | {"_raw": "Input validation error: Additional properties are not allowed ('weight' was unexpected)"}
+PASS | selector hint rejected at schema (protocol error, no status, no mutation) | {"_raw": "Input validation error: Additional properties are not allowed ('hint' was unexpected)"}
+PASS | tree unchanged, no ExtraKey | 
+PASS | PlateProfile geometry and constraints unchanged | 
+NOTE | after fit: {'view_fit_viewport': 'OK', 'detail': None}

@@ -1,0 +1,4 @@
+2026-10-04 12:32:03,030 INFO freecad_buddy.hosts.headless: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 12:32:03,211 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-03-04\evidence\tc-11-08-approve.jsonl
+2026-10-04 12:32:03,213 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-04 12:32:03,254 INFO freecad_buddy.dispatch: INVALID_INPUT: this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id

@@ -1,0 +1,9 @@
+PASS | Given BlockProfile dof=0 | {"status": "OK"}
+PASS | zero refused 'length must be positive, got 0' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "length must be positive, got 0.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\a
+PASS | negative refused 'length must be positive, got -10' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "length must be positive, got -10.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\
+PASS | missing length refused "up_to='Length' is length-driven; 'length' is required" | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "up_to='Length' is length-driven; 'length' is required", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy
+PASS | no envelope carries snapshot_path | 
+PASS | no snapshot written | new=[]
+PASS | no ZeroPad/NegPad/NoLenPad in tree | 
+FAIL | non-finite length refused 'must be finite' | {"_raw": "Input validation error: None is not of type 'number'"}
+PASS | BlockBody Tip is null | None

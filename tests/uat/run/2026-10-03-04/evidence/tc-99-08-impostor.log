@@ -1,0 +1,4 @@
+127.0.0.1 - - [04/Oct/2026 14:23:49] code 404, message File not found
+127.0.0.1 - - [04/Oct/2026 14:23:49] "GET /healthz HTTP/1.1" 404 -
+127.0.0.1 - - [04/Oct/2026 14:26:55] code 501, message Unsupported method ('POST')
+127.0.0.1 - - [04/Oct/2026 14:26:55] "POST /mcp HTTP/1.1" 501 -

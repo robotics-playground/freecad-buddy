@@ -1,0 +1,1 @@
+d=App.getDocument('uat_nested');o=d.addObject('App::Part','Outer');i=d.addObject('App::Part','Inner');o.addObject(i);b=d.addObject('Part::Box','Box');i.addObject(b);l=d.addObject('App::Link','BoxLink');l.setLink(b);l.Placement.Base=App.Vector(20,0,0);i.addObject(l);d.recompute()

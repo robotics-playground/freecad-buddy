@@ -1,0 +1,13 @@
+{
+ "type": "object",
+ "properties": {
+  "doc": {
+   "type": "string",
+   "description": "opaque fcb-doc handle"
+  }
+ },
+ "required": [
+  "doc"
+ ],
+ "additionalProperties": false
+}

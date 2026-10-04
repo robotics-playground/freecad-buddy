@@ -1,0 +1,13 @@
+PASS | Given MixedProfile geometry=[] | geometry=[]
+NOTE | mutation status=SPEC_FAILED detail={"code": "mutation.spec_failed", "message": "verify_sketch failed on MixedProfile (dof=2): sketch.fully_constrained"}
+FAIL | 4 geometry entries at index 0..3 | indexes=[]
+FAIL | types map to FreeCAD types in order | types=[]
+FAIL | mutation envelope names created geometry starting at 0 | structured keys=['mutation', 'sketch', 'sketch_state', 'geo_ids', 'constraint_ids'] created=null
+PASS | verify_sketch OK dof=0 | status=OK dof=0 fc=True
+PASS | kind ellipse is a schema reject | {"_raw": "Input validation error: 'ellipse' is not one of ['line_segment', 'circle', 'arc_of_circle', 'point']"}
+PASS | start [0,0,0,0] (maxItems 3) and [0] (minItems 2) are schema rejects | {"_raw": "Input validation error: [0, 0, 0, 0] is too long"} || {"_raw": "Input validation error: [0] is too short"}
+PASS | bare number radius is a schema reject | {"_raw": "Input validation error: 2.5 is not of type 'object'"}
+NOTE | geometry count after rejects: 0
+NOTE | diagnostic: adding the TC's 4 arc-endpoint constraints -> INVALID_INPUT {"code": "INVALID_INPUT", "message": "constraints[0].second geo_id 2 is outside the sketch (0..-1, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_bud
+NOTE | diagnostic verify after: OK {"sketch": "MixedProfile", "dof": 0, "fully_constrained": true, "geometry_count": 0, "constraint_count": 0, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": []}
+NOTE | fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

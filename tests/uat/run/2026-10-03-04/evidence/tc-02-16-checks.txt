@@ -1,0 +1,10 @@
+PASS | Given no document open | 0 open document(s).
+PASS | first close OK closed:true name sphere_r10/sphere-r10 | {'doc': 'fcb-doc:yd3hUwrYJOOQi8ua3e5saw', 'name': 'sphere_r10', 'closed': True}
+FAIL | first close name == sphere-r10 (literal) | sphere_r10
+PASS | second close INVALID_INPUT exact message | ['INVALID_INPUT', 'unknown or stale document handle: fcb-doc:yd3hUwrYJOOQi8ua3e5saw']
+PASS | message names the exact handle | unknown or stale document handle: fcb-doc:yd3hUwrYJOOQi8ua3e5saw
+PASS | query via released handle refused same way | ['INVALID_INPUT', 'unknown or stale document handle: fcb-doc:yd3hUwrYJOOQi8ua3e5saw']
+PASS | 0 open document(s). | 0 open document(s).
+PASS | query_capabilities OK | OK
+PASS | golden file intact (size, sha) | 1882
+PASS | reopen fresh handle volume 4188.7902 | {'fresh': 'fcb-doc:tT3qTfBzOrWGLXckHrCUdQ', 'volume': 4188.790204786392}

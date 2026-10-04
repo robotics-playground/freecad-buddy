@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given faulted fixture opens (Pad over emptied Sketch) | ('OK', '')
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | status RECOMPUTE_ERROR, never OK | RECOMPUTE_ERROR
+PASS | verdict == RECOMPUTE_ERROR == status | RECOMPUTE_ERROR
+PASS | a recompute.object check passed:false detail.code recompute.error | [{'id': 'recompute.object', 'measured': 'Touched', 'expected': None, 'passed': False, 'detail': {'code': 'recompute.error', 'message': 'Body: Touched', 'objects': ['Body']}}, {'id': 'recompute.object', 'measured': 'Linked shape object is empty', 'expected': None, 'passed': False, 'detail': {'code': 'recompute.error', 'message': 'Pad: Linked shape object is empty', 'objects': ['Pad']}}]
+PASS | text matches 'Recompute: <n> error(s): <names>.' | Recompute: 2 error(s): Body, Pad.
+PASS | _RECOMPUTE_ERROR_STATES includes Touched | 21:_RECOMPUTE_ERROR_STATES = frozenset({"Invalid", "Error", "Touched"}) (TC cites verify.py:24)
+PASS | stable across two calls: same status and failing_objects | (['Body', 'Pad'], ['Body', 'Pad'])
+PASS | clean box-10-20-30 in same session -> OK | OK

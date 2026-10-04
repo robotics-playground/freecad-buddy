@@ -1,0 +1,35 @@
+TEMP=C:/Users/thuan/AppData/Local/Temp
+pre-existing TEMP FCB_TMP_snap_* count: 10
+--- planted at 14:15:27
+TEMP snap dirs: 12
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_5vfvwol0/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_6trobotl/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_8w4fs72c/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap__3t9_knt/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_bkkqvw10/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_bo15ri4_/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_hbam9tic/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_p3jwakfm/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_sm8btlw3/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_tc9907a/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_tc9907b/
+C:/Users/thuan/AppData/Local/Temp/FCB_TMP_snap_yjuiim6p/
+workdir tmp listing:
+total 400
+drwxr-xr-x 1 thuan 197609      0 Oct  4 14:15 ./
+drwxr-xr-x 1 thuan 197609      0 Sep 13 20:55 ../
+-rw-r--r-- 1 thuan 197609  59500 Oct  4 13:13 FCB_TMP_shot_1lcmensu.png
+-rw-r--r-- 1 thuan 197609 269963 Oct  4 13:26 FCB_TMP_shot_94y_p2wf.png
+-rw-r--r-- 1 thuan 197609  34929 Oct  4 13:26 FCB_TMP_shot_u0gyymrc.png
+-rw-r--r-- 1 thuan 197609  34929 Oct  4 13:24 FCB_TMP_shot_ysyhberw.png
+drwxr-xr-x 1 thuan 197609      0 Oct  4 14:15 FCB_TMP_snap_tc9907a/
+drwxr-xr-x 1 thuan 197609      0 Oct  4 14:15 FCB_TMP_snap_tc9907b/
+drwxr-xr-x 1 thuan 197609      0 Oct  4 14:15 tc9907_not_prefixed/
+C:/Users/thuan/freecad-buddy-workdir/tmp/FCB_TMP_snap_tc9907a/:
+box.FCStd
+
+C:/Users/thuan/freecad-buddy-workdir/tmp/FCB_TMP_snap_tc9907b/:
+box.FCStd
+
+C:/Users/thuan/freecad-buddy-workdir/tmp/tc9907_not_prefixed/:
+keep.txt

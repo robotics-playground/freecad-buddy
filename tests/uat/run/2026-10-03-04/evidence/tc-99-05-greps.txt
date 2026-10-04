@@ -1,0 +1,12 @@
+--- grep snap/ transaction.py
+rc=1
+--- mkdtemp line
+42:_SNAPSHOT_PREFIX = "FCB_TMP_snap_"
+100:    directory = tempfile.mkdtemp(prefix=_SNAPSHOT_PREFIX, dir=temp_dir())
+--- workdir tmp now
+total 40
+drwxr-xr-x 1 thuan 197609     0 Oct  4 14:22 ./
+drwxr-xr-x 1 thuan 197609     0 Sep 13 20:55 ../
+-rw-r--r-- 1 thuan 197609 34929 Oct  4 14:20 FCB_TMP_shot_zv_lnazj.png
+--- TEMP snap count
+10

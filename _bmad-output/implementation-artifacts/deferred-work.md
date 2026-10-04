@@ -1463,3 +1463,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   summary: Resolves two entries above. (1) The FreeCAD 1.0.0 in-FreeCAD suite failures (2 failures, 1 error) that stopped the CI 1.0.x headless leg. (2) The unparseable `.github/workflows/ci.yml`.
   evidence: (1) The 1.0.x leg is removed: the project targets FreeCAD 1.1 only (decision D1, 2026-10-03). `ci.yml` has one headless leg `{freecad: "1.1.3", python: "3.11"}`, and the 1.0-only tests are removed. On FreeCAD 1.1.3 the in-FreeCAD suite gives `Ran 672 tests ... OK (skipped=1)`. (2) The step name `"G2 fault fixtures are all materialized (no 'fixture: pending')"` is quoted. `yaml.safe_load` parses all three workflows, and `ci.yml` has jobs `arch-checks`, `headless`, `g0-verdict` and `render`.
   resolution: resolved by spec-drop-freecad-1-0-support.
+
+- source_spec: none
+  summary: TC-99 (AD-25) fails differently than documented — the per-session working directory and its start-of-session sweep are now partly implemented, so the TC-99 AD-25 scenarios (03, 04, 05) no longer show the recorded deviation; decide which parts to promote into the green gate and update TC-99 and the spine gap note.
+  evidence: UAT run `tests/uat/run/2026-10-03-04` (HEAD bece7ac, FreeCAD 1.1.4), TC-99-03/04/05 reported FAILS-DIFFERENTLY by the UAT runner; test-plan §9 says a TC-99 scenario that fails differently is a real finding.
+
+- source_spec: none
+  summary: A second RPC client against the in-FreeCAD listener connects and then hangs, instead of the documented immediate refusal (`WinError 10061`) — TC-99-07 (AD-26, sequential `_accept_loop`) fails differently, so a waiting client can block with no busy error and no timeout reported.
+  evidence: UAT run `tests/uat/run/2026-10-03-04`, TC-99-07 FAILS-DIFFERENTLY (second client connects and hangs). Settle by reading `adapters/rpc_listener.py` `_accept_loop` backlog and the client's connect/read timeouts, and by deciding whether AD-26's `-32000` busy error is now required.
+
+- source_spec: none
+  summary: GUI test recovery is blocked when FreeCAD and the `cua-driver` daemon run elevated but the agent shell does not — a modal dialog cannot be dismissed in the background (UIA timeout), and `WM_CLOSE`, `taskkill` and `kill_app` are all refused, so a stuck FreeCAD needs a human.
+  evidence: UAT run `tests/uat/run/2026-10-03-04`, TC-99-08: FreeCAD pid 32296 stuck on a modal "Open document" dialog after `invoke_menu ["File","Open…"]` with MCP down; Cancel click `background_unavailable`, `WM_CLOSE` denied, `taskkill` Access denied, `kill_app` `foreign_process_termination_denied`. Settle in the GUI e2e harness standard: launch FreeCAD at the same integrity level as the agent shell, and avoid modal file dialogs in scripted steps (open documents through MCP or a path argument).

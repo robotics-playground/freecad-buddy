@@ -1,0 +1,13 @@
+PASS | Given PlatePad vol 12000 | 12000.0
+NOTE | sketch_create on PlatePad Face6: {"status": "OK"} {"status": "OK"}; add: {"status": "OK"} {"status": "OK"}
+PASS | Given SlotProfile dof=0 | {"status": "OK"}
+PASS | Given ThroughProfile dof=0 | {"status": "OK"}
+PASS | step 1 OK rolled_back=false | {"status": "OK"}
+PASS | SlotPocket vol 11800 | 11799.999999999998
+PASS | step 2 OK rolled_back=false | {"status": "OK"}
+PASS | ThroughPocket vol 11300 | 11300.0
+PASS | shape_summary face_count > 6, solid_count=1 | {"solid_count": 1, "face_count": 15, "edge_count": 36, "vertex_count": 24, "is_valid": true, "volume": 11300.0, "area": 5880.0, "bbox": [60.0, 40.0, 5.0]}
+PASS | verify_shape ThroughPocket OK | {"status": "OK"}
+PASS | ThroughPocket Type=ThroughAll | ThroughAll
+PASS | ThroughAll on feature_pad refused | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "up_to 'ThroughAll' is not one of ['Length', 'UpToLast', 'UpToFirst', 'UpToFace', '?TwoLengths', 'UpToShape']", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\th
+PASS | ThroughAll pocket needed no length (step 2 sent no length and committed) | 

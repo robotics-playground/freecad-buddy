@@ -1,0 +1,3 @@
+FAIL | repro {'include': ['BodyA']}: image has non-background pixels | {'status': 'OK', 'objs': ['BodyA'], 'empty_scene': False, 'stats': {'size': [1920, 1920], 'bg': (255, 255, 255), 'fill': 0.0, 'bbox': None}}
+FAIL | repro {'include': ['BodyA'], 'camera': 'front'}: image has non-background pixels | {'status': 'OK', 'objs': ['BodyA'], 'empty_scene': False, 'stats': {'size': [1920, 1920], 'bg': (255, 255, 255), 'fill': 0.0, 'bbox': None}}
+FAIL | repro {'include': ['BodyB']}: image has non-background pixels | {'status': 'OK', 'objs': ['BodyB'], 'empty_scene': False, 'stats': {'size': [1920, 1920], 'bg': (255, 255, 255), 'fill': 0.0, 'bbox': None}}

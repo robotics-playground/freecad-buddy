@@ -1,0 +1,3 @@
+{"tool": "document_list", "args": {}, "isError": false, "seconds": 0.037, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:DGHQi97joZ_gXm5SAkv0Yg", "name": "BracketPlate", "label": "BracketPlate", "transient": true}]}, "text": "1 open document(s): BracketPlate."}}
+{"tool": "document_close", "args": {"doc": "fcb-doc:DGHQi97joZ_gXm5SAkv0Yg"}, "isError": false, "seconds": 0.02, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:DGHQi97joZ_gXm5SAkv0Yg", "name": "BracketPlate", "closed": true}, "text": "Closed BracketPlate (doc=fcb-doc:DGHQi97joZ_gXm5SAkv0Yg)."}}
+{"note": "document_close BracketPlate -> OK"}

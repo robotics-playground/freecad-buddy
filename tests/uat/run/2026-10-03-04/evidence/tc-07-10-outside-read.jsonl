@@ -1,0 +1,2 @@
+{"file": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-10-coarse.stl", "exists": true, "freecad": "1.1.3", "facets": 218, "points": 111, "volume": 3942.874755859375, "solid": true, "non_manifolds": false, "bbox": [19.7815, 19.8904, 20.0]}
+{"file": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-10-fine.stl", "exists": true, "freecad": "1.1.3", "facets": 10174, "points": 5089, "volume": 4182.85791015625, "solid": true, "non_manifolds": false, "bbox": [19.9921, 19.9881, 20.0]}

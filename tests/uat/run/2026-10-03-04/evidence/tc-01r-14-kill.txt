@@ -1,0 +1,36 @@
+== When kill_app pid 32068 2026-10-04T16:12:41+07:00
+{  "refusal": {    "code": "foreign_process_termination_denied",    "message": "standard mode may terminate only a process proven to have been launched by this Cua runtime"  },  "status": "refused"}
+-- kill_app refused; TerminateProcess (taskkill /F equivalent, no shutdown handlers; RUN-CONTEXT allows a kill for this TC)
+True
+== Then FreeCAD gone
+(no process 32068)
+== connect to old RPC port 58780
+refused: ConnectionRefusedError
+elapsed 2.03
+== proxy processes
+pythonw.exe                  37596 Console                    1      5,656 K
+pythonw.exe                  33828 Console                    1     61,760 K
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       33828
+== one MCP call through the endpoint
+{
+ "status": "WORKER_CRASHED",
+ "detail": {
+  "code": "WORKER_CRASHED",
+  "message": "listener connection dropped",
+  "data": {
+   "rpc": "unreachable"
+  }
+ },
+ "structured_content": {},
+ "text": ""
+}
+== stale discovery file
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-32068.json
+== addon.log tail
+2026-10-04 16:11:59,984 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 16:12:00,205 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:58780
+2026-10-04 16:12:00,512 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 37596) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+== mcp-proxy.log tail
+2026-10-04 16:12:00,937 INFO freecad_buddy.hosts.gui_external: freecad-buddy GUI-external MCP server on http://127.0.0.1:8765/mcp
+== second MCP call after the kill (proxy must re-discover; only stale records exist)
+WORKER_CRASHED {"code": "WORKER_CRASHED", "message": "no live listener discovery file", "data": {"rpc": "unreachable"}}

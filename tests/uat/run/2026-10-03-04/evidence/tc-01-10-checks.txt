@@ -1,0 +1,33 @@
+== close the visibility-modified document so the quit raises no save dialog (deviation)
+ "status": "OK",
+ "text": "0 open document(s)."
+== When: File > Exit
+2026-10-03T23:40:55+07:00
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+waited 1s
+== Then FreeCAD exited
+(nothing)
+== Then discovery gone
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-35716.json': No such file or directory
+== Then proxy child terminated (spawn pid 33740, listener 37032)
+(nothing)
+== Then :8765 free
+(no listener/established; TIME_WAIT lines ignored)
+== Then other discovery files unchanged
+unchanged (11 files)
+== Then list_windows / capture dead pid
+{
+  "_legacy_windows": [],
+  "current_space_id": null,
+  "windows": []
+}
+No window with window_id 7018696 exists. Call `list_windows({"pid": 35716})` for candidates.
+ls: cannot access 'tests/uat/run/2026-10-03-04/evidence/tc-01-10-after.png': No such file or directory
+      "title": "intent.md (Working Tree) (intent.md) - freecad-buddy - Visual Studio Code",
+      "title": "freecad-buddy - File Explorer",
+      "title": "intent.md (Working Tree) (intent.md) - freecad-buddy - Visual Studio Code",
+      "title": "freecad-buddy - File Explorer",
+== addon.log tail
+    chunk = self._conn.recv(65536)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host

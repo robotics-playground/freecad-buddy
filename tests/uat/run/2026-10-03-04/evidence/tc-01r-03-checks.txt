@@ -1,0 +1,19 @@
+== Given query_capabilities
+ "status": "OK",
+== Given open
+open: OK fcb-doc:r_tqgIfYrStbLqLPlZnk3w
+showall: {"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 3283362, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+fit: {"status": "OK", "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "computed", "stale_reason": null}, "text": "fitted the live viewport to 'box_10_20_30'"}
+== When list
+45
+additionalProperties values: ['False'] count False: 45
+== export_self_read grep
+(none)
+== debug_exec grep
+(none)
+== families
+{'document_': 7, 'query_': 8, 'verify_': 6, 'export_': 3, 'sketch_': 8, 'feature_': 11, 'preview_': 1, 'view_': 1}
+== read-only 13
+True
+== same as 00-tools-list?
+True

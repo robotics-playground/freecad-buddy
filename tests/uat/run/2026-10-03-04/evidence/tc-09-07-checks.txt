@@ -1,0 +1,13 @@
+NOTE | cleanup previous scenario: document_close TC0906 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box40-hole-r5 OK | fcb-doc:ufJlO41IE9LfHBI8ZRSJLg
+NOTE | roots ['BoxHole']
+PASS | Given query_tree_summary OK | 1
+PASS | depth 0 -> protocol rejection | Input validation error: 0 is less than the minimum of 1
+PASS | depth -1 -> protocol rejection | Input validation error: -1 is less than the minimum of 1
+PASS | depth 2147483647 OK, returned_nodes == actual node count, no hang | {'returned_nodes': 1, 'counted': 1}
+PASS | depth 1 OK, returned_nodes == len(tree) | {'returned_nodes': 1, 'len_tree': 1}
+PASS | max_edges 0 and -1 -> protocol rejection | ['Input validation error: 0 is less than the minimum of 1', 'Input validation error: -1 is less than the minimum of 1']
+PASS | max_edges 1 OK with at most one edge | {'status': 'OK', 'edges': [], 'keys': ['edges', 'total_edges', 'returned_edges', 'truncated']}
+PASS | occurrences 0 and 1 -> protocol rejection | ['Input validation error: 0 is less than the minimum of 2', 'Input validation error: 1 is less than the minimum of 2']
+PASS | addon log: no ValidationError traceback for rejected boundary calls | 0 bytes; lines: 0

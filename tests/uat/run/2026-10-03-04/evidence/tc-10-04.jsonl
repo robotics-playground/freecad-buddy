@@ -1,0 +1,36 @@
+{"t": 1791089839.724, "tag": "04-open", "client": "gui", "event": "connect", "port": 50605}
+{"t": 1791089839.724, "tag": "04-open", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"t": 1791089839.724, "tag": "04-open", "client": "gui", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"t": 1791089839.724, "tag": "04-open", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 2, "method": "document_open", "params": {"path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}}}
+{"t": 1791089839.771, "tag": "04-open", "client": "gui", "event": "recv", "seconds": 0.047, "frame": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ", "name": "box_10_20_30", "label": "box-10-20-30", "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:KFsQEkqE-acTtZt-g75RgQ."}}}
+{"t": 1791089841.045, "tag": "04-open", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 3, "method": "view_fit_viewport", "params": {"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ"}}}
+{"t": 1791089841.046, "tag": "04-open", "client": "gui", "event": "recv", "seconds": 0.001, "frame": {"jsonrpc": "2.0", "id": 3, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "text": "fitted the live viewport to 'box_10_20_30'", "framing": {"fits": true, "ratio": 0.9489144316730523, "checked": "computed", "stale_reason": null}}}}
+{"t": 1791089841.046, "tag": "04-open", "client": "gui", "event": "close"}
+{"t": 1791089849.572, "tag": "04", "client": "A", "event": "connect", "port": 50605}
+{"t": 1791089849.572, "tag": "04", "client": "A", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"t": 1791089849.572, "tag": "04", "client": "A", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"t": 1791089849.572, "tag": "04", "client": "A", "event": "send", "frame": {"jsonrpc": "2.0", "id": 2, "method": "document_list", "params": {}}}
+{"t": 1791089849.572, "tag": "04", "client": "A", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30."}}}
+{"t": 1791089849.572, "tag": "04", "client": "A", "event": "close"}
+{"t": 1791089849.572, "tag": "04", "client": "B", "event": "connect", "port": 50605}
+{"t": 1791089849.572, "tag": "04", "client": "B", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "document_list", "params": {}}}
+{"t": 1791089849.572, "tag": "04", "client": "B", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32002, "message": "handshake required"}}}
+{"t": 1791089849.572, "tag": "04", "client": "B", "event": "close"}
+{"t": 1791089849.572, "tag": "04", "client": "C", "event": "connect", "port": 50605}
+{"t": 1791089849.572, "tag": "04", "client": "C", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"t": 1791089849.572, "tag": "04", "client": "C", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"t": 1791089849.572, "tag": "04", "client": "C", "event": "send", "frame": {"jsonrpc": "2.0", "id": 2, "method": "document_list", "params": {}}}
+{"t": 1791089849.572, "tag": "04", "client": "C", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30."}}}
+{"t": 1791089849.572, "tag": "04", "client": "C", "event": "close"}
+{"t": 1791089850.09, "tag": "04-fit", "client": "gui", "event": "connect", "port": 50605}
+{"t": 1791089850.09, "tag": "04-fit", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"t": 1791089850.09, "tag": "04-fit", "client": "gui", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"t": 1791089850.09, "tag": "04-fit", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 2, "method": "view_fit_viewport", "params": {"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ"}}}
+{"t": 1791089850.09, "tag": "04-fit", "client": "gui", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "text": "fitted the live viewport to 'box_10_20_30'", "framing": {"fits": true, "ratio": 0.9489144316730523, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometry"}}}}
+{"t": 1791089850.09, "tag": "04-fit", "client": "gui", "event": "close"}
+{"t": 1791089863.072, "tag": "04-close", "client": "gui", "event": "connect", "port": 50605}
+{"t": 1791089863.072, "tag": "04-close", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"t": 1791089863.072, "tag": "04-close", "client": "gui", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"t": 1791089863.072, "tag": "04-close", "client": "gui", "event": "send", "frame": {"jsonrpc": "2.0", "id": 2, "method": "document_close", "params": {"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ"}}}
+{"t": 1791089863.078, "tag": "04-close", "client": "gui", "event": "recv", "seconds": 0.006, "frame": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:KFsQEkqE-acTtZt-g75RgQ", "name": "box_10_20_30", "closed": true}, "text": "Closed box_10_20_30 (doc=fcb-doc:KFsQEkqE-acTtZt-g75RgQ)."}}}
+{"t": 1791089863.078, "tag": "04-close", "client": "gui", "event": "close"}

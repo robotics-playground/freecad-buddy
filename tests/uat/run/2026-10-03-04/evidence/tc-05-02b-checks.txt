@@ -1,0 +1,6 @@
+NOTE | cleanup TC0502 close -> OK
+NOTE | rerun feature_pad -> {"status": "OK"}; watcher lines=4
+PASS | rerun: snapshot dir seen mid-operation | 4
+FAIL | rerun: dir held TC0502b.FCStd while bracket open | ['1791054883.4316 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__3liws48 ["<listdir PermissionError: [WinError 5] Access is denied: \'C:/Users/thuan/freecad-buddy-workdir/tmp\\\\\\\\FCB_TMP_snap__3liws48\'>"] exists(TC0502b.FCStd)=False', '1791054883.4382 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__3liws48 ["<listdir PermissionError: [WinError 5] Access is denied: \'C:/Users/thuan/freecad-buddy-workdir/tmp\\\\\\\\FCB_TMP_snap__3liws48\'>"] exists(TC0502b.FCStd)=False', '1791054883.4446 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__3liws48 ["<listdir PermissionError: [WinError 5] Access is denied: \'C:/Users/thuan/freecad-buddy-workdir/tmp\\\\\\\\FCB_TMP_snap__3liws48\'>"] exists(TC0502b.FCStd)=False', '1791054883.4511 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap__3liws48 ["<listdir PermissionError: [WinError 5] Access is denied: \'C:/Users/thuan/freecad-buddy-workdir/tmp\\\\\\\\FCB_TMP_snap__3liws48\'>"] exists(TC0502b.FCStd)=False']
+PASS | rerun: gone after commit | []
+NOTE | cleanup TC0502b close -> OK

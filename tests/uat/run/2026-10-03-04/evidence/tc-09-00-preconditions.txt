@@ -1,0 +1,9 @@
+TC-09 preconditions (2026-10-04)
+PASS fcb env H1-capable: fcb python "import FreeCAD, mcp" -> ok ['1','1','3']
+PASS fault fixture benchmarks/g0/fault-injection/wrong-volume/fixture.FCStd present
+PASS 5 golden models present (box-10-20-30, box40-hole-r5, cylinder-r5-h20, sphere-r10, two-box-compound)
+PASS no stale H1 server: no freecad_buddy.hosts.main process; :8765 LISTEN pid 33976 (GUI proxy only)
+PASS cua-driver drives FreeCAD pid 32440 window 15407174 (get_window_state tree contains QOpenGLWidget; see below)
+PASS Fit All toolbar Button has element_token; click returned route accessibility (tc-09-01-mcp.jsonl gui_fitall)
+PASS evidence dir writable
+NOTE golden box-10-20-30 opens with Box hidden (known harness fact) -> View>Visibility>Show All Objects via cua-driver invoke_menu before every fit

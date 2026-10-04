@@ -1,0 +1,25 @@
+== TC-01-01 Given 2026-10-04T15:56:36+07:00
+-- tasklist freecad:
+(none)
+-- netstat :8765:
+  TCP    127.0.0.1:51758        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:51759        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:51760        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:51761        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:51762        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:51763        127.0.0.1:8765         TIME_WAIT       0
+addon.log rotated to addon.log.prev
+addon.log.prev
+mcp-proxy.log
+rpc-11924.json
+rpc-1444.json
+rpc-1456.json
+rpc-19588.json
+rpc-20096.json
+rpc-21148.json
+rpc-21164.json
+rpc-32380.json
+rpc-33492.json
+rpc-36912.json
+rpc-38812.json
+rpc-9756.json

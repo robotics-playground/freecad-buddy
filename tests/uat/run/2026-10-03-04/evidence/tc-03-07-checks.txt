@@ -1,0 +1,14 @@
+NOTE | Given sketch build: OK
+NOTE | Given pad: OK null
+NOTE | reference constraint TabDiagRef: OK null
+PASS | Given TabWidth value {10 mm} driving=true | {"id": 10, "type": "DistanceX", "name": "TabWidth", "driving": true, "value": {"value": 10.0, "unit": "mm"}}
+PASS | Given TabPad volume near 2000 | volume=1999.9999999999995
+NOTE | before fit: {'view_fit_viewport': 'OK', 'detail': None}
+PASS | datum edit commits OK rolled_back=false | {"status": "OK"}
+PASS | TabWidth now {25 mm} | {"id": 10, "type": "DistanceX", "name": "TabWidth", "driving": true, "value": {"value": 25.0, "unit": "mm"}}
+PASS | verify_sketch OK dof=0 | status=OK dof=0
+PASS | TabPad volume near 5000 within 0.1% | recompute=OK volume=4999.999999999999
+PASS | verify_shape TabPad OK | {"status": "OK"}
+PASS | value+sense INVALID_INPUT naming exactly-one message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "sketch_set_datum requires exactly one of 'value' and 'sense'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeC
+PASS | non-driving datum INVALID_INPUT naming read-only message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraint 12 is not driving; its datum is read-only", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\
+NOTE | after fit: {'view_fit_viewport': 'OK', 'detail': None}

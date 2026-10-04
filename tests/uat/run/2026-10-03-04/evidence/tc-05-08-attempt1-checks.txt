@@ -1,0 +1,16 @@
+PASS | debug_exec enabled (exec host) | {"status": "OK"}
+NOTE | No GUI document has UndoMode 0 and shim.enable_undo turns undo on (shim.py:366-378), so the precondition is forced: debug_exec sets doc.UndoMode=0 and makes the NEXT shim.enable_undo call report the mode without writing it (one-shot). Patch applied AFTER the preview so the preview's copy does not consume it.
+NOTE | patch -> {"status": "OK"} value_repr=0
+PASS | Given document_undo refused 'undo is unavailable on <Name>: the document reports UndoMode 0' | undo is unavailable on TC0508: the document reports UndoMode 0
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | envelope status=RECOMPUTE_ERROR text='Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Fillet: BRep_API: command not done'
+FAIL | explanation ends '; undo unavailable on this document' | recompute left 1 object(s) invalid: Fillet: BRep_API: command not done
+FAIL | rollback_proven 'rolled_back_via_snapshot' | rolled_back_verified
+PASS | rolled_back true and fingerprint_after == preview fingerprint_before | {'rolled_back': True, 'after': '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8', 'preview_before': '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8'}
+NOTE | document_list after: [('TC0508', 'fcb-doc:x5vQKvzREMrGqlNxdzoLxA')]
+PASS | Pad volume = pre-mutation 12000.0 | {'status': 'OK', 'vol': 12000.0}
+NOTE | Fillet in tree after: False
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}
+PASS | control doc WITH undo: explanation does NOT contain 'undo unavailable' | recompute left 1 object(s) invalid: Fillet: BRep_API: command not done
+NOTE | control: status=RECOMPUTE_ERROR proof=rolled_back_verified
+NOTE | control doc closed -> OK

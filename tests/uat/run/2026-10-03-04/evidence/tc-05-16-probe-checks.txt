@@ -1,0 +1,1 @@
+NOTE | post-commit body chain (in-process) -> {'Group': ['Sketch', 'Pad', 'Fillet', 'Chamfer'], 'Tip': 'Chamfer', 'Chamfer.BaseFeature': 'Pad', 'Chamfer.Base': ('Pad', ['Edge2']), 'Fillet.BaseFeature': 'Pad', 'Body.vol': 11865.0, 'Chamfer.vol': 11865.0, 'Fillet.vol': 11974.247779607693}

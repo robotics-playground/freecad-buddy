@@ -1,0 +1,15 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given body document opens | Opened tc-02-body -> fcb-doc:2H_uSnKSPlIW6jp48uus1Q.
+PASS | Given a PartDesign::Pad node | 
+PASS | before view_fit_viewport OK | {'status': 'OK', 'detail': None}
+PASS | identity: name Pad, label, type PartDesign::Pad | {'name': 'Pad', 'label': 'Pad', 'type': 'PartDesign::Pad'}
+PASS | properties include Length, Type, Profile, Reversed | {'Length': '5.0 mm', 'Type': 'Length', 'Profile': ['<Sketcher::SketchObject>', []], 'Reversed': False}
+PASS | Length readable, not null | 5.0 mm
+PASS | healthy error is null | None
+PASS | broken: GUI edit landed (Length 0 mm) | 0.0 mm
+PASS | broken error is non-empty string | Cannot create a pad with a total length of zero.
+PASS | recompute RECOMPUTE_ERROR naming Pad in structured_content.errors | {'status': 'RECOMPUTE_ERROR', 'errors': [{'name': 'Pad', 'error': ['Touched', 'Invalid']}], 'detail': {'code': 'recompute.failed_objects', 'message': "Pad: ['Touched', 'Invalid']", 'objects': ['Pad']}}
+PASS | broken object query OK and valid JSON | OK
+PASS | unknown object -> INVALID_INPUT unknown object: NoSuchPad | ['INVALID_INPUT', 'unknown object: NoSuchPad']
+PASS | after undo: Length restored and error null | {'Length': '5.0 mm', 'error': None, 'undo': 'OK', 'recompute': 'OK'}
+PASS | after undo view_fit_viewport OK | {'status': 'OK', 'detail': None}

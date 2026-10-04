@@ -1,0 +1,199 @@
+[
+ {
+  "id": "TC-10-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-01-before.png",
+   "tc-10-01-after.png",
+   "tc-10-01-e2e_report.json",
+   "tc-10-01-server.stderr.log",
+   "tc-10-01-six-spans.json",
+   "tc-10-01-checks.txt",
+   "tc-10-01.jsonl"
+  ],
+  "note": "run_mcp_e2e.py 29/29, all_passed True; tool sequence = execution order of the script; grep -c marshal = 0, no reentrant/deadlock/already in marshal. TC defect: the report has no [start,end] spans (keys: detail, ok, status, tool), so the When sentence (six back-to-back reads with entry/exit timestamps) was run as a supplement on one H1 connection: order = request order, 0 overlaps, each 8-12 ms (tc-10-01-six-spans.json). TC defect: report path is _automation/e2e_report.json, copied to evidence. Visual: view_fit_viewport OK; window paints, title * box-10-20-30 - FreeCAD 1.1.4, no Not Responding, no modal, one whole box framed (box opened hidden; shown via View>Visibility>Show All Objects). Cleanup: document_close OK. The literal cleanup rm -f evidence/*.step *.stl was NOT run: TC-10-01 wrote none, and the glob would delete 5 STEP files that are TC-07/TC-09 evidence in this shared run folder (test-case defect: cleanup glob too broad)."
+ },
+ {
+  "id": "TC-10-02",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-02-before.png",
+   "tc-10-02-after.png",
+   "tc-10-02-e2e_report.json",
+   "tc-10-02-latency.json",
+   "tc-10-02-checks.txt",
+   "tc-10-02.jsonl"
+  ],
+  "note": "run_mcp_e2e.py 29/29; grep -c TIMEOUT = 0; 5 query_screenshot entries status OK. TC defect: the literal median command fails with KeyError duration_s (report has no per-check durations). Judged on a supplement that times every read-only call (tool-call entry to envelope return) on one H1 connection over the 5 golden models: n=43 (>=8), median 0.008 s (<=15 s), max 0.645 s, 0 TIMEOUT, 0 non-OK, query_screenshot 0.17-0.25 s (<60 s), every call far below the smallest declared timeout_s (30 s). Visual: view_fit_viewport OK; window paints, no Not Responding, no modal, one whole box framed. Cleanup: document_close OK; literal rm tc-10-02-*.png NOT run (it would delete this scenario visual evidence; test-case defect)."
+ },
+ {
+  "id": "TC-10-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-03-before.png",
+   "tc-10-03-after.png",
+   "tc-10-03-checks.json",
+   "tc-10-03.jsonl",
+   "tc-10-03-proxy-stop.txt"
+  ],
+  "note": "Pins SHIPPED behaviour (AD-26 gap held in TC-99-03, not double-counted). Proxy stopped first (TerminateProcess; it holds the only listener connection). A hello OK + query_screenshot OK 0.30 s, held open; B socket.connect returned at once; B 5 s recv after rpc_hello = timeout, 0 bytes; no -32000 frame on B; after A closed, B hello answered at once with contract_version 1; B document_list OK; 0 new addon.log lines, no connection handler crashed. TC-99-03 present, but in tests/uat/testcases/TC-99-ad-conformance-gaps.md, not tests/uat/ (path defect in the Then). Visual: view_fit_viewport (listener) OK; window paints, no Not Responding, no modal, one whole box framed. Cleanup document_close OK."
+ },
+ {
+  "id": "TC-10-04",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-04-before.png",
+   "tc-10-04-after.png",
+   "tc-10-04-checks.json",
+   "tc-10-04.jsonl",
+   "tc-10-04-given.txt"
+  ],
+  "note": "Given: 0 ESTABLISHED on the listener port. A hello result keys capabilities/contract_version/freecad_version; A document_list OK. B document_list as first frame -> error {code:-32002, message:\"handshake required\"} (exact), next recv 0 bytes. C connected after B was closed (jsonl timestamps; the in-script > comparison printed false only because both time.time() reads fell in one 15 ms tick), hello contract_version 1, document_list OK. Visual: view_fit_viewport OK; window paints, no Not Responding, no modal/error popup, one whole box framed. Cleanup document_close OK."
+ },
+ {
+  "id": "TC-10-05",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-05-before.png",
+   "tc-10-05-after.png",
+   "tc-10-05-checks.json",
+   "tc-10-05.jsonl",
+   "tc-10-05-server.stderr.log",
+   "tc-10-05-audit.jsonl",
+   "tc10_slowfeat.py",
+   "tc-10-build-slow.py",
+   "tc-10-slow-100.FCStd"
+  ],
+  "note": "Fixture (harness, built outside the product): tc-10-slow-100.FCStd, a Part::FeaturePython whose execute() sleeps Delay=100 s (proxy preloaded in H1 via tc10_site/sitecustomize.py; calibrated with Delay=3: preview 3.06 s). H1 preview_dry_run {operation feature_body_create} held on one stdio session: status OK after 100.07 s (>60 s, not TIMEOUT, terminal envelope with schema/status/detail/structured_content/text, preview_id issued); document_list on the same session OK; stderr has no timed out/connection reset; document_list shows only tc-10-slow-100 (no FCB_TMP_prev_ handle). The one FCB_TMP_prev_rtoduji3 dir in %TEMP% existed before the call (unreadable, older run); the literal cleanup rm was not run on it. Visual: GUI subject is the golden box (the H1 document is not in the GUI); view_fit_viewport OK; window paints, no Not Responding, no progress modal, one whole box framed."
+ },
+ {
+  "id": "TC-10-06",
+  "priority": "High",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-10-06-checks.json",
+   "tc-10-06.jsonl",
+   "tc-10-06-before.png",
+   "tc-10-06-after.png",
+   "tc-10-06-after-cylinder-active.png"
+  ],
+  "note": "Listener: A rpc_hello, document_open cylinder-r5-h20 -> OK handle fcb-doc:Tps1uq... ; A closed; B fresh rpc_hello; B query_object {doc:<A handle>, object:Cylinder} -> status OK with properties (expected INVALID_INPUT) = FAIL; B document_list lists A handle (expected excluded) = FAIL; schema fcb.result-envelope/1 PASS; follow-up document_list OK PASS. Cause: one process-wide DocumentRegistry (usecases/documents.py:195-205, handles minted per process, not per connection); its docstring calls the handle a session token. Reproduces deterministically. Suspected test-case defect, not product: no design doc requires per-connection handle scope (data-contracts-design.md:239 only says opaque), and TC-01-12 relies on handles surviving a proxy reconnect. Needs an owner decision. Visual: A open made the cylinder view active (hidden Cylinder, empty viewport, view_fit_viewport on the box refused: live viewport is showing cylinder_r5_h20; tc-10-06-after-cylinder-active.png). After closing A cylinder, view_fit_viewport on the box OK: window paints, no Not Responding, no modal, one whole box framed, box document still open (B closed nothing)."
+ },
+ {
+  "id": "TC-10-07",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-07-before.png",
+   "tc-10-07-after.png",
+   "tc-10-0709-checks.json",
+   "tc-10-0709.jsonl",
+   "tc-10-07-audit.jsonl",
+   "tc-10-0709-server.stderr.log",
+   "tc-10-08-pixel-diff.txt"
+  ],
+  "note": "H1 with FREECAD_BUDDY_ALLOW_EXEC=1. TC defect: on H1 no 120 s mutating call can time out; every tool except debug_exec runs on InlineExecutor, which never enforces the budget (adapters/marshal.py:57-62, hosts/tool_catalog.py:1427-1468). Overrunning mutation used: debug_exec on golden box D with a bounded 45 s CPU-busy body (budget 30 s). Envelope after 30.36 s: status TIMEOUT, detail.data.marshal_timeout true, maybe_still_running true, message ends ...; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds. Not preempted: H1 process used 3.12 CPU-s in the 3 s after the envelope. Same session document_list returned OK (terminal), but only at t=45.0 s: it blocked 11.3 s because the abandoned body still holds the DocumentRegistry lock (debug_exec runs under registry.with_document, usecases/debug_exec.py:51; documents.py:224-228) - every registry call on H1 stalls until the abandoned body ends (observation for AD-27 owners). Audit: 1 line verify_verdict TIMEOUT. Visual: no fit (as the TC says); GUI subject golden box framed by Fit All toolbar in the Given; after capture: window paints, no Not Responding, no modal, whole box; pixel-identical to before (the H1 body never touches the GUI process)."
+ },
+ {
+  "id": "TC-10-08",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-08-before.png",
+   "tc-10-08-after.png",
+   "tc-10-0709-checks.json",
+   "tc-10-08-audit.jsonl",
+   "tc-10-08-pixel-diff.txt"
+  ],
+  "note": "Same H1 session as TC-10-07. debug_exec on suspect D (code writes tc-10-08-D.marker) -> INVALID_INPUT, message exactly document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating (prefix and operator hint both match). Not dispatched: marker file absent, 0 new H1 stderr lines. Audit: after line verify_verdict INVALID_INPUT, tool debug_exec. Per document: debug_exec on handle E (cylinder) -> OK, marker written. grep -c document-suspect hosts/gui_external/entry.py = 0. Visual: no fit; before/after window captures pixel-identical (0 differing pixels); window paints, no Not Responding, no modal, whole box."
+ },
+ {
+  "id": "TC-10-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-09-before.png",
+   "tc-10-09-after.png",
+   "tc-10-0709-checks.json",
+   "tc-10-0709.jsonl",
+   "tc-10-09-D.FCStd"
+  ],
+  "note": "Same H1 session. 1) query_object D NoSuchObject -> INVALID_INPUT (unknown object: NoSuchObject). 2) debug_exec D -> still refused, document-suspect: a prior call timed out on this document and its body may ... (marker not written): a failing read does not clear, and the refused mutation did not remove D from the set. 3) query_tree_summary D -> OK. 4) debug_exec D (marker + adds a 5 mm Part::Box QuarantineCleared at x=15) -> OK, marker written. query_tree_summary is in READ_ONLY_PROFILE. Visual: H1 view_fit_viewport D -> SPEC_FAILED this host has no live viewport: no camera to fit (H1 has no GUI), so D was saved by H1 document_save (OK) to tc-10-09-D.FCStd, opened in the GUI and framed with the Fit All toolbar button: window paints, no Not Responding, no modal; the 10x20x30 box and one small QuarantineCleared cube, both whole and framed, nothing half-applied. before.png read in TC-10-08 terms (pixel-identical to tc-10-08-after.png)."
+ },
+ {
+  "id": "TC-10-10",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-10-before.png",
+   "tc-10-10-after.png",
+   "tc-10-10-checks.json",
+   "tc-10-10.jsonl",
+   "tc-10-10-audit.jsonl",
+   "tc-10-10-audit-full.jsonl",
+   "tc-10-10-F.FCStd"
+  ],
+  "note": "H1 + ALLOW_EXEC. Overrunning mutation: debug_exec on golden box F, 40 s CPU-busy body then adds LateBox (5 mm cube at y=25). Fingerprint read with preview_dry_run.fingerprint_before (TC defect: no query_* tool returns a fingerprint digest). TIMEOUT after 30.32 s with ... do not blind-retry, run a query_* read first to confirm ...; waited 11.9 s until H1 CPU idle; clearing read query_tree_summary OK lists Box, LateBox (body landed); digest 33e870c0... -> ba8da106... (differs, and the body landed: consistent). Audit before manual retry: debug_exec 1 before (verdict null) + 1 after (TIMEOUT), 1 params_digest, no second before line (grep -c tool debug_exec = 2). Manual retry by the client: same call -> TIMEOUT, a terminal envelope (retry is a client action). grep retry|re-issue in mcp_server.py/rpc_listener.py: only mcp_server.py:136, the do not blind-retry message string; no re-dispatch. Visual: H1 view_fit_viewport after the manual retry -> INVALID_INPUT document-suspect (correct: the retry timed out again; H1 has no viewport anyway). F saved by H1 (before the manual retry), opened in GUI, Fit All toolbar: window paints, no Not Responding, no modal; tree Box + LateBox, viewport shows the box and exactly one LateBox, never two. before.png pixel-identical to the read tc-10-07-before.png."
+ },
+ {
+  "id": "TC-10-11",
+  "priority": "High",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-10-11-before.png",
+   "tc-10-11-after.png",
+   "tc-10-11-checks.json",
+   "tc-10-11.jsonl",
+   "tc-10-11-server.stderr.log",
+   "tc-10-slow-130.FCStd",
+   "tc-10-11-H.FCStd"
+  ],
+  "note": "H1: verify_recompute (read-only, budget 120 s) on tc-10-slow-130.FCStd (recompute sleeps 130 s) returned status OK after 130.01 s, detail null: expected TIMEOUT -> FAIL; marshal_timeout not set -> FAIL; message contains no mutation was attempted... / the body may still be running and -> FAIL (no message); does not contain the document is now suspect -> PASS (vacuous); following debug_exec on the same handle -> OK, not refused -> PASS. Reproduces by design: H1 runs every tool except debug_exec on InlineExecutor, whose budget is never enforced (adapters/marshal.py:57-62 docstring; hosts/headless/entry.py:88; tool_catalog.py:1427-1468), and debug_exec is mutating, so the marked_suspect=False branch of _with_suspect_message (adapters/mcp_server.py:139-146) is unreachable on H1. Suspected test-case defect (scenario targets a host that cannot produce a read-only TIMEOUT); also an open product question: H1 does not bound read-only calls at all (a 130 s call held the stdio server for 130 s). Not run on the GUI listener: its Qt-pump marshal would block FreeCAD main thread for 130 s (unsafe), and the listener has no no-mutation wording anyway (rpc_listener.py:330-336). Visual: H1 view_fit_viewport SPEC_FAILED no live viewport; H saved by H1, opened in GUI, Fit All: window paints, no Not Responding, no modal; Slow box and one AcceptedAfterRead cube, whole and framed. before.png viewport pixel-identical to the read tc-10-01-before.png (only console text differs)."
+ },
+ {
+  "id": "TC-10-12",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-10-12-before.png",
+   "tc-10-12-after.png",
+   "tc-10-12-checks.json",
+   "tc-10-12-attempt1-checks.json",
+   "tc-10-12-attempt1-restart.png",
+   "tc-10-12.jsonl",
+   "tc-10-12-kill.ps1",
+   "launch-log.tsv"
+  ],
+  "note": "Operator acceptance of the kill = the run brief. Given: disposable copy tc-10-12-box.FCStd (golden box, Box shown, saved by document_save); GUI title still showed * after the save. Attempt 1 (single preview_dry_run, kill 0.15 s later): the call had already completed (OK) - harness miss, not counted; restart found no recovery modal; the first call through the surviving proxy then returned WORKER_CRASHED listener connection dropped (stale socket), the second OK. Attempt 2 (back-to-back preview_dry_run through :8765; TerminateProcess(freecad 32336) after 26 completed calls, one in flight): in-flight call returned in 0.31 s (<180 s) PASS; status WORKER_CRASHED (message listener connection dropped, data.rpc unreachable) PASS; client session exited cleanly PASS; tools/list on :8765 answered 45 tools, proxy kept LISTENING PASS; rpc-32336.json still parses PASS; restart (launch.sh, addon: MCP proxy already on :8765; not spawning) -> tools/list 45 (TC says 44: stale literal) PASS. FAIL: crash not visible in proxy log - mcp-proxy.log holds only its start line; grep -i crash|connection returns nothing. adapters/rpc_client.py:252-254 converts OSError to WORKER_CRASHED with no logger call (logger defined at :21, unused on this path). Reproduces on both kills. Suspected product defect (silent transport failure), unless the Then is relaxed. Visual: after restart, golden copy reopened, view_fit_viewport OK: title tc-10-12-box - FreeCAD 1.1.4, no Not Responding, no crash-recovery or restore modal, one whole box framed. Cleanup: literal rm rpc-*.json NOT run (it would delete the live listener file rpc-32500.json); removed only rpc-34596.json and rpc-32336.json (the two killed pids). document_close OK."
+ },
+ {
+  "id": "TC-10-13",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-10-13-before.png",
+   "tc-10-13-after.png",
+   "tc-10-13-checks.json",
+   "tc-10-13.jsonl",
+   "tc-10-13-proxy-stop.txt"
+  ],
+  "note": "Listener, proxy stopped (orphan proxy 35188 terminated). A hello OK, then {document_list} with no newline, socket closed. addon.log: ERROR freecad_buddy.rpc_listener: frame read failed; closing connection, traceback ValueError: connection closed mid-frame (rpc_listener.py:81) PASS. Fresh client connect ok, hello contract_version 1, document_list OK PASS. No document-suspect in the log PASS. cua-driver get_window_state still reads the menu bar (File/Edit/View/Tools/Help) PASS. NOT RUN: through the H2 proxy the same drop surfaces as WORKER_CRASHED - no harness way to make the listener drop the proxy socket mid-frame without killing FreeCAD; the nearest evidence is TC-10-12 (a dropped listener socket under the proxy returned WORKER_CRASHED listener connection dropped, never an exception). Visual: view_fit_viewport (listener) OK; window paints, no Not Responding, no modal/error popup, one whole box framed. Cleanup document_close OK."
+ },
+ {
+  "id": "TC-10-14",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-10-14-before.png",
+   "tc-10-14-after.png",
+   "tc-10-14-checks.json",
+   "tc-10-14.jsonl"
+  ],
+  "note": "Listener, proxy stopped. A: hello, then 17 MiB with no newline (sendall completed); next recv -> ConnectionResetError WinError 10054, not literally 0 bytes: the listener closed while ~1 MiB of A data was still unread, so Windows sent RST instead of FIN - the connection is closed, judged PASS (literal zero-bytes wording is a test-case defect on Windows). addon.log: frame read failed; closing connection + ValueError: frame exceeds 16 MiB cap. B: hello, then a newline-terminated frame with bytes ff fe c3 28 -> next recv 0 bytes; log UnicodeDecodeError + frame read failed. C: hello contract_version 1, document_list OK (accept loop survived both). Working set 565.3 MB before, 567.8 MB after the stream (+2.5 MB, < 100 MB), 558.3 MB at end. Mutating view_fit_viewport on the open box -> OK, not refused with document-suspect. Visual: view_fit_viewport OK; window paints, no Not Responding, no modal, one whole box framed, no stall or partial repaint. Cleanup document_close OK."
+ }
+]

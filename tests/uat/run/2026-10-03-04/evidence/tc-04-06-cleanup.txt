@@ -1,0 +1,3 @@
+1 open
+  Shaft                -> OK
+0 open document(s).

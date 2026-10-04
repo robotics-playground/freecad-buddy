@@ -1,0 +1,239 @@
+[
+ {
+  "id": "TC-02-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-01-mcp.jsonl",
+   "tc-02-01-checks.txt",
+   "tc-02-01-after.png",
+   "tc-02-01-cleanup.json"
+  ],
+  "note": "All 8 non-visual Thens pass (bare save refused with exact message; transient true->false; close OK). view_fit_viewport on the empty reopened doc returned SPEC_FAILED view_fit.unverified ('no visible shape-bearing objects'), correct for an empty doc; GUI Fit All used per TC. Visual: one 3D view, empty viewport, one tree entry, no leftover view, no dialog. Title reads 'tc-02-01-uat-roundtrip' not 'uat-roundtrip': save-as relabels the document to the file stem (documents.py:319 document.saveAs) - same root as TC-02-13."
+ },
+ {
+  "id": "TC-02-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-02-mcp.jsonl",
+   "tc-02-02-checks.txt",
+   "tc-02-02-fit-after-show.json",
+   "tc-02-02-after.png",
+   "tc-02-02-cleanup.json"
+  ],
+  "note": "All Thens pass (shipped text form, total_objects 1, Box Part::Feature, no error key, JSON-safe properties, volume 6000.0). Golden Box opens hidden: first MCP fit SPEC_FAILED view_fit.unverified; shown via View > Visibility > Show All Objects (invoke_menu), then view_fit_viewport OK. Visual: whole box, Box tree entry, no dialog."
+ },
+ {
+  "id": "TC-02-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-03-mcp.jsonl",
+   "tc-02-03-checks.txt",
+   "tc-02-03-after.png",
+   "tc-02-03-cleanup.txt"
+  ],
+  "note": "New file written; golden size/mtime/sha unchanged; save response doc == open handle; handle resolves after rebind (Cylinder); reopen volume 1570.7963. Visual: whole cylinder, Cylinder entry, title tc-02-03-uat-saveas."
+ },
+ {
+  "id": "TC-02-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-04-mcp.jsonl",
+   "tc-02-04-checks.txt",
+   "tc-02-04-after.png",
+   "tc-02-04-cleanup.txt"
+  ],
+  "note": "Distinct handles; A queries return Box while GUI active doc is sphere-r10 (title); cross-object queries refused with exact messages; volumes 6000.0 / 4188.7902; B usable after A closed. Visual: sphere only, one 3D view, only sphere-r10 in tree."
+ },
+ {
+  "id": "TC-02-05",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-02-05-mcp.jsonl",
+   "tc-02-05-checks.txt",
+   "tc-02-05-before.png",
+   "tc-02-05-hidden.png",
+   "tc-02-05-after.png",
+   "tc-02-05-run1/"
+  ],
+  "note": "Suspected product defect, reproduces 2/2: filters.types ['PartDesign::Pad'], name_pattern '^Pad' and renderable_only each return tree [] / returned_nodes 0 although the doc has a Pad nested in Body. queries.py:352-358 applies _node_passes at each level before recursing ('tree = [build(o, depth) for o in roots if _node_passes(o, effective)]'), so a non-matching container (Body) prunes its matching descendants. The 'every node is Pad' / 'only ^Pad' Thens are only vacuously true. Other Thens pass (depth, root, unknown root, exclude_types replaces default, default datum set, unknown filter key protocol reject, visible_only drops hidden Pad). Hide via tree click + Space was dropped twice; hidden/restored via foreground pixel click on the tree eye icon (route global_input). Visual before/after identical padded solid; hidden.png shows only the sketch outline."
+ },
+ {
+  "id": "TC-02-06",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-06-mcp.jsonl",
+   "tc-02-06-checks.txt",
+   "tc-02-06-before.png",
+   "tc-02-06-broken.png",
+   "tc-02-06-after.png",
+   "tc-02-06-run1-mcp-break/"
+  ],
+  "note": "Test-case defect: the TC's break (feature_set_parameters Length 0 via preview+confirm) returns RECOMPUTE_ERROR 'Mutation rolled back (rolled_back_via_snapshot): ... Cannot create a pad with a total length of zero.' and leaves the Pad healthy (run1: query_object error null, recompute OK, undo stack empty). Break re-done through FreeCAD's property editor (Pad.Length := 0). Then: error = 'Cannot create a pad with a total length of zero.'; document_recompute RECOMPUTE_ERROR errors [{name: Pad}]; unknown object refused; undo 'Edit Pad.Length' restores 5 mm. Visual: broken.png Pad icon has error marker; after.png same extent as before, no marker, no dialog."
+ },
+ {
+  "id": "TC-02-07",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-07-mcp.jsonl",
+   "tc-02-07-checks.txt",
+   "tc-02-07-after.png"
+  ],
+  "note": "Per-object {object, in_list:[Body], out_list:[Sketch]}; whole doc 11 edges, not truncated; views agree. Visual: padded solid, tree Body > Pad > Sketch."
+ },
+ {
+  "id": "TC-02-08",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-08-mcp.jsonl",
+   "tc-02-08-checks.txt",
+   "tc-02-08-build-placement-set.png",
+   "tc-02-08-after-mcpfit.png",
+   "tc-02-08-after.png",
+   "tc-02-08-after-axiscross.png",
+   "tc-02-placed.FCStd"
+  ],
+  "note": "Fixture: feature_set_parameters rejects Placement ('Placement value value must be a number, got None'), so Body Placement (30,15,0, 30 deg about Z) set via Edit > Placement dialog; sketch_create cannot attach to a datum plane, so the datum-attached feature is DatumPlane (attached to XY_Plane, offset 8). All Thens pass incl. Pad global = Body x local and 'object has no placement: Group' (Group from GUI New Group). view_fit_viewport returned OK with framing fits:true ratio:0.0 but framed the datum plane (1.59 mm field, after-mcpfit.png) - known deferred defect; GUI Fit All used. Visual: box away from the axis cross, whole."
+ },
+ {
+  "id": "TC-02-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-09-invoke-open.json",
+   "tc-02-09-type-args.json",
+   "tc-02-09-verify.json",
+   "tc-02-09-verify-literal.json",
+   "tc-02-09-mcp.jsonl",
+   "tc-02-09-checks.txt",
+   "tc-02-09-after.png"
+  ],
+  "note": "Adoption works: '1 open document(s): box40-hole-r5.', ^fcb-doc:, transient false, BoxHole, volume 15214.6018, same handle on second list. TC GUI steps stale: menu label is 'Open…' (U+2026); invoke_menu opened the modal dialog but returned refusal 'InvokePattern.Invoke failed' after 120 s; dialog UIA unresponsive, path typed with foreground type_text + Enter; verify_state shape {title_contains} is invalid ('expected a sequence'), used element TitleBar label_contains -> satisfied. Visual: block with through hole, BoxHole entry, title box40-hole-r5, no file dialog."
+ },
+ {
+  "id": "TC-02-10",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-10-mcp.jsonl",
+   "tc-02-10-checks.txt",
+   "tc-02-10-after.png",
+   "tc-02-10-cleanup.txt"
+  ],
+  "note": "Windows menu labels are '2 box-10-20-30 : 1' / '3 two-box-compound : 1' (TC path ['Windows','two-box-compound'] stale). Title moved to two-box-compound; A re-read equal field for field; B volume 2000, solids 2, com null. Visual: two whole boxes, both docs in tree."
+ },
+ {
+  "id": "TC-02-11",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-11-mcp.jsonl",
+   "tc-02-11-checks.txt",
+   "tc-02-11-before.png",
+   "tc-02-11-after.png"
+  ],
+  "note": "depth 0/-1 and max_nodes rejected as protocol errors; schema closed with properties doc, depth, root, filters; valid call OK afterwards. Before/after (GUI Fit All) identical."
+ },
+ {
+  "id": "TC-02-12",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-12-mcp.jsonl",
+   "tc-02-12-checks.txt",
+   "tc-02-12-before.png",
+   "tc-02-12-after.png"
+  ],
+  "note": "max_edges 1 keeps edges[0] with truncated true and total 11. 0, -5 and 1.5 refused by the MCP schema layer (protocol error), not the INVALID_INPUT envelope. Before/after identical."
+ },
+ {
+  "id": "TC-02-13",
+  "priority": "Medium",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-02-13-mcp.jsonl",
+   "tc-02-13-checks.txt",
+   "tc-02-13-after.png",
+   "tc-02-13-extra-unsaved-label.png",
+   "tc-02-13-extra-create.json"
+  ],
+  "note": "Suspected product defect, reproduces (also seen in TC-02-01): document_save with a path calls document.saveAs (documents.py:319); FreeCAD renames the Label to the file stem, so after save-as and reopen the label is 'tc-02-13-uat-unicode', not the Unicode input. Create/list preserve the label exactly; the Name is a valid identifier (my ASCII-only regex check was too strict). Visual after reopen: tree/title read tc-02-13-uat-unicode. Extra capture of the unsaved doc shows CJK and wrench glyphs rendered correctly, middle elided in the tree."
+ },
+ {
+  "id": "TC-02-14",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-14-console-input.txt",
+   "tc-02-14-build-console-after.png",
+   "tc-02-14-mcp.jsonl",
+   "tc-02-14-checks.txt",
+   "tc-02-14-after.png",
+   "tc-02-14-cleanup.txt"
+  ],
+  "note": "Fixture built by typing one line into FreeCAD's Python console (Outer > Inner App::Part, Part::Box, App::Link at x=20). children/links separated, only App::Link in links, counts sparse, no cycle (0.015 s, stable). One literal Then fails: root 'Inner' at depth 3 returns 4 nodes = whole walk at depth 3 (4) because the subtree root is one level lower; at depth 5 it is 4 < 5 - test-case defect. Visual: two whole cubes, tree Outer > Inner > Box, BoxLink."
+ },
+ {
+  "id": "TC-02-15",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-15-mcp.jsonl",
+   "tc-02-15-checks.txt",
+   "tc-02-15-addonlog.txt",
+   "tc-02-15-inline.py",
+   "tc-02-15-inline.txt",
+   "tc-02-15-before.png",
+   "tc-02-15-after.png"
+  ],
+  "note": "All 12 tools return INVALID_INPUT envelope 'unknown or stale document handle: fcb-doc:not-a-real-handle'; caps OK; live handle OK; no access violation/segfault/swig in addon.log; omitted doc protocol reject. Inline host (FCB_PYTHON, FreeCAD 1.1.3): non-string doc rejected by the MCP schema layer \"Input validation error: 12345 is not of type 'string'\" (isError), not the envelope 'doc handle must be a string' - TC stale; the mcp_server.py:195 guard is unreachable through MCP. Same schema reject on H2. Before/after identical. Side effect: inline host start logged 'session-start sweep removed 12 leftover temp artifact(s)' in the workdir shared with the live GUI."
+ },
+ {
+  "id": "TC-02-16",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-02-16-mcp.jsonl",
+   "tc-02-16-checks.txt",
+   "tc-02-16-addonlog.txt",
+   "tc-02-16-after-double-close.png",
+   "tc-02-16-after.png"
+  ],
+  "note": "Second close and stale query refused with the exact handle in the message; 0 documents; no traceback in addon.log; golden intact; reopen volume 4188.7902. First close name is 'sphere_r10' (internal Name), TC expects 'sphere-r10' - test-case defect. Visual: after double close only the Start tab; after reopen one whole sphere, one tree entry."
+ },
+ {
+  "id": "TC-02-17",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-02-17-mcp.jsonl",
+   "tc-02-17-checks.txt",
+   "tc-02-17-addonlog.txt",
+   "tc-02-17-before.png",
+   "tc-02-17-after.png",
+   "tc-02-17-cleanup.txt"
+  ],
+  "note": "Non-FCStd and corrupt-zip refusals are not distinguishable: both tails are FreeCAD's 'Invalid project file <path>: ios_base::failbit set: iostream stream error' (only the path differs); missing file is distinct ('does not exist!'). Product passes FreeCAD text through (documents.py:298) - product gap or TC over-expectation; reproduces deterministically. Other Thens pass (prefixes, empty-path message, directory refused, no handle leak, caps OK). Before/after identical."
+ },
+ {
+  "id": "TC-02-18",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-02-18-mcp.jsonl",
+   "tc-02-18-checks.txt",
+   "tc-02-18-files.txt",
+   "tc-02-18-addonlog.txt",
+   "tc-02-18-after.png",
+   "tc-02-18-no-such-dir/"
+  ],
+  "note": "Suspected product defect: document_save {path: '$RUN_DIR/evidence/tc-02-18-no-such-dir/out.FCStd'} -> OK saved:true and the directory is created; document_save {path: '$RUN_DIR/evidence'} -> OK saved:true and FreeCAD writes the sibling file $RUN_DIR/evidence.FCStd (silent path change). documents.py:318-319 passes path to saveAs with no validation. Read-only target: status RECOMPUTE_ERROR 'Unable to save document because file is marked as read-only or write permission is not available.' (OSError mapped by rpc_dispatch.py:128); closed-set and file byte-identical, but TC lists INVALID_INPUT/WORKER_CRASHED. Handle usable, writable save OK, golden untouched. Visual: whole cylinder, title tc-02-18-writable, no dialog. Stray files left as evidence: $RUN_DIR/evidence.FCStd, evidence/tc-02-18-no-such-dir/."
+ }
+]

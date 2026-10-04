@@ -1,0 +1,165 @@
+[
+ {
+  "id": "TC-12-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-01-after.png",
+   "tc-12-01-mcp.jsonl"
+  ],
+  "note": "Bracket built fully in GUI: File>New Document, Part Design>New Body, Sketch>New Sketch(XY) rectangle 60x40 via on-view params + Lock Position (fully constrained), Pad 5 mm, Sketch001 on top face with 2x D5.5 circles 40 mm apart (DistanceX=40, fully constrained), Pocket 5 mm (through the 5 mm plate), Fillet 3 mm on 4 vertical corner edges. verify_state 'Pad' satisfied. document_list 1 handle. tree depth 3 shows Body>Fillet>Pocket>(Sketch001,Pad>Sketch) chain; flat child order starts with Fillet (not Group order) - noted, dependency chain correct. Fillet bbox 60x40x5, volume 11723.789 (=12000-2*pi*2.75^2*5-4*(9-pi*9/4)*5). verify_shape OK valid/watertight/1 solid. Sketch001 DistanceX 40.0. verify_recompute clean. query_screenshot iso silhouette matches window. view_fit_viewport OK. Visual: plate with 2 through holes, rounded corners, tree Body/Origin/Pad>Sketch/Pocket>Sketch001/Fillet. Harness deviations: type_text bound to the Length spinner token did not change the value (stayed 10.00 mm) -> foreground click+type used; invoke_menu refused submenu segment 2 intermittently (Part Design>Subtractive Features>Pocket, Dress-Up>Fillet, Sketch>Constraints>Lock Position) while the popup was open -> leaf clicked by desktop click; Pocket type combo set_value 'Through all' did not land -> kept Dimension 5 mm. A mis-click opened a Datum Line task; cancelled, tree verified unchanged."
+ },
+ {
+  "id": "TC-12-02",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-02-after.png",
+   "tc-12-02-mcp.jsonl"
+  ],
+  "note": "document_list [] before; GUI File>New Document (invoke_menu refused segment 1 'New Document' - File menu leaves no longer exposed to UIA after earlier menu use; leaf clicked by desktop click on the painted menu); verify_state 'Unnamed' satisfied; document_list then 1 entry, handle fcb-doc:xbrOj7nmvADkOceEBZw6dg, label 'Unnamed' = title bar/tree; query_tree_summary OK tree []. transient=false: TEST-CASE DEFECT - per data-contracts-design.md:242 transient means preview TempDoc (FCB_TMP_), and documents.py:498 adopts GUI docs with transient False; it is not a never-saved flag. view_fit_viewport SPEC_FAILED view_fit.unverified (empty doc, nothing to measure) -> GUI Fit All used. Visual: title 'Unnamed - FreeCAD 1.1.4', tree shows only 'Unnamed' root, empty 3D view."
+ },
+ {
+  "id": "TC-12-03",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-03-after.png",
+   "tc-12-03-mcp.jsonl"
+  ],
+  "note": "GUI File>Open\u2026 (invoke_menu refused leaf 'Open\u2026' -> desktop click on painted menu), native Windows 'Open document' dialog: type_text into 'File name:' Edit by token (value_readback confirmed), press_key return bound to it (reported unverifiable/delivery_failed but the file opened). verify_state 'box-10-20-30' satisfied; document_list 1 entry label 'box-10-20-30', name box_10_20_30, transient false; tree names Box (visibility false: golden opens hidden); mass volume 6000.0; verify_shape OK valid/watertight/1 solid. 'File path reported': document_list has no path field (contract: handle/name/label/transient per mcp-tools-design \u00a7document_list) - TEST-CASE DEFECT; label = file stem identifies it. view_fit_viewport first SPEC_FAILED view_fit.unverified (hidden objects); after View>Visibility>Show All Objects (invoke_menu OK) fit returned OK. Visual: no dialog, tree 'box-10-20-30' > Box, whole block in view, nothing clipped. Doc closed over MCP, golden not saved (git clean)."
+ },
+ {
+  "id": "TC-12-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-04-after.png",
+   "tc-12-04-mcp.jsonl"
+  ],
+  "note": "Box/sphere opened over MCP (handles KCzW\u2026/nr09\u2026), volumes 6000.0 / 4188.7902. Sphere doc selected in GUI tree: UIA click on the TreeItem token only activated the document (row selected=false); foreground desktop click selected it. verify_state label_contains 'sphere-r10' first returned unknown multi_match (property editor Data tab 'Label' row also matches); with role TreeItem + property tab 'View' it returned satisfied selected:true. With sphere active+selected: box handle volume 6000.0, tree Box only, query_screenshot rendered_objects ['Box']. First render attempt (golden objects hidden) returned empty_scene rendered_objects [] (did not fall back to the active doc); re-run after View>Visibility>Show All Objects in each doc. Reverse: box doc selected (verify_state satisfied) -> sphere handle 4188.790204786392, tree Sphere only, render ['Sphere']. No response named the other document's object. view_fit_viewport(box) OK. Visual: tree lists both documents, box-10-20-30 row highlighted, 3D view shows the box. Docs closed over MCP; goldens unchanged (git clean)."
+ },
+ {
+  "id": "TC-12-05",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-05-after.png",
+   "tc-12-05-mcp.jsonl"
+  ],
+  "note": "No golden has two separate shape objects (two-box-compound is one Part::Feature), so the Given doc was built in the GUI: toolbar New Document, View>Workbench>Part, Part Cube (Box/'Cube', 1000 mm3) + Sphere (523.599 mm3), both visible. Pre: both visibility true, visible_only both. MCP view_fit_viewport OK, before.png captured (both drawn; judged, then deleted per TC cleanup). Sphere row selected by foreground click (verify_state satisfied); View>Visibility>Toggle Visibility: invoke_menu refused segment 2, leaf clicked on the painted submenu (console Std_ToggleVisibility). Post: Sphere visibility false, Cube true; visible_only -> Cube only; volumes unchanged (1000/523.599); no MCP mutation in between. Restore toggle -> both true, visible_only both; view_fit_viewport OK. Visual (after.png, same camera as before, no re-fit): cube only in view, Sphere row greyed with crossed eye. Note: UIA expand of the View menu dropped the tree selection once (Toggle Visibility greyed); reselected and opened the menu by desktop click."
+ },
+ {
+  "id": "TC-12-06",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-06-after.png",
+   "tc-12-06-undo-dropdown.png",
+   "tc-12-06-mcp.jsonl"
+  ],
+  "note": "Given: copy of evidence/tc-02-body.FCStd (Body>Pad 20x10x5, 1000 mm3) opened over MCP. Pre-mutation Edit menu (painted): Undo greyed. preview_dry_run + feature_fillet (Edge1 by mapped_name, r=3, name Fillet) committed OK, Fillet volume 990.343. TC args shape is stale: preview takes operation:{tool,args} without doc; fillet requires body+name; geometric edge selector is refused by feature tools (features.py:159) -> mapped_name used. Edit menu painted after the fillet: Undo entry reads plain 'Undo' (Ctrl+Z), NOT 'buddy: ...' - FreeCAD 1.1.4 never renames the Edit>Undo menu item; the transaction name is shown in the toolbar Undo dropdown, which reads 'buddy: feature_fillet Fillet' (painted, tc-12-06-undo-dropdown.png; UIA MenuItem same label, enabled; verify_state on that popup window satisfied; on main window unknown observation_unavailable). Literal 'Edit-menu label' expectation = TEST-CASE DEFECT; named transaction behaviour correct. GUI Edit>Undo (invoke_menu OK, console Std_Undo): tree no Fillet, Pad/Body volume 1000.0. document_undo afterwards: INVALID_INPUT 'nothing to undo on tc12_body: the undo stack is empty' (not a double undo). view_fit_viewport OK. Visual: Edit menu closed, tree Body>Origin,Pad (no Fillet), sharp-cornered block, Undo arrow grey/Redo green. Closed in GUI with Discard."
+ },
+ {
+  "id": "TC-12-07",
+  "priority": "High",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-12-07-after.png",
+   "tc-12-07-mcp.jsonl"
+  ],
+  "note": "Given: copy of tc-02-body.FCStd (Sketch+Pad 5 mm, 1000 mm3); verify_recompute clean. GUI edit: Pad row selected (foreground click), set_value '8 mm' on the Length value TreeItem token did NOT land (value stayed 5.00 mm); double-click opened the editor, typed '8 mm'+Enter (console: Length='8 mm', transient '8000 mm', then '8 mm'). verify_state role TreeItem '8.00 mm' satisfied. NOT RUN (premise invalid on this build): 'bridge sees dirty state' - FreeCAD 1.1.4 property editor recomputed immediately (Pad volume already 1600 before any refresh), and verify_recompute itself calls doc.recompute() before checking (verify.py:402-407), so it can never report a Touched object; it returned clean (true for the actual state). 'GUI recompute cleaned it': invoke_menu ['Edit','Refresh'] and ['Edit','Recompute'] refused (no 'Refresh' leaf on 1.1.4; Recompute exists but is disabled while nothing is touched) - not exercisable. Ran: post verify_recompute clean; document_recompute touched 0, no geometry change; volume 1600.0 = 20x10x8; view_fit_viewport OK. Visual: property row 'Length 8.00 mm', tree Body/Origin/Pad no error/touched marker, rebuilt taller block (Pad selected, highlighted). TEST-CASE DEFECT: needs a way to leave the doc Touched (e.g. GUI 'Mark to recompute') and a non-recomputing touched probe. Closed in GUI, Discard."
+ },
+ {
+  "id": "TC-12-08",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-08-after.png",
+   "tc-12-08-mcp.jsonl"
+  ],
+  "note": "Given: GUI New Document + Part Cube (modified, never saved). Pre-save document_list transient=false (TEST-CASE DEFECT: transient means FCB_TMP_ preview doc per data-contracts-design.md:242, not 'never saved'), volume 1000. GUI File>Save (invoke_menu refused leaf, clicked painted menu) -> native 'Save FreeCAD Document' dialog. type_text by token APPENDED to the prefilled 'Unnamed.FCStd' (Windows 'file name is not valid' popup, dismissed with OK by token); set_value replaced it, press_key return by token saved (console saveAs(...tc-12-08-bracket.FCStd)). File exists True; title ' tc-12-08-bracket - FreeCAD 1.1.4' (no '*'); post-save document_list same handle rDky\u2026, label 'tc-12-08-bracket' (renamed to file stem as TC-02-13), transient false (unchanged; see defect), no path field in document_list (contract) so 'names tc-12-08-bracket.FCStd' satisfied via label only; query_tree_summary on old handle after GUI save OK. Close + reopen over MCP: volume 1000 round-trips. view_fit_viewport OK. Visual: no dialog, title tc-12-08-bracket no modification marker, Cube in view. Saved file deleted per cleanup."
+ },
+ {
+  "id": "TC-12-09",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-09-after.png",
+   "tc-12-09-mcp.jsonl"
+  ],
+  "note": "Doc: box golden opened over MCP. invoke_menu ['Edit','Preferences'] run in background (UIA invoke blocks while modal); list_windows then showed a second window 'Preferences' (1171x1164) for pid 34228. Timed query_tree_summary while the dialog was up: OK in 0.08 s with the same Box node (Qt modal loop keeps pumping the RPC listener; no stall, no timeout). Dialog UIA unresponsive (get_window_state timed out 4 s, 'UIA provider unresponsive' - known), so the dialog was captured with get_desktop_state and cropped: painted 'Preferences' window, title readable, OK/Cancel/Apply visible (judged; tc-12-09-dialog.png then deleted per TC cleanup). Cancel clicked by desktop click (not by element_token - unreachable through UIA). After: list_windows main window only; background invoke_menu returned; query_tree_summary same object list; query_capabilities OK; :8765 LISTENING pid 3236. Visual after: no dialog painted, main window normal (console shows Std_DlgPreferences)."
+ },
+ {
+  "id": "TC-12-10",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-10-after.png",
+   "tc-12-10-mcp.jsonl"
+  ],
+  "note": "Given: box (A, Hdii\u2026) + sphere (B, z565\u2026) opened over MCP; workbench was Part (left from TC-12-05), so switched to Part Design to satisfy 'Sketch and Part Design menus present' (verified MenuBar). set_value on the workbench ComboBox token ('Part Design'->'Part Design' first, then 'Sketcher') did NOT change it (value stayed); used desktop click on the combo and on the list item 'Sketcher' (ListItem frames read from the popup UIA). verify_state label_contains 'Sketcher' selected:true -> unknown multi_match (ComboBox has no selected state); role ComboBox exists label 'Sketcher' -> satisfied. Post-switch: volumes 6000.0/4188.790 unchanged, OK; document_list same two handles. Back to Part Design: same values. query_capabilities OK render gui_constructed both times. View: activated box tab, View>Visibility>Show All Objects (desktop clicks; invoke_menu refused segment 2), view_fit_viewport(A) first SPEC_FAILED (hidden) then OK. Visual: selector reads 'Part Design', Part Design toolbars present, tree lists box-10-20-30 and sphere-r10, 3D view shows box. Docs closed over MCP; goldens unchanged."
+ },
+ {
+  "id": "TC-12-11",
+  "priority": "Medium",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-11-after.png",
+   "tc-12-11-mcp.jsonl",
+   "tc-12-11-build.py"
+  ],
+  "note": "Given built over MCP (tc-12-11-build.py): 5 Bodies x (Sketch+Pad) = total_objects 55. Reads (all ~0.08 s, well under 30 s): default depth -> 5 nodes (Bodies only); depth 3 -> 20; renderable_only -> 0; name_pattern 'Pad*' -> 0 (both fewer than 20, as asserted). On merits the filters are wrong: at depth 3 renderable_only and 'Pad*' still return 0 although 5 visible Pads exist - the known TC-02-05 defect (roots filtered before recursion, queries.py:352-358; _is_renderable excludes Body containers, queries.py:190) reproduces here. max_nodes:10 -> rejected at schema level: '_raw: Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)' (MCP-layer error, not an INVALID_INPUT envelope; same as other schema rejects in this run). GUI tree: 5 Bodies expanded by foreground clicks so the panel overflows; scroll bound to the Tree element_token did NOT move the list (route global_input, rows unchanged); desktop scroll over the tree did: rows changed from tc12-large..Pad003 to Pad..Pad004 (UIA and both PNGs read: tree.png top row tc12-large, tree2.png top row Pad, Body004/Origin012/Pad004 now visible; then deleted per cleanup). get_window_state after queries: 207 elements, not degraded. view_fit_viewport OK. Visual after: tree scrolled, five pads drawn whole and framed. Closed in GUI, Discard."
+ },
+ {
+  "id": "TC-12-12",
+  "priority": "Medium",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-12-12-after.png",
+   "tc-12-12-busy-open.png",
+   "tc-12-12-busy.png",
+   "tc-12-12.jsonl",
+   "tc-12-12b.jsonl"
+  ],
+  "note": "Long GUI operation substitute: no MCP-only route makes a document need a >3 s recompute (document_recompute only recomputes touched objects), so the long GUI op was opening FreeCAD's ArchDetail.FCStd example (435 objects) from the Start page card by a background window-targeted double-click (synthetic_events). While it loaded, a concurrent query_capabilities poller (same MCP session) got OK every time, with the 3 calls that overlapped the load taking 2.85 s, 2.03 s, 1.13 s (main thread busy ~6 s) and all others ~0.013 s; :8765 LISTENING (pid 36996) on every poll and after; no transport disconnect. Post-op: document_list 1 (ArchDetail), query_tree_summary OK (435 objects), verify_recompute OK failing_objects [] (note: verify_recompute recomputes, 1.07 s, and the doc became modified '*'); get_window_state after = 197 elements, not degraded. Literal When invoke_menu [Edit,Refresh] refused 6x (menu_path_unavailable segment 1) while the Refresh toolbar icon was enabled - BLOCKED (desktop in use / menu popup). NOT RUN: the frozen-viewport capture - cua-driver calls to the window queue behind the busy Qt main thread, so the 'busy' grab returned only after the load finished (tc-12-12-busy-open.png shows the loaded page, not a stale frame). view_fit_viewport -> SPEC_FAILED 'viewport size unreadable: AttributeError' because the active MDI view is the TechDraw page 'A4 sheet' (observation) -> GUI Fit All. Visual read: after = responsive main window, ArchDetail tree populated, TechDraw A4 sheet freshly painted and framed, no greyed UI, no dialog."
+ },
+ {
+  "id": "TC-12-13",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-12-13-after.png",
+   "tc-12-13-tree.png",
+   "tc-12-13.jsonl",
+   "tc-12-13-repro.jsonl",
+   "tc-12-13-attempt1.jsonl",
+   "tc-13-findings.txt"
+  ],
+  "note": "FAIL: stale handle after a GUI close returns RECOMPUTE_ERROR, not INVALID_INPUT (F12-13, reproduced 2/2). Run: B=cylinder-r5-h20 (volume 1570.7963), A=box-10-20-30 opened last (active). GUI close: invoke_menu [File,Close] attempt 1 (no save prompt; list_windows only main window); UIA TreeItems ['cylinder-r5-h20','box-10-20-30','Box'] -> ['cylinder-r5-h20','Cylinder']. Stale reads in the TC order: query_tree_summary {A} RECOMPUTE_ERROR \"Cannot access attribute 'Objects' of deleted object\"; query_mass_properties {A} (literal, no object) schema-rejects 'object is a required property' (stale TC literal), with object -> RECOMPUTE_ERROR \"... 'getObject' of deleted object\" (repro); query_screenshot {A} RECOMPUTE_ERROR; document_close {A} RECOMPUTE_ERROR \"... 'Name' of deleted object\". After document_list, the same handle returns INVALID_INPUT 'unknown or stale document handle' (repro). Code: documents.py:212-222 _resolve has no liveness check; only document_list prunes (documents.py:493/511). Passing Thens: no crash/hang (pid 17732 same, every call < 0.03 s), document_list then 1 entry = B, B query_mass_properties OK 1570.7963, query_capabilities OK. verify_state exists:false refused by the driver (non-exhaustive snapshots) -> PNG judged. Attempt 1 (tc-12-13-attempt1.jsonl): the A root-row token click did not activate A, so File>Close closed the active doc B instead - harness slip, redone with A active. view_fit_viewport {B} SPEC_FAILED (Cylinder hidden as shipped) -> GUI Fit All. Visual read: tree shows only cylinder-r5-h20 > Cylinder (greyed), tab 'cylinder-r5-h20 : 1', no box-10-20-30 row, no dialog; 3D view empty because the golden ships hidden (the TC's 'model whole and framed' expectation is stale for a hidden golden)."
+ },
+ {
+  "id": "TC-12-14",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-12-14-before.png",
+   "tc-12-14-after.png",
+   "tc-12-14.jsonl",
+   "tc-12-14-addonlog-tail.txt"
+  ],
+  "note": "Given: document_list [] (no unsaved doc), FreeCAD pid 17732, :8765 LISTENING owner 36996 (pythonw, parent 32288 pythonw, parent 17732 FreeCAD), discovery rpc-17732.json present (plus 11 stale rpc-*.json from earlier runs). Quit: invoke_menu [File,Exit] attempt 1 (route accessibility); no save prompt; FreeCAD gone within 1 s. After: Get-Process freecad empty; netstat has no LISTENING row for :8765 (only TIME_WAIT); proxy pids 32288 and 36996 gone (torn down, not orphaned); rpc-17732.json deleted, the other 11 files unchanged; list_windows {pid 17732} -> no window; new MCP client call failed at the transport in 2.03 s (no hang). addon.log: no unhandled exception; the only quit-time entry is a handled 'ERROR freecad_buddy.rpc_listener: frame read failed; closing connection' with a ConnectionResetError traceback (the proxy socket reset at quit; same line on every earlier quit in this log) and no explicit shutdown line - observation, not a failure. Restart via launch.sh (cua-driver launch_app, no extra env): pid 36912, window 3807516, :8765 re-served in 4 s by addon-spawned proxy (spawned 36752 -> listener 32292), rpc-36912.json created, query_capabilities OK, addon.log 'session-start sweep removed 7 leftover temp artifact(s)'. No auto-fit (no document). Visual read: before = live 'FreeCAD 1.1.4' window, Start page, menu bar, empty Model panel; after = freshly started 'FreeCAD 1.1.4' window on the Start page (Recent Files ArchDetail, box-10-20-30), no crash or recovery dialog. Title literal 1.1.1 in the TC is stale (1.1.4 build)."
+ },
+ {
+  "id": "TC-12-15",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-12-15-before.png",
+   "tc-12-15-after.png",
+   "tc-12-15.jsonl",
+   "tc-12-15-attempt1-void.jsonl"
+  ],
+  "note": "FAIL: orphan proxy (known finding, as TC-01-14/TC-10-12). Given: scratch doc TC1215Scratch (never saved) via document_create; FreeCAD 36912, proxy spawned 36752 -> :8765 listener 32292, rpc-36912.json. In-flight long call: MCP document_open of the 435-object ArchDetail.FCStd example; 1.5 s later FreeCAD killed with TerminateProcess(PROCESS_TERMINATE) - Stop-Process -Force is 'Access is denied' and cua-driver kill_app refuses foreign processes (attempt 1 void: kill failed, the call returned OK after 5.2 s, tc-12-15-attempt1-void.jsonl). Results: in-flight call -> WORKER_CRASHED 'listener connection dropped' (data rpc unreachable) after 1.56 s, not OK, no hang PASS; Get-Process freecad empty, list_windows {pid} -> no window PASS; FAIL: proxy pids 36752 and 32292 survived and :8765 stayed LISTENING (owner 32292) - it accepts and answers promptly (follow-up query_capabilities -> WORKER_CRASHED 'no live listener discovery file' in 0.028 s, an envelope, not a transport failure), so no hang, but the bridge stays half-up; orphan stopped manually (TerminateProcess 32292, 36752) before relaunch. rpc-36912.json left behind (unclean kill). Restart via launch.sh (no extra env): pid 20424, window 1186194, :8765 by addon-spawned proxy (32400 -> 31924) in 4 s, rpc-20424.json created, query_capabilities OK; sweep removed 0 leftovers; %TEMP% FCB_TMP_snap_*/shot_* = the 10 old 2026-09-22 dirs only, workdir tmp empty. Visual read: before = live window with TC1215Scratch in tree and tab, empty 3D view (scratch doc has no geometry); after = freshly started 'FreeCAD 1.1.4' Start page, no document-recovery dialog (the only killed doc was never saved), no crash dialog."
+ }
+]

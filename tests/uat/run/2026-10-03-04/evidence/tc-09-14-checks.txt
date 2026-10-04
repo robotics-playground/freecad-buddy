@@ -1,0 +1,10 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given verify_sketch on real sketch returns envelope | OK
+NOTE | Given node count total_objects=11 names=['Body', 'Pad', 'Sketch', 'Sketch']
+NOTE | preview of NoSuchFeature op -> INVALID_INPUT unknown object in feature: NoSuchFeature; <P>=fcb-preview:placeholder
+PASS | unknown sketch -> INVALID_INPUT 'unknown object: NoSuchSketch' | ('INVALID_INPUT', 'unknown object: NoSuchSketch')
+PASS | query_sketch_info same refusal | ('INVALID_INPUT', 'unknown object: NoSuchSketch')
+PASS | non-sketch object -> 'object is not a sketch: Body' | ('INVALID_INPUT', 'object is not a sketch: Body')
+PASS | unknown feature -> INVALID_INPUT, not RECOMPUTE_ERROR | ('INVALID_INPUT', 'confirm.preview_id is malformed')
+PASS | no mutation: verify_recompute OK and same node count | ('OK', 11, 11)
+PASS | addon log: one INFO line per refusal, no traceback | {'info_lines': 5, 'lines': ['INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchSketch', 'INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchSketch', 'INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Body', 'INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in feature: NoSuchFeature', 'INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is malformed']}

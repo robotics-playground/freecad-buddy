@@ -1,0 +1,5 @@
+195:            envelope = _invalid_input_envelope("doc handle must be a string")
+---
+---
+src/freecad_buddy/hosts/gui_external/entry.py:137:    async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:
+src/freecad_buddy/adapters/mcp_server.py:176:    async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:

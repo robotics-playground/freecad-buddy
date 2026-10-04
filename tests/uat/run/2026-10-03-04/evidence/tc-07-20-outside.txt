@@ -1,0 +1,4 @@
+wrong-volume volume 7200.0
+open-shell is_watertight False faces 2 bounds [[0.0, 0.0, 0.0], [0.0, 10.0, 1.0]]
+{"file": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-20-wrong-volume.stl", "exists": true, "freecad": "1.1.3", "facets": 12, "points": 8, "volume": 7200.0, "solid": true, "non_manifolds": false, "bbox": [12.0, 20.0, 30.0]}
+{"file": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-20-open-shell.stl", "exists": true, "freecad": "1.1.3", "facets": 2, "points": 4, "volume": 0.0, "solid": false, "non_manifolds": false, "bbox": [0.0, 10.0, 1.0]}

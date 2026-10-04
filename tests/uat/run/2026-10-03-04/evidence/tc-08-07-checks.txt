@@ -1,0 +1,7 @@
+NOTE | cleanup previous scenario: document_close TC0806 -> OK
+PASS | first apply OK | {"status": "OK"}
+PASS | apply fingerprint_before.digest == fingerprint_after.digest | {'before': '80cc3021c618181d028ae54a7ae76ca8cbd11dd5886b720a4c11236536b670da', 'after': '80cc3021c618181d028ae54a7ae76ca8cbd11dd5886b720a4c11236536b670da'}
+PASS | replay refused with spent message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "confirm.preview_id has already authorized a mutation; re-run preview_dry_run", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    r
+PASS | refusal not a fingerprint complaint | confirm.preview_id has already authorized a mutation; re-run preview_dry_run
+PASS | tree depth 2 lists exactly one Probe | ['Body', 'Sketch', 'Probe']
+FAIL | fresh preview token apply returns OK | {"_raw": "Input validation error: None is not of type 'string'"}

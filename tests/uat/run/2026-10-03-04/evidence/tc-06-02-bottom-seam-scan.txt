@@ -1,0 +1,3 @@
+rect 303 1616 523 1396
+dark pixels along row 668 : [] 0
+dark pixels along col 521 : [] 0

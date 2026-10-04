@@ -1,0 +1,14 @@
+NOTE | bodies placed apart in Y (HalfBody y 0..30, DatumBody y 45..75, FaceBody y 120..150) so the three mirrored results do not overlap
+NOTE | origin plane names: HalfBody YZ_Plane, DatumBody YZ_Plane001
+NOTE | MirrorPlane datum (DatumBody YZ plane, offset 30 mm -> x=30): {"status": "OK"}
+PASS | Given HalfPad vol 6000 and x 5..25 | {'xmin': 5.0, 'xmax': 25.0, 'ymin': 0.0, 'ymax': 30.0, 'zmin': 0.0, 'zmax': 10.0}
+PASS | Given MirrorPlane query_placement OK | {"object": "MirrorPlane", "local": {"position": {"x": {"value": 30.0, "unit": "mm"}, "y": {"value": 0.0, "unit": "mm"}, "z": {"value": 0.0, "unit": "mm"}}, "axis": {"x": 0.5773502691896257, "y": 0.5773502691896257, "z": 0.5773502691896257}, "angle": {"value": 120.00000000000001, "unit": "deg"}}, "gl
+PASS | all three mirrors OK rolled_back=false | ['{"status": "OK"}', '{"status": "OK"}', '{"status": "OK"}']
+PASS | PlaneMirror vol 12000 | 12000.0
+PASS | PlaneMirror bbox [50,30,10] | [50.0, 30.000000000000007, 10.000000000000005]
+PASS | whole-object selectors (no mapped_name) accepted for steps 1 and 2 | 
+PASS | face selector with mapped_name Face1 accepted | 
+FAIL | verify_shape OK and solid_count=1 for all three | ['OK', 'OK', 'OK'] solids=[2, 2, 1]
+NOTE | DatumMirror: vol=12000.0 bbox={'xmin': 5.0, 'xmax': 55.0, 'ymin': 45.0, 'ymax': 75.0, 'zmin': 0.0, 'zmax': 10.0}
+NOTE | FaceMirror: vol=12000.0 bbox={'xmin': 5.0, 'xmax': 25.0, 'ymin': 90.0, 'ymax': 150.0, 'zmin': 0.0, 'zmax': 10.0}
+PASS | unknown mirror plane INVALID_INPUT 'unknown object in mirror_plane', no snapshot | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object in mirror_plane: NoSuchPlane", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freec

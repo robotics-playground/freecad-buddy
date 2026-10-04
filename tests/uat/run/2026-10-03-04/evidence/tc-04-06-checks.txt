@@ -1,0 +1,10 @@
+PASS | Given ShaftProfile dof=0 | {"status": "OK"}
+PASS | revolve OK rolled_back=false | {"status": "OK"}
+PASS | volume 1570.7963 within 0.1% | 1570.7963267948985
+PASS | shape_summary solid_count=1 face_count=3 is_valid=true | {"solid_count": 1, "face_count": 3, "edge_count": 3, "vertex_count": 2, "is_valid": true, "volume": 1570.7963267948985, "area": 785.3981633974488, "bbox": [10.000000000000004, 10.00000000000001, 20.000000000000007]}
+FAIL | ReferenceAxis names ShaftProfile and V_Axis | ["<Sketcher::SketchObject>", ["V_Axis"]]
+PASS | verify_shape OK | {"status": "OK"}
+PASS | axis Edge1 on profile INVALID_INPUT naming the allowed axes | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "axis on the profile sketch must be one of ['H_Axis', 'N_Axis', 'V_Axis'], got 'Edge1'", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\
+PASS | angle 400 INVALID_INPUT, no snapshot_path | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "angle must be in (0.0, 360.0] degrees, got 400.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\
+PASS | second_angle without TwoAngles INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "second_angle is only read when up_to='TwoAngles'; got up_to=None", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\F
+NOTE | new temp snapshots during the three refusals: []

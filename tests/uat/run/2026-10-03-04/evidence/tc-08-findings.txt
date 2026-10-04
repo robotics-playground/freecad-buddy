@@ -1,0 +1,17 @@
+TC-08 findings (UAT run 2026-10-03-04). Pixels win; each line names the side that is wrong.
+
+TC-08-06 string-form expect_fingerprint: document_undo after a confirmed 30 mm pad returns
+  matches_pre_op:false, text "did NOT restore the pre-op state", while the window is visually restored
+  (tc-08-06-after.png: flat 20x20 sketch, no solid). Pre-op digest 80cc3021...0da (the same digest a fresh
+  body+sketch doc yields, see tc-08-03 preview), post-undo digest 646a68eb...3f5 on all three undos.
+  Wrong side: the envelope (string form). Byte-exact compare in documents.py:174-175
+  (`return after["digest"] == expected`); documents.py:166-170 docstring states that an undo of a feature that
+  consumed a sketch leaves extra OCCT edge representations, so bytes differ. The record form falls back to
+  massprops_equal and reports true. Reproduces 3/3 in tc-08-06-mcp.jsonl.
+
+TC-08-14 undecodable token: confirm.preview_id "fcb-preview:!!!!.!!!!" returns "confirm.preview_id carries an
+  invalid signature", not "confirm.preview_id is not decodable". Cause: confirm.py:142-143 `_b64decode` uses
+  base64.urlsafe_b64decode, which silently discards non-alphabet characters ("!!!!" decodes to b''), so the
+  decode never raises and the empty signature fails the HMAC compare. Only a bad-length segment reaches
+  "is not decodable" (the truncated-body variant did). Refusal still holds; message is wrong. Reproduces
+  deterministically (plain Python: urlsafe_b64decode('!!!!') == b'').

@@ -1,0 +1,8 @@
+== Given rpc files vs freecad processes
+13
+1
+rpc-11924.json rpc-1444.json rpc-1456.json rpc-19588.json rpc-20096.json rpc-21148.json rpc-21164.json rpc-31584.json rpc-32380.json rpc-33492.json rpc-36912.json rpc-38812.json rpc-9756.json 
+== Given open
+open: OK fcb-doc:TogOh0_XBl6v8hk3pkbhOw
+showall: {"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 5445682, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+fit: {"status": "OK", "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "computed", "stale_reason": null}, "text": "fitted the live viewport to 'box_10_20_30'"}

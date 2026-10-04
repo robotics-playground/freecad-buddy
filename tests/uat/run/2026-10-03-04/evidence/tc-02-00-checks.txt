@@ -1,0 +1,7 @@
+PASS | bridge answers query_capabilities OK | 1.1.4
+PASS | 5 golden models | ['box-10-20-30.FCStd', 'box40-hole-r5.FCStd', 'cylinder-r5-h20.FCStd', 'sphere-r10.FCStd', 'two-box-compound.FCStd']
+PASS | _automation exists | 
+PASS | Given no document open | 0 open document(s).
+PASS | cua get_window_state sees QOpenGLWidget | 120
+FAIL | Fit All toolbar button has element_token | None
+PASS | evidence dir writable | 

@@ -1,0 +1,8 @@
+PASS	given: no stale target	
+PASS	given: open OK	
+PASS	omitted objects -> OK	["OK", null]
+PASS	verify OK, volume within 0.1% of 6000	["OK", 6000.0]
+FAIL	multi-object doc -> INVALID_INPUT 'document has multiple objects; specify ...'	["OK", null, "{\"export_id\": \"fcb-export:vxPjQdXBUb38biSn2N9SJg\", \"path\": \"D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-12-default-compound.step\", \"bytes\": 12239, \"verified\": false}"]
+FAIL	ambiguous case wrote nothing	true
+PASS	objects [] same OK result as omitted	["OK", null, 6854, 6854]
+PASS	supplementary: genuine 2-object doc -> INVALID_INPUT multiple-objects message, no file	["INVALID_INPUT", "document has multiple objects; specify 'objects' with the one to export", false]

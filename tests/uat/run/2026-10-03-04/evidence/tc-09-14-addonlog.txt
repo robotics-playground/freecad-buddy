@@ -1,0 +1,5 @@
+2026-10-04 11:37:46,400 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchSketch
+2026-10-04 11:37:46,415 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchSketch
+2026-10-04 11:37:46,424 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Body
+2026-10-04 11:37:46,512 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in feature: NoSuchFeature
+2026-10-04 11:37:46,546 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is malformed

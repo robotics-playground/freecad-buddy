@@ -1,0 +1,43 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "subject": {
+   "sketch": "Sketch",
+   "dof": 0,
+   "fully_constrained": true,
+   "geometry_count": 4,
+   "constraint_count": 11,
+   "conflicting": [],
+   "malformed": [],
+   "redundant": [],
+   "partially_redundant": []
+  },
+  "checks": [
+   {
+    "id": "sketch.fully_constrained",
+    "measured": true,
+    "expected": true,
+    "passed": true,
+    "detail": {
+     "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+    }
+   }
+  ],
+  "warnings": [],
+  "schema": "fcb.validation-report/1",
+  "banner": {
+   "freecad_version": "1.1.4",
+   "element_map_version": 15
+  },
+  "verdict": "OK"
+ },
+ "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {9 fields}\nverdict: OK\nwarnings: [0 items]",
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}

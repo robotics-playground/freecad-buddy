@@ -1,0 +1,12 @@
+FAIL | Given Sketch fully_constrained true, dof 0 | {'fully_constrained': None, 'dof': None}
+NOTE | pre-mutation Body mass props: {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "object has no queryable shape: Body", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 114, in dispatch\n    return method.handler(**params)\n         
+PASS | status OK, detail null | {"status": "OK"}
+PASS | fingerprints 64-hex and different | 80cc3021c618181d028ae54a7ae76ca8cbd11dd5886b720a4c11236536b670da / 6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8
+PASS | post_verify.passed true, explanation null | {'passed': True, 'explanation': None}
+PASS | rolled_back false, rollback_proven null | {'rolled_back': False, 'rollback_proven': None}
+PASS | transaction_id '0', schema fcb.mutation/1 | {'transaction_id': '0', 'schema': 'fcb.mutation/1'}
+PASS | text starts 'Mutation committed; fingerprint ' + first 12 of after | Mutation committed; fingerprint 6c69192e6d47.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+PASS | Pad volume 12000.0 | 12000.0
+NOTE | fit={'view_fit_viewport': 'OK', 'detail': None}

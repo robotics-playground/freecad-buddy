@@ -1,0 +1,8 @@
+PASS | Given document_create returns a handle | fcb-doc:5YFfvrglAp8IWKi8q2Scbw
+PASS | Given feature_body_create PlateBody OK | {"status": "OK"}
+PASS | create commits OK rolled_back=false | status=OK rolled_back=False
+PASS | PlateProfile is a child of PlateBody, not at root | roots=['PlateBody'] body_children=[{"name": "PlateProfile", "label": "PlateProfile", "type": "Sketcher::SketchObject", "visibility": true}]
+PASS | PlateBody reports no Tip feature | Tip=null status=OK
+PASS | verify_sketch PlateProfile OK dof=0 | status=OK dof=0
+PASS | unknown body INVALID_INPUT, no mutation.snapshot_path | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object in body: NoSuchBody", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\
+NOTE | fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

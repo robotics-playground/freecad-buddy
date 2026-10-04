@@ -1,0 +1,11 @@
+NOTE | git HEAD: bece7ac test(render): recapture the render-tone clean controls on the dimmed rig
+NOTE | git status --short src: ''
+NOTE | Get-Process freecad: {     "Id":  30620,     "MainWindowTitle":  "FreeCAD 1.1.4" }
+FAIL | one FreeCAD GUI open, title 'FreeCAD 1.1.1' | title is 'FreeCAD 1.1.4' -> stale TC literal (test-case defect); GUI open = yes
+PASS | :8765 LISTENING | ['TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       12896']
+PASS | cua-driver status reports daemon, not Session 0 | Cua Driver daemon is running
+PASS | query_capabilities render == gui_constructed | gui_constructed
+NOTE | capabilities: {"freecad_version": "1.1.4", "element_map_available": true, "serializer": "exportBinary", "varset_backend": "varset", "render": "gui_constructed", "sketcher_available": true, "partdesign_available": true, "enums": {"PartDesign::Pad": {"Type": ["Length", "UpToLast", "UpToFirst", "UpToFace", "?TwoLengths", "UpToShape"]}, "PartDesign::Pocket": {"Type": ["Length", "ThroughAll", "UpToFirst", "UpToFace", "?TwoLengths", "UpToShape"]}, "PartDesign::Revolution": {"Type": ["Angle", "UpToLast", "UpToFirst", "UpToFace", "TwoAngles"]}, "PartDesign::Hole": {"ThreadType": ["None", "ISOMetricProfile", "ISOMet
+PASS | list_windows has FreeCAD main window | [(5773620, 'FreeCAD 1.1.4')]
+PASS | evidence dir writable | D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-03-04\evidence
+NOTE | open documents at start: []

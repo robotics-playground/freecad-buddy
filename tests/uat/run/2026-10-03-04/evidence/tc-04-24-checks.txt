@@ -1,0 +1,20 @@
+NOTE | chain: PlatePad -> SlotPocket (10x10x2 on top face) -> CornerFillet (r=2 on SlotPocket Edge1)
+PASS | [literal SlotPocket Length 500] Given verify_recompute OK | {"status": "OK"}
+FAIL | [literal SlotPocket Length 500] status RECOMPUTE_ERROR | {"status": "OK"}
+FAIL | [literal SlotPocket Length 500] recompute_clean=false | True
+FAIL | [literal SlotPocket Length 500] is_valid and fully_constrained not measured | {'is_valid': True, 'fully_constrained': None}
+FAIL | [literal SlotPocket Length 500] explanation starts 'recompute left' and names SlotPocket | 
+FAIL | [literal SlotPocket Length 500] rolled_back=true | {'rolled_back': False, 'rollback_proven': None, 'snapshot_path': None}
+FAIL | [literal SlotPocket Length 500] old Length restored | before=2.0 mm after=500.0 mm
+PASS | [literal SlotPocket Length 500] verify_recompute OK again | {"status": "OK"}
+PASS | [literal SlotPocket Length 500] snapshot deleted | new=[]
+NOTE | literal step committed OK: a 500 mm pocket simply cuts through a 5 mm plate - no engine failure. Running the TC's other named trigger, a fillet whose radius consumes its face, on a fresh identical chain
+PASS | [fillet Radius 30] Given verify_recompute OK | {"status": "OK"}
+FAIL | [fillet Radius 30] status RECOMPUTE_ERROR | {"status": "OK"}
+FAIL | [fillet Radius 30] recompute_clean=false | True
+FAIL | [fillet Radius 30] is_valid and fully_constrained not measured | {'is_valid': True, 'fully_constrained': None}
+FAIL | [fillet Radius 30] explanation starts 'recompute left' and names CornerFillet | 
+FAIL | [fillet Radius 30] rolled_back=true | {'rolled_back': False, 'rollback_proven': None, 'snapshot_path': None}
+FAIL | [fillet Radius 30] old Radius restored | before=2.0 mm after=30.0 mm
+PASS | [fillet Radius 30] verify_recompute OK again | {"status": "OK"}
+PASS | [fillet Radius 30] snapshot deleted | new=[]

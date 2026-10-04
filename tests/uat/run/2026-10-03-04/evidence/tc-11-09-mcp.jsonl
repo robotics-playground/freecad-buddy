@@ -1,0 +1,39 @@
+{"note": "Operator acceptance of a FreeCAD restart: given by the run brief (relaunch procedure in RUN-CONTEXT)."}
+{"tool": "document_list", "args": {}, "isError": false, "seconds": 0.033, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:CMm5Xn670kfMlAdMHHi2lg", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30."}}
+{"tool": "document_close", "args": {"doc": "fcb-doc:CMm5Xn670kfMlAdMHHi2lg"}, "isError": false, "seconds": 0.02, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:CMm5Xn670kfMlAdMHHi2lg", "name": "box_10_20_30", "closed": true}, "text": "Closed box_10_20_30 (doc=fcb-doc:CMm5Xn670kfMlAdMHHi2lg)."}}
+{"note": "cleanup previous scenario: document_close box-10-20-30 -> OK"}
+{"tool": "document_open", "args": {"path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "isError": false, "seconds": 0.07, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:5J8MMyEFV7cPXCST-5MuhQ", "name": "box_10_20_30", "label": "box-10-20-30", "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:5J8MMyEFV7cPXCST-5MuhQ."}}
+{"check": "Given document_open box OK", "verdict": "PASS", "detail": "{\"status\": \"OK\"}"}
+{"note": "GUI Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}"}
+{"check": "Given framed via GUI Fit All (same path as the after capture)", "verdict": "PASS", "detail": {"clicked": "Fit All", "effect": "unverifiable", "route": "accessibility"}}
+{"check": "Given baseline captured", "verdict": "PASS", "detail": "tc-11-09-before.png"}
+{"note": "old token (pid 34340): Q9UD…(len 43)"}
+{"quit": {"old_pid": 34340, "exit_menu": {"effect": "unverifiable", "error": null}, "exited": true, "discovery_file_after_quit_exists": false, "port_8765_free": true}}
+{"relaunch": {"fc": {"pid": 35916, "window_id": 12654734, "proxy_listener_pid": 10420, "proxy_spawned_pid": 35064, "freecad_version": "1.1.4"}, "head": "bece7ac", "src_dirty": false}, "launch_stdout": "tag=tc-11-09 pid=35916 window_id=12654734 bridge_wait=4s\n  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       10420\n--- new addon.log lines ---\n2026-10-04 12:34:23,365 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)\n2026-10-04 12:34:23,588 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:61081\n2026-10-04 12:34:23,896 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 35064) -> http://127.0.0.1:8765/mcp; proxy log: C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\mcp-proxy.log\n"}
+{"note": "new token (pid 35916): HaIW…(len 43)"}
+{"check": "Then second token differs from the first (compared in memory)", "verdict": "PASS", "detail": {"old": "Q9UD…(len 43)", "new": "HaIW…(len 43)"}}
+{"note": "stop addon proxy so the listener accepts a raw client -> listener pid 10420 parent 35064 (pythonw) | terminate 10420 -> True | terminate 35064 -> True | after: 0 :8765 listeners | "}
+{"tag": "tc-11-09", "client": "old-token", "event": "connect", "port": 61081}
+{"tag": "tc-11-09", "client": "old-token", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"tag": "tc-11-09", "client": "old-token", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}}
+{"tag": "tc-11-09", "client": "old-token", "event": "close"}
+{"check": "Then OLD token refused: error message exactly 'auth failed'", "verdict": "PASS", "detail": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}}
+{"check": "Then connection closed after refusal: next recv returns zero bytes", "verdict": "PASS", "detail": "recv returned 0 bytes"}
+{"tag": "tc-11-09", "client": "old-token-bad-version", "event": "connect", "port": 61081}
+{"tag": "tc-11-09", "client": "old-token-bad-version", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "99"}}}
+{"tag": "tc-11-09", "client": "old-token-bad-version", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}}
+{"tag": "tc-11-09", "client": "old-token-bad-version", "event": "close"}
+{"check": "Then auth before version: OLD token + contract_version 99 -> 'auth failed'", "verdict": "PASS", "detail": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}}
+{"tag": "tc-11-09", "client": "new-token", "event": "connect", "port": 61081}
+{"tag": "tc-11-09", "client": "new-token", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"tag": "tc-11-09", "client": "new-token", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"tag": "tc-11-09", "client": "new-token", "event": "close"}
+{"check": "Then new token accepted: contract_version \"1\"", "verdict": "PASS", "detail": {"result_keys": ["capabilities", "contract_version", "freecad_version"]}}
+{"check": "Then stale discovery rpc-<old pid>.json no longer exists", "verdict": "PASS", "detail": "rpc-34340.json exists=False"}
+{"note": "proxy restart by hand: proxy listening"}
+{"tool": "document_list", "args": {}, "isError": false, "seconds": 0.041, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": []}, "text": "0 open document(s)."}}
+{"tool": "document_open", "args": {"path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "isError": false, "seconds": 0.066, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:aBWiz-r5WAG14Gb0II8lWw", "name": "box_10_20_30", "label": "box-10-20-30", "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:aBWiz-r5WAG14Gb0II8lWw."}}
+{"check": "Then (visual) golden model reopened after restart", "verdict": "PASS", "detail": "{\"status\": \"OK\"}"}
+{"note": "GUI Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}"}
+{"check": "Then (visual) framed via GUI Fit All (TC prefers GUI path after restart)", "verdict": "PASS", "detail": {"clicked": "Fit All", "effect": "unverifiable", "route": "accessibility"}}
+{"check": "Then (visual) after captured", "verdict": "PASS", "detail": "tc-11-09-after.png"}

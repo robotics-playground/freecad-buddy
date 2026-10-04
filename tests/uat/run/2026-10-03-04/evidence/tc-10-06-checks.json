@@ -1,0 +1,23 @@
+{
+ "A_open": {
+  "status": "OK",
+  "handle": "fcb-doc:Tps1uqvMczkklFxk5m8Mvw"
+ },
+ "object": "Cylinder",
+ "B_hello": true,
+ "B_query_object_with_A_handle": {
+  "status": "OK",
+  "schema": "fcb.result-envelope/1",
+  "detail": null,
+  "has_properties": true
+ },
+ "B_document_list": {
+  "status": "OK",
+  "handles": [
+   "fcb-doc:rXWbb3pSR2xqxBGf-t7v7w",
+   "fcb-doc:Tps1uqvMczkklFxk5m8Mvw"
+  ],
+  "contains_A_handle": true
+ },
+ "B_followup_document_list": "OK"
+}

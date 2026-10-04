@@ -1,0 +1,27 @@
+== tc-07-05-ap242.step 6854 bytes
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('FreeCAD Model'),'2;1');
+FILE_NAME('Open CASCADE Shape Model','2026-10-04T03:25:44',('FreeCAD'),(
+    'FreeCAD'),'Open CASCADE STEP processor 7.8','FreeCAD','Unknown');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));
+ENDSEC;
+DATA;
+== tc-07-05-ap214.step 6854 bytes
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('FreeCAD Model'),'2;1');
+FILE_NAME('Open CASCADE Shape Model','2026-10-04T03:25:44',('FreeCAD'),(
+    'FreeCAD'),'Open CASCADE STEP processor 7.8','FreeCAD','Unknown');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));
+ENDSEC;
+DATA;
+== tc-07-05-ap242-repro.step 6854 bytes
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('FreeCAD Model'),'2;1');
+FILE_NAME('Open CASCADE Shape Model','2026-10-04T03:31:04',('FreeCAD'),(
+    'FreeCAD'),'Open CASCADE STEP processor 7.8','FreeCAD','Unknown');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));
+ENDSEC;
+DATA;

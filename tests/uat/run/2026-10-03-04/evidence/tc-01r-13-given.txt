@@ -1,0 +1,17 @@
+== prep 2026-10-04T16:09:00+07:00: exit FreeCAD 31584 and stop the hand-started proxy 32716
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+31584 gone after 1s
+listener pid 32716 parent 29568 (python)
+terminate 32716 -> True
+terminate 29568 -> True
+after: 0 :8765 listeners
+== Given FreeCAD not running
+(none)
+== Given :8765 free
+(no listener)
+addon.log rotated to addon.log.prev
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/addon.log': No such file or directory
+== launcher
+@echo off
+set FREECAD_BUDDY_NO_AUTO_MCP=no
+start "" "C:\Program Files\FreeCAD 1.1\bin\freecad.exe"

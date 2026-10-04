@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close TC0801 -> OK
+PASS | Given Pad volume 12000.0 | 12000.0
+PASS | Given no stale preview TempDocs | []
+PASS | diff.deltas.volume.after == 32000.0 | {'before': 12000.0, 'after': 31999.999999999993, 'delta': 19999.999999999993, 'units': 'mm^3'}
+PASS | live volume unchanged 12000.0, byte-identical to first read | {'first': {'value': 12000.0, 'unit': 'mm^3'}, 'second': {'value': 12000.0, 'unit': 'mm^3'}}
+PASS | live bbox and com unchanged | {'bbox1': {'xmin': {'value': 0.0, 'unit': 'mm'}, 'xmax': {'value': 20.0, 'unit': 'mm'}, 'ymin': {'value': 0.0, 'unit': 'mm'}, 'ymax': {'value': 20.0, 'unit': 'mm'}, 'zmin': {'value': 0.0, 'unit': 'mm'}, 'zmax': {'value': 30.0, 'unit': 'mm'}}, 'bbox2': {'xmin': {'value': 0.0, 'unit': 'mm'}, 'xmax': {'value': 20.0, 'unit': 'mm'}, 'ymin': {'value': 0.0, 'unit': 'mm'}, 'ymax': {'value': 20.0, 'unit': 'mm'}, 'zmin': {'value': 0.0, 'unit': 'mm'}, 'zmax': {'value': 30.0, 'unit': 'mm'}}, 'com1': {'x': {'value': 9.999999999999998, 'unit': 'mm'}, 'y': {'value': 9.999999999999998, 'unit': 'mm'}, 'z': {'value': 15.0, 'unit': 'mm'}}, 'com2': {'x': {'value': 9.999999999999998, 'unit': 'mm'}, 'y': {'value': 9.999999999999998, 'unit': 'mm'}, 'z': {'value': 15.0, 'unit': 'mm'}}}
+PASS | document_list same handles, no FCB_TMP_prev_ name | {'before': ['fcb-doc:m69ikYnvAhQD6T5y8aapYw'], 'after': ['fcb-doc:m69ikYnvAhQD6T5y8aapYw'], 'names': ['TC0802']}
+PASS | TempDoc directory gone after preview | []
+PASS | envelope OK, not SPEC_FAILED 'preview changed the live document' | {"status": "OK"}
+PASS | an op FAILING on the copy also leaves no FCB_TMP_prev_ dir | {'fails': [('OK', True), ('OK', False)], 'dirs': []}
+PASS | live volume still 12000.0 after failing previews | 12000.0

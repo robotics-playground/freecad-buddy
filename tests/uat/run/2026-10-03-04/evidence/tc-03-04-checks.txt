@@ -1,0 +1,10 @@
+PASS | Given PlateProfile geometry=[] | geometry=[]
+PASS | call commits OK rolled_back=false | {"status": "OK"}
+PASS | verify_sketch OK dof=0 fully_constrained=true | status=OK dof=0 fc=True
+PASS | passed check id=sketch.fully_constrained expected=true | [{"id": "sketch.fully_constrained", "measured": true, "expected": true, "passed": true, "detail": {"message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"}}]
+PASS | post_verify fully_constrained=true passed=true | {"recompute_clean": true, "is_valid": true, "fully_constrained": true, "tnp_audit": {"status": "CLEAN", "element_map_version": "15.70200.5", "findings": []}, "passed": true, "explanation": null}
+PASS | geometry_count=4 constraint_count=11 | geometry_count=4 constraint_count=11
+PASS | conflicting=[] malformed=[] | conflicting=[] malformed=[]
+PASS | PlateWidth and PlateDepth present with driving=true | {"PlateWidth": {"driving": true, "value": {"value": 60.0, "unit": "mm"}}, "PlateDepth": {"driving": true, "value": {"value": 40.0, "unit": "mm"}}}
+PASS | sketch_state readable=true dof=0 fully_constrained=true | {"schema": "fcb.sketch-state/1", "sketch": "PlateProfile", "readable": true, "dof": 0, "fully_constrained": true, "geometry_count": 4, "constraint_count": 11, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": []}
+NOTE | fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

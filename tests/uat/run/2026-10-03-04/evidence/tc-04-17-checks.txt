@@ -1,0 +1,10 @@
+NOTE | Outside oracle (tc-04-topology-oracle.txt): ShaftRev Edge1/Edge2 are the bottom/top circles (sharp plane-cylinder creases), Edge3 is the cylinder seam line (the cylindrical face meets itself). The TC's 'Edge2' is not the seam; the seam is Edge3.
+PASS | Given ShaftRev exists (query_object lists properties only; seam identified by oracle) | 1570.7963267948985
+PASS | step 1 INVALID_INPUT 'cannot be shown to survive the dress-up' listing the edge | 1 of 1 requested edge(s) on ShaftRev cannot be shown to survive the dress-up: ['Edge3']; each needs exactly two adjacent faces meeting at a measurable crease, and FreeCAD drops the rest without reporting it
+PASS | reason stated | 1 of 1 requested edge(s) on ShaftRev cannot be shown to survive the dress-up: ['Edge3']; each needs exactly two adjacent faces meeting at a measurable crease, and FreeCAD drops the rest without reporting it
+PASS | pre-transaction: no snapshot_path, no new snapshot dir | 
+PASS | mixed request refused whole | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "1 of 2 requested edge(s) on ShaftRev cannot be shown to survive the dress-up: ['Edge3']; each needs exactly two adjacent faces meeting at a measurable crease, and FreeCAD drops the rest without reporting it", "data": {"excep
+PASS | tree names neither DropFillet nor MixedFillet | 
+PASS | ShaftRev volume unchanged | 1570.7963267948985 -> 1570.7963267948985
+NOT RUN | committed under-dressed fillet caught as SPEC_FAILED 'dressed N of the M requested edge(s)' | NOT RUN: no input found that commits a dress-up which drops an edge - the up-front check refuses every droppable edge tried
+NOTE | literal Edge2 (top circle) on a copy -> {"status": "OK"} summary={"solid_count": 1, "face_count": 4, "edge_count": 5, "vertex_count": 3, "is_valid": true, "volume": 1564.3555968171622, "area": 771.4695058907798, "bbox": [9.974927912181826, 9.983081582712693, 20.000000000000007]}

@@ -1,0 +1,25 @@
+== Given proxy pid alive
+pythonw.exe                  33720 Console                    1      5,660 K
+pythonw.exe                  27448 Console                    1     64,336 K
+== Given ALLOW_EXEC: unset
+== Given open
+open: OK fcb-doc:8B_gXfFRHTtLIXNoiJFQFQ
+showall: {"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 3283362, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+fit: {"status": "OK", "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "computed", "stale_reason": null}, "text": "fitted the live viewport to 'box_10_20_30'"}
+== When query_capabilities
+status OK
+keys ['element_map_available', 'enums', 'exec_enabled', 'freecad_version', 'partdesign_available', 'render', 'serializer', 'sketcher_available', 'varset_backend']
+{'freecad_version': ('1.1.4', 'str'), 'element_map_available': (True, 'bool'), 'serializer': ('exportBinary', 'str'), 'varset_backend': ('varset', 'str'), 'render': ('gui_constructed', 'str'), 'sketcher_available': (True, 'bool'), 'partdesign_available': (True, 'bool'), 'exec_enabled': (False, 'bool')}
+== rpc-28996.json freecad_version
+{"schema": 1, "pid": 28996, "host": "127.0.0.1", "port": 55359, "token": "<masked>", "contract_version": "1", "freecad_version": "1.1.4", "started": "2026-10-04T08:56:44.911047+00:00"}
+== About dialog: BLOCKED (modal; invoke_menu Help>About blocks UIA until the modal closes and closing needs a keystroke or foreground click: desktop in use). Non-GUI corroboration:
+-- window title (list_windows)
+[{"window_id": 3283362, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]
+-- freecad.exe file/product version
+
+
+ProductVersion : 
+FileVersion    : 
+
+
+

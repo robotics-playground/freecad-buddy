@@ -1,0 +1,12 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given Pad volume 12000.0 | 12000.0
+NOT RUN | CONDITIONAL second build with the other serializer | NOT RUN: only FreeCAD 1.1.4 (exportBinary) is installed for the GUI
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+PASS | tag carried on a successful mutation's fingerprint_before | exportBinary
+PASS | fingerprint_before.serializer == fingerprint_after.serializer | ['exportBinary', 'exportBinary']
+NOTE | degraded form: tagless record {objects:[], digest:0*64} -> status=OK msg=None sc={"doc": "fcb-doc:Rr4fAixZFfWIcevUEnMmPw", "name": "TC0514", "undone": "buddy: feature_pad Pad", "fingerprint_before": "6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8", "fingerprint_after": "646a68eb84ba29b0d4696e0c23a6465d98837c8156e5f5223a27972919df63f5", "matches_pre_op": false, 
+FAIL | tagless record is refused with a comparison error, not a quiet 'not equal' | None
+PASS | record missing 'objects' refused: "expect_fingerprint record must carry an 'objects' list; got keys ['digest']" | expect_fingerprint record must carry an 'objects' list; got keys ['digest']
+FAIL | no tag mismatch surfaced as matches_pre_op:false without a comparison error | ['{"status": "OK"}']
+NOTE | after refused undos: Pad present=False vol=None
+NOTE | after fit={'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

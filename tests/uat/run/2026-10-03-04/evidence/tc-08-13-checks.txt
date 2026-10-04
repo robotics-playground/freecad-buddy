@@ -1,0 +1,9 @@
+NOTE | cleanup previous scenario: document_close TC0812 -> OK
+PASS | wrong-argument call refused 'issued for different arguments' | confirm.preview_id was issued for different arguments
+PASS | corrected call (same token) OK | {"status": "OK"}
+PASS | corrected call not refused as spent | 
+PASS | Pad volume 12000.0 | 12000.0
+PASS | 4th send of same token -> already-authorized | confirm.preview_id has already authorized a mutation; re-run preview_dry_run
+PASS | middle call with elicitation_action decline refused, corrected call then OK (side doc TC0813b) | {'decline': "Input validation error: 'decline' is not one of ['accept']", 'corrected': 'OK'}
+NOTE | decline refusal text: Input validation error: 'decline' is not one of ['accept']
+NOTE | side doc TC0813b closed -> OK

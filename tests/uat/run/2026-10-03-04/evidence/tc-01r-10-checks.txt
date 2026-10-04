@@ -1,0 +1,56 @@
+== When File>Exit 2026-10-04T16:06:15+07:00
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+waited 1s
+== Then FreeCAD exited
+(none)
+== Then discovery file gone
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-34164.json': No such file or directory
+== Then proxy launcher 31676 and listener 27032 gone
+(none)
+== Then :8765 free
+(no listener)
+== Then other rpc files unchanged
+12
+identical list
+== Then window gone: list_windows (all) filtered to freecad
+      "minimized": false,
+      "pid": 21484,
+      "title": "TC-12-gui-workflows.md - freecad-buddy - Visual Studio Code",
+      "width": 2560,
+      "window_id": 71176,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "height": 1440,
+      "is_on_screen": true,
+--
+      "minimized": true,
+      "pid": 12576,
+      "title": "freecad-buddy - File Explorer",
+      "width": 183,
+      "window_id": 328428,
+      "x": -31992,
+      "y": -32000
+    },
+(end)
+== get_window_state on dead pid
+No window with window_id 3872788 exists. Call `list_windows({"pid": 34164})` for candidates.
+
+ls: cannot access 'tc-01r-10-after.png': No such file or directory
+== addon.log shutdown lines
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 78, in read_line
+    chunk = self._conn.recv(65536)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+== list_windows: windows whose app_name is freecad.exe
+[]
+== addon.log lines after 16:06:00
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-10-04 16:06:15,776 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host

@@ -1,0 +1,41 @@
+== Given list_windows
+      "pid": 33184,
+      "title": "FreeCAD 1.1.4",
+ "status": "OK",
+  "doc": "fcb-doc:DItLrglWx6fWsnCzZxr6Kg",
+== When: discovery record (token masked in this copy)
+{"schema": 1, "pid": 33184, "host": "127.0.0.1", "port": 59314, "token": "<masked, 43 chars>", "contract_version": "1", "freecad_version": "1.1.4", "started": "2026-10-03T16:22:34.047356+00:00"}
+keys ['contract_version', 'freecad_version', 'host', 'pid', 'port', 'schema', 'started', 'token']
+== mode
+-rw-r--r-- 1 thuan 197609 219 Oct  3 23:22 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-33184.json
+Archive
+
+IdentityReference      FileSystemRights
+-----------------      ----------------
+NT AUTHORITY\SYSTEM         FullControl
+BUILTIN\Administrators      FullControl
+Tan-PC\thuan                FullControl
+
+
+
+== legacy dir
+total 4
+drwxr-xr-x 1 thuan 197609 0 Jul 24 09:59 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  3 21:12 ../
+== pid
+freecad.exe                  33184 Console                    1    154,120 K
+== port
+  TCP    127.0.0.1:59314        0.0.0.0:0              LISTENING       33184
+== capabilities version
+  "freecad_version": "1.1.4",
+== token authenticates (proxy stopped first: AD-26 single connection)
+listener pid 35836 parent 15096 (python)
+terminate 35836 -> True
+terminate 15096 -> True
+after: 0 :8765 listeners
+discovery file: rpc-33184.json pid 33184 port 59314
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.02

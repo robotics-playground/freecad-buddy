@@ -1,0 +1,17 @@
+--- find freecad-buddy-audit.jsonl (C:/Users/thuan depth<=4, scratch, repo, FreeCAD install, D:/Work depth<=5) 14:36:31
+C:/Users/thuan/AppData/Local/Temp/claude/D--Work-Personal-Sources-freecad-buddy/3a96e4e8-1193-4f20-8730-69bd46a68309/scratchpad/tc9906A/freecad-buddy-audit.jsonl  12 lines  mtime 14:35:42
+C:/Users/thuan/AppData/Local/Temp/claude/D--Work-Personal-Sources-freecad-buddy/3a96e4e8-1193-4f20-8730-69bd46a68309/scratchpad/tc9906B/freecad-buddy-audit.jsonl  7 lines  mtime 14:36:19
+C:/Users/thuan/freecad-buddy-audit.jsonl  308 lines  mtime 00:19:45
+D:/Work/Personal/Sources/3d-modeling/freecad-buddy-audit.jsonl  2 lines  mtime 10:20:09
+D:/Work/Personal/Sources/freecad-buddy/freecad-buddy-audit.jsonl  284 lines  mtime 00:42:29
+--- A records tools
+A 12 records; keys union: ['actor', 'approval', 'camera_before', 'doc', 'event', 'fingerprint_after', 'fingerprint_before', 'params_digest', 'rollback', 'schema', 'tool', 'ts', 'verify_verdict']
+  tools: [('document_open', 'mutation'), ('document_open', 'mutation'), ('view_fit_viewport', 'mutation'), ('view_fit_viewport', 'mutation'), ('view_fit_viewport', 'mutation'), ('preview_dry_run', 'preview'), ('preview_dry_run', 'preview'), ('feature_body_create', 'mutation')]
+  any session field: False
+B 7 records; keys union: ['actor', 'approval', 'doc', 'event', 'fingerprint_after', 'fingerprint_before', 'params_digest', 'rollback', 'schema', 'tool', 'ts', 'verify_verdict']
+  tools: [('document_open', 'mutation'), ('document_open', 'mutation'), ('preview_dry_run', 'preview'), ('preview_dry_run', 'preview'), ('feature_body_create', 'mutation'), ('feature_body_create', 'approval'), ('feature_body_create', 'mutation')]
+  any session field: False
+--- default path source
+def default_audit_path() -> Path:
+    """The audit-log path from ``FREECAD_BUDDY_AUDIT_LOG``, or a cwd-relative default."""
+    return Path(os.environ.get("FREECAD_BUDDY_AUDIT_LOG", "freecad-buddy-audit.jsonl"))

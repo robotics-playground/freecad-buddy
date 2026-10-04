@@ -1,0 +1,8 @@
+PASS	given: three exports OK	[{"step": "fcb-export:Jf4nFD7iL6GhY3QL06eL8g", "stl": "fcb-export:Y11KUGpdW1hxxZljJzLu4Q", "3mf": "fcb-export:0Ss5X8X1B252Nr1tcLVswQ"}, {"step": 6856, "stl": 684, "3mf": 1112}]
+PASS	all six crossed INVALID_INPUT	{"step<-stl": "INVALID_INPUT", "step<-3mf": "INVALID_INPUT", "stl<-step": "INVALID_INPUT", "stl<-3mf": "INVALID_INPUT", "3mf<-step": "INVALID_INPUT", "3mf<-stl": "INVALID_INPUT"}
+PASS	step verifier on STL id message	export_id fcb-export:Y11KUGpdW1hxxZljJzLu4Q is not a step export
+PASS	stl verifier on STEP id message	export_id fcb-export:Jf4nFD7iL6GhY3QL06eL8g is not a stl export
+PASS	3mf verifier on STL id message	export_id fcb-export:Y11KUGpdW1hxxZljJzLu4Q is not a 3mf export
+PASS	crossed envelopes carry no checks	[{}, {}, {}, {}, {}, {}]
+PASS	matched pairings OK	{"step": "OK", "stl": "OK", "3mf": "OK"}
+PASS	sizes unchanged and trimesh True ~6000	[{"step": 6856, "stl": 684, "3mf": 1112}, {"step": 6856, "stl": 684, "3mf": 1112}, true, 6000.0]

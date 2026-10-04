@@ -1,0 +1,14 @@
+== after the three refused-by-TC saves
+-rw-r--r-- 1 thuan 197609 3696 Oct  4 00:21 tests/uat/run/2026-10-03-04/evidence.FCStd
+
+tests/uat/run/2026-10-03-04/evidence/tc-02-18-no-such-dir/:
+total 84
+drwxr-xr-x 1 thuan 197609    0 Oct  4 00:21 ./
+drwxr-xr-x 1 thuan 197609    0 Oct  4 00:22 ../
+-rw-r--r-- 1 thuan 197609 3694 Oct  4 00:21 out.FCStd
+1834a35bcfc5eab8ddb8683c8c64df97429674a15313f36c6e9a272216273e7e *tests/uat/run/2026-10-03-04/evidence.FCStd
+b10c0b804e4eb9295b1c4ca0afe20097c7833943f8733b3213baf416d4e3b144 *tests/uat/run/2026-10-03-04/evidence/tc-02-18-no-such-dir/out.FCStd
+94969ac4ff909a583c66f6c8091e828c905b6936805000b705f34c0273523136 *tests/uat/run/2026-10-03-04/evidence/tc-02-18-readonly.FCStd
+0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617 *benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+0ce4635591595cacf6bcc08e9544125d0196a2d17e858cf28dbaab909bab8617 *benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+evidence is still a directory

@@ -1,0 +1,14 @@
+NOTE | cleanup previous scenario: document_close TC0516 -> OK
+NOTE | fixture Fillet -> {"status": "OK"}
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | preview={"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "sketch_remove_geometry() got an unexpected keyword argument 'geometry'", "data": {"exception": "TypeError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\F validity=null tnp_precheck=null
+NOTE | envelope status=NO_TOKEN text=None
+NOTE | post_verify={}
+FAIL | tnp_audit.status FLAGGED | None
+FAIL | a BROKEN finding present | None
+FAIL | BROKEN finding at layer 0 or 1 | []
+FAIL | BROKEN owner == 'Fillet' | []
+FAIL | rolled_back true | {'rolled_back': None, 'rollback_proven': None}
+PASS | Fillet intact after rollback: query_mass_properties OK | {'status': 'OK', 'vol': 11974.247779607693}
+PASS | if recompute_clean false, tnp_audit.status is not CLEAN | {'recompute_clean': None, 'tnp': None}
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

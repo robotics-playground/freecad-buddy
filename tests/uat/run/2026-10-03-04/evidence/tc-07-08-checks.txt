@@ -1,0 +1,11 @@
+PASS	given: trimesh importable	4.12.2
+PASS	given: no stale target	
+PASS	status OK	["OK", null]
+PASS	trimesh leg five ids	["trimesh_stl.watertight", "trimesh_stl.winding_consistent", "trimesh_stl.is_volume", "trimesh_stl.volume_band", "trimesh_stl.euler"]
+PASS	stdlib leg four ids	["stl2.facets", "stl2.manifold_edge_pairing", "stl2.local_winding", "stl2.non_degenerate"]
+PASS	self_read facet/vertex passed	[{"id": "self_read.facet_count", "measured": 12, "expected": 12, "passed": true, "detail": {"message": "facets 12 vs 12"}}, {"id": "self_read.vertex_count", "measured": 8, "expected": 8, "passed": true, "detail": {"message": "vertices 8 vs 8"}}]
+PASS	oracle.agreement passed, measured {trimesh_stl:true, stdlib_stl:true}	{"id": "oracle.agreement", "measured": {"trimesh_stl": true, "stdlib_stl": true}, "passed": true, "detail": {"message": "oracles agree"}}
+PASS	volume_band == (2/3)*linear*area and tolerance has abs not rel	[146.66666666666666, 146.66666666666666, {"abs": 146.66666666666666}]
+PASS	tess echoed {linear:0.1, angular:0.5}	{"linear": 0.1, "angular": 0.5}
+PASS	truncated to 100 bytes -> SPEC_FAILED (not INVALID_INPUT, no crash)	["SPEC_FAILED", {"code": "SPEC_FAILED", "message": "trimesh_stl.readable; stdlib_stl.readable; self_read.facet_count; self_read.vertex_count", "objects": []}, "", 100]
+PASS	outside trimesh: True True, volume within band of 6000	[true, true, 6000.0, 146.66666666666666]

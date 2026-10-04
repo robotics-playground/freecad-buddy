@@ -1,0 +1,21 @@
+== final 2026-10-04T16:13:59+07:00: exit 13956 (served by a hand-started proxy), stop that proxy, relaunch clean
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+13956 present: 0
+listener pid 19516 parent 12032 (pythonw)
+terminate 19516 -> True
+terminate 12032 -> True
+after: 0 :8765 listeners
+(no freecad/pythonw)
+tag=tc-01r-final-clean pid=33604 window_id=4528182 :8765 owner=28440 parent=31764
+{"pid": 33604, "window_id": 4528182, "proxy_listener_pid": 28440, "proxy_spawned_pid": 31764, "freecad_version": "1.1.4"}
+--- new addon.log lines ---
+2026-10-04 16:14:05,422 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-04 16:14:05,638 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:64894
+2026-10-04 16:14:05,946 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 31764) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+== proxy
+pid 31764 parent 33604 pythonw.exe: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 28440 parent 31764 pythonw.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+== MCP
+ "status": "OK",
+  "documents": []
+[{"window_id": 4528182, "title": "FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]

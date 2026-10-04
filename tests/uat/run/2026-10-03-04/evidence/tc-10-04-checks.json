@@ -1,0 +1,21 @@
+{
+ "A_hello_result_keys": [
+  "capabilities",
+  "contract_version",
+  "freecad_version"
+ ],
+ "A_document_list": "OK",
+ "B_frame": {
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+   "code": -32002,
+   "message": "handshake required"
+  }
+ },
+ "B_error_message": "handshake required",
+ "B_next_recv": "0 bytes",
+ "C_connected_after_B_refused": false,
+ "C_contract_version": "1",
+ "C_document_list": "OK"
+}

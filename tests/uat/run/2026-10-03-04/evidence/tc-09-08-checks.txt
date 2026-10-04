@@ -1,0 +1,13 @@
+NOTE | cleanup previous scenario: document_close box40-hole-r5 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:sWaWuPhJmIzgu31rGW-Rtw
+NOTE | roots ['Box']
+PASS | checks absent -> OK, five checks, no 'expected' key | {'status': 'OK', 'ids': ['shape.volume', 'shape.bbox', 'shape.solid_count', 'shape.valid', 'shape.watertight'], 'expected_keys': [False, False, False, False, False]}
+PASS | checks null -> protocol rejection | Input validation error: None is not of type 'array'
+PASS | checks [] -> OK, same five ids as absent | {'status': 'OK', 'ids': ['shape.volume', 'shape.bbox', 'shape.solid_count', 'shape.valid', 'shape.watertight']}
+PASS | depth absent -> OK, returned_nodes == root count | (1, 1)
+PASS | depth null -> protocol rejection | Input validation error: None is not of type 'integer'
+FAIL | ap absent -> default AP242: grep -c AP242 non-zero | {'status': 'OK', 'count_AP242': 0, 'schema_lines': ["FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));"]}
+PASS | ap null -> protocol rejection | Input validation error: None is not one of ['AP214', 'AP242']
+PASS | ap null wrote no n2 file | 
+PASS | consistency: absent=default, null=reject in all 3 pairs | 

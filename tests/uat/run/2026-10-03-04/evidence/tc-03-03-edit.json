@@ -1,0 +1,7 @@
+{'expand': 'PlateBody', 'xy': [17, 275], 'effect': 'unverifiable'}
+{'error': "no TreeItem 'BossProfile'"}
+{'error': "no Button 'Isometric'", 'count': 199}
+{'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}
+{'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-03-03-edit-BossProfile-iso.png', 'exists': True, 'title': '- [0] Window "* BracketPlate - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}
+{'clicked': 'Close', 'effect': 'unverifiable', 'route': 'accessibility'}
+{'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-03-03-after-editclosed.png', 'exists': True, 'title': '- [0] Window "* BracketPlate - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

@@ -1,0 +1,20 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-04-before.png
+NOTE | grep exec/eval/script names in tool_catalog.py:
+
+PASS | Then no generic script/eval tool: grep matches only the gated debug_exec spec | []
+FAIL | Then every mutating listed tool is document_/sketch_/feature_/export_ (listed count 45) | {'non_matching_mutating': ['view_fit_viewport'], 'listed': 45}
+PASS | Then debug_exec preview: INVALID_INPUT, message starts prefix | not a previewable mutation tool: 'debug_exec' (previewable: feature_body_create, feature_chamfer, feature_datum, feature_fillet, feature_hole, feature_mirror, f
+PASS | Then refusal lists previewable sketch_/feature_ names only | ['feature_body_create', 'feature_chamfer', 'feature_datum', 'feature_fillet', 'feature_hole', 'feature_mirror', 'feature_pad', 'feature_pattern', 'feature_pocket', 'feature_revolve', 'feature_set_parameters', 'sketch_add_constraint', 'sketch_add_external_geometry', 'sketch_add_geometry', 'sketch_create', 'sketch_remove_constraint', 'sketch_remove_geometry', 'sketch_set_datum', 'sketch_toggle_construction']
+PASS | Then unknown name refused the same way | not a previewable mutation tool: 'run_python' (previewable: feature_body_create,
+PASS | Then every input schema closed (additionalProperties False) — from live H1 tools/list | []
+PASS | Then undeclared key -> MCP protocol rejection, not envelope | ['{"_raw": "Input validation error: Additional properties are not allowed (\'bogus_key\' was unexpected)"}', '{"_raw": "Input validation error: Additional properties are not allowed (\'script\' was unexpected)"}']
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-04-after.png
+CORRECTION | Python-subprocess grep returned rc=1 because of Windows argv quoting of the double quotes; re-run in bash:
+$ grep -niE '"(exec|eval|script|run_python|run_code)"' src/freecad_buddy/hosts/tool_catalog.py
+1031:    audit_event="exec",
+PASS | Then no generic script/eval tool: the single match (line 1031) is inside DEBUG_EXEC_SPEC (tool_catalog.py:1014-1032)

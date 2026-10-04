@@ -1,0 +1,2 @@
+NOTE | one call, 15 constraints (attempt 1): SPEC_FAILED {"code": "mutation.spec_failed", "message": "verify_sketch failed on MixedProfile (dof=0): sketch.fully_constrained"}
+NOTE | one call, 15 constraints (attempt 2): SPEC_FAILED {"code": "mutation.spec_failed", "message": "verify_sketch failed on MixedProfile (dof=0): sketch.fully_constrained"}

@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+NOTE | golden opens hidden: View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS | Given document_open box-10-20-30 OK | fcb-doc:E0xJp2S76oU8QRbFPywepw
+NOTE | roots ['Box']
+PASS | all four reads -> INVALID_INPUT | ['INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT', 'INVALID_INPUT']
+PASS | verify_shape message == 'unknown object: NoSuchObject' | unknown object: NoSuchObject
+NOTE | other read messages: ['unknown object: NoSuchObject', 'unknown object: NoSuchObject', 'unknown object: NoSuchObject']
+PASS | export message == 'unknown object: NoSuchObject' | ('INVALID_INPUT', 'unknown object: NoSuchObject')
+PASS | failed export wrote nothing | 
+PASS | case-differing 'box' -> INVALID_INPUT | ('INVALID_INPUT', 'unknown object: box')
+FAIL | empty object -> INVALID_INPUT "missing required 'object' name" | ('OK', '', '')

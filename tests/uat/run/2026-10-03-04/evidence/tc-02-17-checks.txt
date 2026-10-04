@@ -1,0 +1,13 @@
+PASS | Given bad files prepared | 
+PASS | Given no document open | 0 open document(s).
+PASS | Given baseline open OK | fcb-doc:BHB50CbgCJM5vu9JYwtHcQ
+PASS | nonexistent refused with prefix | document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-does-not-exist.FCStd': File 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-does-not-exist.FCStd' does not exist!
+PASS | non-FCStd refused with prefix | document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-not-fcstd.txt': Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-not-fcstd.txt: ios_base::failbit set: iostream stream error
+
+PASS | corrupt refused with prefix | document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-corrupt.FCStd': Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-corrupt.FCStd: ios_base::failbit set: iostream stream error
+
+PASS | three refusal tails distinguishable | [" File 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-does-not-exist.FCStd' does not exist!", ' Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-not-fcstd.txt: ios_base::failbit set: iostream stream error\n', ' Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-02-17-corrupt.FCStd: ios_base::failbit set: iostream stream error\n']
+PASS | empty path -> document_open requires a 'path' | ['INVALID_INPUT', "document_open requires a 'path'"]
+PASS | directory refused with prefix | ['INVALID_INPUT', "document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence': Invalid project file"]
+PASS | no handle leaked: only baseline listed | 1 open document(s): box-10-20-30.
+PASS | query_capabilities OK | OK

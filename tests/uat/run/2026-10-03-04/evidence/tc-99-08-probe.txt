@@ -1,0 +1,22 @@
+=== curl -s -i http://127.0.0.1:8765/healthz
+HTTP/1.1 404 Not Found
+date: Sun, 04 Oct 2026 07:23:25 GMT
+server: uvicorn
+content-length: 9
+content-type: text/plain; charset=utf-8
+
+Not Found
+=== grep -rn healthz src/
+rc=1
+=== bootstrap already-served check
+def _port_open(host: str, port: int) -> bool:
+    """Whether something already accepts a TCP connection at ``host:port``."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.settimeout(0.3)
+        return probe.connect_ex((host, port)) == 0
+
+        logger.info("FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy")
+        return
+    if _port_open(_MCP_HOST, _MCP_PORT):
+        logger.info("MCP proxy already on http://%s:%s/mcp; not spawning", _MCP_HOST, _MCP_PORT)
+        return

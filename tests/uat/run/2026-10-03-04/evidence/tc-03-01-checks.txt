@@ -1,0 +1,14 @@
+PASS | Given document_create returns a handle | fcb-doc:DkDW3t3bX6n47cbAznH5Rg
+PASS | PlateProfileXY commits OK rolled_back=false | status=OK rolled_back=False
+PASS | RibProfileXZ commits OK rolled_back=false | status=OK rolled_back=False
+PASS | EndProfileYZ commits OK rolled_back=false | status=OK rolled_back=False
+PASS | verify_sketch PlateProfileXY OK dof=0 fully_constrained=true | status=OK dof=0 fc=True
+PASS | PlateProfileXY post_verify fully_constrained=true passed=true | fully_constrained=True passed=True
+PASS | RibProfileXZ post_verify fully_constrained=true passed=true | fully_constrained=True passed=True
+PASS | EndProfileYZ post_verify fully_constrained=true passed=true | fully_constrained=True passed=True
+PASS | RibProfileXZ geometry=[] constraints=[] | geometry=[] constraints=[]
+FAIL | EndProfileYZ rotation distinct from PlateProfileXY | YZ=null XY=null
+PASS | plane ZX is a schema reject | {"_raw": "Input validation error: 'ZX' is not one of ['XY', 'XZ', 'YZ']"}
+PASS | tree names no BadPlane | {"doc": "fcb-doc:DkDW3t3bX6n47cbAznH5Rg", "total_objects": 3, "returned_nodes": 3, "depth": 1, "filters_applied": {"exclude_types": ["App::Plane", "App::Line", "App::Point", "App::Origin"]}, "tree": [{"name": "PlateProfileXY", "label": "PlateProfileXY", "type": "Sketcher::SketchObject", "visibility": true}, {"name": "RibProfileXZ", "label": "RibProfileXZ", "type": "Sketcher::SketchObject", "visibi
+NOTE | fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+CORRECTION | EndProfileYZ rotation distinct from PlateProfileXY -> PASS. Script read a non-existent 'rotation' key; envelope local.axis YZ=(0.577,0.577,0.577) angle=120 deg vs XY axis=(0,0,1) angle=0 deg (tc-03-01-mcp.jsonl query_placement lines)

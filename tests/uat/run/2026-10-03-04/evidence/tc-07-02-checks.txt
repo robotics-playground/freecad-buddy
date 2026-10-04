@@ -1,0 +1,10 @@
+PASS	given: cylinder not open	{"documents": []}
+PASS	given: open + object named	["fcb-doc:epRRAGkd7FSM4IHL5VnMTg", "Cylinder"]
+PASS	status OK	OK
+PASS	exactly five fact ids	["shape.volume", "shape.bbox", "shape.solid_count", "shape.valid", "shape.watertight"]
+PASS	no check has 'expected'	[["id", "measured", "passed"], ["id", "measured", "passed"], ["id", "measured", "passed"], ["id", "measured", "passed"], ["id", "measured", "passed"]]
+PASS	all passed true	[true, true, true, true, true]
+PASS	volume within 0.001 of 1570.7963	1570.7963267948965
+PASS	expect_volume 1.0 -> SPEC_FAILED	["SPEC_FAILED", {"code": "SPEC_FAILED", "message": "assert.expect_volume", "objects": ["Cylinder"]}, null]
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-02-after.png]	["OK", {"fitted": true, "document": "cylinder_r5_h20", "camera_recorded": true}]

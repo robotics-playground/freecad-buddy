@@ -1,0 +1,11 @@
+## lib3mf (literal TC command)
+1
+## lib3mf mesh count
+mesh 100 52 True
+meshes 1
+## trimesh literal TC command (repo env)
+ModuleNotFoundError: No module named 'networkx'
+## trimesh with networkx+lxml, force=mesh
+True 100 1555.5508081832002
+## fcb-env FreeCAD Mesh
+{"file": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-07-09-legs.3mf", "exists": true, "freecad": "1.1.3", "facets": 100, "points": 52, "volume": 1555.5506591796875, "solid": true, "non_manifolds": false, "bbox": [10.0, 9.9271, 20.0]}

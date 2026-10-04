@@ -1,0 +1,15 @@
+== Given: create $TEMP/not-reserved with keep-a.txt keep-b.txt (TEMP=C:\Users\thuan\AppData\Local\Temp)
+ls: cannot access 'C:\Users\thuan\AppData\Local\Temp/not-reserved': No such file or directory
+keep-a.txt
+keep-b.txt
+== When: snapshot helper on keep-a.txt
+exit=0
+keep-b.txt
+== When: preview helper on keep-b.txt
+exit=0
+keep-b.txt
+C:\Users\thuan\AppData\Local\Temp/not-reserved/
+== Then: reserved-prefix dir is emptied (own FCB_TMP_snap_ dir minted for this check)
+minted C:\Users\thuan\AppData\Local\Temp\FCB_TMP_snap_tc1113_shqhfosg ['Doc.FCStd', 'Doc.FCStd.FCBak', 'extra.txt']
+exists after _delete_snapshot: False
+exit=0

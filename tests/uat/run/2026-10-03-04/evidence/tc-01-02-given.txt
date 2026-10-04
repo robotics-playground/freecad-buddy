@@ -1,0 +1,12 @@
+== Given golden models
+benchmarks/g0/golden-models/box-10-20-30.FCStd
+benchmarks/g0/golden-models/box40-hole-r5.FCStd
+benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+benchmarks/g0/golden-models/sphere-r10.FCStd
+benchmarks/g0/golden-models/two-box-compound.FCStd
+5
+== Given no fcb python
+9380
+34584
+pythonw.exe                   9380 Console                    1      5,200 K
+pythonw.exe                  34584 Console                    1     57,032 K

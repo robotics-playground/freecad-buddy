@@ -1,0 +1,11 @@
+NOTE | Given build: OK null
+PASS | Given 5 geometry entries all construction=false | [(0, False), (1, False), (2, False), (3, False), (4, False)]
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+PASS | first toggle commits OK rolled_back=false | {"status": "OK"}
+PASS | after first toggle index 4 construction=true | [(0, False), (1, False), (2, False), (3, False), (4, True)]
+PASS | indexes 0..3 still construction=false | 
+PASS | after second toggle index 4 construction=false | t2=OK [(0, False), (1, False), (2, False), (3, False), (4, False)]
+PASS | dof=0 after each toggle | mid=OK dof=0; end=OK dof=0
+PASS | geo_ids [4,4] INVALID_INPUT naming listed-twice message | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "geo_id 4 is listed twice; a double toggle is a no-op", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\
+PASS | geo_ids [99] INVALID_INPUT naming outside (0..4) | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "geo_id 99 is outside the sketch (0..4)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_bu
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

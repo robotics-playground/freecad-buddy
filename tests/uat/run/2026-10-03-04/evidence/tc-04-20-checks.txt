@@ -1,0 +1,9 @@
+PASS | Given PlatePad vol 12000 | 12000.0
+NOTE | edge names from the outside oracle: PlatePad Edge1 = vertical corner (0,0); DefaultFillet Edge3 = vertical corner (60,0) (tc-04-topology-oracle2.txt)
+PASS | fillet without radius OK | {"status": "OK"}
+PASS | Radius = 1 mm | 1.0 mm
+PASS | DefaultFillet vol 11998.9 | 11998.926990816986
+PASS | chamfer without size OK | {"status": "OK"}
+PASS | Size = 1 mm | 1.0 mm
+PASS | verify_shape DefaultChamfer OK solid_count=1 | {"status": "OK"}
+NOTE | DefaultChamfer vol=11996.426990816988 (expected 11998.927 - 0.5*1*1*5 = 11996.427)

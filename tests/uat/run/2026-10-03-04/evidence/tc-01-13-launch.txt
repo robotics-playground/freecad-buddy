@@ -1,0 +1,23 @@
+== When: launch_app with path = .cmd wrapper (forward-slash path; the backslash payload was mangled by the shell)
+{
+  "active": false,
+  "bundle_id": null,
+  "name": "C:/Users/thuan/AppData/Local/Temp/claude/D--Work-Personal-Sources-freecad-buddy/3a96e4e8-1193-4f20-8730-69bd46a68309/scratchpad/fc-no-auto-mcp.cmd",
+  "pid": 36284,
+  "running": true,
+  "windows": [
+    {
+freecad pid=36284
+      "title": "FreeCAD 1.1.4",
+      "window_id": 1120200,
+== addon.log
+2026-10-03 23:45:02,802 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-03 23:45:03,018 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:64193
+2026-10-03 23:45:03,018 INFO freecad_buddy.hosts.gui_addon.bootstrap: FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy
+== Then listener + rpc file
+2026-10-03 23:45:03,018 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:64193
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-36284.json
+== Then no proxy
+(nothing listening on :8765)
+== Then reason verbatim
+2026-10-03 23:45:03,018 INFO freecad_buddy.hosts.gui_addon.bootstrap: FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy

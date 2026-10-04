@@ -1,0 +1,30 @@
+{
+ "freecad_pid": 32336,
+ "completed_before_kill": 26,
+ "in_flight_at_kill": true,
+ "kill": "terminate 32336 -> True",
+ "statuses_tail": [
+  "OK",
+  "OK",
+  "WORKER_CRASHED"
+ ],
+ "response": {
+  "seconds_after_kill": 0.31,
+  "status": "WORKER_CRASHED",
+  "message": "listener connection dropped",
+  "data": {
+   "rpc": "unreachable"
+  }
+ },
+ "client_session_exited_cleanly": true,
+ "freecad_alive": "0",
+ "tools_list_after_kill": {
+  "rc": 0,
+  "stdout_head": "{\n \"count\": 45,\n \"tools\": [\n  \"document_close\",\n  \"document_create\",\n  \"document_list\",\n  \"document_open\",\n  \"document_recompute\",\n  \"document_save\",\n  \"document_undo\",\n  \"export_3mf\",\n  \"export_step\"",
+  "stderr_tail": ""
+ },
+ "proxy_listening": true,
+ "proxy_log_new": [],
+ "proxy_log_crash_or_connection": [],
+ "discovery_file_dead_pid": "exists and parses as JSON"
+}

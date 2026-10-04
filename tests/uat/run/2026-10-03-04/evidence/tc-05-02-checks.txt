@@ -1,0 +1,9 @@
+PASS | Given no new FCB_TMP_snap_* (excluding 10 stale 2026-09-22 dirs in $TEMP) | []
+PASS | Given Sketch fully_constrained, dof 0 (verify_sketch) | 0
+NOTE | feature_pad -> {"status": "OK"}; watcher lines=3
+PASS | snapshot dir existed mid-operation (count>=1) | 3
+FAIL | logged dir contained <DocumentName>.FCStd while bracket open | ["1791054863.169 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap_9hgiphvv ['<gone>']", "1791054863.179 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap_9hgiphvv ['<gone>']", "1791054863.188 C:/Users/thuan/freecad-buddy-workdir/tmp\\FCB_TMP_snap_9hgiphvv ['<gone>']"]
+PASS | snapshot gone after commit | []
+PASS | envelope OK and mutation.snapshot_path null | None
+PASS | no orphan .FCBak in $TEMP or workdir tmp | []
+NOTE | fit={'view_fit_viewport': 'OK', 'detail': None}

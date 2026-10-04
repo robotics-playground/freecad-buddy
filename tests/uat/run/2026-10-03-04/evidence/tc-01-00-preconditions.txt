@@ -1,0 +1,42 @@
+== FREECAD_EXE
+-rwxr-xr-x 1 thuan 197609 265912 Sep 29 00:41 /c/Program Files/FreeCAD 1.1/bin/freecad.exe*
+== addon link
+-rw-r--r-- 1 thuan 197609 2370 Jul 22 04:15 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py
+07/31/2026  08:43 AM    <JUNCTION>     freecad_buddy [\??\D:\Work\Personal\Sources\freecad-buddy\src\freecad_buddy]
+== venv
+-rwxr-xr-x 1 thuan 197609 262144 Mar 30  2026 .venv/Scripts/python.exe*
+-rwxr-xr-x 1 thuan 197609 249856 Mar 30  2026 .venv/Scripts/pythonw.exe*
+== cua status
+Cua Driver daemon is running
+  socket: \\.\pipe\cua-driver
+  pid: 16172
+  permission mode: standard (built_in_default)
+  user policy: configured=false, active=false, valid=true
+  managed policy: configured=false, active=false, valid=true
+  authorization host: unavailable (unavailable)
+  capability manifest: configured=false, approved_at_startup=false, valid=true
+== fcb env
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'FreeCAD'
+== procs
+freecad.exe                  34776 Console                    1    569,180 K
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       2004
+  TCP    127.0.0.1:52753        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52754        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52755        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52756        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52757        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52758        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52759        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:52760        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61232        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61233        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61234        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61235        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61236        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61237        127.0.0.1:8765         TIME_WAIT       0
+== evidence dir
+writable
+== fcb env (patched, per APPENDIX-B step 3)
+H1 ok 1.1.3

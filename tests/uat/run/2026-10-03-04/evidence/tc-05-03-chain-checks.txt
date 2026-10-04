@@ -1,0 +1,5 @@
+NOTE | repeat with invalid 'Bad' Part::Box present: feature_pad Pad001 -> status=SPEC_FAILED rolled_back=False proof=None
+PASS | chain: recompute_clean false, is_valid false, explanation starts 'recompute left ' | {'recompute_clean': False, 'is_valid': False, 'fully_constrained': 'not_measured', 'explanation': 'recompute left 1 object(s) invalid: Bad: Length of box too small; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint fa9dbab298b4c6508b3fa930b94645c2475792cbafa0ae4bf733189ec02b8567'}
+FAIL | chain: status RECOMPUTE_ERROR | {"status": "SPEC_FAILED", "detail": {"code": "mutation.spec_failed", "message": "recompute left 1 object(s) invalid: Bad: Length of box too small; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint fa9dbab298b4c6508b3fa930b94645c2475792cbafa0ae4b
+PASS | chain: Pad001 not in tree | 
+NOTE | cleanup TC0503 close -> OK (state captured in evidence before cleanup)

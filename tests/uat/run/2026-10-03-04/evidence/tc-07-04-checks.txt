@@ -1,0 +1,21 @@
+PASS	given: box40-hole-r5 present	
+PASS	status OK, detail null	["OK", null]
+PASS	exactly one check recompute.clean passed	[{"id": "recompute.clean", "measured": 0, "expected": 0, "passed": true, "detail": {"message": "no object left in an error state"}}]
+PASS	failing_objects empty	{"failing_objects": []}
+PASS	text 'Recompute clean: no errors.'	Recompute clean: no errors.
+PASS	read-only: volume same before/after	[15214.601836602547, 15214.601836602547, "OK"]
+PASS	banner freecad_version non-empty, element_map_version int|null	{"freecad_version": "1.1.4", "element_map_version": 15}
+PASS	NOTE showall	View>Visibility>Show All Objects -> None None 
+FAIL	visual: view_fit_viewport {doc} OK [tc-07-04-after.png]	["SPEC_FAILED", {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}]
+PASS	NOTE guifit	FreeCAD Fit All toolbar: {"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+--- rerun after relaunch pid 32440 2026-10-04T03:25:15+07:00
+PASS	given: box40-hole-r5 present	
+PASS	status OK, detail null	["OK", null]
+PASS	exactly one check recompute.clean passed	[{"id": "recompute.clean", "measured": 0, "expected": 0, "passed": true, "detail": {"message": "no object left in an error state"}}]
+PASS	failing_objects empty	{"failing_objects": []}
+PASS	text 'Recompute clean: no errors.'	Recompute clean: no errors.
+PASS	read-only: volume same before/after	[15214.601836602547, 15214.601836602547, "OK"]
+PASS	banner freecad_version non-empty, element_map_version int|null	{"freecad_version": "1.1.4", "element_map_version": 15}
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-04-after.png]	["OK", {"fitted": true, "document": "box40_hole_r5", "camera_recorded": true}]
+PASS	NOTE windows	[[15407174, "* box40-hole-r5 - FreeCAD 1.1.4"]]

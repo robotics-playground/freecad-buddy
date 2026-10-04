@@ -1,0 +1,17 @@
+PASS | Given no document open | 0 open document(s).
+PASS | Given one document open | 1 open document(s): box-10-20-30.
+PASS | query_tree_summary refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_object refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_mass_properties refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_dependencies refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_placement refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_sketch_info refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | document_save refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | document_close refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | document_recompute refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | document_undo refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | verify_shape refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_screenshot refuses fake handle (INVALID_INPUT envelope, exact message) | {'status': 'INVALID_INPUT', 'schema': 'fcb.result-envelope/1', 'code': 'INVALID_INPUT', 'message': 'unknown or stale document handle: fcb-doc:not-a-real-handle', 'raw': None}
+PASS | query_capabilities still OK | OK
+PASS | live handle still OK | OK
+PASS | omitted doc -> protocol reject | {'_raw': "Input validation error: 'doc' is a required property", '_isError': True}

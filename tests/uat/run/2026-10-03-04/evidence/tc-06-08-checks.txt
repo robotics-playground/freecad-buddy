@@ -1,0 +1,9 @@
+PASS | Given: PIL reads PNG sizes | uv run --with pillow
+PASS | default is (1920, 1920) | (1920, 1920)
+PASS | 640x480 honored | (640, 480)
+PASS | 4096x4096 refused (schema maximum 1920), not clamped | {"_raw": "Input validation error: 4096 is greater than the maximum of 1920"}
+PASS | width 0 -> INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "image dimension must be positive: 0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call las
+PASS | exactly 1920 accepted, PNG (1920,1920) | (1920, 1920)
+PASS | only width 800 -> OK, PNG (800, 1920) | (800, 1920)
+PASS | visual: view_fit_viewport returns OK | {"status": "OK"}
+NOTE | after shot: {'file': 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-06-08-after.png', 'exists': True, 'title': '- [0] Window "* TC0607 - FreeCAD 1.1.4" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]'}

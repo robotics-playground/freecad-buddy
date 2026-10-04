@@ -1,0 +1,7 @@
+PASS	given: no failure targets	
+PASS	every failure non-OK (INVALID_INPUT or RECOMPUTE_ERROR)	[["INVALID_INPUT", "export supports a single object; got multiple"], ["INVALID_INPUT", "unknown object: NoSuchObject"], ["INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=1e-05, angular=0.5"], ["INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=0.1, angular=0.0"], ["RECOMPUTE_ERROR", "Writing of STEP failed"]]
+PASS	no file at any failure target	[]
+PASS	no zero-byte stub	[]
+PASS	missing dir not created	false
+PASS	no export_id minted on failures	[{}, {}, {}, {}, {}]
+PASS	later single-object export to same path OK and file exists	["OK", null]

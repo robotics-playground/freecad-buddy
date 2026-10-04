@@ -1,0 +1,2 @@
+NOTE | golden box opened hidden (known harness fact); View > Visibility > Show All Objects via cua-driver invoke_menu, then re-fit and re-capture before
+NOTE | GUI golden box volume before headless runs: 6000.0

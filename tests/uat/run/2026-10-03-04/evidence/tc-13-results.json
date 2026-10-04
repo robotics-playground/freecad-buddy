@@ -1,0 +1,237 @@
+[
+ {
+  "id": "TC-13-01",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-01-after.png",
+   "tc-13-01-tree.png",
+   "tc-13-01.jsonl"
+  ],
+  "note": "MCP query_tree_summary depth 2: [BoxHole label BoxHole Part::Feature visibility false] (origin types excluded by default filter). UIA TreeItems: ['box40-hole-r5','BoxHole']. document_list 1 entry label 'box40-hole-r5' = root row. Counts 1=1, no MCP-only, no GUI-only node. view_fit_viewport SPEC_FAILED view_fit.unverified (golden ships hidden, nothing visible to measure) -> GUI Fit All toolbar button (route accessibility, Python console logs Std_ViewFitAll). Visual (read): Model panel rows 'box40-hole-r5' > 'BoxHole' (greyed = hidden), tab 'box40-hole-r5 : 1', empty viewport as expected for a hidden object. Rows match TreeItem labels and MCP set one for one."
+ },
+ {
+  "id": "TC-13-02",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-13-02-selected.png",
+   "tc-13-02-after.png",
+   "tc-13-02-hover-observed.png",
+   "tc-13-02.jsonl"
+  ],
+  "note": "MCP query_object: name BoxHole, type Part::Feature, label BoxHole, error null. Selection: background UIA click on the BoxHole TreeItem token returned effect unverifiable and did NOT select (TreeItem selected=false) -> route used: invoke_menu [Edit,Select All] (only object in doc); console echoes Gui.Selection.addSelection('box40_hole_r5','BoxHole'), row highlighted. Data tab (TabItem click by token) shows Base/Placement [(0.00 0.00 1.00); 0.00deg; (0.0...]/Label BoxHole = MCP label = TreeItem label. Volume 15214.601836602547 before and after selection. Face hover: observed (not agent-driven; the user's own pointer was over the viewport during TC-13-06) status bar 'Preselected: box40_hole_r5.BoxHole.Face3 (33.00 mm, 6.34 mm, 10.00 mm)' - object segment BoxHole = MCP name (tc-13-02-hover-observed.png). BLOCKED (desktop in use): status bar 'Valid, Internal name: BoxHole' needs tree-row hover (global pointer input); after selection the status bar is empty. view_fit_viewport SPEC_FAILED view_fit.unverified (object hidden) -> GUI Fit All. Visual read: BoxHole row highlighted, Data tab Label 'BoxHole', viewport empty (object ships hidden)."
+ },
+ {
+  "id": "TC-13-03",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-13-03-after.png",
+   "tc-13-03-repro-1-opened.png",
+   "tc-13-03-repro-2-after-include-render.png",
+   "tc-13-03-hidden.png",
+   "tc-13-03-probe.png",
+   "tc-13-03-mcp-include-hidden.png",
+   "tc-13-03.jsonl",
+   "tc-13-03b.jsonl",
+   "tc-13-03-repro.jsonl",
+   "tc-13-findings.txt"
+  ],
+  "note": "FAIL on F13-1: the 'explicit include overrides the flag while visibility is false' step returns OK rendered_objects [Box] + PNG (box rendered, read), but the call itself sets Box Visibility=true in the live doc and dirties it (title '* box-10-20-30'); reproduced on a fresh open (repro-1 hidden/empty -> repro-2 eye open, box drawn, '*'). Read-only render mutates the document (render_probe.py:187 contract, call at render_probe.py:226). Other Thens: hidden agrees (MCP false + window greyed/empty, repro-1) PASS; hidden default render empty_scene true, [] , resource_link null PASS; GUI toggle: space keystroke not allowed (desktop in use) -> invoke_menu [View,Visibility,Toggle Visibility] after [Edit,Select All] (console: Std_ToggleVisibility; it turned the leaked-visible box hidden, MCP then false = window greyed), then [View,Visibility,Show Selection] -> MCP true, window box drawn PASS; default render then rendered_objects [Box] + link PASS; volume 6000.0 in both states PASS. view_fit_viewport OK (fits true, ratio 0.948). Visual read: hidden capture (repro-1) empty viewport, after capture one framed 10x20x30 box, eye open. Restore-to-hidden: [View,Visibility,Hide Selection] refused segment 2 once; doc closed without save instead (fixture unchanged on disk)."
+ },
+ {
+  "id": "TC-13-04",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-04-after.png",
+   "tc-13-04-mcp.png",
+   "tc-13-04-viewport.png",
+   "tc-13-04.jsonl"
+  ],
+  "note": "query_mass_properties: volume 15214.601836602547, area 4957.079632679489, bbox 0..40 x 0..40 x 0..10, faces 7 edges 15 vertices 10 solids 1, com null. verify_shape OK (volume, bbox, solid_count, valid, watertight). capabilities render gui_constructed. Route deviation: GUI show via invoke_menu [Edit,Select All] / [View,Visibility,Show Selection] was REFUSED (menu_path_unavailable segment 1/2; invoke_menu needs a foreground popup, desktop in use); BoxHole became visible in the window through F13-1 (the include render set Visibility true, title '* box40-hole-r5'). Standard Views + Fit All toolbar buttons by token; view_fit_viewport OK (fits true ratio 0.951). Visual read: window after = flat square plate 40x40x10 (about 4:1 width:height) in iso, one circular hole centred on the top face, wall shaded, no extra body; MCP render = same silhouette, same centred hole, same iso camera Z up. Lighting order differs (render top face darkest) = known TC-06 F1."
+ },
+ {
+  "id": "TC-13-05",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-05-props.png",
+   "tc-13-05-after.png",
+   "tc-13-05.jsonl",
+   "tc-13-05c.jsonl"
+  ],
+  "note": "query_placement BoxHole: local and global position {0,0,0} each {value,unit:mm}, axis (0,0,1), angle {0.0, unit deg} - all lengths typed mm, angle deg. Selection route: the TreeItem token click does not select and invoke_menu [Edit,Select All] was refused 10x (desktop in use); BoxHole was made visible by an include render (F13-1, harness workaround, recorded) and selected by a background window-targeted pixel click on the solid (route synthetic_events; console Gui.Selection.addSelection('box40_hole_r5','BoxHole','Face3',...)). Data tab Placement row '[(0.00 0.00 1.00); 0.00deg; (0.0...' (truncated), expanded by a background click on its disclosure arrow: Angle 0.00deg, Axis [0.00 0.00 1.00], Position [0.00 mm 0.00 mm 0.00 mm]; Label BoxHole. Axis, angle and position equal the MCP values. bbox 0..40 x 0..40 x 0..10 consistent with origin (0,0,0). view_fit_viewport OK. Visual read: props = Placement collapsed + Label BoxHole, BoxHole row highlighted; after = Placement expanded Angle 0.00deg / Axis [0.00 0.00 1.00] / Position [0.00 mm 0.00 mm 0.00 mm], plate with hole framed."
+ },
+ {
+  "id": "TC-13-06",
+  "priority": "Critical",
+  "verdict": "FAIL",
+  "evidence": [
+   "tc-13-06-after.png",
+   "tc-13-06-mcp.png",
+   "tc-13-06-viewport.png",
+   "tc-13-06-menu.png",
+   "tc-13-06.jsonl"
+  ],
+  "note": "FAIL only on the shading clause 'matching the tone of the same faces': window top face light grey and left/front face mid grey; render top face dark grey (~rgb 90) and front-left face lightest - the tone order is inverted (same as TC-06 F1, offset headlight render_probe.py:55-56, commit eb72dbb; a design decision is pending, so product-vs-test-case is open). No face is black. Other Thens PASS: rendered_objects [BoxHole] + resource_link; volume 15214.6018 before/after, verify_recompute clean (failing_objects []); silhouette, centred through-hole, iso camera, Z up, 3 faces visible in both; flat 40x40x10 plate in both; no Body/Sketch/Origin leak, nothing missing. Camera set by the Standard Views toolbar button and Fit All by token (route accessibility); view_fit_viewport OK ratio 0.951. BoxHole visible via F13-1 (see TC-13-03)."
+ },
+ {
+  "id": "TC-13-07",
+  "priority": "High",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-13-07-broken-after.png",
+   "tc-13-07-broken-tree.png",
+   "tc-13-07-broken-status.png",
+   "tc-13-07-clean-tree.png",
+   "tc-13-07-clean-after.png",
+   "tc-13-07-broken.jsonl",
+   "tc-13-07-clean.jsonl"
+  ],
+  "note": "non-watertight-open-shell opened OK (object OpenShell, Part::Feature, Shape is a Shell). MCP: query_object error null; verify_recompute OK failing_objects []; verify_shape WITH case.yaml checks -> SPEC_FAILED (shape.watertight false vs true, shape.solid_count 0 vs 1) PASS. Window (read): OpenShell row greyed (hidden as shipped), NO error/touched marker - MCP and GUI AGREE there is no FreeCAD error state. Thens 'query_object non-null error OR verify_recompute names it' and 'GUI marks the object' fail as written, but the fixture is a valid static Part::Feature whose defect is geometric, not a recompute error: TEST-CASE DEFECT (fixture choice; no fault-injection case carries an object error state). Same object on both sides (OpenShell). Clean control (CleanControl): error null, verify_recompute clean, verify_shape OK, tree row no marker - agrees. BLOCKED (desktop in use): status bar text needs tree-row hover; the TreeItem token click did not select. view_fit_viewport SPEC_FAILED view_fit.unverified (hidden) -> GUI Fit All (empty viewport expected, object hidden). Visual read: tree 'fixture' > 'OpenShell' greyed, no red/blue marker, status bar empty, viewport empty."
+ },
+ {
+  "id": "TC-13-08",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-08-before.png",
+   "tc-13-08-after.png",
+   "tc-13-08-after-create.png",
+   "tc-13-08.jsonl"
+  ],
+  "note": "document_create {label:TC13Parity} OK handle fcb-doc:zUgJ...; UIA TreeItems before ['box-10-20-30','Box'] -> after ['box-10-20-30','TC13Parity'] (box root collapsed when the new doc became active); document_list 2 entries incl. handle=created, label TC13Parity, transient true; query_tree_summary on new handle: no nodes; golden handle still OK. view_fit_viewport {goldenHandle} -> INVALID_INPUT 'the live viewport is showing TC13Parity, not the targeted box_10_20_30' (correct refusal) -> GUI Fit All. Visual read: before = tab bar 'Start | box-10-20-30 : 1', Model panel one root; after = tabs 'Start | box-10-20-30 : 1 | TC13Parity : 1' (active), Model panel roots box-10-20-30 and bold TC13Parity with no child rows, title 'TC13Parity - FreeCAD 1.1.4'."
+ },
+ {
+  "id": "TC-13-09",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-09-before.png",
+   "tc-13-09-after.png",
+   "tc-13-09-after-open.png",
+   "tc-13-09.jsonl"
+  ],
+  "note": "document_list [] before. Relative path 'benchmarks/g0/golden-models/box-10-20-30.FCStd' -> INVALID_INPUT \"document_open failed for '...': File '...' does not exist!\". Absolute path -> OK handle. UIA TreeItems before [] -> after ['box-10-20-30','Box']. query_tree_summary Box visibility false (shipped flag survived). query_mass_properties volume 6000.0, bbox 0..10 x 0..20 x 0..30, com (5,10,15), faces 6 edges 12 vertices 8 solids 1. view_fit_viewport SPEC_FAILED view_fit.unverified (hidden) -> GUI Fit All. Visual read: before = Start page only, empty Model panel, tab 'Start'; after = tab 'box-10-20-30 : 1', root box-10-20-30 > Box greyed with struck eye, empty viewport as expected."
+ },
+ {
+  "id": "TC-13-10",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-10-before.png",
+   "tc-13-10-after.png",
+   "tc-13-10-after-pad.png",
+   "tc-13-10-expanded.png",
+   "tc-13-10.jsonl"
+  ],
+  "note": "Scratch TC13Pad built over MCP (document_create, feature_body_create, sketch_create XY in Body, sketch_add_geometry 30x20 rectangle fully constrained). preview_dry_run + feature_pad {length {5,mm}} OK, mutation rolled_back false, volume 0 -> 3000. query_tree_summary depth 2: Body > Pad, Sketch. query_mass_properties Pad 3000.0, bbox z 0..5. UIA flat TreeItems right after the pad ['TC13Pad','Body'] (Body collapsed, as the TC warns); Body expanded by a background window-targeted pixel click on the disclosure arrow (route synthetic_events, no foreground) -> ['TC13Pad','Body','Origin','Pad']: Pad row present on both sides. Fit All Button found (label exactly 'Fit All') in the post-pad snapshot. Bare length 5 -> INVALID_INPUT 'length must be a {value, unit} quantity, got 5'. view_fit_viewport OK. Visual read: before = top view, only the 30x20 rectangle sketch outline; after = iso, a flat solid plate 30x20 with ~5 mm thickness, framed, tree TC13Pad > Body."
+ },
+ {
+  "id": "TC-13-11",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-11b-before.png",
+   "tc-13-11-after.png",
+   "tc-13-11b-after-change.png",
+   "tc-13-11-before.png",
+   "tc-13-11b.jsonl",
+   "tc-13-11.jsonl",
+   "tc-13-11-literal.jsonl"
+  ],
+  "note": "Literal When on golden box-10-20-30 -> INVALID_INPUT \"Box has no property named 'Length'\" (static Part::Feature) = TEST-CASE DEFECT (as TC-06-10); judged on merits on parametric objects. Run 1 (Part::Box 'Cube' built in GUI via invoke_menu Part>Primitives>Cube): Length 10->25 OK, volume 1000->2500, bbox x 25, no-confirm refusal exact string, viewport cube -> 2.5x elongated box (tc-13-11-before.png vs tc-13-11.jsonl); panel not readable then (selection menu refused). Run 2 (TC13Pad Pad, selected by a background window-targeted pixel click on the solid in the viewport, route synthetic_events; console Gui.Selection.addSelection('TC13Pad','Body','Pad...')): panel Side1/Length '5.00 mm' before; feature_set_parameters {Pad Length 12 mm} + preview confirm OK, volume 3000->7200, bbox z 12; panel right after the commit is empty (the mutation clears the selection), after re-selecting reads 'Length 12.00 mm' = the accepted value; verify_recompute clean and no touched marker in the tree. view_fit_viewport OK. Visual read: before = flat 30x20x5 plate selected, Length 5.00 mm; after = clearly taller block, Length 12.00 mm."
+ },
+ {
+  "id": "TC-13-12",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-12b-mutated.png",
+   "tc-13-11-after.png",
+   "tc-13-12-after.png",
+   "tc-13-12b-after-undo.png",
+   "tc-13-12-mutated.png",
+   "tc-13-11b.jsonl",
+   "tc-13-12.jsonl"
+  ],
+  "note": "Golden Box literal is a test-case defect (see TC-13-11); two merits runs. Run 1 (Part::Box Cube, Length 25): document_undo OK \"Undid 'buddy: set parameters on Box'\", volume 2500->1000, bbox x 10; viewport elongated box -> cube (tc-13-12-mutated.png, tc-13-12.jsonl). Run 2 (TC13Pad Pad, Length 12): document_undo OK \"Undid 'buddy: set parameters on Pad' on TC13Pad\" (not a no-op), query_mass_properties 3000.0 bbox z 0..5, query_tree_summary same nodes (Body > Pad, Sketch), UIA TreeItems match; panel Length '12.00 mm' -> '5.00 mm'; verify_recompute clean, no touched marker; GUI Redo toolbar arrow enabled after the undo. view_fit_viewport OK. Visual read: mutated = tall block (12 mm); after = flat plate (5 mm), visibly thinner; Length row 5.00 mm."
+ },
+ {
+  "id": "TC-13-13",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-13-before.png",
+   "tc-13-13-after.png",
+   "tc-13-13-after-close.png",
+   "tc-13-13.jsonl"
+  ],
+  "note": "A=TC13Parity, B=box-10-20-30. document_list 2 entries, both query_tree_summary OK. document_close {A} OK 'Closed TC13Parity'. UIA TreeItems before ['box-10-20-30','TC13Parity'] -> after ['box-10-20-30','Box']. verify_state label_contains TC13Parity exists:false -> driver refused the predicate ('element.exists=false is unsupported because element snapshots are not exhaustive') = inconclusive, so the PNG was judged directly per the TC. document_list 1 entry = B. Stale query_tree_summary {A} -> INVALID_INPUT 'unknown or stale document handle: fcb-doc:zUgJ...' (not WORKER_CRASHED). B OK. view_fit_viewport {B} SPEC_FAILED view_fit.unverified (Box hidden) -> GUI Fit All. Visual read: before tabs 'Start | box-10-20-30 : 1 | TC13Parity : 1', roots box-10-20-30 + TC13Parity; after tabs 'Start | box-10-20-30 : 1', only root box-10-20-30 > Box (greyed), title 'box-10-20-30 - FreeCAD 1.1.4', no dialog."
+ },
+ {
+  "id": "TC-13-14",
+  "priority": "Critical",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-14-hidden.png",
+   "tc-13-14-visible.png",
+   "tc-13-14-after.png",
+   "tc-13-14.jsonl"
+  ],
+  "note": "Route and subject deviation (desktop in use): the space keystroke on the tree row is not allowed and a hidden golden object cannot be selected (TreeItem token click does not select; Select All menu refused), so the GUI toggle was the property-panel View tab 'Visibility' row on the selected box40-hole-r5 BoxHole (set_value by UIA token; console 'FreeCADGui.getDocument('box40_hole_r5').getObject('BoxHole').Visibility = False'). Start state visible (made visible earlier by F13-1). Sequence true->false->true->false->true, each followed only by MCP reads with no MCP mutation between: query_tree_summary visibility flipped every time (true,false,true,false,true); visible_only filter returned [BoxHole] when visible and [] when hidden; volume 15214.6018 every time; label stayed 'BoxHole'. set_value results recorded verbatim: effect unverifiable, route accessibility, delivery unknown - verdicts came from MCP re-reads and pixels only. view_fit_viewport OK + GUI Fit All. Visual read: hidden capture = empty viewport, tree eye struck through, Visibility row 'No'; after capture = plate with hole drawn, eye open, Visibility 'Yes' - MCP true agrees."
+ },
+ {
+  "id": "TC-13-15",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-13-15-renamed.png",
+   "tc-13-15-after.png",
+   "tc-13-15-editing.png",
+   "tc-13-05-after.png",
+   "tc-13-15.jsonl",
+   "tc-13-15b.jsonl"
+  ],
+  "note": "Before: query_tree_summary label BoxHole, query_object name BoxHole (tc-13-05-after.png shows row 'BoxHole', Label row 'BoxHole'). Rename route deviation: the tree inline editor needs an F2 keystroke (not allowed, desktop in use), so the rename was done in the GUI property panel: set_value 'BoxHoleRenamed' on the Data-tab Label value row (UIA token, background). MCP right after: query_tree_summary label 'BoxHoleRenamed'; query_object {object:'BoxHole'} still resolves, name 'BoxHole'; window tree row 'BoxHoleRenamed' and no 'BoxHole' row; status bar after a viewport click 'Preselected: box40_hole_r5.BoxHole.Edge7' = internal name unchanged. Volume 15214.6018 throughout. Revert through the same GUI route (set_value 'BoxHole'; console 'FreeCAD.getDocument(...).getObject('BoxHole').Label = \"BoxHole\"') -> MCP label BoxHole, tree row BoxHole. view_fit_viewport OK. Visual read: renamed = tree row and Label row 'BoxHoleRenamed'; after = both 'BoxHole' again. BLOCKED (desktop in use): inline editor open image (F2), Ctrl+Z revert (keystroke; invoke_menu [Edit,Undo] refused 6x; the Undo toolbar button is not in the UIA tree and a pixel click on it routes to the toolbar), and the accidental-space reproduction (keystroke). Note: the property-panel Label edit left the GUI Undo arrow greyed (no undo entry)."
+ },
+ {
+  "id": "TC-13-16",
+  "priority": "Critical",
+  "verdict": "PARTIAL",
+  "evidence": [
+   "tc-13-16-start.png",
+   "tc-13-16-after.png",
+   "tc-13-16-mcp.png",
+   "tc-13-16-after-open.png",
+   "tc-13-16.jsonl",
+   "tc-13-16b.jsonl"
+  ],
+  "note": "Route/subject deviation: the Open... toolbar button opens a modal file dialog (not allowed this run: a modal blocks UIA, desktop in use), so the GUI open used the Start page 'Recent Files' card box-10-20-30.FCStd (the only recent file; cylinder-r5-h20 is not listed). The card's UIA token click did nothing; a background window-targeted pixel double-click on the card (route synthetic_events) opened it. document_list 1 -> 2 entries, new handle fcb-doc:WH2m... label box-10-20-30 (adopted, transient false); query_tree_summary on it OK naming Box; query_mass_properties 6000.0 (box reference); query_screenshot include [Box] -> rendered_objects [Box], PNG read = a 10x20x30 box; existing sphere-r10 handle still OK. UIA TreeItems gained 'box-10-20-30','Box'. view_fit_viewport SPEC_FAILED view_fit.unverified (hidden) -> GUI Fit All. Visual read: tab 'box-10-20-30 : 1' active, Model panel roots sphere-r10 + box-10-20-30 > Box. NOT RUN: cylinder volume 1570.7963 / 10x10x20 bbox (cylinder not openable without the modal dialog); toolbar Open... route evidence (BLOCKED, modal)."
+ },
+ {
+  "id": "TC-13-17",
+  "priority": "High",
+  "verdict": "BLOCKED",
+  "evidence": [
+   "tc-13-12-after.png"
+  ],
+  "note": "Given not reachable without keystrokes or a context menu: the document needs a pending recompute (touched object). feature_set_parameters and FreeCAD property-panel edits recompute immediately (TC-06-10), MCP has no 'set without recompute', and Std_MarkToRecompute lives in the tree context menu (right-click popup, not enumerable, global input). Std_Refresh (Edit > Refresh) is disabled while the doc does not need recompute (StdCmdRefresh::isActive -> mustExecute, CommandDoc.cpp:1659), and invoke_menu refuses disabled leaves. Also note: verify_recompute itself calls document.recompute() (TC-06 observation, verify.py:411), so the 'first verify_recompute names touched objects' read would clear the state it reads. Window after an MCP undo shows the Refresh toolbar icon greyed = nothing touched."
+ },
+ {
+  "id": "TC-13-18",
+  "priority": "High",
+  "verdict": "PASS",
+  "evidence": [
+   "tc-13-18-before.png",
+   "tc-13-18-after.png",
+   "tc-13-18-after-close.png",
+   "tc-13-18.jsonl",
+   "tc-13-18b.jsonl",
+   "tc-13-18c.jsonl"
+  ],
+  "note": "A=box-10-20-30, B=sphere-r10 (both unmodified; verify_recompute clean). GUI close route deviation: Ctrl+W is a keystroke (not allowed) -> A's root TreeItem clicked by token (activates the doc) + invoke_menu [File,Close] (attempt 1, Std_CloseActiveWindow). No save prompt (list_windows: only the main window). A first attempt via a background pixel click on the MDI tab 'x' did not land (route accessibility, no effect); A was then closed over MCP and re-opened for the real run (tc-13-18b.jsonl). Real run: document_list 2 -> 1 entry (sphere-r10 = B); query_tree_summary, query_mass_properties and document_close on stale A all INVALID_INPUT 'unknown or stale document handle: ...' (no WORKER_CRASHED); FreeCAD pid 17732 unchanged; query_capabilities OK; B query_tree_summary OK. verify_state exists:false refused by the driver (snapshots not exhaustive) = inconclusive -> PNG judged. view_fit_viewport {B} SPEC_FAILED view_fit.unverified (Sphere hidden) -> GUI Fit All. Visual read: before tabs 'Start | sphere-r10 : 1 | box-10-20-30 : 1', roots sphere-r10 + box-10-20-30 > Box; after tabs 'Start | sphere-r10 : 1', only root sphere-r10 > Sphere, no dialog. Caveat: the TC calls document_list before the stale reads; without that call the stale reads return RECOMPUTE_ERROR (F12-13, see TC-12-13)."
+ }
+]

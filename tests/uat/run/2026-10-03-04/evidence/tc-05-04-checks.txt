@@ -1,0 +1,9 @@
+PASS | Given tree lists Body, Sketch, Pad | ['Body', 'Pad', 'Sketch']
+NOTE | feature_fillet -> {"status": "OK"} touched=['Fillet', 'Body']
+PASS | touched contains 'Fillet' | ['Fillet', 'Body']
+PASS | 'Sketch' absent from touched | ['Fillet', 'Body']
+PASS | tree diff (after-before) == new names in touched | {'tree_new': ['Fillet'], 'touched_new': ['Fillet']}
+PASS | preview diff.touched == mutation.touched | {'preview': ['Body', 'Fillet'], 'apply': ['Fillet', 'Body']}
+PASS | post_verify.is_valid true | True
+PASS | status OK | {"status": "OK"}
+NOTE | fit={'view_fit_viewport': 'OK', 'detail': None}

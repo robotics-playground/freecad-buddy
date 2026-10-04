@@ -1,0 +1,37 @@
+Spawning headless H1 FreeCAD MCP server + running the tool sweep...
+
+  [PASS] tools/list                 OK 45 tools
+  [PASS] query_capabilities         OK freecad=1.1.3 render=offscreen
+  [PASS] query_mass_properties:box-10-20-30 OK volume=6000.0 (expect 6000.0, rel_ok=True)
+  [PASS] verify_shape:box-10-20-30  OK 
+  [PASS] verify_export_step:box-10-20-30 OK 
+  [PASS] verify_export_stl:box-10-20-30 OK 
+  [PASS] query_screenshot:box-10-20-30 OK link=D:\Work\Personal\Sources\freecad-buddy\freecad-buddy-workdir\tmp\FCB_TMP_shot_6l3byfs3.png
+  [PASS] query_mass_properties:cylinder-r5-h20 OK volume=1570.7963267948965 (expect 1570.7963, rel_ok=True)
+  [PASS] verify_shape:cylinder-r5-h20 OK 
+  [PASS] verify_export_step:cylinder-r5-h20 OK 
+  [PASS] verify_export_stl:cylinder-r5-h20 OK 
+  [PASS] query_screenshot:cylinder-r5-h20 OK link=D:\Work\Personal\Sources\freecad-buddy\freecad-buddy-workdir\tmp\FCB_TMP_shot__j5fdv3n.png
+  [PASS] query_mass_properties:sphere-r10 OK volume=4188.790204786392 (expect 4188.7902, rel_ok=True)
+  [PASS] verify_shape:sphere-r10    OK 
+  [PASS] verify_export_step:sphere-r10 OK 
+  [PASS] verify_export_stl:sphere-r10 OK 
+  [PASS] query_screenshot:sphere-r10 OK link=D:\Work\Personal\Sources\freecad-buddy\freecad-buddy-workdir\tmp\FCB_TMP_shot_7e7yngg6.png
+  [PASS] query_mass_properties:box40-hole-r5 OK volume=15214.601836602547 (expect 15214.6018, rel_ok=True)
+  [PASS] verify_shape:box40-hole-r5 OK 
+  [PASS] verify_export_step:box40-hole-r5 OK 
+  [PASS] verify_export_stl:box40-hole-r5 OK 
+  [PASS] query_screenshot:box40-hole-r5 OK link=D:\Work\Personal\Sources\freecad-buddy\freecad-buddy-workdir\tmp\FCB_TMP_shot_68i8b7hf.png
+  [PASS] query_mass_properties:two-box-compound OK volume=1999.9999999999995 (expect 2000.0, rel_ok=True)
+  [PASS] verify_shape:two-box-compound OK 
+  [PASS] verify_export_step:two-box-compound OK 
+  [PASS] verify_export_stl:two-box-compound OK 
+  [PASS] query_screenshot:two-box-compound OK link=D:\Work\Personal\Sources\freecad-buddy\freecad-buddy-workdir\tmp\FCB_TMP_shot_3g15z15d.png
+  [PASS] document_save              OK 
+  [PASS] document_open(reopen)      OK 
+
+29/29 checks passed
+report: D:\Work\Personal\Sources\freecad-buddy\_automation\e2e_report.json
+server stderr: D:\Work\Personal\Sources\freecad-buddy\_automation\server.stderr.log
+
+--- stderr ---

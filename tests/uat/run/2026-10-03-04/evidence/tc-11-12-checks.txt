@@ -1,0 +1,20 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-12-before.png
+NOTE | baseline FCB_TMP_snap_* ($TEMP + H1 workdir tmp): 10
+NOTE | commit: preview=OK status=OK rolled_back=False rollback_proven=None snapshot_path=None snaps 10->10 text='Mutation committed; fingerprint e55288ec8d35.' detail={"status": "OK"}
+NOTE | fail-rollback: preview=OK status=RECOMPUTE_ERROR rolled_back=True rollback_proven=rolled_back_verified snapshot_path=None snaps 10->10 text='Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: BigFillet: BRep_API: command not done' detail={"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: BigFillet: BRep_API: command not done"}}
+NOTE | raise: preview=OK status=RECOMPUTE_ERROR rolled_back=True rollback_proven=rolled_back_verified snapshot_path=None snaps 10->10 text='Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Fillet: Fillet radius must be greater than zero' detail={"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: Fillet: Fillet radius must be greater than zero"}}
+NOTE | unproven: preview=OK status=RECOMPUTE_ERROR rolled_back=True rollback_proven=rolled_back_verified snapshot_path=None snaps 10->10 text='Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Fillet: BRep_API: command not done' detail={"status": "RECOMPUTE_ERROR", "detail": {"code": "mutation.recompute_error", "message": "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"}}
+PASS | Then committed mutation leaves no snapshot (count == baseline) | 10->10
+PASS | Then committed envelope snapshot_path is null | None
+PASS | Then proven rollback leaves no snapshot (count unchanged) | 10->10 status=RECOMPUTE_ERROR
+PASS | Then rolled-back envelope names proof rolled_back_verified|rolled_back_via_snapshot | rolled_back_verified
+RECLASSIFIED NOT RUN (Radius 0 did not raise; it failed recompute and rolled back like the fail case; count unchanged) | Then failed (raising) commit leaves no snapshot (count unchanged) | 10->10 status=RECOMPUTE_ERROR reached_bracket=True
+NOT RUN | Then UNPROVEN rollback keeps its snapshot | reproducer did not reach the unproven path: status=RECOMPUTE_ERROR proven=rolled_back_verified
+NOT RUN | Then keep-case snapshot_path is absolute | no keep-case reached
+NOT RUN | Then committed-but-unhashable keeps its snapshot | NOT RUN: no typed-tool input makes a committed shape unserializable (needs a fault-injected fingerprint)
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-12-after.png

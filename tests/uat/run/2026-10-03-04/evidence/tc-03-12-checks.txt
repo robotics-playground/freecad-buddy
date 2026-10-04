@@ -1,0 +1,10 @@
+PASS | Given OK dof=0 redundant=[] | OK dof=0 redundant=[]
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+PASS | mutation OK rolled_back=false (never SPEC_FAILED) | {"status": "OK"}
+PASS | verify_sketch status=OK | {"status": "OK"}
+PASS | warnings entry id=sketch.redundant with message 'redundant constraints present (warning only)' | [{"id": "sketch.redundant", "measured": {"redundant": [12], "partially_redundant": []}, "passed": false, "detail": {"message": "redundant constraints present (warning only)"}}]
+PASS | subject.redundant non-empty | [{"id": 12, "name": "", "type": "Horizontal"}]
+PASS | sketch.fully_constrained passed=true measured=true | [{"id": "sketch.fully_constrained", "measured": true, "expected": true, "passed": true, "detail": {"message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"}}]
+PASS | constraint count one higher | 11 -> 12 (subject.constraint_count=12)
+PASS | dof=0 | dof=0
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

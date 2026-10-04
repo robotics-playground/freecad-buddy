@@ -1,0 +1,10 @@
+NOTE | A: Given build (unpinned rectangle, dof 2): SPEC_FAILED {"code": "mutation.spec_failed", "message": "verify_sketch failed on AxisProfile (dof=2): sketch.fully_constrained"}
+FAIL | A: Given verify_sketch AxisProfile dof > 0 | dof=0 geometry_count=0 (Given rolled back by AD-8)
+FAIL | A: -1 call OK rolled_back=false | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[0].first geo_id 0 is outside the sketch (0..-1, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1
+FAIL | A: -2 call OK rolled_back=false | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[0].first geo_id 3 is outside the sketch (0..-1, or -1/-2 axes)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1
+PASS | B: rectangle pinned by PointOnObject to -1 (HAxis) and -2 (VAxis) commits OK | {"status": "OK"}
+PASS | B: verify dof=0 | {"status": "OK"}
+PASS | B: both PointOnObject constraints readable with 1-based ids | [{"id": 11, "type": "PointOnObject", "name": "", "driving": true, "value": {"value": 0.0, "unit": null}}, {"id": 12, "type": "PointOnObject", "name": "", "driving": true, "value": {"value": 0.0, "unit": null}}]
+PASS | axis as first: Coincident(first=-1, first_pos=1, second=0, second_pos=1) accepted | {"status": "OK"}
+PASS | second=-9 INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "constraints[0].second geo_id -9 names external geometry the sketch has not projected (0 projected)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppDa
+NOTE | fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

@@ -1,0 +1,45 @@
+== FreeCAD survived
+freecad.exe                  31584 Console                    1    531,608 K
+== discovery file after
+{'schema': 1, 'pid': 31584, 'host': '127.0.0.1', 'port': 64386, 'contract_version': '1', 'freecad_version': '1.1.4', 'started': '2026-10-04T09:06:45.433966+00:00'} token_sha256 d1e75b03e6f32b85
+== :8765 new pid
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       32716
+== query_capabilities
+ "status": "OK",
+  "freecad_version": "1.1.4",
+== query_tree_summary on pre-restart handle fcb-doc:yijyBv9puH1WT7l9htnQKg
+{
+ "status": "OK",
+ "structured_content": {
+  "doc": "fcb-doc:yijyBv9puH1WT7l9htnQKg",
+  "total_objects": 1,
+  "returned_nodes": 1,
+  "depth": 1,
+  "filters_applied": {
+   "exclude_types": [
+    "App::Plane",
+    "App::Line",
+    "App::Point",
+    "App::Origin"
+   ]
+  },
+  "tree": [
+   {
+    "name": "Box",
+    "label": "Box",
+    "type": "Part::Feature",
+    "visibility": true
+   }
+  ]
+ },
+ "framing": {
+  "fits": true,
+  "ratio": 0.9484425349087003,
+  "checked": "computed",
+  "stale_reason": null
+ },
+== document_list
+ "status": "OK",
+    "label": "box-10-20-30",
+== view_fit_viewport through restarted proxy
+{"status": "OK", "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "computed", "stale_reason": null}, "text": "fitted the live viewport to 'box_10_20_30'"}

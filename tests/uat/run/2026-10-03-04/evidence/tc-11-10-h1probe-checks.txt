@@ -1,0 +1,6 @@
+NOTE | open                         status=None fingerprint=33e870c051cd2fe4
+NOTE | after a 2nd preview          status=None fingerprint=33e870c051cd2fe4
+NOTE | after export_step            status=OK fingerprint=f8e1ba5a5d462098
+NOTE | after verify_export_step     status=OK fingerprint=f8e1ba5a5d462098
+NOTE | after document_recompute     status=OK fingerprint=f8e1ba5a5d462098
+NOTE | volume after all: {'value': 6000.0, 'unit': 'mm^3'}

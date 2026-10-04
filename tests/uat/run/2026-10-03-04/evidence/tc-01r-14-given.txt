@@ -1,0 +1,13 @@
+== Given caps
+ "status": "OK",
+== Given ids
+freecad pid 32068 rpc port 58780 token_sha256 c99aac7b015c8fd4
+proxy launcher 37596, listener 33828
+pid 37596 parent 32068 pythonw.exe: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 33828 parent 37596 pythonw.exe: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+== Given frame: open box, Show All, Fit All toolbar
+ "status": "OK",
+  "doc": "fcb-doc:uKkxYWNiZ8yBKDtKJerJLg",
+{"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 661460, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+{"clicked": "Fit All", "effect": "unverifiable", "route": "accessibility"}
+{"file": "tc-01r-14-before.png", "exists": true, "error": null}

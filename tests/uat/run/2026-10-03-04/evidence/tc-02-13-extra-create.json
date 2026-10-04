@@ -1,0 +1,11 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:epYTFAg3Pv8kCGC6n4aUEA",
+  "name": "\u6e2c\u8a66_\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8___with_spaces_and_a_deliberately_long_label_for_width",
+  "label": "\u6e2c\u8a66 \u30c9\u30ad\u30e5\u30e1\u30f3\u30c8 \ud83d\udd27 with spaces and a deliberately long label for width"
+ },
+ "text": "doc: fcb-doc:epYTFAg3Pv8kCGC6n4aUEA\nlabel: \u6e2c\u8a66 \u30c9\u30ad\u30e5\u30e1\u30f3\u30c8 \ud83d\udd27 with spaces and a deliberately long label for width\nname: \u6e2c\u8a66_\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8___with_spaces_and_a_deliberately_long_label_for_width"
+}

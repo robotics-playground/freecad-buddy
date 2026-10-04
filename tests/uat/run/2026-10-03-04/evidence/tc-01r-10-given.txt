@@ -1,0 +1,17 @@
+== Given discovery file
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-34164.json
+== Given proxy pid from addon.log
+2026-10-04 16:05:19,125 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 31676) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+== Given frame: open box, Show All, Fit All toolbar
+ "status": "OK",
+  "doc": "fcb-doc:tcwgU1vqHHj4Y16iFFjSqg",
+{"invoke_menu": {"effect": "unverifiable", "route": "accessibility"}, "windows_after": [{"window_id": 3872788, "title": "* box-10-20-30 - FreeCAD 1.1.4", "bounds": {"height": 1380, "width": 1775, "x": 0, "y": 0}, "is_on_screen": true}]}
+{"clicked": "Fit All", "effect": "unverifiable", "route": "accessibility"}
+{"file": "tc-01r-10-before.png", "exists": true, "error": null}
+== Given no unsaved document: the Show-All edit dirtied the box document, so it is closed through MCP before the quit (deviation, same as first run)
+close box-10-20-30 OK None
+remaining: []
+ "status": "OK",
+  "documents": []
+== other rpc files before
+12

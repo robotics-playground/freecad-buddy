@@ -1,0 +1,12 @@
+PASS	given: fixtures and case.yaml present	
+PASS	wrong-volume SPEC_FAILED	SPEC_FAILED
+PASS	expect_volume passed false, measured ~7200, expected 6000	{"id": "assert.expect_volume", "measured": 7200.0, "expected": 6000, "tolerance": {"rel": 0.001}, "passed": false, "detail": {"message": "|7200.0 - 6000.0| = 1200.0 <= 6.0 mm^3"}}
+PASS	open-shell SPEC_FAILED	SPEC_FAILED
+PASS	shape.watertight passed false measured false expected true	{"id": "shape.watertight", "measured": false, "expected": true, "tolerance": null, "passed": false, "detail": {"message": "watertight False vs True"}}
+PASS	shape.solid_count measured 0	{"id": "shape.solid_count", "measured": 0, "expected": 1, "tolerance": null, "passed": false, "detail": {"message": "solids 0 vs 1"}}
+PASS	bare checks on wrong-volume -> OK	OK
+PASS	detail.message lists failed ids, detail.code SPEC_FAILED	[{"code": "SPEC_FAILED", "message": "assert.expect_volume", "objects": ["WrongVolume"]}, {"code": "SPEC_FAILED", "message": "shape.watertight; shape.solid_count", "objects": ["OpenShell"]}, ["assert.expect_volume"], ["shape.watertight", "shape.solid_count"]]
+PASS	clean control with its checks -> OK	["OK", null]
+PASS	NOTE showall	View>Visibility>Show All Objects -> unverifiable accessibility 
+PASS	visual: view_fit_viewport {doc} OK [tc-07-20-open-shell.png]	["OK", {"fitted": true, "document": "fixture1", "camera_recorded": true}]
+PASS	NOTE windows	[[15407174, "* fixture - FreeCAD 1.1.4"]]

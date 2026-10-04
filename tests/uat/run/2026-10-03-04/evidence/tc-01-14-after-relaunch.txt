@@ -1,0 +1,13 @@
+      "title": "FreeCAD 1.1.4",
+      "window_id": 11802546,
+== new discovery
+rpc-32944.json
+rpc-33732.json
+new port 51799 new token sha 4a03251c8e954e05 old token sha c1b49339618e7046 differ True
+== MCP through orphan proxy (pid 22056) after relaunch
+ "status": "OK",
+  "freecad_version": "1.1.4",
+ "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: False\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+  TCP    127.0.0.1:51799        0.0.0.0:0              LISTENING       32944
+  TCP    127.0.0.1:51799        127.0.0.1:59920        ESTABLISHED     32944
+  TCP    127.0.0.1:59920        127.0.0.1:51799        ESTABLISHED     22056

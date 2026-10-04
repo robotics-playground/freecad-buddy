@@ -1,0 +1,2 @@
+NOTE | same-operation re-preview refused 'an object named Probe already exists' (TC expects OK; name collision). Re-run with name Probe2.
+PASS | fresh preview (name Probe2) token apply returns OK | {"status": "OK"}

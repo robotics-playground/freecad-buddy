@@ -1,0 +1,2 @@
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | Pad volume after commit = 3999.999999999999 (20x20x10 = 4000 expected if committed)

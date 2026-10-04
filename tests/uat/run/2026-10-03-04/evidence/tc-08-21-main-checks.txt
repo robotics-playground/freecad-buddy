@@ -1,0 +1,11 @@
+NOTE | cleanup previous scenario: document_close TC0820B -> OK
+NOTE | cleanup previous scenario: document_close TC0820A -> OK
+PASS | Given document_create UndoProbe returns a handle | {"status": "OK"}
+NOT RUN | second document whose undo stack cannot be enabled | NOT RUN: shim.enable_undo (shim.py:366-378) writes UndoMode=1 and the 1.1.4 GUI build honours it; no wire path leaves a document at UndoMode 0
+PASS | empty stack refused with exact message | nothing to undo on UndoProbe: the undo stack is empty
+PASS | first real undo OK, undone == 'buddy: <body-create label>' | {'status': 'OK', 'undone': 'buddy: create body Body'}
+PASS | exhausting the stack refused with the same empty-stack message | nothing to undo on UndoProbe: the undo stack is empty
+PASS | neither refusal carries matches_pre_op / fingerprint_after / undone | {'u0_sc': {}, 'u2_sc': {}}
+PASS | undo_count is 0 after the successful undo | 0
+NOT RUN | undo leaving an object in error state -> RECOMPUTE_ERROR naming it | NOT RUN: no deterministic wire-only recipe for an undo whose recompute leaves an object invalid (every bridge mutation rolls back on an invalid recompute, so no such undo target can be committed)
+PASS | tree after: no Body | []

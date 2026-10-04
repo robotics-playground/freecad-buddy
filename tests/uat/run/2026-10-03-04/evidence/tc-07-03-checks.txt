@@ -1,0 +1,21 @@
+PASS	given: document_create OK	OK
+PASS	sketch_create OK	["OK", null]
+PASS	under-constrained -> SPEC_FAILED with failed sketch.fully_constrained	["SPEC_FAILED", {"id": "sketch.fully_constrained", "measured": false, "expected": true, "passed": false, "detail": {"message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"}}]
+FAIL	subject.dof positive int	0
+PASS	detail.message format	dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0
+PASS	note: constraints added (Coincident origin, Horizontal, DistanceX)	["OK", null, {"schema": "fcb.sketch-state/1", "sketch": "Sketch", "readable": true, "dof": 0, "fully_constrained": true, "geometry_count": 1, "constraint_count": 3, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": []}]
+PASS	fully constrained -> OK	OK
+PASS	dof 0 and fully_constrained true	{"sketch": "Sketch", "dof": 0, "fully_constrained": true, "geometry_count": 1, "constraint_count": 3, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": []}
+PASS	duplicate Horizontal -> verify OK + sketch.redundant in warnings not checks	["OK", {}, "OK", [{"id": "sketch.redundant", "measured": {"redundant": [4], "partially_redundant": []}, "passed": false, "detail": {"message": "redundant constraints present (warning only)"}}], ["sketch.fully_constrained"]]
+PASS	non-sketch refused	["INVALID_INPUT", "object is not a sketch: Box"]
+--- rerun 2 (repro) 2026-10-04T03:21:34+07:00
+PASS	under-constrained -> SPEC_FAILED with failed sketch.fully_constrained	["SPEC_FAILED", {"id": "sketch.fully_constrained", "measured": false, "expected": true, "passed": false, "detail": {"message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"}}]
+FAIL	subject.dof positive int	0
+PASS	detail.message format	dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0
+PASS	note: constraints added (Coincident origin, Horizontal, DistanceX)	["OK", null, {"schema": "fcb.sketch-state/1", "sketch": "Sketch", "readable": true, "dof": 0, "fully_constrained": true, "geometry_count": 1, "constraint_count": 3, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": []}]
+PASS	fully constrained -> OK	OK
+PASS	dof 0 and fully_constrained true	{"sketch": "Sketch", "dof": 0, "fully_constrained": true, "geometry_count": 1, "constraint_count": 3, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": []}
+PASS	duplicate Horizontal -> verify OK + sketch.redundant in warnings not checks	["OK", {}, "OK", [{"id": "sketch.redundant", "measured": {"redundant": [4], "partially_redundant": []}, "passed": false, "detail": {"message": "redundant constraints present (warning only)"}}], ["sketch.fully_constrained"]]
+PASS	non-sketch refused	["INVALID_INPUT", "object is not a sketch: Box"]
+FAIL	visual: view_fit_viewport {doc} OK [tc-07-03-after-objectmode.png]	["SPEC_FAILED", {"fitted": false, "reason": "the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure"}]
+PASS	NOTE guifit	FreeCAD Fit All toolbar: {"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}

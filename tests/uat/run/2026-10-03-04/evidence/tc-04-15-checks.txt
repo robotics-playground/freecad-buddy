@@ -1,0 +1,11 @@
+NOTE | BasePad = 60 x 40 x 5 slab at z 20..25 (XZ sketch, midplane 40); RiserProfile = 10 x 10 square on XY (z=0) below it. Outside oracle (tc-04-topology-oracle3.txt): BasePad Face1 = bottom face z=20; Face5 = side face y=+20
+PASS | Given BasePad verify_shape OK and RiserProfile dof=0 | {"status": "OK"} base_bbox=[60.00000000000003, 40.000000000000014, 5.000000000000021] {"status": "OK"}
+NOTE | live Pad Type enum: ['Length', 'UpToLast', 'UpToFirst', 'UpToFace', '?TwoLengths', 'UpToShape']
+PASS | step 1 OK rolled_back=false | {"status": "OK"}
+PASS | extrude stopped at the face: body z 0..25 and vol 12000 + 10x10x20 | bbox={'xmin': 0.0, 'xmax': 60.00000000000004, 'ymin': -20.00000000000003, 'ymax': 19.99999999999999, 'zmin': -1.6653345369377352e-15, 'zmax': 25.000000000000032} vol=14000.000000000025 shape_summary_bbox=[60.00000000000004, 40.000000000000014, 25.000000000000032]
+PASS | UpToFace needed no length (step 1 sent none) | 
+FAIL | Type=UpToFace and UpToFace names BasePad Face1 | Type=UpToFace UpToFace=["<PartDesign::Pad>", ["Face1"]]
+PASS | bad enum INVALID_INPUT "up_to 'UpToInfinity' is not one of" | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "up_to 'UpToInfinity' is not one of ['Length', 'UpToLast', 'UpToFirst', 'UpToFace', '?TwoLengths', 'UpToShape']", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\
+PASS | rejection pre-transaction: no snapshot_path, no BadTypePad in tree | 
+PASS | verify_shape RiserPad OK | {"status": "OK"}
+NOTE | literal up_to_face BasePad Face5 (a side face here) on a copy -> {"status": "SPEC_FAILED", "detail": {"code": "mutation.spec_failed", "message": "recompute left 1 object(s) invalid: RiserPad: SketchBased: Up to face: Must not be parallel to extrusion direction!; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint 22573140766a63473cb16dfa88d3b8d74ca908923f1474ccd9eb20ec44697c99"}} bbox={} vol=None explanation=recompute left 1 object(s) invalid: RiserPad: SketchBased: Up to face: Must not be parallel to extrusion direction!; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint 22573140766a63473cb16dfa88d3b8d74ca908923f1474ccd9eb20ec44697c99

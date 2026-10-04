@@ -1,0 +1,8 @@
+PASS | Given MidProfile dof=0 | {"status": "OK"}
+NOTE | Given comparison: TC-04-02 recorded BlockPad volume 6000.0, bbox z 0..10 (tc-04-02-mcp.jsonl)
+PASS | midplane pad OK rolled_back=false | {"status": "OK"}
+PASS | volume 6000.0 | 6000.0
+PASS | shape_summary bbox [20,30,10] | [20.0, 30.0, 10.0]
+PASS | bbox z -5..+5 | {'xmin': 0.0, 'xmax': 20.0, 'ymin': 0.0, 'ymax': 30.0, 'zmin': -5.0, 'zmax': 5.0}
+PASS | com.z = 0 mm | {'value': 7.579122514774402e-17, 'unit': 'mm'}
+PASS | verify_shape OK | {"status": "OK"}

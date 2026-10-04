@@ -1,0 +1,1 @@
+NOTE | alternative injection probe (instance attribute) -> {"status": "OK"} "instance setattr refused: AttributeError: 'App.Document' object attribute 'commitTransaction' is read-only"

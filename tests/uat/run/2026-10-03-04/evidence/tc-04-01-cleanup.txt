@@ -1,0 +1,4 @@
+2 open
+  Bracket              -> OK
+  box-10-20-30         -> OK
+0 open document(s).

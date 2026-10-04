@@ -1,0 +1,21 @@
+== proxy pids 9380 / 34584
+
+ProcessId       : 9380
+ParentProcessId : 33184
+Name            : pythonw.exe
+CommandLine     : 
+
+ProcessId       : 34584
+ParentProcessId : 9380
+Name            : pythonw.exe
+CommandLine     : 
+
+
+== Then5: all hosts.main serve processes
+
+== Then4: command lines via NtQueryInformationProcess(ProcessCommandLineInformation); Win32_Process.CommandLine returns empty from this non-elevated shell
+pid 9380 : D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 34584 : "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+== Then5: every pythonw/python process whose command line contains hosts.main and serve
+pid 9380: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+pid 34584: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http

@@ -1,0 +1,26 @@
+{"check": "Given listener LISTENING on discovery port", "verdict": "PASS", "detail": ["TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732"]}
+{"check": "Given LAN IPv4 known", "verdict": "PASS", "detail": "192.168.50.13"}
+{"tool": "document_list", "args": {}, "isError": false, "seconds": 0.038, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:aZXp4Im8_fIdSP4Ec_LHtQ", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30."}}
+{"tool": "document_close", "args": {"doc": "fcb-doc:aZXp4Im8_fIdSP4Ec_LHtQ"}, "isError": false, "seconds": 0.019, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:aZXp4Im8_fIdSP4Ec_LHtQ", "name": "box_10_20_30", "closed": true}, "text": "Closed box_10_20_30 (doc=fcb-doc:aZXp4Im8_fIdSP4Ec_LHtQ)."}}
+{"note": "cleanup previous scenario: document_close box-10-20-30 -> OK"}
+{"tool": "document_open", "args": {"path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "isError": false, "seconds": 0.075, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:fqNPAvZ4C_ZTmASpfgfXZA", "name": "box_10_20_30", "label": "box-10-20-30", "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:fqNPAvZ4C_ZTmASpfgfXZA."}}
+{"check": "Given document_open box-10-20-30 OK", "verdict": "PASS", "detail": "{\"status\": \"OK\"}"}
+{"note": "golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}"}
+{"tool": "view_fit_viewport", "args": {"doc": "fcb-doc:fqNPAvZ4C_ZTmASpfgfXZA"}, "isError": false, "seconds": 0.015, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "text": "fitted the live viewport to 'box_10_20_30'", "framing": {"fits": true, "ratio": 0.9489144316730523, "checked": "computed", "stale_reason": null}}}
+{"fit": {"view_fit_viewport": "OK", "detail": null}}
+{"capture": "tc-11-05-before.png", "fit": {"view_fit_viewport": "OK", "detail": null}, "shot": {"file": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-05-before.png", "exists": true, "title": "- [0] Window \"* box-10-20-30 - FreeCAD 1.1.4\" [id=Gui::GUISingleApplication.Gui::MainWindow actions=[invoke,set_value]]"}}
+{"check": "Given baseline fit OK (MCP or GUI Fit All)", "verdict": "PASS", "detail": {"view_fit_viewport": "OK", "detail": null}}
+{"check": "Given baseline captured", "verdict": "PASS", "detail": "D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-05-before.png"}
+{"note": "listener port from discovery rpc-32732.json: 50792; token ucUx…(len 43)"}
+{"netstat": ["TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732"]}
+{"check": "Then netstat local address is 127.0.0.1:<port>", "verdict": "PASS", "detail": ["TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732"]}
+{"check": "Then discovery host is 127.0.0.1", "verdict": "PASS", "detail": "127.0.0.1"}
+{"lan_connect": {"connected": false, "error": "ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it"}}
+{"check": "Then LAN-IP connect refused or times out with no handshake", "verdict": "PASS", "detail": {"connected": false, "error": "ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it"}}
+{"note": "stop proxy (AD-26 single client holds the listener) -> listener pid 4856 parent 34388 (pythonw) | terminate 4856 -> True | terminate 34388 -> True | after: 0 :8765 listeners | "}
+{"tag": "tc-11-05", "client": "loopback", "event": "connect", "port": 50792}
+{"tag": "tc-11-05", "client": "loopback", "event": "send", "frame": {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "1"}}}
+{"tag": "tc-11-05", "client": "loopback", "event": "recv", "seconds": 0.0, "frame": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": false}}}}
+{"tag": "tc-11-05", "client": "loopback", "event": "close"}
+{"check": "Then loopback connect completes rpc_hello, contract_version \"1\"", "verdict": "PASS", "detail": {"keys": ["capabilities", "contract_version", "freecad_version"], "contract_version": "1"}}
+{"check": "Then exactly one LISTENING line for the port", "verdict": "PASS", "detail": ["TCP    127.0.0.1:50792        0.0.0.0:0              LISTENING       32732"]}

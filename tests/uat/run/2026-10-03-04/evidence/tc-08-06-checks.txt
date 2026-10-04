@@ -1,0 +1,15 @@
+NOTE | cleanup previous scenario: document_close TC0805 -> OK
+PASS | Given undo available: document_undo not refused 'undo is unavailable' (undid a probe body) | {'probe_apply': 'OK', 'undo': 'OK', 'undone': 'buddy: create body UndoProbe', 'restored': ['Body', 'Origin', 'X_Axis', 'Y_Axis', 'Z_Axis', 'XY_Plane', 'XZ_Plane', 'YZ_Plane', 'Origin001', 'Sketch']}
+FAIL | string-form undo matches_pre_op true | {'status': 'OK', 'matches': False, 'after': '646a68eb84ba29b0d4696e0c23a6465d98837c8156e5f5223a27972919df63f5', 'expected': '80cc3021c618181d028ae54a7ae76ca8cbd11dd5886b720a4c11236536b670da'}
+PASS | record-form undo matches_pre_op true | {'status': 'OK', 'matches': True}
+PASS | string: fingerprint_before/after 64-hex and differ | {'before': '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8', 'after': '646a68eb84ba29b0d4696e0c23a6465d98837c8156e5f5223a27972919df63f5'}
+PASS | string: undone == 'buddy: <pad transaction label>' | buddy: feature_pad Pad
+FAIL | string: text contains 'restored the pre-op state' | Undid 'buddy: feature_pad Pad' on TC0806: did NOT restore the pre-op state (6c69192e6d47 -> 646a68eb84ba).
+PASS | string: restored_objects lists Body, Sketch, Origin members and not Pad | ['Body', 'Origin', 'X_Axis', 'Y_Axis', 'Z_Axis', 'XY_Plane', 'XZ_Plane', 'YZ_Plane', 'Origin001', 'Sketch']
+PASS | record: fingerprint_before/after 64-hex and differ | {'before': '6c69192e6d47200e550fdbf60ae3172ed820e834cb172ed94fe43e309273faa8', 'after': '646a68eb84ba29b0d4696e0c23a6465d98837c8156e5f5223a27972919df63f5'}
+PASS | record: undone == 'buddy: <pad transaction label>' | buddy: feature_pad Pad
+PASS | record: text contains 'restored the pre-op state' | Undid 'buddy: feature_pad Pad' on TC0806: restored the pre-op state (6c69192e6d47 -> 646a68eb84ba).
+PASS | record: restored_objects lists Body, Sketch, Origin members and not Pad | ['Body', 'Origin', 'X_Axis', 'Y_Axis', 'Z_Axis', 'XY_Plane', 'XZ_Plane', 'YZ_Plane', 'Origin001', 'Sketch']
+PASS | no expect_fingerprint -> matches_pre_op null and text 'no pre-op digest supplied to compare against' | {'apply3': 'OK', 'matches': None, 'text': "Undid 'buddy: feature_pad Pad' on TC0806: no pre-op digest supplied to compare against (6c69192e6d47 -> 646a68eb84ba)."}
+FAIL | expect_fingerprint 42 refused with exact message | {"_raw": "Input validation error: 42 is not of type 'string', 'object'"}
+PASS | tree after: Body + Sketch, no Pad (corroborating) | ['Body', 'Sketch']

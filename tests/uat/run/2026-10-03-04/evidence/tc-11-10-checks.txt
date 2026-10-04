@@ -1,0 +1,27 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-10-before.png
+PASS | [H2] baseline list has no FCB_TMP_ name | ["('fcb-doc:BxCAmWlGEYQ46GH2YonWiQ', 'box-10-20-30', 'box_10_20_30')"]
+PASS | [H2] preview returned terminal envelope in closed set | {"status": "OK"}
+NOTE | [H2] export_step OK export_id=fcb-export:M7z_jZnZo5ye6Xtx69IhAg; verify_export_step OK {"status": "OK"}
+PASS | [H2] no FCB_TMP_prev_ handle after | ["('fcb-doc:BxCAmWlGEYQ46GH2YonWiQ', 'box-10-20-30', 'box_10_20_30')"]
+PASS | [H2] no FCB_TMP_ handle (export re-import) after | 
+PASS | [H2] final handle set == baseline | {'added': [], 'removed': []}
+PASS | [H2] user document fingerprint unchanged | f8e1ba5a5d462098 -> f8e1ba5a5d462098
+PASS | [H2] no FCB_TMP_prev_* dir remains on disk ($TEMP + workdir tmp) | []
+NOTE | [H2] all new FCB_TMP_* entries after the sequence: []
+PASS | [H1] baseline list has no FCB_TMP_ name | ["('fcb-doc:kk8WfhJlPToYSYgzfpJBGQ', 'box-10-20-30', 'box_10_20_30')"]
+PASS | [H1] preview returned terminal envelope in closed set | {"status": "OK"}
+NOTE | [H1] export_step OK export_id=fcb-export:8t343d0i5816dz8HGP9usg; verify_export_step OK {"status": "OK"}
+PASS | [H1] no FCB_TMP_prev_ handle after | ["('fcb-doc:kk8WfhJlPToYSYgzfpJBGQ', 'box-10-20-30', 'box_10_20_30')"]
+PASS | [H1] no FCB_TMP_ handle (export re-import) after | 
+PASS | [H1] final handle set == baseline | {'added': [], 'removed': []}
+FAIL | [H1] user document fingerprint unchanged | 33e870c051cd2fe4 -> f8e1ba5a5d462098
+PASS | [H1] no FCB_TMP_prev_* dir remains on disk ($TEMP + workdir tmp) | []
+NOTE | [H1] all new FCB_TMP_* entries after the sequence: []
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-10-after.png
+NOTE | H1 fingerprint change isolated by tc-11-10-h1probe.py: open 33e870c0 = after preview 33e870c0; after export_step f8e1ba5a; verify_export_step and document_recompute leave f8e1ba5a; volume 6000. The change is export_step's recompute (declared mutating, outside the TC When). Across preview_dry_run and verify_export_step alone the fingerprint is unchanged on both hosts -> Then judged PASS.
+NOTE | H1 temp location correction: H1 workdir is cwd-relative (documents.py:41-55) = evidence/freecad-buddy-workdir/tmp, not $TEMP or C:/Users/thuan/freecad-buddy-workdir/tmp. Checked after the run: that dir is empty (0 entries). Session-start sweep (documents.py sweep_temp_dir) removes only files and snapshot dirs, not FCB_TMP_prev_ dirs, so an empty dir means no preview dir leaked.

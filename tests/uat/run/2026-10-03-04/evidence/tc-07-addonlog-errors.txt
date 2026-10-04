@@ -1,0 +1,1 @@
+2026-10-04 03:24:30,455 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection

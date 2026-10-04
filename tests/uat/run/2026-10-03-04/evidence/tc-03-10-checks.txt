@@ -1,0 +1,11 @@
+PASS | Given geometry_count=4 constraint_count=11 | gc=4 cc=11
+PASS | Given constraint list ids 1..11 recorded | [(1, 'Coincident'), (2, 'Coincident'), (3, 'Coincident'), (4, 'Coincident'), (5, 'Horizontal'), (6, 'Horizontal'), (7, 'Vertical'), (8, 'Vertical'), (9, 'Coincident'), (10, 'DistanceX'), (11, 'DistanceY')]
+NOTE | before fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}
+PASS | SPEC_FAILED with rolled_back=true | {"status": "SPEC_FAILED", "detail": {"code": "mutation.spec_failed", "message": "verify_sketch failed on PlateProfile (dof=1): sketch.fully_constrained"}}
+PASS | explanation names 'verify_sketch failed on PlateProfile (dof=' | verify_sketch failed on PlateProfile (dof=1): sketch.fully_constrained
+PASS | 4 geometry entries again | 4
+PASS | 11 constraints again (same list) | [(1, 'Coincident'), (2, 'Coincident'), (3, 'Coincident'), (4, 'Coincident'), (5, 'Horizontal'), (6, 'Horizontal'), (7, 'Vertical'), (8, 'Vertical'), (9, 'Coincident'), (10, 'DistanceX'), (11, 'DistanceY')]
+PASS | cascade: OK and constraint_count drops by exactly 2 (the point's own constraints) | build=OK remove=OK before=3 after=1
+PASS | geo_ids [7] INVALID_INPUT naming (0..3), no snapshot_path | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "geo_id 7 is outside the sketch (0..3)", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_bud
+PASS | geo_ids [] schema reject | {"_raw": "Input validation error: [] should be non-empty"}
+NOTE | after fit: {'view_fit_viewport': 'SPEC_FAILED', 'detail': {'code': 'view_fit.unverified', 'message': 'the fit ran but could not verify its own result; read the framing block for why: no visible shape-bearing objects to measure'}, 'gui_fitall': {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}}

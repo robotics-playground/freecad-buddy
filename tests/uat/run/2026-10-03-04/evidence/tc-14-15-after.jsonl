@@ -1,0 +1,3 @@
+{"tool": "view_fit_viewport", "args": {"doc": "fcb-doc:DHPQD7AekgAU-lyb5ei_XA"}, "isError": false, "seconds": 0.036, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"fitted": true, "document": "box_10_20_30", "camera_recorded": true}, "text": "fitted the live viewport to 'box_10_20_30'", "framing": {"fits": true, "ratio": 0.9484425349087003, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometry"}}}
+{"check": "Then fit OK after probe", "ok": true, "detail": "fitted the live viewport to 'box_10_20_30'"}
+{"note": "windows ['* box-10-20-30 - FreeCAD 1.1.4']"}

@@ -1,0 +1,38 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "RECOMPUTE_ERROR",
+ "detail": {
+  "code": "RECOMPUTE_ERROR",
+  "message": "recompute.object",
+  "objects": []
+ },
+ "structured_content": {
+  "subject": {
+   "failing_objects": [
+    "Sketch"
+   ]
+  },
+  "checks": [
+   {
+    "id": "recompute.object",
+    "measured": "Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n",
+    "expected": null,
+    "passed": false,
+    "detail": {
+     "code": "recompute.error",
+     "message": "Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n",
+     "objects": [
+      "Sketch"
+     ]
+    }
+   }
+  ],
+  "schema": "fcb.validation-report/1",
+  "banner": {
+   "freecad_version": "1.1.4",
+   "element_map_version": 15
+  },
+  "verdict": "RECOMPUTE_ERROR"
+ },
+ "text": "Recompute: 1 error(s): Sketch."
+}

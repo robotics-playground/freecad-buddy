@@ -1,0 +1,9 @@
+{
+ "host": "127.0.0.1",
+ "port": 59794,
+ "connect": "ok",
+ "connect_s": 0.0,
+ "first_frame": null,
+ "first_frame_note": "no frame within 10 s deadline",
+ "read_s": 10.016
+}

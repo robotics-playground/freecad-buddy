@@ -1,0 +1,8 @@
+NOTE | cleanup previous scenario: document_close TC0809 -> OK
+PASS | Given document_list returns two handles | [{'doc': 'fcb-doc:WPdXBijSgjQhkgsRodP9eA', 'name': 'TC0810A', 'label': 'TC0810A', 'transient': True}, {'doc': 'fcb-doc:CZEPMrNf26hztqQNSB1MEQ', 'name': 'TC0810B', 'label': 'TC0810B', 'transient': True}]
+PASS | A's token on B refused 'issued for a different document' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "confirm.preview_id was issued for a different document", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBudd
+PASS | B not mutated (no Pad) | ['Body', 'Sketch']
+PASS | A not mutated (no Pad) | ['Body', 'Sketch']
+PASS | binding holds although the two docs have identical trees (handle comparison, not content) | {'identical_trees': True}
+PASS | refusal not an argument complaint | confirm.preview_id was issued for a different document
+PASS | A's token on A returns OK | {"status": "OK"}

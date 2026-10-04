@@ -1,0 +1,9 @@
+PASS	given: fixtures present	
+PASS	genus-1 grade OK, volume within 0.1%	["OK", 15214.601836602547]
+PASS	through-hole STL verify OK	["OK", "OK", null]
+PASS	trimesh_stl.euler measured 0 passed	{"id": "trimesh_stl.euler", "measured": 0, "passed": true}
+PASS	compound OK with shape.solid_count measured 2	["OK", {"id": "shape.solid_count", "measured": 2, "expected": 2, "tolerance": null, "passed": true, "detail": {"message": "solids 2 vs 2"}}]
+PASS	compound volume within 0.001 of 2000	{"id": "assert.expect_volume", "measured": 1999.9999999999995, "expected": 2000.0, "tolerance": {"rel": 0.001}, "passed": true, "detail": {"message": "|1999.9999999999995 - 2000.0| = 4.547473508864641e-13 <= 2.0 mm^3"}}
+PASS	compound mass props OK, com null	["OK", {"com": null, "volume": {"value": 1999.9999999999995, "unit": "mm^3"}}]
+PASS	compound expect_watertight -> SPEC_FAILED	["SPEC_FAILED", {"code": "SPEC_FAILED", "message": "shape.watertight", "objects": ["TwoBoxCompound"]}, {"id": "shape.watertight", "measured": false, "expected": true, "tolerance": null, "passed": false, "detail": {"message": "watertight False vs True"}}]
+PASS	outside trimesh euler/watertight: 0 True

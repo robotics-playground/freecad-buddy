@@ -1,0 +1,14 @@
+--- grep busy
+rc=1
+--- grep listen(
+146:        sock.listen(1)
+--- -32000 sites
+31:    RPC_ERROR_WORKER_CRASHED,
+284:            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, "auth failed")
+--- netstat after release
+  TCP    127.0.0.1:51552        127.0.0.1:59794        FIN_WAIT_2      37376
+  TCP    127.0.0.1:57452        127.0.0.1:59794        ESTABLISHED     35052
+  TCP    127.0.0.1:59794        0.0.0.0:0              LISTENING       34240
+  TCP    127.0.0.1:59794        127.0.0.1:51552        CLOSE_WAIT      34240
+  TCP    127.0.0.1:59794        127.0.0.1:57452        ESTABLISHED     34240
+mcp after release: OK 1

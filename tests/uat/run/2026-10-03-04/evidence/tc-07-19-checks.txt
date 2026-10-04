@@ -1,0 +1,8 @@
+PASS	given: fixtures present	
+PASS	given: both handles listed	["fcb-doc:_wv2WKIi3BGfHSMphDSQmQ", "fcb-doc:KI2ylEWLFfLmXmCTQmNkgg"]
+PASS	cross-document verify INVALID_INPUT	INVALID_INPUT
+PASS	message names id and wrong doc	["export_id fcb-export:ealFv7PoKamo5tP_T81HTA does not belong to document fcb-doc:KI2ylEWLFfLmXmCTQmNkgg"]
+PASS	no checks and no subject	{}
+PASS	correct pairing OK	OK
+PASS	symmetric refusal	["INVALID_INPUT", "export_id fcb-export:tZ3Tcmjksc7W6sR7iaVz1w does not belong to document fcb-doc:_wv2WKIi3BGfHSMphDSQmQ"]
+PASS	verify_recompute both OK	["OK", "OK"]

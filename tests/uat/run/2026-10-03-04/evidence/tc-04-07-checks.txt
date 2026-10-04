@@ -1,0 +1,11 @@
+PASS | Given PlatePad vol 12000 | 12000.0
+PASS | Given HoleProfile dof=0 | {"status": "OK"}
+PASS | hole OK rolled_back=false | {"status": "OK"}
+FAIL | volume 11928.7 within 0.1% | 11915.63931179125
+PASS | DepthType=Dimension | Dimension
+PASS | solid_count=1 face_count > 6 | {"solid_count": 1, "face_count": 8, "edge_count": 17, "vertex_count": 11, "is_valid": true, "volume": 11915.63931179125, "area": 5855.795204099273, "bbox": [60.0, 40.0, 5.0]}
+PASS | verify_shape OK | {"status": "OK"}
+PASS | Dimension without depth INVALID_INPUT | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "depth_type='Dimension' is depth-driven; 'depth' is required", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCA
+PASS | zero diameter INVALID_INPUT 'diameter must be positive' | {"status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "diameter must be positive, got 0.0", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\
+PASS | ThroughAll no depth OK vol 11881.2 | {"status": "OK"} vol=11881.208527786135
+NOTE | ThroughAll check ran on a second identical plate (HolePlateThrough), closed before the capture

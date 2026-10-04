@@ -1,0 +1,4 @@
+NOTE | cleanup previous scenario: document_close TC0610 -> OK
+NOTE | tree: [{"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": true, "children_count": 5, "children": [{"name": "Tower", "label": "Tower", "type": "PartDesign::Pad", "visibility": true, "children_count": 2}, {"name": "BaseProfile", "label": "BaseProfile", "type": "Sketcher::SketchObject", "visibility": true}, {"name": "Base", "label": "Base", "type": "PartDesign::Pad", "visibility": false, "children_count": 1}, {"name": "TowerProfile", "label": "TowerProfile", "type": "Sketcher::SketchObject", "visibility": true}]}]
+NOTE | Tower Refine: true
+NOTE | render bottom incl. TowerProfile: ['Tower', 'TowerProfile'] OK

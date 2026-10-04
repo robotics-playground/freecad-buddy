@@ -1,0 +1,27 @@
+== When (proxy stopped first, AD-26)
+listener pid 8676 parent 37532 (pythonw)
+terminate 8676 -> True
+terminate 37532 -> True
+after: 0 :8765 listeners
+-- literal TC command: sorted(glob)[-1]
+discovery file: rpc-9756.json pid 9756 port 53416
+refused: ConnectionRefusedError [WinError 10061] No connection could be made because the target machine actively refused it
+elapsed 2.03
+-- same frame against the live pid's discovery file
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: {"jsonrpc": "2.0", "id": 1, "method": "rpc_hello", "params": {"token": "<discovery token>", "contract_version": "99"}}
+frame1: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32004, "message": "contract version unsupported", "data": {"supported": ["1"]}}}
+frame2: ''
+elapsed 0.0
+-- listener alive? authenticated hello
+discovery file: rpc-28996.json pid 28996 port 55359
+sent: (rpc_hello with discovery token, contract_version 1)
+frame1 keys: ['id', 'jsonrpc', 'result'] result keys: ['capabilities', 'contract_version', 'freecad_version']
+capabilities: {"gui": true, "qt_loop": true, "exec_enabled": false}
+frame2 read error: TimeoutError timed out
+elapsed 5.02
+restarted by hand: .venv/Scripts/pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       37660
+== listener survives: query_capabilities via restarted proxy
+ "status": "OK",
+  "freecad_version": "1.1.4",

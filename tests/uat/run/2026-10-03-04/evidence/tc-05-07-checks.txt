@@ -1,0 +1,17 @@
+NOTE | cleanup previous scenario: document_close TC0507 -> OK
+NOTE | attempt 1 (fresh pad+fillet, Radius 400) rolled back VERIFIED -> not a snapshot-path document (tc-05-07-attempt1-*). Attempt 2 rebuilds the TC-05-06 history (fillet, Sketch001 on Fillet.Face5, committed pocket 900) that went unproven in tc-05-06.
+NOTE | fixture pocket -> {"status": "OK"}
+NOTE | before fit={'view_fit_viewport': 'OK', 'detail': None}
+NOTE | envelope: status=SPEC_FAILED text='Mutation failed and its rollback could not be proven: freecad-buddy-workdir\\tmp\\FCB_TMP_snap_qmnlvdem\\TC0507.FCStd.'
+PASS | rolled_back false | False
+PASS | rollback_proven null | None
+PASS | status SPEC_FAILED | SPEC_FAILED
+PASS | snapshot_path non-null | freecad-buddy-workdir\tmp\FCB_TMP_snap_qmnlvdem\TC0507.FCStd
+NOTE | snapshot_path is relative ('freecad-buddy-workdir\\tmp\\FCB_TMP_snap_qmnlvdem\\TC0507.FCStd'); resolved against home -> C:\Users\thuan\freecad-buddy-workdir\tmp\FCB_TMP_snap_qmnlvdem\TC0507.FCStd
+PASS | snapshot dir still on disk (dir visible; file listing ACL-denied to this shell) | C:\Users\thuan\freecad-buddy-workdir\tmp\FCB_TMP_snap_qmnlvdem
+PASS | text exactly 'Mutation failed and its rollback could not be proven: {snapshot_path}.' and no 'rolled back'/'restored' | Mutation failed and its rollback could not be proven: freecad-buddy-workdir\tmp\FCB_TMP_snap_qmnlvdem\TC0507.FCStd.
+PASS | explanation ends 'rollback could not be proven: ... pre-mutation fingerprint ' + before digest | recompute left 1 object(s) invalid: Fillet: BRep_API: command not done; rollback could not be proven: the snapshot-restored document does not match the pre-mutation fingerprint e2a151996df1cebecf3fffd69feb9207879e295c2b4a4fa828d7c19e2d6c3460
+NOTE | before vs after fingerprint object diffs: [{'name': 'Body', 'brep_equal': False, 'massprops_equal': True}, {'name': 'Fillet', 'brep_equal': False, 'massprops_equal': True}, {'name': 'Pad', 'brep_equal': False, 'massprops_equal': True}, {'name': 'Pocket', 'brep_equal': False, 'massprops_equal': True}, {'name': 'Sketch', 'brep_equal': False, 'massprops_equal': True}, {'name': 'Sketch001', 'brep_equal': False, 'massprops_equal': True}]
+NOTE | Fillet volume after: 11974.247779607693
+NOTE | Body volume after: 11224.247779607693
+NOTE | after fit={'view_fit_viewport': 'OK', 'detail': None}

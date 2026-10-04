@@ -1,0 +1,84 @@
+{
+ "handles": {
+  "D": "fcb-doc:xAug9n-_bQ41lzCnJv1daQ",
+  "E": "fcb-doc:ZM3_kZBEHTVIl97gFySdIg",
+  "h1_pid": 33252
+ },
+ "07": {
+  "seconds": 30.36,
+  "status": "TIMEOUT",
+  "marshal_timeout": true,
+  "maybe_still_running": true,
+  "message": "marshaled call exceeded 30.0s; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds",
+  "has_consequence": true,
+  "cpu_s_in_3s_after_envelope": 3.12,
+  "followup_document_list": {
+   "status": "OK",
+   "seconds": 11.32,
+   "returned_at_s_after_debug_exec_start": 45.01
+  },
+  "audit_timeout_lines": 1,
+  "after_shot": "{\"file\": \"D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-10-07-after.png\", \"exists\": true}"
+ },
+ "08": {
+  "before_shot": "{\"file\": \"D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-10-08-before.png\", \"exists\": true}",
+  "D_status": "INVALID_INPUT",
+  "D_message": "document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating",
+  "D_startswith": true,
+  "D_contains_operator_hint": true,
+  "D_marker_exists": false,
+  "stderr_new_lines_during_D": [],
+  "audit_invalid_input_lines": [
+   {
+    "actor": "operator",
+    "code": "open('D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-10-08-D.marker','w').write('dispatched')\nresult='marker written'\n",
+    "doc": {
+     "handle": "fcb-doc:xAug9n-_bQ41lzCnJv1daQ"
+    },
+    "event": "exec",
+    "fingerprint_after": null,
+    "fingerprint_before": null,
+    "params_digest": "036723c7f4d4aefcd756d7f12e9a5b2b734dc4d134390c5738710f8a0acb4d48",
+    "rollback": null,
+    "schema": "fcb.audit-record/1",
+    "tool": "debug_exec",
+    "ts": "2026-10-04T05:05:36.117410+00:00",
+    "verify_verdict": "INVALID_INPUT"
+   }
+  ],
+  "E_status": "OK",
+  "E_message": "",
+  "E_marker_exists": true,
+  "after_shot": "{\"file\": \"D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-10-08-after.png\", \"exists\": true}"
+ },
+ "09": {
+  "before_shot": "{\"file\": \"D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-10-09-before.png\", \"exists\": true}",
+  "1_failing_read": {
+   "status": "INVALID_INPUT",
+   "message": "unknown object: NoSuchObject"
+  },
+  "2_mutation_after_failing_read": {
+   "status": "INVALID_INPUT",
+   "message": "document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating",
+   "still_document_suspect": true,
+   "marker": false
+  },
+  "3_passing_read": {
+   "status": "OK"
+  },
+  "4_mutation_after_passing_read": {
+   "status": "OK",
+   "message": "",
+   "marker": true
+  },
+  "h1_view_fit_viewport": {
+   "status": "SPEC_FAILED",
+   "message": "this host has no live viewport: no camera to fit"
+  },
+  "save_D_for_gui_visual": {
+   "status": "OK",
+   "message": ""
+  }
+ },
+ "entry_py_document_suspect_count": 0
+}

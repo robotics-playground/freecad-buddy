@@ -1,0 +1,32 @@
+TC-14 findings (run 2026-10-03-04)
+
+F1 [harness incident, TC-14-05] invoke_menu ["Edit","Preferences"] (pid 33388) opened the modal Preferences dialog (window 4790522)
+   and the UIA Invoke never returned: every later get_window_state on pid 33388 (dialog and main window 11278464) failed with
+   "get_window_state timed out after 4s (UIA provider unresponsive ...)". FreeCAD stayed Responding and MCP :8765 kept answering.
+   Recovered with ONE coordinator-authorised background press_key escape to window 4790522 (route synthetic_events,
+   effect unverifiable); dialog closed, captures worked again (tc-14-05-incident-recovered.png). Rule: do not open modal
+   dialogs through invoke_menu.
+
+F2 [TC-14-05 animation Then, substitution] The GUI animation preference was read from %APPDATA%/FreeCAD/v1-1/user.cfg
+   (UseNavigationAnimations = 1 before and after the fit) instead of the Preferences dialog. This cannot falsify the
+   assertion: _animation_suspended toggles the view's runtime setAnimationEnabled, not the parameter, and user.cfg is
+   written at exit. Then recorded NOT RUN.
+
+F3 [TC-14-05 render vs window, low] query_screenshot render and the window agree on shape, isometric orientation, wholeness
+   and framing (bar whole, three faces). They differ in face shading: window top face light grey, render top face dark grey
+   (render left face lightest). Recorded as a render tone disagreement (window is the referent). Not written to
+   $RUN_DIR/bugs.md (file absent; main runner consolidates).
+
+F4 [TC-14-13, suspected product defect, High] After set_window_frame to 640 wide (height clamped by FreeCAD to 643; 400 is
+   unreachable), the MDI area shows scrollbars and a ~285x165 px visible 3D view in which the box is cut off at the right
+   and bottom edges (tc-14-13-after.png). query_tree_summary in the same state: framing {fits:true, ratio:0.952,
+   checked:computed}. The framing verdict measures the 3D view widget size, which stayed larger than the visible MDI
+   viewport, so it reports a fit the human does not see. Reproduce: open box, view_fit_viewport, set_window_frame
+   {width:640,height:400}, query_tree_summary, capture.
+   REPRODUCED (tc-14-13-repro.py / .jsonl / tc-14-13-repro-small-after-fit.png): in the small window view_fit_viewport
+   itself returns OK {fitted:true} with framing {fits:true, ratio:0.9467, computed} while the capture shows the box cut off
+   at the right and bottom edges of the visible view. So the fit tool also reports success over a clipped model here.
+
+F5 [harness, after TC-14-13 repro] invoke_menu ["View","Visibility","Show All Objects"] in the 640-wide window left the View
+   menu and its Visibility submenu open as visible top-level popups (windows 2627974, 2954636). A UIA click on the "View"
+   menubar item did not close them. FreeCAD was exited (File>Exit) and relaunched clean with launch.sh (pid 17732).

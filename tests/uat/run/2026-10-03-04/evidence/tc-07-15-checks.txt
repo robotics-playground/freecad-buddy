@@ -1,0 +1,3 @@
+PASS	outside trimesh (uv --with networkx; repo env: ImportError no graph engines for split()): True 1 6000.0
+PASS	supplementary sphere: overwrite replaces (stat == B2, != B1+B2)	[15284, 505384]
+PASS	supplementary sphere: stale coarse id -> SPEC_FAILED self_read.facet_count	["SPEC_FAILED", "self_read.facet_count; self_read.vertex_count", {"id": "self_read.facet_count", "measured": 10106, "expected": 304, "passed": false, "detail": {"message": "facets 10106 vs 304"}}]

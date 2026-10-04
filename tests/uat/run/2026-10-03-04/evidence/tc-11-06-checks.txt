@@ -1,0 +1,20 @@
+PASS | Given proxy serving: :8765 LISTENING | ['TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       26768']
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box OK | {"status": "OK"}
+NOTE | GUI Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given GUI Fit All toolbar click (route accessibility) | {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}
+PASS | Given baseline captured | tc-11-06-before.png
+PASS | Then endpoint bound to 127.0.0.1:8765 (only) | ['TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       26768']
+PASS | Then LAN-IP POST fails at transport (connection refused) | rc=7 curl: (7) Failed to connect to 192.168.50.13:8765 after 2047 ms: Could not connect to server
+PASS | Then loopback request served with a real HTTP status | http_code=307 rc=23
+PASS | Then --host 0.0.0.0 exits non-zero with unrecognized-argument error | rc=2 freecad-buddy: error: unrecognized arguments: --host 0.0.0.0
+NOTE | grep _HOST/_PORT:
+38:_HOST = "127.0.0.1"
+39:_PORT = 8765
+160:def run(host: str = _HOST, port: int = _PORT) -> int:
+
+PASS | Then bind hard-coded: literal _HOST/_PORT, no os.environ lookup for them | {'env_lines': ['175:    caps = Capabilities.from_env(dict(os.environ))']}
+PASS | Then no auth/Origin/CORS control in entry.py (gap = TC-99-01/02) | 
+PASS | Then (extra) proxy still serving after the rejected rebind | ['TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       26768']
+PASS | Then (visual) framed by GUI Fit All | {'clicked': 'Fit All', 'effect': 'unverifiable', 'route': 'accessibility'}
+PASS | Then (visual) after captured (pixel judgement by agent) | tc-11-06-after.png

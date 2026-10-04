@@ -1,0 +1,1 @@
+{"pid": 2032, "window_id": 14751814, "text": "d=App.getDocument('TC0503');b=d.addObject('Part::Box','Bad');b.Length=0;d.recompute();print('BAD_VALID',b.isValid(),b.getStatusString())"}

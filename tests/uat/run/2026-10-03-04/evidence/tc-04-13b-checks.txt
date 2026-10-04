@@ -1,0 +1,5 @@
+NOTE | supplement on the TC-04-13 document fcb-doc:3pN06lX_hdOc2TVvEhXCyw: substitute modes this build's attach engines implement for the literal subelements
+PASS | EdgeAxis (TwoPointLine on Edge1) OK | {"status": "OK"}
+PASS | CornerPoint (Vertex on Vertex1) OK | {"status": "OK"}
+PASS | tree lists RaisedPlane, EdgeAxis, CornerPoint, FaceCS under PlateBody | ['PlatePad', 'PlateProfile', 'RaisedPlane', 'FaceCS', 'EdgeAxis', 'CornerPoint']
+PASS | plate solid unchanged vol 12000 | 12000.0

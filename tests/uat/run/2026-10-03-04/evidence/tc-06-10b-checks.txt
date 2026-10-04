@@ -1,0 +1,4 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | fixture BoxPad 10x20x30 committed | {"status": "OK"}
+PASS | Given: clean render dirty_document false | {'available': True, 'resource_link': 'C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_shot_tyqm9gsz.png', 'reason': None, 'dirty_document': False, 'empty_scene': False}
+NOTE | doc=fcb-doc:RAiq1oMyyaOefLujXd6HxQ

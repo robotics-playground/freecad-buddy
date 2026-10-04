@@ -1,0 +1,20 @@
+NOTE | cleanup previous scenario: document_close box-10-20-30 -> OK
+PASS | Given document_open box-10-20-30 OK | {"status": "OK"}
+NOTE | golden box opens hidden; GUI View>Visibility>Show All Objects: {'effect': 'unverifiable', 'route': 'accessibility', 'error': None}
+PASS | Given baseline fit OK (MCP or GUI Fit All) | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Given baseline captured | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-11-before.png
+NOTE | baseline FCB_TMP_prev_* ($TEMP + H1 workdir tmp): 1 ['C:/Users/thuan/AppData/Local/Temp/FCB_TMP_prev_rtoduji3']
+NOTE | success: status=OK validity={'is_valid': True, 'recompute_clean': True, 'recompute_errors': [], 'pre_existing_errors': [], 'status': 'OK', 'explanation': None} msg='' prev_dirs=1 docs=[('tc11-11-preview', 'tc11_11_preview')]
+PASS | Then success path leaves nothing: FCB_TMP_prev_* count unchanged | {'count': 1, 'new': []}
+PASS | Then no FCB_TMP_prev_ handle in document_list after success | [('tc11-11-preview', 'tc11_11_preview')]
+NOTE | failure: status=OK validity={'is_valid': True, 'recompute_clean': True, 'recompute_errors': [], 'pre_existing_errors': [], 'status': 'OK', 'explanation': None} msg='' prev_dirs=1 docs=[('tc11-11-preview', 'tc11_11_preview')]
+PASS | Then failure path leaves nothing: FCB_TMP_prev_* count unchanged | {'count': 1, 'new': []}
+PASS | Then no FCB_TMP_prev_ handle in document_list after failure | [('tc11-11-preview', 'tc11_11_preview')]
+NOTE | raise: status=INVALID_INPUT validity=None msg='unknown object in profile: NoSuchSketch' prev_dirs=1 docs=[('tc11-11-preview', 'tc11_11_preview')]
+PASS | Then raise path leaves nothing: FCB_TMP_prev_* count unchanged | {'count': 1, 'new': []}
+PASS | Then no FCB_TMP_prev_ handle in document_list after raise | [('tc11-11-preview', 'tc11_11_preview')]
+FAIL | Then failing preview returned an envelope with SPEC_FAILED or RECOMPUTE_ERROR | {'status': 'OK', 'validity': {'is_valid': True, 'recompute_clean': True, 'recompute_errors': [], 'pre_existing_errors': [], 'status': 'OK', 'explanation': None}, 'msg': ''}
+PASS | Then raising preview returned closed-set status with detail.message | {'status': 'INVALID_INPUT', 'msg': 'unknown object in profile: NoSuchSketch'}
+PASS | Then cleanup never masked the outcome: no message names a cleanup failure | {'success': '{"is_valid": true, "recompute_clean": true, "recompute_errors": [], "pre_existing_errors": [], "status": "OK", "explanation": null}', 'failure': '{"is_valid": true, "recompute_clean": true, "recompute_errors": [], "pre_existing_errors": [], "status": "OK", "explanation": null}', 'raise': 'unknown object in profile: NoSuchSketch'}
+PASS | Then (visual) model framed: view_fit_viewport OK | {'view_fit_viewport': 'OK', 'detail': None}
+PASS | Then (visual) after captured (pixel judgement by agent, see results) | D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-03-04/evidence/tc-11-11-after.png
