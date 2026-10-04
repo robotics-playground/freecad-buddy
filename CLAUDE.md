@@ -125,7 +125,6 @@ Code is written for the standards, never compressed:
 
 ## 6. Project Operating Model
 
-- `main` stays clean. It holds shared tooling, docs, standards, and harness config only.
 - Before substantive work:
   1. Read `.knowledge-base/technical/standards/index.md`.
   2. Read `.knowledge-base/technical/application-design/index.md`.
@@ -202,10 +201,6 @@ Code is written for the standards, never compressed:
   - Agent always needs to do the visual check, never trust automated verification alone or the MCP results.
 
 ### Commands
-
-`main` holds no code and no `package.json`. Build, test, and dev commands are defined by
-each service under `services/` on a `project/*` branch — read that service's
-`package.json` before running anything.
 
 Quality checks after any implementation or bug fix, in this order:
 

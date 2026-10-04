@@ -125,7 +125,6 @@ Code is written for the standards, never compressed:
 
 ## 6. Project Operating Model
 
-- `main` stays clean. It holds shared tooling, docs, standards, and harness config only.
 - Before substantive work:
   1. Read `.knowledge-base/technical/standards/index.md`.
   2. Read `.knowledge-base/technical/application-design/index.md`.
@@ -202,10 +201,6 @@ Code is written for the standards, never compressed:
   - Agent always needs to do the visual check, never trust automated verification alone or the MCP results.
 
 ### Commands
-
-`main` holds no code and no `package.json`. Build, test, and dev commands are defined by
-each service under `services/` on a `project/*` branch — read that service's
-`package.json` before running anything.
 
 Quality checks after any implementation or bug fix, in this order:
 
@@ -439,5 +434,5 @@ design, and code. Read one only when you need the evidence behind a design decis
   { "mcpServers": { "freecad-buddy": { "type": "http", "url": "http://127.0.0.1:8765/mcp" } } }
   ```
 - **Why the proxy is a separate process (AD-2/AD-12):** the MCP/FastMCP libs are third-party and may not be imported inside FreeCAD's bundled Python. The addon spawns the proxy in the **external project venv interpreter** (which has `mcp`); it never imports `mcp` itself.
-- **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
+- **No env vars required.** Proxy launch resolution (bootstrap `_mcp_proxy_command`): `FREECAD_BUDDY_MCP_CMD` (verbatim override, optional) → else **auto-discover the project `.venv`/`venv` python next to the installed addon** (walk from the package's `__file__` to the repo root; a built copy finds the venv through the `repo-root.txt` marker written by `build_addon.py`) and run the serve module directly → else legacy `FREECAD_BUDDY_REPO`+`uv` fallback. So "install addon, `uv sync`, open FreeCAD" is the whole setup. Opt out with `FREECAD_BUDDY_NO_AUTO_MCP=1`; if `:8765` is already served the addon does not double-spawn.
 - Headless automation (CI, the `run_mcp_*` sweeps) is unaffected: it uses the single-process H1 stdio host, not this proxy.
