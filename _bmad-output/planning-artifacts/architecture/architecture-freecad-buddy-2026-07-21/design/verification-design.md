@@ -78,7 +78,7 @@ def run_mutation(doc, op) -> ResultEnvelope:
 
 1. **Recompute clean** — no object with `not obj.isValid()`; collect `getStatusString()` per failed object.
 2. **Shape validity** — `verify_shape` (§5) on every shape-bearing object the op touched.
-3. **Sketch signal** — `verify_sketch` (§4) on every sketch involved; PASS requires `FullyConstrained == True` (AD-8).
+3. **Sketch signal** — `verify_sketch` (§4) on every sketch involved; PASS per §4.2 (AD-8).
 4. **TNP audit** — `audit_references(doc, refs_before)` (§3); any BROKEN/REPOINTED/DROPPED verdict fails.
 
 ---
@@ -187,30 +187,33 @@ If an owner's `ElementMapVersion` differs from its snapshot value, all mapped na
 
 ## 4. `verify_sketch` (AD-8)
 
-Read-only tool. Contract: `doc.recompute()` first (properties are only guaranteed fresh post-recompute; `SketchObject.execute()` runs `solve(true)` on every recompute), then read properties. `solve()` return codes are never used as the DoF signal — logging only (a `0` return means "solved", not "fully constrained").
+Read-only tool: it opens no transaction. Contract: `doc.recompute()` first (properties are only guaranteed fresh post-recompute; `SketchObject.execute()` runs `solve(true)` on every recompute), then `sk.solve()`, then read properties. The extra solve is necessary because `sk.DoF` returns the count of the last solve (`SketchObjectPyImp.cpp:2644`), and `recompute()` does not execute an untouched sketch opened from a file, so `DoF` reads 0 until a solve runs. FreeCAD itself solves when no recompute runs (`SketchObject.cpp:922`). `sk.solve()` writes the solved geometry and `FullyConstrained` only when it returns 0, and writes the geometry only when it differs from the stored geometry (`SketchObject.cpp:611-623`). On an already solved sketch it writes no geometry, and because no transaction is open the undo stack does not change. The `solve()` return code is never used as the DoF signal (a `0` return means "solved", not "fully constrained").
 
 ### 4.1 Report fields
 
 | Field | Source | Notes |
 | --- | --- | --- |
 | `dof` | `sk.DoF` | QR-decomposition DoF count |
-| `fully_constrained` | `sk.FullyConstrained` | **the PASS signal** — implies DoF==0 *and* clean solve |
+| `fully_constrained` | `sk.FullyConstrained` | the flag when `sk.solve()` returned 0, else `false`: FreeCAD does not update the flag after a solve that returns an error code |
 | `geometry_count` / `constraint_count` | `sk.GeometryCount` / `sk.ConstraintCount` | |
 | `conflicting` | `sk.ConflictingConstraints` | 1-based ids → mapped to `Constraints[id-1]` name/type |
 | `redundant` / `partially_redundant` | `sk.RedundantConstraints` / `sk.PartiallyRedundantConstraints` | defensive `getattr` behind shim (1.0+ availability) |
-| `malformed` | `sk.MalformedConstraints` + `sk.evaluateConstraints()` | invalid-index / un-addable constraints |
+| `malformed` | `sk.MalformedConstraints` | invalid-index / un-addable constraints |
+| `evaluate_bad` (check detail) | `sk.evaluateConstraints()` | reported diagnostic; counted true only alongside non-empty `malformed`, which already fails |
 | `degenerate_geometry_count` | `sk.detectDegeneratedGeometries(tol)` | zero-length/degenerate elements |
 | `open_vertices` | `len(sk.OpenVertices)` | open wire endpoints |
 | `under_constrained_elements` | `sk.getGeometryWithDependentParameters()` | `(geoId, posId)` list — repair-loop diagnostic |
-| `solver_status_code` | optional `sk.solve()` | logging only |
+| `solver_status_code` | `sk.solve()` | must be 0 to PASS; named in the check detail when it is not; never a DoF signal |
 
 ### 4.2 Pass/warn/fail policy (AD-8)
 
 | Verdict | Condition |
 | --- | --- |
-| **PASS** | `FullyConstrained == True`, read after `doc.recompute()` — and only this |
-| **HARD FAIL** | non-empty `conflicting` or `malformed`; `evaluateConstraints() == True`; `dof < 0` (over-constrained); `dof > 0` (under-constrained); `degenerate_geometry_count > 0` |
-| **WARN (never fail)** | non-empty `redundant` / `partially_redundant` — quality warning; optional cleanup via `autoRemoveRedundants()` is a separate explicit repair action, never applied silently inside verify |
+| **PASS** | `sk.solve()` returns 0, `FullyConstrained == True` and `dof == 0`, read after `doc.recompute()` and `sk.solve()`, and no HARD FAIL condition holds |
+| **HARD FAIL** | non-empty `conflicting`, `malformed` or `redundant`; `dof < 0` (over-constrained); `dof > 0` (under-constrained); `degenerate_geometry_count > 0` |
+| **WARN (never fail)** | non-empty `partially_redundant` — quality warning; optional cleanup via `autoRemoveRedundants()` is a separate explicit repair action, never applied silently inside verify |
+
+Full redundancy fails because FreeCAD fails on it. `SketchObject::execute` returns "Sketch with redundant constraints" and skips `buildShape()` (`SketchObject.cpp:301-304`), so the sketch has no rebuilt shape. `solve()` returns `-2` and does not update `FullyConstrained` (`:611-623`). Without the `solve() == 0` condition the flag would keep the value of an earlier solve, and the same constraint set would pass or fail depending on the insertion order. FreeCAD only logs partial redundancy (`:602-606`), so it stays a warning.
 
 Constraint diagnostics in the report map 1-based solver ids to `Constraints[id-1]` names (spine error convention).
 

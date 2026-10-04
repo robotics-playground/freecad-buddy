@@ -154,20 +154,15 @@ def _sketches(document: object, names: list[str]) -> list[str]:
     ]
 
 
-def _invalid_objects(document: object, touched: list[str]) -> list[tuple[str, str]]:
+def _invalid_objects(document: object) -> list[tuple[str, str]]:
     """Return ``(name, status)`` for every object failing ``isValid()``.
 
-    A sketch the op touched whose sole invalidity is redundant constraints is not reported:
-    FreeCAD marks it invalid, while redundancy is only a warning, so the sketch check below owns
-    that verdict. The deferral is limited to touched sketches — an untouched invalid object must
-    still block the commit, because no later step grades it.
+    This includes a sketch with redundant constraints: FreeCAD fails its execute and builds no
+    shape for it.
     """
     invalid = []
-    graded = set(touched)
     for obj in sorted(document.Objects, key=lambda o: o.Name):
         if obj.isValid():
-            continue
-        if obj.Name in graded and shim.redundant_only_sketch(obj):
             continue
         getter = getattr(obj, "getStatusString", None)
         invalid.append((obj.Name, str(getter()) if callable(getter) else ""))
@@ -212,9 +207,11 @@ def post_verify(
 
     The order is (1) recompute clean — no object failing ``isValid()``, collecting
     ``getStatusString()`` per failure; (2) ``verify_shape`` on every shape-bearing object in
-    ``touched``; (3) ``verify_sketch`` on every sketch in ``touched``, requiring
-    ``FullyConstrained``; (4) ``audit_references`` against ``refs_before``, where any finding
-    other than ``RE_BASELINED`` fails. A failing step names its cause in ``explanation``.
+    ``touched``; (3) ``verify_sketch`` on every sketch in ``touched``, which passes per
+    ``verification-design.md`` §4.2 (a clean solve, ``FullyConstrained``, ``dof == 0``, and no
+    conflicting, malformed, redundant or degenerate condition); (4) ``audit_references``
+    against ``refs_before``, where any finding other than ``RE_BASELINED`` fails. A failing step
+    names its cause in ``explanation``.
 
     :param document: the already-resolved ``App.Document``.
     :param handle: the caller's document handle, threaded through to the verify reports.
@@ -225,7 +222,7 @@ def post_verify(
     """
     registry = _ResolvedRegistry(handle, document)
 
-    invalid = _invalid_objects(document, touched)
+    invalid = _invalid_objects(document)
     if invalid:
         explanation = "recompute left {} object(s) invalid: {}".format(
             len(invalid), "; ".join(f"{name}: {status}" for name, status in invalid)

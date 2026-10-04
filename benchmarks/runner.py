@@ -114,6 +114,7 @@ _VALIDATOR_SOURCES = {
     "assertions": (
         _REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
         _SRC / "usecases" / "assertions.py",
+        _SRC / "usecases" / "verify.py",
     ),
     "run_mutation": (_SRC / "usecases" / "transaction.py",),
     "fingerprint": (_SRC / "usecases" / "fingerprint.py",),

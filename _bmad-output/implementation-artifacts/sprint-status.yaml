@@ -149,7 +149,7 @@ development_status:
   epic-9-retrospective: optional
   epic-10: in-progress
   10-1-documents-and-queries: review
-  10-2-sketch-and-verify-correctness: backlog
+  10-2-sketch-and-verify-correctness: review
   10-3-feature-tools-and-mutation-protocol: backlog
   10-4-render-and-framing: backlog
   10-5-step-export-schema: backlog

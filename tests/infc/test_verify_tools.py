@@ -3,10 +3,12 @@
 Run via ``FreeCADCmd tests/run_tests.py``. Golden values are analytic (hand-computed box
 volume/bbox), never captured from the implementation under test. Covers fingerprint
 stability/sensitivity/cross-tag, ``verify_shape`` golden-pass / defect-fail / null-shape,
-``verify_sketch`` pass / under-constrained / redundant-warn / not-a-sketch, ``verify_recompute``
+``verify_sketch`` pass / under-constrained / redundant-fail / partially-redundant-warn /
+not-a-sketch, ``verify_recompute``
 broken-object report + banner, and the bad-handle ``INVALID_INPUT`` boundary.
 """
 
+import math
 import os
 import tempfile
 import unittest
@@ -225,6 +227,31 @@ class VerifyShapeTest(_DocFixture):
         for measured, expected in zip(content["checks"][0]["measured"], [BOX_L, BOX_W, BOX_H]):
             self.assertAlmostEqual(measured, expected, places=6)
 
+    def test_should_refuse_as_unknown_fn_when_a_check_nests_an_object_in_fn(self):
+        # Arrange
+        self._add_box()
+        nested = [{"fn": {"a": {"fn": "expect_volume"}}, "expect": 1}]
+
+        # Act
+        def act():
+            return verify.verify_shape(self.registry, doc=self.handle, object="Box", checks=nested)
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, r"^unknown assertion fn: "):
+            act()
+
+    def test_should_refuse_a_missing_object_name_when_object_is_an_empty_string(self):
+        # Arrange
+        self._add_box()
+
+        # Act
+        def act():
+            return verify.verify_shape(self.registry, doc=self.handle, object="")
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, r"^missing required 'object' name$"):
+            act()
+
     def test_shape_floor_missing_tolerance_attr_is_benign_zero(self):
         self.assertEqual(assertions.shape_floor(_FakeShape(tolerance=None)), 0.0)
 
@@ -305,16 +332,62 @@ class VerifySketchTest(_DocFixture):
         self.assertGreater(content["subject"]["dof"], 0)
         self.assertFalse(content["checks"][0]["passed"])
 
-    def test_redundant_constraint_is_warning_never_fails(self):
+    def test_should_fail_naming_the_constraint_when_a_constraint_is_fully_redundant(self):
+        # Arrange
         sk = self._fully_constrained_sketch("Redundant")
         sk.addConstraint(Sketcher.Constraint("Horizontal", 0))  # duplicate -> redundant
         self.document.recompute()
+
+        # Act
         content = verify.verify_sketch(self.registry, doc=self.handle, sketch="Redundant")[
             "structured_content"
         ]
+
+        # Assert
+        self.assertEqual(content["verdict"], "SPEC_FAILED")
+        self.assertFalse(content["subject"]["fully_constrained"])
+        self.assertEqual(
+            content["subject"]["redundant"], [{"id": 4, "name": "", "type": "Horizontal"}]
+        )
+        self.assertIn("redundant: 4 Horizontal", content["checks"][0]["detail"]["message"])
+        self.assertIn("solve() returned -2", content["checks"][0]["detail"]["message"])
+
+    def test_should_leave_geometry_and_state_unchanged_when_a_solved_file_sketch_is_verified(
+        self,
+    ):
+        # Arrange
+        # A sketch opened from a file is not re-executed by recompute(), so verify_sketch's own
+        # solve() is the only call that could write its geometry.
+        self._fully_constrained_sketch()
+        path = os.path.join(tempfile.gettempdir(), "FCB_TMP_verify_solved_sketch.FCStd")
+        self.addCleanup(lambda: os.path.exists(path) and os.remove(path))
+        self.document.saveAs(path)
+        self.registry.document_close(self.handle)
+        reopened = self.registry.document_open(path)["structured_content"]["doc"]
+        sk = self.registry.with_document(reopened, lambda _h, d: d.getObject("Sketch"))
+        geometry_before = [(g.StartPoint, g.EndPoint) for g in sk.Geometry]
+
+        # Act
+        envelope = verify.verify_sketch(self.registry, doc=reopened, sketch="Sketch")
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual([(g.StartPoint, g.EndPoint) for g in sk.Geometry], geometry_before)
+        self.assertNotIn("Touched", list(sk.State))
+
+    def test_should_pass_with_a_warning_when_constraints_are_only_partially_redundant(self):
+        # Arrange
+        document = _FakeSketchDocument(_FakeSketch(partially_redundant=[3]))
+
+        # Act
+        content = verify.read_sketch(document, "Sketch")["structured_content"]
+
+        # Assert
         self.assertEqual(content["verdict"], "OK")
-        warning_ids = {w["id"] for w in content.get("warnings", [])}
-        self.assertIn("sketch.redundant", warning_ids)
+        self.assertEqual(len(content["warnings"]), 1)
+        self.assertEqual(content["warnings"][0]["id"], "sketch.partially_redundant")
+        self.assertEqual(content["warnings"][0]["measured"], [3])
+        self.assertTrue(all(isinstance(i, int) for i in content["warnings"][0]["measured"]))
 
     def test_non_sketch_is_invalid_input(self):
         self._add_box()
@@ -322,6 +395,132 @@ class VerifySketchTest(_DocFixture):
             "verify_sketch", {"doc": self.handle, "sketch": "Box"}
         )
         self.assertEqual(envelope["status"], "INVALID_INPUT")
+
+    def test_should_report_the_solved_dof_when_the_sketch_is_opened_from_a_file(self):
+        # Arrange
+        # One free line segment: 2 endpoints x 2 coordinates, nothing constrained, so DoF 4.
+        sk = self.document.addObject("Sketcher::SketchObject", "Loose")
+        sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(40, 0, 0)), False)
+        self.document.recompute()
+        path = os.path.join(tempfile.gettempdir(), "FCB_TMP_verify_loose_sketch.FCStd")
+        self.addCleanup(lambda: os.path.exists(path) and os.remove(path))
+        self.document.saveAs(path)
+        self.registry.document_close(self.handle)
+        reopened = self.registry.document_open(path)["structured_content"]["doc"]
+
+        # Act
+        envelope = verify.verify_sketch(self.registry, doc=reopened, sketch="Loose")
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+        self.assertEqual(content["subject"]["dof"], 4)
+        self.assertTrue(content["checks"][0]["detail"]["message"].startswith("dof=4,"))
+
+
+# The UAT MixedProfile (TC-03-05): a line, a circle, a quarter arc and a point, each placed by
+# coordinates from the root point. The arc carries more endpoint dimensions than its two angle
+# DoF need, so the full set reaches DoF 0 with one constraint FreeCAD reports redundant.
+MIXED_PROFILE_CONSTRAINTS = [
+    ("Coincident", 0, 1, -1, 1),
+    ("Horizontal", 0),
+    ("DistanceX", 0, 1, 0, 2, 40.0),
+    ("DistanceX", -1, 1, 1, 3, 20.0),
+    ("DistanceY", -1, 1, 1, 3, 20.0),
+    ("Radius", 1, 2.5),
+    ("DistanceX", -1, 1, 2, 3, 50.0),
+    ("DistanceY", -1, 1, 2, 3, 20.0),
+    ("Radius", 2, 8.0),
+    ("DistanceX", -1, 1, 2, 1, 58.0),
+    ("DistanceY", -1, 1, 2, 1, 20.0),
+    ("DistanceX", -1, 1, 2, 2, 50.0),
+    ("DistanceY", -1, 1, 2, 2, 28.0),
+    ("DistanceX", -1, 1, 3, 1, 10.0),
+    ("DistanceY", -1, 1, 3, 1, 30.0),
+]
+# The arc start x and end y: without these two the set is fully constrained with no redundancy.
+MIXED_PROFILE_LATE = (9, 12)
+
+
+class VerifySketchPassRuleTest(_DocFixture):
+    """Full redundancy fails like FreeCAD's own execute, whatever order the constraints came in.
+
+    ``SketchObject::solve`` writes ``FullyConstrained`` only when it returns 0
+    (``SketchObject.cpp:611-623``), so after a redundant solve the flag keeps an earlier value
+    that depends on the insertion order.
+    """
+
+    def _mixed_profile(self, name):
+        sk = self.document.addObject("Sketcher::SketchObject", name)
+        sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(40, 0, 0)), False)
+        sk.addGeometry(Part.Circle(App.Vector(20, 20, 0), App.Vector(0, 0, 1), 2.5), False)
+        arc_circle = Part.Circle(App.Vector(50, 20, 0), App.Vector(0, 0, 1), 8.0)
+        sk.addGeometry(Part.ArcOfCircle(arc_circle, 0.0, math.pi / 2), False)
+        sk.addGeometry(Part.Point(App.Vector(10, 30, 0)), False)
+        self.document.recompute()
+        return sk
+
+    def test_should_fail_naming_the_redundant_constraint_when_the_order_differs(self):
+        # Arrange
+        all_at_once = self._mixed_profile("AllAtOnce")
+        all_at_once.addConstraint([Sketcher.Constraint(*c) for c in MIXED_PROFILE_CONSTRAINTS])
+        self.document.recompute()
+        incremental = self._mixed_profile("Incremental")
+        incremental.addConstraint(
+            [
+                Sketcher.Constraint(*c)
+                for index, c in enumerate(MIXED_PROFILE_CONSTRAINTS)
+                if index not in MIXED_PROFILE_LATE
+            ]
+        )
+        self.document.recompute()
+        flag_before_late = incremental.FullyConstrained
+        incremental.addConstraint(
+            [Sketcher.Constraint(*MIXED_PROFILE_CONSTRAINTS[i]) for i in MIXED_PROFILE_LATE]
+        )
+        self.document.recompute()
+
+        # Act
+        graded = [
+            verify.verify_sketch(self.registry, doc=self.handle, sketch=name)["structured_content"]
+            for name in ("AllAtOnce", "Incremental")
+        ]
+
+        # Assert
+        self.assertTrue(flag_before_late, "fixture no longer leaves the incremental flag True")
+        for content in graded:
+            redundant = content["subject"]["redundant"]
+            self.assertEqual(content["verdict"], "SPEC_FAILED")
+            self.assertEqual(content["subject"]["dof"], 0)
+            self.assertFalse(content["subject"]["fully_constrained"])
+            self.assertEqual(len(redundant), 1)
+            self.assertIn(
+                f"redundant: {redundant[0]['id']} {redundant[0]['type']}",
+                content["checks"][0]["detail"]["message"],
+            )
+
+    def test_should_fail_when_the_flag_is_stale_but_the_sketch_is_under_constrained(self):
+        # Arrange
+        # The same duplicate Horizontal, but no DistanceX: DoF 1 must fail despite redundancy.
+        sk = self.document.addObject("Sketcher::SketchObject", "Loose")
+        sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(40, 0, 0)), False)
+        sk.addConstraint(
+            [
+                Sketcher.Constraint("Coincident", -1, 1, 0, 1),
+                Sketcher.Constraint("Horizontal", 0),
+                Sketcher.Constraint("Horizontal", 0),
+            ]
+        )
+        self.document.recompute()
+
+        # Act
+        content = verify.verify_sketch(self.registry, doc=self.handle, sketch="Loose")[
+            "structured_content"
+        ]
+
+        # Assert
+        self.assertEqual(content["verdict"], "SPEC_FAILED")
+        self.assertEqual(content["subject"]["dof"], 1)
 
 
 class VerifyRecomputeTest(_DocFixture):
@@ -342,6 +541,42 @@ class VerifyRecomputeTest(_DocFixture):
         failed = [c for c in content["checks"] if not c["passed"]]
         self.assertTrue(any("Broken" in c["detail"]["message"] for c in failed))
 
+    def _pinned_line_sketch(self, name, extra):
+        """A line pinned at the origin, horizontal and 40 mm long, plus ``extra`` constraints."""
+        sk = self.document.addObject("Sketcher::SketchObject", name)
+        sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(40, 0, 0)), False)
+        sk.addConstraint(
+            [
+                Sketcher.Constraint("Coincident", -1, 1, 0, 1),
+                Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 40.0),
+                Sketcher.Constraint("Horizontal", 0),
+            ]
+            + [Sketcher.Constraint(*args) for args in extra]
+        )
+        return sk
+
+    def test_should_report_recompute_error_naming_the_sketch_when_it_is_redundant(self):
+        # Arrange
+        self._pinned_line_sketch("Redundant", [("Horizontal", 0)])
+
+        # Act
+        content = verify.verify_recompute(self.registry, doc=self.handle)["structured_content"]
+
+        # Assert
+        self.assertEqual(content["verdict"], "RECOMPUTE_ERROR")
+        self.assertEqual(content["subject"]["failing_objects"], ["Redundant"])
+
+    def test_should_report_recompute_error_when_a_sketch_has_conflicting_constraints(self):
+        # Arrange
+        self._pinned_line_sketch("Conflict", [("DistanceX", 0, 1, 0, 2, 30.0)])
+
+        # Act
+        content = verify.verify_recompute(self.registry, doc=self.handle)["structured_content"]
+
+        # Assert
+        self.assertEqual(content["verdict"], "RECOMPUTE_ERROR")
+        self.assertEqual(content["subject"]["failing_objects"], ["Conflict"])
+
 
 class BadHandleTest(_DocFixture):
     def test_missing_handle_is_invalid_input(self):
@@ -352,6 +587,46 @@ class BadHandleTest(_DocFixture):
         ):
             envelope = _verify_dispatch(self.registry).dispatch(name, params)
             self.assertEqual(envelope["status"], "INVALID_INPUT", name)
+
+
+class _FakeSketch:
+    """A solved, fully constrained sketch stand-in whose diagnostics the test sets."""
+
+    TypeId = "Sketcher::SketchObject"
+    Name = "Sketch"
+    DoF = 0
+    FullyConstrained = True
+    GeometryCount = 1
+    ConstraintCount = 4
+    Constraints = []
+    ConflictingConstraints = []
+    MalformedConstraints = []
+    RedundantConstraints = []
+
+    def __init__(self, partially_redundant):
+        self.PartiallyRedundantConstraints = partially_redundant
+
+    def solve(self):
+        return 0
+
+    def evaluateConstraints(self):
+        return True
+
+    def detectDegeneratedGeometries(self, tolerance):
+        return 0
+
+
+class _FakeSketchDocument:
+    """A document stand-in holding one ``_FakeSketch``; recompute is a no-op."""
+
+    def __init__(self, sketch):
+        self._sketch = sketch
+
+    def getObject(self, name):
+        return self._sketch if name == self._sketch.Name else None
+
+    def recompute(self):
+        return 0
 
 
 class _FakeShape:

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from freecad_buddy.contracts import ASSERTION_FNS
 from freecad_buddy.usecases import assertions as primitives
+from freecad_buddy.usecases import verify
 from freecad_buddy.usecases.documents import ValidationError
 
 _INVALID_INPUT = primitives.INVALID_INPUT_CODE
@@ -131,8 +132,11 @@ def _measure_expect_sketch_fully_constrained(document, check) -> dict:
             "assert.expect_sketch_fully_constrained", "document carries no sketch to measure"
         )
     expected = bool(check.get("expect"))
-    document.recompute()
-    states = {sketch.Name: bool(getattr(sketch, "FullyConstrained", False)) for sketch in sketches}
+    # The grader applies verify_sketch's own rule (AD-8), so the two cannot disagree on a sketch.
+    states = {
+        sketch.Name: verify.read_sketch(document, sketch.Name)["status"] == "OK"
+        for sketch in sketches
+    }
     measured = all(states.values())
     loose = sorted(name for name, state in states.items() if not state)
     return _check(

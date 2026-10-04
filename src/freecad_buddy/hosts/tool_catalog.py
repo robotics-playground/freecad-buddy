@@ -273,9 +273,21 @@ _GEOMETRY_SPEC_SCHEMA = {
     "type": "object",
     "properties": {
         "kind": {"enum": ["line_segment", "circle", "arc_of_circle", "point"]},
-        "start": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
+        "start": {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "line start; a point takes start or center, not both",
+        },
         "end": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
-        "center": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 3},
+        "center": {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 2,
+            "maxItems": 3,
+            "description": "circle/arc center; a point takes start or center, not both",
+        },
         "radius": _LENGTH_QUANTITY_SCHEMA,
         "start_angle": _ANGLE_QUANTITY_SCHEMA,
         "end_angle": _ANGLE_QUANTITY_SCHEMA,
@@ -312,8 +324,11 @@ _CONSTRAINT_SPEC_SCHEMA = {
             "enum": [0, 1, 2, 3],
             "description": "PointPos: 0 none, 1 start, 2 end, 3 mid",
         },
-        "second": {"type": "integer"},
-        "second_pos": {"enum": [0, 1, 2, 3]},
+        "second": {
+            "type": "integer",
+            "description": "omit for single-point DistanceX/DistanceY: first, first_pos, value",
+        },
+        "second_pos": {"enum": [0, 1, 2, 3], "description": "requires second"},
         "third": {"type": "integer"},
         "third_pos": {"enum": [0, 1, 2, 3]},
         "value": _QUANTITY_SCHEMA,
@@ -441,8 +456,9 @@ def _sketch_specs():
                 },
                 ["sketch", "constraints"],
             ),
-            "Add typed constraints; returns 1-based solver ids. A conflicting or malformed set "
-            "rolls back with the offending ids named; redundant constraints warn only.",
+            "Add typed constraints; returns 1-based solver ids. A conflicting, malformed or "
+            "fully redundant set rolls back with the offending ids named; partially redundant "
+            "constraints warn only.",
         ),
         _sketch_method(
             "sketch_remove_constraint",

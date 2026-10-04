@@ -389,7 +389,7 @@ A developer or MCP client can programmatically drive FreeCAD — documents, quer
 
 4. **Given** a sketch in any state  
    **When** `verify_sketch` runs after recompute  
-   **Then** verdict follows AD-8 exactly: PASS ⇔ `FullyConstrained`, hard-fail on conflicting/malformed/over/under/degenerate, redundant = WARN only, `solve()` codes logging-only
+   **Then** verdict follows AD-8 exactly: PASS ⇔ `solve()` returns 0, `FullyConstrained` and DoF 0; hard-fail on conflicting/malformed/fully redundant/over/under/degenerate; partially redundant = WARN only; DoF never inferred from `solve()`
 
 5. **Given** a document with a deliberately broken object  
    **When** `verify_recompute` runs  
@@ -1260,7 +1260,7 @@ The bridge does what the design says when a real agent drives it through the rea
    **Then** it is accepted as FreeCAD accepts it (F-05, TC-03-05/06)
 3. **Given** the same constraint set added in any order
    **When** the sketch is verified
-   **Then** the verdict is the same; redundancy warns and never fails by itself (F-06, `verification-design.md:213`)
+   **Then** the verdict is the same; full redundancy fails like FreeCAD; partial redundancy warns (F-06, `verification-design.md` §4.2)
 4. **Given** an under-constrained sketch opened from a file
    **When** `verify_sketch` runs
    **Then** the reported DoF is the solver's value after solving (F-17, TC-07-03)

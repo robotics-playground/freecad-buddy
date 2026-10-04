@@ -65,6 +65,9 @@
     },
     "sketch": {
       "type": "string"
+    },
+    "solver_status_code": {
+      "type": "integer"
     }
   },
   "required": [

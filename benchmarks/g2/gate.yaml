@@ -65,7 +65,7 @@ criteria:
     cited_validators: [audit_references]
   - id: G2.5
     text: "Fully constrained sketches: run the sketch benchmark, read verify_sketch reports"
-    pass_rule: "FullyConstrained == True in >=90% (AD-8 pass signal; redundants warn only)"
+    pass_rule: "FullyConstrained == True in >=90% (AD-8 pass signal; full redundancy fails, partial redundancy warns)"
     cited_validators: [verify_sketch]
   - id: G2.6
     text: "Skills + ablation harness: shape-check 6 newly drafted skills; run ablation with declared subsets"

@@ -85,3 +85,4 @@ class SketchState(TypedDict, total=False):
     redundant: list[ConstraintRef]
     partially_redundant: list[ConstraintRef]
     malformed: list[ConstraintRef]
+    solver_status_code: int  # sk.solve() return code; 0 is a clean solve

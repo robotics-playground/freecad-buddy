@@ -1485,3 +1485,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
   summary: Correct the test-case defects that UAT run 2026-10-04-01 found in TC-02-01, TC-02-15, TC-05-14, TC-08-06 and TC-12-13 (Story 10.7).
   evidence: `tests/uat/run/2026-10-04-01/report.md` section "Test-case defects for Story 10.7" lists each Then, the actual product result, and why the product is correct.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
+  summary: Add G2 fault cases that target `verify_sketch` (redundant sketch, non-converged solve, partial redundancy only) so its score is measured, not `not_scored`.
+  evidence: `benchmarks/_registry/validators.yaml` `verify_sketch` has `sensitivity: 0.0` and `not_scored: "no fault case targets this validator"`; Story 10.2 changed its pass rule.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
+  summary: Check in the FreeCAD 1.1.4 GUI that `verify_sketch` (which now calls `solve()`) does not mark a saved, already-solved document modified.
+  evidence: `solve()` writes geometry only when it returns 0 and the geometry differs (`SketchObject.cpp:611-623`); all Story 10.2 runs were headless FreeCADCmd 1.1.3.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
+  summary: Correct TC-03-05 and TC-03-06 in Story 10.7: the MixedProfile set carries a fully redundant constraint, which now fails like FreeCAD's own execute instead of passing with a warning.
+  evidence: Story 10.2 D1 (follow FreeCAD: full redundancy is a HARD FAIL); `SketchObject.cpp:301-304`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
+  summary: Correct TC-03-12 ("Redundant constraints warn and commit") and the TC-07 duplicate-Horizontal step (`TC-07-verification-and-export-pairing.md:120`) in Story 10.7: full redundancy now rolls back with `RECOMPUTE_ERROR`.
+  evidence: Story 10.2 D1/D2; `tests/uat/testcases/TC-03-sketch-authoring.md:471-491` expects `OK` and a `sketch.redundant` warning.

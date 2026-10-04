@@ -5,8 +5,9 @@ Each resolves its document through the registry lock, builds a contracts-owned
 inside a ``ResultEnvelope``. ``verify_shape`` measures ``obj.Shape`` against the closed §7.2
 assertion vocabulary (``usecases.assertions``) in an optional anchor frame, plus
 ``expect_solid_count``/``expect_valid``/``expect_watertight``, and never recomputes.
-``verify_sketch`` and ``verify_recompute`` call ``doc.recompute()`` as a read-refresh but open no
-transaction and write no property. Unknown object, null ``Shape``, or a non-sketch raises
+``verify_sketch`` and ``verify_recompute`` call ``doc.recompute()`` as a read-refresh, and
+``verify_sketch`` then solves the sketch so its solver diagnostics are current; neither opens a
+transaction. Unknown object, null ``Shape``, or a non-sketch raises
 ``ValidationError`` so the dispatch boundary maps it to ``INVALID_INPUT``.
 """
 
@@ -235,7 +236,7 @@ def read_shape(
     :raises ValidationError: the object is unknown, its ``Shape`` is null, or a check or the
         anchor frame is malformed.
     """
-    if object:
+    if object is not None:
         obj = _resolve_object(document, object)
     else:
         objects = list(document.Objects)
@@ -249,7 +250,8 @@ def read_shape(
         if not isinstance(check, dict):
             raise ValidationError(f"check must be an object, got {check!r}")
         fn = check.get("fn")
-        if fn not in ASSERTION_FNS and fn not in _ASSERTIONS:
+        # A non-string fn (a nested object) is unhashable, so the membership test would raise.
+        if not isinstance(fn, str) or (fn not in ASSERTION_FNS and fn not in _ASSERTIONS):
             raise ValidationError(f"unknown assertion fn: {fn!r}")
     primitives = [check for check in checks if check["fn"] in ASSERTION_FNS]
     measured, frame = assertions.evaluate_checks(document, shape, anchor_frame, primitives)
@@ -301,15 +303,25 @@ def constraint_refs(sketch_obj: object, solver_ids: list) -> list[dict]:
     return refs
 
 
+def _describe_ref(ref: dict) -> str:
+    """Render a ``constraint_refs`` entry as ``<id> <type> '<name>'``, omitting absent parts."""
+    parts = [str(ref["id"]), ref.get("type", "")]
+    if ref.get("name"):
+        parts.append(repr(ref["name"]))
+    return " ".join(part for part in parts if part)
+
+
 def verify_sketch(
     registry: DocumentRegistry, doc: str | None = None, sketch: str | None = None
 ) -> ResultEnvelope:
-    """Grade a Sketcher sketch per AD-8, reading properties after a read-refresh recompute.
+    """Grade a Sketcher sketch per AD-8, reading properties after a recompute and a solve.
 
-    PASS ⇔ ``FullyConstrained`` after ``doc.recompute()``. HARD FAIL on non-empty
-    conflicting/malformed, a truthy ``evaluateConstraints()``, ``dof < 0`` or ``dof > 0``, or
-    any degenerate geometry. Redundant / partially-redundant constraints are WARN only (never
-    fail, never auto-removed). A non-sketch object raises ``ValidationError``.
+    PASS ⇔ ``solve()`` returns 0, ``FullyConstrained`` and ``dof == 0``, with no hard-fail
+    condition. HARD FAIL on non-empty conflicting/malformed/redundant, ``dof < 0`` or
+    ``dof > 0``, or any degenerate geometry. ``evaluate_bad`` is a reported diagnostic: it is
+    true only alongside malformed constraints, which already fail. Partially redundant
+    constraints are WARN only. No constraint is ever auto-removed. A non-sketch object raises
+    ``ValidationError``.
     """
     return registry.with_document(doc, lambda _h, document: read_sketch(document, sketch))
 
@@ -329,9 +341,16 @@ def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
         raise ValidationError(f"object is not a sketch: {sketch}")
 
     document.recompute()
+    # DoF returns the last solve's count (SketchObjectPyImp.cpp:2644), and recompute() does not
+    # re-execute an untouched sketch opened from a file, so it would read 0. FreeCAD itself
+    # solves when no recompute runs (SketchObject.cpp:922).
+    solve = getattr(obj, "solve", None)
+    solve_code = int(solve()) if callable(solve) else 0
 
     dof = int(getattr(obj, "DoF", getattr(obj, "DoFs", 0)) or 0)
-    fully_constrained = bool(getattr(obj, "FullyConstrained", False))
+    # solve() writes FullyConstrained only when it returns 0 (SketchObject.cpp:611-623); after
+    # any other code the flag still holds an earlier solve's value.
+    fully_constrained = solve_code == 0 and bool(getattr(obj, "FullyConstrained", False))
     conflicting = _getattr_list(obj, "ConflictingConstraints")
     malformed = _getattr_list(obj, "MalformedConstraints")
     redundant = _getattr_list(obj, "RedundantConstraints")
@@ -346,6 +365,18 @@ def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
     detect = getattr(obj, "detectDegeneratedGeometries", None)
     degenerate_count = int(detect(1e-7)) if callable(detect) else 0
 
+    message = (
+        f"dof={dof}, conflicting={len(conflicting)}, malformed={len(malformed)}, "
+        f"evaluate_bad={evaluate_bad}, degenerate={degenerate_count}"
+    )
+    # FreeCAD fails execute() on full redundancy (SketchObject.cpp:301-304), so it fails here too.
+    if redundant:
+        message += "; redundant: " + ", ".join(
+            _describe_ref(ref) for ref in constraint_refs(obj, redundant)
+        )
+    if solve_code != 0:
+        message += f"; solve() returned {solve_code}"
+
     checks = [
         {
             "id": "sketch.fully_constrained",
@@ -355,28 +386,22 @@ def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
             and dof == 0
             and not conflicting
             and not malformed
+            and not redundant
             and not evaluate_bad
             and degenerate_count == 0,
-            "detail": {
-                "message": (
-                    f"dof={dof}, conflicting={len(conflicting)}, malformed={len(malformed)}, "
-                    f"evaluate_bad={evaluate_bad}, degenerate={degenerate_count}"
-                )
-            },
+            "detail": {"message": message},
         }
     ]
 
+    # FreeCAD only logs partial redundancy (SketchObject.cpp:602-606), so it stays a warning.
     warnings = []
-    if redundant or partially_redundant:
+    if partially_redundant:
         warnings.append(
             {
-                "id": "sketch.redundant",
-                "measured": {
-                    "redundant": [int(i) for i in redundant],
-                    "partially_redundant": [int(i) for i in partially_redundant],
-                },
+                "id": "sketch.partially_redundant",
+                "measured": [int(i) for i in partially_redundant],
                 "passed": False,
-                "detail": {"message": "redundant constraints present (warning only)"},
+                "detail": {"message": "partially redundant constraints present (warning only)"},
             }
         )
 
@@ -391,6 +416,7 @@ def read_sketch(document: object, sketch: str | None = None) -> ResultEnvelope:
             "malformed": constraint_refs(obj, malformed),
             "redundant": constraint_refs(obj, redundant),
             "partially_redundant": constraint_refs(obj, partially_redundant),
+            "solver_status_code": solve_code,
         },
         "checks": checks,
         "warnings": warnings,

@@ -242,43 +242,6 @@ def extrude_symmetric(obj: object, on: bool) -> None:
         obj.Midplane = True
 
 
-def _constraint_indices(obj: object, prop: str) -> list | None:
-    """Read one of ``SketchObject``'s solver-diagnostic index lists, or ``None`` when unexposed."""
-    raw = getattr(obj, prop, None)
-    if raw is None:
-        return None
-    try:
-        return list(raw)
-    except TypeError:
-        return None
-
-
-def redundant_only_sketch(obj: object) -> bool:
-    """Whether ``obj`` is a sketch whose sole invalidity is redundant constraints.
-
-    FreeCAD marks such a sketch invalid and gives it no shape, while redundancy is only a
-    warning; the generic validity sweeps use this to leave the verdict to the sketch grader.
-
-    The verdict comes from the sketch's own solver diagnostics rather than ``getStatusString``,
-    which reports the recompute log and so can still name a fault the sketch no longer has.
-    True requires ``RedundantConstraints`` to be non-empty with ``ConflictingConstraints`` and
-    ``MalformedConstraints`` both empty and ``DoF`` non-negative, matching the priority order in
-    ``SketchObject::solve`` where over-constraint, conflict and malformation each outrank
-    redundancy. A build exposing none of the diagnostics reports ``False``.
-    """
-    if not str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
-        return False
-    redundant = _constraint_indices(obj, "RedundantConstraints")
-    conflicting = _constraint_indices(obj, "ConflictingConstraints")
-    malformed = _constraint_indices(obj, "MalformedConstraints")
-    if redundant is None or conflicting is None or malformed is None:
-        return False
-    dof = getattr(obj, "DoF", None)
-    if not isinstance(dof, int) or dof < 0:
-        return False
-    return bool(redundant) and not conflicting and not malformed
-
-
 def set_attachment(obj: object, support: list, map_mode: str) -> None:
     """Attach ``obj`` to ``support`` under ``map_mode``.
 

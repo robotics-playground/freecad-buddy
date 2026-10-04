@@ -367,10 +367,7 @@ def _invalid_object_findings(doc: object, snapshot: list[RefRecord]) -> list[Ref
     """Return one ``BROKEN`` finding per object failing ``isValid()`` — the Layer-0 sweep.
 
     A failing object's own references are attributed to it where the snapshot recorded any;
-    otherwise a single finding names the object with no property. A sketch whose sole invalidity
-    is redundant constraints is skipped only when the snapshot recorded no references for it:
-    redundancy is a warning graded by the sketch verifier, but it must not hide a broken
-    reference on the same object.
+    otherwise a single finding names the object with no property.
     """
     by_owner: dict[str, list[RefRecord]] = {}
     for record in snapshot:
@@ -379,8 +376,6 @@ def _invalid_object_findings(doc: object, snapshot: list[RefRecord]) -> list[Ref
     findings: list[RefFinding] = []
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         if obj.isValid():
-            continue
-        if shim.redundant_only_sketch(obj) and not by_owner.get(obj.Name):
             continue
         status = _status_string(obj)
         owned = by_owner.get(obj.Name, [])

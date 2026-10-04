@@ -98,7 +98,7 @@ graph LR
 
 - **Binds:** verify tools, benchmark graders, repair loops
 - **Prevents:** grader and verifier disagreeing on "fully constrained"; inferring DoF from `solve() == 0`
-- **Rule:** PASS ⇔ `sketch.FullyConstrained == True`, read after `doc.recompute()`. Hard fail on conflicting/malformed/over-/under-constrained or degenerate geometry; redundant constraints warn, never fail. `solve()` return codes are logging only.
+- **Rule:** PASS ⇔ `sk.solve()` returns 0, `sketch.FullyConstrained == True` and `DoF == 0`, read after `doc.recompute()` and `sk.solve()`. Hard fail on conflicting, malformed, fully redundant, over- or under-constrained, or degenerate geometry, as FreeCAD's own execute fails on full redundancy. Partially redundant constraints only warn. `FullyConstrained` counts only when `solve()` returns 0, because FreeCAD does not update it otherwise. DoF is never inferred from `solve() == 0`.
 
 ### AD-9 — Export/verify pairing [ADOPTED]
 

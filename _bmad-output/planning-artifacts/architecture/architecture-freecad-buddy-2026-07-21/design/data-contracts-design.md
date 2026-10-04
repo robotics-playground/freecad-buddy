@@ -128,7 +128,7 @@ class ValidationReport(TypedDict, total=False):
     verdict: TerminalStatus         # required; derived, never asserted
 ```
 
-**Verdict derivation (normative):** `OK` ⇔ every `checks[].passed` is true. Any failed spec/geometry check → `SPEC_FAILED`; a check that could not run because recompute failed → `RECOMPUTE_ERROR`; malformed inputs → `INVALID_INPUT`. `warnings` never affect the verdict (AD-8: redundant-constraint findings warn, never fail). An `UNSUPPORTED` TNP check is `passed: false` — never clean (AD-7) — surfacing as `SPEC_FAILED` with `detail.code="tnp.unsupported"`; an `element_map_version` bump re-baselines, it does not fail.
+**Verdict derivation (normative):** `OK` ⇔ every `checks[].passed` is true. Any failed spec/geometry check → `SPEC_FAILED`; a check that could not run because recompute failed → `RECOMPUTE_ERROR`; malformed inputs → `INVALID_INPUT`. `warnings` never affect the verdict (AD-8: fully redundant constraints fail the sketch check; partially redundant constraints are a warning). An `UNSUPPORTED` TNP check is `passed: false` — never clean (AD-7) — surfacing as `SPEC_FAILED` with `detail.code="tnp.unsupported"`; an `element_map_version` bump re-baselines, it does not fail.
 
 ### 5.1 Assertion vocabulary & anchor frame (`assertions.py`)
 

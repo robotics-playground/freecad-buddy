@@ -822,24 +822,31 @@ class AddConstraintTest(_SketchFixture):
             ],
         )
 
-    def test_a_redundant_constraint_commits_and_warns(self):
-        self._rectangle_without_dimensions()
+    def test_should_roll_back_as_recompute_error_when_a_constraint_makes_the_sketch_redundant(
+        self,
+    ):
+        # Arrange
+        # FreeCAD fails execute() on full redundancy (SketchObject.cpp:301-304), so the duplicate
+        # Horizontal leaves the sketch in error and the mutation must not commit it.
+        sketch = self._rectangle_without_dimensions()
+        constraints = [
+            distance_x(0, 1, 0, 2, 16.0),
+            distance_y(1, 1, 1, 2, 8.0),
+            {"type": "Horizontal", "first": 0},
+        ]
+        count_before = sketch.ConstraintCount
 
+        # Act
         envelope = sketches.sketch_add_constraint(
-            self.registry,
-            doc=self.handle,
-            sketch="Rect",
-            constraints=[
-                distance_x(0, 1, 0, 2, 16.0),
-                distance_y(1, 1, 1, 2, 8.0),
-                {"type": "Horizontal", "first": 0},
-            ],
+            self.registry, doc=self.handle, sketch="Rect", constraints=constraints
         )
 
-        self.assertEqual(envelope["status"], "OK")
-        state = self.state(envelope)
-        self.assertTrue(state["fully_constrained"])
-        self.assertTrue(state["redundant"] or state["partially_redundant"])
+        # Assert
+        mutation = envelope["structured_content"]["mutation"]
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertFalse(mutation["post_verify"]["recompute_clean"])
+        self.assertTrue(mutation["rolled_back"])
+        self.assertEqual(self.document().getObject("Rect").ConstraintCount, count_before)
 
     def test_bad_arity_is_rejected_before_the_transaction_opens(self):
         sketch = self._rectangle_without_dimensions()
@@ -1119,14 +1126,18 @@ class RemoveTest(_SketchFixture):
         self.assertEqual(self.document().getObject("Rect").ConstraintCount, HEIGHT_ID)
 
     def test_removing_a_redundant_constraint_commits(self):
+        # sketch_add_constraint rolls back a redundant constraint, so the fixture adds it
+        # through the Sketcher API.
+        import Sketcher
+
         self._dimensioned_rectangle()
-        added = sketches.sketch_add_constraint(
-            self.registry,
-            doc=self.handle,
-            sketch="Rect",
-            constraints=[dict({"type": "Horizontal", "first": 0}, name="Extra")],
-        )
-        self.assertEqual(added["status"], "OK")
+        document = self.document()
+        sketch = document.getObject("Rect")
+        extra = Sketcher.Constraint("Horizontal", 0)
+        extra.Name = "Extra"
+        sketch.addConstraint(extra)
+        document.recompute()
+        self.assertTrue(sketch.RedundantConstraints)
 
         envelope = sketches.sketch_remove_constraint(
             self.registry, doc=self.handle, sketch="Rect", constraints=["Extra"]
@@ -1914,14 +1925,16 @@ class ReviewPatchTest(_SketchFixture):
         # SketchObjectPyImp.cpp:538-545 raises ValueError("Duplicate constraint not allowed") from
         # renameConstraint, which runs inside the transaction — so without a pre-bracket check the
         # caller pays a snapshot and a rollback for input the I/O matrix rejects as INVALID_INPUT.
+        # The named Distance stands in for the rectangle's DistanceX: adding it on top would be
+        # redundant, which FreeCAD fails and the mutation rolls back.
         self.create("Rect", plane="XY")
-        self.add("Rect", RECTANGLE_GEOMETRY, RECTANGLE_CONSTRAINTS)
-        named = sketches.sketch_add_constraint(
-            self.registry,
-            doc=self.handle,
-            sketch="Rect",
-            constraints=[{"type": "Distance", "first": 0, "name": "width", "value": mm(16.0)}],
-        )
+        constraints = [
+            {"type": "Distance", "first": 0, "name": "width", "value": mm(16.0)}
+            if spec.get("type") == "DistanceX"
+            else spec
+            for spec in RECTANGLE_CONSTRAINTS
+        ]
+        named = self.add("Rect", RECTANGLE_GEOMETRY, constraints)
         self.assertEqual(named["status"], "OK", named.get("detail"))
 
         self.assert_rejected_pre_bracket(
@@ -2011,9 +2024,7 @@ class ReviewPatchTest(_SketchFixture):
 
     def test_an_untouched_redundant_sketch_still_blocks_a_commit(self):
         # A redundant sketch is shapeless (SketchObject.cpp returns before buildShape on solve
-        # code -2). The warn-only deferral is therefore scoped to sketches the op touched, which
-        # post_verify step 3 grades; nothing grades an untouched one, so exempting it there would
-        # let a shapeless object commit unnoticed.
+        # code -2), so FreeCAD marks it in error and post_verify step 1 blocks the commit.
         import Sketcher
 
         self.create("Rect", plane="XY")
@@ -2133,6 +2144,188 @@ class AngleEndpointFormTest(_SketchFixture):
                 }
             ],
         )
+
+
+def _point_from_origin(constraint_type, geo_id, pos, value):
+    """A two-point DistanceX/DistanceY measured from the sketch root point to ``(geo_id, pos)``."""
+    return {
+        "type": constraint_type,
+        "first": ORIGIN_GEO,
+        "first_pos": ORIGIN_POS,
+        "second": geo_id,
+        "second_pos": pos,
+        "value": mm(value),
+    }
+
+
+class PointGeometryTest(_SketchFixture):
+    """A point takes its position from ``start`` or ``center``, never both."""
+
+    def test_should_place_the_point_at_start_when_a_point_gives_start(self):
+        # Arrange
+        self.create("Dot", plane="XY")
+        geometry = [{"kind": "point", "start": [10, 30]}]
+        constraints = [
+            _point_from_origin("DistanceX", 0, 1, 10.0),
+            _point_from_origin("DistanceY", 0, 1, 30.0),
+        ]
+
+        # Act
+        envelope = self.add("Dot", geometry, constraints)
+
+        # Assert
+        self.assert_fully_constrained(envelope)
+        sketch = self.document().getObject("Dot")
+        self.assertEqual(sketch.Geometry[0].TypeId, "Part::GeomPoint")
+        placed = sketch.getPoint(0, 1)
+        self.assertAlmostEqual(placed.x, 10.0, places=9)
+        self.assertAlmostEqual(placed.y, 30.0, places=9)
+
+    def test_should_refuse_naming_both_fields_when_a_point_gives_start_and_center(self):
+        # Arrange
+        self.create("Dot", plane="XY")
+        sketch = self.document().getObject("Dot")
+        geometry = [{"kind": "point", "start": [1, 1], "center": [1, 1]}]
+
+        # Act
+        def act():
+            return self.add("Dot", geometry)
+
+        # Assert
+        self.assert_rejected_pre_bracket(lambda: sketch.GeometryCount, act)
+        with self.assertRaises(ValidationError) as raised:
+            act()
+        self.assertIn("'start'", str(raised.exception))
+        self.assertIn("'center'", str(raised.exception))
+
+    def test_should_refuse_naming_both_fields_when_a_point_gives_neither_start_nor_center(self):
+        # Arrange
+        self.create("Dot", plane="XY")
+        sketch = self.document().getObject("Dot")
+        geometry = [{"kind": "point"}]
+
+        # Act
+        def act():
+            return self.add("Dot", geometry)
+
+        # Assert
+        self.assert_rejected_pre_bracket(lambda: sketch.GeometryCount, act)
+        with self.assertRaises(ValidationError) as raised:
+            act()
+        self.assertIn("'start'", str(raised.exception))
+        self.assertIn("'center'", str(raised.exception))
+
+
+class SinglePointDistanceTest(_SketchFixture):
+    """``DistanceX``/``DistanceY`` take the single-point form (``ConstraintPyImp.cpp:346-356``)."""
+
+    def test_should_constrain_the_point_coordinate_when_distance_x_and_y_name_one_point(self):
+        # Arrange
+        self.create("Hole", plane="XY")
+        # The circle starts off its target centre, so only the two constraints can put it there.
+        geometry = [
+            line([0, 0], [40, 0]),
+            {"kind": "circle", "center": [21, 19], "radius": mm(2.5)},
+        ]
+        constraints = [
+            coincident(0, 1, ORIGIN_GEO, ORIGIN_POS),
+            {"type": "Horizontal", "first": 0},
+            distance_x(0, 1, 0, 2, 40.0),
+            circle_radius(1, 2.5),
+            {"type": "DistanceX", "first": 1, "first_pos": 3, "value": mm(20.0)},
+            {"type": "DistanceY", "first": 1, "first_pos": 3, "value": mm(20.0)},
+        ]
+
+        # Act
+        envelope = self.add("Hole", geometry, constraints)
+
+        # Assert
+        self.assert_fully_constrained(envelope)
+        sketch = self.document().getObject("Hole")
+        single_point = [
+            (c.Type, c.First, c.FirstPos, c.Value)
+            for c in sketch.Constraints
+            if c.Type in ("DistanceX", "DistanceY") and c.First == 1
+        ]
+        self.assertEqual(single_point, [("DistanceX", 1, 3, 20.0), ("DistanceY", 1, 3, 20.0)])
+        center = sketch.getPoint(1, 3)
+        self.assertAlmostEqual(center.x, 20.0, places=9)
+        self.assertAlmostEqual(center.y, 20.0, places=9)
+
+    def test_should_refuse_a_lone_first_pos_when_the_type_is_not_distance_x_or_y(self):
+        # Arrange
+        self.create("Hole", plane="XY")
+        self.add(
+            "Hole",
+            [{"kind": "circle", "center": [0, 0], "radius": mm(5.0)}],
+            CIRCLE_CONSTRAINTS,
+        )
+        sketch = self.document().getObject("Hole")
+        lone_first_pos = (
+            {"type": "Distance", "first": 0, "first_pos": 3, "value": mm(5.0)},
+            {"type": "Angle", "first": 0, "first_pos": 3, "value": deg(30.0)},
+        )
+
+        for constraint in lone_first_pos:
+            with self.subTest(constraint=constraint["type"]):
+                # Act
+                def act():
+                    return sketches.sketch_add_constraint(
+                        self.registry, doc=self.handle, sketch="Hole", constraints=[constraint]
+                    )
+
+                # Assert
+                self.assert_rejected_pre_bracket(lambda: sketch.ConstraintCount, act)
+
+    def test_should_refuse_when_single_point_distance_y_names_the_edge_with_first_pos_zero(self):
+        # Arrange
+        self.create("Hole", plane="XY")
+        self.add(
+            "Hole",
+            [{"kind": "circle", "center": [0, 0], "radius": mm(5.0)}],
+            CIRCLE_CONSTRAINTS,
+        )
+        sketch = self.document().getObject("Hole")
+        constraint = {"type": "DistanceY", "first": 0, "first_pos": 0, "value": mm(20.0)}
+
+        # Act
+        def act():
+            return sketches.sketch_add_constraint(
+                self.registry, doc=self.handle, sketch="Hole", constraints=[constraint]
+            )
+
+        # Assert
+        self.assert_rejected_pre_bracket(lambda: sketch.ConstraintCount, act)
+        with self.assertRaisesRegex(ValidationError, r"first_pos 1, 2 or 3"):
+            act()
+
+    def test_should_refuse_naming_second_when_distance_x_gives_second_pos_without_second(self):
+        # Arrange
+        self.create("Hole", plane="XY")
+        self.add(
+            "Hole",
+            [{"kind": "circle", "center": [0, 0], "radius": mm(5.0)}],
+            CIRCLE_CONSTRAINTS,
+        )
+        sketch = self.document().getObject("Hole")
+        constraint = {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 3,
+            "second_pos": 1,
+            "value": mm(20.0),
+        }
+
+        # Act
+        def act():
+            return sketches.sketch_add_constraint(
+                self.registry, doc=self.handle, sketch="Hole", constraints=[constraint]
+            )
+
+        # Assert
+        self.assert_rejected_pre_bracket(lambda: sketch.ConstraintCount, act)
+        with self.assertRaisesRegex(ValidationError, r"second_pos also requires 'second'"):
+            act()
 
 
 if __name__ == "__main__":

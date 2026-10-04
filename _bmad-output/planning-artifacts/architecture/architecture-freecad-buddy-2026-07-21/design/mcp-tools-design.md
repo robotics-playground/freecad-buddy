@@ -348,16 +348,16 @@ Tolerances default to linear ±0.05 mm, angle ±0.1°, volume ±1 %, and are nev
   }, "required": ["doc", "sketch"] },
   "outputSchema-result": { "type": "object", "properties": {
     "dof": { "type": "integer" },
-    "fully_constrained": { "type": "boolean", "description": "PASS ⇔ true, read after recompute (AD-8)" },
+    "fully_constrained": { "type": "boolean", "description": "FullyConstrained when solve() returned 0, else false; PASS rule in verification-design.md §4.2 (AD-8)" },
     "geometry_count": { "type": "integer" }, "constraint_count": { "type": "integer" },
     "conflicting": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" } },
-    "redundant": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" }, "description": "WARN only, never FAIL (AD-8)" },
-    "partially_redundant": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" } },
+    "redundant": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" }, "description": "non-empty is a HARD FAIL, as in FreeCAD (AD-8)" },
+    "partially_redundant": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" }, "description": "WARN only, never FAIL (AD-8)" },
     "malformed": { "type": "array", "items": { "$ref": "#/$defs/ConstraintRef" } },
     "degenerate_geometry_count": { "type": "integer" },
     "open_vertices": { "type": "integer" },
     "under_constrained_elements": { "type": "array", "description": "(geo_id, pos_id) pairs from getGeometryWithDependentParameters — repair-loop input" },
-    "solver_status_code": { "type": "integer", "description": "logging only — never a pass signal (AD-8)" },
+    "solver_status_code": { "type": "integer", "description": "must be 0 to PASS; never a DoF signal (AD-8)" },
     "verdict": { "enum": ["PASS", "FAIL", "WARN"] }
   }, "required": ["dof", "fully_constrained", "verdict"] } }
 ```
@@ -406,7 +406,7 @@ Tolerances default to linear ±0.05 mm, angle ±0.1°, volume ±1 %, and are nev
       "type": { "enum": ["Coincident", "Horizontal", "Vertical", "Parallel", "Perpendicular", "Tangent", "Equal", "Symmetric", "PointOnObject", "Block", "Distance", "DistanceX", "DistanceY", "Radius", "Diameter", "Angle"] },
       "first": { "type": "integer", "description": "sketch geo_id (from sketch_add_geometry)" },
       "first_pos": { "type": "integer", "description": "PointPos: 0 none, 1 start, 2 end, 3 mid" },
-      "second": { "type": "integer" }, "second_pos": { "type": "integer" },
+      "second": { "type": "integer", "description": "omit for single-point DistanceX/DistanceY (first, first_pos, value)" }, "second_pos": { "type": "integer", "description": "requires second" },
       "third": { "type": "integer" }, "third_pos": { "type": "integer" },
       "value": { "$ref": "#/$defs/Quantity", "description": "dimensional constraints only" },
       "name": { "type": "string", "description": "intent-bearing constraint name" },
@@ -421,7 +421,9 @@ Tolerances default to linear ±0.05 mm, angle ±0.1°, volume ±1 %, and are nev
   }, "required": ["constraint_ids", "sketch_state", "mutation"] } }
 ```
 
-If the added constraints produce conflicting/malformed state, AD-5 post-verify fails → automatic proven rollback, envelope `status: "SPEC_FAILED"` with the solver diagnostics in `detail`.
+If the added constraints make the sketch conflicting, malformed or fully redundant, FreeCAD marks the sketch in error, AD-5 post-verify step 1 fails → automatic proven rollback, envelope `status: "RECOMPUTE_ERROR"` with FreeCAD's status string, which names the offending constraints, in the explanation. A sketch that solves but is not fully constrained fails post-verify step 3 → rollback with `status: "SPEC_FAILED"`.
+
+`sketch_add_geometry` places a `point` from `start` or `center`; giving both is `INVALID_INPUT`.
 
 ### 3.7 `feature_pad`
 

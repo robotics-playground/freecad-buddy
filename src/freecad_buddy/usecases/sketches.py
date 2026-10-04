@@ -202,7 +202,11 @@ def _build_geometry(spec: object, index: int) -> tuple[object, bool]:
         return Part.LineSegment(start, end), construction
 
     if kind == "point":
-        return Part.Point(_point(spec.get("center"), f"{what}.center")), construction
+        has_start = spec.get("start") is not None
+        if has_start == (spec.get("center") is not None):
+            raise ValidationError(f"{what} point takes exactly one of 'start' or 'center'")
+        field = "start" if has_start else "center"
+        return Part.Point(_point(spec.get(field), f"{what}.{field}")), construction
 
     import FreeCAD
 
@@ -438,7 +442,19 @@ def _constraint_args(spec: object, index: int, sketch_obj: object) -> tuple:
             _check_pos(spec.get("second_pos"), f"{what}.second_pos"),
             value,
         )
+    if spec.get("second_pos") is not None:
+        raise ValidationError(f"{what} {constraint_type} with a second_pos also requires 'second'")
     if spec.get("first_pos") is not None:
+        # ConstraintPyImp.cpp:346-356 reads (type, geo, pos, value) as a single-point coordinate
+        # for these two types only; every other type reads the third argument as a geo id.
+        if constraint_type in ("DistanceX", "DistanceY"):
+            pos = _check_pos(spec.get("first_pos"), f"{what}.first_pos")
+            # PointPos 0 names the edge, not a point, so it has no coordinate to constrain.
+            if pos == 0:
+                raise ValidationError(
+                    f"{what} single-point {constraint_type} needs first_pos 1, 2 or 3, got 0"
+                )
+            return (constraint_type, first, pos, value)
         raise ValidationError(
             f"{what} {constraint_type} with a first_pos also requires 'second' and 'second_pos'"
         )
@@ -903,8 +919,8 @@ def sketch_add_constraint(
     """Add typed constraints to a sketch, returning their 1-based solver ids.
 
     Arity is checked against the verified constraint constructor before the transaction opens.
-    A conflicting or malformed set fails ``post_verify`` and rolls back with the offending ids
-    named in ``sketch_state``; redundant constraints warn and commit.
+    A conflicting, malformed or fully redundant set fails ``post_verify`` and rolls back with
+    the offending ids named in ``sketch_state``; partially redundant constraints warn and commit.
 
     :raises ValidationError: the sketch is unknown, or a constraint's type, arity, geo id,
         PointPos or value quantity is invalid.

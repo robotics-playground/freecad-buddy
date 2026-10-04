@@ -225,5 +225,37 @@ class GradingFailureIsReportedTest(_ShapeFixture):
         self.assertEqual(primitives._extent_along([point, point], (0.0, 0.0, 1.0)), 0.0)
 
 
+class SketchFullyConstrainedTest(_ShapeFixture):
+    """``expect_sketch_fully_constrained`` must not trust a flag FreeCAD left stale."""
+
+    def test_should_read_false_when_a_redundant_constraint_left_the_flag_stale(self):
+        # Arrange
+        # A fully constrained line sets FullyConstrained; the duplicate Horizontal then fails the
+        # solve, which leaves the flag at True (SketchObject.cpp:611-623) and the sketch invalid.
+        import Sketcher
+
+        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
+        sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(40, 0, 0)), False)
+        sketch.addConstraint(
+            [
+                Sketcher.Constraint("Coincident", -1, 1, 0, 1),
+                Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 40.0),
+                Sketcher.Constraint("Horizontal", 0),
+            ]
+        )
+        self.document.recompute()
+        sketch.addConstraint(Sketcher.Constraint("Horizontal", 0))
+        self.document.recompute()
+        stale_flag = sketch.FullyConstrained
+
+        # Act
+        result = self.grade("expect_sketch_fully_constrained", True)
+
+        # Assert
+        self.assertTrue(stale_flag, "fixture no longer leaves the flag stale at True")
+        self.assertFalse(result["measured"])
+        self.assertFalse(result["passed"])
+
+
 if __name__ == "__main__":
     unittest.main()

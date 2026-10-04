@@ -32,10 +32,10 @@ at it — otherwise none of these steps can run.
 
 ## Decision Rules
 
-- Treat a sketch as done only when `FullyConstrained` reads true after a recompute,
-  because that is the one signal that both DoF = 0 and the solve is clean — an
-  under-constrained sketch still "solves" and still returns a zero solver code, so
-  the solver return value is never the pass signal. Read it with `verify_sketch`.
+- Treat a sketch as done only when `verify_sketch` passes: a clean solve,
+  `FullyConstrained` true, DoF = 0, and no conflicting, malformed or redundant
+  constraint. `FullyConstrained` alone is not enough, because FreeCAD does not
+  update it after a failed solve, so a redundant sketch can keep a stale true.
 - Never infer degrees of freedom from a successful solve: `solve()` returning 0
   means "solved", not "fully constrained", because the solver happily converges on
   an under-constrained sketch by holding the free parameters where they sit.
@@ -52,10 +52,10 @@ at it — otherwise none of these steps can run.
   symmetric) before the sizes (distance, radius, angle), because dimensioning
   un-located geometry produces a solver fighting to place and size at once, which is
   where conflicts appear.
-- Treat **conflicting** or **malformed** constraints as a hard failure and
-  **redundant** constraints as a warning only, because a conflict means the sketch
-  is over-defined and won't solve correctly, while a redundant constraint is merely
-  untidy — remove redundancy deliberately, never let a repair loop fail on it.
+- Treat **conflicting**, **malformed** and **redundant** constraints as a hard
+  failure, because FreeCAD marks a redundant sketch in error and builds no shape for
+  it. Only **partially redundant** constraints are a warning. Remove the redundant
+  constraint the diagnostic names; never add a constraint "to be safe".
 - Map a solver constraint id back to its constraint by name when reporting a
   conflict — the solver reports 1-based ids, and naming the actual constraint is
   what makes the diagnosis actionable.
@@ -79,7 +79,8 @@ Reasoning → constraints:
    one symmetric constraint per axis, not four corner dimensions — so a later width
    edit stays centered.
 3. Dimensions: one horizontal distance = 60, one vertical distance = 40.
-4. `verify_sketch` → `FullyConstrained` true, DoF = 0, no conflicts. Done.
+4. `verify_sketch` → `OK`: `FullyConstrained` true, DoF = 0, no conflicting or
+   redundant constraints. Done.
 If instead you'd dimensioned all four corners from the origin, the sketch would be
 over-defined the moment you added the width, and the solver would report a conflict.
 
@@ -88,22 +89,22 @@ Input: "The sketch shows DoF = 2 after I added the holes."
 Reasoning: two hole centers are unlocated. Add the missing position constraints —
 distances from a construction centerline, or a symmetry constraint if the holes are
 mirrored — then re-read `verify_sketch`. Never pad the feature until
-`FullyConstrained` is true.
+`verify_sketch` returns `OK`.
 
 ## Anti-Patterns
 
 - **Reading DoF from the solver code.** Symptom: an under-constrained sketch
   treated as done. Why: `solve() == 0` means "solved", not "fully constrained". Fix:
-  gate on `FullyConstrained` after recompute.
+  gate on `verify_sketch`.
 - **Duplicated dimensions instead of symmetry.** Symptom: an edit makes a
   once-symmetric feature lopsided. Why: two equal numbers drift when one changes.
   Fix: use a symmetric or equal constraint.
 - **Dimensioning before locating.** Symptom: the solver reports conflicts as you
   add sizes. Why: shape and size were fought at once. Fix: geometric constraints
   first, dimensions second.
-- **Failing on a redundant constraint.** Symptom: a repair loop aborts on a
-  harmless redundancy. Why: redundant was treated as conflicting. Fix: redundant is
-  a warning; only conflicting/malformed is a hard fail.
+- **Keeping a redundant constraint.** Symptom: the mutation rolls back with
+  `RECOMPUTE_ERROR` "Sketch with redundant constraints". Why: FreeCAD fails a
+  redundant sketch. Fix: remove the constraint the diagnostic names.
 - **Projecting a face for an external reference.** Symptom: the sketch breaks after
   an unrelated recompute. Why: the projected edge was re-pointed or dropped (TNP).
   Fix: attach to a datum plane where possible; re-audit with `verify_references`.

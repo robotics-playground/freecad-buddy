@@ -63,7 +63,7 @@ Statistics shorthand used below — **[stats]** = majority-of-R scoring, Wilson 
 | G2.2 | Universal post-verify + rollback | Inject failing ops; read audit log + reports | 100 % of executed ops show post-verify record; every failed verify shows automatic rollback + human-readable explanation |
 | G2.3 | Exact undo | For every benchmark op: fingerprint before, mutate, undo, fingerprint after (AD-6) | Hash-identical in 100 % of cases (snapshot-restore path counts, and is reported when taken) |
 | G2.4 | TNP guard | Run 5 TNP-provoking scenarios through the guard | 5/5 flagged; zero false-clean; `UNSUPPORTED` never reported on the 1.1.x leg |
-| G2.5 | Fully constrained sketches | Run sketch benchmark; read `verify_sketch` reports | `FullyConstrained == True` in ≥90 % (AD-8 pass signal; redundants warn only) |
+| G2.5 | Fully constrained sketches | Run sketch benchmark; read `verify_sketch` reports | `FullyConstrained == True` in ≥90 % (AD-8 pass signal; full redundancy fails, partial redundancy warns) |
 | G2.6 | Skills + ablation harness | Shape-check 6 newly drafted skills; run ablation with declared subsets | Harness reports per-skill paired deltas in AD-14 format |
 
 **Threats → counters:** "op ran but wrong geometry" → assertions check intent (right pocket, right place, right depth), not recompute success; "rollback assumed" → G2.3 hash proof; "silent reference re-point" → G2.4 mapped-name diff incl. count-drop.
