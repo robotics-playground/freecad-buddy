@@ -33,6 +33,7 @@ from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_au
 from freecad_buddy.contracts import ANCHOR_FRAME_KINDS
 from freecad_buddy.hosts.headless.entry import build_registry
 from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, tool_specs
+from freecad_buddy.usecases import confirm
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -643,6 +644,81 @@ def test_mutating_call_on_suspect_doc_is_refused_without_reaching_the_handler(tm
     ]
     assert "fingerprint_before" in records[-2]
     assert records[-1]["verify_verdict"] == "INVALID_INPUT"
+
+
+def _audit_records(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def test_a_call_refused_before_the_bracket_gets_one_pair_written_after_it_ran(tmp_path):
+    audit_path = tmp_path / "audit.jsonl"
+    seen_while_running: list[list[dict]] = []
+
+    def _refuse():
+        seen_while_running.append(_audit_records(audit_path))
+        raise ValidationError("precheck refused the pad")
+
+    server, _ = _suspect_server({"feature_pad": (True, _refuse)}, audit_path)
+
+    result = _call_tool_via_server(server, "feature_pad", {"doc": "fcb-doc:D"})
+
+    assert result.structuredContent["status"] == "INVALID_INPUT"
+    assert seen_while_running == [[]]
+    records = _audit_records(audit_path)
+    assert [r["event"] for r in records] == ["mutation", "mutation"]
+    assert records[0]["fingerprint_before"] is None
+    assert records[1]["verify_verdict"] == "INVALID_INPUT"
+
+
+def test_a_call_whose_envelope_carries_a_mutation_block_gets_no_adapter_lines(tmp_path):
+    audit_path = tmp_path / "audit.jsonl"
+
+    def _bracketed():
+        envelope = _ok_envelope()
+        envelope["structured_content"] = {"mutation": {"schema": "fcb.mutation/1"}}
+        return envelope
+
+    server, _ = _suspect_server({"feature_pad": (True, _bracketed)}, audit_path)
+
+    _call_tool_via_server(server, "feature_pad", {"doc": "fcb-doc:D"})
+
+    assert _audit_records(audit_path) == []
+
+
+def test_build_server_installs_its_audit_sink_as_the_sink_run_mutation_writes_through(tmp_path):
+    audit = AuditSink(tmp_path / "audit.jsonl")
+    previous = confirm.set_approval_sink(None)
+    try:
+        build_server(MethodRegistry(), Capabilities(allow_exec=False), audit)
+
+        assert confirm.host_audit_sink() is audit
+    finally:
+        confirm.set_approval_sink(previous)
+
+
+def test_a_debug_exec_call_writes_its_before_line_before_the_code_runs(tmp_path):
+    audit_path = tmp_path / "audit.jsonl"
+    seen_while_running: list[list[dict]] = []
+
+    def _exec(**_params):
+        seen_while_running.append(_audit_records(audit_path))
+        return _ok_envelope()
+
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(name="debug_exec", handler=_exec, mutating=False, audit_event="exec")
+    )
+    server = build_server(registry, Capabilities(allow_exec=True), AuditSink(audit_path))
+
+    _call_tool_via_server(server, "debug_exec", {"doc": "fcb-doc:D", "code": "1+1"})
+
+    assert len(seen_while_running) == 1
+    assert [(r["event"], r.get("code")) for r in seen_while_running[0]] == [("exec", "1+1")]
+    records = _audit_records(audit_path)
+    assert [r["event"] for r in records] == ["exec", "exec"]
+    assert records[1]["verify_verdict"] == "OK"
 
 
 def test_ok_read_on_suspect_doc_clears_the_flag(tmp_path):

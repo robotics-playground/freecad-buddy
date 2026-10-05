@@ -280,8 +280,9 @@ class MassProps(TypedDict):
 
 class ObjectFingerprint(TypedDict):
     name: str                       # immutable Name (sort key)
-    brep_sha256: str
-    massprops: MassProps            # independent cross-oracle (hashing research §2.3)
+    brep_sha256: str                # sha256(b"") when the object's Shape is null
+    massprops: MassProps            # independent cross-oracle (hashing research §2.3);
+                                    #   every field 0.0 when the object's Shape is null
 
 class FingerprintRecord(TypedDict):
     schema: Literal["fcb.fingerprint/1"]
@@ -295,6 +296,8 @@ class FingerprintRecord(TypedDict):
 Comparison rule (normative, AD-6): two records are comparable **iff `serializer` tags are equal**; a helper `fingerprints_equal(a, b)` raises on tag mismatch rather than returning False — cross-tag comparison is a programming error, never a "changed" verdict. Equality = `digest` equality; on mismatch, `massprops` provides the human-diffable cross-oracle. Document-XML/FCStd and tessellation hashes are banned as identity oracles and have no contract type.
 
 **Read-only-after-render verdict (normative):** a check that a read-only operation (a render/screenshot) did not mutate the document compares `massprops_equal(before, after)` — the geometric invariants — **not** the `digest`. OCCT re-lays-out a freshly loaded shape's BRep bytes the first time a render touches it, so the digest legitimately shifts while the geometry is unchanged; a digest comparison here yields a false "changed" verdict. The invariants compared are `volume`, `area`, `com`, and `principal_moments`; `bbox` is excluded because `Shape.BoundBox` is tessellation-derived and shifts when a render/export refines the mesh. A genuine mutation still changes the mass-properties.
+
+**Snapshot-restore rollback verdict (normative):** `run_mutation`'s snapshot-restore path proves the rollback with `massprops_equal(fp_before, fingerprint(restored))` over the same object-name set, not with the digest. Reopening the `saveCopy` file re-serializes every shape, so the B-rep bytes never match the in-memory shapes the snapshot was saved from. The abort path still proves rollback by digest equality. A null-shape entry carries zeroed mass properties, so it equals another null-shape entry and differs from a real shape.
 
 ## 10. RPC wire contract (`rpc.py`) — AD-2/AD-3
 

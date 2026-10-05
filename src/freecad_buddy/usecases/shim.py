@@ -242,6 +242,19 @@ def extrude_symmetric(obj: object, on: bool) -> None:
         obj.Midplane = True
 
 
+def extrude_second_side(obj: object, length: float) -> None:
+    """Give an extrude a second, length-driven side of ``length`` mm opposite the first.
+
+    FreeCAD 1.1 reads ``Type2`` and ``Length2`` only when ``SideType`` is ``"Two sides"``
+    (``FeatureExtrude.cpp:333-342``), so the side type is written first.
+
+    :raises AttributeError: the build does not expose the ``SideType`` property.
+    """
+    obj.SideType = "Two sides"
+    obj.Type2 = "Length"
+    obj.Length2 = length
+
+
 def set_attachment(obj: object, support: list, map_mode: str) -> None:
     """Attach ``obj`` to ``support`` under ``map_mode``.
 

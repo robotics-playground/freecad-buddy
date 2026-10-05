@@ -1497,3 +1497,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
   summary: Correct TC-03-12 ("Redundant constraints warn and commit") and the TC-07 duplicate-Horizontal step (`TC-07-verification-and-export-pairing.md:120`) in Story 10.7: full redundancy now rolls back with `RECOMPUTE_ERROR`.
   evidence: Story 10.2 D1/D2; `tests/uat/testcases/TC-03-sketch-authoring.md:471-491` expects `OK` and a `sketch.redundant` warning.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-3-feature-tools-and-mutation-protocol.md`
+  summary: Post-verify now runs `audit_references` on short-circuit paths; if it raises on an invalid object, the op-exception handler replaces the `RECOMPUTE_ERROR` verdict with a generic `SPEC_FAILED`.
+  evidence: Unverified (maybe-false, medium if true). Settle by running `sketch_remove_geometry` that leaves a Pad with a null shape (TC-05-17 shape) through post-verify and checking the status stays `RECOMPUTE_ERROR` with a `FLAGGED` audit.

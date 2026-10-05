@@ -433,10 +433,10 @@ If the added constraints make the sketch conflicting, malformed or fully redunda
     "body": { "type": "string", "description": "target PartDesign Body Name" },
     "profile": { "type": "string", "description": "sketch Name" },
     "length": { "$ref": "#/$defs/Quantity" },
-    "second_length": { "$ref": "#/$defs/Quantity" },
+    "second_length": { "$ref": "#/$defs/Quantity", "description": "second side, opposite the first; sets SideType 'Two sides', Type2 'Length', Length2" },
     "reversed": { "type": "boolean", "default": false },
     "midplane": { "type": "boolean", "default": false },
-    "up_to": { "enum": ["Length", "UpToFace", "ThroughAll"], "default": "Length" },
+    "up_to": { "type": "string", "default": "Length", "description": "extrude Type, checked against the live enumeration (Pad: Length, UpToLast, UpToFirst, UpToFace, UpToShape; Pocket has ThroughAll in place of UpToLast)" },
     "up_to_face": { "$ref": "#/$defs/Selector" },
     "name": { "type": "string", "description": "intent-bearing feature name (tree reads like a build plan)" },
     "confirm": { "$ref": "#/$defs/Confirm" }
@@ -449,6 +449,12 @@ If the added constraints make the sketch conflicting, malformed or fully redunda
 ```
 
 All `feature_*` tools follow this shape: selectors for sub-element references, `Quantity` for every dimension, mandatory intent-bearing `name`, common `mutation` block.
+
+Refusals that every `feature_*` tool returns as `INVALID_INPUT` before the bracket opens (AD-17):
+
+- `feature_pad` / `feature_pocket`: `second_length` together with `midplane: true`; `up_to: "TwoLengths"` (or its `"?TwoLengths"` spelling), which FreeCAD 1.1 keeps only as a tombstone member — the message names `second_length` as the replacement.
+- `feature_set_parameters`: a value outside the property's type family — a `Quantity` or number for a quantity property, a number for a unitless float property, an integer for an integer property, a boolean for `App::PropertyBool`, a member string for `App::PropertyEnumeration`. Any other property type (for example `Part::PropertyPartShape`) is refused. The message names `<feature>.<prop>` and its type.
+- `feature_fillet` / `feature_chamfer`: a `base` that is not the Body's `Tip`; the message names the Tip. The dress-up builds from its base alone, so a base below the Tip would drop every later feature. FreeCAD's GUI allows this; the bridge refuses it.
 
 ### 3.8 `preview_dry_run` (AD-10)
 

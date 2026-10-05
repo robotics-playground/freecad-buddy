@@ -16,6 +16,8 @@ import time
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.adapters.rpc_listener import RpcListener
+from freecad_buddy.usecases import confirm
+from freecad_buddy.usecases.documents import ValidationError
 
 TOKEN = "test-token-value"
 
@@ -434,6 +436,107 @@ def test_listener_audits_mutating_calls(tmp_path):
         time.sleep(0.05)
         assert audit.before_calls == [("mutation", "document_create", "fcb-doc:a")]
         assert audit.after_calls == [("mutation", "document_create", "fcb-doc:a", "OK")]
+        conn.close()
+    finally:
+        listener.stop()
+
+
+def test_listener_installs_its_audit_sink_as_the_sink_run_mutation_writes_through(tmp_path):
+    audit = RecordingAudit()
+    previous = confirm.set_approval_sink(None)
+    listener, _, _ = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        assert confirm.host_audit_sink() is audit
+    finally:
+        listener.stop()
+        confirm.set_approval_sink(previous)
+
+
+def test_listener_leaves_a_bracketed_mutation_to_write_its_own_audit_lines(tmp_path):
+    audit = RecordingAudit()
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name="feature_pad",
+            handler=lambda **p: _ok_envelope({"mutation": {"schema": "fcb.mutation/1"}}),
+            mutating=True,
+            timeout_s=0.5,
+        )
+    )
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        conn.call("feature_pad", {"doc": "fcb-doc:a"})
+        time.sleep(0.05)
+        assert audit.before_calls == []
+        assert audit.after_calls == []
+        conn.close()
+    finally:
+        listener.stop()
+
+
+def test_listener_writes_the_before_line_of_a_refused_call_after_it_ran(tmp_path):
+    audit = RecordingAudit()
+    order = []
+    audit_before = audit.before
+
+    def _record_before(*args):
+        order.append("before")
+        audit_before(*args)
+
+    audit.before = _record_before
+
+    def _refuse(**_params):
+        order.append("handler")
+        raise ValidationError("precheck refused the pad")
+
+    registry = MethodRegistry()
+    registry.register(RpcMethod(name="feature_pad", handler=_refuse, mutating=True, timeout_s=0.5))
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        response = conn.call("feature_pad", {"doc": "fcb-doc:a"})
+        time.sleep(0.05)
+        assert response["result"]["status"] == "INVALID_INPUT"
+        assert order == ["handler", "before"]
+        assert audit.after_calls == [("mutation", "feature_pad", "fcb-doc:a", "INVALID_INPUT")]
+        conn.close()
+    finally:
+        listener.stop()
+
+
+def test_listener_writes_the_before_line_of_a_debug_exec_call_before_it_runs(tmp_path):
+    audit = RecordingAudit()
+    order = []
+    audit_before = audit.before
+
+    def _record_before(*args):
+        order.append("before")
+        audit_before(*args)
+
+    audit.before = _record_before
+
+    def _exec(**_params):
+        order.append("handler")
+        return _ok_envelope()
+
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(
+            name="debug_exec", handler=_exec, mutating=False, audit_event="exec", timeout_s=0.5
+        )
+    )
+    listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
+    try:
+        conn = Conn(host, port)
+        conn.hello()
+        conn.call("debug_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+        time.sleep(0.05)
+        assert order == ["before", "handler"]
+        assert audit.before_calls == [("exec", "debug_exec", "fcb-doc:a")]
+        assert audit.after_calls == [("exec", "debug_exec", "fcb-doc:a", "OK")]
         conn.close()
     finally:
         listener.stop()

@@ -20,7 +20,7 @@ import check_status_vocab  # noqa: E402
 import gen_schemas  # noqa: E402
 
 from freecad_buddy.contracts.envelope import mirror_text  # noqa: E402
-from freecad_buddy.contracts.fingerprint import fingerprints_equal  # noqa: E402
+from freecad_buddy.contracts.fingerprint import fingerprints_equal, massprops_equal  # noqa: E402
 from freecad_buddy.contracts.report import (  # noqa: E402
     MeasuredKind,
     derive_verdict,
@@ -524,6 +524,40 @@ def test_fingerprints_equal_missing_serializer_raises():
 def test_fingerprints_equal_missing_digest_both_none_raises():
     with pytest.raises(ValueError):
         fingerprints_equal(_fp("exportBinary", None), _fp("exportBinary", None))
+
+
+def _massprops(volume):
+    return {
+        "volume": volume,
+        "area": 0.0 if volume == 0.0 else 6.0,
+        "bbox": [0.0] * 6,
+        "com": [0.0] * 3,
+        "principal_moments": [0.0] * 3,
+        "quantum": 1e-6,
+    }
+
+
+def _fp_objects(*entries):
+    record = _fp("exportBinary", "sha256:aa")
+    record["objects"] = [
+        {"name": name, "brep_sha256": "b", "massprops": massprops} for name, massprops in entries
+    ]
+    return record
+
+
+def test_massprops_equal_is_false_when_the_object_name_sets_differ():
+    left = _fp_objects(("Pad", _massprops(1.0)))
+    right = _fp_objects(("Pad", _massprops(1.0)), ("Fillet", _massprops(1.0)))
+
+    assert not massprops_equal(left, right)
+
+
+def test_a_zeroed_null_shape_entry_equals_itself_and_differs_from_a_real_one():
+    null_shape = _fp_objects(("Fillet", _massprops(0.0)))
+    real_shape = _fp_objects(("Fillet", _massprops(1.0)))
+
+    assert massprops_equal(null_shape, _fp_objects(("Fillet", _massprops(0.0))))
+    assert not massprops_equal(null_shape, real_shape)
 
 
 # --------------------------------------------------------------------------- #

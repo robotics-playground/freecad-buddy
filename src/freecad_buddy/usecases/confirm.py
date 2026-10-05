@@ -41,9 +41,10 @@ _SECRET = secrets.token_bytes(32)
 # every call the host serves.
 _AUTO_APPROVE = False
 
-# The sink approval records are written to, installed by the host once its audit log is open. The
-# mutation use cases are reached through a handler that takes no sink argument, so the sink is
-# held here rather than threaded through eighteen tool signatures.
+# The sink approval records and a bracketed mutation's own before/after records are written to,
+# installed by the host once its audit log is open. The mutation use cases are reached through a
+# handler that takes no sink argument, so the sink is held here rather than threaded through
+# eighteen tool signatures.
 _APPROVAL_SINK: object = None
 
 # The active preview_exemption while a preview runs its operation on its own throwaway copy, else
@@ -299,13 +300,14 @@ def gate_mutation(document: object, handle: str, tool: str, params: dict) -> App
 
     The confirm is taken from ``params``, and the arguments the token is compared against are
     ``params`` minus the two fields the token never covered: the document handle, which is
-    compared on its own, and the confirm itself. The live fingerprint is read only on the token
-    path; an approval that compares against no token has no reading to compare it against.
+    compared on its own, and the confirm itself. The live fingerprint is read on both the token
+    and the auto-approve path: the token compares against it, and the approval record carries it
+    either way, so the approval line names the same ``fingerprint_before`` as the mutation lines.
 
     :param document: the resolved document.
     :param handle: the resolved document handle.
     :raises ValidationError: the call is not authorized, including when the document's state
-        cannot be read to check the confirm against.
+        cannot be read.
     """
     from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -322,19 +324,16 @@ def gate_mutation(document: object, handle: str, tool: str, params: dict) -> App
             "fingerprint_before": None,
         }
 
-    posture = auto_approve()
-    fingerprint_now = None
-    if not posture:
-        # A gate that cannot read the state it must compare against refuses rather than raising
-        # past its own boundary: an unreadable shape (SerializerUnavailable, or an OCCT error
-        # from a degenerate B-rep) would otherwise leave the gate as an unexpected
-        # RECOMPUTE_ERROR instead of the refusal every other gate failure produces.
-        try:
-            fingerprint_now = fingerprint(document)["digest"]
-        except Exception as exc:  # noqa: BLE001 - any unreadable state is a refusal, not a crash
-            raise ValidationError(
-                f"cannot read the state of {handle} to check the confirm against: {exc}"
-            ) from exc
+    # A gate that cannot read the state it must record refuses rather than raising past its own
+    # boundary: an unreadable shape (SerializerUnavailable, or an OCCT error from a degenerate
+    # B-rep) would otherwise leave the gate as an unexpected RECOMPUTE_ERROR instead of the
+    # refusal every other gate failure produces.
+    try:
+        fingerprint_now = fingerprint(document)["digest"]
+    except Exception as exc:  # noqa: BLE001 - any unreadable state is a refusal, not a crash
+        raise ValidationError(
+            f"cannot read the state of {handle} to authorize the mutation: {exc}"
+        ) from exc
 
     return verify_confirm(
         params.get("confirm"),
@@ -342,7 +341,7 @@ def gate_mutation(document: object, handle: str, tool: str, params: dict) -> App
         args=args,
         doc_handle=handle,
         fingerprint_now=fingerprint_now,
-        auto_approve=posture,
+        auto_approve=auto_approve(),
     )
 
 
@@ -382,6 +381,17 @@ def set_approval_sink(sink: object) -> object:
     previous = _APPROVAL_SINK
     _APPROVAL_SINK = sink
     return previous
+
+
+def host_audit_sink() -> object:
+    """The host's sink for a bracketed mutation's own audit lines, or ``None`` during a preview.
+
+    A preview runs its operation on a throwaway copy; like its approval, that run authorized and
+    applied no mutation, so it writes no mutation lines. The preview writes its own records.
+    """
+    if _active_exemption() is not None:
+        return None
+    return _APPROVAL_SINK
 
 
 def audit_approval(sink: object, approval: ApprovalRecord, params: dict | None = None) -> None:

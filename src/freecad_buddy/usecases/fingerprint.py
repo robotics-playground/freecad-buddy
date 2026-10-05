@@ -5,8 +5,9 @@ serialized shape bytes and a quantized mass-property tuple (objects ordered by i
 ``Name``). Both the per-object B-rep hash and the mass-property tuple are recorded on each
 entry so a diff can inspect either. The serializer is shim-probed (``exportBinary`` when
 exposed, else ``exportBrep``) and tagged on every record; comparing across tags is banned
-(``contracts.fingerprints_equal`` raises). Objects with a null or absent ``Shape`` are
-skipped, never hashed. Stdlib + FreeCAD App API only; FreeCAD is imported lazily.
+(``contracts.fingerprints_equal`` raises). An object with a null ``Shape`` is recorded with the
+hash of empty bytes and zeroed mass properties; an object with no ``Shape`` attribute is skipped.
+Stdlib + FreeCAD App API only; FreeCAD is imported lazily.
 """
 
 from __future__ import annotations
@@ -126,6 +127,24 @@ def _massprops(shape: object) -> MassProps:
     }
 
 
+# The entry a null shape contributes. A real serialization is never empty, so the empty-bytes hash
+# cannot match a real shape, and the fields keep the str / MassProps types fcb.fingerprint/1
+# declares.
+_NULL_SHAPE_SHA256 = hashlib.sha256(b"").hexdigest()
+
+
+def _null_massprops() -> MassProps:
+    """Zeroed mass properties for an object whose ``Shape`` is null."""
+    return {
+        "volume": 0.0,
+        "area": 0.0,
+        "bbox": [0.0] * 6,
+        "com": [0.0] * 3,
+        "principal_moments": [0.0] * 3,
+        "quantum": Q,
+    }
+
+
 # Datum features carry construction geometry, not model shape. They are excluded because an
 # App::Plane is INFINITE: a PartDesign Body's auto-created XZ_Plane spans +/-1e100 with
 # Area == 8.000000000000003e+100, and a float of that magnitude loses its low-order bits through
@@ -143,19 +162,32 @@ def _is_datum(obj: object) -> bool:
 def fingerprint(doc: object) -> FingerprintRecord:
     """Return the ``FingerprintRecord`` for ``doc``.
 
-    Iterates ``doc.Objects`` in immutable ``Name`` order, skipping objects with a null or
-    absent ``Shape`` and every datum feature (see ``_DATUM_TYPE_PREFIXES``). Each surviving
-    object contributes ``{name, brep_sha256, massprops}``; the record ``digest`` is the SHA-256
-    over the repr of the ordered entries. The serializer tag is shim-probed once and stamped on
-    the record.
+    Iterates ``doc.Objects`` in immutable ``Name`` order, skipping objects with no ``Shape`` and
+    every datum feature (see ``_DATUM_TYPE_PREFIXES``). Each surviving object contributes
+    ``{name, brep_sha256, massprops}``; the record ``digest`` is the SHA-256 over the repr of the
+    ordered entries. The serializer tag is shim-probed once and stamped on the record.
+
+    An object whose ``Shape`` is null contributes the hash of empty bytes and zeroed mass
+    properties. Skipping it would let a feature whose shape went null, such as a Tip whose
+    recompute failed, hash equal to the state before it broke, so a rollback that left it broken
+    would be proven.
     """
     entries: list[dict] = []
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         if _is_datum(obj):
             continue
         shape = getattr(obj, "Shape", None)
+        if shape is None:
+            continue
         is_null = getattr(shape, "isNull", None)
-        if shape is None or (is_null is not None and is_null()):
+        if is_null is not None and is_null():
+            entries.append(
+                {
+                    "name": obj.Name,
+                    "brep_sha256": _NULL_SHAPE_SHA256,
+                    "massprops": _null_massprops(),
+                }
+            )
             continue
         raw = _serialize(shape)
         entries.append(

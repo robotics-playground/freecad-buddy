@@ -4,12 +4,12 @@
 
 verify_shape:
   suite: g0/fault-injection/
-  validator_sha: "5d10441136c5ca9d024a0da61eb73b0b7609d40b84e8df3acf3f0bd679ceea81"
+  validator_sha: "9e012e32b773234839705b672aa7a9997be2e91dc3c6561d162e87816784a9e2"
   last_run:
-    run_id: fr-2026-10-04-1
+    run_id: fr-2026-10-05-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-05
     wilson_ci:
       rate: 1.0
       low: 0.7412
@@ -81,10 +81,10 @@ assertions:
   suite: g2/fault-injection/
   validator_sha: "57b77061b6ed6cdf99ce1289cf9a7db449394c3d0563689e8b5537c627046f0d"
   last_run:
-    run_id: g2-2026-10-04-1
+    run_id: g2-2026-10-05-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-05
     wilson_ci:
       rate: 1.0
       low: 0.6756
@@ -96,10 +96,10 @@ audit_references:
   suite: g2/fault-injection/
   validator_sha: "edd2aafdcde1705fa58ddc2ceed36619fdc5ca26ce7342f668642c6db8776ff1"
   last_run:
-    run_id: g2-2026-10-04-1
+    run_id: g2-2026-10-05-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-05
     skipped_cases: 4
     wilson_ci:
       rate: 1.0
@@ -110,12 +110,12 @@ audit_references:
 
 fingerprint:
   suite: g2/fault-injection/
-  validator_sha: "6f07ff0d709d14a047996f16683622ef949cd2228d6efefc9dec75d989e9834f"
+  validator_sha: "7ec3c4649ba8858cb15e43cf9fc65f2766c1f3c3a3319dd8e580d92610eed778"
   last_run:
-    run_id: g2-2026-10-04-1
+    run_id: g2-2026-10-05-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-05
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
@@ -126,12 +126,12 @@ fingerprint:
 
 run_mutation:
   suite: g2/fault-injection/
-  validator_sha: "232105bd9332fa92f205e76419479c6ccdd9c0e297d4ff82f3e18ba8f559e96f"
+  validator_sha: "bd56518975c843a6d348fcb89fb273984b802dc76d78791f17111f549c0aacc4"
   last_run:
-    run_id: g2-2026-10-04-1
+    run_id: g2-2026-10-05-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-05
     not_scored: "no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero"
     skipped_cases: 2
     wilson_ci:
@@ -145,10 +145,10 @@ verify_sketch:
   suite: g2/fault-injection/
   validator_sha: "6f1907519b2f0cb2f5b34231c801726dba6fda70f326254abe1a7706155ba273"
   last_run:
-    run_id: g2-2026-10-04-1
+    run_id: g2-2026-10-05-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-05
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0

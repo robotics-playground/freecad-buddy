@@ -589,8 +589,15 @@ _EXTRUDE_PROPERTIES = {
     "profile": {"type": "string", "description": "sketch Name"},
     "name": _FEATURE_NAME_SCHEMA,
     "length": _LENGTH_QUANTITY_SCHEMA,
-    "second_length": _LENGTH_QUANTITY_SCHEMA,
-    "up_to": {"type": "string", "description": "extrude Type; validated against the live enum"},
+    "second_length": dict(
+        _LENGTH_QUANTITY_SCHEMA,
+        description="second side, opposite the first ('Two sides'); not with midplane",
+    ),
+    "up_to": {
+        "type": "string",
+        "description": "extrude Type; validated against the live enum. 'TwoLengths' is retired "
+        "in FreeCAD 1.1: use second_length",
+    },
     "up_to_face": _SUBELEMENT_SELECTOR_SCHEMA,
     "reversed": {"type": "boolean", "default": False},
     "midplane": {"type": "boolean", "default": False},
@@ -666,16 +673,20 @@ def _feature_specs():
             _feature_schema(
                 {
                     "body": {"type": "string"},
-                    "base": {"type": "string", "description": "feature carrying the edges"},
+                    "base": {
+                        "type": "string",
+                        "description": "feature carrying the edges; must be the Body's Tip",
+                    },
                     "name": _FEATURE_NAME_SCHEMA,
                     "edges": _EDGE_SELECTOR_LIST_SCHEMA,
                     "radius": _LENGTH_QUANTITY_SCHEMA,
                 },
                 ["body", "base", "name", "edges"],
             ),
-            "Fillet named edges. Omitting 'radius' takes FreeCAD's own 1 mm. An edge without "
-            "exactly two adjacent faces, or whose faces meet tangentially, is rejected — FreeCAD "
-            "would drop it and commit a smaller fillet.",
+            "Fillet named edges of the Body's Tip; any other base is rejected, because the "
+            "fillet would drop every feature after it. Omitting 'radius' takes FreeCAD's own "
+            "1 mm. An edge without exactly two adjacent faces, or whose faces meet tangentially, "
+            "is rejected — FreeCAD would drop it and commit a smaller fillet.",
         ),
         _feature_method(
             "feature_chamfer",
@@ -683,7 +694,7 @@ def _feature_specs():
             _feature_schema(
                 {
                     "body": {"type": "string"},
-                    "base": {"type": "string"},
+                    "base": {"type": "string", "description": "must be the Body's Tip"},
                     "name": _FEATURE_NAME_SCHEMA,
                     "edges": _EDGE_SELECTOR_LIST_SCHEMA,
                     "size": _LENGTH_QUANTITY_SCHEMA,
@@ -694,8 +705,8 @@ def _feature_specs():
                 ["body", "base", "name", "edges"],
             ),
             "Chamfer named edges. Omitting 'size' takes FreeCAD's own 1 mm. chamfer_type is "
-            "checked against the live enumeration; the same silent-drop edge check as "
-            "feature_fillet applies.",
+            "checked against the live enumeration; the same Tip rule and silent-drop edge check "
+            "as feature_fillet apply.",
         ),
         _feature_method(
             "feature_pattern",
@@ -782,14 +793,17 @@ def _feature_specs():
                     "feature": {"type": "string"},
                     "parameters": {
                         "type": "object",
-                        "description": "property name -> Quantity, number, boolean or enum "
-                        "string; validated against the live feature",
+                        "description": "property name -> Quantity or number for a quantity "
+                        "property, number for a unitless float, integer for an integer property, "
+                        "boolean for a boolean one, member string for an enumeration; validated "
+                        "against the live feature",
                     },
                 },
                 ["feature", "parameters"],
             ),
             "Edit a feature's driving properties and re-verify the solid in the same "
-            "transaction. Unknown, read-only or wrong-unit values are rejected before it opens.",
+            "transaction. Unknown, read-only, wrong-type or wrong-unit values are rejected before "
+            "it opens.",
         ),
     ]
 

@@ -35,7 +35,11 @@ def register_tools(server, caps: Capabilities):
 
 `unattended` marks a run with no human present — `debug_exec` is **never enabled there** even if the env flag is set, because the flag is a human act and no agent may perform it (AD-4). Belt-and-suspenders: the tool body also re-checks the capability record and returns `INVALID_INPUT` if reached while off (defense against registration-logic bugs; not the boundary).
 
-**3. Append-only audit log.** Every `debug_exec` call — and every mutation tool call (AD-17 requires this from Phase 0) — appends one JSON line to the per-session audit log before execution and one after completion:
+**3. Append-only audit log.** Every `debug_exec` call — and every mutation tool call (AD-17 requires this from Phase 0) — appends one `before` line and one `after` line to the per-session audit log:
+
+- `debug_exec` writes its `before` line, carrying the full source, ahead of execution, so the line survives a call that never returns.
+- A bracketed mutation writes its pair from inside `run_mutation`: the `before` line ahead of the op, the `after` line once the commit or the proven rollback is done. Both carry the full-parameter digest and the real fingerprints, so they join the call's approval line.
+- A mutating call refused before the bracket gets its pair from the adapter after dispatch.
 
 ```json
 {"ts": "...", "session": "<id>", "event": "exec_call", "tool": "debug_exec",

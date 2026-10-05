@@ -74,6 +74,10 @@ def massprops_equal(a: dict, b: dict) -> bool:
     render), and a render/export refines the tessellation so ``bbox`` shifts — yet the exact
     geometric invariants stay identical. Use this for a read-only check where a render must not
     alter the geometry but may perturb the serialization or the tessellation.
+
+    It is also the snapshot-restore rollback proof in ``run_mutation``: reopening the snapshot
+    file re-serializes every shape, so the digest cannot match there. Records whose object-name
+    sets differ are unequal.
     """
 
     def _invariants(record: dict) -> dict:

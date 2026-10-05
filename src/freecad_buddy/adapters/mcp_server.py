@@ -22,7 +22,12 @@ from mcp import types
 from mcp.server.lowlevel import Server
 
 from freecad_buddy.adapters.audit_log import AuditSink
-from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
+from freecad_buddy.adapters.rpc_dispatch import (
+    MethodRegistry,
+    RpcMethod,
+    is_audited,
+    wrote_own_audit,
+)
 from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.usecases.capabilities import (
     Capabilities,
@@ -207,7 +212,11 @@ def build_server(
             _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"))
             return _to_call_result(envelope)
 
-        if audited:
+        # A mutating call's pair is written after dispatch so a bracketed mutation, which wrote
+        # its own joinable pair, gets no second one. Every other audited call (debug_exec,
+        # preview_dry_run) records its `before` line ahead of execution, so the line survives a
+        # call that never returns.
+        if audited and not mutating:
             _audit_safe(audit.before, event, tool_name, doc, args)
         envelope = registry.dispatch(tool_name, args)
         if _is_marshal_timeout(envelope):
@@ -216,7 +225,9 @@ def build_server(
             envelope = _with_suspect_message(envelope, marked_suspect=mutating)
         elif method is not None and not mutating and envelope.get("status") == "OK":
             suspect.clear(doc)
-        if audited:
+        if audited and not (mutating and wrote_own_audit(envelope)):
+            if mutating:
+                _audit_safe(audit.before, event, tool_name, doc, args)
             _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"))
         return _to_call_result(envelope)
 

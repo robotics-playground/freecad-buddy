@@ -8,6 +8,7 @@ not-a-sketch, ``verify_recompute``
 broken-object report + banner, and the bad-handle ``INVALID_INPUT`` boundary.
 """
 
+import hashlib
 import math
 import os
 import tempfile
@@ -94,14 +95,16 @@ class FingerprintTest(_DocFixture):
         with self.assertRaises(ValueError):
             fingerprints_equal(record, cross)
 
-    def test_null_shape_object_is_skipped(self):
+    def test_null_shape_object_is_recorded_as_empty_bytes_and_zero_massprops(self):
         self._add_box()
         self.document.addObject("Part::Feature", "Empty")  # present but null Shape
         self.document.recompute()
         record = fingerprint.fingerprint(self.document)
-        names = {entry["name"] for entry in record["objects"]}
-        self.assertIn("Box", names)
-        self.assertNotIn("Empty", names)
+        entries = {entry["name"]: entry for entry in record["objects"]}
+        self.assertIsNotNone(entries["Box"]["brep_sha256"])
+        self.assertEqual(entries["Empty"]["brep_sha256"], hashlib.sha256(b"").hexdigest())
+        self.assertEqual(entries["Empty"]["massprops"]["volume"], 0.0)
+        self.assertEqual(entries["Empty"]["massprops"]["bbox"], [0.0] * 6)
 
     def test_infinite_datum_planes_are_skipped(self):
         # A PartDesign Body auto-creates an App::Origin whose App::Plane children are infinite:

@@ -468,6 +468,8 @@ class ExpectFingerprintRecordTest(_UndoFixture):
         body.addObject(sketch)
         sketch.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 5.0), False)
         sketch.addConstraint(Sketcher.Constraint("Radius", 0, 5.0))
+        # Post-verify grades the profile a pad consumes, so it must be fully constrained.
+        sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 3, -1, 1))
         self.document.recompute()
         pre_op = fingerprint(self.document)
 

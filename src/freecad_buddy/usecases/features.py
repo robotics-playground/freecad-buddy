@@ -45,6 +45,10 @@ _SKETCH_AXES = frozenset({"V_Axis", "H_Axis", "N_Axis"})
 # The only revolution type that reads Angle2; every other type marks the property read-only.
 _REVOLVE_TWO_ANGLES = "TwoAngles"
 
+# The extrude type FreeCAD 1.1 retired in favour of a second side (FeaturePad.cpp:39-44). Its
+# enumeration slot survives only as a "?"-prefixed tombstone member, so the value cannot be set.
+_EXTRUDE_RETIRED_TWO_LENGTHS = "TwoLengths"
+
 # The Hole ThreadType member meaning "no thread". Every other member makes Diameter read-only and
 # derives it from the thread's size tables instead.
 _HOLE_NO_THREAD = "None"
@@ -407,7 +411,16 @@ def _extrude_type(feature: object, up_to: object) -> str:
     """Return the extrude ``Type`` string, defaulting to ``Length``, checked against the build.
 
     The enumeration is never indexed: one of its positions carries a deprecation tombstone.
+
+    :raises ValidationError: ``up_to`` is outside the build's enumeration, or names the retired
+        two-length type, whose replacement ``second_length`` the message names.
     """
+    # The tombstone spelling itself is a live enumeration member, so it is caught here too.
+    if isinstance(up_to, str) and up_to.lstrip("?") == _EXTRUDE_RETIRED_TWO_LENGTHS:
+        raise ValidationError(
+            f"up_to={_EXTRUDE_RETIRED_TWO_LENGTHS!r} is retired in FreeCAD 1.1; give "
+            "'second_length' for a second side opposite the first instead"
+        )
     requested = "Length" if up_to is None else up_to
     return _checked_enum(feature, "Type", requested, "up_to")
 
@@ -424,6 +437,8 @@ def _precheck_extrude(
     name: object,
     up_to: object,
     length: object,
+    second_length: object,
+    midplane: bool,
     taper_angle: object,
     up_to_face: tuple[str, str] | None,
     type_id: str,
@@ -441,6 +456,13 @@ def _precheck_extrude(
         if length is None:
             raise ValidationError(f"up_to={extrude_type!r} is length-driven; 'length' is required")
         _positive_length(length, "length")
+    if second_length is not None:
+        if midplane:
+            raise ValidationError(
+                "second_length and midplane are exclusive: midplane splits 'length' evenly "
+                "across both sides, while second_length sets the second side's own length"
+            )
+        _positive_length(second_length, "second_length")
     if taper_angle is not None:
         _bounded_angle(taper_angle, "taper_angle", -90.0, 90.0)
     if up_to_face is not None:
@@ -470,7 +492,19 @@ def _extrude_tool(
     face = _selector_subelement(up_to_face, "up_to_face") if up_to_face is not None else None
 
     def precheck(document: object) -> None:
-        _precheck_extrude(document, body, profile, name, up_to, length, taper_angle, face, type_id)
+        _precheck_extrude(
+            document,
+            body,
+            profile,
+            name,
+            up_to,
+            length,
+            second_length,
+            midplane,
+            taper_angle,
+            face,
+            type_id,
+        )
 
     def op(document: object) -> list[str]:
         body_obj = _resolve_body(document, body)
@@ -481,7 +515,7 @@ def _extrude_tool(
         if _extrude_needs_length(feature.Type):
             feature.Length = _length_mm(length, "length")
         if second_length is not None:
-            feature.Length2 = _length_mm(second_length, "second_length")
+            shim.extrude_second_side(feature, _positive_length(second_length, "second_length"))
         if face is not None:
             feature.UpToFace = (_resolve_object(document, face[0], "up_to_face"), [face[1]])
         feature.Reversed = bool(reversed_)
@@ -530,10 +564,12 @@ def feature_pad(
     ``up_to`` selects the extrude type and defaults to ``"Length"``, which requires a positive
     ``length``; every other value is checked against the build's live ``Type`` enumeration.
     ``midplane`` makes the pad straddle the profile plane, adding half its length to each side
-    rather than moving the total volume.
+    rather than moving the total volume. ``second_length`` adds a second side of that length
+    opposite the first.
 
     :raises ValidationError: the body or profile is unknown, the name is taken, ``up_to`` is
-        outside the build's enumeration, or a length-driven pad carries no ``length``.
+        outside the build's enumeration or is the retired ``"TwoLengths"``, a length-driven pad
+        carries no ``length``, or ``second_length`` is given with ``midplane``.
     """
     return _extrude_tool(
         "PartDesign::Pad",
@@ -576,10 +612,12 @@ def feature_pocket(
     ``up_to`` selects the extrude type and defaults to ``"Length"``, which requires a positive
     ``length``. ``"ThroughAll"`` cuts the whole body and is a Pocket-only value — the Pad
     enumeration carries a different member at that position, which is why the value is checked
-    against the live enumeration of the feature being built.
+    against the live enumeration of the feature being built. ``second_length`` adds a second side
+    of that length opposite the first.
 
     :raises ValidationError: the body or profile is unknown, the name is taken, ``up_to`` is
-        outside the build's enumeration, or a length-driven pocket carries no ``length``.
+        outside the build's enumeration or is the retired ``"TwoLengths"``, a length-driven
+        pocket carries no ``length``, or ``second_length`` is given with ``midplane``.
     """
     return _extrude_tool(
         "PartDesign::Pocket",
@@ -966,6 +1004,10 @@ def _dressup_base(
     The base must already belong to ``body``: FreeCAD only warns when a dress-up links out of
     its Body's scope, leaving a feature whose reference the tree does not own.
 
+    The base must also be the Body's ``Tip``. The new feature becomes the Tip and its solid is
+    built from its base alone, so a base below the Tip would silently drop every feature after
+    it. FreeCAD's GUI allows that; this bridge refuses it.
+
     Every requested edge is checked against the base shape's own topology and rejected when
     FreeCAD would drop it, so a dress-up that would ignore part of the selection never opens a
     transaction.
@@ -978,6 +1020,14 @@ def _dressup_base(
         raise ValidationError(
             f"dress-up base {base_obj.Name} is not in Body {body.Name}; "
             f"name a feature the Body owns ({sorted(members)})"
+        )
+    tip = getattr(body, "Tip", None)
+    tip_name = str(getattr(tip, "Name", "")) if tip is not None else ""
+    if base_obj.Name != tip_name:
+        raise ValidationError(
+            f"dress-up base {base_obj.Name} is not the Tip of Body {body.Name}; the Tip is "
+            f"{tip_name or 'unset'}. A dress-up builds from its base alone, so it would drop "
+            "every feature after the base; name the Tip as the base"
         )
     shape = _require_shape(base_obj)
     subelements: list[str] = []
@@ -1663,22 +1713,73 @@ def _parameter_writes(feature: object, parameters: object) -> list[tuple[str, ob
     return writes
 
 
+def _is_number(value: object) -> bool:
+    """Whether ``value`` is an int or float; ``bool`` is an ``int`` subclass and is excluded."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _property_family(feature: object, prop: str, type_id: str) -> str | None:
+    """Return the wire value family ``feature.prop`` accepts, or ``None`` when it takes none.
+
+    ``"bool"`` for ``App::PropertyBool`` and ``"enum"`` for ``App::PropertyEnumeration``. The
+    numeric families are read from the current value: ``"quantity"`` when it is a ``Quantity``
+    (every unit-bearing property), ``"integer"`` when it is an int, ``"float"`` when it is a plain
+    float. A type-id list would miss the many unit property types.
+    """
+    if type_id == "App::PropertyBool":
+        return "bool"
+    if type_id == "App::PropertyEnumeration":
+        return "enum"
+    import FreeCAD
+
+    current = getattr(feature, prop)
+    if isinstance(current, FreeCAD.Units.Quantity):
+        return "quantity"
+    if isinstance(current, int) and not isinstance(current, bool):
+        return "integer"
+    if isinstance(current, float):
+        return "float"
+    return None
+
+
 def _parameter_value(feature: object, prop: str, raw: object) -> object:
-    """Return the raw value to write to ``feature.prop`` from one wire parameter value."""
+    """Return the raw value to write to ``feature.prop`` from one wire parameter value.
+
+    The value must match the property's family: a ``{value, unit}`` quantity or a bare number for
+    a quantity property, a bare number for a unitless float property, an int for an integer
+    property, a boolean for a boolean property, and a member string for an enumeration. FreeCAD
+    would raise on any other pairing inside the transaction.
+
+    :raises ValidationError: naming ``<feature>.<prop>`` and its type when the value does not
+        match the family, or when the property is of a type this tool cannot write.
+    """
     type_id = str(feature.getTypeIdOfProperty(prop))
-    if isinstance(raw, dict):
+    family = _property_family(feature, prop, type_id)
+    where = f"{feature.Name}.{prop}"
+    if family is None:
+        raise ValidationError(f"{where} is a {type_id}, which feature_set_parameters cannot write")
+    if family == "quantity" and isinstance(raw, dict):
         if type_id == "App::PropertyAngle":
             return _angle_degrees(raw, f"{prop} value")
         return _length_mm(raw, f"{prop} value")
-    if isinstance(raw, str):
-        return _checked_enum(feature, prop, raw, f"{prop} value")
-    if isinstance(raw, bool):
-        return raw
-    if isinstance(raw, (int, float)):
+    if family in ("quantity", "float") and _is_number(raw):
         if not math.isfinite(float(raw)):
             raise ValidationError(f"{prop} value must be finite, got {raw!r}")
         return raw
-    raise ValidationError(f"{prop} value must be a quantity, number, boolean or enum string")
+    if family == "integer" and isinstance(raw, int) and not isinstance(raw, bool):
+        return raw
+    if family == "bool" and isinstance(raw, bool):
+        return raw
+    if family == "enum" and isinstance(raw, str):
+        return _checked_enum(feature, prop, raw, f"{prop} value")
+    expected = {
+        "quantity": "a {value, unit} quantity or a number",
+        "float": "a number",
+        "integer": "an integer",
+        "bool": "a boolean",
+        "enum": "an enumeration member string",
+    }[family]
+    raise ValidationError(f"{where} is a {type_id} and takes {expected}, got {raw!r}")
 
 
 def feature_set_parameters(
@@ -1691,12 +1792,15 @@ def feature_set_parameters(
 ) -> ResultEnvelope:
     """Edit a feature's driving properties and re-verify the solid inside the same transaction.
 
-    ``parameters`` maps property names to values: a ``{value, unit}`` quantity for a dimension
-    (``deg`` for an angle property, ``mm`` otherwise), a string for an enumerated property, or a
-    bare number or boolean. Each is validated against the live feature before the bracket opens.
+    ``parameters`` maps property names to values: a ``{value, unit}`` quantity or a bare number
+    for a quantity property (``deg`` for an angle property, ``mm`` otherwise), a bare number for
+    a unitless float property, an int for an integer property, a boolean for a boolean property,
+    or a string for an enumerated property. Each is validated
+    against the live feature before the bracket opens.
 
-    :raises ValidationError: the feature is unknown, a named property does not exist or is
-        read-only, or a value's unit or enumeration member is wrong for its property.
+    :raises ValidationError: the feature is unknown, a named property does not exist, is
+        read-only or is of a type this tool cannot write, or a value's type, unit or enumeration
+        member is wrong for its property.
     """
     _require_partdesign()
 

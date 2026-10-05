@@ -66,7 +66,9 @@ def run_mutation(doc, op) -> ResultEnvelope:
     else:
         restore_from_snapshot(doc, snap_path)         # close + reopen from saveCopy
         doc.recompute()
-        assert fingerprint(doc) == fp_before, "ROLLBACK FAILED — hash mismatch"
+        # reopen re-serializes every shape, so the digest never matches here;
+        # the restore is proven on mass properties over the same object names
+        assert massprops_equal(fingerprint(doc), fp_before), "ROLLBACK FAILED"
         rollback = "rolled_back_via_snapshot"
     delete(snap_path)
     return failed_envelope(report, rollback=rollback) # status per AD-17 closed set
@@ -78,8 +80,10 @@ def run_mutation(doc, op) -> ResultEnvelope:
 
 1. **Recompute clean** — no object with `not obj.isValid()`; collect `getStatusString()` per failed object.
 2. **Shape validity** — `verify_shape` (§5) on every shape-bearing object the op touched.
-3. **Sketch signal** — `verify_sketch` (§4) on every sketch involved; PASS per §4.2 (AD-8).
+3. **Sketch signal** — `verify_sketch` (§4) on every sketch the op touched, and on every sketch in the `OutList` of a touched object that is not a container (`PartDesign::Body`, `App::Part`); PASS per §4.2 (AD-8). A pad therefore grades the profile it consumes. Body membership alone never pulls a sketch in.
 4. **TNP audit** — `audit_references(doc, refs_before)` (§3); any BROKEN/REPOINTED/DROPPED verdict fails.
+
+The TNP audit runs on every path where the op returned, including a short-circuit at steps 1-3: its Layer-0 sweep reports each object a recompute broke as `BROKEN`. A path where the audit did not run (setup failure, op raised) reports the audit `UNSUPPORTED`, never `CLEAN` (AD-7).
 
 ---
 
@@ -112,7 +116,10 @@ def fingerprint(doc) -> Fingerprint:
     entries = []
     for obj in sorted(doc.Objects, key=lambda o: o.Name):   # immutable Name order
         shape = getattr(obj, "Shape", None)
-        if shape is None or shape.isNull():
+        if shape is None:                                    # no Shape attribute: not hashed
+            continue
+        if shape.isNull():                                   # a null shape still enters the digest
+            entries.append((obj.Name, hashlib.sha256(b"").hexdigest(), ZERO_MASSPROPS))
             continue
         buf = io.BytesIO()
         serialize(shape, buf)                                # probed: exportBinary | exportBrep
@@ -125,6 +132,8 @@ def fingerprint(doc) -> Fingerprint:
 ```
 
 Equality semantics: primary = digest equality (same serializer tag). The mass-property tuple is a cross-oracle: BRep-hash equality with mass-prop inequality (or vice versa) on a benchmark run is a validator bug and is investigated, not averaged away. The scope is *representation identity* (undo/rollback proof) — two independently rebuilt but geometrically equal shapes may hash differently, which is correct for this use.
+
+A non-datum object whose `Shape` is null enters the record as `{name, brep_sha256: sha256(b""), massprops: <every field 0.0, quantum Q>}`, so a feature whose shape went null (a broken Tip) never hashes equal to its pre-mutation state. A real serialization is never empty, so that hash cannot match a real shape, and the field types stay `str` and `MassProps` under `fcb.fingerprint/1`. An object with no `Shape` attribute stays out. Two comparisons use the digest and one does not: the abort path of §1.2 proves rollback by digest equality; the snapshot-restore path proves it with `massprops_equal` over the same object-name set, because a reopened file re-serializes every shape and its B-rep bytes never match the in-memory shape they were saved from.
 
 ---
 

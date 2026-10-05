@@ -196,6 +196,67 @@ class _FeatureFixture(unittest.TestCase):
         self.assertTrue(sketch.FullyConstrained, f"{name} is not fully constrained")
         return sketch
 
+    def loose_rect_sketch(self, body, name, width, height):
+        """A closed rectangle held only by its corner and orientation constraints.
+
+        Its position and both side lengths stay free, so the solver reports four degrees of
+        freedom.
+        """
+        sketch = self._sketch(body, name, 0.0)
+        corners = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)]
+        for index in range(4):
+            start = corners[index]
+            end = corners[(index + 1) % 4]
+            sketch.addGeometry(Part.LineSegment(App.Vector(*start, 0), App.Vector(*end, 0)), False)
+        for index in range(4):
+            sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
+        for index in (0, 2):
+            sketch.addConstraint(Sketcher.Constraint("Horizontal", index))
+        for index in (1, 3):
+            sketch.addConstraint(Sketcher.Constraint("Vertical", index))
+        self.document().recompute()
+        sketch.solve()
+        self.assertEqual(sketch.DoF, 4, f"{name} does not carry four degrees of freedom")
+        return sketch
+
+    def filleted_pad(self):
+        """A 20x30x10 pad whose top front edge carries an r=8 fillet; the fillet is the Tip.
+
+        Returns the fillet's edge name on the pad. An r=8 fillet needs the pad to stay taller
+        than 8 mm, so shortening the pad to 5 mm leaves the fillet unbuildable.
+        """
+        body = self.empty_body()
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+        self.assert_ok(
+            features.feature_pad(
+                self.registry,
+                doc=self.handle,
+                body="Body",
+                profile="Profile",
+                name="Pad",
+                length=mm(10.0),
+            )
+        )
+        shape = self.document().getObject("Pad").Shape
+        edge = next(
+            f"Edge{i}"
+            for i, e in enumerate(shape.Edges, 1)
+            if all(abs(v.Point.z - 10.0) < 1e-9 and abs(v.Point.y) < 1e-9 for v in e.Vertexes)
+        )
+        self.assert_ok(
+            features.feature_fillet(
+                self.registry,
+                doc=self.handle,
+                body="Body",
+                base="Pad",
+                name="Fillet",
+                edges=[sub("Pad", edge)],
+                radius=mm(8.0),
+            )
+        )
+        self.assertEqual(self.document().getObject("Body").Tip.Name, "Fillet")
+        return edge
+
     def assert_ok(self, envelope):
         """Assert the envelope committed, returning its ``shape_summary``."""
         self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
@@ -223,6 +284,7 @@ class _FeatureFixture(unittest.TestCase):
         transaction, so a snapshot path handed out at all proves the bracket ran.
 
         :param probe: reads the state the call must not change; compared before and after.
+        :returns: the refusal message.
         """
         before = probe()
         real_snapshot_path = transaction.temp_snapshot_path
@@ -234,7 +296,7 @@ class _FeatureFixture(unittest.TestCase):
 
         transaction.temp_snapshot_path = counting_snapshot_path
         try:
-            with self.assertRaises(ValidationError):
+            with self.assertRaises(ValidationError) as caught:
                 call(*args, **kwargs)
         finally:
             transaction.temp_snapshot_path = real_snapshot_path
@@ -242,6 +304,7 @@ class _FeatureFixture(unittest.TestCase):
         self.assertEqual(minted, [], "the mutation bracket opened and wrote a snapshot")
         self.assertEqual(probe(), before)
         self.assertEqual(_snapshot_leftovers(), [])
+        return str(caught.exception)
 
     def object_count(self):
         return len(self.document().Objects)
@@ -411,6 +474,127 @@ class PadTest(_FeatureFixture):
             name="Pad",
             length=deg(5.0),
         )
+
+    def test_a_second_length_runs_a_second_side_opposite_the_first(self):
+        # A 20x30 profile padded 10 mm one way and 4 mm the other spans 14 mm: 20*30*14 = 8400.
+        body = self.empty_body()
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+
+        envelope = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Profile",
+            name="TwoSided",
+            length=mm(10.0),
+            second_length=mm(4.0),
+        )
+
+        self.assert_volume(envelope, 20.0 * 30.0 * 14.0)
+        pad = self.document().getObject("TwoSided")
+        self.assertEqual(pad.SideType, "Two sides")
+        self.assertEqual(pad.Type2, "Length")
+        self.assertAlmostEqual(pad.Length2.Value, 4.0, places=6)
+        self.assertAlmostEqual(pad.Shape.BoundBox.ZMin, -4.0, places=6)
+        self.assertAlmostEqual(pad.Shape.BoundBox.ZMax, 10.0, places=6)
+
+    def test_a_second_length_with_midplane_is_rejected_before_the_bracket(self):
+        body = self.empty_body()
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+
+        message = self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_pad,
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Profile",
+            name="Both",
+            length=mm(10.0),
+            second_length=mm(4.0),
+            midplane=True,
+        )
+
+        self.assertIn("second_length", message)
+        self.assertIn("midplane", message)
+
+    def test_the_retired_two_lengths_type_is_refused_naming_second_length(self):
+        # FreeCAD 1.1 keeps TwoLengths only as the "?TwoLengths" tombstone in the enumeration.
+        body = self.empty_body()
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+
+        message = self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_pad,
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Profile",
+            name="Retired",
+            length=mm(10.0),
+            second_length=mm(4.0),
+            up_to="TwoLengths",
+        )
+
+        self.assertIn("second_length", message)
+
+    def test_the_tombstone_spelling_of_two_lengths_is_refused_naming_second_length(self):
+        body = self.empty_body()
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+
+        message = self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_pad,
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Profile",
+            name="Retired",
+            length=mm(10.0),
+            up_to="?TwoLengths",
+        )
+
+        self.assertIn("second_length", message)
+
+    def test_a_loose_sketch_elsewhere_in_the_body_does_not_fail_the_pad(self):
+        # The Body is touched, and its OutList holds every member; only the pad's own profile
+        # is graded.
+        body = self.empty_body()
+        self.loose_rect_sketch(body, "Unrelated", 5.0, 5.0)
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+
+        envelope = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Profile",
+            name="Pad",
+            length=mm(10.0),
+        )
+
+        self.assert_volume(envelope, 20.0 * 30.0 * 10.0)
+
+    def test_a_pad_on_an_under_constrained_profile_fails_and_rolls_back(self):
+        body = self.empty_body()
+        self.loose_rect_sketch(body, "Sketch", 20.0, 30.0)
+        before = self.object_count()
+
+        envelope = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Sketch",
+            name="LoosePad",
+            length=mm(10.0),
+        )
+
+        self.assertEqual(envelope["status"], "SPEC_FAILED", envelope.get("detail"))
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"])
+        self.assertFalse(block["post_verify"]["fully_constrained"])
+        self.assertIn("verify_sketch failed on Sketch (dof=4)", block["post_verify"]["explanation"])
+        self.assertIsNone(self.document().getObject("LoosePad"))
+        self.assertEqual(self.object_count(), before)
 
 
 class PocketTest(_FeatureFixture):
@@ -1091,6 +1275,63 @@ class PatternTest(_FeatureFixture):
 
         self.assert_volume(envelope, PLATE_VOLUME - 3.0 * math.pi * 4.0 * PLATE_H)
 
+    def _row_of_three(self):
+        self._plate_with_hole()
+        envelope = features.feature_pattern(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            name="Row",
+            kind="linear",
+            originals=["Bore"],
+            direction=whole("X_Axis"),
+            length=mm(20.0),
+            occurrences=3,
+        )
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+
+    def test_a_fractional_count_for_an_integer_property_is_rejected_before_the_bracket(self):
+        self._row_of_three()
+
+        message = self.assert_rejected_pre_bracket(
+            lambda: self.document().getObject("Row").Occurrences,
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Row",
+            parameters={"Occurrences": 2.5},
+        )
+
+        self.assertIn("Row.Occurrences", message)
+        self.assertIn("App::PropertyIntegerConstraint", message)
+
+    def test_a_quantity_for_an_integer_property_is_rejected_before_the_bracket(self):
+        self._row_of_three()
+
+        message = self.assert_rejected_pre_bracket(
+            lambda: self.document().getObject("Row").Occurrences,
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Row",
+            parameters={"Occurrences": mm(4.0)},
+        )
+
+        self.assertIn("Row.Occurrences", message)
+
+    def test_an_integer_count_for_an_integer_property_is_applied(self):
+        self._row_of_three()
+
+        envelope = features.feature_set_parameters(
+            self.registry,
+            doc=self.handle,
+            feature="Row",
+            parameters={"Occurrences": 4},
+        )
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.document().getObject("Row").Occurrences, 4)
+
     def test_a_linear_pattern_spaces_its_occurrences_over_the_whole_length(self):
         # Extent mode spreads occurrences across Length, so three over 20 mm land 10 mm apart.
         self._plate_with_hole()
@@ -1685,7 +1926,8 @@ class BodyCreateTest(_FeatureFixture):
     def test_the_bodys_origin_children_stay_out_of_the_fingerprint(self):
         # A Body brings App::Origin plus its Plane/Line/Point children. They are datum features,
         # which fingerprint() already skips; asserted here so a later change cannot let the
-        # infinite-extent planes back into the digest.
+        # infinite-extent planes back into the digest. The empty Body itself is recorded, with
+        # the zeroed entry the fingerprint gives a null shape.
         features.feature_body_create(self.registry, doc=self.handle, name="Bracket")
         document = self.document()
 
@@ -1693,7 +1935,7 @@ class BodyCreateTest(_FeatureFixture):
         self.assertTrue(origin_types, "a Body must bring its Origin children")
         record = fingerprint.fingerprint(document)
 
-        self.assertEqual([entry["name"] for entry in record["objects"]], [])
+        self.assertEqual([entry["name"] for entry in record["objects"]], ["Bracket"])
 
     def test_a_body_adopts_an_existing_solid_as_its_base_feature(self):
         document = self.document()
@@ -1904,6 +2146,158 @@ class SetParametersTest(_FeatureFixture):
             doc=self.handle,
             feature="Block",
             parameters={},
+        )
+
+    def test_a_value_for_a_property_it_cannot_write_is_rejected_before_the_bracket(self):
+        self._padded_body()
+
+        message = self.assert_rejected_pre_bracket(
+            lambda: self.document().getObject("Block").Length.Value,
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Block",
+            parameters={"Shape": 1},
+        )
+
+        self.assertIn("Block.Shape", message)
+        self.assertIn("Part::PropertyPartShape", message)
+
+    def test_a_number_for_a_boolean_property_is_rejected_before_the_bracket(self):
+        self._padded_body()
+
+        message = self.assert_rejected_pre_bracket(
+            lambda: self.document().getObject("Block").Reversed,
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Block",
+            parameters={"Reversed": 1},
+        )
+
+        self.assertIn("Block.Reversed", message)
+        self.assertIn("App::PropertyBool", message)
+
+    def test_a_boolean_for_a_length_property_is_rejected_before_the_bracket(self):
+        self._padded_body()
+
+        message = self.assert_rejected_pre_bracket(
+            lambda: self.document().getObject("Block").Length.Value,
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Block",
+            parameters={"Length": True},
+        )
+
+        self.assertIn("Block.Length", message)
+
+    def test_a_quantity_for_a_unitless_float_property_is_rejected_before_the_bracket(self):
+        self._padded_body()
+
+        message = self.assert_rejected_pre_bracket(
+            lambda: self.document().getObject("Block").FuzzyTolerance,
+            features.feature_set_parameters,
+            self.registry,
+            doc=self.handle,
+            feature="Block",
+            parameters={"FuzzyTolerance": mm(0.1)},
+        )
+
+        self.assertIn("Block.FuzzyTolerance", message)
+        self.assertIn("App::PropertyFloatConstraint", message)
+
+    def test_a_recompute_that_breaks_a_later_feature_reports_it_in_the_tnp_audit(self):
+        self.filleted_pad()
+
+        envelope = features.feature_set_parameters(
+            self.registry,
+            doc=self.handle,
+            feature="Pad",
+            parameters={"Length": mm(5.0)},
+        )
+
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"])
+        audit = block["post_verify"]["tnp_audit"]
+        self.assertEqual(audit["status"], "FLAGGED")
+        broken = [
+            f
+            for f in audit["findings"]
+            if f["verdict"] == "BROKEN" and f["layer"] == 0 and f["owner"] == "Fillet"
+        ]
+        self.assertTrue(broken, audit["findings"])
+        self.assertAlmostEqual(self.document().getObject("Pad").Length.Value, 10.0, places=6)
+
+
+class DressUpTipTest(_FeatureFixture):
+    def test_a_dress_up_on_a_feature_below_the_tip_is_rejected_naming_the_tip(self):
+        edge = self.filleted_pad()
+
+        message = self.assert_rejected_pre_bracket(
+            self.object_count,
+            features.feature_chamfer,
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            base="Pad",
+            name="Chamfer",
+            edges=[sub("Pad", edge)],
+            size=mm(1.0),
+        )
+
+        self.assertIn("Fillet", message)
+        self.assertIn("Tip", message)
+
+    def test_a_fillet_that_cannot_build_with_undo_off_is_restored_from_the_snapshot(self):
+        # With undo off the abort restores nothing, so only the snapshot can bring the document
+        # back; the restore is proven on mass properties because reopening re-serializes every
+        # shape and changes its B-rep bytes.
+        body = self.empty_body()
+        self.rect_sketch(body, "Profile", 0.0, 0.0, 20.0, 30.0)
+        self.assert_ok(
+            features.feature_pad(
+                self.registry,
+                doc=self.handle,
+                body="Body",
+                profile="Profile",
+                name="Pad",
+                length=mm(10.0),
+            )
+        )
+        shape = self.document().getObject("Pad").Shape
+        edge = next(
+            f"Edge{i}"
+            for i, e in enumerate(shape.Edges, 1)
+            if all(abs(v.Point.z - 10.0) < 1e-9 and abs(v.Point.y) < 1e-9 for v in e.Vertexes)
+        )
+
+        def undo_off(document):
+            document.UndoMode = 0
+            return False
+
+        real_enable_undo = shim.enable_undo
+        shim.enable_undo = undo_off
+        try:
+            envelope = features.feature_fillet(
+                self.registry,
+                doc=self.handle,
+                body="Body",
+                base="Pad",
+                name="Fillet",
+                edges=[sub("Pad", edge)],
+                radius=mm(500.0),
+            )
+        finally:
+            shim.enable_undo = real_enable_undo
+
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"], block["post_verify"]["explanation"])
+        self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
+        self.assertIsNone(self.document().getObject("Fillet"))
+        self.assertAlmostEqual(
+            self.document().getObject("Pad").Shape.Volume, 20.0 * 30.0 * 10.0, places=6
         )
 
 

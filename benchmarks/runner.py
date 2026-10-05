@@ -116,7 +116,10 @@ _VALIDATOR_SOURCES = {
         _SRC / "usecases" / "assertions.py",
         _SRC / "usecases" / "verify.py",
     ),
-    "run_mutation": (_SRC / "usecases" / "transaction.py",),
+    "run_mutation": (
+        _SRC / "usecases" / "transaction.py",
+        _SRC / "contracts" / "fingerprint.py",
+    ),
     "fingerprint": (_SRC / "usecases" / "fingerprint.py",),
     "audit_references": (_SRC / "usecases" / "tnp_guard.py",),
     "verify_sketch": (_SRC / "usecases" / "verify.py",),

@@ -8,14 +8,16 @@ captured before the op ran), never captured from a verify tool.
 """
 
 import glob
+import hashlib
 import os
 import unittest
 
 import FreeCAD as App
 import Part
+import Sketcher
 
 from freecad_buddy.contracts import fingerprints_equal
-from freecad_buddy.usecases import shim, tnp_guard, transaction, verify
+from freecad_buddy.usecases import confirm, shim, tnp_guard, transaction, verify
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -58,6 +60,33 @@ class _MutationFixture(unittest.TestCase):
         box.Height = BOX_H
         self.document.recompute()
         return box
+
+    def _add_padded_body(self):
+        """A Body holding a fully constrained 20x30 sketch padded 10 mm."""
+        body = self.document.addObject("PartDesign::Body", "Body")
+        sketch = self.document.addObject("Sketcher::SketchObject", "Profile")
+        body.addObject(sketch)
+        corners = [(0, 0), (20, 0), (20, 30), (0, 30)]
+        for index in range(4):
+            start = corners[index]
+            end = corners[(index + 1) % 4]
+            sketch.addGeometry(Part.LineSegment(App.Vector(*start, 0), App.Vector(*end, 0)), False)
+        for index in range(4):
+            sketch.addConstraint(Sketcher.Constraint("Coincident", index, 2, (index + 1) % 4, 1))
+        for index in (0, 2):
+            sketch.addConstraint(Sketcher.Constraint("Horizontal", index))
+        for index in (1, 3):
+            sketch.addConstraint(Sketcher.Constraint("Vertical", index))
+        sketch.addConstraint(Sketcher.Constraint("DistanceX", -1, 1, 0, 1, 0))
+        sketch.addConstraint(Sketcher.Constraint("DistanceY", -1, 1, 0, 1, 0))
+        sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 20))
+        sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, 30))
+        pad = self.document.addObject("PartDesign::Pad", "Pad")
+        body.addObject(pad)
+        pad.Profile = sketch
+        pad.Length = 10
+        self.document.recompute()
+        self.assertTrue(pad.isValid())
 
     def _run(self, label, op, document=None):
         return transaction.run_mutation(document or self.document, self.handle, label, op)
@@ -141,6 +170,41 @@ class RollbackProofTest(_MutationFixture):
         self.assertTrue(fingerprints_equal(fingerprint(document), before))
         self.assertNotIn("Sph6031", [obj.Name for obj in document.Objects])
 
+    def test_a_snapshot_restore_of_a_body_document_is_proven_on_mass_properties(self):
+        # Reopening the snapshot re-serializes every shape, so a PartDesign document never gets
+        # its B-rep digest back; the restore must still be provable.
+        self._add_padded_body()
+        before = fingerprint(self.document)
+        real_equal = transaction.fingerprints_equal
+        calls = []
+
+        def once_unequal(left, right):
+            calls.append(1)
+            return False if len(calls) == 1 else real_equal(left, right)
+
+        transaction.fingerprints_equal = once_unequal
+        try:
+            document, envelope = self._run("forced restore", _raise_after_add)
+        finally:
+            transaction.fingerprints_equal = real_equal
+
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"], block["post_verify"]["explanation"])
+        self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
+        self.assertNotEqual(fingerprint(document)["digest"], before["digest"])
+        self.assertNotIn("Sph", [obj.Name for obj in document.Objects])
+        self.assertEqual(
+            [entry["name"] for entry in fingerprint(document)["objects"]],
+            [entry["name"] for entry in before["objects"]],
+        )
+
+    def test_a_raising_op_reports_the_audit_it_never_ran_as_unsupported(self):
+        _, envelope = self._run("raising op", _raise_after_add)
+
+        audit = envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]
+        self.assertEqual(audit["status"], "UNSUPPORTED")
+        self.assertEqual(audit["findings"], [])
+
     def test_snapshot_restore_preserves_the_document_label(self):
         label = self.document.Label
         document, _ = self._run("6031 pattern", _add_with_undo_disabled)
@@ -215,6 +279,12 @@ class BracketGuardTest(_MutationFixture):
     transaction (R5), release or report the snapshot (R6) and hand the caller an envelope.
     """
 
+    def _assert_the_audit_that_ran_is_reported(self, block):
+        """A commit failure comes after a passing post-verify, so its audit did run."""
+        if not shim.element_map_available():
+            self.skipTest("element map unavailable; the audit reports UNSUPPORTED by design")
+        self.assertEqual(block["post_verify"]["tnp_audit"]["status"], "CLEAN")
+
     def _assert_closed_failure(self, envelope, document):
         self.assertEqual(envelope["status"], "SPEC_FAILED")
         self.assertIsNotNone(envelope["detail"])
@@ -225,13 +295,16 @@ class BracketGuardTest(_MutationFixture):
         return block
 
     def test_a_failing_savecopy_returns_an_envelope_and_leaks_no_snapshot(self):
+        before = fingerprint(self.document)
         document, envelope = self._run(
             "unwritable snapshot",
             _add_cylinder,
             document=_FailingDocument(self.document, "saveCopy"),
         )
 
-        self._assert_closed_failure(envelope, self.document)
+        block = self._assert_closed_failure(envelope, self.document)
+        # The fingerprint was taken before saveCopy failed, so the block reports it.
+        self.assertEqual(block["fingerprint_before"]["digest"], before["digest"])
         self.assertEqual(_snapshot_leftovers(), [])
         self.assertNotIn("Cyl", [obj.Name for obj in self.document.Objects])
         del document
@@ -255,6 +328,7 @@ class BracketGuardTest(_MutationFixture):
             transaction.fingerprint = real
 
         block = self._assert_closed_failure(envelope, document)
+        self._assert_the_audit_that_ran_is_reported(block)
         # The mutation is committed and cannot be undone from here, so it must not be reported
         # as rolled back, and the after-fingerprint it could not take stays absent.
         self.assertFalse(block["rolled_back"])
@@ -292,7 +366,8 @@ class BracketGuardTest(_MutationFixture):
             document=_FailingDocument(self.document, "commitTransaction"),
         )
 
-        self._assert_closed_failure(envelope, self.document)
+        block = self._assert_closed_failure(envelope, self.document)
+        self._assert_the_audit_that_ran_is_reported(block)
         self.assertTrue(fingerprints_equal(fingerprint(self.document), before))
         self.assertNotIn("Cyl", [obj.Name for obj in self.document.Objects])
         self.assertEqual(_snapshot_leftovers(), [])
@@ -419,6 +494,22 @@ class NotMeasuredTest(_MutationFixture):
 
         self.assertIsInstance(block["post_verify"]["is_valid"], bool)
         self.assertIsInstance(block["post_verify"]["fully_constrained"], (bool, type(None)))
+
+
+class NullShapeFingerprintTest(_MutationFixture):
+    def test_an_object_with_a_null_shape_enters_the_digest(self):
+        # A feature whose shape went null (a broken Tip) must not vanish from the fingerprint,
+        # or a rollback that left it broken would hash equal to the pre-mutation state.
+        before = fingerprint(self.document)
+        self.document.addObject("Sketcher::SketchObject", "Empty")
+        self.document.recompute()
+
+        after = fingerprint(self.document)
+
+        self.assertNotEqual(after["digest"], before["digest"])
+        entry = next(e for e in after["objects"] if e["name"] == "Empty")
+        self.assertEqual(entry["brep_sha256"], hashlib.sha256(b"").hexdigest())
+        self.assertEqual(entry["massprops"]["volume"], 0.0)
 
 
 class SerializerTagTest(_MutationFixture):
@@ -577,6 +668,58 @@ class AuditRecordTest(_MutationFixture):
         self.assertTrue(post[7]["rolled_back"])
         self.assertEqual(post[7]["rollback_proven"], "rolled_back_verified")
         self.assertIn("planted op failure", post[7]["explanation"])
+
+    def test_with_no_sink_passed_the_lines_go_to_the_host_sink(self):
+        sink = self._RecordingSink()
+        previous = confirm.set_approval_sink(sink)
+        try:
+            transaction.run_mutation(
+                self.document, self.handle, "add cylinder", _add_cylinder, tool="feature_pad"
+            )
+        finally:
+            confirm.set_approval_sink(previous)
+
+        self.assertEqual([line[0] for line in sink.lines], ["before", "after"])
+
+    def test_a_preview_copy_writes_no_mutation_lines_to_the_host_sink(self):
+        sink = self._RecordingSink()
+        previous = confirm.set_approval_sink(sink)
+        try:
+            with confirm.preview_exemption():
+                transaction.run_mutation(
+                    self.document, self.handle, "add cylinder", _add_cylinder, tool="feature_pad"
+                )
+        finally:
+            confirm.set_approval_sink(previous)
+
+        self.assertEqual(sink.lines, [])
+
+    def test_a_setup_failure_still_writes_both_lines(self):
+        # The adapters skip their own pair for an envelope carrying a mutation block, so every
+        # path that returns one must write the pair itself.
+        sink = self._RecordingSink()
+        real = transaction.fingerprint
+
+        def _always_fails(document):
+            raise RuntimeError("planted pre-bracket fingerprint failure")
+
+        transaction.fingerprint = _always_fails
+        try:
+            transaction.run_mutation(
+                self.document,
+                self.handle,
+                "pre-bracket hash",
+                _add_cylinder,
+                audit_sink=sink,
+                tool="feature_pad",
+            )
+        finally:
+            transaction.fingerprint = real
+
+        pre, post = sink.lines
+        self.assertEqual(pre, ("before", "mutation", "feature_pad", self.handle, None))
+        self.assertEqual(post[4], "SPEC_FAILED")
+        self.assertIsNone(post[5])
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Callable
 
 from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout
-from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited
+from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited, wrote_own_audit
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.contracts.rpc import (
@@ -326,8 +326,13 @@ class RpcListener:
         audited = method is not None and is_audited(method)
         event = method.audit_event if method is not None else "mutation"
         doc_str = doc if isinstance(doc, str) else None
-        if audited and self._audit is not None:
-            self._audit_safe(self._audit.before, event, name, doc_str, params)
+        audit = self._audit if audited else None
+        # A mutating call's pair is written after dispatch so a bracketed mutation, which wrote
+        # its own joinable pair, gets no second one. Every other audited call (debug_exec,
+        # preview_dry_run) records its `before` line ahead of execution, so the line survives a
+        # call that never returns.
+        if audit is not None and not mutating:
+            self._audit_safe(audit.before, event, name, doc_str, params)
 
         timeout_s = method.timeout_s if method is not None else 30.0
         try:
@@ -337,8 +342,10 @@ class RpcListener:
             if mutating:
                 self._mark_suspect(doc)
 
-        if audited and self._audit is not None:
-            self._audit_safe(self._audit.after, event, name, doc_str, params, env.get("status"))
+        if audit is not None and not (mutating and wrote_own_audit(env)):
+            if mutating:
+                self._audit_safe(audit.before, event, name, doc_str, params)
+            self._audit_safe(audit.after, event, name, doc_str, params, env.get("status"))
 
         self._update_suspect(method, mutating, doc, env)
         return env

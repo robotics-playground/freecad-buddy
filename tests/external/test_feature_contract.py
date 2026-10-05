@@ -295,9 +295,10 @@ def test_symmetric_extrusion_goes_through_the_shim_rather_than_a_direct_write():
 
 
 def test_no_extrude_type_enum_is_indexed_numerically():
-    # One enum position is a deprecation tombstone, so an index could select it.
+    # One enum position is a deprecation tombstone, so an index could select it. The retired
+    # name may appear only as the value a refusal compares against, never as the tombstone.
     source = FEATURES_SOURCE.read_text(encoding="utf-8")
-    assert "TwoLengths" not in source
+    assert "?TwoLengths" not in source
     assert "setEnums" not in source
 
 

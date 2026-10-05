@@ -12,6 +12,7 @@ The gate fires for both tool families, so the rejection rows are exercised throu
 """
 
 import glob
+import json
 import os
 import tempfile
 import time
@@ -21,6 +22,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
+from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.hosts.tool_catalog import preview_op_table
 from freecad_buddy.usecases import confirm, features, preview, sketches, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
@@ -495,6 +497,32 @@ class ApprovalAuditTest(_GateFixture):
         record = approvals[0][2]
         self.assertEqual(record["tool"], "feature_pad")
         self.assertTrue(record["args_digest"], "the approval names no params digest")
+
+    def test_an_auto_approved_call_writes_three_lines_an_auditor_can_join(self):
+        directory = tempfile.mkdtemp(prefix="FCB_TMP_gate_")
+        path = os.path.join(directory, "audit.jsonl")
+        confirm.set_approval_sink(AuditSink(path))
+        confirm.set_auto_approve(True)
+        digest_before = fingerprint(self.document)["digest"]
+        try:
+            envelope = features.feature_body_create(self.registry, doc=self.handle, name="Bracket")
+            with open(path, encoding="utf-8") as handle:
+                records = [json.loads(line) for line in handle]
+        finally:
+            os.remove(path)
+            os.rmdir(directory)
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(
+            [(r["event"], r["tool"]) for r in records],
+            [
+                ("approval", "feature_body_create"),
+                ("mutation", "feature_body_create"),
+                ("mutation", "feature_body_create"),
+            ],
+        )
+        self.assertEqual(len({r["params_digest"] for r in records}), 1, records)
+        self.assertEqual({r["fingerprint_before"] for r in records}, {digest_before})
 
     def test_a_preview_writes_no_approval_record(self):
         """A preview authorizes nothing and applies nothing, so it appends no approval line.

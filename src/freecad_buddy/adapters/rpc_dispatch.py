@@ -60,6 +60,21 @@ def is_audited(method: RpcMethod) -> bool:
     )
 
 
+def wrote_own_audit(envelope: ResultEnvelope) -> bool:
+    """Whether the call behind ``envelope`` already wrote its own before/after audit pair.
+
+    An envelope carrying a ``mutation`` block came out of ``run_mutation``, which writes the pair
+    itself with the full-parameter digest and the real fingerprints. A second pair from the
+    adapter would carry a different digest and no fingerprints, and could not be joined.
+
+    A mutating call that times out returns the marshal's ``TIMEOUT`` envelope, which carries no
+    ``mutation`` block, so the adapter writes its own pair. If the abandoned body later finishes,
+    the bracket writes its own pair too. Both are true records of what happened.
+    """
+    content = envelope.get("structured_content")
+    return isinstance(content, dict) and isinstance(content.get("mutation"), dict)
+
+
 def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False) -> ResultEnvelope:
     tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     # A client error (INVALID_INPUT — unknown handle/object/path, bad param) is expected traffic,

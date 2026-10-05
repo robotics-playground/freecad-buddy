@@ -172,7 +172,7 @@ def test_post_verify_threads_the_written_reading_into_the_audit():
 
 def test_run_mutation_captures_the_written_references_before_recompute():
     """The capture must sit between the op returning and recompute, or it reads FreeCAD's edit."""
-    source = inspect.getsource(transaction.run_mutation)
+    source = inspect.getsource(transaction._bracket)
     op_line = source.index("touched = list(op(document)")
     capture_line = source.index("refs_written = tnp_guard.snapshot_references(document)")
     recompute_line = source.index("document.recompute()")

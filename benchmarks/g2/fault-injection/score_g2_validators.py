@@ -42,7 +42,10 @@ VALIDATOR_SOURCES = {
         _USECASES / "assertions.py",
         _USECASES / "verify.py",
     ),
-    "run_mutation": (_USECASES / "transaction.py",),
+    "run_mutation": (
+        _USECASES / "transaction.py",
+        SRC / "freecad_buddy" / "contracts" / "fingerprint.py",
+    ),
     "fingerprint": (_USECASES / "fingerprint.py",),
     "audit_references": (_USECASES / "tnp_guard.py",),
     "verify_sketch": (_USECASES / "verify.py",),
