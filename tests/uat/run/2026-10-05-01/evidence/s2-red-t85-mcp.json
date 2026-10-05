@@ -1,0 +1,37 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "render": {
+   "available": true,
+   "resource_link": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_6760_b03406ec\\FCB_TMP_shot_u2e2mnn7.png",
+   "reason": null,
+   "dirty_document": false,
+   "empty_scene": false
+  },
+  "scene": {
+   "rendered_objects": [
+    "Box"
+   ],
+   "focused_on": null
+  }
+ },
+ "text": "Rendered 1 objects.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+ "images": [
+  {
+   "kind": "resource_link",
+   "uri": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_6760_b03406ec\\FCB_TMP_shot_u2e2mnn7.png",
+   "mime_type": "image/png",
+   "audience": [
+    "user"
+   ]
+  }
+ ],
+ "framing": {
+  "fits": false,
+  "ratio": null,
+  "checked": "cached",
+  "stale_reason": "served from cache; unverified key component(s): geometry"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "SPEC_FAILED",
+ "detail": {
+  "code": "view_fit.nothing_to_frame",
+  "message": "no visible object to frame; datum planes are infinite and are not measured"
+ },
+ "structured_content": {
+  "fitted": false,
+  "reason": "no visible object to frame; datum planes are infinite and are not measured"
+ },
+ "text": "no visible object to frame; datum planes are infinite and are not measured"
+}

@@ -1,0 +1,13 @@
+2026-10-05 16:36:58,109 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-05 16:36:59,602 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:54122
+2026-10-05 16:36:59,943 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 31740) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-05 16:45:12,126 INFO freecad_buddy.dispatch: INVALID_INPUT: attachment kind must be 'mapped_name'; 'geometric' is not resolvable by a feature tool
+2026-10-05 16:49:20,933 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 243, in _serve_conn
+    line = reader.read_line()
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\Mod\FreeCADBuddy\.\freecad_buddy\adapters\rpc_listener.py", line 78, in read_line
+    chunk = self._conn.recv(65536)
+            ^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host

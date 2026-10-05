@@ -1,0 +1,19 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "SPEC_FAILED",
+ "detail": {
+  "code": "view_fit.not_framed",
+  "message": "the fit ran and the model still does not fit the live viewport; read the framing block for the measured overflow"
+ },
+ "structured_content": {
+  "fitted": false,
+  "reason": "the fit ran and the model still does not fit the live viewport; read the framing block for the measured overflow"
+ },
+ "text": "the fit ran and the model still does not fit the live viewport; read the framing block for the measured overflow",
+ "framing": {
+  "fits": false,
+  "ratio": 0.9500454132606722,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

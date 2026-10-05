@@ -1,0 +1,4 @@
+sizes (1346, 1378) (1346, 1378)
+changed pixels (>8) 0 of 1854788
+A non-white px 731888 mean rgb (231.2, 232.4, 230.6) hsv (0.275, 0.008, 0.912)
+B non-white px 731888 mean rgb (231.2, 232.4, 230.6) hsv (0.275, 0.008, 0.912)

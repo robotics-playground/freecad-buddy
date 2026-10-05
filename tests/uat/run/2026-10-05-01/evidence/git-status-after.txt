@@ -1,0 +1,17 @@
+ M _bmad-output/implementation-artifacts/deferred-work.md
+ M _bmad-output/implementation-artifacts/epic-10-context.md
+ M _bmad-output/implementation-artifacts/sprint-status.yaml
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/ARCHITECTURE-SPINE.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md
+ M _bmad-output/planning-artifacts/epics.md
+ M src/freecad_buddy/adapters/render_probe.py
+ M src/freecad_buddy/usecases/framing.py
+ M src/freecad_buddy/usecases/screenshot.py
+ M src/freecad_buddy/usecases/view_fit.py
+ M tests/external/test_framing.py
+ M tests/external/test_render_probe.py
+ M tests/external/test_view_fit.py
+ M tests/infc/test_screenshot.py
+?? _bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md
+?? freecad-buddy-workdir/
+?? tests/uat/run/2026-10-05-01/

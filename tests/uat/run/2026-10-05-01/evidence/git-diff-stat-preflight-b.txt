@@ -1,0 +1,15 @@
+ .../implementation-artifacts/deferred-work.md      |  12 +
+ .../implementation-artifacts/epic-10-context.md    |  45 ++--
+ .../implementation-artifacts/sprint-status.yaml    |   2 +-
+ .../ARCHITECTURE-SPINE.md                          |   4 +-
+ .../design/mcp-tools-design.md                     |   5 +-
+ _bmad-output/planning-artifacts/epics.md           |   6 +-
+ src/freecad_buddy/adapters/render_probe.py         | 124 +++++++--
+ src/freecad_buddy/usecases/framing.py              |  79 +++++-
+ src/freecad_buddy/usecases/screenshot.py           |  37 ++-
+ src/freecad_buddy/usecases/view_fit.py             | 140 ++++++----
+ tests/external/test_framing.py                     | 154 ++++++++++-
+ tests/external/test_render_probe.py                | 149 ++++++++++
+ tests/external/test_view_fit.py                    | 250 +++++++++++++++--
+ tests/infc/test_screenshot.py                      | 300 ++++++++++++++++++++-
+ 14 files changed, 1159 insertions(+), 148 deletions(-)

@@ -1,0 +1,8 @@
+23:2026-10-04 16:17:54,860 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection
+35:2026-10-04 17:57:25,446 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+36:2026-10-04 17:57:25,724 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:61732
+37:2026-10-04 17:57:25,725 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy already on http://127.0.0.1:8765/mcp; not spawning
+96:2026-10-05 17:35:19,861 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+97:2026-10-05 17:35:20,101 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:62615
+98:2026-10-05 17:35:20,408 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 32300) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\A
+99:2026-10-05 17:38:03,721 ERROR freecad_buddy.rpc_listener: frame read failed; closing connection

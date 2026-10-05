@@ -1,0 +1,1 @@
+{"tool": "document_create", "args": {"label": "S6MeshOnly"}, "envelope": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:HQFfTzLaK-4amegZ_pmGuQ", "name": "S6MeshOnly", "label": "S6MeshOnly"}, "text": "doc: fcb-doc:HQFfTzLaK-4amegZ_pmGuQ\nlabel: S6MeshOnly\nname: S6MeshOnly"}}

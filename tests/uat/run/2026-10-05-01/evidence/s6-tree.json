@@ -1,0 +1,34 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:Zzagt-M4rKpgP-64_XexZQ",
+  "total_objects": 1,
+  "returned_nodes": 1,
+  "depth": 1,
+  "filters_applied": {
+   "exclude_types": [
+    "App::Plane",
+    "App::Line",
+    "App::Point",
+    "App::Origin"
+   ]
+  },
+  "tree": [
+   {
+    "name": "s6_input",
+    "label": "s6-input",
+    "type": "Mesh::Feature",
+    "visibility": true
+   }
+  ]
+ },
+ "text": "1 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+ "framing": {
+  "fits": false,
+  "ratio": 4.828141783029001,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

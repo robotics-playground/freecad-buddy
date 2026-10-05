@@ -1,0 +1,14 @@
+#Inventor V2.1 ascii
+
+
+OrthographicCamera {
+  viewportMapping ADJUST_CAMERA
+  position 0 0 1
+  orientation 0 0 1  0
+  nearDistance -4.0040002
+  farDistance 1.001
+  aspectRatio 1
+  focalDistance 5
+  height 4.1421356
+
+}

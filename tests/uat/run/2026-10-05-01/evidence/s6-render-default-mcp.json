@@ -1,0 +1,37 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "render": {
+   "available": true,
+   "resource_link": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_6760_b03406ec\\FCB_TMP_shot_h3vnknaq.png",
+   "reason": null,
+   "dirty_document": false,
+   "empty_scene": false
+  },
+  "scene": {
+   "rendered_objects": [
+    "s6_input"
+   ],
+   "focused_on": null
+  }
+ },
+ "text": "Rendered 1 objects.",
+ "images": [
+  {
+   "kind": "resource_link",
+   "uri": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_6760_b03406ec\\FCB_TMP_shot_h3vnknaq.png",
+   "mime_type": "image/png",
+   "audience": [
+    "user"
+   ]
+  }
+ ],
+ "framing": {
+  "fits": true,
+  "ratio": 0.9505907626208379,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

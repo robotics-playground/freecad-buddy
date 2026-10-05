@@ -1,0 +1,35 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "doc": "fcb-doc:t_ToKUsqIYq1M-HLLSejjA",
+  "total_objects": 12,
+  "returned_nodes": 1,
+  "depth": 1,
+  "filters_applied": {
+   "exclude_types": [
+    "App::Plane",
+    "App::Line",
+    "App::Point",
+    "App::Origin"
+   ]
+  },
+  "tree": [
+   {
+    "name": "Body",
+    "label": "Body",
+    "type": "PartDesign::Body",
+    "visibility": true,
+    "children_count": 4
+   }
+  ]
+ },
+ "text": "12 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+ "framing": {
+  "fits": false,
+  "ratio": 0.9500454132606722,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

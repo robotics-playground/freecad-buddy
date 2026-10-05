@@ -1,0 +1,17 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "fitted": true,
+  "document": "S4DatumPad",
+  "camera_recorded": true
+ },
+ "text": "fitted the live viewport to 'S4DatumPad'",
+ "framing": {
+  "fits": true,
+  "ratio": 0.9491371480472298,
+  "checked": "cached",
+  "stale_reason": "served from cache; unverified key component(s): geometry"
+ }
+}

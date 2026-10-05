@@ -1,0 +1,37 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "render": {
+   "available": true,
+   "resource_link": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_6760_b03406ec\\FCB_TMP_shot_yodjma_j.png",
+   "reason": null,
+   "dirty_document": false,
+   "empty_scene": false
+  },
+  "scene": {
+   "rendered_objects": [
+    "Box"
+   ],
+   "focused_on": null
+  }
+ },
+ "text": "Rendered 1 objects.",
+ "images": [
+  {
+   "kind": "resource_link",
+   "uri": "C:\\Users\\thuan\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_6760_b03406ec\\FCB_TMP_shot_yodjma_j.png",
+   "mime_type": "image/png",
+   "audience": [
+    "user"
+   ]
+  }
+ ],
+ "framing": {
+  "fits": null,
+  "ratio": null,
+  "checked": "unavailable",
+  "stale_reason": "no visible shape-bearing objects to measure"
+ }
+}
