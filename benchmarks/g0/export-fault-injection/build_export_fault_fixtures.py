@@ -6,6 +6,10 @@ list never overwrites the committed fixtures::
     FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES=1 FreeCADCmd build_export_fault_fixtures.py
     $env:FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES="1"; FreeCADCmd build_export_fault_fixtures.py
 
+Set ``FREECAD_BUDDY_EXPORT_FAULT_CASES`` to a comma-separated list of case ids to build only
+those cases. A STEP header carries a write timestamp, so a full rebuild changes every committed
+STEP file even when its geometry is the same.
+
 Each case writes a real
 exported file carrying a planted defect (or a clean control) next to a ``case.yaml`` recording
 the targeted verifier, the format, the DETECT/PASS_CLEAN expectation, and the reference facts
@@ -17,7 +21,11 @@ facet removed, flipped winding, extra/degenerate facets, a doubled shell, a scal
 mesh, or truncated coordinates; 3MFs with a lying unit, a truncated or model-less container, a
 syntactically malformed transform, a removed/duplicated/out-of-range triangle, a moved vertex,
 or a second non-manifold mesh object; STEPs whose source dropped a solid, is scaled, is a bare
-shell, carries an unrefined fuse or CompSolid, or gained a notch, an overlap, or a loose face.
+shell, carries an unrefined fuse or CompSolid, or gained a notch, an overlap, or a loose face,
+and a STEP whose recorded application protocol is not the one its header names.
+
+Every STEP fixture is written at AP214. Its ``case.yaml`` records ``ap: AP214``, except
+``step-schema-lie``, which records ``AP242``.
 """
 
 from __future__ import annotations
@@ -340,9 +348,14 @@ def _3mf_second_non_manifold_object(case_dir: Path) -> Path:
     )
 
 
+def _pin_step_ap214() -> None:
+    Part.setStaticValue("write.step.unit", "MM")
+    Part.setStaticValue("write.step.schema", "AP214IS")
+
+
 def _step_dropped_solid(case_dir: Path) -> Path:
     """STEP of a single box where the recorded source is a two-solid compound."""
-    Part.setStaticValue("write.step.unit", "MM")
+    _pin_step_ap214()
     target = case_dir / "export.step"
     _box_shape().exportStep(str(target))
     return target
@@ -356,14 +369,14 @@ def _step_unit_lie(case_dir: Path) -> Path:
     (round-trip-neutral, verified empirically). The detectable unit fault is therefore a genuine
     geometry-scale mismatch — a 1/10-scale box referenced against the full-scale facts.
     """
-    Part.setStaticValue("write.step.unit", "MM")
+    _pin_step_ap214()
     target = case_dir / "export.step"
     Part.makeBox(1, 2, 3).exportStep(str(target))
     return target
 
 
 def _export_step(case_dir: Path, shape) -> Path:
-    Part.setStaticValue("write.step.unit", "MM")
+    _pin_step_ap214()
     target = case_dir / "export.step"
     shape.exportStep(str(target))
     return target
@@ -438,8 +451,16 @@ def _step_scaled_half_box(case_dir: Path) -> Path:
     return _export_step(case_dir, Part.makeBox(5, 10, 15))
 
 
+def _step_schema_lie(case_dir: Path) -> Path:
+    """STEP of the clean box written at AP214 while its record says AP242.
+
+    Geometry and topology match the reference exactly, so only the schema check can detect it.
+    """
+    return _export_step(case_dir, _box_shape())
+
+
 def _clean_step(case_dir: Path) -> Path:
-    Part.setStaticValue("write.step.unit", "MM")
+    _pin_step_ap214()
     target = case_dir / "export.step"
     _box_shape().exportStep(str(target))
     return target
@@ -494,8 +515,14 @@ CASES = {
     "step-loose-face": ("verify_export_step", "step", "DETECT", _step_loose_face),
     "step-open-shell": ("verify_export_step", "step", "DETECT", _step_open_shell),
     "step-scaled-half-box": ("verify_export_step", "step", "DETECT", _step_scaled_half_box),
+    "step-schema-lie": ("verify_export_step", "step", "DETECT", _step_schema_lie),
     "step-clean-control": ("verify_export_step", "step", "PASS_CLEAN", _clean_step),
 }
+
+
+def _recorded_ap(case_id: str) -> str:
+    """Return the application protocol a STEP case records; every STEP file is written AP214."""
+    return "AP242" if case_id == "step-schema-lie" else "AP214"
 
 
 def _reference_source(case_id: str) -> dict:
@@ -520,6 +547,7 @@ def _write_case_yaml(case_dir: Path, case_id: str) -> None:
     validator, fmt, expectation, _ = CASES[case_id]
     source = _reference_source(case_id)
     bbox = ", ".join(str(v) for v in source["bbox"])
+    ap = f"ap: {_recorded_ap(case_id)}\n" if fmt == "step" else ""
     case_dir.joinpath("case.yaml").write_text(
         f"id: g0-export-{case_id}\n"
         "gate: g0\n"
@@ -527,6 +555,7 @@ def _write_case_yaml(case_dir: Path, case_id: str) -> None:
         f"format: {fmt}\n"
         f"expectation: {expectation}\n"
         f"export_file: export.{fmt}\n"
+        f"{ap}"
         "source:\n"
         f"  volume: {source['volume']}\n"
         f"  area: {source['area']}\n"
@@ -542,10 +571,16 @@ def _write_case_yaml(case_dir: Path, case_id: str) -> None:
     )
 
 
-def build_all(base_dir: Path | None = None) -> list[Path]:
+def build_all(base_dir: Path | None = None, case_ids: list[str] | None = None) -> list[Path]:
+    """Build every case, or only ``case_ids`` when given; an unknown id raises ``ValueError``."""
     base_dir = base_dir or HERE
+    unknown = sorted(set(case_ids or ()) - CASES.keys())
+    if unknown:
+        raise ValueError(f"unknown export-fault case ids: {unknown}")
     written = []
     for case_id, (_validator, _fmt, _expectation, builder) in CASES.items():
+        if case_ids and case_id not in case_ids:
+            continue
         case_dir = base_dir / case_id
         case_dir.mkdir(parents=True, exist_ok=True)
         target = builder(case_dir)
@@ -555,6 +590,7 @@ def build_all(base_dir: Path | None = None) -> list[Path]:
 
 
 _BUILD_FLAG = "FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES"
+_CASES_ENV = "FREECAD_BUDDY_EXPORT_FAULT_CASES"
 
 
 def _build_requested_in(env: Mapping[str, str]) -> bool:
@@ -571,5 +607,8 @@ def _build_requested() -> bool:
 
 
 if _build_requested():
-    for path in build_all():
+    _selected = [
+        case_id.strip() for case_id in os.environ.get(_CASES_ENV, "").split(",") if case_id.strip()
+    ]
+    for path in build_all(case_ids=_selected):
         print(f"wrote {path}")

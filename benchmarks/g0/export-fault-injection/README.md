@@ -15,8 +15,12 @@ detects the deviation. A control's file matches its reference and must pass.
 
 ## Cases
 
-Each verifier carries 10 planted cases plus a clean control, so its Wilson lower bound is
-computed over n=10 rather than the vacuous n=2/n=3 the suite originally shipped.
+Each verifier carries at least 10 planted cases plus a clean control, so its Wilson lower bound
+is computed over n>=10 rather than the vacuous n=2/n=3 the suite originally shipped.
+
+Every STEP `case.yaml` records `ap`, the application protocol the export asked for. Every STEP
+file is written at AP214, so each records `ap: AP214` except `step-schema-lie`, which records
+`AP242`. The scorer adds the `export_step.schema` check when a case carries `ap`.
 
 | id                             | verifier           | defect                                                        | expectation |
 | ------------------------------ | ------------------ | ------------------------------------------------------------- | ----------- |
@@ -30,6 +34,7 @@ computed over n=10 rather than the vacuous n=2/n=3 the suite originally shipped.
 | step-loose-face                | verify_export_step | box compounded with a stray far-off plane — vol 6607, faces 7  | DETECT      |
 | step-open-shell                | verify_export_step | shell with the top face dropped — vol 4800, faces 5, solids 0  | DETECT      |
 | step-scaled-half-box           | verify_export_step | half-size box (vol 750) sold as the full-scale reference       | DETECT      |
+| step-schema-lie                | verify_export_step | clean box written AP214, record says AP242 — schema only       | DETECT      |
 | step-clean-control             | verify_export_step | exact box-10-20-30 round-trip                                  | PASS_CLEAN  |
 | stl-hole                       | verify_export_stl  | clean STL with one facet removed (open surface)                | DETECT      |
 | stl-flipped-normals            | verify_export_stl  | every facet's winding reversed                                 | DETECT      |
@@ -89,6 +94,10 @@ FREECAD_BUDDY_RUN_EXPORT_SCORER=1 python score_export_verify.py
 ```powershell
 $env:FREECAD_BUDDY_BUILD_EXPORT_FAULT_FIXTURES="1"; FreeCADCmd build_export_fault_fixtures.py
 ```
+
+To build only some cases, set `FREECAD_BUDDY_EXPORT_FAULT_CASES` to a comma-separated list of
+case ids (for example `step-schema-lie`). A STEP header carries a write timestamp, so a full
+rebuild changes every committed STEP file even when its geometry is the same.
 
 `score_export_verify.py` scores whichever verifiers the current environment can
 run: the mesh verifiers read the committed `.stl`/`.3mf` directly (trimesh + lib3mf, no

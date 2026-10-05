@@ -94,6 +94,8 @@ def _load_case(case_yaml: Path) -> dict:
                 case["expectation"] = value
             elif key == "export_file":
                 case["export_file"] = value
+            elif key == "ap":
+                case["ap"] = value
         elif section:
             case[section][key] = _parse_scalar(value)
     return case
@@ -148,7 +150,10 @@ def _score_mesh_case(case: dict) -> bool:
 
 
 def _score_step_case(case: dict) -> bool:
-    """Return whether ``verify_export_step`` flags ``case``; re-imports the committed STEP."""
+    """Return whether ``verify_export_step`` flags ``case``; re-imports the committed STEP.
+
+    The schema check runs when the case records its application protocol ``ap``.
+    """
     import Part
 
     from freecad_buddy.usecases import exports
@@ -158,6 +163,8 @@ def _score_step_case(case: dict) -> bool:
     shape = Part.Shape()
     shape.read(path)
     checks = exports._step_checks(shape, source)
+    if "ap" in case:
+        checks.append(exports._schema_check(path, case["ap"]))
     return any(not c["passed"] for c in checks)
 
 

@@ -262,12 +262,13 @@ Third-party oracles (trimesh, admesh, lib3mf) live only in the external MCP/harn
 
 ### 6.2 `verify_export_step` — the canonical round-trip
 
-Export pins config **per call**: `write.step.schema = AP214` (or AP242) and `write.step.unit = MM` — never ambient defaults. Verify:
+Export pins config **per call** through the OCC statics, never ambient defaults: `write.step.unit = MM` and `write.step.schema` set to its OCC enum name — `AP242DIS` for AP242, `AP214IS` for AP214, `AP203` for AP203. The bare name `AP242` is refused by `Part.setStaticValue` (`Failed to set 'write.step.schema'`). `TopoShape::exportStep` reads only the statics (`TopoShape.cpp:891`). The bridge does not write the user's `Mod/Part/STEP` `Scheme` preference. The statics are process-global: File > Export applies `Scheme` only when it is in `Part::supportedSTEPSchemes()` and otherwise keeps the current static (`AppImportGuiPy.cpp:579-583`), and `Import.export` never resets it. So after every `exportStep` call, success or raise, the bridge sets `write.step.schema` to what FreeCAD itself would choose: `Scheme` when it is supported (`AP203`, `AP214CD`, `AP214DIS`, `AP214IS`, `AP242DIS`), else `AP214IS`, the OCC default. Python has no getter for the static, so a value a macro set directly on it is overwritten. `write.step.unit` is not restored. Verify:
 
 1. Re-import the written file into a fresh document (fresh `STEPControl_Reader` state).
 2. `Shape.isValid()` + `Shape.check()` pass on the re-imported shape.
 3. `Volume` within **±0.1 %** of source; `BoundBox` diagonal and `CenterOfMass` within tolerance.
 4. Face / edge / solid counts match the source (no dropped subshapes).
+5. `export_step.schema`: the first identifier of the written file's `FILE_SCHEMA` (header text before `DATA;`, may span lines) equals the schema of the recorded `ap` — `AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF` (AP242), `AUTOMOTIVE_DESIGN` (AP214), `CONFIG_CONTROL_DESIGN` (AP203). The check reads the file, never a setting. No `FILE_SCHEMA` fails the check with `measured: null`.
 
 ### 6.3 `verify_export_stl` — dual independent mesh oracles
 

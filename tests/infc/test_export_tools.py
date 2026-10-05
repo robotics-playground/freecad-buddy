@@ -13,9 +13,10 @@ import unittest
 from pathlib import Path
 
 import FreeCAD as App
+import Part
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.usecases import exports
+from freecad_buddy.usecases import exports, shim
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
 
@@ -26,6 +27,8 @@ ANALYTIC_VOLUME = BOX_L * BOX_W * BOX_H  # 6000 mm^3
 ANALYTIC_FACES = 6
 ANALYTIC_EDGES = 12
 ANALYTIC_SOLIDS = 1
+AP242_FILE_SCHEMA_PREFIX = "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING"
+STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
 
 
 class _ExportFixture(unittest.TestCase):
@@ -95,13 +98,175 @@ class ExportStepTest(_ExportFixture):
         self.assertNotEqual(envelope["status"], "OK")
         self.assertIsNotNone(envelope["detail"])
 
-    def test_ap242_and_mm_pinned(self):
-        self._add_box()
-        path = str(self.tmp / "box.step")
-        exports.export_step(self.registry, self.exports, doc=self.handle, path=path, ap="AP242")
-        from freecad_buddy.usecases import shim
 
-        self.assertEqual(shim.step_schema(), "AP242")
+class ExportStepSchemaTest(_ExportFixture):
+    def setUp(self):
+        super().setUp()
+        self.step_preferences = App.ParamGet(STEP_PARAM_PATH)
+        self.saved_scheme = (
+            self.step_preferences.GetString("Scheme")
+            if "Scheme" in self.step_preferences.GetStrings()
+            else None
+        )
+
+    def tearDown(self):
+        if self.saved_scheme is None:
+            self.step_preferences.RemString("Scheme")
+        else:
+            self.step_preferences.SetString("Scheme", self.saved_scheme)
+        shim.restore_step_schema()
+        super().tearDown()
+
+    def _export(self, name, **params):
+        path = str(self.tmp / name)
+        export_id = exports.export_step(
+            self.registry, self.exports, doc=self.handle, path=path, **params
+        )["structured_content"]["export_id"]
+        return path, export_id
+
+    def _verify(self, export_id):
+        envelope = exports.verify_export_step(
+            self.registry, self.exports, doc=self.handle, export_id=export_id
+        )
+        by_id = {c["id"]: c for c in envelope["structured_content"]["checks"]}
+        return envelope, by_id
+
+    def test_should_write_ap242_file_schema_and_pass_schema_check_when_ap242_requested(self):
+        # Arrange
+        self._add_box()
+
+        # Act
+        path, export_id = self._export("box.step", ap="AP242")
+        envelope, by_id = self._verify(export_id)
+
+        # Assert
+        self.assertTrue(_file_schema_text(path).startswith(AP242_FILE_SCHEMA_PREFIX))
+        self.assertEqual(envelope["status"], "OK")
+        self.assertTrue(by_id["export_step.schema"]["passed"])
+
+    def test_should_write_ap242_file_schema_when_ap_omitted(self):
+        # Arrange
+        self._add_box()
+
+        # Act
+        path, export_id = self._export("box.step")
+        envelope, by_id = self._verify(export_id)
+
+        # Assert
+        self.assertTrue(_file_schema_text(path).startswith(AP242_FILE_SCHEMA_PREFIX))
+        self.assertEqual(envelope["status"], "OK")
+        self.assertTrue(by_id["export_step.schema"]["passed"])
+
+    def test_should_write_automotive_design_when_ap214_follows_an_ap242_export(self):
+        # Arrange
+        self._add_box()
+        self._export("first.step", ap="AP242")
+
+        # Act
+        path, export_id = self._export("second.step", ap="AP214")
+        envelope, by_id = self._verify(export_id)
+
+        # Assert
+        self.assertTrue(_file_schema_text(path).startswith("AUTOMOTIVE_DESIGN"))
+        self.assertEqual(envelope["status"], "OK")
+        self.assertTrue(by_id["export_step.schema"]["passed"])
+
+    def test_should_fail_schema_check_when_recorded_ap_differs_from_file(self):
+        # Arrange
+        self._add_box()
+        _, export_id = self._export("box.step", ap="AP214")
+        self.exports._by_id[export_id]["ap"] = "AP242"
+
+        # Act
+        envelope, by_id = self._verify(export_id)
+
+        # Assert
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assertFalse(by_id["export_step.schema"]["passed"])
+        self.assertEqual(by_id["export_step.schema"]["measured"], "AUTOMOTIVE_DESIGN")
+
+    def test_should_fail_schema_check_with_null_measured_when_file_has_no_file_schema(self):
+        # Arrange
+        self._add_box()
+        path, export_id = self._export("box.step", ap="AP242")
+        lines = Path(path).read_text(encoding="ascii").splitlines(keepends=True)
+        header_end = next(i for i, line in enumerate(lines) if line.startswith("ENDSEC;"))
+        start = next(i for i, line in enumerate(lines) if line.startswith("FILE_SCHEMA"))
+        Path(path).write_text("".join(lines[:start] + lines[header_end:]), encoding="ascii")
+
+        # Act
+        envelope, by_id = self._verify(export_id)
+
+        # Assert
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assertFalse(by_id["export_step.schema"]["passed"])
+        self.assertIsNone(by_id["export_step.schema"]["measured"])
+
+    def test_should_restore_occ_default_schema_when_scheme_preference_unset(self):
+        # Arrange
+        self._add_box()
+        self.step_preferences.RemString("Scheme")
+        self._export("bridge.step", ap="AP242")
+        plain_path = str(self.tmp / "plain.step")
+
+        # Act
+        Part.makeBox(BOX_L, BOX_W, BOX_H).exportStep(plain_path)
+
+        # Assert
+        self.assertTrue(_file_schema_text(plain_path).startswith("AUTOMOTIVE_DESIGN"))
+
+    def test_should_restore_occ_default_schema_when_export_step_raises(self):
+        # Arrange
+        self._add_box()
+        self.step_preferences.RemString("Scheme")
+        with self.assertRaisesRegex(Exception, "Writing of STEP failed"):
+            self._export("missing-folder/bridge.step", ap="AP242")
+        plain_path = str(self.tmp / "plain.step")
+
+        # Act
+        Part.makeBox(BOX_L, BOX_W, BOX_H).exportStep(plain_path)
+
+        # Assert
+        self.assertTrue(_file_schema_text(plain_path).startswith("AUTOMOTIVE_DESIGN"))
+
+    def test_should_restore_scheme_preference_when_it_is_supported(self):
+        # Arrange
+        self._add_box()
+        self.step_preferences.SetString("Scheme", "AP242DIS")
+        self._export("bridge.step", ap="AP214")
+        plain_path = str(self.tmp / "plain.step")
+
+        # Act
+        Part.makeBox(BOX_L, BOX_W, BOX_H).exportStep(plain_path)
+
+        # Assert
+        self.assertTrue(_file_schema_text(plain_path).startswith(AP242_FILE_SCHEMA_PREFIX))
+
+    def test_should_restore_occ_default_schema_when_scheme_preference_unsupported(self):
+        # Arrange
+        self._add_box()
+        self.step_preferences.SetString("Scheme", "AP242")
+        self._export("bridge.step", ap="AP242")
+        plain_path = str(self.tmp / "plain.step")
+
+        # Act
+        Part.makeBox(BOX_L, BOX_W, BOX_H).exportStep(plain_path)
+
+        # Assert
+        self.assertTrue(_file_schema_text(plain_path).startswith("AUTOMOTIVE_DESIGN"))
+
+    def test_should_leave_scheme_preference_unchanged_when_exporting(self):
+        # Arrange
+        self._add_box()
+        sentinel = "FCB_SENTINEL_SCHEME"
+        self.step_preferences.SetString("Scheme", sentinel)
+
+        # Act
+        self._export("ap242.step", ap="AP242")
+        self._export("ap214.step", ap="AP214")
+
+        # Assert
+        self.assertEqual(self.step_preferences.GetString("Scheme"), sentinel)
 
 
 class ExportMeshTest(_ExportFixture):
@@ -252,6 +417,13 @@ class ExportBadInputTest(_ExportFixture):
 
 def _freecad_version() -> str:
     return ".".join(str(part) for part in App.Version()[:3])
+
+
+def _file_schema_text(path: str) -> str:
+    """Return the quoted text of the STEP header's ``FILE_SCHEMA``, read straight from the file."""
+    header = Path(path).read_text(encoding="ascii").split("DATA;", 1)[0]
+    quoted = header.split("FILE_SCHEMA", 1)[1]
+    return quoted.split("'")[1]
 
 
 if __name__ == "__main__":

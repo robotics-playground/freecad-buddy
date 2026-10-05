@@ -1338,7 +1338,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.verify_export_step,
             120.0,
             _VERIFY_EXPORT_INPUT_SCHEMA,
-            "Re-import a written STEP and grade volume/isValid/counts against source.",
+            "Re-import a written STEP and grade volume/isValid/counts against source, and check "
+            "the file's FILE_SCHEMA against the requested AP.",
             mutating=False,
         ),
         _mesh_verify_spec(

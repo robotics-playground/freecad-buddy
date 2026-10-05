@@ -1531,3 +1531,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: With a perspective camera, `view_fit_viewport`'s `boxZoom` pass pans on the focal plane, so a model away from that plane may land off-centre (unverified; medium if true).
   evidence: maybe-false. Settle by switching the 3D view to perspective and fitting a Body with a pad and a datum plane; pass 3 still grades the result, so the failure mode is `SPEC_FAILED not_framed`, not a false `OK`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
+  summary: Correct TC-07-05 in Story 10.7: its `grep -c "AP214"` on the AP214 export counts 0 for a correct file, because an AP214 `FILE_SCHEMA` reads `AUTOMOTIVE_DESIGN { 1 0 10303 214 … }`, never `AP214`. Assert `AUTOMOTIVE_DESIGN` for AP214 and `AP242_MANAGED_MODEL_BASED_3D_ENGINEERING` for AP242.
+  evidence: Story 10.5 D5; fault fixtures `benchmarks/g0/export-fault-injection/step-*/export.step` line 6 (AP214 header).
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
+  summary: Correct TC-07-07 in Story 10.7: its Then "exactly three round-trip checks run" lists `export_step.volume`, `export_step.valid`, `export_step.topology_counts`; `verify_export_step` now also returns `export_step.schema`, so a correct result has four checks.
+  evidence: Story 10.5 D3; `tests/uat/testcases/TC-07-verification-and-export-pairing.md` TC-07-07; `src/freecad_buddy/usecases/exports.py` `verify_export_step` appends `_schema_check`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
+  summary: Bring `mcp-tools-design.md` §3.5 `verify_export_step.outputSchema-result` in line with the shipped report. It describes a `reimport` block and a `PASS`/`FAIL` verdict; the tool returns a `checks` list (`export_step.volume`, `.valid`, `.topology_counts`, `.schema`) with an `OK`/non-`OK` verdict. The drift was present before Story 10.5.
+  evidence: `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md` §3.5; `src/freecad_buddy/usecases/exports.py` `verify_export_step` report.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
+  summary: `export_step` pins `write.step.unit=MM` and never restores it, so after one bridge export FreeCAD's own File > Export writes MM even when the user's `Mod/Part/STEP` `Unit` preference is `M` or `INCH` (medium, pre-existing since Story 1.7).
+  evidence: FreeCAD applies the `Unit` preference to the static only once, at Part load (`OCAF/ImportExportSettings.cpp:133-147`, called from `AppPart.cpp:577`); `WriterStep` never re-applies it. Fix: read the old value with `Part.exportUnits()["write.step.unit"]` (`AppPartPy.cpp:2426-2446`) before the pin and restore it in the same `finally` as `shim.restore_step_schema()`.

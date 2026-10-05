@@ -10,7 +10,8 @@ recorded source.
 
 ``verify_export_step`` re-imports the written STEP into a fresh ``FCB_TMP_`` document and grades
 volume (±0.1 %), ``isValid``, and face/edge/solid counts against the recorded source, closing
-the temp document in a ``finally``. ``export_self_read_stl``/``export_self_read_3mf`` re-read a
+the temp document in a ``finally``. It also reads the written header's ``FILE_SCHEMA`` against
+the recorded application protocol. ``export_self_read_stl``/``export_self_read_3mf`` re-read a
 written mesh and return facet/vertex/bbox facts with no verdict — the third-party oracle legs
 and verdict assembly live in ``adapters`` and are merged by the host handler.
 
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import secrets
 
 from freecad_buddy.contracts import ResultEnvelope, derive_verdict, summary_text
@@ -33,6 +35,12 @@ _DEFAULT_LINEAR = 0.1
 _DEFAULT_ANGULAR = 0.5
 _MIN_DEFLECTION = 1e-4
 _MESH_BAND_ABS_FLOOR = 1e-6
+_STEP_FILE_SCHEMAS = {
+    "AP242": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+    "AP214": "AUTOMOTIVE_DESIGN",
+    "AP203": "CONFIG_CONTROL_DESIGN",
+}
+_FILE_SCHEMA_IDENTIFIER = re.compile(r"FILE_SCHEMA\s*\(\s*\(\s*'\s*([A-Za-z0-9_]+)")
 
 
 class ExportRegistry:
@@ -135,11 +143,11 @@ def export_step(
 ) -> ResultEnvelope:
     """Write a document object's shape to a STEP file with unit and schema pinned per call.
 
-    Pins ``write.step.unit=MM`` and the STEP ``Scheme`` to ``ap`` through the shim, exports the
-    resolved object's ``Shape``, and records the source facts under a minted ``export_id``. The
-    result carries ``{export_id, path, bytes, verified: false}``; the export is done only once
-    ``verify_export_step`` passes. A missing path, unknown object, or null shape raises
-    ``ValidationError``.
+    Pins ``write.step.unit=MM`` and ``write.step.schema`` to ``ap`` through the shim, exports the
+    resolved object's ``Shape``, restores the schema static whether or not the write raised, and
+    records the source facts under a minted ``export_id``. The result carries ``{export_id, path,
+    bytes, verified: false}``; the export is done only once ``verify_export_step`` passes. A
+    missing path, unknown object, or null shape raises ``ValidationError``.
     """
 
     def write(handle: str, document: object) -> ResultEnvelope:
@@ -148,7 +156,10 @@ def export_step(
         obj = _resolve_export_object(document, objects)
         shape = _require_shape(obj)
         shim.pin_step_config(ap)
-        shape.exportStep(path)
+        try:
+            shape.exportStep(path)
+        finally:
+            shim.restore_step_schema()
         facts = _source_facts(shape, _is_mm(document))
         export_id = export_registry.record(
             {
@@ -156,7 +167,6 @@ def export_step(
                 "doc": handle,
                 "format": "step",
                 "ap": ap,
-                "schema": shim.step_schema(),
                 "source": facts,
             }
         )
@@ -293,7 +303,8 @@ def verify_export_step(
     """Re-import a written STEP with a fresh reader and grade it against the recorded source.
 
     Reads the file into a fresh ``Part.Shape`` (independent reader state), checks volume within
-    ±0.1 %, ``isValid``, and face/edge/solid counts equal to the recorded source. An unknown
+    ±0.1 %, ``isValid``, and face/edge/solid counts equal to the recorded source, and checks the
+    file's ``FILE_SCHEMA`` names the recorded application protocol. An unknown
     ``export_id``/``doc``, or an ``export_id`` for a non-STEP export, raises ``ValidationError``.
     """
 
@@ -307,6 +318,7 @@ def verify_export_step(
         reimported = Part.Shape()
         reimported.read(entry["path"])
         checks = _step_checks(reimported, source)
+        checks.append(_schema_check(entry["path"], entry["ap"]))
         report = {
             "subject": {"export_id": export_id, "path": entry["path"]},
             "checks": checks,
@@ -361,6 +373,36 @@ def _step_checks(shape: object, source: dict) -> list[dict]:
             },
         },
     ]
+
+
+def _read_file_schema(path: str) -> str | None:
+    """Return the first identifier of the STEP header's ``FILE_SCHEMA``, or ``None`` when absent.
+
+    Only the header is read: the text before ``DATA;``. The entry may span several lines.
+    """
+    header: list[str] = []
+    with open(path, encoding="ascii", errors="replace") as handle:
+        for line in handle:
+            before, data_found, _ = line.partition("DATA;")
+            header.append(before)
+            if data_found:
+                break
+    match = _FILE_SCHEMA_IDENTIFIER.search("".join(header))
+    return match.group(1) if match else None
+
+
+def _schema_check(path: str, ap: str) -> dict:
+    """Return the check that the written file's ``FILE_SCHEMA`` names the schema of ``ap``."""
+    measured = _read_file_schema(path)
+    expected = _STEP_FILE_SCHEMAS[ap]
+    return {
+        "id": "export_step.schema",
+        "measured": measured,
+        "expected": expected,
+        "tolerance": None,
+        "passed": measured == expected,
+        "detail": {"message": f"FILE_SCHEMA {measured} vs {expected} for {ap}"},
+    }
 
 
 def _self_read(

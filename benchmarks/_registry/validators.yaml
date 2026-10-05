@@ -19,12 +19,12 @@ verify_shape:
 
 verify_export_stl:
   suite: g0/export-fault-injection/
-  validator_sha: "356215d6b34900f1ea866c21f65bf5192f36c689786591f74e92edcd8db775e0"
+  validator_sha: "5dff26edb9c1ca8e93c7046454251ccc4ffabe931b45dc9cea641538e8150ec0"
   last_run:
-    run_id: er-2026-08-01-1
+    run_id: er-2026-10-05-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-08-01
+    date: 2026-10-05
     wilson_ci:
       rate: 1.0
       low: 0.7225
@@ -34,12 +34,12 @@ verify_export_stl:
 
 verify_export_3mf:
   suite: g0/export-fault-injection/
-  validator_sha: "356215d6b34900f1ea866c21f65bf5192f36c689786591f74e92edcd8db775e0"
+  validator_sha: "5dff26edb9c1ca8e93c7046454251ccc4ffabe931b45dc9cea641538e8150ec0"
   last_run:
-    run_id: er-2026-08-01-1
+    run_id: er-2026-10-05-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-08-01
+    date: 2026-10-05
     wilson_ci:
       rate: 1.0
       low: 0.7225
@@ -49,18 +49,18 @@ verify_export_3mf:
 
 verify_export_step:
   suite: g0/export-fault-injection/
-  validator_sha: "356215d6b34900f1ea866c21f65bf5192f36c689786591f74e92edcd8db775e0"
+  validator_sha: "5dff26edb9c1ca8e93c7046454251ccc4ffabe931b45dc9cea641538e8150ec0"
   last_run:
-    run_id: er-2026-08-01-1
+    run_id: er-2026-10-05-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-08-01
+    date: 2026-10-05
     wilson_ci:
       rate: 1.0
-      low: 0.7225
+      low: 0.7412
       high: 1.0
-      n: 10
-      r: 10
+      n: 11
+      r: 11
 
 grader:
   suite: g1/fault-injection/

@@ -4,6 +4,7 @@ targets_validator: verify_export_step
 format: step
 expectation: DETECT
 export_file: export.step
+ap: AP214
 source:
   volume: 12000.0
   area: 4400.0

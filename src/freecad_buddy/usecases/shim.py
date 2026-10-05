@@ -15,8 +15,13 @@ from freecad_buddy.contracts import CapabilityBanner
 
 T = TypeVar("T")
 
+# OCC's ``write.step.schema`` enum names. The bare protocol name is refused: on 1.1.3
+# ``setStaticValue("write.step.schema", "AP242")`` raises ``Failed to set 'write.step.schema'``.
+_STEP_SCHEMES = {"AP203": "AP203", "AP214": "AP214IS", "AP242": "AP242DIS"}
 _STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
-_STEP_SCHEMES = frozenset({"AP203", "AP214", "AP242"})
+# ``Part::supportedSTEPSchemes()`` (``ImportStep.h``): the ``Scheme`` values File > Export applies.
+_FREECAD_STEP_SCHEMES = frozenset({"AP203", "AP214CD", "AP214DIS", "AP214IS", "AP242DIS"})
+_OCC_DEFAULT_STEP_SCHEME = "AP214IS"
 
 # The (type_id, property) pairs the feature tools validate against a live enumeration. A caller
 # cannot know the legal set without reading it from the running build.
@@ -388,25 +393,35 @@ def warm_capability_probes() -> None:
 def pin_step_config(ap: str) -> None:
     """Pin the STEP write unit to millimetres and the schema to ``ap`` for the next export.
 
-    ``ap`` is the STEP application protocol (``"AP242"`` or ``"AP214"``). The unit is set
-    through ``Part.setStaticValue("write.step.unit", "MM")``. The schema is set through the
-    ``Mod/Part/STEP`` ``Scheme`` preference string, because ``setStaticValue`` raises on
-    ``write.step.schema`` on the 1.1 builds. Raises ``ValueError`` for an unknown ``ap``.
+    ``ap`` is the STEP application protocol (``"AP242"``, ``"AP214"`` or ``"AP203"``). Both are
+    OCC statics, because ``TopoShape::exportStep`` (``TopoShape.cpp:891``) reads only the statics
+    and never the ``Mod/Part/STEP`` ``Scheme`` preference. The statics are process-global, so a
+    pinned schema leaks into File > Export when ``Scheme`` is unset or unsupported; the caller
+    calls ``restore_step_schema`` after the export. Raises ``ValueError`` for an unknown ``ap``.
     """
     if ap not in _STEP_SCHEMES:
         raise ValueError(f"unknown STEP application protocol: {ap!r}")
-    import FreeCAD
     import Part
 
     Part.setStaticValue("write.step.unit", "MM")
-    FreeCAD.ParamGet(_STEP_PARAM_PATH).SetString("Scheme", ap)
+    Part.setStaticValue("write.step.schema", _STEP_SCHEMES[ap])
 
 
-def step_schema() -> str:
-    """Return the STEP schema currently pinned in the ``Mod/Part/STEP`` ``Scheme`` preference."""
+def restore_step_schema() -> None:
+    """Set ``write.step.schema`` back to the value FreeCAD itself would choose.
+
+    That is the ``Mod/Part/STEP`` ``Scheme`` preference when it is a scheme File > Export applies,
+    else the OCC default ``AP214IS``. Python has no getter for the static, so the value before
+    the pin cannot be saved; a value a macro set directly on the static is overwritten. The
+    preference is only read, never written.
+    """
     import FreeCAD
+    import Part
 
-    return FreeCAD.ParamGet(_STEP_PARAM_PATH).GetString("Scheme")
+    scheme = FreeCAD.ParamGet(_STEP_PARAM_PATH).GetString("Scheme")
+    if scheme not in _FREECAD_STEP_SCHEMES:
+        scheme = _OCC_DEFAULT_STEP_SCHEME
+    Part.setStaticValue("write.step.schema", scheme)
 
 
 def capability_banner(
