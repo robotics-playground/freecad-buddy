@@ -1543,3 +1543,6 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
   summary: `export_step` pins `write.step.unit=MM` and never restores it, so after one bridge export FreeCAD's own File > Export writes MM even when the user's `Mod/Part/STEP` `Unit` preference is `M` or `INCH` (medium, pre-existing since Story 1.7).
   evidence: FreeCAD applies the `Unit` preference to the static only once, at Part load (`OCAF/ImportExportSettings.cpp:133-147`, called from `AppPart.cpp:577`); `WriterStep` never re-applies it. Fix: read the old value with `Part.exportUnits()["write.step.unit"]` (`AppPartPy.cpp:2426-2446`) before the pin and restore it in the same `finally` as `shim.restore_step_schema()`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-dw-step-unit-restore.md`
+  summary: `verify_export_step` has no `export_step.unit` check, so a STEP written in the wrong unit is not caught; the length unit entity in the file header would let a check read it the same way `export_step.schema` reads `FILE_SCHEMA`.
+  evidence: DW-42 records that a wrong `write.step.unit` re-imports with a matching volume, so no current check sees it; a plain `exportStep` with the static at `INCH` writes `CONVERSION_BASED_UNIT('INCH',…)`, which a header read can detect.

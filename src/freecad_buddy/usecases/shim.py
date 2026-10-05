@@ -390,34 +390,38 @@ def warm_capability_probes() -> None:
     freecad_version()
 
 
-def pin_step_config(ap: str) -> None:
-    """Pin the STEP write unit to millimetres and the schema to ``ap`` for the next export.
+def pin_step_config(ap: str) -> str:
+    """Pin the STEP write unit to millimetres and the schema to ``ap``; return the prior unit.
 
     ``ap`` is the STEP application protocol (``"AP242"``, ``"AP214"`` or ``"AP203"``). Both are
     OCC statics, because ``TopoShape::exportStep`` (``TopoShape.cpp:891``) reads only the statics
-    and never the ``Mod/Part/STEP`` ``Scheme`` preference. The statics are process-global, so a
-    pinned schema leaks into File > Export when ``Scheme`` is unset or unsupported; the caller
-    calls ``restore_step_schema`` after the export. Raises ``ValueError`` for an unknown ``ap``.
+    and never the ``Mod/Part/STEP`` preferences. The statics are process-global and File > Export
+    does not re-apply the ``Unit`` preference (FreeCAD applies it only at Part load and when the
+    STEP preferences are saved), so the caller passes the returned unit to ``restore_step_config``
+    after the export. Raises ``ValueError`` for an unknown ``ap``.
     """
     if ap not in _STEP_SCHEMES:
         raise ValueError(f"unknown STEP application protocol: {ap!r}")
     import Part
 
-    Part.setStaticValue("write.step.unit", "MM")
+    previous_unit = Part.exportUnits()["write.step.unit"]
     Part.setStaticValue("write.step.schema", _STEP_SCHEMES[ap])
+    Part.setStaticValue("write.step.unit", "MM")
+    return previous_unit
 
 
-def restore_step_schema() -> None:
-    """Set ``write.step.schema`` back to the value FreeCAD itself would choose.
+def restore_step_config(unit: str) -> None:
+    """Set ``write.step.unit`` back to ``unit`` and ``write.step.schema`` to FreeCAD's own choice.
 
-    That is the ``Mod/Part/STEP`` ``Scheme`` preference when it is a scheme File > Export applies,
-    else the OCC default ``AP214IS``. Python has no getter for the static, so the value before
-    the pin cannot be saved; a value a macro set directly on the static is overwritten. The
-    preference is only read, never written.
+    The unit has a getter (``Part.exportUnits``), so ``pin_step_config`` saved it and it comes
+    back exactly. The schema has none: it becomes the ``Mod/Part/STEP`` ``Scheme`` preference when
+    that is a scheme File > Export applies, else the OCC default ``AP214IS``; a schema a macro set
+    directly on the static is overwritten. The preferences are only read, never written.
     """
     import FreeCAD
     import Part
 
+    Part.setStaticValue("write.step.unit", unit)
     scheme = FreeCAD.ParamGet(_STEP_PARAM_PATH).GetString("Scheme")
     if scheme not in _FREECAD_STEP_SCHEMES:
         scheme = _OCC_DEFAULT_STEP_SCHEME

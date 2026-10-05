@@ -29,6 +29,7 @@ ANALYTIC_EDGES = 12
 ANALYTIC_SOLIDS = 1
 AP242_FILE_SCHEMA_PREFIX = "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING"
 STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
+INCH_UNIT = "CONVERSION_BASED_UNIT('INCH'"
 
 
 class _ExportFixture(unittest.TestCase):
@@ -108,13 +109,14 @@ class ExportStepSchemaTest(_ExportFixture):
             if "Scheme" in self.step_preferences.GetStrings()
             else None
         )
+        self.saved_unit = Part.exportUnits()["write.step.unit"]
 
     def tearDown(self):
         if self.saved_scheme is None:
             self.step_preferences.RemString("Scheme")
         else:
             self.step_preferences.SetString("Scheme", self.saved_scheme)
-        shim.restore_step_schema()
+        shim.restore_step_config(self.saved_unit)
         super().tearDown()
 
     def _export(self, name, **params):
@@ -267,6 +269,33 @@ class ExportStepSchemaTest(_ExportFixture):
 
         # Assert
         self.assertEqual(self.step_preferences.GetString("Scheme"), sentinel)
+
+    def test_should_restore_prior_step_unit_and_write_bridge_file_in_mm_when_exporting(self):
+        # Arrange
+        self._add_box()
+        Part.setStaticValue("write.step.unit", "INCH")
+        plain_path = str(self.tmp / "plain.step")
+
+        # Act
+        bridge_path, _ = self._export("bridge.step", ap="AP242")
+        Part.makeBox(BOX_L, BOX_W, BOX_H).exportStep(plain_path)
+
+        # Assert
+        self.assertEqual(Part.exportUnits()["write.step.unit"], "INCH")
+        self.assertNotIn(INCH_UNIT, Path(bridge_path).read_text(encoding="ascii"))
+        self.assertIn(INCH_UNIT, Path(plain_path).read_text(encoding="ascii"))
+
+    def test_should_restore_prior_step_unit_when_export_step_raises(self):
+        # Arrange
+        self._add_box()
+        Part.setStaticValue("write.step.unit", "INCH")
+
+        # Act
+        with self.assertRaisesRegex(Exception, "Writing of STEP failed"):
+            self._export("missing-folder/bridge.step", ap="AP242")
+
+        # Assert
+        self.assertEqual(Part.exportUnits()["write.step.unit"], "INCH")
 
 
 class ExportMeshTest(_ExportFixture):

@@ -144,7 +144,7 @@ def export_step(
     """Write a document object's shape to a STEP file with unit and schema pinned per call.
 
     Pins ``write.step.unit=MM`` and ``write.step.schema`` to ``ap`` through the shim, exports the
-    resolved object's ``Shape``, restores the schema static whether or not the write raised, and
+    resolved object's ``Shape``, restores both statics whether or not the write raised, and
     records the source facts under a minted ``export_id``. The result carries ``{export_id, path,
     bytes, verified: false}``; the export is done only once ``verify_export_step`` passes. A
     missing path, unknown object, or null shape raises ``ValidationError``.
@@ -155,11 +155,11 @@ def export_step(
             raise ValidationError("export_step requires a 'path'")
         obj = _resolve_export_object(document, objects)
         shape = _require_shape(obj)
-        shim.pin_step_config(ap)
+        previous_unit = shim.pin_step_config(ap)
         try:
             shape.exportStep(path)
         finally:
-            shim.restore_step_schema()
+            shim.restore_step_config(previous_unit)
         facts = _source_facts(shape, _is_mm(document))
         export_id = export_registry.record(
             {

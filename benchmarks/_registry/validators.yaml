@@ -19,7 +19,7 @@ verify_shape:
 
 verify_export_stl:
   suite: g0/export-fault-injection/
-  validator_sha: "5dff26edb9c1ca8e93c7046454251ccc4ffabe931b45dc9cea641538e8150ec0"
+  validator_sha: "b9e65813b4e893666bcf969bac25b0d253d2769f2c3b79149e9c099123b775dd"
   last_run:
     run_id: er-2026-10-05-1
     sensitivity: 1.0
@@ -34,7 +34,7 @@ verify_export_stl:
 
 verify_export_3mf:
   suite: g0/export-fault-injection/
-  validator_sha: "5dff26edb9c1ca8e93c7046454251ccc4ffabe931b45dc9cea641538e8150ec0"
+  validator_sha: "b9e65813b4e893666bcf969bac25b0d253d2769f2c3b79149e9c099123b775dd"
   last_run:
     run_id: er-2026-10-05-1
     sensitivity: 1.0
@@ -49,7 +49,7 @@ verify_export_3mf:
 
 verify_export_step:
   suite: g0/export-fault-injection/
-  validator_sha: "5dff26edb9c1ca8e93c7046454251ccc4ffabe931b45dc9cea641538e8150ec0"
+  validator_sha: "b9e65813b4e893666bcf969bac25b0d253d2769f2c3b79149e9c099123b775dd"
   last_run:
     run_id: er-2026-10-05-1
     sensitivity: 1.0
