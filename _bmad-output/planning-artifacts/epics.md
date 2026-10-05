@@ -1314,9 +1314,9 @@ The bridge does what the design says when a real agent drives it through the rea
 3. **Given** a style with `transparency` and no colour
    **When** it renders
    **Then** the transparency applies (F-16, TC-06-04)
-4. **Given** a window whose visible area is smaller than the widget
-   **When** framing is measured
-   **Then** the verdict uses the visible area, and a clipped part is `fits: false` (F-27, TC-14-13)
+4. **Given** a window of any size
+   **When** framing is measured or `view_fit_viewport` runs
+   **Then** the bound is the whole 3D view (`getSize()`, AD-30), whatever its size; a FreeCAD window so small that the MDI area scrolls part of the 3D view off screen is outside the bridge's scope (F-27 is not a product defect; TC-14-13 is corrected in Story 10.7)
 5. **Given** a document whose only geometry is a datum plane, a sketch or a mesh
    **When** `view_fit_viewport` runs
    **Then** it fits that geometry or reports why it cannot, never `OK` with `ratio: 0.0` (F-28; TC-02-08, TC-04-12/13)

@@ -441,3 +441,152 @@ def test_successful_render_returns_image_ref_and_cleans_side_state():
     assert image["uri"] == port.last_out_path
     assert os.path.exists(port.last_out_path)
     os.remove(port.last_out_path)
+
+
+# ---- default set: sketches and meshes --------------------------------------------------------
+
+
+class _TypedObject(_FakeObject):
+    def __init__(self, name, type_id, shape=None, visibility=True):
+        super().__init__(name, shape)
+        self.TypeId = type_id
+        self.Visibility = visibility
+
+
+class _FakeMesh:
+    def __init__(self, facets):
+        self.CountFacets = facets
+
+
+def test_should_put_a_visible_sketch_in_the_default_set_when_no_include_is_given():
+    # Arrange
+    document = _doc(_TypedObject("Sketch", "Sketcher::SketchObject", _FakeShape()))
+
+    # Act
+    _, port = _run(document)
+
+    # Assert
+    assert port.last_scene.objects == ["Sketch"]
+
+
+def test_should_put_a_mesh_with_facets_in_the_default_set_when_no_include_is_given():
+    # Arrange
+    mesh = _TypedObject("Mesh", "Mesh::Feature")
+    mesh.Mesh = _FakeMesh(facets=12)
+    empty = _TypedObject("Empty", "Mesh::Feature")
+    empty.Mesh = _FakeMesh(facets=0)
+
+    # Act
+    _, port = _run(_doc(mesh, empty))
+
+    # Assert
+    assert port.last_scene.objects == ["Mesh"]
+
+
+# ---- the port's live-state guard and Body resolution (no Coin needed) ------------------------
+
+
+class _LiveObject:
+    def __init__(self, visibility):
+        self.Visibility = visibility
+
+
+class _GuiDocument:
+    def __init__(self, modified):
+        self.Modified = modified
+
+
+class _FakeGui:
+    def __init__(self, gui_document):
+        self._gui_document = gui_document
+        self.asked = []
+
+    def getDocument(self, name):  # noqa: N802 - FreeCAD API name
+        self.asked.append(name)
+        return self._gui_document
+
+
+class _NamedDocument:
+    Name = "Part"
+
+
+def test_should_restore_visibility_and_the_modified_flag_when_a_subgraph_build_changed_them():
+    # Arrange: what attach() does to a hidden object's live state in the GUI.
+    hidden = _LiveObject(visibility=False)
+    gui_document = _GuiDocument(modified=False)
+    live = render_probe._LiveState(_FakeGui(gui_document), _NamedDocument(), "gui_constructed")
+    live.record(hidden)
+    hidden.Visibility = True
+    gui_document.Modified = True
+
+    # Act
+    live.restore()
+
+    # Assert
+    assert hidden.Visibility is False
+    assert gui_document.Modified is False
+
+
+def test_should_keep_a_document_modified_when_it_was_modified_before_the_render():
+    # Arrange
+    gui_document = _GuiDocument(modified=True)
+    live = render_probe._LiveState(_FakeGui(gui_document), _NamedDocument(), "gui_constructed")
+
+    # Act
+    live.restore()
+
+    # Assert
+    assert gui_document.Modified is True
+
+
+def test_should_restore_the_first_value_when_one_object_is_recorded_twice():
+    # Arrange: include ["Body", "Pad"] resolves both entries to the Pad.
+    pad = _LiveObject(visibility=False)
+    live = render_probe._LiveState(_FakeGui(None), _NamedDocument(), "offscreen")
+    live.record(pad)
+    pad.Visibility = True
+    live.record(pad)
+
+    # Act
+    live.restore()
+
+    # Assert
+    assert pad.Visibility is False
+
+
+def test_should_not_ask_for_a_gui_document_when_rendering_offscreen():
+    # Arrange
+    gui = _FakeGui(_GuiDocument(modified=False))
+
+    # Act
+    render_probe._LiveState(gui, _NamedDocument(), "offscreen").restore()
+
+    # Assert
+    assert gui.asked == []
+
+
+class _FakeBody:
+    def __init__(self, tip):
+        self.Tip = tip
+
+    def isDerivedFrom(self, type_name):  # noqa: N802 - FreeCAD API name
+        return type_name == "PartDesign::Body"
+
+
+def test_should_build_the_tip_subgraph_when_the_object_is_a_body():
+    # Arrange
+    tip = _FakeObject("Pad", _FakeShape())
+
+    # Act
+    source = render_probe._subgraph_source(_FakeBody(tip))
+
+    # Assert
+    assert source is tip
+
+
+def test_should_build_nothing_when_the_body_has_no_tip():
+    # Act
+    source = render_probe._subgraph_source(_FakeBody(None))
+
+    # Assert
+    assert source is None

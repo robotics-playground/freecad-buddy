@@ -16,17 +16,20 @@ the camera.
 wrote and reports ``SPEC_FAILED`` when that projection contradicts it (AD-31).
 
 Contains no ``FreeCADGui``/Qt import. The view arrives as an opaque object from the host-injected
-``ViewportPort`` and is only duck-typed (``getCamera``, ``fitAll``, ``getPointOnViewport``,
-``getSize``).
+``ViewportPort`` and is only duck-typed (``getCamera``, ``fitAll``, ``boxZoom``,
+``getPointOnViewport``, ``getSize``).
 """
 
 from __future__ import annotations
 
-import math
-
 from freecad_buddy.contracts import FramingVerdict, ResultEnvelope, ViewportPort
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
-from freecad_buddy.usecases.framing import measure_framing
+from freecad_buddy.usecases.framing import (
+    ProjectedHull,
+    measure_framing,
+    model_bounds,
+    projected_hull,
+)
 
 _AUDIT_SINK: object = None
 
@@ -37,10 +40,10 @@ _AUDIT_SINK: object = None
 # plainly visible.
 _FILL_FRACTION = 0.95
 
-# Floor on the computed fitAll factor. A factor at or below zero is refused outright by
-# ``viewAll`` (``View3DInventorViewer.cpp:4463``), so a degenerate measurement must never
-# produce one; this keeps the call a no-op zoom rather than a silently skipped fit.
-_MIN_FIT_FACTOR = 0.01
+# Floor on each side of the zoom box, as a fraction of that viewport dimension. ``boxZoom`` returns
+# without moving the camera for a 0x0 box (``NavigationStyle.cpp:599``), so a model measured as
+# a sub-pixel dot would otherwise be left as a dot; the floor keeps the zoom one the view acts on.
+_MIN_ZOOM_BOX_FRACTION = 0.01
 
 
 def set_audit_sink(sink: object) -> object:
@@ -70,7 +73,9 @@ def view_fit_viewport(
     A host with no viewport, or a document whose viewport is unavailable, returns a non-``OK``
     envelope naming the reason and touches no camera. A viewport that is showing a different
     document raises ``ValidationError`` naming **both** documents, so the agent can act rather
-    than guess; the fit is never redirected and the named document is never activated.
+    than guess; the fit is never redirected and the named document is never activated. A document
+    with nothing measurable on screen (only datums, for example) returns ``SPEC_FAILED`` with
+    ``view_fit.nothing_to_frame`` and no ``framing`` block; no camera is touched.
 
     ``OK`` requires the post-fit re-projection to agree: a fit whose own measurement says the model
     still overflows returns ``SPEC_FAILED`` carrying that verdict as a top-level ``framing`` block.
@@ -95,6 +100,11 @@ def view_fit_viewport(
         if view is None:
             return _unavailable_envelope(f"'{_name_of(document)}' has no live 3D view to fit")
         _require_same_document(document, viewport_port)
+        if _nothing_to_frame(document):
+            return _refused_envelope(
+                "view_fit.nothing_to_frame",
+                "no visible object to frame; datum planes are infinite and are not measured",
+            )
 
         camera_before = _read_camera(view)
         try:
@@ -119,24 +129,27 @@ def _fit_all(view: object, document: object) -> FramingVerdict:
 
     Three passes inside one suspended block, which is what lets the fit verify itself (AD-30):
 
-    1. ``viewIsometric`` then a plain ``fitAll(1.0)``, so the camera is in a *known* state, and
-       ``measure_framing`` through it reports how much of the binding axis the model then fills.
-    2. ``fitAll(factor)`` with ``factor = ratio / _FILL_FRACTION``. ``fitAll(f)`` scales the scene
-       box by ``f`` before framing its space diagonal (``View3DInventorViewer.cpp:4467-4488``), so
-       the on-screen extent scales as ``1/f`` relative to ``fitAll(1.0)`` and the measured ratio
-       lands exactly on the requested fill.
-    3. ``measure_framing`` again, through the camera pass 2 just wrote. Its verdict is the one the
-       caller gets, and it is what makes ``fitted: true`` a measurement rather than a report that
-       the call ran.
+    1. ``viewIsometric`` then a plain ``fitAll(1.0)``, so the camera is in a *known* state and the
+       model is on screen, and ``projected_hull`` through it boxes the measured set's corners.
+    2. ``boxZoom`` on that hull, expanded about its centre by ``1 / _FILL_FRACTION``. ``boxZoom``
+       pans the box centre to the view centre and scales by the larger axis quotient
+       (``NavigationStyle.cpp:584-620``), so the measured model is centred and its binding axis
+       lands on the requested fill. ``fitAll`` cannot do this pass: it centres on the Coin scene
+       box, which includes a drawn datum plane the measurement leaves out, so a pad beside a datum
+       plane was zoomed to 95 % off-centre and overflowed.
+    3. ``measure_framing`` through the camera pass 2 just wrote. Its verdict is the one the caller
+       gets, and it is what makes ``fitted: true`` a measurement rather than a report that the
+       call ran.
 
-    Passes 1 and 3 measure with the *same* routine the framing verdict uses. An analytic estimate
-    of the same quantity was the defect: it underestimated the projected extent by 1.155x on a cube
-    and overestimated it by 0.856x on a 40x40x800 bar, so compact parts were zoomed past the edge
-    while the tool reported success.
+    Passes 1 and 3 measure with the *same* corners and projection the framing verdict uses. An
+    analytic estimate of the same quantity was the defect: it underestimated the projected extent
+    by 1.155x on a cube and overestimated it by 0.856x on a 40x40x800 bar, so compact parts were
+    zoomed past the edge while the tool reported success.
 
-    The measurement is only sound because animation is suspended: with animation on, both camera
-    writes land after this call returns and pass 3 would re-read the pre-fit camera. That is why
-    a toggle that exists and refuses is a refusal rather than a degraded fit.
+    The measurement is only sound because animation is suspended: with animation on, the
+    orientation and ``fitAll`` writes land after this call returns, so the pass-1 hull and pass 3
+    would both read the pre-fit camera. That is why a toggle that exists and refuses is a refusal
+    rather than a degraded fit.
 
     The camera is oriented isometrically first — the standard TOP/FRONT/RIGHT corner view, which
     shows all three dimensions at once. A fit exists to show the human the work, and a top view
@@ -144,10 +157,10 @@ def _fit_all(view: object, document: object) -> FramingVerdict:
     """
     with _animation_suspended(view):
         _view_isometric(view)
-        _fit_all_with_factor(view, 1.0)
-        factor = _correction_factor(_measure(document, view))
-        if factor is not None:
-            _fit_all_with_factor(view, factor)
+        _fit_all_known_state(view)
+        box = _zoom_box(_hull(document, view))
+        if box is not None:
+            view.boxZoom(*box)
         return _measure(document, view)
 
 
@@ -169,23 +182,61 @@ def _measure(document: object, view: object) -> FramingVerdict:
         }
 
 
-def _correction_factor(verdict: FramingVerdict) -> float | None:
-    """The ``fitAll`` factor that moves the measured ratio onto ``_FILL_FRACTION``.
+def _nothing_to_frame(document: object) -> bool:
+    """Whether ``document`` has nothing the fit could measure, checked before the camera moves.
 
-    ``None`` only when the pass-1 measurement produced no ratio at all — every corner implausible,
-    no readable bbox, an unreadable ``getSize``. The plain ``fitAll(1.0)`` already ran, so a model
-    the camera was pointed away from is still recovered; only the margin is FreeCAD's own rather
-    than the requested one.
-
-    A measured ``0.0`` is a measurement, not a failure to measure: it says the model projects to a
-    sub-pixel dot, which is the case most in need of correction. Treating it as unusable left the
-    dot on screen and reported ``fitted: true``. ``_MIN_FIT_FACTOR`` floors the resulting zoom, so
-    the factor stays one ``viewAll`` will act on.
+    Without this a datum-only document zooms onto nothing and pass 3 has no box to grade. A box
+    with zero size on all three axes (a sketch holding one point) is nothing too: it projects to
+    one pixel, so the fit would report ``OK`` beside a ratio of ``0.0``. A document that cannot be
+    read at all is not "nothing": the fit runs, and ``_measure`` names the read failure in the
+    verdict.
     """
-    ratio = verdict.get("ratio")
-    if not isinstance(ratio, (int, float)) or isinstance(ratio, bool) or not math.isfinite(ratio):
+    try:
+        box = model_bounds(document)
+    except Exception:  # noqa: BLE001 - an unreadable document is reported by the fit's own verdict
+        return False
+    return box is None or all(box[axis + 3] - box[axis] == 0.0 for axis in range(3))
+
+
+def _hull(document: object, view: object) -> ProjectedHull | None:
+    """``projected_hull``, with any read failure meaning "no hull" rather than a raise.
+
+    ``None`` skips pass 2 only. The plain ``fitAll(1.0)`` already ran, so a model the camera was
+    pointed away from is still recovered with FreeCAD's own margin, and pass 3 names whatever
+    could not be read.
+    """
+    try:
+        return projected_hull(document, view)
+    except Exception:  # noqa: BLE001 - pass 3 reports the failure; pass 2 is skipped
         return None
-    return max(ratio / _FILL_FRACTION, _MIN_FIT_FACTOR)
+
+
+def _zoom_box(hull: ProjectedHull | None) -> tuple[int, int, int, int] | None:
+    """The ``boxZoom(XMin, YMin, XMax, YMax)`` box that frames ``hull`` to ``_FILL_FRACTION``.
+
+    The hull is expanded about its centre by ``1 / _FILL_FRACTION`` on both axes, so the larger
+    axis quotient ``boxZoom`` scales by is the hull's binding ratio over ``_FILL_FRACTION``. Each
+    side is floored at ``_MIN_ZOOM_BOX_FRACTION`` of its viewport dimension.
+    ``getPointOnViewport`` is Y-up and ``boxZoom`` Y-down (it centres on
+    ``height - (ymin + ymax) / 2``), so Y is flipped. ``boxZoom`` parses ``short`` integers, so
+    the corners are rounded.
+    """
+    if hull is None:
+        return None
+    half_width = (
+        max((hull.xmax - hull.xmin) / _FILL_FRACTION, _MIN_ZOOM_BOX_FRACTION * hull.width) / 2
+    )
+    half_height = (
+        max((hull.ymax - hull.ymin) / _FILL_FRACTION, _MIN_ZOOM_BOX_FRACTION * hull.height) / 2
+    )
+    centre_x = (hull.xmin + hull.xmax) / 2
+    centre_y = hull.height - (hull.ymin + hull.ymax) / 2
+    return (
+        round(centre_x - half_width),
+        round(centre_y - half_height),
+        round(centre_x + half_width),
+        round(centre_y + half_height),
+    )
 
 
 class _AnimationRefused(Exception):
@@ -256,16 +307,15 @@ class _animation_suspended:  # noqa: N801 - a context manager reads as a stateme
             pass
 
 
-def _fit_all_with_factor(view: object, factor: float) -> None:
-    """``fitAll(factor)``, falling back to the no-argument form for a view that takes none.
+def _fit_all_known_state(view: object) -> None:
+    """``fitAll(1.0)``, falling back to the no-argument form for a view that takes none.
 
     ``fitAll`` takes an optional factor (``View3DPy.cpp:484-492``), but the view is duck-typed
     here and an older or stubbed one may accept no argument at all. A ``TypeError`` from the arity
-    is retried bare rather than reported as a refused fit: the bare call still frames the model,
-    just with the sphere's own margin instead of the requested one.
+    is retried bare rather than reported as a refused fit; both forms frame the same camera.
     """
     try:
-        view.fitAll(factor)
+        view.fitAll(1.0)
     except TypeError:
         view.fitAll()
 

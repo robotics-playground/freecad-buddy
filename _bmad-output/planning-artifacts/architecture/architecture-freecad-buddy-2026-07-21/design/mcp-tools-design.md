@@ -499,7 +499,7 @@ A document with a pending or broken recompute (a `Touched`/`Invalid`/`Error` obj
     "doc": { "type": "string" },
     "view": { "type": "object", "properties": {
       "include": { "type": "array", "items": { "type": "string" },
-                   "description": "object Names to render; omit = all visible objects" },
+                   "description": "object Names to render; omit = the default set: every visible object with a non-null shape, visible sketches and meshes with facets included, Bodies and datums left out. A Body name draws its Tip and is reported under the Body name; a Body with no Tip draws nothing" },
       "exclude": { "type": "array", "items": { "type": "string" },
                    "description": "object Names dropped from the scene (hide = not added)" },
       "styles": { "type": "array", "items": { "type": "object", "properties": {
@@ -525,10 +525,12 @@ A document with a pending or broken recompute (a `Touched`/`Invalid`/`Error` obj
       "resource_link": { "type": "string" },
       "available": { "type": "boolean" },
       "reason": { "type": ["string", "null"], "description": "why unavailable (no GL / no FreeCADGui)" },
-      "dirty_document": { "type": "boolean", "description": "true when rendered against a document with a pending/broken recompute; the read-only mutation guard was skipped" }
+      "dirty_document": { "type": "boolean", "description": "true when rendered against a document with a pending/broken recompute; the read-only mutation guard was skipped" },
+      "empty_scene": { "type": "boolean", "description": "true when no object in the scene draws anything (none resolved, or every subgraph has an empty bounding box); no image is written and resource_link is null" }
     }, "required": ["available"] },
     "scene": { "type": "object", "properties": {
-      "rendered_objects": { "type": "array", "items": { "type": "string" } },
+      "rendered_objects": { "type": "array", "items": { "type": "string" },
+                            "description": "the scene's object Names whose subgraph drew something; a name whose subgraph has an empty bounding box, or a Body with no Tip, is left out" },
       "focused_on": { "type": ["object", "null"], "description": "resolved focus selector echo" }
     } }
   }, "required": ["render"] } }

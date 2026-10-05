@@ -30,6 +30,12 @@ from freecad_buddy.usecases.screenshot import is_default_renderable
 # multiple is a stated constant, not a per-implementer judgement (AD-30/AD-32).
 _IMPLAUSIBLE_FACTOR = 4
 
+# An infinite OCC shape — a datum plane or line — reports its bbox as about ±1e100 (measured on
+# FreeCAD 1.1: ``XY_Plane`` reads ``(-1e+100, -1e+100, 0, 1e+100, 1e+100, 0)``). Folded into the
+# union it collapses every real part to a sub-pixel dot, so a box reaching this magnitude is
+# skipped like a non-finite one.
+_INFINITE_EXTENT = 1e99
+
 # ``(xmin, ymin, zmin, xmax, ymax, zmax)`` — raw floats, never a FreeCAD ``BoundBox``.
 Bounds = tuple[float, float, float, float, float, float]
 
@@ -59,8 +65,9 @@ def union_bbox(objects: list) -> Bounds | None:
 
     Returns ``None`` when no object contributes a readable box. Folds raw floats rather than
     holding a FreeCAD ``BoundBox``, so the union step is stdlib-pure and unit-testable with no
-    FreeCAD present. A shape whose box cannot be read or is non-finite is skipped rather than
-    poisoning the union with a NaN that would make every containment test false.
+    FreeCAD present. A shape whose box cannot be read, is non-finite or is infinite is skipped
+    rather than poisoning the union: a NaN makes every containment test false, and an infinite
+    datum shrinks every real part to a dot.
     """
     boxes = [box for box in (_object_bounds(obj) for obj in objects) if box is not None]
     if not boxes:
@@ -75,9 +82,24 @@ def union_bbox(objects: list) -> Bounds | None:
     )
 
 
+def model_bounds(document: object) -> Bounds | None:
+    """The union box of ``document``'s measured set — the render's default set — or ``None``.
+
+    ``None`` means nothing measurable is on screen: no visible shape-bearing object, or only
+    objects whose box is unreadable or infinite. The fit checks this before it moves the camera.
+    """
+    return union_bbox([obj for obj in document.Objects if is_default_renderable(obj)])
+
+
 def _object_bounds(obj: object) -> Bounds | None:
-    """``obj``'s shape bounding box as six finite floats, or ``None`` when it has none."""
-    box = getattr(getattr(obj, "Shape", None), "BoundBox", None)
+    """``obj``'s shape or mesh bounding box as six finite floats, or ``None`` when it has none.
+
+    A ``Mesh::Feature`` carries no ``Shape``; its geometry, and so its box, is the ``Mesh``.
+    """
+    geometry = getattr(obj, "Shape", None)
+    if geometry is None:
+        geometry = getattr(obj, "Mesh", None)
+    box = getattr(geometry, "BoundBox", None)
     if box is None:
         return None
     try:
@@ -91,7 +113,8 @@ def _object_bounds(obj: object) -> Bounds | None:
         )
     except (AttributeError, TypeError, ValueError):
         return None
-    return values if all(math.isfinite(value) for value in values) else None
+    finite = all(math.isfinite(value) and abs(value) < _INFINITE_EXTENT for value in values)
+    return values if finite else None
 
 
 def corners(box: Bounds) -> list[tuple[float, float, float]]:
@@ -302,10 +325,10 @@ def measure_framing(document: object, view: object) -> FramingVerdict:
 
     Public because the viewport fit frames the model with this same measurement (AD-30): a second
     analytic estimate of the on-screen extent is how a fit ends up reporting success beside a
-    verdict that contradicts it. The fit calls this before and after its zoom; the framing read
-    calls it through the cache.
+    verdict that contradicts it. The fit calls this after its zoom, and ``projected_hull`` before
+    it; the framing read calls it through the cache.
     """
-    box = union_bbox([obj for obj in document.Objects if is_default_renderable(obj)])
+    box = model_bounds(document)
     if box is None:
         return _unavailable("no visible shape-bearing objects to measure")
 
@@ -330,6 +353,43 @@ def measure_framing(document: object, view: object) -> FramingVerdict:
         "checked": "computed",
         "stale_reason": None,
     }
+
+
+@dataclass(frozen=True)
+class ProjectedHull:
+    """The 2D box around the measured set's projected corners, in Y-up viewport pixels.
+
+    Y-up because ``getPointOnViewport`` is (AD-30 hazard 3); a consumer that drives a Y-down API
+    flips it with ``height - y``. ``width``/``height`` are the ``getSize()`` the corners were
+    projected against.
+    """
+
+    xmin: float
+    ymin: float
+    xmax: float
+    ymax: float
+    width: int
+    height: int
+
+
+def projected_hull(document: object, view: object) -> ProjectedHull | None:
+    """The measured set's projected corners through ``view``, boxed — the fit's pass-1 reading.
+
+    The same corners, projection and implausible-magnitude rule as ``measure_framing``, so the box
+    the fit centres on is the box the verdict grades. ``None`` when there is no hull to centre on:
+    nothing measurable, a zero viewport, or any corner discarded as implausible (its position is
+    unknown, so a box from the survivors would centre on the wrong place).
+    """
+    box = model_bounds(document)
+    size = _viewport_size(view) if box is not None else None
+    if size is None:
+        return None
+    _fits, kept, discarded = containment([_project(view, corner) for corner in corners(box)], size)
+    if discarded or not kept:
+        return None
+    xs = [x for x, _ in kept]
+    ys = [y for _, y in kept]
+    return ProjectedHull(min(xs), min(ys), max(xs), max(ys), size[0], size[1])
 
 
 def _viewport_size(view: object) -> tuple[int, int] | None:
@@ -361,10 +421,13 @@ def _unavailable(reason: str) -> FramingVerdict:
 
 
 __all__ = [
+    "ProjectedHull",
     "containment",
     "corners",
     "hull_ratio",
     "measure_framing",
+    "model_bounds",
+    "projected_hull",
     "read_framing",
     "reset_cache",
     "union_bbox",

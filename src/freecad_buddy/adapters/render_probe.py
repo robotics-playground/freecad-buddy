@@ -64,6 +64,14 @@ _AA_PREF_GROUP = "User parameter:BaseApp/Preferences/View"
 _AA_PREF_KEY = "AntiAliasing"
 _AA_ENUM_TO_SAMPLES = {0: 0, 1: 1, 2: 2, 3: 4, 4: 8, 5: 6}
 
+# Without this Coin couples the diffuse and transparency overrides, so a style that overrides only
+# transparency also replaces the object's color (measured: a red box with transparency 0.5 rendered
+# grey rgb(143,143,143); with the variable set, rgb(143,117,117)). In GUI mode FreeCAD's own 3D
+# view sets it (``View3DInventorSelection.cpp:60``). A headless process never builds one, and Coin
+# reads the variable once, at the first override it traverses, so a headless render must set it
+# before that traversal. The write is idempotent, so ``render()`` makes it on every call.
+_SEPARATE_OVERRIDE_ENV = "COIN_SEPARATE_DIFFUSE_TRANSPARENCY_OVERRIDE"
+
 
 def _no_display_reason() -> str | None:
     """Why Qt cannot open a platform plugin here, or ``None`` when it can.
@@ -206,30 +214,23 @@ class OffscreenRenderPort:
         mode, reason = render_capability()
         if mode == "none":
             raise RenderError(reason or "render unavailable")
+        os.environ[_SEPARATE_OVERRIDE_ENV] = "1"
         if mode == "offscreen":
             FreeCADGui.setupWithoutGUI()
             _ensure_qgui_application()
 
-        styles = {style.object: style for style in scene.styles}
         root = coin.SoSeparator()
         camera = coin.SoOrthographicCamera()
         camera.orientation.setValue(coin.SbRotation(*scene.orientation))
         root.addChild(camera)
         _add_lighting(coin, root, scene.orientation)
+        viewport = coin.SbViewportRegion(scene.width, scene.height)
 
-        rendered: list[str] = []
-        subgraphs: dict[str, object] = {}
-        for name in scene.objects:
-            obj = document.getObject(name)
-            if obj is None:
-                continue
-            sub = FreeCADGui.subgraphFromObject(obj)
-            if sub is None:
-                continue
-            styled = _wrap_style(coin, sub, styles.get(name), scene.highlight == name)
-            root.addChild(styled)
-            rendered.append(name)
-            subgraphs[name] = sub
+        live = _LiveState(FreeCADGui, document, mode)
+        try:
+            rendered = _add_subgraphs(FreeCADGui, coin, root, document, scene, viewport, live)
+        finally:
+            live.restore()
 
         if not rendered:
             # Nothing drawable was added, so the only thing left to frame is the camera and the
@@ -237,7 +238,6 @@ class OffscreenRenderPort:
             # one; report the empty scene instead and write no image at all.
             return RenderResult(rendered_objects=[], focused=False, empty_scene=True)
 
-        viewport = coin.SbViewportRegion(scene.width, scene.height)
         focused = _aim_camera(coin, camera, document, scene.focus, rendered, root, viewport)
 
         renderer = FreeCADGui.SoQtOffscreenRenderer(scene.width, scene.height)
@@ -252,6 +252,86 @@ class OffscreenRenderPort:
         return RenderResult(rendered_objects=rendered, focused=focused)
 
 
+class _LiveState:
+    """The live ``Visibility`` flags and GUI ``Modified`` flag a render must leave as it found them.
+
+    ``subgraphFromObject`` builds a fresh view provider and attaches it, and ``attach`` copies that
+    provider's default ``Visibility=true`` onto the live object
+    (``ViewProviderDocumentObject.cpp:360-363``). Building the subgraph of a hidden object therefore
+    un-hides it in the human's document and, in the GUI, marks the document modified. Each flag is
+    recorded before its subgraph is built and written back only when it changed. ``Modified`` is
+    restored last, because writing a ``Visibility`` back can set it again.
+    """
+
+    def __init__(self, gui, document, mode: str) -> None:
+        self._visibility: list[tuple[object, bool]] = []
+        self._gui_document = gui.getDocument(document.Name) if mode == "gui_constructed" else None
+        self._modified = self._gui_document.Modified if self._gui_document is not None else None
+
+    def record(self, obj) -> None:
+        self._visibility.append((obj, bool(obj.Visibility)))
+
+    def restore(self) -> None:
+        # Reversed, so an object recorded twice ends at its first, untouched value.
+        for obj, visible in reversed(self._visibility):
+            if bool(obj.Visibility) != visible:
+                obj.Visibility = visible
+        if self._gui_document is not None and self._gui_document.Modified != self._modified:
+            self._gui_document.Modified = self._modified
+
+
+def _add_subgraphs(gui, coin, root, document, scene, viewport, live: _LiveState) -> list[str]:
+    """Add each scene object's subgraph to ``root``; return the names that drew something.
+
+    A subgraph with an empty bounding box draws nothing, so it is left out and its name does not
+    count as rendered: a scene of only such subgraphs is an empty scene, never a blank PNG. Styles
+    and the highlight key on the name the caller gave, so a style on a Body reaches its Tip.
+    """
+    styles = {style.object: style for style in scene.styles}
+    rendered: list[str] = []
+    for name in scene.objects:
+        source = _subgraph_source(document.getObject(name))
+        if source is None:
+            continue
+        live.record(source)
+        sub = gui.subgraphFromObject(source)
+        if sub is None or _is_empty(coin, sub, viewport):
+            continue
+        root.addChild(_wrap_style(coin, sub, styles.get(name), scene.highlight == name))
+        rendered.append(name)
+    return rendered
+
+
+def _subgraph_source(obj):
+    """The object whose subgraph draws ``obj``: a ``PartDesign::Body``'s Tip, else ``obj`` itself.
+
+    A Body's own view provider is never built: its subgraph faults the headless Coin library and
+    leaves it unusable for every later object, and it does not draw the Body's features. The Tip is
+    the Body's result shape. A Body with no Tip, or a missing object, draws nothing (``None``).
+    """
+    is_derived_from = getattr(obj, "isDerivedFrom", None)
+    if is_derived_from is not None and is_derived_from("PartDesign::Body"):
+        return obj.Tip
+    return obj
+
+
+def _is_empty(coin, subgraph, viewport) -> bool:
+    action = coin.SoGetBoundingBoxAction(viewport)
+    action.apply(subgraph)
+    return bool(action.getBoundingBox().isEmpty())
+
+
+# Every field of a ``SoMaterial``; ``_wrap_style`` marks the ones it does not write as ignored.
+_MATERIAL_FIELDS = (
+    "ambientColor",
+    "diffuseColor",
+    "specularColor",
+    "emissiveColor",
+    "shininess",
+    "transparency",
+)
+
+
 def _wrap_style(coin, subgraph, style, is_highlight):
     """Wrap ``subgraph`` in a separator with a prepended overriding material.
 
@@ -259,21 +339,28 @@ def _wrap_style(coin, subgraph, style, is_highlight):
     ``style.transparency`` is applied whether or not the object is highlighted. Returns the raw
     subgraph unchanged when there is no highlight and no style field to apply.
 
-    The material is marked as overriding only when a diffuse color is written. ``setOverride`` is
-    node-wide rather than per-field, so a material that overrode while carrying an unwritten diffuse
-    would force Coin's default grey over the object's own color.
+    The material always overrides, because the object's own material sits deeper in the subgraph
+    and would otherwise win. Every field it does not write is marked ignored, so only the written
+    fields override: a transparency-only style keeps the object's own color, and a color-only
+    style keeps its own transparency.
     """
     has_style = style is not None and (style.color is not None or style.transparency is not None)
     if not has_style and not is_highlight:
         return subgraph
     separator = coin.SoSeparator()
     material = coin.SoMaterial()
+    written = set()
     color = _ACCENT_COLOR if is_highlight else style.color
     if color is not None:
         material.diffuseColor.setValue(*color)
-        material.setOverride(True)
+        written.add("diffuseColor")
     if style is not None and style.transparency is not None:
         material.transparency.setValue(style.transparency)
+        written.add("transparency")
+    for field_name in _MATERIAL_FIELDS:
+        if field_name not in written:
+            getattr(material, field_name).setIgnored(True)
+    material.setOverride(True)
     separator.addChild(material)
     separator.addChild(subgraph)
     return separator

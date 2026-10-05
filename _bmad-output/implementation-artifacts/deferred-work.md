@@ -1501,3 +1501,33 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-3-feature-tools-and-mutation-protocol.md`
   summary: Post-verify now runs `audit_references` on short-circuit paths; if it raises on an invalid object, the op-exception handler replaces the `RECOMPUTE_ERROR` verdict with a generic `SPEC_FAILED`.
   evidence: Unverified (maybe-false, medium if true). Settle by running `sketch_remove_geometry` that leaves a Pad with a null shape (TC-05-17 shape) through post-verify and checking the status stays `RECOMPUTE_ERROR` with a `FLAGGED` audit.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: Correct TC-14-13 in Story 10.7: framing measures the whole 3D view whatever its size, so a window small enough to make the MDI area scroll the 3D view is not a framing failure; drop the "visible area" expectation.
+  evidence: Story 10.4 D8 (user, 2026-10-05): F-27 is not a product defect; AD-30 keeps `getSize()` as the bound.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: Correct the UAT text that says a sketch never appears in a render (`TC-06-render-and-gui-visual-fidelity.md:108`, `:194`; `TC-13-gui-mcp-parity.md:365`) in Story 10.7: a visible sketch is now in the default render set.
+  evidence: Story 10.4 D5 (user, 2026-10-05): sketches and meshes join `is_default_renderable`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: `query_screenshot` with an explicit `include` naming a datum (`PartDesign::Plane`) crashes the headless renderer with `RuntimeError: Access violation` in `subgraphFromObject`.
+  evidence: Pre-existing; observed during Story 10.4 implementation under FreeCADCmd 1.1.3. The default set excludes datums (D4), but an explicit include still sends one to the port. Outside the Story 10.4 spec.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: `document_save` over MCP leaves the GUI document marked modified (title keeps `*`, `Gui.getDocument(...).Modified` is `True`); the toolbar Save clears it.
+  evidence: UAT run `tests/uat/run/2026-10-05-01` O-2 (`s3-console-after-mcp-save.png`); run `2026-10-04-01` saw the same symptom and blamed `view_fit_viewport`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: The `feature_datum` map-mode probe (`usecases/shim.py:273-310` `implemented_map_modes`) recomputes a throwaway datum in every `MapMode`, and each mode its single face reference cannot satisfy writes an `AttachEngine3D::calculateAttachedPlacement` error to the FreeCAD console, which floods the GUI notification area ("Too many opened non-intrusive notifications").
+  evidence: Seen by the user in the FreeCAD 1.1.4 GUI during UAT run `2026-10-05-01` (errors from objects `Probe` and `PositionBySupport`). Pre-existing since `2cf5a14` (2026-08-01); the errors are expected by the probe, only their display is the defect. Runs once per process per datum type (`lru_cache`).
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: An `OK` `view_fit_viewport` can return its `framing` block as `checked:"cached"` with `stale_reason` "unverified key component(s): geometry", although the fit just measured the view in pass 3; the fit's own pass-3 verdict should be the one reported.
+  evidence: UAT run `tests/uat/run/2026-10-05-01` O-7 (`s4b-2-fit-mcp.json`; the first fit reported `computed`). Values matched, so the defect is the freshness label only.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: `query_screenshot` renders every object with the stock material, not its live `ViewObject.ShapeColor`, so a transparency-only style "keeps its own colour" only for an uncoloured object.
+  evidence: UAT run `tests/uat/run/2026-10-05-01` O-1: a red box (`ShapeColor=(0.9,0.1,0.1)`) rendered byte-identical to the grey one (`s2-red-*.png`); `subgraphFromObject` builds a fresh view provider. Pre-existing.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: Story 10.7 test-case corrections from UAT run `2026-10-05-01`: TC-06-04 needs a transparency-only step, TC-13-03 needs a Then for F-15 (hidden stays hidden, no `*`), no test case covers a mesh-only document, and `TC-14-viewport-framing-and-auto-fit.md:140` still names the removed `_fill_factor`.
+  evidence: `tests/uat/run/2026-10-05-01/report.md` "Test-case defects for Story 10.7"; Story 10.4 D9 replaced the `fitAll(factor)` pass.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: The GUI `Modified` restore in `render_probe._LiveState` is checked only with fake GUI objects; add a 10.7b probe check (modified flag after a render that includes a hidden object).
+  evidence: infc runs under FreeCADCmd where render mode is never `gui_constructed`; UAT S3 covered it once manually.
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
+  summary: With a perspective camera, `view_fit_viewport`'s `boxZoom` pass pans on the focal plane, so a model away from that plane may land off-centre (unverified; medium if true).
+  evidence: maybe-false. Settle by switching the 3D view to perspective and fitting a Body with a pad and a datum plane; pass 3 still grades the result, so the failure mode is `SPEC_FAILED not_framed`, not a false `OK`.

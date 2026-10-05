@@ -38,14 +38,18 @@ _DEFAULT_HEIGHT = 1920
 _ELEMENT_TYPES = frozenset({"face", "edge", "vertex"})
 
 # Types skipped by a default (no ``include``) render. Datum/origin features are construction
-# geometry, not model shape; a ``Sketcher::SketchObject`` has a non-null wire Shape but is a
-# profile, not model shape, so it leaks into the scene otherwise; a ``PartDesign::Body`` is a
-# container whose Coin subgraph aggregates its children through view-provider machinery that
-# faults in a headless (no-GUI) renderer and leaves the Coin library unusable for every later
-# object. An explicit ``include`` still renders any of them — the skip only shapes the automatic
-# set to the shape-bearing leaf features.
+# geometry, not model shape, and a datum plane or line is an infinite OCC shape whose bbox
+# (about ±1e100) would swamp every framing measurement; the base types catch every datum flavour
+# (``PartDesign::Plane``, ``Part::DatumPlane``, origins, coordinate systems) by derivation rather
+# than by name. A ``PartDesign::Body`` is a container whose Coin subgraph aggregates its children
+# through view-provider machinery that faults in a headless (no-GUI) renderer and leaves the Coin
+# library unusable for every later object; its Tip is already in the set as a leaf feature. A
+# visible sketch stays in: it is what the human sees, and a hidden one (the usual state after a
+# pad) is dropped by its ``Visibility`` like any other object. An explicit ``include`` still
+# renders any of them — the skip only shapes the automatic set.
 _NON_RENDER_TYPE_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Point")
-_NON_RENDER_TYPES = frozenset({"PartDesign::Body", "Sketcher::SketchObject"})
+_NON_RENDER_TYPES = frozenset({"PartDesign::Body"})
+_NON_RENDER_BASE_TYPES = ("App::DatumElement", "App::LocalCoordinateSystem", "Part::Datum")
 
 
 def is_default_renderable(obj: object) -> bool:
@@ -53,6 +57,7 @@ def is_default_renderable(obj: object) -> bool:
 
     The default (no-``include``) set mirrors the live viewport — an object hidden via its
     ``Visibility`` flag is omitted. An explicit ``include`` bypasses this and renders the object.
+    A visible sketch and a non-empty mesh are in the set.
 
     Public because the framing read measures exactly this set (AD-30): a second plausible
     "visible shape-bearing" filter is how the render and the framing warning end up describing
@@ -61,9 +66,19 @@ def is_default_renderable(obj: object) -> bool:
     type_id = str(getattr(obj, "TypeId", ""))
     if type_id in _NON_RENDER_TYPES or type_id.startswith(_NON_RENDER_TYPE_PREFIXES):
         return False
+    if _is_datum(obj):
+        return False
     if not bool(getattr(obj, "Visibility", True)):
         return False
     return _has_shape(obj)
+
+
+def _is_datum(obj: object) -> bool:
+    is_derived_from = getattr(obj, "isDerivedFrom", None)
+    return is_derived_from is not None and any(
+        is_derived_from(base) for base in _NON_RENDER_BASE_TYPES
+    )
+
 
 # Fixed camera orientations (x, y, z, w quaternions), transcribed from FreeCAD's
 # ``src/Gui/Camera.cpp``: ``iso`` is ``Camera::isometric()``, ``front`` ``Camera::front()``,
@@ -244,9 +259,15 @@ def _object_list(document: object, options: dict) -> list[str]:
 
 
 def _has_shape(obj: object) -> bool:
+    """Whether ``obj`` carries drawable geometry: a non-null ``Shape``, or a mesh with facets.
+
+    A ``Mesh::Feature`` has no ``Shape`` at all; its geometry is the ``Mesh`` property.
+    """
     shape = getattr(obj, "Shape", None)
+    if shape is None:
+        return getattr(getattr(obj, "Mesh", None), "CountFacets", 0) > 0
     is_null = getattr(shape, "isNull", None)
-    return shape is not None and not (is_null is not None and is_null())
+    return not (is_null is not None and is_null())
 
 
 def _styles(document: object, raw: object) -> list[StyleSpec]:

@@ -19,7 +19,7 @@ from freecad_buddy.adapters import render_probe
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability
 from freecad_buddy.contracts import massprops_equal
 from freecad_buddy.contracts.render import SceneSpec, StyleSpec
-from freecad_buddy.usecases import screenshot
+from freecad_buddy.usecases import framing, screenshot
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 from freecad_buddy.usecases.render_tone import verify_render_tone
@@ -215,6 +215,273 @@ class ScreenshotTest(unittest.TestCase):
         link = envelope["structured_content"]["render"].get("resource_link")
         self.assertTrue(link and os.path.getsize(link) > 0)
         os.remove(link)
+
+    def test_should_draw_the_tip_under_the_body_name_when_include_names_a_body(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        _padded_body(self.document)
+        view = {"include": ["Body"], "width": 200, "height": 200}
+
+        # Act
+        envelope = self._shot(view=view)
+
+        # Assert
+        render = envelope["structured_content"]["render"]
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], ["Body"])
+        self.assertFalse(render["empty_scene"])
+        self.assertGreater(_drawn_pixels(render["resource_link"]), 1000, "the Body PNG is blank")
+        os.remove(render["resource_link"])
+
+    def test_should_paint_the_tip_with_the_accent_when_the_highlight_names_the_included_body(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        from PySide import QtGui
+
+        # Arrange
+        _padded_body(self.document)
+        view = {"include": ["Body"], "highlight": {"object": "Body"}, "width": 200, "height": 200}
+
+        # Act
+        envelope = self._shot(view=view)
+
+        # Assert
+        link = envelope["structured_content"]["render"]["resource_link"]
+        self.addCleanup(os.remove, link)
+        color = QtGui.QImage(link).pixelColor(100, 100)
+        red, blue = color.red(), color.blue()
+        self.assertGreater(red, blue + 40, f"the Tip is not accent-hued: {(red, blue)}")
+
+    def test_should_report_an_empty_scene_when_the_included_body_has_no_tip(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        self.document.addObject("PartDesign::Body", "Body")
+        self.document.recompute()
+
+        # Act
+        envelope = self._shot(view={"include": ["Body"]})
+
+        # Assert
+        render = envelope["structured_content"]["render"]
+        self.assertTrue(render["empty_scene"])
+        self.assertIsNone(render["resource_link"])
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], [])
+
+    def test_should_report_an_empty_scene_when_every_included_subgraph_is_empty(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange: a sketch with no geometry builds a subgraph with an empty bounding box.
+        self.document.addObject("Sketcher::SketchObject", "EmptySketch")
+        self.document.recompute()
+
+        # Act
+        envelope = self._shot(view={"include": ["EmptySketch"]})
+
+        # Assert
+        render = envelope["structured_content"]["render"]
+        self.assertTrue(render["empty_scene"])
+        self.assertIsNone(render["resource_link"])
+        self.assertNotIn("images", envelope)
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], [])
+
+    def test_should_leave_a_hidden_object_hidden_when_an_include_renders_it(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        self.box.Visibility = False
+
+        # Act
+        envelope = self._shot(view={"include": ["Box"]})
+
+        # Assert
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], ["Box"])
+        self.assertFalse(self.box.Visibility, "the render un-hid the live object")
+        os.remove(envelope["structured_content"]["render"]["resource_link"])
+
+    def test_should_restore_visibility_when_the_render_raises_after_building_a_subgraph(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        import FreeCADGui
+
+        # Arrange: the real call un-hides the object, then the render fails.
+        self.box.Visibility = False
+        real = FreeCADGui.subgraphFromObject
+
+        def build_then_fail(obj):
+            real(obj)
+            raise RuntimeError("planted render failure")
+
+        FreeCADGui.subgraphFromObject = build_then_fail
+        self.addCleanup(setattr, FreeCADGui, "subgraphFromObject", real)
+        scene = SceneSpec(
+            objects=["Box"], orientation=screenshot._CAMERA_QUATS["iso"], width=64, height=64
+        )
+        handle, path = tempfile.mkstemp(suffix=".png")
+        os.close(handle)
+        self.addCleanup(os.remove, path)
+
+        # Act
+        with self.assertRaises(RuntimeError):
+            self.port.render(self.document, scene, path)
+
+        # Assert
+        self.assertFalse(self.box.Visibility, "a raising render left the live object un-hidden")
+
+
+def _padded_body(document):
+    """A ``PartDesign::Body`` whose Tip is a 10x10x5 pad, plus a datum plane beside it."""
+    body = document.addObject("PartDesign::Body", "Body")
+    sketch = body.newObject("Sketcher::SketchObject", "PadSketch")
+    _add_square(sketch)
+    pad = body.newObject("PartDesign::Pad", "Pad")
+    pad.Profile = sketch
+    pad.Length = 5.0
+    body.newObject("PartDesign::Plane", "DatumPlane")
+    document.recompute()
+    return body
+
+
+def _add_square(sketch, size=10.0):
+    """Add a closed ``size`` square of line segments to ``sketch``."""
+    import Part
+
+    corners = ((0, 0, 0), (size, 0, 0), (size, size, 0), (0, size, 0))
+    for index, start in enumerate(corners):
+        end = corners[(index + 1) % len(corners)]
+        sketch.addGeometry(Part.LineSegment(App.Vector(*start), App.Vector(*end)), False)
+
+
+def _drawn_pixels(path):
+    """How many pixels of the PNG at ``path`` differ from its top-left (background) pixel."""
+    from PySide import QtGui
+
+    image = QtGui.QImage(path)
+    background = image.pixel(0, 0)
+    return sum(
+        1
+        for y in range(image.height())
+        for x in range(image.width())
+        if image.pixel(x, y) != background
+    )
+
+
+class DefaultSetTest(unittest.TestCase):
+    """The default (no-``include``) set draws visible sketches and meshes, never datums."""
+
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.port = OffscreenRenderPort()
+        self.handle = self.registry.document_create("screenshot_default")["structured_content"][
+            "doc"
+        ]
+        _, self.document = self.registry.with_document(self.handle, lambda h, d: (h, d))
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _shot(self):
+        return screenshot.query_screenshot(
+            self.registry, self.port, doc=self.handle, view={"width": 200, "height": 200}
+        )
+
+    def test_should_draw_a_visible_sketch_when_it_is_the_only_object(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        _add_square(self.document.addObject("Sketcher::SketchObject", "Sketch"))
+        self.document.recompute()
+
+        # Act
+        envelope = self._shot()
+
+        # Assert
+        render = envelope["structured_content"]["render"]
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], ["Sketch"])
+        self.assertFalse(render["empty_scene"])
+        self.assertGreater(_drawn_pixels(render["resource_link"]), 0, "the sketch PNG is blank")
+        os.remove(render["resource_link"])
+
+    def test_should_leave_out_a_hidden_sketch_when_the_default_set_is_built(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
+        _add_square(sketch)
+        box = self.document.addObject("Part::Box", "Box")
+        self.document.recompute()
+        sketch.Visibility = False
+
+        # Act
+        envelope = self._shot()
+
+        # Assert
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], [box.Name])
+        os.remove(envelope["structured_content"]["render"]["resource_link"])
+
+    def test_should_draw_a_mesh_when_it_is_the_only_object(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        import Mesh
+
+        # Arrange
+        mesh = self.document.addObject("Mesh::Feature", "Mesh")
+        mesh.Mesh = Mesh.createBox(10.0, 20.0, 30.0)
+        self.document.recompute()
+
+        # Act
+        envelope = self._shot()
+
+        # Assert
+        render = envelope["structured_content"]["render"]
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], ["Mesh"])
+        self.assertGreater(_drawn_pixels(render["resource_link"]), 1000, "the mesh PNG is blank")
+        os.remove(render["resource_link"])
+
+    def test_should_leave_out_every_datum_flavour_when_it_derives_from_a_datum_base(self):
+        # Arrange
+        body = self.document.addObject("PartDesign::Body", "Body")
+        datums = [
+            self.document.addObject("Part::DatumPlane", "PartPlane"),
+            body.newObject("PartDesign::Line", "DatumLine"),
+            body.newObject("PartDesign::Point", "DatumPoint"),
+            body.newObject("PartDesign::CoordinateSystem", "DatumCS"),
+        ]
+        self.document.recompute()
+
+        # Act
+        renderable = {obj.TypeId: screenshot.is_default_renderable(obj) for obj in datums}
+
+        # Assert
+        self.assertEqual(
+            renderable,
+            {
+                "Part::DatumPlane": False,
+                "PartDesign::Line": False,
+                "PartDesign::Point": False,
+                "PartDesign::CoordinateSystem": False,
+            },
+        )
+
+    def test_should_measure_and_draw_only_the_pad_when_a_datum_plane_shares_the_body(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        _padded_body(self.document)
+        self.document.getObject("PadSketch").Visibility = False
+
+        # Act
+        measured = framing.union_bbox(
+            [obj for obj in self.document.Objects if screenshot.is_default_renderable(obj)]
+        )
+        envelope = self._shot()
+
+        # Assert
+        for actual, expected in zip(measured, (0.0, 0.0, 0.0, 10.0, 10.0, 5.0)):
+            self.assertAlmostEqual(actual, expected, places=4, msg=f"measured {measured}")
+        self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], ["Pad"])
+        os.remove(envelope["structured_content"]["render"]["resource_link"])
 
 
 class EmptySceneTest(unittest.TestCase):
@@ -518,6 +785,15 @@ def _wrapped_material(style, is_highlight):
     )
 
 
+def _ignored_fields(style, is_highlight):
+    """The names of the prepended material's fields that ``_wrap_style`` marked ignored."""
+    from pivy import coin
+
+    result = render_probe._wrap_style(coin, coin.SoSeparator(), style, is_highlight)
+    material = result.getChild(0)
+    return {name for name in render_probe._MATERIAL_FIELDS if getattr(material, name).isIgnored()}
+
+
 class WrapStyleTest(unittest.TestCase):
     """``_wrap_style`` composes the highlight accent with the requested style transparency.
 
@@ -561,12 +837,38 @@ class WrapStyleTest(unittest.TestCase):
         self.assertAlmostEqual(transparency, _STYLE_TRANSPARENCY, places=5)
         self.assertTrue(is_override)
 
-    def test_transparency_only_style_does_not_override_the_object_color(self):
+    def test_should_override_only_transparency_when_the_style_has_no_color(self):
+        # Arrange
         style = StyleSpec(object="Box", transparency=0.5)
+
+        # Act
         wrapped, _, transparency, is_override = _wrapped_material(style, False)
+        ignored = _ignored_fields(style, False)
+
+        # Assert
         self.assertTrue(wrapped)
         self.assertAlmostEqual(transparency, 0.5, places=5)
-        self.assertFalse(is_override, "an unwritten diffuse would force Coin's default grey")
+        self.assertTrue(is_override, "a material that does not override loses to the object's own")
+        self.assertIn("diffuseColor", ignored, "an unwritten diffuse would force Coin's grey")
+        self.assertNotIn("transparency", ignored)
+
+    def test_should_ignore_transparency_when_the_style_sets_only_a_color(self):
+        # Arrange
+        style = StyleSpec(object="Box", color=_STYLE_COLOR)
+
+        # Act
+        ignored = _ignored_fields(style, False)
+
+        # Assert
+        self.assertIn("transparency", ignored, "an unwritten transparency would force opaque")
+        self.assertNotIn("diffuseColor", ignored)
+
+    def test_should_ignore_every_field_but_the_accent_when_only_highlighted(self):
+        # Act
+        ignored = _ignored_fields(None, True)
+
+        # Assert
+        self.assertEqual(ignored, set(render_probe._MATERIAL_FIELDS) - {"diffuseColor"})
 
     def test_color_only_style_leaves_transparency_at_the_coin_default(self):
         style = StyleSpec(object="Box", color=_STYLE_COLOR)
@@ -580,6 +882,25 @@ class WrapStyleTest(unittest.TestCase):
 
     def test_empty_style_on_a_plain_object_returns_the_subgraph_unwrapped(self):
         self.assertFalse(_wrapped_material(StyleSpec(object="Box"), False)[0])
+
+
+_RED_SHAPE_COLOR = 0xE61A1AFF
+
+
+def _pin_shape_color(test, packed_rgba):
+    """Set the ``DefaultShapeColor`` preference for one test and restore it on cleanup.
+
+    A headless view provider takes its color from this preference, so pinning it fixes the color
+    every subgraph built during the test is drawn with.
+    """
+    preferences = App.ParamGet(_VIEW_PREFERENCES)
+    if _SHAPE_COLOR_KEY in preferences.GetUnsigneds():
+        test.addCleanup(
+            preferences.SetUnsigned, _SHAPE_COLOR_KEY, preferences.GetUnsigned(_SHAPE_COLOR_KEY)
+        )
+    else:
+        test.addCleanup(preferences.RemUnsigned, _SHAPE_COLOR_KEY)
+    preferences.SetUnsigned(_SHAPE_COLOR_KEY, packed_rgba)
 
 
 class StyleReachesThePixelsTest(unittest.TestCase):
@@ -633,14 +954,23 @@ class StyleReachesThePixelsTest(unittest.TestCase):
             highlighted[0], highlighted[2], f"highlight is not accent-hued: {highlighted}"
         )
 
-    def test_transparency_only_style_keeps_the_object_color(self):
+    def test_should_change_the_pixels_and_keep_the_hue_when_a_style_sets_only_transparency(self):
         if not _render_available():
             self.skipTest("no render context on this leg")
+        # Arrange: a red shape color, so "hue kept" is a channel order the grey default breaks.
+        _pin_shape_color(self, _RED_SHAPE_COLOR)
         plain = self._center_pixel([], None)
-        transparent = self._center_pixel([StyleSpec(object="Box", transparency=0.5)], None)
 
-        self.assertEqual(
-            plain, transparent, f"a transparency-only style repainted the object: {transparent}"
+        # Act
+        transparent = self._center_pixel([StyleSpec(object="Box", transparency=0.85)], None)
+
+        # Assert
+        self.assertNotEqual(plain, transparent, "the transparency never reached the image")
+        self.assertGreater(plain[0], plain[2] + 20, f"the pinned color did not render: {plain}")
+        # At 85 % over a white ground the red lead shrinks to ~13/255; the coupled-override defect
+        # renders the face exactly grey, a lead of 0.
+        self.assertGreater(
+            transparent[0], transparent[2] + 5, f"transparency repainted the hue: {transparent}"
         )
 
 

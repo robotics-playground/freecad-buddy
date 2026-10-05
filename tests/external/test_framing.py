@@ -523,7 +523,7 @@ def test_should_drop_an_object_from_the_union_when_only_its_visibility_changes()
 
 @pytest.mark.parametrize(
     "type_id",
-    ["PartDesign::Body", "Sketcher::SketchObject", "App::Origin", "App::Plane"],
+    ["PartDesign::Body", "App::Origin", "App::Plane"],
 )
 def test_should_exclude_the_render_predicates_non_renderable_types_from_the_union(type_id):
     # Arrange
@@ -534,6 +534,158 @@ def test_should_exclude_the_render_predicates_non_renderable_types_from_the_unio
 
     # Assert
     assert result is None
+
+
+class _FakeDatum(_FakeObject):
+    """A datum whose type is known only through its base, as ``PartDesign::Plane`` is."""
+
+    def __init__(self, name, bounds, base, type_id="PartDesign::Plane"):
+        super().__init__(name, shape=_FakeShape(_FakeBoundBox(*bounds)), type_id=type_id)
+        self._base = base
+
+    def isDerivedFrom(self, type_name):  # noqa: N802 - FreeCAD API name
+        return type_name == self._base
+
+
+class _FakeMesh:
+    def __init__(self, bounds, facets=12):
+        self.BoundBox = _FakeBoundBox(*bounds)
+        self.CountFacets = facets
+
+
+_INFINITE_PLANE = (-1e100, -1e100, 0.0, 1e100, 1e100, 0.0)
+
+
+@pytest.mark.parametrize(
+    ("type_id", "base"),
+    [
+        ("PartDesign::Plane", "Part::Datum"),
+        ("Part::DatumPlane", "App::DatumElement"),
+        ("Part::LocalCoordinateSystem", "App::LocalCoordinateSystem"),
+    ],
+)
+def test_should_exclude_a_datum_from_the_union_when_it_derives_from_a_datum_base(type_id, base):
+    # Arrange
+    obj = _FakeDatum("Datum", (0, 0, 0, 10, 10, 10), base, type_id=type_id)
+
+    # Act
+    result = framing.union_bbox([o for o in [obj] if is_default_renderable(o)])
+
+    # Assert
+    assert result is None
+
+
+def test_should_skip_an_infinite_box_when_a_non_datum_shape_reports_one():
+    # Arrange
+    objects = [
+        _box_object("Infinite", _INFINITE_PLANE),
+        _box_object("Good", (0, 0, 0, 10, 10, 10)),
+    ]
+
+    # Act
+    result = framing.union_bbox(objects)
+
+    # Assert
+    assert result == (0.0, 0.0, 0.0, 10.0, 10.0, 10.0)
+
+
+def test_should_measure_a_visible_sketch_when_it_is_the_only_object():
+    # Arrange
+    sketch = _box_object("Sketch", (0, 0, 0, 10, 10, 0), type_id="Sketcher::SketchObject")
+
+    # Act
+    result = framing.model_bounds(_FakeDocument([sketch]))
+
+    # Assert
+    assert result == (0.0, 0.0, 0.0, 10.0, 10.0, 0.0)
+
+
+def test_should_leave_out_a_hidden_sketch_when_the_union_is_built():
+    # Arrange
+    sketch = _box_object(
+        "Sketch", (0, 0, 0, 99, 99, 0), type_id="Sketcher::SketchObject", visibility=False
+    )
+    pad = _box_object("Pad", (0, 0, 0, 10, 10, 5))
+
+    # Act
+    result = framing.model_bounds(_FakeDocument([sketch, pad]))
+
+    # Assert
+    assert result == (0.0, 0.0, 0.0, 10.0, 10.0, 5.0)
+
+
+def test_should_measure_a_mesh_from_its_mesh_bounds_when_it_has_no_shape():
+    # Arrange
+    mesh = _FakeObject("Mesh", type_id="Mesh::Feature")
+    mesh.Mesh = _FakeMesh((-5, -5, -5, 5, 5, 5))
+
+    # Act
+    result = framing.model_bounds(_FakeDocument([mesh]))
+
+    # Assert
+    assert result == (-5.0, -5.0, -5.0, 5.0, 5.0, 5.0)
+
+
+def test_should_leave_out_a_mesh_when_it_has_no_facets():
+    # Arrange
+    mesh = _FakeObject("Mesh", type_id="Mesh::Feature")
+    mesh.Mesh = _FakeMesh((-5, -5, -5, 5, 5, 5), facets=0)
+
+    # Act
+    result = framing.model_bounds(_FakeDocument([mesh]))
+
+    # Assert
+    assert result is None
+
+
+def test_should_measure_only_the_pad_when_a_datum_plane_shares_the_document():
+    # Arrange: F-28. The plane's ±1e100 box once collapsed the pad to a dot and the ratio to 0.0.
+    pad_bounds = (0.0, 0.0, 0.0, 10.0, 10.0, 5.0)
+    pad = _box_object("Pad", pad_bounds)
+    plane = _FakeDatum("DatumPlane", _INFINITE_PLANE, "Part::Datum")
+    points = {
+        corner: (300.0 + 200.0 * (corner[0] > 0), 200.0 + 200.0 * (corner[1] > 0))
+        for corner in framing.corners(pad_bounds)
+    }
+    view = _FakeView(size=(800, 600), points=points)
+
+    # Act
+    verdict = _read(_FakeDocument([pad, plane]), view)
+
+    # Assert
+    assert set(view.projected_corners) == set(framing.corners(pad_bounds))
+    assert verdict["fits"] is True
+    assert verdict["ratio"] == pytest.approx(200.0 / 600.0)
+
+
+def test_should_box_the_projected_corners_when_every_corner_is_plausible():
+    # Arrange
+    bounds = (0.0, 0.0, 0.0, 10.0, 10.0, 5.0)
+    points = {
+        corner: (300.0 + 200.0 * (corner[0] > 0), 100.0 + 50.0 * (corner[1] > 0))
+        for corner in framing.corners(bounds)
+    }
+    view = _FakeView(size=(800, 600), points=points)
+
+    # Act
+    hull = framing.projected_hull(_FakeDocument([_box_object("Pad", bounds)]), view)
+
+    # Assert
+    assert hull == framing.ProjectedHull(300.0, 100.0, 500.0, 150.0, 800, 600)
+
+
+def test_should_return_no_hull_when_a_corner_is_implausible():
+    # Arrange: one wrapped corner has no known position, so no centre can be taken from the rest.
+    bounds = (0.0, 0.0, 0.0, 10.0, 10.0, 5.0)
+    points = _corner_map(bounds, (400.0, 300.0))
+    points[(10.0, 10.0, 5.0)] = (99999.0, 300.0)
+    view = _FakeView(size=(800, 600), points=points)
+
+    # Act
+    hull = framing.projected_hull(_FakeDocument([_box_object("Pad", bounds)]), view)
+
+    # Assert
+    assert hull is None
 
 
 def test_should_measure_exactly_the_render_predicates_set_by_importing_it_not_redefining_it():

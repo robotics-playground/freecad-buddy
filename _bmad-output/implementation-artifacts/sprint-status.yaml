@@ -151,7 +151,7 @@ development_status:
   10-1-documents-and-queries: review
   10-2-sketch-and-verify-correctness: review
   10-3-feature-tools-and-mutation-protocol: review
-  10-4-render-and-framing: backlog
+  10-4-render-and-framing: review
   10-5-step-export-schema: backlog
   10-6-session-transport-and-bounded-execution: backlog
   10-7-uat-suite-and-harness-maintenance: backlog

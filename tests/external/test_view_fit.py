@@ -65,8 +65,9 @@ class _FakeDocument:
 class _FakeView:
     """A live 3D view whose camera string and ``fitAll`` outcome are scripted per test.
 
-    ``fit_calls`` counts the fits that actually reached the view, which is how the wrong-document
-    and unavailable rows prove no camera moved.
+    ``fit_calls`` counts the camera moves that actually reached the view — each ``fitAll`` and each
+    ``boxZoom`` — which is how the wrong-document and unavailable rows prove no camera moved.
+    ``zoom_boxes`` records each ``boxZoom`` argument.
 
     It projects the model onto a centred rectangle already filling the target fraction of an
     800x600 viewport, so the post-fit verdict is ``fits: True`` and these rows exercise the
@@ -78,6 +79,7 @@ class _FakeView:
         self._camera = camera
         self._raises = raises
         self.fit_calls = 0
+        self.zoom_boxes = []
 
     def getCamera(self):  # noqa: N802 - FreeCAD API name
         if self._raises == "getCamera":
@@ -97,6 +99,10 @@ class _FakeView:
     def fitAll(self):  # noqa: N802 - FreeCAD API name
         if self._raises == "fitAll":
             raise RuntimeError("the scene graph is empty")
+        self.fit_calls += 1
+
+    def boxZoom(self, xmin, ymin, xmax, ymax):  # noqa: N802 - FreeCAD API name
+        self.zoom_boxes.append((xmin, ymin, xmax, ymax))
         self.fit_calls += 1
 
 
@@ -521,7 +527,8 @@ class _ProjectingView(_FakeView):
 
     The projection may be swapped per pass: ``project`` is re-read on every corner, so a test can
     hand a different function to passes 1 and 3 and make the two measurements distinguishable.
-    ``factors`` records the ``fitAll`` argument of each pass.
+    ``factors`` records the ``fitAll`` argument of each call; ``zoom_boxes`` (inherited) records
+    each ``boxZoom``. The projection ignores both, so a test controls exactly what each pass reads.
     """
 
     def __init__(self, project, size=(800, 600)):
@@ -633,16 +640,22 @@ def test_should_report_the_honest_failure_when_pass_three_cannot_measure_the_mod
 
 
 class _SimulatingView(_FakeView):
-    """A view that models FreeCAD's real framing, so the fit's own measurement can be graded.
+    """A view that models FreeCAD's real camera moves, so the fit's own measurement can be graded.
 
-    ``fitAll(f)`` in FreeCAD scales the scene box about its centre by ``f`` and frames the result
-    through ``SoCamera::viewBoundingBox``, which surrounds the box with a **sphere**
+    ``fitAll(f)`` in FreeCAD scales the **scene** box about its centre by ``f`` and frames the
+    result through ``SoCamera::viewBoundingBox``, which surrounds the box with a **sphere**
     (``View3DInventorViewer.cpp:4456-4492, 4840``). The on-screen scale is therefore
-    ``min(width, height) / (space_diagonal * f)`` pixels per world unit — the arithmetic this fake
-    reproduces, and the reason a part's on-screen extent scales as ``1/f``.
+    ``min(width, height) / (space_diagonal * f)`` pixels per world unit, centred on the scene box.
+    The scene box is ``scene_bounds``: everything Coin draws, a datum plane included, which can be
+    larger than and off-centre from the measured model.
 
-    ``getPointOnViewport`` projects through the scale ``fitAll`` last set, so passes 1 and 3
-    measure genuinely different cameras. Before any fit the scale is the ``initial_scale`` the
+    ``boxZoom(XMin, YMin, XMax, YMax)`` follows ``NavigationStyle.cpp:584-620``: the box is Y-down,
+    its integer midpoint is normalised by ``size - 1``, the camera pans so that point becomes the
+    view centre, and the camera height scales by the larger of ``size_x / width`` and
+    ``size_y / height``. A 0x0 box moves nothing.
+
+    ``getPointOnViewport`` projects through the target and scale the last move set, Y-up, so every
+    pass measures the camera it follows. Before any move the scale is the ``initial_scale`` the
     test supplies, standing in for whatever camera the human left behind.
     """
 
@@ -651,12 +664,12 @@ class _SimulatingView(_FakeView):
         (0.4082482904638631, 0.4082482904638631, -0.8164965809277261),
     )
 
-    def __init__(self, bounds, size=(800, 600), initial_scale=1.0):
+    def __init__(self, bounds, size=(800, 600), initial_scale=1.0, scene_bounds=None):
         super().__init__()
-        self._bounds = bounds
+        self._scene = scene_bounds if scene_bounds is not None else bounds
         self._size = size
         self._scale = initial_scale
-        self._centre = tuple((bounds[i] + bounds[i + 3]) / 2.0 for i in range(3))
+        self._target = _box_centre(self._scene)
         self.factors = []
         self.isometric_calls = 0
 
@@ -664,7 +677,7 @@ class _SimulatingView(_FakeView):
         return self._size
 
     def getPointOnViewport(self, x, y, z):  # noqa: N802 - FreeCAD API name
-        offset = (x - self._centre[0], y - self._centre[1], z - self._centre[2])
+        offset = (x - self._target[0], y - self._target[1], z - self._target[2])
         screen = [sum(axis[i] * offset[i] for i in range(3)) for axis in self._ISO]
         return (
             self._size[0] / 2.0 + screen[0] * self._scale,
@@ -677,11 +690,39 @@ class _SimulatingView(_FakeView):
     def fitAll(self, factor=None):  # noqa: N802 - FreeCAD API name
         self.factors.append(factor)
         self.fit_calls += 1
-        dx, dy, dz = (self._bounds[i + 3] - self._bounds[i] for i in range(3))
+        dx, dy, dz = (self._scene[i + 3] - self._scene[i] for i in range(3))
         diagonal = math.sqrt(dx * dx + dy * dy + dz * dz)
         if diagonal <= 0.0 or not factor:
             return
+        self._target = _box_centre(self._scene)
         self._scale = min(self._size) / (diagonal * factor)
+
+    def boxZoom(self, xmin, ymin, xmax, ymax):  # noqa: N802 - FreeCAD API name
+        super().boxZoom(xmin, ymin, xmax, ymax)
+        width, height = self._size
+        size_x, size_y = xmax - xmin, ymax - ymin
+        if size_x == 0 and size_y == 0:
+            return
+        centre_x = int((xmin + xmax) / 2) / max(width - 1, 1)
+        centre_y = (height - int((ymin + ymax) / 2)) / max(height - 1, 1)
+        pan_x = (centre_x - 0.5) * width / self._scale
+        pan_y = (centre_y - 0.5) * height / self._scale
+        self._target = tuple(
+            self._target[i] + self._ISO[0][i] * pan_x + self._ISO[1][i] * pan_y for i in range(3)
+        )
+        self._scale /= max(size_x / width, size_y / height)
+
+
+def _box_centre(bounds):
+    return tuple((bounds[i] + bounds[i + 3]) / 2.0 for i in range(3))
+
+
+def _hull_centre(view, bounds):
+    """The centre of ``bounds``' projected hull through ``view``'s camera now, Y-up pixels."""
+    projected = [view.getPointOnViewport(*corner) for corner in framing.corners(bounds)]
+    xs = [x for x, _ in projected]
+    ys = [y for _, y in projected]
+    return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
 
 
 def _binding_ratio(view, bounds):
@@ -724,7 +765,7 @@ def test_should_zoom_in_when_the_model_measures_as_a_sub_pixel_dot():
 
     Treating it as unusable skipped the correction pass entirely and left the dot on screen while
     reporting ``fitted: true`` — the same contradiction this story removes, in the opposite
-    direction. The floor keeps the factor one ``viewAll`` will act on.
+    direction. The floor keeps the box one ``boxZoom`` will act on.
     """
     # Arrange: every corner lands on one pixel in the middle of the viewport.
     view = _ProjectingView(lambda _x, _y, _z: (400.0, 300.0))
@@ -734,7 +775,8 @@ def test_should_zoom_in_when_the_model_measures_as_a_sub_pixel_dot():
     view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
 
     # Assert
-    assert view.factors == [1.0, view_fit._MIN_FIT_FACTOR], "a zero ratio must still be corrected"
+    assert view.factors == [1.0]
+    assert view.zoom_boxes == [(396, 297, 404, 303)], "a zero ratio must still be zoomed, floored"
 
 
 def test_should_restore_animation_when_the_previous_setting_could_not_be_read():
@@ -782,6 +824,10 @@ def test_should_name_the_measurement_failure_rather_than_claim_an_overflow():
     assert "view" not in envelope["framing"]["stale_reason"]
 
 
+# ``boxZoom`` takes whole pixels, so each side of the zoom box is up to one pixel off the exact
+# expanded hull. On these models' ~400-600 px boxes that moves the landed ratio by under 0.003.
+_PIXEL_TOLERANCE = 0.003
+
 _ASPECT_SWEEP = [
     pytest.param((-20, -20, -20, 20, 20, 20), id="40mm-cube"),
     pytest.param((0, 0, 0, 20, 20, 30), id="20x20x30-box"),
@@ -806,7 +852,9 @@ def test_should_fill_the_viewport_to_the_configured_fraction_whatever_the_aspect
     # Assert
     assert envelope["status"] == "OK"
     assert envelope["structured_content"]["fitted"] is True
-    assert _binding_ratio(view, bounds) == pytest.approx(view_fit._FILL_FRACTION, abs=0.001)
+    assert _binding_ratio(view, bounds) == pytest.approx(
+        view_fit._FILL_FRACTION, abs=_PIXEL_TOLERANCE
+    )
 
 
 @pytest.mark.parametrize("bounds", _ASPECT_SWEEP)
@@ -840,7 +888,9 @@ def test_should_converge_in_one_call_from_any_starting_camera():
 
     # Assert
     assert envelope["status"] == "OK"
-    assert _binding_ratio(view, bounds) == pytest.approx(view_fit._FILL_FRACTION, abs=0.001)
+    assert _binding_ratio(view, bounds) == pytest.approx(
+        view_fit._FILL_FRACTION, abs=_PIXEL_TOLERANCE
+    )
 
 
 def test_should_measure_the_model_through_the_camera_it_wrote():
@@ -854,8 +904,8 @@ def test_should_measure_the_model_through_the_camera_it_wrote():
     view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
 
     # Assert
-    assert view.factors[0] == 1.0, "pass 1 zooms to a known camera before it measures"
-    assert len(view.factors) == 2, "one correction pass, never a retry loop"
+    assert view.factors == [1.0], "pass 1 zooms to a known camera before it measures"
+    assert len(view.zoom_boxes) == 1, "one centring zoom, never a retry loop"
 
 
 def test_should_report_spec_failed_carrying_the_framing_block_when_the_fit_contradicts_itself():
@@ -867,7 +917,7 @@ def test_should_report_spec_failed_carrying_the_framing_block_when_the_fit_contr
     document = _ProjectingDocument([_FakeObject("Cube", bounds)])
 
     def overflow_after_the_correction(x, y, _z):
-        if len(view.factors) >= 2:
+        if view.zoom_boxes:
             return (900.0 if x > 0 else -100.0, 700.0 if y > 0 else -100.0)
         return _centred_box(100, 80)(x, y, _z)
 
@@ -919,17 +969,18 @@ def test_should_fall_back_to_a_plain_fit_when_the_geometry_cannot_be_measured():
     assert view.factors == [1.0]
 
 
-def test_should_never_pass_a_factor_viewall_would_refuse():
-    # Arrange: viewAll returns early for factor <= 0 (View3DInventorViewer.cpp:4463), so a
-    # degenerate measurement must not silently skip the fit.
+def test_should_never_pass_a_box_boxzoom_would_ignore():
+    # Arrange: boxZoom returns early for a 0x0 box (NavigationStyle.cpp:599), so a degenerate
+    # measurement must not silently skip the zoom.
     view = _ProjectingView(lambda _x, _y, _z: (400.0, 300.0))
-    document = _ProjectingDocument([_FakeObject("Flat", (0, 0, 0, 0, 0, 0))])
+    document = _ProjectingDocument([_FakeObject("Edge", (0, 0, 0, 10, 0, 0))])
 
     # Act
     view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
 
     # Assert
-    assert all(factor > 0.0 for factor in view.factors)
+    assert view.zoom_boxes, "the zoom pass must run"
+    assert all(xmax > xmin and ymax > ymin for xmin, ymin, xmax, ymax in view.zoom_boxes)
 
 
 _BAR = (-20, -20, 0, 20, 20, 800)
@@ -958,6 +1009,10 @@ class _AnimationView(_SimulatingView):
         super().fitAll(factor)
         self.events.append("fitAll")
 
+    def boxZoom(self, xmin, ymin, xmax, ymax):  # noqa: N802 - FreeCAD API name
+        super().boxZoom(xmin, ymin, xmax, ymax)
+        self.events.append("boxZoom")
+
 
 def test_should_write_the_camera_with_animation_off_so_the_fit_lands_in_this_call():
     # Arrange: both camera writes animate by default, and an animation advances on the Qt event
@@ -975,7 +1030,7 @@ def test_should_write_the_camera_with_animation_off_so_the_fit_lands_in_this_cal
         "animation=False",
         "isometric",
         "fitAll",
-        "fitAll",
+        "boxZoom",
         "animation=True",
     ]
 
@@ -1061,3 +1116,162 @@ def test_should_still_fit_a_view_that_has_no_animation_toggle():
     # Assert
     assert envelope["status"] == "OK"
     assert view.fit_calls == 2
+
+
+# ---- F-28: what the fit measures --------------------------------------------------------------
+
+
+class _TypedObject(_FakeObject):
+    """A visible object of a named type, optionally a datum by derivation."""
+
+    def __init__(self, name, bounds, type_id, base=None):
+        super().__init__(name, bounds)
+        self.TypeId = type_id
+        self._base = base
+
+    def isDerivedFrom(self, type_name):  # noqa: N802 - FreeCAD API name
+        return type_name == self._base
+
+
+class _FakeMeshObject:
+    """A ``Mesh::Feature``: no ``Shape`` at all, its geometry is the ``Mesh`` property."""
+
+    def __init__(self, name, bounds):
+        self.Name = name
+        self.TypeId = "Mesh::Feature"
+        self.Visibility = True
+        self.Mesh = _FakeShape(bounds)
+        self.Mesh.CountFacets = 12
+
+
+_SKETCH = (0, 0, 0, 40, 25, 0)
+_INFINITE_PLANE = (-1e100, -1e100, 0, 1e100, 1e100, 0)
+
+
+def test_should_fit_a_sketch_when_it_is_the_only_visible_object():
+    # Arrange
+    view = _SimulatingView(_SKETCH)
+    sketch = _TypedObject("Sketch", _SKETCH, "Sketcher::SketchObject")
+
+    # Act
+    envelope = view_fit_viewport(
+        _FakeRegistry(_ProjectingDocument([sketch])), _FakeViewportPort(view), doc=HANDLE
+    )
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert envelope["structured_content"]["fitted"] is True
+    assert 0.0 < _binding_ratio(view, _SKETCH) <= 1.0
+
+
+def test_should_fit_a_mesh_when_it_is_the_only_object():
+    # Arrange
+    bounds = (-5, -5, -5, 5, 5, 5)
+    view = _SimulatingView(bounds)
+    mesh = _FakeMeshObject("Mesh", bounds)
+
+    # Act
+    envelope = view_fit_viewport(
+        _FakeRegistry(_ProjectingDocument([mesh])), _FakeViewportPort(view), doc=HANDLE
+    )
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert envelope["structured_content"]["fitted"] is True
+    assert 0.0 < _binding_ratio(view, bounds) <= 1.0
+
+
+# The S4 pad and the Coin scene box FreeCAD drew around it in UAT run 2026-10-05-01: the drawn
+# datum plane widens the scene box to the left and below, so its centre is far from the pad's.
+_S4_PAD = (0, 0, 0, 20, 30, 10)
+_S4_SCENE = (-30.2, -30.2, 0, 30.2, 35.2, 10)
+
+
+def test_should_frame_the_pad_alone_when_a_datum_plane_shares_the_body():
+    # Arrange: the plane's ±1e100 box once shrank the pad to a dot and the fit reported OK beside
+    # a ratio of 0.0.
+    pad_bounds = (0, 0, 0, 10, 10, 5)
+    view = _SimulatingView(pad_bounds)
+    document = _ProjectingDocument(
+        [
+            _TypedObject("Pad", pad_bounds, "PartDesign::Pad"),
+            _TypedObject("DatumPlane", _INFINITE_PLANE, "PartDesign::Plane", base="Part::Datum"),
+        ]
+    )
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert _binding_ratio(view, pad_bounds) == pytest.approx(
+        view_fit._FILL_FRACTION, abs=_PIXEL_TOLERANCE
+    )
+
+
+def test_should_centre_the_pad_when_the_drawn_scene_box_is_larger_and_off_centre():
+    """``fitAll`` centres on the scene box, which includes the drawn datum plane; the measurement
+    grades only the pad. Zooming about the scene centre to 95 % left the pad off-centre and over
+    the edge, and the fit returned ``SPEC_FAILED view_fit.not_framed``."""
+    # Arrange
+    view = _SimulatingView(_S4_PAD, scene_bounds=_S4_SCENE)
+    document = _ProjectingDocument(
+        [
+            _TypedObject("Pad", _S4_PAD, "PartDesign::Pad"),
+            _TypedObject("DatumPlane", _INFINITE_PLANE, "PartDesign::Plane", base="Part::Datum"),
+        ]
+    )
+
+    # Act
+    envelope = view_fit_viewport(_FakeRegistry(document), _FakeViewportPort(view), doc=HANDLE)
+
+    # Assert
+    assert envelope["status"] == "OK"
+    assert envelope["structured_content"]["fitted"] is True
+    assert 0.0 < _binding_ratio(view, _S4_PAD) <= 1.0
+    # boxZoom normalises the box's integer midpoint by ``size - 1``, about a pixel off before the
+    # zoom magnifies it; 1 % of the view is that error with margin. The scene-box fit missed by
+    # ~180 px.
+    centre_x, centre_y = _hull_centre(view, _S4_PAD)
+    assert centre_x == pytest.approx(400.0, abs=8.0)
+    assert centre_y == pytest.approx(300.0, abs=6.0)
+
+
+def test_should_refuse_before_any_camera_move_when_the_model_has_zero_size_on_every_axis():
+    # Arrange: a visible sketch holding one point projects to one pixel; fitting it reported OK
+    # beside a ratio of 0.0.
+    view = _AnimationView(animation_enabled=True, bounds=(5, 5, 0, 5, 5, 0))
+    point = _TypedObject("Sketch", (5, 5, 0, 5, 5, 0), "Sketcher::SketchObject")
+
+    # Act
+    envelope = view_fit_viewport(
+        _FakeRegistry(_ProjectingDocument([point])), _FakeViewportPort(view), doc=HANDLE
+    )
+
+    # Assert
+    assert envelope["status"] == "SPEC_FAILED"
+    assert envelope["detail"]["code"] == "view_fit.nothing_to_frame"
+    assert "framing" not in envelope
+    assert view.events == [], "no animation toggle, no reorientation, no fit"
+
+
+def test_should_refuse_before_any_camera_move_when_only_a_datum_plane_is_visible():
+    # Arrange
+    view = _AnimationView(animation_enabled=True, bounds=_INFINITE_PLANE)
+    plane = _TypedObject("DatumPlane", _INFINITE_PLANE, "PartDesign::Plane", base="Part::Datum")
+    sink = _RecordingSink()
+
+    # Act
+    envelope = view_fit_viewport(
+        _FakeRegistry(_ProjectingDocument([plane])), _FakeViewportPort(view), HANDLE, sink
+    )
+
+    # Assert
+    assert envelope["status"] == "SPEC_FAILED"
+    assert envelope["detail"]["code"] == "view_fit.nothing_to_frame"
+    assert envelope["detail"]["message"] == (
+        "no visible object to frame; datum planes are infinite and are not measured"
+    )
+    assert "framing" not in envelope
+    assert view.events == [], "no animation toggle, no reorientation, no fit"
+    assert sink.records == [], "no camera moved, so there is no camera move to audit"
