@@ -1546,3 +1546,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-step-unit-restore.md`
   summary: `verify_export_step` has no `export_step.unit` check, so a STEP written in the wrong unit is not caught; the length unit entity in the file header would let a check read it the same way `export_step.schema` reads `FILE_SCHEMA`.
   evidence: DW-42 records that a wrong `write.step.unit` re-imports with a matching volume, so no current check sees it; a plain `exportStep` with the static at `INCH` writes `CONVERSION_BASED_UNIT('INCH',…)`, which a header read can detect.
+- source_spec: none
+  summary: Story 10.6 goal B (AC3) — a second RPC client that connects while a session is active gets the AD-26 busy error, never a hang.
+  evidence: Split from Story 10.6 at the step-01 scope check; independent of goal A (listener accept path only). AC3 cites TC-99-07, but UAT run 2026-10-03-04 uses TC-99-07 for the temp sweep; confirm the test-case mapping when planned.
+- source_spec: none
+  summary: Story 10.6 goal C (AC4, F-26) — after an unclean FreeCAD kill, the relaunched addon must not adopt an orphan or foreign server on `:8765`; it verifies `/healthz` session identity first.
+  evidence: Split from Story 10.6 at the step-01 scope check; touches the bootstrap spawn guard and the proxy health endpoint only. UAT run 2026-10-03-04 F-26 (TC-01-14, TC-10-12, TC-12-15, TC-99-08).
+- source_spec: none
+  summary: Story 10.6 goal D (AC5, AC6; F-24, F-31, F-32) — log a dropped in-flight call and a malformed first frame once at the right level, no traceback on a clean exit, and make the discovery-file comment state the ACL protection Windows actually applies.
+  evidence: Split from Story 10.6 at the step-01 scope check; log calls and one comment only (`rpc_client.py:252-254`, `rpc_listener.py:269-271`, `rpc_listener.py:197-198`).
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6-headless-bounded-execution.md`
+  summary: AD-27 says a timed-out mutation's AD-5 transaction is "aborted with rollback proved" when the op returns; both hosts instead let a late body commit and leave the document suspect.
+  evidence: Human decision D2 (2026-10-06) kept the late commit for Story 10.6; TC-10-10 tests the late-commit behaviour. A fix needs a `run_mutation` bracket that rolls back at its commit point when its call was abandoned; lifecycle tools outside the bracket (`document_recompute`, `document_save`, `document_close`, `document_undo`) need their own answer.
