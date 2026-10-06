@@ -79,6 +79,13 @@ it — otherwise none of these checks can run.
   assertions AND an independent visual judge (a vision model that is never the
   acting agent). The judge is conjunctive — it can flag a wrong-looking part that
   geometry missed, but it can never rescue a part geometry already failed.
+- When a mating part is **inserted, slid, or tilted into place**, check clearance
+  along that path, not only at the final position: sweep the mating part through
+  the travel in steps and measure overlap and minimum gap at each step, because a
+  wall that clears the installed part can still block it on the way in.
+- Re-check an earlier clearance after **every edit near it**: widening a gap on one
+  side moves material toward something else, so rerun the clearance and path checks
+  for the neighbours, not only for the feature you changed.
 - Report only checks that actually ran. Never claim structural safety, tolerance
   compliance, or manufacturability unless that analysis was explicitly performed —
   geometric plausibility is the ceiling of what these checks prove.
@@ -128,3 +135,6 @@ have hidden the regression.
 - **Treating `UNSUPPORTED` reference audit as clean.** Symptom: a silently
   corrupted model passes. Why: no-element-map was read as no-problem. Fix:
   `UNSUPPORTED` is not a pass.
+- **Checking only the installed position.** Symptom: a part that "fits" cannot be
+  assembled. Why: the interference check ran at the end pose only. Fix: sweep the
+  assembly path and report overlap and minimum gap per step.

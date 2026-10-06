@@ -64,6 +64,20 @@ MCP client at it — otherwise none of these steps can run.
 - Address sub-elements by **geometric query or mapped name**, resolving any bare
   index at call time, because indexed names (`Face6`) are valid only until the next
   recompute reshuffles them; never store an index for later reuse.
+- **Exhaust the typed tools before any fallback**: `feature_set_parameters` writes
+  booleans, numbers, quantities, and enum members on any object — including
+  `Visibility` — so try it before GUI input or a script. It cannot write a placement
+  (`AttachmentOffset`) and no tool deletes an object; only those gaps justify a
+  fallback.
+- The fallback for a gap is a **headless script on the closed document**: close it
+  in the GUI, edit and save with `freecadcmd`, reopen with `document_open`, then run
+  the full verification and one `document_save` from the GUI. In a script,
+  `body.removeObject(feature)` relinks the next feature's `BaseFeature`, and
+  `body.newObject(...)` inserts after the Tip and becomes the new Tip.
+- A headless save **drops the GUI display state** (`GuiDocument.xml`), and the GUI
+  then reopens the body hidden. Set `Visibility` true on the body *and* its Tip
+  (the body alone stays blank), hide sketches and datums, then save once from the
+  GUI so the display state is written back.
 
 ## Worked Examples
 
@@ -97,3 +111,16 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
   only with the GUI open. Why: render capability can differ headless. Fix: treat an
   unavailable render as unavailable, and gate real correctness on geometry, not the
   picture.
+- **Driving the GUI before checking the typed tools.** Symptom: clicks and keys to
+  the model tree are dropped, the view stays empty. Why: background input does not
+  reach FreeCAD's Qt tree, and the property was writable all along. Fix:
+  `feature_set_parameters` `{"Visibility": true}` on the body and its Tip, then
+  `view_fit_viewport`.
+- **Trusting a failed `freecadcmd` save.** Symptom: `OSError: Failed to write all
+  data to file Permission denied` and a `<file>.<uuid>` temp file beside the target
+  (seen on Windows, FreeCAD 1.1.4, cause unknown). Why: the zip is complete; only
+  the final rename failed. Fix: confirm the temp file is a valid zip, then rename it
+  over the target and re-open it to verify.
+- **A script file named like a standard module.** Symptom: `freecadcmd` runs and
+  prints nothing. Why: `bisect.py` resolves to Python's own `bisect`. Fix: give
+  helper scripts distinct names.

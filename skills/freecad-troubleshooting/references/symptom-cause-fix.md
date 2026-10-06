@@ -87,6 +87,26 @@ Fix: verify the shape is valid and closed first (`verify_shape`); pin the export
 unit per call; then re-run the export and its paired `verify_export_*` re-import
 check — an export is done only when the re-import matches.
 
+## Empty viewport after a headless edit
+
+Likely causes: the file was saved by `freecadcmd`, which drops the GUI display
+state, so the body and its Tip reopen with `Visibility` false.
+
+Fix: `feature_set_parameters` `{"Visibility": true}` on the body and on its Tip
+feature (the body alone stays blank), then `view_fit_viewport`, then one
+`document_save` from the GUI. Do not toggle visibility through GUI input: background
+clicks and keys on the model tree are dropped.
+
+## Headless save fails with "Permission denied"
+
+Likely causes: `freecadcmd` wrote the complete file to `<path>.<uuid>` but its final
+rename failed (observed on Windows, FreeCAD 1.1.4; not the backup setting, not the
+shape data).
+
+Fix: check that exactly one new `<path>.<uuid>` exists and is a valid zip, rename it
+over the target, re-open it, and rerun the checks. Remove stale temp files from
+earlier failures by hand only after confirming they are not the newest save.
+
 ## Reporting an unrepairable failure
 
 State: what failed; what was tried; which artifact (if any) is still usable; which

@@ -22,6 +22,10 @@ Note the two enums differ — pad has `UpToLast`, pocket has `ThroughAll`. Never
 carry one feature's mode list onto the other. `Midplane` and `Reversed` apply to
 both (they belong to the shared sketch-based extrude behavior).
 
+A pad that overlaps nothing adds the same volume in either direction, so a matching
+volume never proves the side. Prove it with a point probe on each side of the
+sketch plane (`Shape.isInside`) before accepting `Reversed`.
+
 ## Hole
 
 Prerequisite: a sketch of hole center points. Properties:
@@ -49,6 +53,15 @@ Dress-up features (fillet, chamfer) are the last step in a body. A dress-up
 silently drops edges that lose their two adjacent faces during recompute, so a
 fillet that "worked" can quietly round fewer edges than intended — compare the
 edge count, not just the error state, when auditing.
+
+A concave fillet near another wall merges into it and adds less volume than the
+analytic value (2π · centroid radius · spandrel area per round base). Measure each
+instance in a bounding ring rather than accepting the total: a shortfall at one
+instance is overlap, at all instances it is a dropped or wrong edge.
+
+A feature added by script with `body.newObject(...)` goes after the current Tip and
+becomes the Tip, so a later dress-up or an added rib can sit after features it does
+not depend on. The geometry is the same; state the tree order in the report.
 
 ## Pattern and mirror
 
