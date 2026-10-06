@@ -86,19 +86,22 @@ Every mutation tool (column **Mut** = yes below) executes the AD-5 bracket (geoh
 
 ```json
 { "mutation": {
+  "schema": "fcb.mutation/2",
   "transaction_id": "string",
-  "fingerprint_before": { "hash": "sha256…", "serializer": "exportBinary|exportBrep", "mass_props": {} },
-  "fingerprint_after":  { "hash": "…", "serializer": "…", "mass_props": {} },
+  "fingerprint_before": { "digest": "sha256…", "serializer": "exportBinary|exportBrep" },
+  "fingerprint_after":  { "digest": "…", "serializer": "…" },
+  "changed": [ { "name": "Pocket003", "volume": 47120.4, "area": 46010.2, "com": [55.2, 67.1, 19.3] } ],
   "post_verify": { "recompute_clean": true, "is_valid": true,
                    "fully_constrained": true,
-                   "tnp_audit": { "status": "CLEAN|FLAGGED|UNSUPPORTED", "element_map_version": "string", "findings": [] } },
+                   "tnp_audit": { "status": "CLEAN|FLAGGED|UNSUPPORTED", "element_map_version": "string",
+                                  "counts": { "PASS": 42 }, "findings": [] } },
   "rolled_back": false, "rollback_proven": null
 }}
 ```
 
 Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). `tnp_audit` reports `UNSUPPORTED`, never clean, when the element map probe fails (AD-7, AD-11). From Phase 2, mutation tools additionally accept an optional `confirm` object (§4.8) tying execution to a `preview_dry_run` + elicitation acceptance (AD-10); headless without confirmation is fail-closed unless `autoApprove` is set, and every auto-approval is audit-logged.
 
-**Lifecycle ops** (`document_save`, `document_close`, `document_recompute`, `document_undo`) change document state but carry no new geometric intent: they are audit-logged and serialized with the single-writer rule (AD-20) but are exempt from the preview/confirm gate. `document_undo` is verified by fingerprint comparison (AD-6; gate G2.3).
+**Lifecycle ops** (`document_save`, `document_close`, `document_recompute`, `document_undo`) change document state but carry no new geometric intent: they are audit-logged and serialized with the single-writer rule (AD-20) but are exempt from the preview/confirm gate. `document_undo` is verified by fingerprint comparison (AD-6; gate G2.3). A `feature_set_parameters` call that writes only `Visibility` is display state: it runs the AD-5 bracket and is audit-logged, but is confirm-exempt. A call that also writes any other property keeps the gate.
 
 ## 2. Tool Inventory
 

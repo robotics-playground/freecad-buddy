@@ -1215,7 +1215,7 @@ The bridge does what the design says when a real agent drives it through the rea
 
 **Why now:** UAT run `2026-10-03-04` (HEAD `bece7ac`, FreeCAD 1.1.4) was the first to execute all of TC-01..TC-14. Gate 1 is red: 34 of 251 scenarios fail, 29 of them on product defects F-01..F-33 (`tests/uat/run/2026-10-03-04/report.md`, "Findings"). Most are the spine already being right and the code not matching it. The user requires Gate 1 green before Story 4.3.
 
-**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
+**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); Epic 11 Stories 11.1-11.4 -> 10.7 (the test cases are written once, against the new envelope); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
 
 **Acceptance for the epic:** Story 10.8 — a full UAT run with Gate 1 green.
 
@@ -1426,3 +1426,99 @@ The bridge does what the design says when a real agent drives it through the rea
 1. **Given** Stories 10.1-10.7b done and CI green
    **When** the full suite TC-01..TC-14, TC-99 and the G3 live replay run on FreeCAD 1.1.4 through the Story 10.7b runner, with agent review per the updated §9 and the desktop free (or the GUI lane in an isolated Windows session)
    **Then** Gate 1 is green (Critical 100 %, High ≥ 95 %), Gate 2 matches its documented deviations, and the G3 replay is unchanged; the report is committed under `tests/uat/run/`
+
+## Epic 11: Lean Agent Loop
+
+An agent builds a part with fewer calls and a small context: every mutation still runs every check, and its result reports what changed and what failed, not every value that passed. The operator can run attended GUI work with one call per mutation. The skills stop asking for checks the mutation result already gives. A change on a large document freezes the GUI only for FreeCAD's own recompute, not for bridge overhead.
+
+**Why now:** three build sessions on 2026-10-06 (`eacac40d`, `ff604ce5`, `0320ba38`) used 98-310 FreeCAD calls, reached 797K-820K context tokens, and compacted 8 times in the longest one. 86 % of FreeCAD output was full fingerprints and PASS findings that no caller reads. The spine Tool-results convention already forbids raw dumps. On a copy of `kiwibox-drawer.FCStd` one change costs about 65 s with preview, of which FreeCAD's recompute is 29 s and the rest is bridge overhead (`sprint-change-proposal-2026-10-06.md` §1).
+
+**Sequencing:** 11.1 -> 11.2 and 11.1 -> 11.4 (11.2 makes mass properties the visible change record, and 11.4 makes them the abort-path rollback proof, so they must be right first). 11.3 and 11.4 are parallel-eligible with 11.2; 11.4 edits `usecases/transaction.py`, so it merges after 11.2. 11.1-11.4 finish before Story 10.7. 11.5 is parallel-eligible. 11.6 is last. **Opens no gate and reopens no epic** (AD-19).
+
+**Acceptance for the epic:** Story 11.6: a measured build session meets the targets in its acceptance criteria.
+
+**Rules for every story:** no check is removed or weakened. Each story proves that the AD-5 bracket, the AD-6 rollback proof, the AD-7 audit and the AD-8 sketch signal still run and still fail a bad change. Re-run any validator score whose sources change.
+
+### Story 11.1: Mass Properties That Tell Shapes Apart
+
+> **As** the bridge, **I want** every fingerprint's mass properties computed from the shape's solids and sensitive to orientation, so that `massprops_equal`, the identity check in 4 of 5 comparison sites, sees a rotation or mirror about the centre of mass.
+
+**Evidence (2026-10-06, headless probe on a copy of `kiwibox-drawer.FCStd`):** `principal_moments` is `[0, 0, 0]` on 74 of 144 hashed objects, all `Compound` shapes without `PrincipalProperties`; the solid inside has real moments, for example `(3.4e8, 1.9e8, 1.8e8)`. Principal moments are eigenvalues of the inertia tensor, so even real values do not change under a rotation or mirror about the centre of mass.
+
+**Acceptance Criteria:**
+
+1. **Given** a compound of solids, **When** `fingerprint()` runs, **Then** `principal_moments` come from its solids and are non-zero for any non-empty solid; a unit test under `tests/infc/` fails on zero moments for a non-empty compound.
+2. **Given** any shape, **Then** `MassProps` carries `inertia`: the 6 components of the inertia tensor about the centre of mass in document axes (`Ixx, Iyy, Izz, Ixy, Ixz, Iyz`), computed from the solids, as an optional field added to `fcb.fingerprint/1` (additive, AD-28); `massprops_equal` compares it.
+3. **Given** an asymmetric solid rotated 90° about its centre of mass, and the same solid mirrored through a plane through its centre of mass, **When** `massprops_equal(before, after)` runs, **Then** it returns `False` for both (regression tests). A solid with symmetric inertia is a documented limit.
+4. **Given** a copy of `kiwibox-drawer.FCStd`, **When** one feature is changed inside a transaction, aborted and recomputed, **Then** `massprops_equal(before, after)` is `True` on every object; the quantization step for `inertia` is set so that this holds, and the story records the step and the measured jitter.
+
+### Story 11.2: Quiet Result Envelope
+
+> **As** an agent, **I want** a mutation or preview result that carries the digest, the changed objects and the non-PASS findings, so that one result costs about 2K chars instead of 30-110K.
+
+**Acceptance Criteria:**
+
+1. **Given** any successful mutation, **When** the result returns, **Then** `mutation.fingerprint_before` and `mutation.fingerprint_after` are digest strings with their serializer tag, and `mutation.changed` lists `{name, volume, area, com}` for each object whose mass-property invariants differ (empty on a no-op).
+2. **Given** a mutation that fails or rolls back, **When** the result returns, **Then** `changed` also carries the full before and after `massprops` of each object that differs, and `rolled_back` / `rollback_proven` are as today.
+3. **Given** any `tnp_audit` or `tnp_precheck` block, **Then** it is `{status, element_map_version, counts: {<verdict>: n}, findings: [non-PASS only]}`; a FLAGGED audit lists every non-PASS finding.
+4. **Given** a preview, **Then** `diff.op` is `{tool}` and `text` does not repeat `preview_id`.
+5. **Given** any result, **Then** `adapters/mcp_server.py` writes compact JSON (no `indent=2`).
+6. **Given** the full `FingerprintRecord`, **Then** it stays on the server in an in-process cache keyed by digest; `document_undo(expect_fingerprint=<digest>)` uses it for the mass-property comparison, and the hint at `usecases/documents.py:166-168` is removed.
+7. **Given** the projection, **Then** it is built in `usecases/` (AD-17), the contracts are `fcb.mutation/2` and `fcb.geometry-diff/2` with `/1` retained for audit replay (AD-28), and the generated schemas pass the drift check.
+8. **Given** the 529 recorded results from the three sessions, **When** a replay script projects them through the new code path, **Then** total size drops by ≥ 85 % and no result is over 10K chars.
+9. **Given** the G2 fault suite (rollback-boundary, TNP-provoking, dress-up silent drop), **When** it runs, **Then** every case fails or flags exactly as before.
+
+### Story 11.3: One Call per Mutation
+
+> **As** an operator, **I want** attended GUI work to apply a mutation in one call when I have set auto-approve, so that the agent does not spend a preview round trip on every change.
+
+**Acceptance Criteria:**
+
+1. **Given** `FREECAD_BUDDY_AUTO_APPROVE=1` set before FreeCAD starts, **When** an agent calls `feature_pad` without `confirm`, **Then** the pad applies under the full AD-5 bracket and the audit log records an `auto_approve` approval for it.
+2. **Given** the same posture and a mutation that fails post-verify, **Then** it rolls back and returns its failure status exactly as with a token.
+3. **Given** `feature_set_parameters` that writes only `Visibility`, **When** called without `confirm` and without auto-approve, **Then** it applies (display state, same carve-out as `view_fit_viewport`) and is audit-logged; any other property in the same call keeps the gate.
+4. **Given** auto-approve unset, **Then** every other mutation still needs a valid `preview_id` (no regression).
+5. The operator setup is documented in `README.md` and in the GUI harness standard.
+
+### Story 11.4: Cheap, Correct Rollback Proof and Fingerprints
+
+> **As** the bridge, **I want** each mutation to do whole-document work only as often as its guarantees need, and to prove a FreeCAD abort without a needless snapshot restore, so that a change on a large document freezes the GUI for FreeCAD's recompute and not for bridge overhead.
+
+**Evidence (2026-10-06, headless, copy of `kiwibox-drawer.FCStd`, 184 objects):** one `fingerprint()` takes 4.5 s (mass properties 3.6 s, B-rep bytes 0.9 s); `saveCopy` 1.2 s; FreeCAD's recompute after one `duct_pilot` change 14.6 s for 23 objects. A live mutation runs 3 fingerprints and a preview 4. After `abortTransaction` + recompute, mass properties matched on every object, but 33 objects had new B-rep bytes. So the digest proof at `usecases/transaction.py:356` fails, and every failed mutation restores the snapshot, which closes and reopens the document.
+
+**Acceptance Criteria:**
+
+1. **Given** a successful live mutation, **When** it runs, **Then** `fingerprint()` runs 2 times, not 3: the gate record (`usecases/confirm.py:332`) is passed into `run_mutation` and used as `fp_before` (`usecases/transaction.py:604`). A test counts the calls.
+2. **Given** the abort path, **Then** rollback is proven by digest equality, else by `massprops_equal` over the same object names (Story 11.1 invariants); only an invariant mismatch restores the snapshot. **Given** a mutation on the drawer copy that fails post-verify, **Then** it returns `rolled_back_verified` and the document is never closed or reopened.
+3. **Given** the failure path, **Then** the fingerprint computed for the rollback proof is reused at `usecases/transaction.py:692`, not recomputed.
+4. **Given** a fingerprint, **Then** an object whose shape is unchanged since its last fingerprint reuses its cached entry. The story chooses the unchanged-shape test, and a test proves that a changed shape never reuses its entry. The abort-path and snapshot-restore proofs compute every entry fresh.
+5. **Given** `snapshot_references`, **Then** a property value is read only after its type passes the link-type filter (`usecases/tnp_guard.py:322-326`).
+6. **Given** the drawer copy and one leaf change (`duct_pilot.Length`), **When** the live mutation is timed (median of 5, headless and in the GUI), **Then** bridge overhead (total time minus FreeCAD's recompute) is ≤ 3 s, from about 15 s today; the timings are recorded in the story file.
+7. **Given** the G2 fault suite, **Then** the rollback-boundary (#6031-pattern) cases still escalate to the snapshot restore and pass, and all `test_mutation_protocol.py`, `test_tnp_guard.py` and fingerprint tests pass.
+
+### Story 11.5: Build-Loop Skills
+
+> **As** an agent, **I want** skills that use the checks the mutation result already reports, so that I verify per milestone and not per feature.
+
+**Acceptance Criteria:**
+
+1. `verification-thinking` adds a build-loop rule: per feature, read `post_verify`, `sketch_state` and `changed`, with no `verify_*` call and no screenshot; per milestone (a finished part or feature group), one `verify_shape` with every spec check and one screenshot packet; call `verify_*` again after any change made outside the typed tools. `SKILL.md:68-72` keeps "even when every deterministic check passed" and changes "every part whose geometry changed" to "every milestone".
+2. `freecad-sketcher` states that `sketch_state.fully_constrained` and `dof` in the mutation result are the AD-8 signal, and that a separate `verify_sketch` is for a sketch changed outside the typed tools.
+3. `freecad-scripting-idioms` forbids editing the live model through headless scripts while the bridge serves it.
+4. `design-decomposition` states the CAD plan shape: a parameter table and milestones, one commit per milestone, no per-step checkboxes and no hand-predicted volumes.
+5. All 19 references to `verify_references` and `verify_fingerprint` in 9 files point to `post_verify.tnp_audit` and `mutation.fingerprint_*` digests.
+6. `verification-thinking/references/snapshot-packet-sizing.md` sets 800 px as the default screenshot size and keeps the AD-21 review floor where it applies.
+7. `design-decomposition` states that derived pieces (print splits, `Part::Common` cuts of a master body) stay out of the edit loop: in a separate document, or rebuilt only at milestones. Evidence: on `kiwibox-drawer.FCStd`, 3 split `Part::Common` objects take 7.5 s of the 14.6 s recompute after one change to the master body.
+8. `scripts/check_skill_shape.py` passes (4 sections, ≤ 1,500 words per `SKILL.md`).
+
+### Story 11.6: Measured Build Session
+
+> **As** the team, **I want** one real build measured against the 2026-10-06 baseline, so that the epic is closed on numbers.
+
+**Acceptance Criteria:**
+
+1. A transcript metrics script lands in `scripts/automation/` and reports, per session: FreeCAD calls, `preview_dry_run` calls, FreeCAD output chars, largest result, spilled results, peak context, compactions.
+2. **Given** Stories 11.1-11.5 done, auto-approve set and the updated skills installed, **When** an agent builds a part of the same size class as the kiwibox drawer (about 100+ objects) in the FreeCAD GUI, **Then** the script reports: FreeCAD output ≤ 15 % of the `0320ba38` value per FreeCAD call, 0 spilled results, no result over 10K chars, and FreeCAD calls per feature ≤ 2 (median).
+3. **Given** the same session, **Then** the median bridge overhead per mutation, measured by the Story 11.4 timing method, is ≤ 3 s.
+4. The agent visually checks the finished part against a real FreeCAD screenshot, and a native Check Geometry passes (`freecad-native-validation` standard).
+5. The report, with the baseline numbers beside the new numbers, is committed under `tests/uat/run/`.

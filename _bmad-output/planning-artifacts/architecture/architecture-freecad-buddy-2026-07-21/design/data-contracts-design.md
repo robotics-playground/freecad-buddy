@@ -205,8 +205,9 @@ class CountDelta(TypedDict):
     before: int; after: int; delta: int
 
 class GeometryDiff(TypedDict, total=False):
-    schema: Literal["fcb.geometry-diff/1"]
-    op: dict                        # echo of the proposed typed operation (tool + params)
+    schema: Literal["fcb.geometry-diff/2"]
+    op: dict                        # {"tool": str} — the args are not echoed; the confirm
+                                    #   token signs their digest
     doc: DocHandle                  # live target document (§9)
     deltas: dict                    # required: {"volume": ScalarDelta, "area": ScalarDelta,
                                     #  "bbox": {"before": [6]float, "after": [6]float,
@@ -221,12 +222,15 @@ class GeometryDiff(TypedDict, total=False):
     validity: dict                  # required: {"is_valid": bool, "recompute_clean": bool,
                                     #  "recompute_errors": [{"object": str, "error": str}]}
     tnp_precheck: dict              # required: {"status": "CLEAN"|"FLAGGED"|"UNSUPPORTED",
-                                    #  "flagged": [{"object": str, "reference": Selector,
-                                    #               "kind": "re_point"|"drop"|"marker"}]}
+                                    #  "element_map_version": str,
+                                    #  "counts": {<verdict>: int},
+                                    #  "findings": [non-PASS only, verification-design §3.3 shape]}
     fingerprint_before: str         # live-doc FingerprintRecord.digest — audit-vocabulary reuse (§6)
     render: dict | None             # {"available": bool, "reason": str|None} — images travel in
                                     #   the envelope (§4), never inside the diff
 ```
+
+The shipped code returned every finding, PASS included (`usecases/preview.py:587`); `/2` restores the summarized shape.
 
 `tnp_precheck.status == "UNSUPPORTED"` (no element map, AD-7/AD-11) is surfaced to the confirmer verbatim — the preview never claims clean. The diff is computed on a `copyObject` TempDoc (AD-20 lifecycle); `before` values come from the live document, `after` from the copy. Confirmation gates on this object; renders are optional overlay (AD-10).
 
@@ -275,7 +279,9 @@ class MassProps(TypedDict):
     volume: float; area: float
     bbox: list[float]               # [xmin, ymin, zmin, xmax, ymax, zmax], mm
     com: list[float]                # [3]
-    principal_moments: list[float]  # [3]
+    principal_moments: list[float]  # [3], from the shape's solids
+    inertia: list[float]            # [6] Ixx, Iyy, Izz, Ixy, Ixz, Iyz about com, document axes,
+                                    #   from the solids; optional (additive, AD-28)
     quantum: float                  # always 1e-6 (spine Numeric-tolerance convention)
 
 class ObjectFingerprint(TypedDict):
@@ -295,9 +301,13 @@ class FingerprintRecord(TypedDict):
 
 Comparison rule (normative, AD-6): two records are comparable **iff `serializer` tags are equal**; a helper `fingerprints_equal(a, b)` raises on tag mismatch rather than returning False — cross-tag comparison is a programming error, never a "changed" verdict. Equality = `digest` equality; on mismatch, `massprops` provides the human-diffable cross-oracle. Document-XML/FCStd and tessellation hashes are banned as identity oracles and have no contract type.
 
-**Read-only-after-render verdict (normative):** a check that a read-only operation (a render/screenshot) did not mutate the document compares `massprops_equal(before, after)` — the geometric invariants — **not** the `digest`. OCCT re-lays-out a freshly loaded shape's BRep bytes the first time a render touches it, so the digest legitimately shifts while the geometry is unchanged; a digest comparison here yields a false "changed" verdict. The invariants compared are `volume`, `area`, `com`, and `principal_moments`; `bbox` is excluded because `Shape.BoundBox` is tessellation-derived and shifts when a render/export refines the mesh. A genuine mutation still changes the mass-properties.
+**Read-only-after-render verdict (normative):** a check that a read-only operation (a render/screenshot) did not mutate the document compares `massprops_equal(before, after)` — the geometric invariants — **not** the `digest`. OCCT re-lays-out a freshly loaded shape's BRep bytes the first time a render touches it, so the digest legitimately shifts while the geometry is unchanged; a digest comparison here yields a false "changed" verdict. The invariants compared are `volume`, `area`, `com`, `principal_moments` and `inertia`; `bbox` is excluded because `Shape.BoundBox` is tessellation-derived and shifts when a render/export refines the mesh. A genuine mutation still changes the mass-properties.
 
-**Snapshot-restore rollback verdict (normative):** `run_mutation`'s snapshot-restore path proves the rollback with `massprops_equal(fp_before, fingerprint(restored))` over the same object-name set, not with the digest. Reopening the `saveCopy` file re-serializes every shape, so the B-rep bytes never match the in-memory shapes the snapshot was saved from. The abort path still proves rollback by digest equality. A null-shape entry carries zeroed mass properties, so it equals another null-shape entry and differs from a real shape.
+**Snapshot-restore rollback verdict (normative):** `run_mutation`'s snapshot-restore path proves the rollback with `massprops_equal(fp_before, fingerprint(restored))` over the same object-name set, not with the digest. Reopening the `saveCopy` file re-serializes every shape, so the B-rep bytes never match the in-memory shapes the snapshot was saved from. The abort path proves rollback by digest equality first, then by `massprops_equal` when the digest differs: a recompute after `abortTransaction` writes new B-rep bytes for shapes whose geometry it restored (measured 2026-10-06 on `kiwibox-drawer.FCStd`: 33 objects with new bytes, 0 with changed mass properties). Only an invariant mismatch escalates to the snapshot restore. A null-shape entry carries zeroed mass properties, so it equals another null-shape entry and differs from a real shape.
+
+### 9.1 Wire projection
+
+The full `FingerprintRecord` never travels in a tool result. A `MutationBlock` (`fcb.mutation/2`) carries `fingerprint_before` / `fingerprint_after` as `{"digest": str, "serializer": str}`, and `changed: [{name, volume, area, com}]` for each object whose invariants (`volume`, `area`, `com`, `principal_moments`, `inertia`) differ. On a failed or rolled-back mutation each `changed` entry adds `before` and `after` `MassProps`. The server keeps full records in a digest-keyed in-process cache; `document_undo` resolves `expect_fingerprint` digests through it. `/1` stays for audit replay (AD-28).
 
 ## 10. RPC wire contract (`rpc.py`) — AD-2/AD-3
 

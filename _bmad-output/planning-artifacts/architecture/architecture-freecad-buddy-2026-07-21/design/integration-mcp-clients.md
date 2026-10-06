@@ -120,7 +120,7 @@ No native skill mechanism exists on this path. Skills are delivered by injection
 | MCP client without elicitation (llama.cpp, LM Studio) | `structuredContent` + text mirror | `preview_id` (confirm token) from `preview_dry_run` + client's own tool-approval prompt | Missing/stale token → reject |
 | Headless CI / agent-to-agent | Diff JSON in job log / report | **Fail-closed**: no mutation without explicit `autoApprove` flag; every auto-approval audit-logged with its diff (AD-10, AD-17) | Mutation rejected |
 
-Invariants: the structured diff is the mandatory payload in every row; confirmation never gates on a render succeeding; `autoApprove` is an operator-set env flag (conventions), never a client-supplied parameter.
+Invariants: the structured diff is the mandatory payload in every row; confirmation never gates on a render succeeding; `autoApprove` is an operator-set env flag (conventions), never a client-supplied parameter. The operator may set `autoApprove` for any context, attended GUI work included; a mutation then applies in one call, every approval is audit-logged, and `preview_dry_run` stays available to the agent.
 
 ## 5. Image / Render Delivery Rules (AD-10)
 

@@ -66,6 +66,9 @@
 #   (both edit post-verify in usecases/transaction.py and usecases/verify.py); 10-7 runs alongside;
 #   10-7 -> 10-7b (the runner encodes the corrected test cases); 10-8 (full UAT re-run, Gate 1
 #   green, using the 10-7b runner) is last and closes the epic.
+# - Epic 11 (sprint-change-proposal-2026-10-06) cuts agent calls, result size and bridge time.
+#   11-1 -> 11-2 and 11-1 -> 11-4; 11-3 is parallel-eligible; 11-4 merges after 11-2; 11-1..11-4 finish before
+#   10-7 starts; 11-5 runs alongside; 11-6 is last.
 
 project: freecad-buddy
 project_key: NOKEY
@@ -158,6 +161,14 @@ development_status:
   10-7b-scripted-uat-runner-and-freecad-probe: backlog
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional
+  epic-11: backlog
+  11-1-mass-properties-that-tell-shapes-apart: backlog
+  11-2-quiet-result-envelope: backlog
+  11-3-one-call-per-mutation: backlog
+  11-4-cheap-correct-rollback-proof-and-fingerprints: backlog
+  11-5-build-loop-skills: backlog
+  11-6-measured-build-session: backlog
+  epic-11-retrospective: optional
 
 action_items:
   - epic: 1

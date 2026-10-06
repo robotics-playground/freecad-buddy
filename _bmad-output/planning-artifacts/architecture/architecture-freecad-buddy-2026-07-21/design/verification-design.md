@@ -61,7 +61,10 @@ def run_mutation(doc, op) -> ResultEnvelope:
     # --- rollback with proof (R4) ---
     doc.abortTransaction()
     doc.recompute()                                   # R2
-    if fingerprint(doc) == fp_before:
+    fp_rolled = fingerprint(doc)
+    # recompute after abort writes new B-rep bytes for restored shapes, so on a
+    # large document the digest alone reports a false mismatch
+    if fp_rolled == fp_before or massprops_equal(fp_rolled, fp_before):
         rollback = "rolled_back_verified"
     else:
         restore_from_snapshot(doc, snap_path)         # close + reopen from saveCopy
@@ -109,7 +112,8 @@ def _massprops(shape):
     bb = shape.BoundBox
     t = (shape.Volume, shape.Area,
          bb.XMin, bb.YMin, bb.ZMin, bb.XMax, bb.YMax, bb.ZMax,
-         *shape.CenterOfMass, *principal_moments(shape))
+         *shape.CenterOfMass, *principal_moments(shape),   # from the solids
+         *inertia_tensor(shape))                         # 6 values about the COM
     return tuple(round(v / Q) * Q for v in t)
 
 def fingerprint(doc) -> Fingerprint:
@@ -187,6 +191,8 @@ trap it is meant to catch.
 ### 3.3 Verdict shape
 
 Per reference: `{owner, prop, mapped_before, state_after, verdict: PASS|BROKEN|REPOINTED|DROPPED|UNSUPPORTED, layer: 0|1|2, detail}`. Aggregate verdict feeds `post_verify` (§1.3): any non-PASS (other than re-baselined, below) → mutation fails and rolls back. Every audit report records the `ElementMapVersion` banner (spine conventions).
+
+On the wire (tool results) the audit is summarized per the spine Tool-results convention: `{status, element_map_version, counts: {<verdict>: n}, findings: [non-PASS only]}`. The full per-reference list is computed and used for the aggregate verdict exactly as above; only the PASS entries are not serialized.
 
 ### 3.4 `ElementMapVersion` re-baseline rule
 

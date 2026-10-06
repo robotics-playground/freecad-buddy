@@ -59,7 +59,9 @@ They open FreeCAD. The addon starts the RPC listener and spawns the MCP proxy; t
 setup. In a side window they talk to their agent, which loads the skills library, calls
 `query_tree_summary` to orient itself in the open document, and answers or acts. When the ask is a
 change, the agent calls `preview_dry_run`, shows the structured diff, and applies it on confirmation
-through a typed `sketch_*`/`feature_*` tool. When the ask is a whole part, the same conversation runs
+through a typed `sketch_*`/`feature_*` tool. When the operator has set auto-approve, the agent
+applies the typed tool directly; the same checks and rollback run, and the preview stays available.
+When the ask is a whole part, the same conversation runs
 longer: the agent plans, builds, measures with `verify_*`, looks at the rendered views, and repairs —
 `design-loop` tells it how, and `visual-review` tells it what to look for. Asking a question,
 executing one command, and building a part are one continuum, not three products.
