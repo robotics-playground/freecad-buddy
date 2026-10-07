@@ -20,6 +20,7 @@ from freecad_buddy.contracts import fingerprints_equal
 from freecad_buddy.usecases import confirm, shim, tnp_guard, transaction, verify
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
+from infc.rollback_plant import abort_proof_mismatch
 
 BOX_L = 10.0
 BOX_W = 20.0
@@ -200,23 +201,98 @@ class RollbackProofTest(_MutationFixture):
         self.assertTrue(fingerprints_equal(fingerprint(document), before))
         self.assertNotIn("Sph6031", [obj.Name for obj in document.Objects])
 
+    def test_should_prove_the_abort_without_a_restore_when_only_the_bytes_differ(self):
+        # Arrange
+        # The recompute after an abort writes new B-rep bytes for every shape it rebuilds; on the
+        # drawer copy 33 objects did. Their geometry is unchanged, so the abort alone is proven.
+        self._add_padded_body()
+        original = self.document
+        real_equal = transaction.fingerprints_equal
+        real_restore = transaction._restore_from_snapshot
+        restores = []
+
+        def recording_restore(document, snapshot_path):
+            restores.append(snapshot_path)
+            return real_restore(document, snapshot_path)
+
+        transaction.fingerprints_equal = lambda left, right: False
+        transaction._restore_from_snapshot = recording_restore
+
+        # Act
+        try:
+            document, envelope = self._run("rebuilt bytes", _raise_after_add)
+        finally:
+            transaction.fingerprints_equal = real_equal
+            transaction._restore_from_snapshot = real_restore
+
+        # Assert
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"], block["post_verify"]["explanation"])
+        self.assertEqual(block["rollback_proven"], "rolled_back_verified")
+        self.assertEqual(restores, [])
+        self.assertIs(document, original)
+        self.assertNotIn("Sph", [obj.Name for obj in document.Objects])
+        self.assertEqual(_snapshot_leftovers(), [])
+
+    def test_should_restore_the_snapshot_when_the_bytes_differ_and_undo_was_unavailable(self):
+        # Arrange
+        # With undo off the abort restored nothing, so equal mass properties prove nothing: a
+        # 180 degree turn about a principal axis keeps them. Undo is really on here, so the abort
+        # does restore and the mass properties match: only the reported undo state decides.
+        self.document.UndoMode = 1
+        real_enable_undo = shim.enable_undo
+        real_equal = transaction.fingerprints_equal
+        shim.enable_undo = lambda document: False
+        transaction.fingerprints_equal = lambda left, right: False
+
+        # Act
+        try:
+            document, envelope = self._run("undo unavailable", _raise_after_add)
+        finally:
+            shim.enable_undo = real_enable_undo
+            transaction.fingerprints_equal = real_equal
+
+        # Assert
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"], block["post_verify"]["explanation"])
+        self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
+        self.assertNotIn("Sph", [obj.Name for obj in document.Objects])
+
+    def test_should_hash_once_after_the_abort_and_report_that_record_when_a_gated_op_fails(self):
+        # Arrange
+        fp_before = fingerprint(self.document)
+        real = transaction.fingerprint
+        records = []
+
+        def recording(document, fresh=False):
+            record = real(document, fresh)
+            records.append((fresh, record))
+            return record
+
+        transaction.fingerprint = recording
+
+        # Act
+        try:
+            _, envelope = transaction.run_mutation(
+                self.document, self.handle, "raising op", _raise_after_add, fp_before=fp_before
+            )
+        finally:
+            transaction.fingerprint = real
+
+        # Assert
+        block = envelope["structured_content"]["mutation"]
+        self.assertEqual(block["rollback_proven"], "rolled_back_verified")
+        self.assertEqual([fresh for fresh, _ in records], [True])
+        self.assertEqual(block["fingerprint_before"]["digest"], fp_before["digest"])
+        self.assertEqual(block["fingerprint_after"]["digest"], records[0][1]["digest"])
+
     def test_a_snapshot_restore_of_a_body_document_is_proven_on_mass_properties(self):
         # Reopening the snapshot re-serializes every shape, so a PartDesign document never gets
         # its B-rep digest back; the restore must still be provable.
         self._add_padded_body()
         before = fingerprint(self.document)
-        real_equal = transaction.fingerprints_equal
-        calls = []
-
-        def once_unequal(left, right):
-            calls.append(1)
-            return False if len(calls) == 1 else real_equal(left, right)
-
-        transaction.fingerprints_equal = once_unequal
-        try:
+        with abort_proof_mismatch():
             document, envelope = self._run("forced restore", _raise_after_add)
-        finally:
-            transaction.fingerprints_equal = real_equal
 
         block = envelope["structured_content"]["mutation"]
         self.assertTrue(block["rolled_back"], block["post_verify"]["explanation"])
@@ -349,11 +425,11 @@ class BracketGuardTest(_MutationFixture):
         real = transaction.fingerprint
         calls = {"n": 0}
 
-        def _fail_after_the_first(document):
+        def _fail_after_the_first(document, fresh=False):
             calls["n"] += 1
             if calls["n"] >= 2:
                 raise _PlantedFailure("planted post-commit fingerprint failure")
-            return real(document)
+            return real(document, fresh)
 
         transaction.fingerprint = _fail_after_the_first
         try:
@@ -377,7 +453,7 @@ class BracketGuardTest(_MutationFixture):
     def test_a_failing_pre_bracket_fingerprint_returns_an_envelope_and_opens_no_transaction(self):
         real = transaction.fingerprint
 
-        def _always_fails(document):
+        def _always_fails(document, fresh=False):
             raise _PlantedFailure("planted pre-bracket fingerprint failure")
 
         transaction.fingerprint = _always_fails
@@ -767,7 +843,7 @@ class AuditRecordTest(_MutationFixture):
         sink = self._RecordingSink()
         real = transaction.fingerprint
 
-        def _always_fails(document):
+        def _always_fails(document, fresh=False):
             raise RuntimeError("planted pre-bracket fingerprint failure")
 
         transaction.fingerprint = _always_fails

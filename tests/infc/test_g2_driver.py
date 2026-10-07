@@ -164,13 +164,13 @@ class DrivenCaseTest(DriverFixture):
         self.assertNotIn("Pad", outcome.undo["restored_objects"])
 
     def test_should_match_the_pre_op_state_on_geometry_when_undoing_a_padded_sketch(self):
-        """The undo restores the geometry but not the bytes, and the published digest bridges it.
+        """The undo restores the pre-op state, and the published digest matches it.
 
-        Padding attaches a pcurve per new face and the undo drops the faces without dropping the
-        representations, so the post-undo digest differs from the pre-op one (DW-97). The driver
-        passes the pre-op digest, which the preview and the bracket published, so ``document_undo``
-        resolves it to the held record and compares mass properties: G2.3 measures geometric
-        identity for a published digest.
+        Padding attaches a pcurve per new face to the sketch's edges in place, and the undo drops
+        the faces without dropping the representations (DW-97). The sketch keeps its TShape, so
+        the fingerprint reuses the entry it cached before the pad and the post-undo digest equals
+        the published pre-op one. A digest whose entry was evicted is resolved to its held record
+        and compared on mass properties (``test_document_undo``).
         """
         # Arrange
         case = self.case
@@ -180,7 +180,7 @@ class DrivenCaseTest(DriverFixture):
 
         # Assert
         self.assertIs(outcome.undo["matches_pre_op"], True, outcome.undo)
-        self.assertNotEqual(
+        self.assertEqual(
             outcome.undo["fingerprint_after"], outcome.mutation["fingerprint_before"]["digest"]
         )
         self.assertNotEqual(

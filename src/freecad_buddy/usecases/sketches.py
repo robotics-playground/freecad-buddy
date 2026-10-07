@@ -574,13 +574,20 @@ def _sketch_mutation(
     rebound: list = []
 
     def call(handle: str, document: object):
-        approval = confirm.gate_mutation(document, handle, tool, params)
+        approval, fp_before = confirm.gate_mutation(document, handle, tool, params)
         if precheck is not None:
             precheck(document)
         confirm.spend_confirm(approval, params)
         confirm.audit_approval(audit_sink, approval, params)
         result = transaction.run_mutation(
-            document, handle, label, op, audit_sink=audit_sink, tool=tool, params=params
+            document,
+            handle,
+            label,
+            op,
+            audit_sink=audit_sink,
+            tool=tool,
+            params=params,
+            fp_before=fp_before,
         )
         rebound.append(result[0])
         # The reported state is read here, in the window that produced it: reading it after this

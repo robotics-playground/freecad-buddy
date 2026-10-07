@@ -1,0 +1,23 @@
+ M _bmad-output/implementation-artifacts/sprint-status.yaml
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/verification-design.md
+ M benchmarks/_registry/validators.yaml
+ M src/freecad_buddy/usecases/confirm.py
+ M src/freecad_buddy/usecases/features.py
+ M src/freecad_buddy/usecases/fingerprint.py
+ M src/freecad_buddy/usecases/sketches.py
+ M src/freecad_buddy/usecases/tnp_guard.py
+ M src/freecad_buddy/usecases/transaction.py
+ M tests/external/test_fingerprint_contract.py
+ M tests/infc/test_confirm_gate.py
+ M tests/infc/test_document_undo.py
+ M tests/infc/test_feature_tools.py
+ M tests/infc/test_g2_driver.py
+ M tests/infc/test_mutation_protocol.py
+ M tests/infc/test_sketch_tools.py
+ M tests/infc/test_tnp_guard.py
+ M tests/infc/test_verify_tools.py
+?? _bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md
+?? scripts/automation/time_mutation_overhead.py
+?? tests/infc/rollback_plant.py
+?? tests/uat/run/2026-10-07-02/
+118e7650400e1dc15082e186cef7fa0c671e1124

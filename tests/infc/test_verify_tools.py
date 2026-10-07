@@ -119,6 +119,95 @@ class FingerprintTest(_DocFixture):
         for datum in ("XY_Plane", "XZ_Plane", "YZ_Plane", "X_Axis", "Y_Axis", "Z_Axis"):
             self.assertNotIn(datum, names, f"{datum} must not be hashed")
 
+    def _serializations(self, **kwargs):
+        """Fingerprint the document, returning the record and how many shapes it serialized."""
+        real = fingerprint._serialize
+        calls = []
+
+        def counting(shape):
+            calls.append(shape)
+            return real(shape)
+
+        fingerprint._serialize = counting
+        try:
+            record = fingerprint.fingerprint(self.document, **kwargs)
+        finally:
+            fingerprint._serialize = real
+        return record, len(calls)
+
+    def test_should_reuse_the_entry_when_the_shape_is_unchanged(self):
+        # Arrange
+        self._add_box()
+        first = fingerprint.fingerprint(self.document)
+
+        # Act
+        second, serialized = self._serializations()
+
+        # Assert
+        self.assertEqual(serialized, 0)
+        self.assertEqual(second["digest"], first["digest"])
+
+    def test_should_recompute_the_entry_when_a_recompute_builds_a_new_shape(self):
+        # Arrange
+        box = self._add_box()
+        first = fingerprint.fingerprint(self.document)
+        box.Length = BOX_L + 1.0
+        self.document.recompute()
+
+        # Act
+        second, serialized = self._serializations()
+
+        # Assert
+        self.assertEqual(serialized, 1)
+        self.assertNotEqual(second["digest"], first["digest"])
+
+    def test_should_recompute_the_entry_when_only_the_placement_changes(self):
+        # Arrange
+        # A Part::Feature keeps its assigned TShape when moved, so only the location differs; a
+        # Part::Box would rebuild a new TShape on recompute and leave the location check untested.
+        feature = self.document.addObject("Part::Feature", "Moved")
+        feature.Shape = Part.makeBox(BOX_L, BOX_W, BOX_H)
+        self.document.recompute()
+        first = fingerprint.fingerprint(self.document)
+        unmoved = feature.Shape
+        feature.Placement = App.Placement(App.Vector(5, 0, 0), App.Rotation())
+        self.document.recompute()
+
+        # Act
+        second, serialized = self._serializations()
+
+        # Assert
+        self.assertTrue(unmoved.isPartner(feature.Shape), "the move must keep the TShape")
+        self.assertEqual(serialized, 1)
+        self.assertNotEqual(second["digest"], first["digest"])
+
+    def test_should_serialize_every_shape_when_fresh_is_set(self):
+        # Arrange
+        self._add_box()
+        self._add_box("Second")
+        first = fingerprint.fingerprint(self.document)
+
+        # Act
+        second, serialized = self._serializations(fresh=True)
+
+        # Assert
+        self.assertEqual(serialized, 2)
+        self.assertEqual(second["digest"], first["digest"])
+
+    def test_should_hold_four_documents_and_evict_the_least_recently_fingerprinted(self):
+        # Arrange
+        fingerprint._ENTRY_CACHE.clear()
+        documents = [App.newDocument(f"entry_cache_{index}") for index in range(5)]
+        names = [document.Name for document in documents]
+
+        # Act
+        for document in documents:
+            fingerprint.fingerprint(document)
+        fingerprint.fingerprint(documents[1])
+
+        # Assert
+        self.assertEqual(list(fingerprint._ENTRY_CACHE), names[2:] + [names[1]])
+
     def test_a_body_survives_a_save_reload_round_trip(self):
         """The snapshot-restore rollback path re-hashes after saveCopy + reopen.
 

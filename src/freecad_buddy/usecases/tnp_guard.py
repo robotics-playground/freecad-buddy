@@ -319,12 +319,14 @@ def snapshot_references(doc: object) -> list[RefRecord]:
         for prop in sorted(getattr(obj, "PropertiesList", None) or ()):
             try:
                 type_id = obj.getTypeIdOfProperty(prop)
-                value = getattr(obj, prop, None)
+                # A value is read only once its type passes: reading ``Shape`` copies the object's
+                # ``TopoShape`` with its element map into a new Python object.
                 if type_id == _EXPRESSION_ENGINE_TYPE:
-                    records.extend(_expression_records(obj, prop, value))
+                    records.extend(_expression_records(obj, prop, getattr(obj, prop, None)))
                     continue
                 if type_id not in _LINK_SUB_TYPES:
                     continue
+                value = getattr(obj, prop, None)
                 version = _element_map_version(obj)
                 for target, subs in _link_sub_entries(value):
                     records.append(

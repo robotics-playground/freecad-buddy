@@ -1,0 +1,20 @@
+  g0-fault-clean-control                     PASS_CLEAN  OK               PASS_CLEAN
+  g0-fault-degenerate-face                   DETECT      SPEC_FAILED      DETECTED
+  g0-fault-dropped-solid                     DETECT      SPEC_FAILED      DETECTED
+  g0-fault-invalid-self-intersecting-solid   DETECT      SPEC_FAILED      DETECTED
+  g0-fault-non-manifold                      DETECT      SPEC_FAILED      DETECTED
+  g0-fault-non-watertight-open-shell         DETECT      SPEC_FAILED      DETECTED
+  g0-fault-self-intersecting-compound        DETECT      SPEC_FAILED      DETECTED
+  g0-fault-unit-lie                          DETECT      SPEC_FAILED      DETECTED
+  g0-fault-wrong-bbox                        DETECT      SPEC_FAILED      DETECTED
+  g0-fault-wrong-solid-count                 DETECT      SPEC_FAILED      DETECTED
+  g0-fault-wrong-volume                      DETECT      SPEC_FAILED      DETECTED
+  g0-fault-zero-volume-lamina                DETECT      SPEC_FAILED      DETECTED
+
+  planted=11 detected=11 sensitivity=1.000
+  controls=1 flagged=0 false_alarm=0.000
+  wilson_ci=[0.741, 1.000]
+  wrote D:\Work\Personal\Sources\freecad-buddy\benchmarks\_registry\validators.yaml
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+

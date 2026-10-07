@@ -37,9 +37,12 @@ One wrapper — `run_mutation()` — is the only path any `sketch_*` / `feature_
 ### 1.2 Wrapper pseudocode
 
 ```python
-def run_mutation(doc, op) -> ResultEnvelope:
+def run_mutation(doc, op, fp_before=None) -> ResultEnvelope:
     # --- pre-state capture (outside the transaction) ---
-    fp_before   = fingerprint(doc)                    # AD-6, §2
+    # fp_before is the record the confirm gate took under the same lock; a preview's copy is
+    # exempt from the gate and passes none, so the wrapper takes its own
+    if fp_before is None:
+        fp_before = fingerprint(doc)                  # AD-6, §2
     refs_before = snapshot_references(doc)            # AD-7, §3
     snap_path   = temp_snapshot_path(doc)             # reserved-prefix temp file
     doc.saveCopy(snap_path)                           # R6: guaranteed fallback
@@ -61,7 +64,7 @@ def run_mutation(doc, op) -> ResultEnvelope:
     # --- rollback with proof (R4) ---
     doc.abortTransaction()
     doc.recompute()                                   # R2
-    fp_rolled = fingerprint(doc)
+    fp_rolled = fingerprint(doc, fresh=True)          # every entry computed anew, §2
     # recompute after abort writes new B-rep bytes for restored shapes, so on a
     # large document the digest alone reports a false mismatch
     if fp_rolled == fp_before or massprops_equal(fp_rolled, fp_before):
@@ -71,10 +74,12 @@ def run_mutation(doc, op) -> ResultEnvelope:
         doc.recompute()
         # reopen re-serializes every shape, so the digest never matches here;
         # the restore is proven on mass properties over the same object names
-        assert massprops_equal(fingerprint(doc), fp_before), "ROLLBACK FAILED"
+        fp_rolled = fingerprint(doc, fresh=True)
+        assert massprops_equal(fp_rolled, fp_before), "ROLLBACK FAILED"
         rollback = "rolled_back_via_snapshot"
     delete(snap_path)
-    return failed_envelope(report, rollback=rollback) # status per AD-17 closed set
+    return failed_envelope(report, rollback=rollback,
+                           fp_after=fp_rolled)       # the proof's record, not a third hash
 ```
 
 ### 1.3 `post_verify` composition
@@ -140,20 +145,28 @@ def _massprops(shape):
     return (tuple(round(v / Q) * Q for v in t)
             + tuple(round(v / step) * step for v in (*moments, *tensor)))
 
-def fingerprint(doc) -> Fingerprint:
-    entries = []
+def fingerprint(doc, fresh=False) -> Fingerprint:
+    previous = {} if fresh else CACHE.get(doc.Name, {})     # §2.3
+    current, entries = {}, []
     for obj in sorted(doc.Objects, key=lambda o: o.Name):   # immutable Name order
         shape = getattr(obj, "Shape", None)
         if shape is None:                                    # no Shape attribute: not hashed
             continue
         if shape.isNull():                                   # a null shape still enters the digest
             entries.append((obj.Name, hashlib.sha256(b"").hexdigest(), ZERO_MASSPROPS))
-            continue
-        buf = io.BytesIO()
-        serialize(shape, buf)                                # probed: exportBinary | exportBrep
-        entries.append((obj.Name,
-                        hashlib.sha256(buf.getvalue()).hexdigest(),
-                        _massprops(shape)))
+            continue                                         # never cached
+        cached = previous.get(obj.Name)
+        if cached is not None and cached.shape.isEqual(shape):
+            entry = cached.entry                             # same TShape, location, orientation
+        else:
+            buf = io.BytesIO()
+            serialize(shape, buf)                            # probed: exportBinary | exportBrep
+            entry = (obj.Name,
+                     hashlib.sha256(buf.getvalue()).hexdigest(),
+                     _massprops(shape))
+        current[obj.Name] = (shape, entry)                   # holds the TShape alive
+        entries.append(entry)
+    CACHE[doc.Name] = current                                # replaced: removed objects drop out
     digest = hashlib.sha256(repr(entries).encode()).hexdigest()
     return Fingerprint(digest=digest, serializer=SERIALIZER_ID,
                        per_object=entries)                   # per-object detail = diff aid
@@ -171,7 +184,17 @@ The mass-property tuple is part of the digest material. Adding `inertia` and the
 
 Equality semantics: primary = digest equality (same serializer tag). The mass-property tuple is a cross-oracle: BRep-hash equality with mass-prop inequality (or vice versa) on a benchmark run is a validator bug and is investigated, not averaged away. The scope is *representation identity* (undo/rollback proof) — two independently rebuilt but geometrically equal shapes may hash differently, which is correct for this use.
 
-A non-datum object whose `Shape` is null enters the record as `{name, brep_sha256: sha256(b""), massprops: <every field 0.0, quantum Q>}`, so a feature whose shape went null (a broken Tip) never hashes equal to its pre-mutation state. A real serialization is never empty, so that hash cannot match a real shape, and the field types stay `str` and `MassProps` under `fcb.fingerprint/1`. An object with no `Shape` attribute stays out. Two comparisons use the digest and one does not: the abort path of §1.2 proves rollback by digest equality; the snapshot-restore path proves it with `massprops_equal` over the same object-name set, because a reopened file re-serializes every shape and its B-rep bytes never match the in-memory shape they were saved from.
+A non-datum object whose `Shape` is null enters the record as `{name, brep_sha256: sha256(b""), massprops: <every field 0.0, quantum Q>}`, so a feature whose shape went null (a broken Tip) never hashes equal to its pre-mutation state. A real serialization is never empty, so that hash cannot match a real shape, and the field types stay `str` and `MassProps` under `fcb.fingerprint/1`. An object with no `Shape` attribute stays out. The abort path of §1.2 proves rollback by digest equality, else `massprops_equal` over the same object-name set, because the recompute after an abort writes new B-rep bytes for the shapes it rebuilds (33 objects on a copy of `kiwibox-drawer.FCStd`) while their geometry is unchanged. The snapshot-restore path proves it with `massprops_equal` only, because a reopened file re-serializes every shape and its B-rep bytes never match the in-memory shape they were saved from.
+
+### 2.3 Entry cache
+
+`fingerprint` keeps, per document `Name`, the last entry of each object together with the `TopoShape` it was computed from. An object reuses its cached entry when the cached shape `isEqual` the current one: same TShape, location and orientation. Any rebuild makes a new TShape and a `Placement` change makes a new location, so both compute the entry again. FreeCAD exposes no per-object recompute counter, and `hashCode` alone can collide when a freed TShape address is reused; the cache holds the shape, so its TShape stays alive and equality means identity.
+
+- The map for a document is replaced on every call, so a removed object drops out. A null shape is never cached.
+- At most four documents are held, least recently used first out. Each held shape keeps its B-rep in memory.
+- `fresh=True` computes every entry anew. The abort-path proof and the snapshot-restore proof of §1.2 use it.
+- All callers run under the registry lock or on the GUI main thread, so the cache has no lock of its own.
+- A cached entry keeps the bytes of its first fingerprint. A representation OCCT adds to the same TShape later — a triangulation from a render or `exportBinary`, the pcurves a pad attaches to its profile's edges — does not change the digest. The digest is more stable across renders and undo for it; the rollback proofs are fresh and fall back to `massprops_equal`, so they are unaffected.
 
 ---
 

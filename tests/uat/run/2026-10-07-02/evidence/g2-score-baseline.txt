@@ -1,0 +1,45 @@
+<Exception> ObjectIdentifier.cpp(1456): Property 'NoSuchObject' not found in 'NoSuchObject.Height'
+in property binding 'fixture#Driven.Height'
+Driven: Property 'NoSuchObject' not found in 'NoSuchObject.Height'
+in property binding 'fixture#Driven.Height'
+  assertions         g2-fault-wrong-param-correct-pattern           PASS_CLEAN  OK/PASS                PASS_CLEAN
+  assertions         g2-fault-wrong-param-correct-pocket            PASS_CLEAN  OK/PASS                PASS_CLEAN
+  assertions         g2-fault-wrong-param-fillet-radius             DETECT      OK/FAIL |5768.230016469244 - 5896.991118430775| = 128.761101 DETECTED
+  assertions         g2-fault-wrong-param-hole-diameter             DETECT      OK/FAIL |5094.278837970062 - 5151.769983530756| = 57.4911455 DETECTED
+  assertions         g2-fault-wrong-param-mirror-plane              DETECT      OK/FAIL |12383.999999999998 - 12768.0| = 384.0000000000018 < DETECTED
+  assertions         g2-fault-wrong-param-pad-direction             DETECT      OK/FAIL |6000.0 - 7600.0| = 1600.0 <= 7.6000000000000005 mm^ DETECTED
+  assertions         g2-fault-wrong-param-pattern-count             DETECT      OK/FAIL logical holes 4 vs 3 DETECTED
+  assertions         g2-fault-wrong-param-pattern-spacing           DETECT      OK/FAIL nearest-neighbour gaps [12.0, 12.0, 12.0] vs declare DETECTED
+  assertions         g2-fault-wrong-param-pocket-depth              DETECT      OK/FAIL |5748.0 - 5820.0| = 72.0 <= 5.82 mm^3 DETECTED
+  assertions         g2-fault-wrong-param-revolve-angle             DETECT      OK/FAIL |3769.9111843077517 - 2261.946710584651| = 1507.9644 DETECTED
+  assertions         g2-fault-wrong-param-within-tolerance          PASS_CLEAN  OK/PASS                PASS_CLEAN
+  assertions         planted= 8 controls= 3 detected= 8 flagged= 0 sensitivity=1.000 false_alarm=0.000
+  audit_references   g2-fault-coincidental-genuine-match            PASS_CLEAN  OK/CLEAN               PASS_CLEAN
+  audit_references   g2-fault-coincidental-witness-match            DETECT      SPEC_FAILED/FLAGGED    DETECTED
+  audit_references   g2-fault-dressup-all-edges-retained            PASS_CLEAN  OK/CLEAN               PASS_CLEAN
+  audit_references   g2-fault-dressup-intended-edge-removal         PASS_CLEAN  OK/CLEAN               PASS_CLEAN
+  audit_references   g2-fault-tnp-b-attachment-support-deleted      DETECT      SPEC_FAILED/FLAGGED    DETECTED
+  audit_references   g2-fault-tnp-control-elementmap-version-bump   PASS_CLEAN  OK/CLEAN               PASS_CLEAN
+  audit_references   g2-fault-tnp-control-intended-target           PASS_CLEAN  OK/CLEAN               PASS_CLEAN
+  audit_references   g2-fault-tnp-control-unchanged-references      PASS_CLEAN  OK/CLEAN               PASS_CLEAN
+  audit_references   g2-fault-tnp-d-expression-rename-break         DETECT      RECOMPUTE_ERROR/FLAGGED DETECTED
+  audit_references   g2-fault-dressup-silent-edge-drop              NOT DRIVEABLE: FeatureDressUp::getContinuousEdges is C++-only on FreeCAD 1.1.x; no Python call plants a silent LinkSubList drop that the feature then recomputes cleanly over
+  audit_references   g2-fault-tnp-a-fillet-edge-renumber            NOT DRIVEABLE: the case grades DROPPED at layer 1 with must_not_be_caught_by: layer_0_error_sweep, and that combination is not reachable on FreeCAD 1.1.0. Measured over a parametric Part::Cut upstream of the fillet: renumbering that the element map survives keeps every mapped name (Edge1 -> Edge4 indexed, mapped 'Edge1;:H2b3,E' unchanged) and correctly grades PASS, while destroying the referenced topology outright marks the entry missing and the dress-up invalid, which is a layer-0 BROKEN verdict — the one the case excludes. A silent layer-1 drop needs the C++-only path DW-91 records
+  audit_references   g2-fault-tnp-c-external-geometry-source-changed NOT DRIVEABLE: the case grades BROKEN at layer 1 on a sketch carrying the Missing flag with its reference rendered '?', and no probed change to the source produces that state on FreeCAD 1.1.0. Measured three ways: replacing Source.Shape with a smaller box keeps the link resolving and correctly grades PASS; replacing it with a shape carrying no edges makes FreeCAD silently EMPTY the sketch's ExternalGeometry (measured 'ExternalGeometry = []', sketch still isValid() and status 'Valid'), so snapshot_references returns zero records and there is no reference left to grade rather than a broken one; and removing the Source object outright makes the guard report 'Sketch is no longer present in the document' although the Sketch object is present, which is a record-pairing defect in the guard, not a detection of this fault. Scoring any of these as a detection would credit the guard for a verdict it did not reach
+  audit_references   g2-fault-tnp-e-boolean-reorder-repoint         NOT DRIVEABLE: Part::MultiFuse.Shapes is a PropertyLinkList, which carries no subelement, so snapshot_references captures zero records for this fixture and there is no reference for the guard to grade a re-point against. Measured: 0 records before and after the reorder. Reaching the REPOINTED verdict needs a fixture whose face reference is held in a LinkSub property
+  audit_references   planted= 3 controls= 6 detected= 3 flagged= 0 sensitivity=1.000 false_alarm=0.000
+  fingerprint        planted= 0 controls= 0 detected= 0 flagged= 0 sensitivity=0.000 false_alarm=0.000
+                     NOT SCORED: no fault case targets this validator
+  run_mutation       g2-fault-rollback-failing-op-abort-clean       PASS_CLEAN  SPEC_FAILED/rolled_back_verified PASS_CLEAN
+  run_mutation       g2-fault-rollback-successful-op-no-rollback    PASS_CLEAN  OK/None                PASS_CLEAN
+  run_mutation       g2-fault-rollback-6031-nested-transaction      NOT DRIVEABLE: FreeCAD#6031 does not reproduce on FreeCAD 1.1.0 (Libs 1.1.0R20260325): measured directly, a nested openTransaction followed by one abortTransaction restores the pre-transaction object set exactly (HasPendingTransaction is False afterwards), so the abort fast path proves the rollback and the snapshot escalation this case grades is never reached. Forcing the escalation would grade a fault the build does not have
+  run_mutation       g2-fault-rollback-6031-sketch-on-plane         NOT DRIVEABLE: the same FreeCAD#6031 boundary, and the case already records the measurement: on this build abort restores the sketch, so the case yields rolled_back_verified — behaviourally identical to its own abort-clean control. Its expected_path_by_build map names the snapshot_restore path as reachable only on a build where abort leaves the sketch behind (deferred-work DW-74)
+  run_mutation       planted= 0 controls= 2 detected= 0 flagged= 0 sensitivity=0.000 false_alarm=0.000
+                     NOT SCORED: no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero
+  verify_sketch      planted= 0 controls= 0 detected= 0 flagged= 0 sensitivity=0.000 false_alarm=0.000
+                     NOT SCORED: no fault case targets this validator
+  wrote D:\Work\Personal\Sources\freecad-buddy\benchmarks\_registry\validators.yaml
+  BARS NOT MET: sensitivity<0.95, false_alarm>0.05, or a validator was not scored
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+

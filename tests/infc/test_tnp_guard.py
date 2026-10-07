@@ -797,6 +797,43 @@ class TargetIdentityTest(_BodyFixture):
         self.assertIn("BoxB -> BoxC", findings[1]["detail"])
 
 
+class _ReadRecorder:
+    """Delegates to a real object, recording the name of every attribute read through it."""
+
+    def __init__(self, inner):
+        object.__setattr__(self, "_inner", inner)
+        object.__setattr__(self, "reads", [])
+
+    def __getattr__(self, name):
+        object.__getattribute__(self, "reads").append(name)
+        return getattr(object.__getattribute__(self, "_inner"), name)
+
+
+class PropertyReadTest(_BodyFixture):
+    def test_should_never_read_a_non_link_value_when_snapshotting_references(self):
+        # Arrange
+        fillet = self._add_fillet()
+        recorder = _ReadRecorder(fillet)
+        document = type("_OneObjectDocument", (), {"Objects": [recorder]})()
+        reference_types = tnp_guard._LINK_SUB_TYPES | {tnp_guard._EXPRESSION_ENGINE_TYPE}
+        # The owner's ElementMapVersion is read once one of its link properties passes the filter.
+        expected_non_reference_reads = {"ElementMapVersion"}
+
+        # Act
+        records = tnp_guard.snapshot_references(document)
+
+        # Assert
+        self.assertIn("Base", [record["prop"] for record in records])
+        non_reference_reads = {
+            name
+            for name in recorder.reads
+            if name in fillet.PropertiesList
+            and fillet.getTypeIdOfProperty(name) not in reference_types
+        }
+        self.assertNotIn("Shape", recorder.reads)
+        self.assertLessEqual(non_reference_reads, expected_non_reference_reads)
+
+
 class WholeObjectLinkTest(_BodyFixture):
     def test_a_whole_object_link_passes_before_the_resolution_check(self):
         plane = self.document.addObject("PartDesign::Plane", "DatumPlane")

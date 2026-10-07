@@ -18,6 +18,7 @@ import Part
 import Sketcher
 
 from freecad_buddy.usecases import confirm, result_projection, transaction
+from freecad_buddy.usecases import fingerprint as fingerprint_module
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -553,6 +554,10 @@ class ExpectFingerprintRecordTest(_UndoFixture):
             return ["Pad"]
 
         envelope = self.run_mutation("pad the sketch", _pad)
+        # The pad attaches pcurves to the sketch's edges in place, so the sketch keeps its TShape
+        # and its cached entry would hide the byte change. Dropping the cache makes the next
+        # fingerprint serialize the sketch again, as it does once the entry has been evicted.
+        fingerprint_module._ENTRY_CACHE.clear()
         if published:
             return envelope["structured_content"]["mutation"]["fingerprint_before"]
         return pre_op

@@ -354,7 +354,7 @@ class RejectionTest(_GateFixture):
 
         real = fingerprint_module.fingerprint
 
-        def unreadable(document):
+        def unreadable(document, fresh=False):
             raise fingerprint_module.SerializerUnavailable("no serializer on this build")
 
         fingerprint_module.fingerprint = unreadable
@@ -571,6 +571,64 @@ class ApprovalAuditTest(_GateFixture):
         self.assertEqual({r["fingerprint_before"] for r in records}, {digest_before})
         self.assertEqual(records[0]["approval"]["mode"], "auto_approve")
         self.assertEqual(records[0]["approval"]["source"], "FREECAD_BUDDY_AUTO_APPROVE")
+
+    def test_should_fingerprint_twice_and_join_one_digest_when_a_gated_pad_commits(self):
+        # Arrange
+        import freecad_buddy.usecases.fingerprint as fingerprint_module
+
+        confirm.set_auto_approve(True)
+        real = fingerprint_module.fingerprint
+        calls = []
+
+        def counting(document, fresh=False):
+            calls.append(fresh)
+            return real(document, fresh)
+
+        fingerprint_module.fingerprint = counting
+        transaction.fingerprint = counting
+
+        # Act
+        try:
+            envelope, records = _through_a_real_audit_sink(lambda: self.pad(None))
+        finally:
+            fingerprint_module.fingerprint = real
+            transaction.fingerprint = real
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(calls, [False, False])
+        approval, before, after = records
+        self.assertEqual(approval["event"], "approval")
+        self.assertEqual(approval["fingerprint_before"], before["fingerprint_before"])
+        self.assertEqual(after["fingerprint_before"], before["fingerprint_before"])
+
+    def test_should_fingerprint_twice_when_a_gated_sketch_call_commits(self):
+        # Arrange
+        import freecad_buddy.usecases.fingerprint as fingerprint_module
+
+        confirm.set_auto_approve(True)
+        real = fingerprint_module.fingerprint
+        calls = []
+
+        def counting(document, fresh=False):
+            calls.append(fresh)
+            return real(document, fresh)
+
+        fingerprint_module.fingerprint = counting
+        transaction.fingerprint = counting
+
+        # Act
+        try:
+            envelope = sketches.sketch_create(
+                self.registry, doc=self.handle, name="Counted", plane="XY"
+            )
+        finally:
+            fingerprint_module.fingerprint = real
+            transaction.fingerprint = real
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(calls, [False, False])
 
     def test_a_preview_writes_no_approval_record(self):
         """A preview authorizes nothing and applies nothing, so it appends no approval line.

@@ -1,0 +1,60 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "name": "duct_pilot",
+  "label": "duct_pilot",
+  "type": "PartDesign::Pocket",
+  "properties": {
+   "AddSubShape": "<Compound object at 000001DE029C3C40>",
+   "AllowMultiFace": true,
+   "AlongSketchNormal": true,
+   "BaseFeature": "<PartDesign::Pocket>",
+   "Direction": "Vector (-0.0, -0.0, -1.0)",
+   "ExpressionEngine": [],
+   "FuzzyTolerance": -1.0,
+   "Label": "duct_pilot",
+   "Label2": "",
+   "Length": "6.0 mm",
+   "Length2": "5.0 mm",
+   "Midplane": false,
+   "Offset": "0.0 mm",
+   "Offset2": "0.0 mm",
+   "Placement": "Placement [Pos=(0,0,1.8), Yaw-Pitch-Roll=(0,0,0)]",
+   "PreviewShape": "<Shape object at 000001DE029C4B60>",
+   "Profile": [
+    "<Sketcher::SketchObject>",
+    []
+   ],
+   "ReferenceAxis": null,
+   "Refine": true,
+   "Reversed": false,
+   "Shape": "<Compound object at 000001DE029C34B0>",
+   "ShapeMaterial": "<Material at 000001DD5D1D9790>",
+   "SideType": "One side",
+   "Suppressed": false,
+   "SuppressedShape": "<Shape object at 000001DE029C3560>",
+   "TaperAngle": "0.0 deg",
+   "TaperAngle2": "0.0 deg",
+   "Type": "Length",
+   "Type2": "Length",
+   "UpToFace": null,
+   "UpToFace2": null,
+   "UpToShape": [],
+   "UpToShape2": [],
+   "UseCustomVector": false,
+   "Visibility": true,
+   "_Body": "<body object>",
+   "_ElementMapVersion": "15.70200.5"
+  },
+  "error": null
+ },
+ "text": "error: None\nlabel: duct_pilot\nname: duct_pilot\nproperties: {37 fields}\ntype: PartDesign::Pocket",
+ "framing": {
+  "fits": true,
+  "ratio": 0.94921875,
+  "checked": "computed",
+  "stale_reason": null
+ }
+}

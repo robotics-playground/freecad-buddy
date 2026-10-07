@@ -1,11 +1,12 @@
 """The uniform mutation protocol: ``run_mutation()`` and ``post_verify()``.
 
 ``run_mutation(doc, op)`` is the only path a mutation executes through. Outside the transaction
-it fingerprints the document, snapshots its references and writes a ``saveCopy`` snapshot to a
-reserved-prefix temp path. It then opens one transaction (never nested, never left open), applies
-the op, recomputes, and runs ``post_verify``. On pass it commits and deletes the snapshot; on
-failure or exception it aborts, recomputes, and proves restoration by re-hashing — escalating to
-restoring the snapshot when the hash does not match, which it proves on mass properties.
+it takes the pre-mutation fingerprint (the gate's, when the caller passes it), snapshots its
+references and writes a ``saveCopy`` snapshot to a reserved-prefix temp path. It then opens one
+transaction (never nested, never left open), applies the op, recomputes, and runs ``post_verify``.
+On pass it commits and deletes the snapshot; on failure or exception it aborts, recomputes, and
+proves restoration by a fresh re-hash, on the digest or else on mass properties — escalating to
+restoring the snapshot only when the mass properties differ too.
 
 Takes the already-resolved ``App.Document`` object, never a handle: ``DocumentRegistry
 .with_document`` holds a non-reentrant lock, so re-resolving inside the callback would deadlock.
@@ -67,12 +68,14 @@ class RollbackNotProven(RuntimeError):
 
     Carries the document the restore attempt left open in ``document``: the snapshot restore closes
     and reopens the document, so the caller's original object is dead by the time this raises and
-    only this one can still be read.
+    only this one can still be read. ``record`` is that document's fingerprint, the one the proof
+    compared.
     """
 
-    def __init__(self, message: str, document: object) -> None:
+    def __init__(self, message: str, document: object, record: FingerprintRecord) -> None:
         super().__init__(message)
         self.document = document
+        self.record = record
 
 
 class _ResolvedRegistry:
@@ -335,35 +338,48 @@ def _restore_from_snapshot(document: object, snapshot_path: str) -> object:
 
 
 def _prove_rollback(
-    document: object, fp_before: FingerprintRecord, snapshot_path: str
-) -> tuple[object, RollbackProof]:
-    """Prove the document is back at ``fp_before``, returning the document and the proof path.
+    document: object, fp_before: FingerprintRecord, snapshot_path: str, undo_enabled: bool
+) -> tuple[object, RollbackProof, FingerprintRecord]:
+    """Prove the document is back at ``fp_before``; return the document, proof path and record.
 
-    Re-hashes after the caller's abort + recompute. Digest equality proves
-    ``rolled_back_verified``. A mismatch (FreeCAD #6031: undo can fail to restore the
-    pre-``openTransaction`` boundary) restores from the snapshot, recomputes and compares again,
-    giving ``rolled_back_via_snapshot``.
+    Re-hashes after the caller's abort + recompute, computing every entry fresh. Digest equality
+    or, failing it, mass-property equality over the same object names proves
+    ``rolled_back_verified``: the recompute after an abort writes new B-rep bytes for the shapes it
+    rebuilds while their geometry is unchanged. The mass-property fallback applies only when undo
+    was enabled: otherwise the abort restored nothing, and a change mass properties cannot see,
+    such as a 180 degree rotation about a principal axis through the centre of mass, would be
+    proven. A mismatch (FreeCAD #6031: undo can fail to restore the pre-``openTransaction``
+    boundary) restores from the snapshot, recomputes and compares again, giving
+    ``rolled_back_via_snapshot``.
 
-    The restored document is compared on mass properties over the same object names, not on the
-    digest: reopening a file re-serializes every shape, so its B-rep bytes never match the
-    in-memory shape they were saved from, while volume, area, centre of mass, principal moments
-    and inertia tensor do. A null shape carries zeroed mass properties on both sides.
+    The restored document is compared on mass properties too: reopening a file re-serializes every
+    shape, so its B-rep bytes never match the in-memory shape they were saved from, while volume,
+    area, centre of mass, principal moments and inertia tensor do. A null shape carries zeroed mass
+    properties on both sides.
+
+    The returned record is the fingerprint the proof compared, so the caller reports it as the
+    after-fingerprint rather than hashing the document again.
 
     :raises RollbackNotProven: the restored document still does not match ``fp_before``.
     :raises ValueError: the fingerprints carry differing serializer tags.
     """
-    if fingerprints_equal(fingerprint(document), fp_before):
-        return document, "rolled_back_verified"
+    record = fingerprint(document, fresh=True)
+    if fingerprints_equal(record, fp_before) or (
+        undo_enabled and massprops_equal(record, fp_before)
+    ):
+        return document, "rolled_back_verified", record
 
     restored = _restore_from_snapshot(document, snapshot_path)
     restored.recompute()
-    if not massprops_equal(fingerprint(restored), fp_before):
+    record = fingerprint(restored, fresh=True)
+    if not massprops_equal(record, fp_before):
         raise RollbackNotProven(
             "rollback could not be proven: the snapshot-restored document does not match the "
             f"pre-mutation fingerprint {fp_before['digest']}",
             restored,
+            record,
         )
-    return restored, "rolled_back_via_snapshot"
+    return restored, "rolled_back_via_snapshot", record
 
 
 def _mutation_block(
@@ -544,18 +560,19 @@ def run_mutation(
     audit_sink: object = None,
     tool: str = "",
     params: dict | None = None,
+    fp_before: FingerprintRecord | None = None,
 ) -> tuple[object, ResultEnvelope]:
     """Execute ``op`` on ``document`` inside the mutation bracket; return the document + envelope.
 
     Outside the transaction: enable the document's undo stack (headless leaves it off, which makes
-    ``abortTransaction`` restore nothing), fingerprint the document, snapshot its references, write
-    a ``saveCopy`` snapshot. Then open one transaction named ``label``, apply ``op``, re-read the
-    references it wrote, recompute, and run ``post_verify``. On pass: commit, delete the snapshot,
-    return an ``OK`` envelope carrying
-    the after-fingerprint. On failure or exception: abort, recompute (mandatory — undo skips
-    recompute, so verifying first reads stale state), and prove restoration by re-hashing,
-    escalating to a snapshot restore on mismatch. The snapshot is deleted only after commit or
-    proven rollback.
+    ``abortTransaction`` restore nothing), fingerprint the document unless ``fp_before`` is given,
+    snapshot its references, write a ``saveCopy`` snapshot. Then open one transaction named
+    ``label``, apply ``op``, re-read the references it wrote, recompute, and run ``post_verify``.
+    On pass: commit, delete the snapshot, return an ``OK`` envelope carrying the after-fingerprint.
+    On failure or exception: abort, recompute (mandatory — undo skips recompute, so verifying first
+    reads stale state), and prove restoration by a fresh re-hash, escalating to a snapshot restore
+    when neither the digest nor the mass properties match. The proof's record is the block's
+    after-fingerprint. The snapshot is deleted only after commit or proven rollback.
 
     The returned document is the caller's document, or the reopened one when the snapshot-restore
     path ran (restoring closes and reopens the document, so the original handle's object is dead).
@@ -577,11 +594,13 @@ def run_mutation(
         (``confirm.host_audit_sink``), which is itself ``None`` while a preview runs its copy.
     :param tool: the tool name recorded on the audit lines.
     :param params: the tool arguments whose digest the audit lines record.
+    :param fp_before: the fingerprint the mutation gate took of ``document`` under the same lock;
+        ``None`` (a preview's copy, which the gate exempts) makes the bracket take its own.
     :raises ValueError: two fingerprints carry differing serializer tags.
     """
     params = params or {}
     sink = audit_sink if audit_sink is not None else confirm.host_audit_sink()
-    document, envelope = _bracket(document, handle, label, op, sink, tool, params)
+    document, envelope = _bracket(document, handle, label, op, sink, tool, params, fp_before)
     full_block = envelope["structured_content"]["mutation"]
     _audit_after(sink, tool, handle, params, full_block)
     envelope["structured_content"]["mutation"] = result_projection.project_mutation(full_block)
@@ -596,6 +615,7 @@ def _bracket(
     sink: object,
     tool: str,
     params: dict,
+    fp_before: FingerprintRecord | None,
 ) -> tuple[object, ResultEnvelope]:
     """The bracket ``run_mutation`` wraps; it writes the ``before`` line, not the ``after``."""
     params_digest = _params_digest(params)
@@ -604,11 +624,12 @@ def _bracket(
     # Setup runs before any transaction is open, so a failure here has mutated nothing. It still
     # has to return an envelope rather than escape: `fingerprint` raises SerializerUnavailable on
     # a shape exposing neither exporter, and `saveCopy` raises on an unwritable temp dir.
-    try:
-        fp_before = fingerprint(document)
-    except Exception as exc:  # noqa: BLE001 - setup failure must not escape as a raw exception
-        _audit_before(sink, tool, handle, params, None)
-        return document, _setup_failed_envelope(exc, params_digest)
+    if fp_before is None:
+        try:
+            fp_before = fingerprint(document)
+        except Exception as exc:  # noqa: BLE001 - setup failure must not escape as a raw exception
+            _audit_before(sink, tool, handle, params, None)
+            return document, _setup_failed_envelope(exc, params_digest)
     _audit_before(sink, tool, handle, params, fp_before)
 
     snapshot_path = None
@@ -670,7 +691,9 @@ def _bracket(
         # expected. Recorded so it is not misread as the #6031 undo-boundary defect.
         report["explanation"] = f"{report['explanation']}; undo unavailable on this document"
     try:
-        document, proof = _prove_rollback(document, fp_before, snapshot_path)
+        document, proof, fp_after = _prove_rollback(
+            document, fp_before, snapshot_path, undo_enabled
+        )
     except RollbackNotProven as exc:
         # R6: the snapshot is deleted only after commit or PROVEN rollback. An unproven rollback
         # keeps it so an operator still has the restore path, and reports it.
@@ -678,7 +701,7 @@ def _bracket(
         report["explanation"] = f"{report['explanation']}; {exc}"
         block = _mutation_block(
             fp_before,
-            fingerprint(document),
+            exc.record,
             report,
             False,
             None,
@@ -693,7 +716,7 @@ def _bracket(
     status = _rollback_status(report)
     block = _mutation_block(
         fp_before,
-        fingerprint(document),
+        fp_after,
         report,
         True,
         proof,

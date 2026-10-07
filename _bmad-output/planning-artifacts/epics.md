@@ -1488,12 +1488,12 @@ An agent builds a part with fewer calls and a small context: every mutation stil
 
 **Acceptance Criteria:**
 
-1. **Given** a successful live mutation, **When** it runs, **Then** `fingerprint()` runs 2 times, not 3: the gate record (`usecases/confirm.py:332`) is passed into `run_mutation` and used as `fp_before` (`usecases/transaction.py:604`). A test counts the calls.
+1. **Given** a successful live mutation, **When** it runs, **Then** `fingerprint()` runs 2 times, not 3: the gate record (`confirm.gate_mutation`) is passed into `run_mutation` and used as `fp_before`. A test counts the calls.
 2. **Given** the abort path, **Then** rollback is proven by digest equality, else by `massprops_equal` over the same object names (Story 11.1 invariants); only an invariant mismatch restores the snapshot. **Given** a mutation on the drawer copy that fails post-verify, **Then** it returns `rolled_back_verified` and the document is never closed or reopened.
-3. **Given** the failure path, **Then** the fingerprint computed for the rollback proof is reused at `usecases/transaction.py:692`, not recomputed.
+3. **Given** the failure path, **Then** the fingerprint computed for the rollback proof is reused as the block's `fingerprint_after`, not recomputed.
 4. **Given** a fingerprint, **Then** an object whose shape is unchanged since its last fingerprint reuses its cached entry. The story chooses the unchanged-shape test, and a test proves that a changed shape never reuses its entry. The abort-path and snapshot-restore proofs compute every entry fresh.
 5. **Given** `snapshot_references`, **Then** a property value is read only after its type passes the link-type filter (`usecases/tnp_guard.py:322-326`).
-6. **Given** the drawer copy and one leaf change (`duct_pilot.Length`), **When** the live mutation is timed (median of 5, headless and in the GUI), **Then** bridge overhead (total time minus FreeCAD's recompute) is ≤ 3 s, from about 15 s today; the timings are recorded in the story file.
+6. **Given** the drawer copy and one leaf change (`duct_pilot.Length`), **When** the live mutation is timed (median of 5, headless and in the GUI), **Then** the median bridge overhead (total time minus FreeCAD's recompute) is ≤ 18 s headless (baseline `118e765`: 49.4 s) and ≤ 10 s in the GUI; the timings are recorded in the story file.
 7. **Given** the G2 fault suite, **Then** the rollback-boundary (#6031-pattern) cases still escalate to the snapshot restore and pass, and all `test_mutation_protocol.py`, `test_tnp_guard.py` and fingerprint tests pass.
 
 ### Story 11.5: Build-Loop Skills

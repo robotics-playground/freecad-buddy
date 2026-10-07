@@ -1,0 +1,48 @@
+{
+  "document": "C:/Users/thuan/AppData/Local/Temp/claude/D--Work-Personal-Sources-freecad-buddy/7d256914-16b8-4768-a149-443e6960a072/scratchpad/kiwibox-drawer-copy.FCStd",
+  "feature": "duct_pilot",
+  "lengths": [
+    6.0,
+    5.5
+  ],
+  "mode": "headless",
+  "objects": 184,
+  "samples": [
+    {
+      "tool_seconds": 62.751188000002,
+      "recompute_seconds": 31.1525690999988,
+      "overhead_seconds": 31.598618900003203
+    },
+    {
+      "tool_seconds": 45.16958429999795,
+      "recompute_seconds": 26.453367199996137,
+      "overhead_seconds": 18.716217100001813
+    },
+    {
+      "tool_seconds": 44.469307300001674,
+      "recompute_seconds": 26.868394199998875,
+      "overhead_seconds": 17.6009131000028
+    },
+    {
+      "tool_seconds": 44.45292419999896,
+      "recompute_seconds": 27.04980120000255,
+      "overhead_seconds": 17.403122999996413
+    },
+    {
+      "tool_seconds": 43.73380239999824,
+      "recompute_seconds": 26.291310100001283,
+      "overhead_seconds": 17.442492299996957
+    }
+  ],
+  "median_tool_seconds": 44.469307300001674,
+  "median_recompute_seconds": 26.868394199998875,
+  "median_overhead_seconds": 17.6009131000028,
+  "abort": {
+    "seconds": 39.973348100000294,
+    "status": "SPEC_FAILED",
+    "rollback_proven": "rolled_back_verified",
+    "same_document": true,
+    "close_document_calls": [],
+    "passed": true
+  }
+}

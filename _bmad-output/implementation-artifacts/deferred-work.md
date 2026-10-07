@@ -1586,3 +1586,18 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-3-one-call-per-mutation.md`
   summary: `CLAUDE.md` §15 names `README.md` as the source of the branching model and contribution rules, but the root `README.md` (first committed in Story 11.3) holds only "Operator setup".
   evidence: Story 11.3 review, blind layer. The fix edits an agent-context file (`CLAUDE.md`) or adds README sections outside the story scope, so it is deferred.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
+  summary: Bridge overhead per mutation on the drawer copy stays at 17.6 s headless and 9.4 s in the GUI (warm gate), far above the ≤ 3 s target that Story 11.6 AC3 and the epic acceptance still state.
+  evidence: Story 11.4 profile (`tests/uat/run/2026-10-07-02/evidence/headless-profile-new.txt`): `fingerprint` x 2 11.2 s (23 rebuilt objects integrated again), `verify_shape` `isValid` 5.3 s (AD-5), `features._feature_state` 5.5 s (repeats `isValid` and builds a shape summary), `saveCopy` 2.5 s. Human decision 2026-10-07 replaced the Story 11.4 target with the measured result (≤ 18 s headless, ≤ 10 s GUI). Story 11.6 AC3 needs the same decision before it runs.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
+  summary: The per-object fingerprint cache keeps the bytes of a shape's first fingerprint when OCCT adds data to the same TShape in place (pcurves a pad adds to its profile sketch, triangulation a GUI render adds), so an in-process digest can stay equal while a fresh serialization would differ.
+  evidence: `usecases/fingerprint.py` `_entry` reuses a cached entry on `isEqual`. `tests/infc/test_g2_driver.py` now asserts the post-undo digest equals the pre-op digest; `tests/infc/test_document_undo.py` clears `_ENTRY_CACHE` to keep the byte-difference path covered. Both rollback proofs compute fresh, so they are not affected.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
+  summary: Cached fingerprint entries are shared dict objects across `FingerprintRecord`s, so a caller that changes a returned record would corrupt the cache.
+  evidence: `usecases/fingerprint.py` `fingerprint` appends the cached entry itself. No caller changes a record today.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
+  summary: The abort-path proof now accepts equal mass properties when the digest differs, so a partial abort that leaves a change mass properties cannot see (point reflection, 180° turn about a principal axis, rotation of a no-solid compound such as a multi-wire sketch) is proven `rolled_back_verified`; no G2 case plants one on the abort path.
+  evidence: `usecases/transaction.py` `_prove_rollback`; limit listed in `contracts/fingerprint.py` `massprops_equal`. AD-5 adopts the fallback; the existing entry about rotation and mirror cases covers only the fingerprint validator, not `run_mutation`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
+  summary: A closed document keeps its held shapes in the fingerprint entry cache until four newer documents evict it, so a closed 184-object drawer copy keeps its B-rep in memory.
+  evidence: `usecases/fingerprint.py` `_ENTRY_CACHE` is keyed by `doc.Name` and no close path (`document_close`, preview copy discard, `_restore_from_snapshot`) drops the entry. Bounded at four documents.

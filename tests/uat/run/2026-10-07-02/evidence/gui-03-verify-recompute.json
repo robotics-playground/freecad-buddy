@@ -1,0 +1,34 @@
+{
+ "schema": "fcb.result-envelope/1",
+ "status": "OK",
+ "detail": null,
+ "structured_content": {
+  "subject": {
+   "failing_objects": []
+  },
+  "checks": [
+   {
+    "id": "recompute.clean",
+    "measured": 0,
+    "expected": 0,
+    "passed": true,
+    "detail": {
+     "message": "no object left in an error state"
+    }
+   }
+  ],
+  "schema": "fcb.validation-report/1",
+  "banner": {
+   "freecad_version": "1.1.4",
+   "element_map_version": 15
+  },
+  "verdict": "OK"
+ },
+ "text": "Recompute clean: no errors.",
+ "framing": {
+  "fits": true,
+  "ratio": 0.94921875,
+  "checked": "cached",
+  "stale_reason": "served from cache; unverified key component(s): geometry"
+ }
+}

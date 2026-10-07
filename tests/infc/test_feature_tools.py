@@ -20,6 +20,7 @@ import Sketcher
 
 from freecad_buddy.usecases import confirm, features, fingerprint, shim, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
+from infc.rollback_plant import abort_proof_mismatch
 
 # Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
 # directory here would now match nothing and this leak check would pass without measuring.
@@ -2369,20 +2370,10 @@ class RegistryRebindTest(_FeatureFixture):
             ghost.Length, ghost.Width, ghost.Height = 1.0, 2.0, 3.0
             raise RuntimeError("planted rollback-boundary failure")
 
-        real_equal = transaction.fingerprints_equal
-        calls = []
-
-        def once_unequal(left, right):
-            calls.append(1)
-            return False if len(calls) == 1 else real_equal(left, right)
-
-        transaction.fingerprints_equal = once_unequal
-        try:
+        with abort_proof_mismatch():
             return features._feature_mutation(
                 self.registry, self.handle, "Keep", "forced restore", "test", {}, op
             )
-        finally:
-            transaction.fingerprints_equal = real_equal
 
     def test_a_forced_snapshot_restore_rebinds_the_registry_to_the_live_document(self):
         self.keep_solid()
@@ -2435,28 +2426,20 @@ class RegistryRebindTest(_FeatureFixture):
             raise RuntimeError("planted rollback-boundary failure")
 
         real_run = transaction.run_mutation
-        real_equal = transaction.fingerprints_equal
-        calls = []
-
-        def once_unequal(left, right):
-            calls.append(1)
-            return False if len(calls) == 1 else real_equal(left, right)
 
         def restore_then_break_the_caller(*args, **kwargs):
             """Drive the real restore, then return a tuple the caller's 2-way unpack rejects."""
             document, envelope = real_run(*args, **kwargs)
             return (document, envelope, "surplus")
 
-        transaction.fingerprints_equal = once_unequal
         transaction.run_mutation = restore_then_break_the_caller
         try:
-            with self.assertRaises(ValueError):
+            with abort_proof_mismatch(), self.assertRaises(ValueError):
                 features._feature_mutation(
                     self.registry, self.handle, "Keep", "raising exit", "test", {}, failing_op
                 )
         finally:
             transaction.run_mutation = real_run
-            transaction.fingerprints_equal = real_equal
 
         rebound = self.document()
         self.assertIsNot(rebound, original)

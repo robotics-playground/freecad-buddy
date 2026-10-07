@@ -1,0 +1,67 @@
+Looking for thread definitions in: C:\Program Files\FreeCAD 1.1\data\Mod/PartDesign/Resources/Hole C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\PartDesign/Hole 
+Looking for thread definitions in: C:\Program Files\FreeCAD 1.1\data\Mod/PartDesign/Resources/Hole C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\PartDesign/Hole 
+Looking for thread definitions in: C:\Program Files\FreeCAD 1.1\data\Mod/PartDesign/Resources/Hole C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\PartDesign/Hole 
+cold fingerprint 10.158581200001208
+warm fingerprint 0.0038376000011339784
+noop recompute 0.00039119999928516336
+duct_pilot InList count 22
+recompute A->B 28.976332099999127 objects 23
+fingerprint after change 5.469426399999065 serialized 23
+tool 54.32359910000014 OK
+         57647 function calls (57635 primitive calls) in 54.324 seconds
+
+   Ordered by: cumulative time
+   List reduced from 310 to 45 due to restriction <45>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   54.324   54.324 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\features.py:1792(feature_set_parameters)
+        1    0.000    0.000   54.319   54.319 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\features.py:343(_feature_mutation)
+        1    0.000    0.000   54.319   54.319 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\documents.py:414(with_document)
+        1    0.000    0.000   54.319   54.319 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\features.py:371(call)
+        1    0.000    0.000   43.361   43.361 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\transaction.py:550(run_mutation)
+        1    0.000    0.000   43.360   43.360 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\transaction.py:605(_bracket)
+        2   29.647   14.824   29.647   14.824 {method 'recompute' of 'App.Document' objects}
+        2    0.006    0.003   11.181    5.591 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\fingerprint.py:391(fingerprint)
+      288    0.050    0.000   11.162    0.039 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\fingerprint.py:379(_entry)
+       46    3.658    0.080   10.195    0.222 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\fingerprint.py:298(_massprops)
+        4    9.915    2.479    9.915    2.479 {method 'isValid' of 'Part.Shape' objects}
+        3    0.000    0.000    7.868    2.623 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\verify.py:224(read_shape)
+        3    0.359    0.120    7.867    2.622 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\verify.py:191(_measured_facts)
+       46    6.528    0.142    6.531    0.142 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\fingerprint.py:258(_solid_mass_properties)
+        1    0.000    0.000    5.520    5.520 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\features.py:309(_feature_state)
+        1    0.047    0.047    5.438    5.438 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\confirm.py:324(gate_mutation)
+        1    0.000    0.000    5.325    5.325 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\transaction.py:229(post_verify)
+        3    0.000    0.000    5.288    1.763 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\transaction.py:93(with_document)
+        2    0.000    0.000    5.287    2.643 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\verify.py:202(verify_shape)
+        2    0.000    0.000    5.287    2.643 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\verify.py:220(<lambda>)
+        1    0.402    0.402    2.939    2.939 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\features.py:274(_shape_summary)
+        1    2.542    2.542    2.542    2.542 {method 'saveCopy' of 'App.Document' objects}
+       46    0.002    0.000    0.913    0.020 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\fingerprint.py:111(_serialize)
+       46    0.597    0.013    0.597    0.013 {method 'exportBinary' of 'Part.Shape' objects}
+       46    0.254    0.006    0.254    0.006 {built-in method io.open}
+        3    0.037    0.012    0.080    0.027 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:307(snapshot_references)
+        3    0.000    0.000    0.077    0.026 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\verify.py:125(_is_watertight)
+        3    0.077    0.026    0.077    0.026 {method 'isClosed' of 'Part.Shape' objects}
+        3    0.052    0.017    0.052    0.017 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\verify.py:120(_bbox_extents)
+        1    0.000    0.000    0.035    0.035 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\transaction.py:258(audit)
+        1    0.000    0.000    0.035    0.035 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:412(audit_references)
+     6550    0.031    0.000    0.031    0.000 {built-in method builtins.getattr}
+       47    0.000    0.000    0.023    0.000 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\documents.py:61(temp_dir)
+       46    0.000    0.000    0.019    0.000 C:\Program Files\FreeCAD 1.1\bin\Lib\tempfile.py:322(mkstemp)
+       47    0.000    0.000    0.019    0.000 C:\Program Files\FreeCAD 1.1\bin\Lib\pathlib.py:1111(mkdir)
+       46    0.000    0.000    0.018    0.000 C:\Program Files\FreeCAD 1.1\bin\Lib\tempfile.py:244(_mkstemp_inner)
+       46    0.016    0.000    0.016    0.000 {built-in method nt.open}
+       48    0.014    0.000    0.014    0.000 {built-in method nt.mkdir}
+      390    0.000    0.000    0.013    0.000 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:337(<listcomp>)
+      261    0.001    0.000    0.013    0.000 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:231(_capture_entry)
+       47    0.012    0.000    0.012    0.000 {built-in method nt.remove}
+    12680    0.008    0.000    0.008    0.000 {method 'getTypeIdOfProperty' of 'App.PropertyContainer' objects}
+        1    0.000    0.000    0.007    0.007 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:809(_reference_findings)
+      170    0.000    0.000    0.007    0.000 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:132(_resolve_element)
+     1842    0.001    0.000    0.007    0.000 D:\Work/Personal/Sources/freecad-buddy/src\freecad_buddy\usecases\tnp_guard.py:78(_element_map_version)
+
+
+
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+

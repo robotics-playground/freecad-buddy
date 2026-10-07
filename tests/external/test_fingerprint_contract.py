@@ -35,6 +35,7 @@ class _Object:
 
 class _Document:
     def __init__(self, *objects):
+        self.Name = "Fake"
         self.Objects = list(objects)
 
 

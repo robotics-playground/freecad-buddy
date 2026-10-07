@@ -36,6 +36,7 @@ import secrets
 import threading
 import time
 
+from freecad_buddy.contracts import FingerprintRecord
 from freecad_buddy.contracts.confirm import ApprovalRecord, Confirm, PreviewTokenPayload
 from freecad_buddy.usecases.capabilities import AUTO_APPROVE_VARIABLE
 from freecad_buddy.usecases.documents import ValidationError
@@ -320,14 +321,20 @@ def _is_display_state(tool: str, params: dict) -> bool:
     )
 
 
-def gate_mutation(document: object, handle: str, tool: str, params: dict) -> ApprovalRecord:
-    """Authorize the mutation ``tool`` is about to run on ``document``.
+def gate_mutation(
+    document: object, handle: str, tool: str, params: dict
+) -> tuple[ApprovalRecord, FingerprintRecord | None]:
+    """Authorize the mutation ``tool`` is about to run on ``document``; return the approval and
+    the fingerprint it was taken against.
 
     The confirm is taken from ``params``, and the arguments the token is compared against are
     ``params`` minus the two fields the token never covered: the document handle, which is
     compared on its own, and the confirm itself. The live fingerprint is read on every approving
-    path: the token compares against it, and the approval record carries it either way, so the
-    approval line names the same ``fingerprint_before`` as the mutation lines.
+    path: the token compares against it, and the approval record carries it either way. The caller
+    passes the returned record to ``run_mutation`` as its pre-mutation fingerprint, so the document
+    is hashed once before the bracket and the approval line names the same ``fingerprint_before``
+    as the mutation lines. The record is ``None`` on a preview's copy, which is not fingerprinted
+    here.
 
     A display-state call is approved in either posture; its value is still validated by the
     tool's own precheck, which runs after this gate.
@@ -350,14 +357,14 @@ def gate_mutation(document: object, handle: str, tool: str, params: dict) -> App
             "doc": handle,
             "args_digest": exemption.args_digest,
             "fingerprint_before": None,
-        }
+        }, None
 
     # A gate that cannot read the state it must record refuses rather than raising past its own
     # boundary: an unreadable shape (SerializerUnavailable, or an OCCT error from a degenerate
     # B-rep) would otherwise leave the gate as an unexpected RECOMPUTE_ERROR instead of the
     # refusal every other gate failure produces.
     try:
-        fingerprint_now = fingerprint(document)["digest"]
+        record = fingerprint(document)
     except Exception as exc:  # noqa: BLE001 - any unreadable state is a refusal, not a crash
         raise ValidationError(
             f"cannot read the state of {handle} to authorize the mutation: {exc}"
@@ -369,17 +376,18 @@ def gate_mutation(document: object, handle: str, tool: str, params: dict) -> App
             "tool": tool,
             "doc": handle,
             "args_digest": args_digest(args),
-            "fingerprint_before": fingerprint_now,
-        }
+            "fingerprint_before": record["digest"],
+        }, record
 
-    return verify_confirm(
+    approval = verify_confirm(
         params.get("confirm"),
         tool=tool,
         args=args,
         doc_handle=handle,
-        fingerprint_now=fingerprint_now,
+        fingerprint_now=record["digest"],
         auto_approve=auto_approve(),
     )
+    return approval, record
 
 
 class preview_exemption:  # noqa: N801 - a context manager used as a statement, not a type

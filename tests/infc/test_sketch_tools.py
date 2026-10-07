@@ -19,6 +19,7 @@ import FreeCAD as App
 from freecad_buddy.hosts.tool_catalog import preview_op_table
 from freecad_buddy.usecases import confirm, preview, sketches, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
+from infc.rollback_plant import abort_proof_mismatch
 
 # Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
 # directory here would now match nothing and this leak check would pass without measuring.
@@ -1324,20 +1325,10 @@ class RegistryRebindTest(_SketchFixture):
             document.addObject("Sketcher::SketchObject", "Ghost")
             raise RuntimeError("planted rollback-boundary failure")
 
-        real_equal = transaction.fingerprints_equal
-        calls = []
-
-        def once_unequal(left, right):
-            calls.append(1)
-            return False if len(calls) == 1 else real_equal(left, right)
-
-        transaction.fingerprints_equal = once_unequal
-        try:
+        with abort_proof_mismatch():
             return sketches._sketch_mutation(
                 self.registry, self.handle, "Keep", "forced restore", "test", {}, op
             )
-        finally:
-            transaction.fingerprints_equal = real_equal
 
     def test_a_forced_snapshot_restore_rebinds_the_registry_to_the_live_document(self):
         original = self.document()
@@ -1700,12 +1691,6 @@ class NoTransactionLeftOpenTest(_SketchFixture):
             raise RuntimeError("planted rollback-boundary failure")
 
         real_run = transaction.run_mutation
-        real_equal = transaction.fingerprints_equal
-        calls = []
-
-        def once_unequal(left, right):
-            calls.append(1)
-            return False if len(calls) == 1 else real_equal(left, right)
 
         def restore_then_break_the_caller(*args, **kwargs):
             """Drive the real restore, then return a tuple the caller's 2-way unpack rejects."""
@@ -1713,15 +1698,13 @@ class NoTransactionLeftOpenTest(_SketchFixture):
             return (document, envelope, "surplus")
 
         transaction.run_mutation = restore_then_break_the_caller
-        transaction.fingerprints_equal = once_unequal
         try:
-            with self.assertRaises(ValueError):
+            with abort_proof_mismatch(), self.assertRaises(ValueError):
                 sketches._sketch_mutation(
                     self.registry, self.handle, "Keep", "forced", "test", {}, failing_op
                 )
         finally:
             transaction.run_mutation = real_run
-            transaction.fingerprints_equal = real_equal
 
         rebound = self.document()
         self.assertIsNot(rebound, original)
@@ -1748,20 +1731,10 @@ class SketchStateTest(_SketchFixture):
             document.addObject("Sketcher::SketchObject", "Ghost")
             raise RuntimeError("planted rollback-boundary failure")
 
-        real_equal = transaction.fingerprints_equal
-        calls = []
-
-        def once_unequal(left, right):
-            calls.append(1)
-            return False if len(calls) == 1 else real_equal(left, right)
-
-        transaction.fingerprints_equal = once_unequal
-        try:
+        with abort_proof_mismatch():
             envelope = sketches._sketch_mutation(
                 self.registry, self.handle, "Ghost", "forced restore", "test", {}, op
             )
-        finally:
-            transaction.fingerprints_equal = real_equal
 
         self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
         state = self.state(envelope)

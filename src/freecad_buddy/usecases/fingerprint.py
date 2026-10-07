@@ -8,6 +8,12 @@ exposed, else ``exportBrep``) and tagged on every record; comparing across tags 
 (``contracts.fingerprints_equal`` raises). An object with a null ``Shape`` is recorded with the
 hash of empty bytes and zeroed mass properties; an object with no ``Shape`` attribute is skipped.
 
+An unchanged shape is not serialized and integrated again: each document keeps its last entry per
+object together with the ``TopoShape`` it was computed from, and reuses the entry while the
+current shape ``isEqual`` that one (same TShape, location and orientation). The cache holds the
+shape, so its TShape cannot be freed and its address reused by a different shape. ``fresh=True``
+computes every entry anew; the rollback proofs use it.
+
 Mass properties of a shape that has solids come from its solids, combined with the parallel-axis
 rule, because a ``Compound`` exposes no centre of mass, inertia matrix or principal moments. The
 record carries the inertia tensor as well as its eigenvalues: the principal moments of a solid
@@ -27,6 +33,7 @@ import io
 import math
 import os
 import tempfile
+from collections import OrderedDict
 
 from freecad_buddy.contracts import FingerprintRecord, MassProps
 from freecad_buddy.usecases import shim
@@ -362,7 +369,26 @@ def _is_datum(obj: object) -> bool:
     return str(getattr(obj, "TypeId", "")).startswith(_DATUM_TYPE_PREFIXES)
 
 
-def fingerprint(doc: object) -> FingerprintRecord:
+# Per document ``Name``: the last entry of each object and the shape it was computed from. Bounded
+# to the four most recently fingerprinted documents, least recently used first out: each held shape
+# keeps its B-rep in memory.
+_ENTRY_CACHE: OrderedDict[str, dict[str, tuple[object, dict]]] = OrderedDict()
+_CACHED_DOCUMENTS = 4
+
+
+def _entry(name: str, shape: object, cached: tuple[object, dict] | None) -> dict:
+    """Return ``name``'s entry, reusing ``cached`` when its shape ``isEqual`` ``shape``."""
+    if cached is not None and cached[0].isEqual(shape):
+        return cached[1]
+    raw = _serialize(shape)
+    return {
+        "name": name,
+        "brep_sha256": hashlib.sha256(raw).hexdigest(),
+        "massprops": _massprops(shape),
+    }
+
+
+def fingerprint(doc: object, fresh: bool = False) -> FingerprintRecord:
     """Return the ``FingerprintRecord`` for ``doc``.
 
     Iterates ``doc.Objects`` in immutable ``Name`` order, skipping objects with no ``Shape`` and
@@ -373,8 +399,16 @@ def fingerprint(doc: object) -> FingerprintRecord:
     An object whose ``Shape`` is null contributes the hash of empty bytes and zeroed mass
     properties. Skipping it would let a feature whose shape went null, such as a Tip whose
     recompute failed, hash equal to the state before it broke, so a rollback that left it broken
-    would be proven.
+    would be proven. A null shape is never cached.
+
+    A non-null shape reuses the entry cached for the object when the cached shape ``isEqual`` the
+    current one. The cache for ``doc`` is replaced by this call's entries, so a removed object
+    drops out of it.
+
+    :param fresh: compute every entry anew, without reading the cache.
     """
+    previous = {} if fresh else _ENTRY_CACHE.get(doc.Name, {})
+    current: dict[str, tuple[object, dict]] = {}
     entries: list[dict] = []
     for obj in sorted(doc.Objects, key=lambda o: o.Name):
         if _is_datum(obj):
@@ -392,14 +426,13 @@ def fingerprint(doc: object) -> FingerprintRecord:
                 }
             )
             continue
-        raw = _serialize(shape)
-        entries.append(
-            {
-                "name": obj.Name,
-                "brep_sha256": hashlib.sha256(raw).hexdigest(),
-                "massprops": _massprops(shape),
-            }
-        )
+        entry = _entry(obj.Name, shape, previous.get(obj.Name))
+        current[obj.Name] = (shape, entry)
+        entries.append(entry)
+    _ENTRY_CACHE[doc.Name] = current
+    _ENTRY_CACHE.move_to_end(doc.Name)
+    while len(_ENTRY_CACHE) > _CACHED_DOCUMENTS:
+        _ENTRY_CACHE.popitem(last=False)
     digest_material = repr([(e["name"], e["brep_sha256"], e["massprops"]) for e in entries]).encode(
         "utf-8"
     )
