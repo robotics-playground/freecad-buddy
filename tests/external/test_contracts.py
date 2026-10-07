@@ -533,6 +533,7 @@ def _massprops(volume):
         "bbox": [0.0] * 6,
         "com": [0.0] * 3,
         "principal_moments": [0.0] * 3,
+        "inertia": [0.0] * 6,
         "quantum": 1e-6,
     }
 
@@ -558,6 +559,36 @@ def test_a_zeroed_null_shape_entry_equals_itself_and_differs_from_a_real_one():
 
     assert massprops_equal(null_shape, _fp_objects(("Fillet", _massprops(0.0))))
     assert not massprops_equal(null_shape, real_shape)
+
+
+def test_should_be_unequal_when_only_the_inertia_tensor_differs():
+    # Arrange
+    mirrored = _massprops(1.0)
+    mirrored["inertia"] = [0.0, 0.0, 0.0, 180000.0, 0.0, 0.0]
+    before = _fp_objects(("Pad", _massprops(1.0)))
+    after = _fp_objects(("Pad", mirrored))
+
+    # Act
+    equal = massprops_equal(before, after)
+
+    # Assert
+    assert not equal
+
+
+def test_should_be_unequal_when_a_record_has_no_inertia():
+    # Arrange
+    old_massprops = _massprops(1.0)
+    del old_massprops["inertia"]
+    old_record = _fp_objects(("Pad", old_massprops))
+    new_record = _fp_objects(("Pad", _massprops(1.0)))
+
+    # Act
+    old_against_new = massprops_equal(old_record, new_record)
+    old_against_itself = massprops_equal(old_record, old_record)
+
+    # Assert
+    assert not old_against_new
+    assert not old_against_itself
 
 
 # --------------------------------------------------------------------------- #

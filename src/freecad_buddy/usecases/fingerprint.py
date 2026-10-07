@@ -7,6 +7,16 @@ entry so a diff can inspect either. The serializer is shim-probed (``exportBinar
 exposed, else ``exportBrep``) and tagged on every record; comparing across tags is banned
 (``contracts.fingerprints_equal`` raises). An object with a null ``Shape`` is recorded with the
 hash of empty bytes and zeroed mass properties; an object with no ``Shape`` attribute is skipped.
+
+Mass properties of a shape that has solids come from its solids, combined with the parallel-axis
+rule, because a ``Compound`` exposes no centre of mass, inertia matrix or principal moments. The
+record carries the inertia tensor as well as its eigenvalues: the principal moments of a solid
+rotated or mirrored about its centre of mass do not change, its tensor does. The tensor itself
+does not change, and the record stays equal, under a 180 degree rotation about a principal axis
+through the centre of mass, a point reflection through the centre of mass, a mirror through a
+plane through the centre of mass normal to a principal axis, any rotation of a solid with three
+equal moments (a cube, a sphere), and a rotation of an axisymmetric part about its axis; that
+limit is accepted.
 Stdlib + FreeCAD App API only; FreeCAD is imported lazily.
 """
 
@@ -24,13 +34,23 @@ from freecad_buddy.usecases.documents import temp_dir
 
 Q = 1e-6
 
+# Significant digits ``principal_moments`` and ``inertia`` keep: ``_tensor_step`` rounds them to
+# 10^(floor(log10(s) + 1e-9) - INERTIA_DIGITS), ``s`` the object's largest diagonal component, so
+# the step is about 1e-10 to 1e-9 of ``s``. Both jitter in their last bits: the integration over
+# the B-rep a recompute rebuilds rounds differently. On a copy of kiwibox-drawer.FCStd, 12 abort +
+# recompute cycles over 4 features moved them by up to 1.8e-7 on riser_zone, whose s is ~1.7e8:
+# 1.1e-15 of s, and 1.8e-6 of its 0.1 step. That rounding-boundary crossing rate matches what area
+# shows at ``Q`` (1.8e-12 / 1e-6). More digits shrink the step towards the jitter itself; fewer
+# round away a small part's rotation.
+INERTIA_DIGITS = 9
+
 
 class SerializerUnavailable(RuntimeError):
     """Raised when the build exposes neither ``exportBinary`` nor ``exportBrep`` on a shape."""
 
 
-def _quantize(value: float) -> float:
-    """Round ``value`` to the fixed quantization step ``Q`` (1e-6); non-finite floors to 0.0.
+def _quantize(value: float, step: float = Q) -> float:
+    """Round ``value`` to the caller's ``step`` (default ``Q``); non-finite floors to 0.0.
 
     A degenerate shape can yield ``nan``/``inf`` mass properties; coercing them to ``0.0`` keeps
     the record JSON-serializable and the digest deterministic.
@@ -38,11 +58,29 @@ def _quantize(value: float) -> float:
     number = float(value)
     if not math.isfinite(number):
         return 0.0
-    return round(number / Q) * Q
+    return round(number / step) * step
+
+
+def _tensor_step(tensor: tuple[float, ...]) -> float:
+    """Quantization step for ``tensor`` and its eigenvalues: ``INERTIA_DIGITS`` below its scale.
+
+    The scale ``s`` is the largest absolute diagonal component. A step relative to ``s`` keeps a
+    small part's rotation visible, where a fixed absolute step would round it away. When ``s`` is
+    0 or not finite there is no scale, and the step is ``Q``.
+    """
+    diagonal = [abs(component) for component in tensor[:3]]
+    # ``max`` skips a ``nan`` that is not first, so finiteness is checked on every component.
+    if not all(math.isfinite(component) for component in diagonal) or max(diagonal) == 0.0:
+        return Q
+    scale = max(diagonal)
+    # ``+ 1e-9`` moves each step boundary from s = 10^k down to s = 10^k·(1 − 2.3e-9). Round
+    # dimensions put ``s`` exactly on a power of ten (a 6 x 10 x 10 mm box has s = 10000.0); with
+    # the boundary there, last-bit jitter in ``s`` flips the step 10x and changes the record.
+    return 10.0 ** (math.floor(math.log10(scale) + 1e-9) - INERTIA_DIGITS)
 
 
 def _principal_moments(shape: object) -> tuple[float, float, float]:
-    """Return the three principal moments of inertia as a deterministic triple.
+    """Return the three principal moments of inertia of a shape that has no solids.
 
     Prefers ``Shape.PrincipalProperties['Moments']`` when the build exposes it, else derives
     the eigen-ordered diagonal of ``Shape.MatrixOfInertia``. Falls back to the sorted matrix
@@ -108,21 +146,185 @@ def _center_of_mass(shape: object) -> tuple[float, float, float]:
     )
 
 
+def _inertia_components(matrix: object) -> tuple[float, ...]:
+    """``[Ixx, Iyy, Izz, Ixy, Ixz, Iyz]`` from a ``Base.Matrix`` holding an OCC inertia matrix.
+
+    OCC stores the products of inertia negated in the off-diagonal elements; they are kept as
+    stored, so the six values are the elements of the inertia tensor itself.
+    """
+    return (
+        float(matrix.A11),
+        float(matrix.A22),
+        float(matrix.A33),
+        float(matrix.A12),
+        float(matrix.A13),
+        float(matrix.A23),
+    )
+
+
+def _principal_tensor(props: dict) -> tuple[float, tuple[float, ...]]:
+    """Return a solid's volume and its inertia tensor about its centre of mass.
+
+    Rebuilt from one ``PrincipalProperties`` integration: the tensor is ``Σk λk·ak·akᵀ`` over the
+    ``Moments`` λ and the unit ``First/Second/ThirdAxisOfInertia`` a, which is the matrix
+    ``MatrixOfInertia`` returns, products of inertia negated included. ``RadiusOfGyration`` is
+    ``rk = sqrt(λk / v)``, so the volume is ``λk / rk²`` on the axis with the largest ``rk``, the
+    best-conditioned one, and 0 when every ``rk`` is 0 (a solid with no enclosed volume).
+
+    ``MatrixOfInertia`` and ``Volume`` are not read: each is one more integration over the solid.
+    Reading both from ``PrincipalProperties`` saves one integration per solid, which took the
+    fingerprint of kiwibox-drawer.FCStd from 7.32 s to 5.81 s.
+    """
+    tensor = [0.0] * 6
+    axes = (
+        props["FirstAxisOfInertia"],
+        props["SecondAxisOfInertia"],
+        props["ThirdAxisOfInertia"],
+    )
+    for moment, axis in zip(props["Moments"], axes, strict=True):
+        x, y, z = float(axis.x), float(axis.y), float(axis.z)
+        outer = (x * x, y * y, z * z, x * y, x * z, y * z)
+        tensor = [sum_ + float(moment) * term for sum_, term in zip(tensor, outer)]
+    radii = [float(radius) for radius in props["RadiusOfGyration"]]
+    widest = max(range(3), key=lambda index: radii[index])
+    if not radii[widest] > 0.0:
+        return 0.0, tuple(tensor)
+    return float(props["Moments"][widest]) / radii[widest] ** 2, tuple(tensor)
+
+
+# Jacobi converges quadratically: with distinct or two equal moments the off-diagonal elements
+# reach exactly 0 in at most 6 sweeps (20,000 random rotations and scales, 2e-16 noise). With
+# three equal moments (a sphere, a tilted cube) a rotation no longer moves the diagonal by one ulp,
+# so the off-diagonal elements, already below the diagonal's rounding, shrink only about 3x per
+# sweep and never reach 0; the diagonal is already exact to its rounding there. The bound ends
+# that case and a tensor holding a non-finite value.
+_JACOBI_SWEEPS = 50
+
+
+def _eigenvalues(tensor: tuple[float, ...]) -> tuple[float, float, float]:
+    """Eigenvalues of the symmetric 3x3 ``tensor`` (``_inertia_components`` order), descending.
+
+    Cyclic Jacobi rotations: each rotation zeroes one off-diagonal element, and sweeps over the
+    pairs (0, 1), (0, 2), (1, 2) repeat until every off-diagonal element is 0, at most
+    ``_JACOBI_SWEEPS`` times. Jacobi keeps the error near the rounding of the tensor itself for
+    distinct, repeated and triple eigenvalues. The trigonometric closed form does not: with two
+    equal moments (a cylinder, a revolved part) its ``acos`` near ±1 turned 2e-16 relative noise
+    into an error of 0.86 on moments of 1.7e8, more than eight steps of 0.1.
+    """
+    xx, yy, zz, xy, xz, yz = tensor
+    matrix = [[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]]
+    for _ in range(_JACOBI_SWEEPS):
+        # ``x * x``, not ``x ** 2``: a float ``**`` raises OverflowError above 1.34e154, ``*``
+        # returns inf and the sweep bound ends the loop.
+        off_diagonal = (matrix[0][1], matrix[0][2], matrix[1][2])
+        if sum(element * element for element in off_diagonal) == 0.0:
+            break
+        for p, q in ((0, 1), (0, 2), (1, 2)):
+            _jacobi_rotate(matrix, p, q)
+    first, second, third = sorted((matrix[0][0], matrix[1][1], matrix[2][2]), reverse=True)
+    return first, second, third
+
+
+def _jacobi_rotate(matrix: list[list[float]], p: int, q: int) -> None:
+    """Rotate the symmetric 3x3 ``matrix`` in place in the (p, q) plane so ``matrix[p][q]`` is 0.
+
+    Numerical Recipes form: ``t = tan(angle)`` is the smaller root, so the rotation angle is at
+    most 45 degrees, and the other row is updated through ``tau = sin / (1 + cos)``.
+    """
+    element = matrix[p][q]
+    if element == 0.0:
+        return
+    theta = (matrix[q][q] - matrix[p][p]) / (2.0 * element)
+    t = math.copysign(1.0, theta) / (abs(theta) + math.sqrt(theta * theta + 1.0))
+    cosine = 1.0 / math.sqrt(t * t + 1.0)
+    sine = t * cosine
+    tau = sine / (1.0 + cosine)
+    matrix[p][p] -= t * element
+    matrix[q][q] += t * element
+    matrix[p][q] = matrix[q][p] = 0.0
+    r = 3 - p - q
+    rp, rq = matrix[r][p], matrix[r][q]
+    matrix[r][p] = matrix[p][r] = rp - sine * (rq + tau * rp)
+    matrix[r][q] = matrix[q][r] = rq + sine * (rp - tau * rq)
+
+
+def _solid_mass_properties(
+    shape: object, solids: list
+) -> tuple[float, tuple[float, ...], tuple[float, ...]]:
+    """Return the volume, centre of mass and inertia tensor about it of ``solids`` combined.
+
+    Each solid is integrated twice: ``CenterOfMass``, and ``PrincipalProperties`` for its volume
+    and its tensor about its own centre of mass in document axes (``_principal_tensor``). With
+    density 1, ``V = Σv``, ``C = Σv·c / V`` and ``T = Σ[M + v·(|d|²·E − d·dᵀ)]`` for
+    ``d = c − C``; the ``−d·dᵀ`` term matches OCC's negated off-diagonals. A zero total volume has
+    no mass-weighted centre, so the centre falls back to ``_center_of_mass(shape)``.
+    """
+    measured = []
+    for solid in solids:
+        center = solid.CenterOfMass
+        volume, own = _principal_tensor(solid.PrincipalProperties)
+        measured.append((volume, (float(center.x), float(center.y), float(center.z)), own))
+    total = sum(volume for volume, _, _ in measured)
+    if total == 0.0:
+        com = _center_of_mass(shape)
+    else:
+        com = tuple(
+            sum(volume * center[axis] for volume, center, _ in measured) / total
+            for axis in range(3)
+        )
+    tensor = [0.0] * 6
+    for volume, center, own in measured:
+        dx, dy, dz = center[0] - com[0], center[1] - com[1], center[2] - com[2]
+        squared = dx * dx + dy * dy + dz * dz
+        shift = (
+            volume * (squared - dx * dx),
+            volume * (squared - dy * dy),
+            volume * (squared - dz * dz),
+            -volume * dx * dy,
+            -volume * dx * dz,
+            -volume * dy * dz,
+        )
+        tensor = [sum_ + matrix + offset for sum_, matrix, offset in zip(tensor, own, shift)]
+    return total, com, tuple(tensor)
+
+
 def _massprops(shape: object) -> MassProps:
     """Return the quantized mass-property cross-oracle tuple for ``shape``.
 
-    Every component (volume, area, bbox extents, centre of mass, principal moments) is rounded
-    to the fixed quantization step ``Q`` so small numeric jitter does not change the record.
+    A shape with solids, a single ``Solid`` included, takes volume, centre of mass, inertia
+    tensor and principal moments (the tensor's eigenvalues) from its solids. A shape with no
+    solids (sketch, wire, face, shell) keeps its own ``Volume``, ``_center_of_mass`` and
+    ``_principal_moments``, and its own ``MatrixOfInertia`` when its type exposes one, else six
+    zeros. ``area`` is always ``shape.Area`` and ``bbox`` always ``shape.BoundBox``. Volume,
+    area, bbox and centre are rounded to ``Q``; the moments and the tensor to the object's
+    ``_tensor_step``, so small numeric jitter does not change the record.
+
+    The tensor separates a rotation or mirror about the centre of mass that the moments cannot,
+    except where the tensor itself does not change: a 180 degree rotation about a principal axis
+    through the centre of mass, a point reflection through the centre of mass, a mirror through
+    a plane through the centre of mass normal to a principal axis, any rotation of a solid with
+    three equal moments, and a rotation of an axisymmetric part about its axis.
     """
     bb = shape.BoundBox
-    com = _center_of_mass(shape)
     bbox = [bb.XMin, bb.YMin, bb.ZMin, bb.XMax, bb.YMax, bb.ZMax]
+    solids = shape.Solids
+    if solids:
+        volume, com, inertia = _solid_mass_properties(shape, solids)
+        moments = _eigenvalues(inertia)
+    else:
+        volume = float(shape.Volume)
+        com = _center_of_mass(shape)
+        moments = _principal_moments(shape)
+        matrix = getattr(shape, "MatrixOfInertia", None)
+        inertia = (0.0,) * 6 if matrix is None else _inertia_components(matrix)
+    step = _tensor_step(inertia)
     return {
-        "volume": _quantize(float(shape.Volume)),
+        "volume": _quantize(volume),
         "area": _quantize(float(shape.Area)),
         "bbox": [_quantize(v) for v in bbox],
         "com": [_quantize(c) for c in com],
-        "principal_moments": [_quantize(m) for m in _principal_moments(shape)],
+        "principal_moments": [_quantize(m, step) for m in moments],
+        "inertia": [_quantize(component, step) for component in inertia],
         "quantum": Q,
     }
 
@@ -141,6 +343,7 @@ def _null_massprops() -> MassProps:
         "bbox": [0.0] * 6,
         "com": [0.0] * 3,
         "principal_moments": [0.0] * 3,
+        "inertia": [0.0] * 6,
         "quantum": Q,
     }
 

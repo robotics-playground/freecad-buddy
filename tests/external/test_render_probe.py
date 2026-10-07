@@ -395,7 +395,13 @@ def test_geometry_mutation_detected_removes_temp_and_is_not_ok(monkeypatch):
             "schema": "fcb.fingerprint/1",
             "serializer": "exportBrep",
             # mass-props change between the before/after snapshots = a real geometry mutation.
-            "objects": [{"name": "Body", "brep_sha256": "b", "massprops": {"volume": calls["n"]}}],
+            "objects": [
+                {
+                    "name": "Body",
+                    "brep_sha256": "b",
+                    "massprops": {"volume": calls["n"], "inertia": [0.0] * 6},
+                }
+            ],
             "digest": f"digest-{calls['n']}",
         }
 
@@ -419,7 +425,11 @@ def test_brep_bytes_change_without_geometry_change_is_ok(monkeypatch):
             "serializer": "exportBrep",
             # same mass-props, different brep bytes + digest — the freshly-loaded-shape case.
             "objects": [
-                {"name": "Body", "brep_sha256": f"bytes-{calls['n']}", "massprops": {"volume": 1.0}}
+                {
+                    "name": "Body",
+                    "brep_sha256": f"bytes-{calls['n']}",
+                    "massprops": {"volume": 1.0, "inertia": [0.0] * 6},
+                }
             ],
             "digest": f"digest-{calls['n']}",
         }

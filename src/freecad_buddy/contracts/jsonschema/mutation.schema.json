@@ -46,6 +46,12 @@
           },
           "type": "array"
         },
+        "inertia": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
         "principal_moments": {
           "items": {
             "type": "number"

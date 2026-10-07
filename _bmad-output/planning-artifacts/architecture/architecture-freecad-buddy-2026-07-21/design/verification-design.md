@@ -108,13 +108,37 @@ Every `Fingerprint` value carries its serializer tag. **Comparing fingerprints a
 ```python
 Q = 1e-6  # quantization step (spine convention)
 
+def tensor_step(tensor):                                 # per object (AD-6)
+    diagonal = [abs(c) for c in tensor[:3]]
+    if not all(isfinite(c) for c in diagonal) or max(diagonal) == 0:
+        return Q                                         # every component checked: max() skips nan
+    return 10 ** (floor(log10(max(diagonal)) + 1e-9) - 9)   # + 1e-9: boundary off 10^k
+
+def eigenvalues(tensor):                                 # cyclic Jacobi, never the closed form
+    T = symmetric_3x3(tensor)
+    for _ in range(50):                                  # bound: equal moments, non-finite input
+        if T[0][1]*T[0][1] + T[0][2]*T[0][2] + T[1][2]*T[1][2] == 0:   # never ** (overflow)
+            break
+        for p, q in ((0, 1), (0, 2), (1, 2)):
+            rotate_out(T, p, q)                          # Jacobi rotation: T[p][q] becomes 0
+    return sorted(diagonal_of(T), reverse=True)
+
 def _massprops(shape):
     bb = shape.BoundBox
-    t = (shape.Volume, shape.Area,
-         bb.XMin, bb.YMin, bb.ZMin, bb.XMax, bb.YMax, bb.ZMax,
-         *shape.CenterOfMass, *principal_moments(shape),   # from the solids
-         *inertia_tensor(shape))                         # 6 values about the COM
-    return tuple(round(v / Q) * Q for v in t)
+    if shape.Solids:
+        volume, com, tensor = from_solids(shape)         # tensor: 6 values about the COM;
+                                                         #   per solid: CenterOfMass +
+                                                         #   PrincipalProperties, parallel axis
+        moments = eigenvalues(tensor)
+    else:                                                # wire, face, shell; one-wire sketch
+        volume, com = shape.Volume, center_of_mass(shape)    # bbox centre when not exposed
+        moments = principal_moments(shape)               # PrincipalProperties, else matrix diagonal
+        tensor = components(shape.MatrixOfInertia) if exposed else (0,) * 6
+    t = (volume, shape.Area,
+         bb.XMin, bb.YMin, bb.ZMin, bb.XMax, bb.YMax, bb.ZMax, *com)
+    step = tensor_step(tensor)
+    return (tuple(round(v / Q) * Q for v in t)
+            + tuple(round(v / step) * step for v in (*moments, *tensor)))
 
 def fingerprint(doc) -> Fingerprint:
     entries = []
@@ -134,6 +158,16 @@ def fingerprint(doc) -> Fingerprint:
     return Fingerprint(digest=digest, serializer=SERIALIZER_ID,
                        per_object=entries)                   # per-object detail = diff aid
 ```
+
+The `+ 1e-9` in `tensor_step` moves each step boundary from `s = 10^k` to `s = 10^k·(1 − 2.3e-9)`. Round dimensions put `s` exactly on a power of ten (a 6 x 10 x 10 mm box has `s = 10000.0`); with the boundary there, last-bit jitter in `s` flips the step 10x and a no-op recompute changes the record.
+
+A shape with no solids is covered by its own `MatrixOfInertia`. A sketch is covered only when its shape is a single wire: a sketch with several wires or with points builds a compound (`SketchObject.cpp:412,428`), which exposes no `MatrixOfInertia` and no `PrincipalProperties`, so it records zero moments and a zero tensor.
+
+Limit: the tensor itself does not change, so the record stays equal, under a 180 degree rotation about a principal axis through the centre of mass, a point reflection through the centre of mass, a mirror through a plane through the centre of mass normal to a principal axis, any rotation of a solid with three equal moments (a cube, a sphere), and a rotation of an axisymmetric part about its axis. Mass properties cannot see these changes.
+
+The eigenvalues come from cyclic Jacobi rotations. The trigonometric closed form is banned: with two equal moments (a cylinder, a revolved part) its `acos` near ±1 turns 2e-16 relative noise into an error of 0.86 on moments of 1.7e8, more than eight steps of 0.1. Jacobi stays below 1e-5 of the step for distinct, paired and triple moments.
+
+The mass-property tuple is part of the digest material. Adding `inertia` and the per-object tensor step changed every digest: a digest stored under the earlier rule never matches a fresh one, and a stored record without `inertia` is never `massprops_equal` to anything.
 
 Equality semantics: primary = digest equality (same serializer tag). The mass-property tuple is a cross-oracle: BRep-hash equality with mass-prop inequality (or vice versa) on a benchmark run is a validator bug and is investigated, not averaged away. The scope is *representation identity* (undo/rollback proof) — two independently rebuilt but geometrically equal shapes may hash differently, which is correct for this use.
 
@@ -359,7 +393,7 @@ Defaults below are starting points; **exact values are calibrated by each phase'
 
 | Quantity | Default tolerance | Notes |
 | --- | --- | --- |
-| Fingerprint mass-prop quantization | 1e-6 (absolute, per component) | AD-6 fixed; not calibratable |
+| Fingerprint mass-prop quantization | 1e-6 (absolute, per component) for volume, area, bbox, COM; principal moments and inertia tensor: per object `10^(floor(log10(s) + 1e-9) − 9)`, `s` = largest absolute diagonal component of the tensor, 1e-6 when `s` is 0 or not finite | AD-6 fixed. The exponent 9 was calibrated on a copy of `kiwibox-drawer.FCStd`: abort + recompute moves the tensor and its eigenvalues by up to 1.1e-15 of `s`, 1.8e-6 of the step. Recalibrate the exponent after a FreeCAD or OCCT version change: the integration's jitter belongs to the kernel build. A fixed absolute step for the tensor is rejected: it hides the rotation of a small part |
 | Fingerprint digest | exact equality | same serializer tag only |
 | Linear dimension (diameter, spacing, position, extent) | ±0.05 mm absolute, plus relative band for large dims | per-assertion override allowed in spec |
 | Angle (perpendicularity, `angle_between`) | ±0.1° | via normal dot-product |

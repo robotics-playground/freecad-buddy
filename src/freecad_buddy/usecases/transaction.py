@@ -347,8 +347,8 @@ def _prove_rollback(
 
     The restored document is compared on mass properties over the same object names, not on the
     digest: reopening a file re-serializes every shape, so its B-rep bytes never match the
-    in-memory shape they were saved from, while volume, area, centre of mass and principal
-    moments do. A null shape carries zeroed mass properties on both sides.
+    in-memory shape they were saved from, while volume, area, centre of mass, principal moments
+    and inertia tensor do. A null shape carries zeroed mass properties on both sides.
 
     :raises RollbackNotProven: the restored document still does not match ``fp_before``.
     :raises ValueError: the fingerprints carry differing serializer tags.

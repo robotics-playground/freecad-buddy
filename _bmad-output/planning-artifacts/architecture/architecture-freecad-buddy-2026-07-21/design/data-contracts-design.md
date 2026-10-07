@@ -279,10 +279,14 @@ class MassProps(TypedDict):
     volume: float; area: float
     bbox: list[float]               # [xmin, ymin, zmin, xmax, ymax, zmax], mm
     com: list[float]                # [3]
-    principal_moments: list[float]  # [3], from the shape's solids
+    principal_moments: list[float]  # [3], from the shape's solids; per-object step (below)
     inertia: list[float]            # [6] Ixx, Iyy, Izz, Ixy, Ixz, Iyz about com, document axes,
-                                    #   from the solids; optional (additive, AD-28)
-    quantum: float                  # always 1e-6 (spine Numeric-tolerance convention)
+                                    #   from the solids; optional (additive, AD-28);
+                                    #   per-object step (below); off-diagonals are the
+                                    #   negated products of inertia (Ixy = −∫xy dm), as in
+                                    #   OCC's MatrixOfInertia
+    quantum: float                  # always 1e-6 (spine Numeric-tolerance convention): the
+                                    #   step of volume, area, bbox and com
 
 class ObjectFingerprint(TypedDict):
     name: str                       # immutable Name (sort key)
@@ -298,6 +302,8 @@ class FingerprintRecord(TypedDict):
                                     #   (serializer, objects); the value stored in
                                     #   audit fingerprint_before/after and diff fields
 ```
+
+Quantization (normative, AD-6): `volume`, `area`, `bbox` and `com` round to `quantum` (1e-6). `principal_moments` and `inertia` round to a per-object step `10^(floor(log10(s) + 1e-9) − 9)`, where `s` is the largest absolute diagonal component of that object's tensor; when `s` is 0 or not finite, the step is 1e-6. The `+ 1e-9` moves each step boundary from `s = 10^k` to `s = 10^k·(1 − 2.3e-9)`: round dimensions put `s` exactly on a power of ten (a 6 x 10 x 10 mm box has `s = 10000.0`), where last-bit jitter would flip the step 10x. The tensor and its eigenvalues jitter in their last bits after a recompute, so a fixed 1e-6 step crosses rounding boundaries on large parts. A fixed coarser step is rejected: it hides the rotation of a small part.
 
 Comparison rule (normative, AD-6): two records are comparable **iff `serializer` tags are equal**; a helper `fingerprints_equal(a, b)` raises on tag mismatch rather than returning False — cross-tag comparison is a programming error, never a "changed" verdict. Equality = `digest` equality; on mismatch, `massprops` provides the human-diffable cross-oracle. Document-XML/FCStd and tessellation hashes are banned as identity oracles and have no contract type.
 

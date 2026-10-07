@@ -2,7 +2,10 @@
 
 Run via ``FreeCADCmd tests/run_tests.py``. Golden values are analytic (hand-computed box
 volume/bbox), never captured from the implementation under test. Covers fingerprint
-stability/sensitivity/cross-tag, ``verify_shape`` golden-pass / defect-fail / null-shape,
+stability/sensitivity/cross-tag, mass properties from solids (compound tensor, rotation of a large
+and a small part, mirror, the symmetric-inertia limit, zero volume, the tensor rebuilt from
+``PrincipalProperties``, principal moments of tilted solids, rotation of a face),
+``verify_shape`` golden-pass / defect-fail / null-shape,
 ``verify_sketch`` pass / under-constrained / redundant-fail / partially-redundant-warn /
 not-a-sketch, ``verify_recompute``
 broken-object report + banner, and the bad-handle ``INVALID_INPUT`` boundary.
@@ -19,7 +22,7 @@ import Part
 import Sketcher
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.contracts import fingerprints_equal
+from freecad_buddy.contracts import fingerprints_equal, massprops_equal
 from freecad_buddy.usecases import assertions, fingerprint, verify
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
@@ -135,6 +138,272 @@ class FingerprintTest(_DocFixture):
             self.assertEqual(before["digest"], fingerprint.fingerprint(reopened)["digest"])
         finally:
             App.closeDocument(reopened.Name)
+
+
+def _l_shape():
+    """A 30 x 30 x 10 L of two overlapping bars: volume 5000, COM (11, 11, 5), Ixy != 0."""
+    return Part.makeBox(30, 10, 10).fuse(Part.makeBox(10, 30, 10)).removeSplitter()
+
+
+class MassPropsTest(_DocFixture):
+    """Mass properties from solids: analytic compound values, rotation, mirror and their limit.
+
+    The compound golden values are the parallel-axis sum for two 10 mm cubes whose centres sit
+    (+-10, +-10, 0) from the combined centre (15, 15, 5): each cube adds 1000 * 200 / 12 about
+    its own centre plus 1000 * (dy^2 + dz^2) = 1000 * 100 for Ixx.
+    """
+
+    def _feature(self, shape, name="Part"):
+        feature = self.document.addObject("Part::Feature", name)
+        feature.Shape = shape
+        self.document.recompute()
+        return feature
+
+    def _massprops(self, name="Part"):
+        record = fingerprint.fingerprint(self.document)
+        return record, {entry["name"]: entry["massprops"] for entry in record["objects"]}[name]
+
+    def _replace_shape(self, feature, shape):
+        feature.Shape = shape
+        self.document.recompute()
+
+    @staticmethod
+    def _rotated(shape, angle=90, axis=(0, 0, 1)):
+        """A copy of ``shape`` rotated about its own centre of mass."""
+        rotated = shape.copy()
+        rotated.rotate(shape.CenterOfMass, App.Vector(*axis), angle)
+        return rotated
+
+    def test_should_record_the_combined_tensor_and_non_zero_moments_when_solids_form_a_compound(
+        self,
+    ):
+        # Arrange
+        cube_moment = 1000 * 200 / 12
+        expected_inertia = [
+            2 * (cube_moment + 1000 * 100),
+            2 * (cube_moment + 1000 * 100),
+            2 * (cube_moment + 1000 * 200),
+            -200000.0,
+            0.0,
+            0.0,
+        ]
+        # Eigenvalues of the tensor: Izz, and Ixx +- |Ixy| from the x/y block.
+        expected_moments = [
+            2 * (cube_moment + 1000 * 200),
+            2 * (cube_moment + 1000 * 200),
+            2 * (cube_moment + 1000 * 100) - 200000.0,
+        ]
+        self._feature(
+            Part.makeCompound(
+                [Part.makeBox(10, 10, 10), Part.makeBox(10, 10, 10, App.Vector(20, 20, 0))]
+            )
+        )
+
+        # Act
+        _, massprops = self._massprops()
+
+        # Assert
+        step = fingerprint._tensor_step(tuple(massprops["inertia"]))
+        for measured, expected in zip(massprops["inertia"], expected_inertia, strict=True):
+            self.assertAlmostEqual(measured, expected, delta=step)
+        for measured, expected in zip(massprops["com"], (15.0, 15.0, 5.0), strict=True):
+            self.assertAlmostEqual(measured, expected, delta=1e-5)
+        self.assertAlmostEqual(massprops["volume"], 2000.0, delta=1e-5)
+        for measured, expected in zip(
+            massprops["principal_moments"], expected_moments, strict=True
+        ):
+            self.assertAlmostEqual(measured, expected, delta=step)
+        self.assertNotIn(0.0, massprops["principal_moments"])
+        # Already rounded to the per-object step: rounding again changes nothing. A value rounded
+        # only to Q (1e-6) is not a multiple of this compound's step of 1e-4.
+        for value in (*massprops["inertia"], *massprops["principal_moments"]):
+            self.assertEqual(fingerprint._quantize(value, step), value)
+
+    def test_should_not_be_massprops_equal_when_an_asymmetric_solid_turns_about_its_com(self):
+        # Arrange
+        box = Part.makeBox(BOX_L, BOX_W, BOX_H)
+        feature = self._feature(box)
+        before, before_massprops = self._massprops()
+
+        # Act
+        self._replace_shape(feature, self._rotated(box))
+        after, after_massprops = self._massprops()
+
+        # Assert
+        self.assertEqual(
+            after_massprops["principal_moments"], before_massprops["principal_moments"]
+        )
+        self.assertEqual(after_massprops["com"], before_massprops["com"])
+        self.assertNotEqual(after_massprops["inertia"], before_massprops["inertia"])
+        self.assertFalse(massprops_equal(before, after))
+
+    def test_should_not_be_massprops_equal_when_an_l_shape_is_mirrored_through_its_com(self):
+        # Arrange
+        shape = _l_shape()
+        feature = self._feature(shape)
+        before, before_massprops = self._massprops()
+
+        # Act
+        self._replace_shape(feature, shape.mirror(App.Vector(11, 11, 5), App.Vector(1, 0, 0)))
+        after, after_massprops = self._massprops()
+
+        # Assert
+        for key in ("volume", "area", "com", "principal_moments"):
+            self.assertEqual(after_massprops[key], before_massprops[key], key)
+        self.assertNotEqual(after_massprops["inertia"], before_massprops["inertia"])
+        self.assertFalse(massprops_equal(before, after))
+
+    def test_should_not_be_massprops_equal_when_a_small_part_turns_about_its_com(self):
+        # Arrange
+        # 0.1 x 0.05 x 0.025 mm: Ixx is 3.3e-8 and Iyy 1.1e-7 mm^5, so a fixed step of Q (1e-6) or
+        # 0.1 rounds both to 0 and the rotation that swaps them is invisible. The per-object step,
+        # 1e-16 for this part's largest diagonal component Izz = 1.3e-7, keeps them apart.
+        part = Part.makeBox(0.1, 0.05, 0.025)
+        feature = self._feature(part)
+        before, before_massprops = self._massprops()
+
+        # Act
+        self._replace_shape(feature, self._rotated(part))
+        after, after_massprops = self._massprops()
+
+        # Assert
+        self.assertEqual(fingerprint._tensor_step(tuple(before_massprops["inertia"])), 10.0**-16)
+        for key in ("volume", "com", "principal_moments"):
+            self.assertEqual(after_massprops[key], before_massprops[key], key)
+        self.assertNotEqual(after_massprops["inertia"], before_massprops["inertia"])
+        self.assertFalse(massprops_equal(before, after))
+
+    def _assert_moments_match_occ(self, solid, massprops):
+        step = fingerprint._tensor_step(tuple(massprops["inertia"]))
+        expected = sorted(solid.PrincipalProperties["Moments"], reverse=True)
+        for measured, moment in zip(massprops["principal_moments"], expected, strict=True):
+            self.assertAlmostEqual(measured, moment, delta=step)
+
+    def test_should_record_occ_principal_moments_when_a_solid_is_tilted_out_of_the_z_axis(self):
+        # Arrange
+        tilted = self._rotated(Part.makeBox(BOX_L, BOX_W, BOX_H), angle=37, axis=(1, 2, 0))
+        self._feature(tilted)
+
+        # Act
+        _, massprops = self._massprops()
+
+        # Assert
+        self._assert_moments_match_occ(tilted, massprops)
+
+    def test_should_record_occ_principal_moments_when_a_cylinder_is_tilted(self):
+        # Arrange
+        # Two equal moments: the case where a closed-form eigenvalue routine loses precision.
+        cylinder = Part.makeCylinder(3, 40, App.Vector(1, 2, 3), App.Vector(1, 2, 2))
+        self._feature(cylinder)
+
+        # Act
+        _, massprops = self._massprops()
+
+        # Assert
+        self._assert_moments_match_occ(cylinder, massprops)
+
+    def test_should_not_be_massprops_equal_when_a_face_turns_about_its_centre(self):
+        # Arrange
+        face = Part.makePlane(20, 10)
+        feature = self._feature(face)
+        before, before_massprops = self._massprops()
+
+        # Act
+        self._replace_shape(feature, self._rotated(face))
+        after, _ = self._massprops()
+
+        # Assert
+        self.assertTrue(any(before_massprops["inertia"]))
+        self.assertFalse(massprops_equal(before, after))
+
+    def test_should_match_the_solid_matrix_when_the_tensor_is_rebuilt_from_principal_properties(
+        self,
+    ):
+        # Arrange
+        solids = {
+            "tilted box": self._rotated(
+                Part.makeBox(BOX_L, BOX_W, BOX_H), angle=37, axis=(1, 1, 0)
+            ),
+            "L": _l_shape().Solids[0],
+            "cylinder (symmetry axis)": Part.makeCylinder(
+                3, 40, App.Vector(1, 2, 3), App.Vector(1, 2, 2)
+            ),
+            "cube (symmetry point)": Part.makeBox(10, 10, 10),
+        }
+
+        # Act
+        rebuilt = {
+            label: fingerprint._principal_tensor(solid.PrincipalProperties)
+            for label, solid in solids.items()
+        }
+
+        # Assert
+        for label, solid in solids.items():
+            volume, tensor = rebuilt[label]
+            matrix = solid.MatrixOfInertia
+            expected = (matrix.A11, matrix.A22, matrix.A33, matrix.A12, matrix.A13, matrix.A23)
+            scale = max(abs(component) for component in expected[:3])
+            for measured, component in zip(tensor, expected, strict=True):
+                self.assertAlmostEqual(measured, component, delta=scale * 1e-12, msg=label)
+            self.assertAlmostEqual(volume, solid.Volume, delta=solid.Volume * 1e-12, msg=label)
+
+    def test_should_keep_one_step_when_a_round_box_puts_its_scale_on_a_power_of_ten(self):
+        # Arrange
+        # 6 x 10 x 10 mm: Ixx = 600 * (10^2 + 10^2) / 12 = 10000. Jitter of 1e-15 below it, the
+        # size a recompute produces, must not drop the step from 1e-5 to 1e-6.
+        box = Part.makeBox(6, 10, 10)
+        _, _, tensor = fingerprint._solid_mass_properties(box, box.Solids)
+        jittered = (tensor[0] * (1 - 1e-15), *tensor[1:])
+
+        # Act
+        steps = (fingerprint._tensor_step(tensor), fingerprint._tensor_step(jittered))
+
+        # Assert
+        self.assertAlmostEqual(tensor[0], 10000.0, delta=1e-9)
+        self.assertEqual(steps, (10.0**-5, 10.0**-5))
+
+    def test_should_stay_massprops_equal_when_a_cube_turns_about_its_com_as_a_known_limit(self):
+        # Arrange
+        cube = Part.makeBox(10, 10, 10)
+        feature = self._feature(cube)
+        before, _ = self._massprops()
+
+        # Act
+        self._replace_shape(feature, self._rotated(cube))
+        after, _ = self._massprops()
+
+        # Assert
+        self.assertTrue(massprops_equal(before, after))
+
+    def test_should_stay_massprops_equal_when_an_l_shape_turns_180_degrees_as_a_known_limit(self):
+        # Arrange
+        # z is a principal axis of the L; a half turn about it negates x and y, so Ixy = -∫xy dm
+        # and every other component keep their values.
+        shape = _l_shape().Solids[0]
+        feature = self._feature(shape)
+        before, _ = self._massprops()
+
+        # Act
+        self._replace_shape(feature, self._rotated(shape, angle=180))
+        after, _ = self._massprops()
+
+        # Assert
+        self.assertTrue(massprops_equal(before, after))
+
+    def test_should_fall_back_to_its_own_centre_when_a_solid_has_zero_volume(self):
+        # Arrange
+        open_solid = Part.Solid(Part.Shell([Part.makePlane(10, 10).Faces[0]]))
+        self._feature(open_solid)
+
+        # Act
+        _, massprops = self._massprops()
+
+        # Assert
+        self.assertEqual(massprops["volume"], 0.0)
+        self.assertEqual(
+            massprops["com"], [fingerprint._quantize(c) for c in open_solid.CenterOfMass]
+        )
+        self.assertEqual(massprops["inertia"], [0.0] * 6)
 
 
 class VerifyShapeTest(_DocFixture):

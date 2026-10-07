@@ -161,8 +161,8 @@ development_status:
   10-7b-scripted-uat-runner-and-freecad-probe: backlog
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional
-  epic-11: backlog
-  11-1-mass-properties-that-tell-shapes-apart: backlog
+  epic-11: in-progress
+  11-1-mass-properties-that-tell-shapes-apart: review
   11-2-quiet-result-envelope: backlog
   11-3-one-call-per-mutation: backlog
   11-4-cheap-correct-rollback-proof-and-fingerprints: backlog

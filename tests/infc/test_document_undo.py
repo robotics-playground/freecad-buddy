@@ -430,8 +430,8 @@ class ExpectFingerprintRecordTest(_UndoFixture):
         """Consuming a sketch as a profile makes OCCT store the edge several ways.
 
         Undo removes the feature but leaves the extra representations, so the BRep bytes differ
-        while volume, area, centre of mass and principal moments are unchanged. A digest-only
-        expectation reports that as a failed restore; a record expectation does not.
+        while volume, area, centre of mass, principal moments and inertia tensor are unchanged. A
+        digest-only expectation reports that as a failed restore; a record expectation does not.
         """
         pre_op = self._pad_a_sketch()
         self.assertNotEqual(fingerprint(self.document)["digest"], pre_op["digest"])

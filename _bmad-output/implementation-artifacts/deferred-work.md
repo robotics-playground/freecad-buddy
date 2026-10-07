@@ -1558,3 +1558,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6-headless-bounded-execution.md`
   summary: AD-27 says a timed-out mutation's AD-5 transaction is "aborted with rollback proved" when the op returns; both hosts instead let a late body commit and leave the document suspect.
   evidence: Human decision D2 (2026-10-06) kept the late commit for Story 10.6; TC-10-10 tests the late-commit behaviour. A fix needs a `run_mutation` bracket that rolls back at its commit point when its call was abandoned; lifecycle tools outside the bracket (`document_recompute`, `document_save`, `document_close`, `document_undo`) need their own answer.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
+  summary: A compound of faces or shells with no solids (imported surface model) records zero `inertia` and zero `principal_moments`, so `massprops_equal` cannot see a rotation or mirror of it about its centre.
+  evidence: Pre-existing (moments were already zero for such compounds); Story 11.1 kept today's no-solids rule. A fix combines per-face or per-shell `MatrixOfInertia` with the parallel-axis rule, as the solids path does.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
+  summary: No G2 fault case plants a rotation or mirror about the centre of mass, so the gate does not measure the detection Story 11.1 added; only infc tests cover it.
+  evidence: `benchmarks/_registry/validators.yaml` keeps `fingerprint` at `not_scored: "no fault case targets this validator"`; `benchmarks/g2/fault-injection/` has no rotation or mirror case.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
+  summary: `volume`, `area` and `com` still round to the absolute `Q = 1e-6`, so a part above about 1e9 mm³ (an assembly-scale model) crosses rounding boundaries on a no-op recompute, the same failure the per-object tensor step fixed for moments.
+  evidence: Recompute jitter is about 1.1e-15 relative (Story 11.1 drawer probe); 1.1e-15 x 1e9 is above `Q`. Pre-existing rule, not changed by Story 11.1.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
+  summary: No test detects recompute jitter growing past the calibrated tensor step (exponent 9) after a FreeCAD or OCCT upgrade; calibration rests on a manual probe of `kiwibox-drawer.FCStd`.
+  evidence: The only step test pins the formula; a regression test needs a committed large part whose recompute reproduces last-bit jitter.

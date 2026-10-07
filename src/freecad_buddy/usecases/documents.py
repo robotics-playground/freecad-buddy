@@ -202,8 +202,8 @@ def _matches_pre_op(after: dict, expected: str | dict | None) -> bool | None:
     A digest string is compared byte-exactly. A whole ``FingerprintRecord`` also passes when the
     per-object geometric invariants match, because consuming a shape as a profile makes OCCT
     store its edges several ways and an undo removes the feature without dropping the extra
-    representations — the bytes then differ while volume, area, centre of mass and principal
-    moments do not.
+    representations — the bytes then differ while volume, area, centre of mass, principal
+    moments and inertia tensor do not.
     """
     if expected is None:
         return None
