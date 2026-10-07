@@ -17,6 +17,8 @@ jobs:
         run: uv run python scripts/gen_schemas.py --check
       - name: Provenance gate (AD-16)
         run: uv run python scripts/check_provenance.py
+      - name: Skill shape (AD-15)
+        run: uv run python scripts/check_skill_shape.py
       - name: Entry gate G0 fails honestly against the stub (AD-19)
         run: |
           if uv run python benchmarks/runner.py --gate G0 --stub; then

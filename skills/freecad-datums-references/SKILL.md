@@ -9,7 +9,7 @@ description: >-
   system", "what origin", "attach to", "broken reference after recompute", "TNP".
   Do NOT use for constraining a sketch (see freecad-sketcher) or the mutation
   transaction/audit itself (see verification-thinking).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -51,8 +51,8 @@ at it — otherwise none of these steps can run.
   a feature is measured in, the frame it attaches at, and the part's own origin are
   not automatically the same. Name which frame a value is expressed in, because a
   number without its frame is the classic silent placement error.
-- After any mutation that could touch a reference, run `verify_references` and treat
-  a re-pointed, dropped, or `?`-marked reference as a failure, and an `UNSUPPORTED`
+- After any mutation that could touch a reference, read the reference audit in
+  `mutation.post_verify.tnp_audit` and treat a re-pointed, dropped, or `?`-marked reference as a failure, and an `UNSUPPORTED`
   result as *not clean* — a silently re-pointed reference recomputes fine and is
   still a corrupted model.
 - Use a **local coordinate system** when a sub-assembly or a repeated feature group
@@ -69,8 +69,8 @@ Input: "Add a flange on the end of this plate that references the plate end."
 Reasoning: don't attach the flange sketch to the plate's end *face* — a later hole
 or fillet recompute can re-label it. Instead: create a datum plane at the plate end,
 offset from the origin by a `plate_len` parameter, and sketch the flange on the
-datum. Now the flange survives edits to the holes, and `verify_references` stays
-clean because the reference is a stable datum, not a moving face index.
+datum. Now the flange survives edits to the holes, and `post_verify.tnp_audit`
+stays `CLEAN` because the reference is a stable datum, not a moving face index.
 
 Input: "The bracket's holes broke after I added a pocket."
 
@@ -84,8 +84,8 @@ for choosing the anchoring frame per part type.
 - **Modeling before choosing the origin.** Symptom: alignment and symmetry checks
   are ambiguous. Why: an arbitrary origin gives every relative measurement an
   arbitrary reference. Fix: fix the functional datum first.
-- **Attaching to a face a later step invalidates.** Symptom: `verify_references`
-  reports BROKEN/REPOINTED after recompute. Why: the face index moved (TNP). Fix:
+- **Attaching to a face a later step invalidates.** Symptom: `post_verify.tnp_audit`
+  reports `BROKEN`/`REPOINTED` findings after recompute. Why: the face index moved (TNP). Fix:
   attach to a datum plane created early.
 - **Storing a bare `Face6`.** Symptom: a reference points at the wrong topology
   after a recompute. Why: indices reshuffle. Fix: address by geometric query or

@@ -9,7 +9,7 @@ description: >-
   multi-feature part's sketches. Do NOT use for constraining a sketch you're already
   in (see freecad-sketcher) or ordering the whole feature plan (see
   design-decomposition).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -56,8 +56,9 @@ MCP client at it — otherwise the sketches you plan can't be built.
   feature the user is most likely to edit into its own sketch so an edit touches one
   sketch, not a shared monolith.
 - Plan every sketch to reach **fully constrained** (DoF = 0). If a profile can't be
-  cleanly constrained, that's a signal it's trying to do too much — split it. Verify
-  the intent with `verify_sketch` after building, not by eye.
+  cleanly constrained, that's a signal it's trying to do too much — split it. Read
+  `sketch_state` in the sketch tool's result, not the picture; call `verify_sketch`
+  only after a change outside the typed tools.
 - Prefer a profile that references a **datum or the origin** over one that projects
   a model face, because a projected external reference re-points or drops on
   recompute (TNP); a sketch anchored to a datum is durable.
@@ -73,7 +74,7 @@ Reasoning → sketch split:
    feature), so editing the pattern doesn't disturb the base profile. Use a
    construction bolt-circle or centerlines for symmetry.
 3. Flange sketch: on a datum plane at the base end, not projected off the base face.
-One sketch per feature, each reaching `verify_sketch` fully-constrained. Trying to
+One sketch per feature, each with `sketch_state` fully constrained (`dof` 0). Trying to
 draw the L, the holes, and the flange in one profile would be near-impossible to
 constrain and couple three independent edits.
 

@@ -48,7 +48,7 @@ Rules:
 
 ## 2. SKILL.md Template
 
-Frontmatter + exactly four H2 body sections in fixed order (AD-15). Body ≤1,500 words; the `check_skill_shape.py` CI check that enforces this is **not yet built** (Story 6.1) — until it lands the cap is convention only (§6).
+Frontmatter + exactly four H2 body sections in fixed order (AD-15). Body ≤1,500 words, enforced in CI by `scripts/check_skill_shape.py` (§6).
 
 ```markdown
 ---
@@ -163,7 +163,7 @@ Rules match on task text; multiple matches union their subsets, capped at 5 bodi
 
 ## 6. CI Shape Check
 
-> **Status: `scripts/check_skill_shape.py` is NOT yet built** (Story 6.1, AD-15). Everything in this section is the specification *for* that script. Until it lands every rule below is convention only, held by review rather than by CI — including the word cap, which currently passes by luck (all 15 bodies measure well under it).
+> **Status: `scripts/check_skill_shape.py` is built for the four-section and word-cap rules** (AD-15) and runs in CI. The frontmatter, description-shape and cross-skill rules below remain Story 6.1; until they land they are convention only, held by review rather than by CI.
 
 One script (external process, to run in the existing CI workflow), blocking on the 1.1.x CI leg. It backs GS.E ("skill shape check wired into CI"), G1.5, and G2.6. Per SKILL.md:
 
@@ -189,7 +189,7 @@ Planning figures from the research report (~100 tokens/description, ~2K tokens p
 | Ablation typical subset | declared 1–3 bodies | ~2–6K | Per-skill delta runs |
 | Ablation `--skills all` | all bodies (15 core) | ~25K (cap-compliant) to ~40K (if bodies bloat) | Measurement only — never production (context-rot distractor cost); the §6 word cap is what keeps this at the ~25K end |
 
-Budget guard: once built, the shape check's 1,500-word cap will be the enforcement mechanism for every row — a skill that outgrows it moves content to `references/`, not past the cap.
+Budget guard: the shape check's 1,500-word cap is the enforcement mechanism for every row — a skill that outgrows it moves content to `references/`, not past the cap.
 
 ## 8. Conflicts & Notes
 

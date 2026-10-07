@@ -65,8 +65,8 @@ was dropped and marked with `?`.
 Fix: re-select by axis, plane, position, normal, or an inspected mapped-name/
 geometric-query reference; use `query_tree_summary` + `query_object` to rediscover
 stable references; add a construction datum or simplify the operation so the
-reference has something durable to attach to. A `verify_references` result of
-`UNSUPPORTED` means the audit could not run (no element map) — treat it as
+reference has something durable to attach to. A `mutation.post_verify.tnp_audit`
+result of `UNSUPPORTED` means the audit could not run (no element map) — treat it as
 not-clean, never as a pass.
 
 ## Positioning or datum mismatch

@@ -55,8 +55,9 @@ lands somewhere else.
 
 ## Repairing a broken reference
 
-When `verify_references` flags a re-pointed or dropped reference, do not re-pick
-another bare index — it will break again on the next recompute. Re-resolve against
-the most durable anchor available from the list above (datum first), then recompute
-and re-audit. If `verify_references` reports `UNSUPPORTED`, the audit could not run
-(no element map) — treat the reference as unverified, never as clean.
+When `mutation.post_verify.tnp_audit` flags a re-pointed or dropped reference, do not
+re-pick another bare index — it will break again on the next recompute. Re-resolve
+against the most durable anchor available from the list above (datum first) through
+a typed tool, then read the audit in that mutation's result. If `tnp_audit` reports
+`UNSUPPORTED`, the audit could not run (no element map) — treat the reference as
+unverified, never as clean.

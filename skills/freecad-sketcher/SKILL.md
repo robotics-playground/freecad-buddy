@@ -11,7 +11,7 @@ description: >-
   won't solve". Do NOT use for the solid feature built from a sketch (see
   freecad-partdesign) or planning how many sketches a part needs (see
   sketch-strategy).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -32,10 +32,17 @@ at it — otherwise none of these steps can run.
 
 ## Decision Rules
 
-- Treat a sketch as done only when `verify_sketch` passes: a clean solve,
-  `FullyConstrained` true, DoF = 0, and no conflicting, malformed or redundant
-  constraint. `FullyConstrained` alone is not enough, because FreeCAD does not
-  update it after a failed solve, so a redundant sketch can keep a stale true.
+- Treat a sketch as done only when the last `sketch_*` result reports
+  `structured_content.sketch_state.fully_constrained` true and `dof` 0, with
+  `mutation.post_verify.passed` true. That is the AD-8 sketch signal: the same
+  grade `verify_sketch` computes (a clean solve, no conflicting, malformed or
+  redundant constraint), so do not call `verify_sketch` after a typed sketch
+  tool. `sketch_state.readable` false (no grade) or a `"not_measured"`
+  `fully_constrained` is not a pass: call `verify_sketch`. Call `verify_sketch`
+  also for a sketch changed outside the typed tools (a GUI edit, a script),
+  because no mutation result covers that change. FreeCAD's
+  `FullyConstrained` property alone is not enough, because FreeCAD does not update
+  it after a failed solve, so a redundant sketch can keep a stale true.
 - Never infer degrees of freedom from a successful solve: `solve()` returning 0
   means "solved", not "fully constrained", because the solver happily converges on
   an under-constrained sketch by holding the free parameters where they sit.
@@ -62,8 +69,9 @@ at it — otherwise none of these steps can run.
 - Use **external geometry with caution**: projecting a model edge or face into a
   sketch creates a reference that a later recompute can re-point or drop (the
   topological-naming risk), so prefer attaching to a datum plane over projecting a
-  face, and after any change re-audit references with `verify_references` — an
-  `UNSUPPORTED` result is not clean.
+  face, and after any change read the reference audit in
+  `mutation.post_verify.tnp_audit` — an `UNSUPPORTED` status or finding is not
+  clean.
 - Keep degenerate geometry out: a zero-length edge or a coincident-endpoints line
   passes a casual glance but fails the solve or the downstream feature. Fix it in
   the sketch, not by working around it downstream.
@@ -79,23 +87,27 @@ Reasoning → constraints:
    one symmetric constraint per axis, not four corner dimensions — so a later width
    edit stays centered.
 3. Dimensions: one horizontal distance = 60, one vertical distance = 40.
-4. `verify_sketch` → `OK`: `FullyConstrained` true, DoF = 0, no conflicting or
-   redundant constraints. Done.
+4. Send the lines and all these constraints in one `sketch_add_geometry` call —
+   geometry sent alone leaves `dof` > 0, which fails and rolls back. Its result →
+   `sketch_state.fully_constrained` true, `dof` 0, `post_verify.passed` true, no
+   conflicting or redundant constraints. Done — no separate `verify_sketch` call.
 If instead you'd dimensioned all four corners from the origin, the sketch would be
 over-defined the moment you added the width, and the solver would report a conflict.
 
-Input: "The sketch shows DoF = 2 after I added the holes."
+Input: "I added two holes to the sketch in the GUI; is it still fine?"
 
-Reasoning: two hole centers are unlocated. Add the missing position constraints —
-distances from a construction centerline, or a symmetry constraint if the holes are
-mirrored — then re-read `verify_sketch`. Never pad the feature until
-`verify_sketch` returns `OK`.
+Reasoning: the edit was made outside the typed tools, so no mutation result covers
+it — call `verify_sketch`. It reports `dof` 2: the two hole centers are unlocated.
+Add the missing position constraints in one `sketch_add_constraint` call — distances
+from a construction centerline, or a symmetry constraint if the holes are mirrored.
+Its `sketch_state` reports `fully_constrained` true and `dof` 0. Never pad the
+feature before that.
 
 ## Anti-Patterns
 
 - **Reading DoF from the solver code.** Symptom: an under-constrained sketch
   treated as done. Why: `solve() == 0` means "solved", not "fully constrained". Fix:
-  gate on `verify_sketch`.
+  gate on `sketch_state.fully_constrained` and `dof`.
 - **Duplicated dimensions instead of symmetry.** Symptom: an edit makes a
   once-symmetric feature lopsided. Why: two equal numbers drift when one changes.
   Fix: use a symmetric or equal constraint.
@@ -107,4 +119,5 @@ mirrored — then re-read `verify_sketch`. Never pad the feature until
   redundant sketch. Fix: remove the constraint the diagnostic names.
 - **Projecting a face for an external reference.** Symptom: the sketch breaks after
   an unrelated recompute. Why: the projected edge was re-pointed or dropped (TNP).
-  Fix: attach to a datum plane where possible; re-audit with `verify_references`.
+  Fix: attach to a datum plane where possible; read `post_verify.tnp_audit` after
+  each change.

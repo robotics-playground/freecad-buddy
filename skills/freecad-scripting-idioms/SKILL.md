@@ -9,7 +9,7 @@ description: >-
   "does this work headless", "the value didn't update", "object identity". Do NOT
   use for the document/recompute mental model at a conceptual level (see
   freecad-fundamentals) or diagnosing a specific error (see freecad-troubleshooting).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -69,6 +69,11 @@ MCP client at it — otherwise none of these steps can run.
   `Visibility` — so try it before GUI input or a script. It cannot write a placement
   (`AttachmentOffset`) and no tool deletes an object; only those gaps justify a
   fallback.
+- **Never edit the live model through a headless script while the bridge serves
+  it**: no `freecadcmd` run that writes a document the GUI has open. The script
+  skips the transaction, verification, and reference audit, and the GUI keeps its
+  in-memory copy, so the next typed call or `document_save` works on stale state
+  or overwrites the script's change.
 - The fallback for a gap is a **headless script on the closed document**: close it
   in the GUI, edit and save with `freecadcmd`, reopen with `document_open`, then run
   the full verification and one `document_save` from the GUI. In a script,
@@ -104,6 +109,10 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
 - **Free-form execution for a mutation.** Symptom: an unverified or corrupt document
   that recompiled fine. Why: raw code bypassed the transaction/verify/audit wrapper.
   Fix: use the typed `sketch_*`/`feature_*`/`document_*` tools.
+- **Scripting the open document.** Symptom: a headless edit vanishes after the next
+  GUI save, or the GUI shows geometry the file no longer has. Why: the script and
+  the bridge edited two copies of one model. Fix: use a typed tool, or close the
+  document in the GUI before the script runs.
 - **Guessing an enum member.** Symptom: a feature does the wrong thing silently.
   Why: FreeCAD enum members don't always follow the GUI order. Fix: confirm with
   `query_object`.

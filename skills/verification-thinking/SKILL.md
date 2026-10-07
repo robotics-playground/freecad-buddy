@@ -6,10 +6,10 @@ description: >-
   actually done: which geometry to check against the spec, when a screenshot is
   required, and how to turn a visual doubt into a measurement. Trigger phrases:
   "verify", "does it match the spec", "is this done", "check the result", "measure
-  it", after a mutation or a full part build. Do NOT use for planning the build
+  it", at a milestone or a finished part. Do NOT use for planning the build
   order (see design-decomposition) or diagnosing a recompute error (see
   freecad-troubleshooting).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -37,6 +37,21 @@ it — otherwise none of these checks can run.
   or fail comes from deterministic checks (`verify_shape`, `verify_sketch`,
   `verify_export_step`) or an independent judge, because an agent that grades its
   own work systematically over-scores it.
+- Verify on the **build loop**, not on every call. **Per feature:** read the
+  mutation result — `structured_content.mutation.post_verify`,
+  `structured_content.sketch_state` on a sketch tool, and `mutation.changed` —
+  with no `verify_*` call and no screenshot, because every mutation already ran
+  those checks. Clean = `passed` true, `tnp_audit.status` `CLEAN`, no
+  `"not_measured"` field (detail: `references/reading-mutation-results.md`).
+  **Per milestone** (a finished part or feature group): one `verify_shape` whose
+  `checks` carry every spec check, and one screenshot packet. **After a change outside the typed tools** (a GUI edit, a
+  script, the user): run `verify_recompute`, `verify_shape`, and `verify_sketch`.
+  No tool audits references or compares before and after outside a mutation, so
+  report reference integrity and freedom from regression as unverified.
+- On a **failed mutation** (`post_verify.passed` false): with `rolled_back` true
+  and `rollback_proven` set, the change is not in the model — read `explanation`,
+  fix the cause, send the call again. With `rolled_back` false or
+  `rollback_proven` null, the model state is unproven: stop and report.
 - A clean recompute is **necessary but not sufficient**: `verify_recompute`
   passing means the script ran, not that the geometry is right. Always follow it
   with spec-driven measurement, because "a pocket exists" is not "the right pocket,
@@ -45,7 +60,7 @@ it — otherwise none of these checks can run.
   callout) states — with `query_mass_properties` for bbox/volume and
   `query_placement` for distances and offsets — because an unchecked dimension is
   an unverified claim, and the point of verifying is to falsify a wrong part.
-- Run a baseline inspection on every result before spec checks:
+- Run a baseline inspection at each milestone before the spec checks:
   `query_tree_summary` + `query_object` for labels and error states,
   `query_mass_properties` for a scale sanity check. An order-of-magnitude or
   centering error passes narrow checks but shows up in the baseline.
@@ -53,20 +68,27 @@ it — otherwise none of these checks can run.
   deltas between the two references; if it's off, fix the source feature or datum
   and recompute — never nudge exported geometry, because the model is the source
   of truth and the export is derived.
-- On a **modification**, compare geometry before and after with
-  `verify_fingerprint`, because a change that "worked" may have silently altered an
-  unrelated feature, and the fingerprint diff catches what a spot check misses.
-  Never use file size or a diff of the saved document as a geometry comparison —
-  those change for reasons unrelated to shape.
+- On a **modification**, compare `mutation.fingerprint_before.digest` with
+  `fingerprint_after.digest` (equal means no geometry changed) and read
+  `mutation.changed`, the objects whose mass properties differ, because a change
+  that "worked" may have silently altered an unrelated feature. In a PartDesign
+  body each feature's `Shape` is cumulative, so an edit also lists every later
+  feature and the body; an *earlier* feature in `changed` is the regression. A
+  null `fingerprint_*` leaves `changed` empty: the regression check is unverified,
+  so re-measure. Never use file size or a diff of the saved document as a
+  geometry comparison — those change for reasons unrelated to shape.
 - An export counts as done **only** when its paired `verify_export_step` (or
   `_stl`/`_3mf`) re-imports and matches, because "the file was written" is not
   proof the geometry survived the round-trip. Independent-oracle disagreement is a
   fail, never an average.
-- After any mutation, run `verify_references` (the post-recompute reference audit)
-  and treat an `UNSUPPORTED` result as *not clean*, never as a pass — a silently
-  re-pointed or dropped reference is a corrupted model that still recomputes.
-- Take a screenshot with `query_screenshot` for every part whose geometry
-  changed, **even when every deterministic check passed**, because deterministic
+- After any mutation, read `post_verify.tnp_audit.status` (the post-recompute
+  reference audit): `CLEAN`; `FLAGGED` (a `BROKEN`, `REPOINTED`, `DROPPED`, or
+  `UNSUPPORTED` finding); or `UNSUPPORTED` (the audit could not run).
+  `RE_BASELINED` is informational and can appear under `CLEAN`. `UNSUPPORTED` is
+  *not clean*, yet `passed` stays true on it, so read the status separately — a
+  silently re-pointed reference is a corrupted model that still recomputes.
+- Take a screenshot with `query_screenshot` for every milestone, **even when
+  every deterministic check passed**, because deterministic
   checks only catch what the spec encoded; a mirrored part or a feature on the
   wrong face passes the numbers and fails the eye. Size the packet per
   `references/snapshot-packet-sizing.md`; don't re-render in a loop.
@@ -92,26 +114,30 @@ it — otherwise none of these checks can run.
 
 ## Worked Examples
 
-Input: a copilot just padded a sketch to make a 60×40×5 plate; spec says two Ø5.5
-holes 40 mm apart.
+Input: a copilot builds a 60×40×5 plate; spec says two Ø5.5 holes 40 mm apart.
 
 Verification read:
-1. Baseline: `query_tree_summary` (one solid, named, no error state);
-   `query_mass_properties` → bbox ≈ 60×40×5, volume plausible.
-2. Spec checks: `verify_shape` for validity + counts;
-   `count_cylindrical_holes == 2`; `hole_diameter == 5.5`; hole-center distance via
-   `query_placement` == 40 mm.
-3. `verify_references` clean after recompute.
+1. Per feature (sketch, pad, hole): read each result only — `sketch_state`
+   `fully_constrained` true and `dof` 0, `post_verify.passed` true,
+   `tnp_audit.status` `CLEAN`, `changed` lists the new feature and the body. No
+   `verify_*` call, no screenshot.
+2. Milestone (plate finished). Baseline: `query_tree_summary` (one solid, named,
+   no error state); `query_mass_properties` → bbox ≈ 60×40×5.
+3. One `verify_shape` with every spec check in `checks`: `is_valid_solid`,
+   `count_cylindrical_holes == 2`, `hole_diameter == 5.5`, `hole_spacing == 40`.
 4. `query_screenshot` (single iso — simple static part per the packet guide). The
    holes look centered; nothing to escalate. Done: geometry ∧ visual both pass.
 
-Input: a modification — "make the flange 5 mm taller" on an existing bracket.
+Input: a modification — "make the flange 5 mm taller" on a bracket built as
+plate pad → hole pocket → flange pad → slot pocket.
 
-Verification read: `verify_fingerprint` before vs after → confirm only the flange
-volume changed and the base plate + holes are byte-identical; if the hole pattern
-also shifted, that's a silent regression to investigate, not a success. Then
-`query_screenshot` and re-measure the flange height. A clean recompute alone would
-have hidden the regression.
+Verification read: the `feature_set_parameters` result's `mutation.changed` lists
+the flange pad, the slot pocket and the body — cumulative shapes, as expected —
+and `fingerprint_before.digest` / `fingerprint_after.digest` differ. The plate pad and
+the hole pocket are absent; if the hole pocket were listed, that is a silent
+regression to investigate, not a success. The edit closes a milestone, so one
+`verify_shape` re-measures the flange height, then one `query_screenshot`. A
+clean recompute alone would have hidden the regression.
 
 ## Anti-Patterns
 
@@ -121,14 +147,19 @@ have hidden the regression.
 - **Skipping the render because the numbers passed.** Symptom: a mirrored or
   wrong-face part ships. Why: deterministic checks only encode what the spec
   listed; orientation and gestalt aren't in the numbers. Fix: screenshot every
-  changed part; done is geometry ∧ visual.
+  milestone; done is geometry ∧ visual.
+- **Verifying every feature.** Symptom: a `verify_sketch`, `verify_shape` and
+  screenshot after each step; a session spends most calls and context on checks.
+  Why: the mutation result already reported `post_verify`, `sketch_state` and
+  `changed`. Fix: read the result per feature; verify and render per milestone.
 - **Claiming a visual finding as a result.** Symptom: "looks asymmetric" reported
   as a defect with no measurement. Why: a render is diagnostic, not authoritative.
   Fix: convert the concern into a `query_placement`/`query_mass_properties` check
   first.
 - **File diff as geometry comparison.** Symptom: "the file changed, so the
   geometry changed" (or the reverse). Why: saved-document bytes shift for reasons
-  unrelated to shape. Fix: use `verify_fingerprint`.
+  unrelated to shape. Fix: compare the `mutation.fingerprint_*.digest` values and
+  read `mutation.changed`.
 - **Export written = export done.** Symptom: a STEP/STL delivered without a
   re-import check. Why: writing bytes isn't verifying geometry survived. Fix:
   require the paired `verify_export_*` before calling it done.

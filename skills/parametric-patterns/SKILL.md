@@ -9,7 +9,7 @@ description: >-
   parameters", "VarSet", "parameter table", "so a user can change it". Do NOT use
   for deciding which values are parameters (see design-intent) or splitting sketches
   (see sketch-strategy).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -51,11 +51,14 @@ MCP client at it — otherwise the parametric model can't be built or verified.
 - Give each driving parameter a **valid default and a sane range**, and check the
   extremes: a parameter that produces a self-intersecting or impossible model at its
   min or max isn't a usable degree of freedom. Verify a representative edit with
-  `verify_shape` and `verify_references`, not by eye.
+  `verify_shape` and the edit's `mutation.post_verify.tnp_audit`, not by eye.
 - After changing a driving parameter, **recompute and re-verify** the whole part —
   a clean recompute plus the reference audit proves the edit propagated without
   breaking a reference. An edit that "worked" but broke an unrelated feature is a
-  regression; catch it with `verify_fingerprint` or a re-measure.
+  regression; catch it with the edit's `mutation.changed` (objects whose mass
+  properties differ) and `mutation.fingerprint_*.digest` values.
+  A null `fingerprint_*` leaves `changed` empty: the check is unverified, so
+  re-measure.
 - Keep the parameter set **minimal**: expose the real design degrees of freedom, not
   every constant. Too many parameters make the model as hard to reason about as too
   few — one control per genuine design choice.
@@ -75,8 +78,10 @@ Reasoning → parametric build:
    corner), not literals.
 3. Features in order: base pad → hole pattern (count driven by `hole_count`) →
    fillets last. Holes anchored to the skeleton, not the pad's faces.
-4. Test the edit: change `plate_len`, recompute, then `verify_shape` +
-   `verify_references` → the holes stay margin-in and symmetric, references clean.
+4. Test the edit: change `plate_len` with `feature_set_parameters`; its result
+   shows `post_verify.passed` true and `tnp_audit.status` `CLEAN`; then
+   `verify_shape` → the holes stay
+   margin-in and symmetric.
 If the holes had been dimensioned from a face instead of the skeleton, resizing the
 plate would have broken them.
 

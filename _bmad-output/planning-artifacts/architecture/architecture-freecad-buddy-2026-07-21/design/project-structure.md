@@ -84,8 +84,7 @@ freecad-buddy/
 │   └── package.xml                   # Addon Manager metadata (§2.2)
 ├── skills/                           # one dir per skill (AD-15); 18 target (12 Track A/B + 3 Track W + 3 Phase-5)
 │   └── <skill-name>/
-│       ├── SKILL.md                  # 4 sections, ≤1,500 words (check_skill_shape.py — unbuilt, Story 6.1;
-│       │                             #   cap is convention only until it lands)
+│       ├── SKILL.md                  # 4 sections, ≤1,500 words (check_skill_shape.py)
 │       └── references/
 ├── benchmarks/                       # per-gate layout, not a flat dev/heldout split
 │   ├── runner.py                     # gate runner CLI → contracts ValidationReport ( `gate` console alias)
@@ -110,7 +109,7 @@ freecad-buddy/
 │   ├── build_addon.py                # assembles dist/addon/FreeCADBuddy/ (§2.2); stdlib only
 │   └── automation/                   # run_mcp_e2e.py, run_mcp_edge_cases.py — live MCP manual harness
 │
-│   # check_skill_shape.py (AD-15, 4-section + word-count) is NOT yet built — Story 6.1.
+│   # check_skill_shape.py (AD-15): 4 sections + word cap; front-matter, description and cross-skill rules are Story 6.1.
 └── .github/
     └── workflows/
         ├── ci.yml                    # blocking matrix + arch checks + render leg (§5)
@@ -242,7 +241,7 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 
 | Job | Matrix | Steps | Blocking |
 | --- | --- | --- | --- |
-| `arch-checks` | — (uv, py3.12) | `uv sync` → `check_imports.py` → `check_status_vocab.py` → `gen_schemas.py --check` → `check_provenance.py` → `ruff check` (T201 print ban) → `pytest tests/external` | yes |
+| `arch-checks` | — (uv, py3.12) | `uv sync` → `check_imports.py` → `check_status_vocab.py` → `gen_schemas.py --check` → `check_provenance.py` → `check_skill_shape.py` → `ruff check` (T201 print ban) → `pytest tests/external` | yes |
 | `headless` | `{freecad: 1.1.x/py3.11}` | micromamba (cached) → pip layer-in → `FreeCADCmd tests/run_tests.py` → `pytest tests/external` → `benchmarks/runner.py --gate G0` | yes (G0.4) |
 | `render` | 1.1.x only | same env + `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1`, render-tagged tests only | no (`continue-on-error: true`) |
 

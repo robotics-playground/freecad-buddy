@@ -10,7 +10,7 @@ description: >-
   down", ambiguous or under-dimensioned request. Do NOT use for constraining an
   individual sketch (see sketch-strategy) or choosing one feature operation
   (see tool-selection).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -52,6 +52,22 @@ then point your MCP client at it — otherwise the plan can't be built.
 - Make each planned feature a **named step** with an intent-bearing name, because
   the feature tree should read like the build plan and a parameter edit should
   touch one obvious place.
+- Write the plan in the **CAD plan shape**: a parameter table (name, value, unit,
+  source — spec, callout, or assumption) and a list of milestones, each a finished
+  part or feature group with the spec checks that close it. No per-step checkboxes
+  and no hand-predicted volumes: each mutation result already reports what changed
+  and what failed, and a volume worked out by hand is a second, unchecked model.
+- Close each milestone only after its `verify_shape` checks and screenshot pass:
+  then `document_save`, then, when the user's project uses version control, one
+  commit of the `.FCStd` and the plan file — one commit per milestone, so every
+  commit is a verified state to return to.
+- Keep **derived pieces** — print splits, `Part::Common` cuts of a master body —
+  out of the edit loop: put them in a separate document, or rebuild them only at
+  milestones, because every master-body change recomputes each one. On
+  `kiwibox-drawer.FCStd`, 3 split `Part::Common` objects took 7.5 s of the 14.6 s
+  recompute after one change to the master body. No typed tool creates a
+  `Part::Common`, so make or rebuild them through the closed-document script
+  fallback in freecad-scripting-idioms.
 - Decide single body vs multiple bodies before modeling: parts that are
   separately manufactured, purchased, or movable are separate bodies; one
   monolithic manufacturing intent is one fused solid. Never emit an unlabeled
@@ -95,8 +111,10 @@ Reasoning → plan:
 4. Lightening slot = subtractive pocket on the flange. `slot_len=10`.
 5. No fillets requested → none planned. One body (monolithic bracket).
 No clarification needed: M5 clearance is defaultable, origin is choosable-and-
-reported. Verification targets handed down: bbox ≈ 60×40×35, 2 holes Ø5.5 at 40 mm
-spacing, flange perpendicular, one valid solid.
+reported. Milestones: M1 plate with holes (bbox 60×40×5, 2 holes Ø5.5 at 40 mm
+spacing); M2 flange and slot (bbox ≈ 60×40×35, flange perpendicular, one valid
+solid). Once its checks pass, each closes with `document_save` and, under version
+control, one commit.
 
 Input: a 2D drawing, front view labelled "Ø12 THRU, 4X", title block "mm, third-
 angle".
@@ -119,9 +137,13 @@ drawing is reported as unverified, never scaled off the image.
   hole spacing doesn't follow, or vice versa. Why: the controlling dimension became
   a computed value instead of a parameter. Fix: choose the construction that makes
   stated dimensions direct parameters.
-- **Referencing a face a later step invalidates.** Symptom: `verify_references`
-  reports BROKEN/REPOINTED after recompute. Why: a bare face index moved when the
+- **Referencing a face a later step invalidates.** Symptom: `post_verify.tnp_audit`
+  reports `BROKEN`/`REPOINTED` findings after recompute. Why: a bare face index moved when the
   tree recomputed (TNP). Fix: attach to a datum plane or a geometric-query selector.
+- **A per-step checklist plan.** Symptom: a checkbox and a predicted volume for
+  every feature, and a check call after each one. Why: the plan repeats what each
+  mutation result reports, and the hand math drifts from the model. Fix: a
+  parameter table and milestones; verify per milestone.
 - **Unlabeled multi-body output.** Symptom: `query_tree_summary` shows anonymous
   solids; inspection can't tell which is which. Why: bodies with no intent names
   lose traceability. Fix: name every body from its role.

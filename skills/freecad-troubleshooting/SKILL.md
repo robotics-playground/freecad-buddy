@@ -9,7 +9,7 @@ description: >-
   reference", "the object is in error", "why won't this recompute", "dangling
   sketch", "fix this". Do NOT use for planning a build (see design-decomposition)
   or the normal use of a specific feature (see freecad-partdesign).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -50,8 +50,8 @@ MCP client at it — otherwise none of these repair steps can run.
 - On a **broken reference** (a feature pointing at a face/edge that a recompute
   re-labelled or dropped), re-resolve it against a stable target — a datum plane or
   a geometric-query/mapped-name selector — rather than re-picking another bare
-  index that will break again. `verify_references` reporting `UNSUPPORTED` means the
-  audit could not run, not that the reference is fine.
+  index that will break again. `mutation.post_verify.tnp_audit` reporting
+  `UNSUPPORTED` means the audit could not run, not that the reference is fine.
 - On an **invalid or self-intersecting sketch**, the fault is upstream of every
   feature that consumes it — repair the sketch to fully-constrained and non-
   degenerate first, because a pad or pocket on a broken profile can only fail.
@@ -62,9 +62,12 @@ MCP client at it — otherwise none of these repair steps can run.
 - On **wrong scale or bounding box**, check the parameter values and the units
   first, then measure the critical extents — because the usual cause is a
   units mismatch or a diameter entered as a radius, not a modelling error.
-- After a repair that *could* have touched unrelated geometry, compare before and
-  after with `verify_fingerprint` and re-run the dependent checks, because a fix
-  that "worked" may have silently changed a neighbouring feature.
+- After a repair that *could* have touched unrelated geometry, compare the
+  repair's `mutation.fingerprint_before.digest` with `fingerprint_after.digest`,
+  read its `mutation.changed` (objects whose mass properties differ), and re-run
+  the dependent checks, because a fix that "worked" may have silently changed a
+  neighbouring feature. A null `fingerprint_*` leaves `changed` empty: report the
+  regression check as unverified and re-measure.
 - When a failure can't be repaired in the current environment, **report it
   honestly**: what failed, what was tried, which artifact is still usable, which
   validation claims can't be made, and the next source-level correction to try.

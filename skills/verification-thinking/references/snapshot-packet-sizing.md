@@ -41,6 +41,18 @@ ghost context parts at high transparency while inspecting a flange, or focus the
 camera on one hole's bounding box. All view control is scene composition; it does
 not touch `Visibility` or the document.
 
+## Size
+
+Request `view.width` and `view.height` of **800** by default. The tool default is
+1920 (also the maximum), and every image travels through the agent's context; 800 px
+shows feature presence, orientation, and placement at a fraction of that cost.
+
+Go above 800 only for a **review-directed image**, and never request more than 1920
+from `query_screenshot` — that is its cap. The AD-21 ≥ 2048 px legibility floor
+applies to the review-directed visual set (the images a reviewer reads dimensions
+from), which `query_screenshot` does not produce; the 800 px default never lowers
+that floor.
+
 ## Targeted additions
 
 Add a view only when the brief or a failure mode calls for it:
