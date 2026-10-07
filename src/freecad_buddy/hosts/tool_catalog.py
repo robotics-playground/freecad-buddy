@@ -1139,10 +1139,13 @@ def tool_specs() -> list[ToolSpec]:
                         "type": ["string", "object"],
                         "description": "the pre-mutation fingerprint to compare the result "
                         "against; without it matches_pre_op is null. A digest string (64 "
-                        "lowercase hex) matches byte-exactly. A whole FingerprintRecord, which "
-                        "must carry this build's serializer, also matches on the per-object "
-                        "geometric invariants, which an op that consumed a shape as a profile "
-                        "changes the serialization of without changing the geometry",
+                        "lowercase hex), or the {digest, serializer} object a mutation result "
+                        "carries, which must name this build's serializer. A digest this server "
+                        "published resolves to the record it holds, which also matches on the "
+                        "per-object geometric invariants, which an op that consumed a shape as a "
+                        "profile changes the serialization of without changing the geometry; any "
+                        "other digest matches byte-exactly. A whole FingerprintRecord, which must "
+                        "carry this build's serializer, matches as a held record does",
                     },
                 },
                 "required": ["doc"],

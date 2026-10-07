@@ -119,9 +119,13 @@ _VALIDATOR_SOURCES = {
     "run_mutation": (
         _SRC / "usecases" / "transaction.py",
         _SRC / "contracts" / "fingerprint.py",
+        _SRC / "usecases" / "result_projection.py",
     ),
     "fingerprint": (_SRC / "usecases" / "fingerprint.py",),
-    "audit_references": (_SRC / "usecases" / "tnp_guard.py",),
+    "audit_references": (
+        _SRC / "usecases" / "tnp_guard.py",
+        _SRC / "usecases" / "result_projection.py",
+    ),
     "verify_sketch": (_SRC / "usecases" / "verify.py",),
     # The G3 corrupted-plan suite graded through verify_shape's §7.2 checks, plus the scorer that
     # classifies them. Its suite is folded in like a G2 validator's, then the dev specs its cases

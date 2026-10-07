@@ -97,6 +97,16 @@ def massprops_equal(a: dict, b: dict) -> bool:
     solids (a multi-wire or point-bearing sketch, a compound of faces) records zero moments and a
     zero tensor, so any rotation of it compares equal.
     """
+    return not massprops_changed(a, b)
+
+
+def massprops_changed(a: dict, b: dict) -> list[str]:
+    """Return the sorted object names on which two FingerprintRecords differ by geometry.
+
+    A name is listed when its invariants (``volume``, ``area``, ``com``, ``principal_moments``,
+    ``inertia``) differ, when only one record holds it, or when either side lacks ``inertia``.
+    The list is empty exactly when ``massprops_equal`` holds.
+    """
 
     def _invariants(record: dict) -> dict:
         result = {}
@@ -107,6 +117,12 @@ def massprops_equal(a: dict, b: dict) -> bool:
 
     left = _invariants(a)
     right = _invariants(b)
-    if any(mp["inertia"] is None for mp in (*left.values(), *right.values())):
-        return False
-    return left == right
+    return sorted(
+        name
+        for name in left.keys() | right.keys()
+        if name not in left
+        or name not in right
+        or left[name]["inertia"] is None
+        or right[name]["inertia"] is None
+        or left[name] != right[name]
+    )

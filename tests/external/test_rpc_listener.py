@@ -458,7 +458,7 @@ def test_listener_leaves_a_bracketed_mutation_to_write_its_own_audit_lines(tmp_p
     registry.register(
         RpcMethod(
             name="feature_pad",
-            handler=lambda **p: _ok_envelope({"mutation": {"schema": "fcb.mutation/1"}}),
+            handler=lambda **p: _ok_envelope({"mutation": {"schema": "fcb.mutation/2"}}),
             mutating=True,
             timeout_s=0.5,
         )

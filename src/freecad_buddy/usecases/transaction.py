@@ -24,7 +24,6 @@ from typing import Callable
 from freecad_buddy.contracts import (
     NOT_MEASURED,
     FingerprintRecord,
-    MutationBlock,
     NotMeasured,
     PostVerifyBlock,
     ResultEnvelope,
@@ -34,7 +33,7 @@ from freecad_buddy.contracts import (
     fingerprints_equal,
     massprops_equal,
 )
-from freecad_buddy.usecases import confirm, shim, tnp_guard, verify
+from freecad_buddy.usecases import confirm, result_projection, shim, tnp_guard, verify
 from freecad_buddy.usecases.documents import ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -377,7 +376,8 @@ def _mutation_block(
     snapshot_path: str | None,
     params_digest: str | None = None,
     touched: list[str] | None = None,
-) -> MutationBlock:
+) -> dict:
+    """Build the full block: whole fingerprint records, every finding, the audit-only fields."""
     return {
         "schema": "fcb.mutation/1",
         "transaction_id": _TRANSACTION_ID,
@@ -448,7 +448,7 @@ def _unhashable_commit_envelope(
     return _envelope(block, "SPEC_FAILED", summarize_mutation(block))
 
 
-def _envelope(block: MutationBlock, status: TerminalStatus, text: str) -> ResultEnvelope:
+def _envelope(block: dict, status: TerminalStatus, text: str) -> ResultEnvelope:
     detail = (
         None
         if status == "OK"
@@ -466,7 +466,7 @@ def _envelope(block: MutationBlock, status: TerminalStatus, text: str) -> Result
     }
 
 
-def summarize_mutation(block: MutationBlock) -> str:
+def summarize_mutation(block: dict) -> str:
     """One-line mutation summary: the proven rollback path, or the commit and its fingerprint.
 
     A block that reports neither a rollback nor a passing post-verify is the unproven-rollback
@@ -482,7 +482,7 @@ def summarize_mutation(block: MutationBlock) -> str:
     return f"Mutation committed; fingerprint {block['fingerprint_after']['digest'][:12]}."
 
 
-def _rollback_record(block: MutationBlock) -> dict:
+def _rollback_record(block: dict) -> dict:
     """The audit record's rollback block: the outcome and the proof path that was taken."""
     return {
         "rolled_back": block["rolled_back"],
@@ -514,7 +514,7 @@ def _audit_before(
         pass
 
 
-def _audit_after(sink: object, tool: str, handle: str, params: dict, block: MutationBlock) -> None:
+def _audit_after(sink: object, tool: str, handle: str, params: dict, block: dict) -> None:
     """Append the post-execution mutation line: both digests, the verdict, the rollback block.
 
     A write failure is swallowed for the same reason as in ``_audit_before``.
@@ -566,6 +566,8 @@ def run_mutation(
     Every return writes one ``before`` and one ``after`` audit line, both digested over the full
     ``params``, which is what joins them to the call's approval line. The adapters write no lines
     of their own for an envelope carrying a ``mutation`` block, so no return path may skip them.
+    The ``after`` line and the summary text are written from the full block; the envelope then
+    carries its ``fcb.mutation/2`` projection (``result_projection.project_mutation``).
 
     :param document: the already-resolved ``App.Document``; never a handle to re-resolve.
     :param handle: the caller's document handle, threaded into the verify reports.
@@ -580,7 +582,9 @@ def run_mutation(
     params = params or {}
     sink = audit_sink if audit_sink is not None else confirm.host_audit_sink()
     document, envelope = _bracket(document, handle, label, op, sink, tool, params)
-    _audit_after(sink, tool, handle, params, envelope["structured_content"]["mutation"])
+    full_block = envelope["structured_content"]["mutation"]
+    _audit_after(sink, tool, handle, params, full_block)
+    envelope["structured_content"]["mutation"] = result_projection.project_mutation(full_block)
     return document, envelope
 
 

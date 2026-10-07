@@ -359,7 +359,8 @@ def collect_g2_3(criterion: dict, outcomes: list) -> ValidationReport:
             "G2.3.undo",
             reached / len(matched),
             bar,
-            "ops whose undo reached the pre-op hash" + _unexecuted_note(driven, applied),
+            "ops whose undo reached the pre-op state, by digest or, for a digest the server "
+            "published, by mass properties" + _unexecuted_note(driven, applied),
         )
     ]
     if missing_expectation:

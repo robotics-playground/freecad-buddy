@@ -61,8 +61,8 @@ class _MutationFixture(unittest.TestCase):
         self.document.recompute()
         return box
 
-    def _add_padded_body(self):
-        """A Body holding a fully constrained 20x30 sketch padded 10 mm."""
+    def _add_padded_body(self, pad=True):
+        """A Body holding a fully constrained 20x30 sketch, padded 10 mm unless ``pad`` is off."""
         body = self.document.addObject("PartDesign::Body", "Body")
         sketch = self.document.addObject("Sketcher::SketchObject", "Profile")
         body.addObject(sketch)
@@ -81,6 +81,9 @@ class _MutationFixture(unittest.TestCase):
         sketch.addConstraint(Sketcher.Constraint("DistanceY", -1, 1, 0, 1, 0))
         sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 20))
         sketch.addConstraint(Sketcher.Constraint("DistanceY", 1, 1, 1, 2, 30))
+        if not pad:
+            self.document.recompute()
+            return
         pad = self.document.addObject("PartDesign::Pad", "Pad")
         body.addObject(pad)
         pad.Profile = sketch
@@ -121,14 +124,41 @@ class CommitPathTest(_MutationFixture):
         self.assertEqual(envelope["status"], "OK")
         self.assertIsNone(envelope["detail"])
         block = envelope["structured_content"]["mutation"]
-        self.assertEqual(block["schema"], "fcb.mutation/1")
-        self.assertEqual(block["transaction_id"], "0")
-        self.assertEqual(block["fingerprint_before"]["digest"], before["digest"])
+        self.assertEqual(block["schema"], "fcb.mutation/2")
+        self.assertEqual(
+            block["fingerprint_before"],
+            {"digest": before["digest"], "serializer": before["serializer"]},
+        )
         self.assertNotEqual(block["fingerprint_after"]["digest"], before["digest"])
+        self.assertEqual(sorted(block["fingerprint_after"]), ["digest", "serializer"])
+        for field in ("transaction_id", "verify_verdict", "params_digest", "snapshot_path"):
+            self.assertNotIn(field, block)
         self.assertFalse(block["rolled_back"])
         self.assertIsNone(block["rollback_proven"])
         self.assertTrue(block["post_verify"]["passed"])
         self.assertIsNone(block["post_verify"]["explanation"])
+
+    def test_should_list_the_new_pad_and_the_body_it_changed_when_a_pad_commits(self):
+        # Arrange
+        self._add_padded_body(pad=False)
+
+        def _pad(document):
+            pad = document.addObject("PartDesign::Pad", "Pad")
+            document.getObject("Body").addObject(pad)
+            pad.Profile = document.getObject("Profile")
+            pad.Length = 10
+            return ["Pad"]
+
+        # Act
+        _, envelope = self._run("pad the profile", _pad)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope["detail"])
+        changed = envelope["structured_content"]["mutation"]["changed"]
+        self.assertEqual([entry["name"] for entry in changed], ["Body", "Pad"])
+        for entry in changed:
+            self.assertEqual(sorted(entry), ["area", "com", "name", "volume"])
+            self.assertAlmostEqual(entry["volume"], 20 * 30 * 10, places=3)
 
     def test_commit_leaves_the_new_object_on_the_document(self):
         self._run("add cylinder", _add_cylinder)
@@ -243,6 +273,10 @@ class RollbackProofTest(_MutationFixture):
         self.assertIsNone(block["rollback_proven"])
         self.assertIn("could not be proven", block["post_verify"]["explanation"])
         self.assertTrue(os.path.isfile(block["snapshot_path"]))
+        unrestored = [e for e in block["changed"] if e["name"] == "Unrestorable"]
+        self.assertEqual(len(unrestored), 1, block["changed"])
+        self.assertIsNone(unrestored[0]["before"])
+        self.assertGreater(unrestored[0]["after"]["volume"], 0.0)
         del document
 
 
@@ -573,6 +607,39 @@ class TnpGuardTest(_MutationFixture):
         self.assertEqual(audit["status"], "UNSUPPORTED")
         self.assertTrue(audit["findings"])
         self.assertEqual({f["verdict"] for f in audit["findings"]}, {"UNSUPPORTED"})
+
+    def test_should_count_every_verdict_and_keep_only_non_pass_findings_when_flagged(self):
+        # Arrange
+        def _finding(owner, verdict):
+            return {"owner": owner, "prop": "Base", "verdict": verdict, "layer": 1}
+
+        planted = (
+            [_finding(f"Feature{i:03d}", "PASS") for i in range(40)]
+            + [_finding("Fillet", "REPOINTED"), _finding("Chamfer", "REPOINTED")]
+            + [_finding("Sketch", "RE_BASELINED")]
+        )
+        real = tnp_guard.audit_references
+        tnp_guard.audit_references = lambda *_args: {
+            "status": "FLAGGED",
+            "element_map_version": "4",
+            "findings": list(planted),
+        }
+
+        # Act
+        try:
+            _, envelope = self._run("add cylinder", _add_cylinder)
+        finally:
+            tnp_guard.audit_references = real
+
+        # Assert
+        block = envelope["structured_content"]["mutation"]
+        audit = block["post_verify"]["tnp_audit"]
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+        self.assertIn("2 reference(s)", block["post_verify"]["explanation"])
+        self.assertEqual(audit["counts"], {"PASS": 40, "REPOINTED": 2, "RE_BASELINED": 1})
+        self.assertEqual(audit["findings"], planted[40:])
+        self.assertTrue(block["rolled_back"])
+        self.assertEqual(block["changed"], [])
 
     def test_mutation_reports_unsupported_in_its_tnp_block_without_failing_on_that_alone(self):
         probe = shim.element_map_available

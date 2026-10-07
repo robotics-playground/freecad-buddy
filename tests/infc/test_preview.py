@@ -138,6 +138,17 @@ class HappyPathTest(_PreviewFixture):
         self.assertTrue(content["preview_id"].startswith("fcb-preview:"))
         self.assertTrue(content["expires_at"].endswith("+00:00"))
 
+    def test_should_leave_the_preview_id_out_of_the_text_when_a_preview_succeeds(self):
+        # Arrange
+        operation = _fillet_op()
+
+        # Act
+        envelope = self._preview(operation=operation)
+
+        # Assert
+        self.assertNotIn(envelope["structured_content"]["preview_id"], envelope["text"])
+        self.assertNotIn("fcb-preview:", envelope["text"])
+
     def test_the_preview_id_and_expiry_are_envelope_siblings_not_diff_fields(self):
         content = self._preview()["structured_content"]
         self.assertNotIn("preview_id", content["diff"])
@@ -145,8 +156,8 @@ class HappyPathTest(_PreviewFixture):
 
     def test_the_diff_names_the_op_the_live_doc_and_the_before_fingerprint(self):
         diff = self._diff()
-        self.assertEqual(diff["schema"], "fcb.geometry-diff/1")
-        self.assertEqual(diff["op"]["tool"], "feature_fillet")
+        self.assertEqual(diff["schema"], "fcb.geometry-diff/2")
+        self.assertEqual(diff["op"], {"tool": "feature_fillet"})
         self.assertEqual(diff["doc"]["handle"], self.handle)
         self.assertEqual(len(diff["fingerprint_before"]), 64)
 
@@ -514,7 +525,8 @@ class TnpPrecheckTest(_PreviewFixture):
 
     def test_the_precheck_is_the_copys_own_audit_block_verbatim(self):
         block = self._diff()["tnp_precheck"]
-        self.assertEqual(sorted(block), ["element_map_version", "findings", "status"])
+        self.assertEqual(sorted(block), ["counts", "element_map_version", "findings", "status"])
+        self.assertEqual([f for f in block["findings"] if f["verdict"] == "PASS"], [])
 
     def test_an_op_that_produced_no_post_verify_is_unsupported_never_clean(self):
         """ "we did not look" and "we looked and saw nothing" are different answers (AD-7)."""
@@ -542,6 +554,8 @@ class TnpPrecheckTest(_PreviewFixture):
         block = envelope["structured_content"]["diff"]["tnp_precheck"]
         self.assertEqual(block["status"], "UNSUPPORTED")
         self.assertNotEqual(block["status"], "CLEAN")
+        self.assertEqual(sorted(block), ["counts", "element_map_version", "findings", "status"])
+        self.assertEqual(block["counts"], {})
 
     def test_no_finding_claims_pass_when_the_audit_did_not_run(self):
         block = preview._unrun_audit()

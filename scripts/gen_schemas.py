@@ -84,9 +84,9 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
         "exec_enabled",
     ],
     "MutationBlock": [
-        "transaction_id",
         "fingerprint_before",
         "fingerprint_after",
+        "changed",
         "post_verify",
         "rolled_back",
         "rollback_proven",
@@ -97,7 +97,9 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     # take a cached `fits` for a fresh one, which is the failure AD-32 exists to prevent.
     "FramingVerdict": ["fits", "ratio", "checked", "stale_reason"],
     "PostVerifyBlock": ["recompute_clean", "is_valid", "fully_constrained", "tnp_audit", "passed"],
-    "TnpAuditBlock": ["status", "element_map_version", "findings"],
+    "TnpAuditBlock": ["status", "element_map_version", "counts", "findings"],
+    "WireFingerprint": ["digest", "serializer"],
+    "ChangedObject": ["name", "volume", "area", "com"],
     "RefFinding": ["owner", "prop", "verdict", "layer"],
     "ReportBanner": ["freecad_version", "element_map_version"],
     "AnchorFrame": ["kind"],
@@ -149,7 +151,14 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
 # rather than silently defaulting the real one, which is a breaking change for any producer
 # sending an extra key — so closure is opt-in per type rather than a blanket default.
 CLOSED_TYPES: frozenset[str] = frozenset(
-    {"MutationBlock", "PostVerifyBlock", "TnpAuditBlock", "RefFinding"}
+    {
+        "MutationBlock",
+        "PostVerifyBlock",
+        "TnpAuditBlock",
+        "RefFinding",
+        "WireFingerprint",
+        "ChangedObject",
+    }
 )
 
 # Conditional manifest (wire-root type name -> conditional spec). Each entry binds
@@ -422,12 +431,20 @@ def _conditional(name: str, properties: dict, defs: dict[str, dict]) -> dict | N
     }
 
 
+def _schema_id(stem: str, tp: Any) -> str:
+    """Return the root's ``schema`` tag, which carries its major; ``fcb.<stem>/1`` without one."""
+    tag = get_type_hints(tp).get("schema")
+    if get_origin(tag) is Literal:
+        return get_args(tag)[0]
+    return f"fcb.{stem}/1"
+
+
 def build_schema(stem: str, tp: Any) -> dict:
     defs: dict[str, dict] = {}
     properties, required = _properties_and_required(tp, defs)
     schema: dict = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": f"fcb.{stem}/1",
+        "$id": _schema_id(stem, tp),
         "title": tp.__name__,
         "type": "object",
         "properties": properties,

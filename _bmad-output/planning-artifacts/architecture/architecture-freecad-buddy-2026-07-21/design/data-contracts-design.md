@@ -41,6 +41,7 @@ Rules:
 
 - Every top-level object carries `"schema": "fcb.<name>/<major>"`, e.g. `"fcb.result-envelope/1"`.
 - **Within a major: additive-only.** (Bound by AD-28; this section owns the mechanics.) New fields must be optional with a defined default. Readers MUST ignore unknown fields. Removing/renaming a field, changing a type, or changing a closed enum = **major bump** and a new schema file (old one retained for replay of audit logs).
+- A retained old major lives in `jsonschema/retained/` as `<name>-<major>.schema.json`, unchanged and outside the generator's drift check.
 - **The terminal status set is frozen** (§3). Adding a member is a major bump on every schema that embeds it — that is deliberate friction (AD-17 exists to prevent status-set drift).
 - The RPC channel negotiates by `protocol_version` at handshake (§10); schema majors ride inside it and are not independently negotiated.
 - Audit logs are append-only history: records are **never rewritten** to a new major; readers keep old-major decoders.

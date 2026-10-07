@@ -150,7 +150,7 @@ class DrivenCaseTest(DriverFixture):
         outcome = case_run.run_case(self.case, self.resolver)
 
         self.assertIsNotNone(outcome.mutation, outcome.error)
-        for key in ("post_verify", "rolled_back", "rollback_proven", "params_digest"):
+        for key in ("post_verify", "rolled_back", "rollback_proven", "changed"):
             self.assertIn(key, outcome.mutation)
         post_verify = outcome.mutation["post_verify"]
         for key in ("recompute_clean", "is_valid", "fully_constrained", "tnp_audit", "passed"):
@@ -163,23 +163,26 @@ class DrivenCaseTest(DriverFixture):
         self.assertEqual(outcome.undo["undone"], "buddy: feature_pad Pad")
         self.assertNotIn("Pad", outcome.undo["restored_objects"])
 
-    def test_undoing_a_padded_sketch_does_not_reach_the_pre_op_digest(self):
-        """A measured G2.3 shortfall, pinned so it cannot regress silently or be claimed green.
+    def test_should_match_the_pre_op_state_on_geometry_when_undoing_a_padded_sketch(self):
+        """The undo restores the geometry but not the bytes, and the published digest bridges it.
 
-        The undo restores the document geometrically — the sketch comes back with identical
-        edges, vertices, placement and bounding box, and the Pad is gone. The AD-6 digest still
-        differs, because consuming the sketch as a profile flips one OCCT per-TShape housekeeping
-        bit (5 single-byte differences inside the ``TShapes`` records of a 913-byte serialization,
-        geometry bytes untouched) and the undo does not clear it.
-
-        So ``fingerprint`` is byte-identity, not geometric identity: for a sketch-consuming
-        PartDesign op it reports a difference where the model is unchanged. G2.3 claims
-        hash-identity in 100% of benchmark ops, and this op type cannot meet that with the
-        current oracle. Recorded in the deferred-work ledger rather than worked around here.
+        Padding attaches a pcurve per new face and the undo drops the faces without dropping the
+        representations, so the post-undo digest differs from the pre-op one (DW-97). The driver
+        passes the pre-op digest, which the preview and the bracket published, so ``document_undo``
+        resolves it to the held record and compares mass properties: G2.3 measures geometric
+        identity for a published digest.
         """
-        outcome = case_run.run_case(self.case, self.resolver)
+        # Arrange
+        case = self.case
 
-        self.assertIs(outcome.undo["matches_pre_op"], False)
+        # Act
+        outcome = case_run.run_case(case, self.resolver)
+
+        # Assert
+        self.assertIs(outcome.undo["matches_pre_op"], True, outcome.undo)
+        self.assertNotEqual(
+            outcome.undo["fingerprint_after"], outcome.mutation["fingerprint_before"]["digest"]
+        )
         self.assertNotEqual(
             outcome.undo["fingerprint_before"], outcome.undo["fingerprint_after"]
         )

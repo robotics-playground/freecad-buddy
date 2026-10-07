@@ -1342,19 +1342,19 @@ def test_mutation_block_schemas_are_closed(name):
 def _valid_mutation_block() -> dict:
     """A block that satisfies every required key, so a test can introduce exactly one defect."""
     return {
-        "transaction_id": "0",
-        "fingerprint_before": {
-            "schema": "fcb.fingerprint/1",
-            "serializer": "exportBinary",
-            "objects": [],
-            "digest": "d",
-        },
+        "fingerprint_before": {"digest": "d", "serializer": "exportBinary"},
         "fingerprint_after": None,
+        "changed": [],
         "post_verify": {
             "recompute_clean": True,
             "is_valid": True,
             "fully_constrained": None,
-            "tnp_audit": {"status": "CLEAN", "element_map_version": None, "findings": []},
+            "tnp_audit": {
+                "status": "CLEAN",
+                "element_map_version": None,
+                "counts": {},
+                "findings": [],
+            },
             "passed": True,
         },
         "rolled_back": False,

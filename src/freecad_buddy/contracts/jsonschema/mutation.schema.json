@@ -1,31 +1,70 @@
 {
   "$defs": {
-    "FingerprintRecord": {
+    "ChangedObject": {
+      "additionalProperties": false,
       "properties": {
-        "digest": {
+        "after": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MassProps"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "area": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "before": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MassProps"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "com": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
           "type": "string"
         },
-        "objects": {
-          "items": {
-            "$ref": "#/$defs/ObjectFingerprint"
-          },
-          "type": "array"
-        },
-        "schema": {
-          "const": "fcb.fingerprint/1"
-        },
-        "serializer": {
-          "enum": [
-            "exportBinary",
-            "exportBrep"
+        "volume": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       },
       "required": [
-        "schema",
-        "serializer",
-        "objects",
-        "digest"
+        "name",
+        "volume",
+        "area",
+        "com"
       ],
       "type": "object"
     },
@@ -72,25 +111,6 @@
         "com",
         "principal_moments",
         "quantum"
-      ],
-      "type": "object"
-    },
-    "ObjectFingerprint": {
-      "properties": {
-        "brep_sha256": {
-          "type": "string"
-        },
-        "massprops": {
-          "$ref": "#/$defs/MassProps"
-        },
-        "name": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "name",
-        "brep_sha256",
-        "massprops"
       ],
       "type": "object"
     },
@@ -213,6 +233,9 @@
     "TnpAuditBlock": {
       "additionalProperties": false,
       "properties": {
+        "counts": {
+          "type": "object"
+        },
         "element_map_version": {
           "anyOf": [
             {
@@ -240,19 +263,45 @@
       "required": [
         "status",
         "element_map_version",
+        "counts",
         "findings"
+      ],
+      "type": "object"
+    },
+    "WireFingerprint": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "type": "string"
+        },
+        "serializer": {
+          "enum": [
+            "exportBinary",
+            "exportBrep"
+          ]
+        }
+      },
+      "required": [
+        "digest",
+        "serializer"
       ],
       "type": "object"
     }
   },
-  "$id": "fcb.mutation/1",
+  "$id": "fcb.mutation/2",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "changed": {
+      "items": {
+        "$ref": "#/$defs/ChangedObject"
+      },
+      "type": "array"
+    },
     "fingerprint_after": {
       "anyOf": [
         {
-          "$ref": "#/$defs/FingerprintRecord"
+          "$ref": "#/$defs/WireFingerprint"
         },
         {
           "type": "null"
@@ -260,12 +309,9 @@
       ]
     },
     "fingerprint_before": {
-      "$ref": "#/$defs/FingerprintRecord"
-    },
-    "params_digest": {
       "anyOf": [
         {
-          "type": "string"
+          "$ref": "#/$defs/WireFingerprint"
         },
         {
           "type": "null"
@@ -292,50 +338,22 @@
       "type": "boolean"
     },
     "schema": {
-      "const": "fcb.mutation/1"
+      "const": "fcb.mutation/2"
     },
     "snapshot_path": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "type": "string"
     },
     "touched": {
       "items": {
         "type": "string"
       },
       "type": "array"
-    },
-    "transaction_id": {
-      "type": "string"
-    },
-    "verify_verdict": {
-      "anyOf": [
-        {
-          "enum": [
-            "OK",
-            "SPEC_FAILED",
-            "RECOMPUTE_ERROR",
-            "TIMEOUT",
-            "OOM_KILLED",
-            "WORKER_CRASHED",
-            "INVALID_INPUT"
-          ]
-        },
-        {
-          "type": "null"
-        }
-      ]
     }
   },
   "required": [
-    "transaction_id",
     "fingerprint_before",
     "fingerprint_after",
+    "changed",
     "post_verify",
     "rolled_back",
     "rollback_proven"

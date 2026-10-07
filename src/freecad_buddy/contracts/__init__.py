@@ -52,11 +52,13 @@ from freecad_buddy.contracts.fingerprint import (
     MassProps,
     ObjectFingerprint,
     fingerprints_equal,
+    massprops_changed,
     massprops_equal,
 )
 from freecad_buddy.contracts.job import JobStatus
 from freecad_buddy.contracts.mutation import (
     NOT_MEASURED,
+    ChangedObject,
     MutationBlock,
     NotMeasured,
     PostVerifyBlock,
@@ -65,6 +67,7 @@ from freecad_buddy.contracts.mutation import (
     RollbackProof,
     TnpAuditBlock,
     TnpStatus,
+    WireFingerprint,
 )
 from freecad_buddy.contracts.render import (
     FocusSpec,
@@ -117,6 +120,7 @@ __all__ = [
     "AuditRecord",
     "BBoxDelta",
     "CapabilityBanner",
+    "ChangedObject",
     "Check",
     "ComDelta",
     "Confirm",
@@ -185,9 +189,11 @@ __all__ = [
     "ValidationReport",
     "ViewportPort",
     "WilsonCI",
+    "WireFingerprint",
     "derive_verdict",
     "fingerprints_equal",
     "framing_warning",
+    "massprops_changed",
     "massprops_equal",
     "mirror_text",
     "require_wilson_ci_for_rates",

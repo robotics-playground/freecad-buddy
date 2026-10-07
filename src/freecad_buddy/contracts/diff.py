@@ -74,8 +74,8 @@ class DiffRender(TypedDict, total=False):
 
 
 class GeometryDiff(TypedDict, total=False):
-    schema: Literal["fcb.geometry-diff/1"]
-    op: dict
+    schema: Literal["fcb.geometry-diff/2"]
+    op: dict  # {"tool": str}; the args are not echoed, the confirm token signs their digest
     doc: DocHandle
     deltas: DiffDeltas  # required
     counts: DiffCounts  # required

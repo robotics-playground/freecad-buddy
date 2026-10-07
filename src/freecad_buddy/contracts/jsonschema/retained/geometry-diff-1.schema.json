@@ -1,0 +1,429 @@
+{
+  "$defs": {
+    "BBoxDelta": {
+      "properties": {
+        "after": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "before": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "center_shift": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "units": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "before",
+        "after",
+        "center_shift",
+        "units"
+      ],
+      "type": "object"
+    },
+    "ComDelta": {
+      "properties": {
+        "after": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "before": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "shift": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "units": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "before",
+        "after",
+        "shift",
+        "units"
+      ],
+      "type": "object"
+    },
+    "CountDelta": {
+      "properties": {
+        "after": {
+          "type": "integer"
+        },
+        "before": {
+          "type": "integer"
+        },
+        "delta": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "before",
+        "after",
+        "delta"
+      ],
+      "type": "object"
+    },
+    "DiffCounts": {
+      "properties": {
+        "edges": {
+          "$ref": "#/$defs/CountDelta"
+        },
+        "faces": {
+          "$ref": "#/$defs/CountDelta"
+        },
+        "solids": {
+          "$ref": "#/$defs/CountDelta"
+        },
+        "vertices": {
+          "$ref": "#/$defs/CountDelta"
+        }
+      },
+      "required": [
+        "faces",
+        "edges",
+        "vertices",
+        "solids"
+      ],
+      "type": "object"
+    },
+    "DiffDeltas": {
+      "properties": {
+        "area": {
+          "$ref": "#/$defs/ScalarDelta"
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBoxDelta"
+        },
+        "com": {
+          "$ref": "#/$defs/ComDelta"
+        },
+        "volume": {
+          "$ref": "#/$defs/ScalarDelta"
+        }
+      },
+      "required": [
+        "volume",
+        "area",
+        "bbox",
+        "com"
+      ],
+      "type": "object"
+    },
+    "DiffRender": {
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "available",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "DiffValidity": {
+      "properties": {
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_valid": {
+          "type": "boolean"
+        },
+        "pre_existing_errors": {
+          "items": {
+            "$ref": "#/$defs/RecomputeError"
+          },
+          "type": "array"
+        },
+        "recompute_clean": {
+          "type": "boolean"
+        },
+        "recompute_errors": {
+          "items": {
+            "$ref": "#/$defs/RecomputeError"
+          },
+          "type": "array"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "enum": [
+                "OK",
+                "SPEC_FAILED",
+                "RECOMPUTE_ERROR",
+                "TIMEOUT",
+                "OOM_KILLED",
+                "WORKER_CRASHED",
+                "INVALID_INPUT"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "is_valid",
+        "recompute_clean",
+        "recompute_errors",
+        "pre_existing_errors",
+        "status",
+        "explanation"
+      ],
+      "type": "object"
+    },
+    "DocHandle": {
+      "properties": {
+        "handle": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transient": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "type": "object"
+    },
+    "RecomputeError": {
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "object": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "object",
+        "error"
+      ],
+      "type": "object"
+    },
+    "RefFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "mapped_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner": {
+          "type": "string"
+        },
+        "prop": {
+          "type": "string"
+        },
+        "state_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "BROKEN",
+            "REPOINTED",
+            "DROPPED",
+            "UNSUPPORTED",
+            "RE_BASELINED"
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "prop",
+        "verdict",
+        "layer"
+      ],
+      "type": "object"
+    },
+    "ScalarDelta": {
+      "properties": {
+        "after": {
+          "type": "number"
+        },
+        "before": {
+          "type": "number"
+        },
+        "delta": {
+          "type": "number"
+        },
+        "units": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "before",
+        "after",
+        "delta",
+        "units"
+      ],
+      "type": "object"
+    },
+    "TnpAuditBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "element_map_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/RefFinding"
+          },
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "CLEAN",
+            "FLAGGED",
+            "UNSUPPORTED"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "element_map_version",
+        "findings"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.geometry-diff/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "counts": {
+      "$ref": "#/$defs/DiffCounts"
+    },
+    "deleted": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "deltas": {
+      "$ref": "#/$defs/DiffDeltas"
+    },
+    "doc": {
+      "$ref": "#/$defs/DocHandle"
+    },
+    "fingerprint_before": {
+      "type": "string"
+    },
+    "new": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "op": {
+      "type": "object"
+    },
+    "render": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DiffRender"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "fcb.geometry-diff/1"
+    },
+    "tnp_precheck": {
+      "$ref": "#/$defs/TnpAuditBlock"
+    },
+    "touched": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "validity": {
+      "$ref": "#/$defs/DiffValidity"
+    }
+  },
+  "required": [
+    "schema",
+    "deltas",
+    "counts",
+    "validity",
+    "tnp_precheck"
+  ],
+  "title": "GeometryDiff",
+  "type": "object"
+}

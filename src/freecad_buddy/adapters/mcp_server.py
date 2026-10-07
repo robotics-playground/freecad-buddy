@@ -83,7 +83,7 @@ def registered_tools(registry: MethodRegistry, caps: Capabilities) -> list[types
 
 def _to_call_result(envelope: dict) -> types.CallToolResult:
     """Wrap a result envelope as a ``CallToolResult``, flagging non-OK statuses as errors."""
-    text = json.dumps(envelope, indent=2, ensure_ascii=False)
+    text = json.dumps(envelope, separators=(",", ":"), ensure_ascii=False)
     return types.CallToolResult(
         content=[types.TextContent(type="text", text=text)],
         structuredContent=dict(envelope),

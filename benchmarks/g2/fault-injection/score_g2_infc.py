@@ -88,9 +88,10 @@ VALIDATOR_SOURCES = {
     "run_mutation": (
         _USECASES / "transaction.py",
         SRC / "freecad_buddy" / "contracts" / "fingerprint.py",
+        _USECASES / "result_projection.py",
     ),
     "fingerprint": (_USECASES / "fingerprint.py",),
-    "audit_references": (_USECASES / "tnp_guard.py",),
+    "audit_references": (_USECASES / "tnp_guard.py", _USECASES / "result_projection.py"),
     "verify_sketch": (_USECASES / "verify.py",),
 }
 

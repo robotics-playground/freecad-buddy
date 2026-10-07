@@ -25,6 +25,7 @@ from freecad_buddy.contracts import (
     massprops_equal,
     summary_text,
 )
+from freecad_buddy.usecases import result_projection
 from freecad_buddy.usecases.process import pid_alive
 
 T = TypeVar("T")
@@ -153,9 +154,9 @@ def summarize_document_close(sc: dict) -> str:
 def summarize_document_undo(sc: dict, digest_only: bool = False) -> str:
     """One-line summary of a document_undo result: what was undone and whether it restored.
 
-    ``digest_only`` marks a string expectation. A byte difference alone does not show the undo
-    failed — re-serializing an untouched shape changes the bytes too — so that mismatch is
-    reported as the measurement it is, never as a failed restore.
+    ``digest_only`` marks an expected digest this process holds no record for. A byte difference
+    alone does not show the undo failed — re-serializing an untouched shape changes the bytes
+    too — so that mismatch is reported as the measurement it is, never as a failed restore.
     """
     matches = sc.get("matches_pre_op")
     if matches is None:
@@ -164,8 +165,8 @@ def summarize_document_undo(sc: dict, digest_only: bool = False) -> str:
         verdict = "restored the pre-op state"
     elif digest_only:
         verdict = (
-            "the digest differs from the expected one on byte comparison; pass the whole "
-            "FingerprintRecord as expect_fingerprint to also compare the geometry"
+            "the digest differs from the expected one on byte comparison; this process held "
+            "no record for that digest, so the geometry was not compared"
         )
     else:
         verdict = "did NOT restore the pre-op state"
@@ -199,7 +200,8 @@ def _recompute_error_state(state: list) -> bool:
 def _matches_pre_op(after: dict, expected: str | dict | None) -> bool | None:
     """Whether ``after`` reaches ``expected``; ``None`` when the caller supplied no expectation.
 
-    A digest string is compared byte-exactly. A whole ``FingerprintRecord`` also passes when the
+    A digest string, one no held record resolves, is compared byte-exactly. A whole
+    ``FingerprintRecord``, supplied or resolved from a digest, also passes when the
     per-object geometric invariants match, because consuming a shape as a profile makes OCCT
     store its edges several ways and an undo removes the feature without dropping the extra
     representations — the bytes then differ while volume, area, centre of mass, principal
@@ -213,6 +215,37 @@ def _matches_pre_op(after: dict, expected: str | dict | None) -> bool | None:
 
 
 _DIGEST = re.compile(r"[0-9a-f]{64}")
+
+
+def _check_wire_expectation(expected: dict, serializer: str) -> None:
+    """Refuse a ``{digest, serializer}`` expectation this build's fingerprint cannot match.
+
+    :raises ValidationError: the serializer tag differs from this build's, or the digest is not
+        64 lowercase hex characters.
+    """
+    if expected.get("serializer") != serializer:
+        raise ValidationError(
+            f"expect_fingerprint serializer {expected.get('serializer')!r} does not match this "
+            f"build's {serializer!r}; fingerprints with different serializers cannot be compared"
+        )
+    digest = expected.get("digest")
+    if not (isinstance(digest, str) and _DIGEST.fullmatch(digest)):
+        raise ValidationError(
+            f"expect_fingerprint digest must be 64 lowercase hex characters, got {digest!r}"
+        )
+
+
+def _resolve_expectation(expected: str | dict | None) -> str | dict | None:
+    """Return what ``expected`` is compared as: a record when one is known, else the digest.
+
+    A ``{digest, serializer}`` object stands for its digest. A digest this process published
+    resolves to the full record it remembered; any other digest stays a string.
+    """
+    if isinstance(expected, dict) and "objects" not in expected:
+        expected = expected["digest"]
+    if isinstance(expected, str):
+        return result_projection.recall(expected) or expected
+    return expected
 
 
 def _check_expectation(expected: object, serializer: str) -> None:
@@ -231,9 +264,12 @@ def _check_expectation(expected: object, serializer: str) -> None:
         return
     if not isinstance(expected, dict):
         raise ValidationError(
-            "expect_fingerprint must be a fingerprint digest string or a FingerprintRecord, "
-            f"got {type(expected).__name__}"
+            "expect_fingerprint must be a fingerprint digest string, a {digest, serializer} "
+            f"object or a FingerprintRecord, got {type(expected).__name__}"
         )
+    if "objects" not in expected:
+        _check_wire_expectation(expected, serializer)
+        return
     if not isinstance(expected.get("objects"), list):
         raise ValidationError(
             f"expect_fingerprint record must carry an 'objects' list; got keys {sorted(expected)}"
@@ -572,13 +608,16 @@ class DocumentRegistry:
         its own: an undo that left an object invalid is ``RECOMPUTE_ERROR``, never an ``OK`` whose
         digest happens not to match.
 
-        :param expect_fingerprint: the pre-mutation digest string, or the whole
-            ``FingerprintRecord``, to compare the result against. A record also matches on the
-            per-object geometric invariants, so an op that changed a shape's serialization
-            without changing its geometry still reports the undo as restoring.
+        :param expect_fingerprint: the pre-mutation digest string, the ``{digest, serializer}``
+            object a mutation result carries, or the whole ``FingerprintRecord``, to compare the
+            result against. A digest this process published resolves to the record it
+            remembered. A record also matches on the per-object geometric invariants, so an op
+            that changed a shape's serialization without changing its geometry still reports the
+            undo as restoring. A digest no held record resolves is compared byte-exactly.
         :raises ValidationError: ``doc`` is missing or stale, ``expect_fingerprint`` is not a
-            64-hex digest string or a record comparable with this build's fingerprint, undo is
-            unavailable on the document, or there is nothing to undo.
+            64-hex digest, a ``{digest, serializer}`` object or a record comparable with this
+            build's fingerprint, undo is unavailable on the document, or there is nothing to
+            undo.
         """
         from freecad_buddy.usecases import shim
         from freecad_buddy.usecases.fingerprint import fingerprint
@@ -614,6 +653,10 @@ class DocumentRegistry:
             document.undo()
             document.recompute()
             after = fingerprint(document)
+            # Resolved before remembering: a full cache would otherwise evict the expected record.
+            expected = _resolve_expectation(expect_fingerprint)
+            result_projection.remember(before)
+            result_projection.remember(after)
 
             # The recompute after the undo can leave objects invalid, and this call reports
             # restoration as a measured result. Reporting OK for that would present a broken
@@ -632,7 +675,7 @@ class DocumentRegistry:
                 "undone": names[0] if names else None,
                 "fingerprint_before": before["digest"],
                 "fingerprint_after": after["digest"],
-                "matches_pre_op": _matches_pre_op(after, expect_fingerprint),
+                "matches_pre_op": _matches_pre_op(after, expected),
                 # Read from the document, not from the fingerprint: fingerprint() skips every
                 # shape-less object (an Origin, a Body, a datum, an empty Sketch), and those are
                 # exactly the ones a caller asks this list about after an undo.
@@ -644,7 +687,7 @@ class DocumentRegistry:
                 return _recompute_error_envelope(structured, errors)
             return _ok_envelope(
                 structured,
-                summarize_document_undo(structured, isinstance(expect_fingerprint, str)),
+                summarize_document_undo(structured, isinstance(expected, str)),
             )
 
     def document_list(self) -> ResultEnvelope:

@@ -63,8 +63,19 @@ def test_tnp_status_never_offers_a_clean_synonym():
 def test_mutation_block_uses_the_shared_audit_field_names():
     """Story 3.6's diff reuses these identifiers, so a synonym here breaks it downstream."""
     hints = get_type_hints(MutationBlock)
-    for field in ("fingerprint_before", "fingerprint_after", "verify_verdict", "params_digest"):
+    for field in ("fingerprint_before", "fingerprint_after"):
         assert field in hints
+
+
+def test_should_leave_the_audit_only_fields_out_of_the_wire_block():
+    # Arrange
+    audit_only = ("transaction_id", "verify_verdict", "params_digest")
+
+    # Act
+    hints = get_type_hints(MutationBlock)
+
+    # Assert
+    assert not set(audit_only) & set(hints)
 
 
 def test_post_verify_block_carries_the_four_checklist_signals_and_an_explanation():
@@ -86,11 +97,11 @@ def test_tnp_audit_block_banners_the_element_map_version():
 
 def test_schema_requires_both_fingerprints_and_the_rollback_outcome():
     schema = _schema()
-    assert schema["$id"] == "fcb.mutation/1"
+    assert schema["$id"] == "fcb.mutation/2"
     assert set(schema["required"]) == {
-        "transaction_id",
         "fingerprint_before",
         "fingerprint_after",
+        "changed",
         "post_verify",
         "rolled_back",
         "rollback_proven",

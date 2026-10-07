@@ -25,7 +25,7 @@ from freecad_buddy.contracts import (
     TnpAuditBlock,
     massprops_equal,
 )
-from freecad_buddy.usecases import confirm, shim
+from freecad_buddy.usecases import confirm, result_projection, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 from freecad_buddy.usecases.queries import shape_metrics
@@ -245,6 +245,7 @@ def _unrun_audit() -> TnpAuditBlock:
     return {
         "status": "UNSUPPORTED",
         "element_map_version": shim.element_map_version_string(),
+        "counts": {},
         "findings": [],
     }
 
@@ -297,7 +298,10 @@ def _validity(
 
 
 def _tnp_precheck(post_verify: dict | None) -> TnpAuditBlock:
-    """Surface the copy's own TNP audit block verbatim, or ``UNSUPPORTED`` when none ran."""
+    """Surface the copy's own TNP audit block verbatim, or ``UNSUPPORTED`` when none ran.
+
+    The copy's mutation envelope already carries the projected audit, so it is forwarded as is.
+    """
     if post_verify is None:
         return _unrun_audit()
     audit = post_verify.get("tnp_audit")
@@ -397,7 +401,10 @@ def _failed_envelope(message: str) -> ResultEnvelope:
 
 
 def summarize_preview(sc: dict) -> str:
-    """One-line preview summary: the measured volume delta and the pre-check verdicts."""
+    """One-line preview summary: the measured volume delta and the pre-check verdicts.
+
+    The ``preview_id`` token stays in ``structured_content`` only; the text does not repeat it.
+    """
     diff = sc.get("diff") or {}
     deltas = diff.get("deltas") or {}
     volume = (deltas.get("volume") or {}).get("delta", 0.0)
@@ -406,7 +413,7 @@ def summarize_preview(sc: dict) -> str:
     validity = diff.get("validity") or {}
     tnp = (diff.get("tnp_precheck") or {}).get("status", "UNSUPPORTED")
     return (
-        f"Preview {sc.get('preview_id', '?')}: volume {volume:+.4f} mm^3, faces {faces:+d}, "
+        f"Preview: volume {volume:+.4f} mm^3, faces {faces:+d}, "
         f"valid={validity.get('is_valid')}, tnp={tnp}."
     )
 
@@ -452,6 +459,8 @@ def preview_dry_run(
 
     handle, live = registry.with_document(doc, lambda h, d: (h, d))
     fp_before = fingerprint(live)
+    # The diff publishes this digest, and a later document_undo may name it as its expectation.
+    result_projection.remember(fp_before)
     before = document_metrics(live)
     names_before = [o.Name for o in live.Objects]
     pre_existing = _error_sweep(live)
@@ -486,7 +495,6 @@ def preview_dry_run(
         diff = _diff(
             doc_handle=handle,
             tool=tool,
-            args=args,
             before=before,
             after=after,
             names_before=names_before,
@@ -559,7 +567,6 @@ def _render_block(render: str, render_port: object) -> dict:
 def _diff(
     doc_handle: str,
     tool: str,
-    args: dict,
     before: dict,
     after: dict,
     names_before: list[str],
@@ -575,8 +582,8 @@ def _diff(
     set_before = set(names_before)
     set_after = set(names_after)
     return {
-        "schema": "fcb.geometry-diff/1",
-        "op": {"tool": tool, "args": args},
+        "schema": "fcb.geometry-diff/2",
+        "op": {"tool": tool},
         "doc": {"handle": doc_handle},
         "deltas": _deltas(before, after),
         "counts": _counts(before, after),

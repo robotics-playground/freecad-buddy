@@ -87,7 +87,6 @@ Every mutation tool (column **Mut** = yes below) executes the AD-5 bracket (geoh
 ```json
 { "mutation": {
   "schema": "fcb.mutation/2",
-  "transaction_id": "string",
   "fingerprint_before": { "digest": "sha256…", "serializer": "exportBinary|exportBrep" },
   "fingerprint_after":  { "digest": "…", "serializer": "…" },
   "changed": [ { "name": "Pocket003", "volume": 47120.4, "area": 46010.2, "com": [55.2, 67.1, 19.3] } ],

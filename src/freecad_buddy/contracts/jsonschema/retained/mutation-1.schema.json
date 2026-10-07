@@ -1,0 +1,345 @@
+{
+  "$defs": {
+    "FingerprintRecord": {
+      "properties": {
+        "digest": {
+          "type": "string"
+        },
+        "objects": {
+          "items": {
+            "$ref": "#/$defs/ObjectFingerprint"
+          },
+          "type": "array"
+        },
+        "schema": {
+          "const": "fcb.fingerprint/1"
+        },
+        "serializer": {
+          "enum": [
+            "exportBinary",
+            "exportBrep"
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "serializer",
+        "objects",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "MassProps": {
+      "properties": {
+        "area": {
+          "type": "number"
+        },
+        "bbox": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "com": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "inertia": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "principal_moments": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "quantum": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "volume",
+        "area",
+        "bbox",
+        "com",
+        "principal_moments",
+        "quantum"
+      ],
+      "type": "object"
+    },
+    "ObjectFingerprint": {
+      "properties": {
+        "brep_sha256": {
+          "type": "string"
+        },
+        "massprops": {
+          "$ref": "#/$defs/MassProps"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "brep_sha256",
+        "massprops"
+      ],
+      "type": "object"
+    },
+    "PostVerifyBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "explanation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fully_constrained": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "not_measured"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "is_valid": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": "not_measured"
+            }
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "recompute_clean": {
+          "type": "boolean"
+        },
+        "tnp_audit": {
+          "$ref": "#/$defs/TnpAuditBlock"
+        }
+      },
+      "required": [
+        "recompute_clean",
+        "is_valid",
+        "fully_constrained",
+        "tnp_audit",
+        "passed"
+      ],
+      "type": "object"
+    },
+    "RefFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "type": "integer"
+        },
+        "mapped_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner": {
+          "type": "string"
+        },
+        "prop": {
+          "type": "string"
+        },
+        "state_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "BROKEN",
+            "REPOINTED",
+            "DROPPED",
+            "UNSUPPORTED",
+            "RE_BASELINED"
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "prop",
+        "verdict",
+        "layer"
+      ],
+      "type": "object"
+    },
+    "TnpAuditBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "element_map_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/RefFinding"
+          },
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "CLEAN",
+            "FLAGGED",
+            "UNSUPPORTED"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "element_map_version",
+        "findings"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "fcb.mutation/1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "fingerprint_after": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FingerprintRecord"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fingerprint_before": {
+      "$ref": "#/$defs/FingerprintRecord"
+    },
+    "params_digest": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "post_verify": {
+      "$ref": "#/$defs/PostVerifyBlock"
+    },
+    "rollback_proven": {
+      "anyOf": [
+        {
+          "enum": [
+            "rolled_back_verified",
+            "rolled_back_via_snapshot"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rolled_back": {
+      "type": "boolean"
+    },
+    "schema": {
+      "const": "fcb.mutation/1"
+    },
+    "snapshot_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "touched": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "transaction_id": {
+      "type": "string"
+    },
+    "verify_verdict": {
+      "anyOf": [
+        {
+          "enum": [
+            "OK",
+            "SPEC_FAILED",
+            "RECOMPUTE_ERROR",
+            "TIMEOUT",
+            "OOM_KILLED",
+            "WORKER_CRASHED",
+            "INVALID_INPUT"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "transaction_id",
+    "fingerprint_before",
+    "fingerprint_after",
+    "post_verify",
+    "rolled_back",
+    "rollback_proven"
+  ],
+  "title": "MutationBlock",
+  "type": "object"
+}

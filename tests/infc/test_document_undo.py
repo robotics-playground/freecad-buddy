@@ -17,7 +17,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import confirm, transaction
+from freecad_buddy.usecases import confirm, result_projection, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -289,7 +289,8 @@ class ReportedComparisonTest(_UndoFixture):
         self.assertIs(structured["matches_pre_op"], False)
         self.assertNotIn("did NOT restore", envelope["text"])
         self.assertIn("byte comparison", envelope["text"])
-        self.assertIn("FingerprintRecord", envelope["text"])
+        self.assertIn("held no record", envelope["text"])
+        self.assertNotIn("FingerprintRecord", envelope["text"])
         self.assertEqual(structured["fingerprint_after"], fingerprint(self.document)["digest"])
 
     def test_a_string_that_is_not_a_digest_is_refused_before_the_undo(self):
@@ -450,19 +451,90 @@ class ExpectFingerprintRecordTest(_UndoFixture):
             f"geometry was restored but the record expectation reported otherwise: {structured}",
         )
 
-    def test_a_string_expectation_on_a_restoring_undo_states_the_byte_measurement(self):
-        """The undo restores the geometry; only the bytes differ, and the text says so."""
-        pre_op = self._pad_a_sketch()
+    def test_should_match_on_the_cached_record_when_a_published_digest_differs_in_bytes(self):
+        """The bracket published the pre-op digest, so the undo compares its held record."""
+        # Arrange
+        published = self._pad_a_sketch(published=True)["digest"]
 
+        # Act
+        envelope = self.registry.document_undo(doc=self.handle, expect_fingerprint=published)
+
+        # Assert
+        self.assertNotEqual(envelope["structured_content"]["fingerprint_after"], published)
+        self.assertIs(envelope["structured_content"]["matches_pre_op"], True, envelope)
+        self.assertIn("restored the pre-op state", envelope["text"])
+        self.assertNotIn("FingerprintRecord", envelope["text"])
+
+    def test_should_compare_as_its_digest_when_the_expectation_is_a_wire_fingerprint(self):
+        # Arrange
+        wire = self._pad_a_sketch(published=True)
+
+        # Act
+        envelope = self.registry.document_undo(doc=self.handle, expect_fingerprint=wire)
+
+        # Assert
+        self.assertIs(envelope["structured_content"]["matches_pre_op"], True, envelope)
+
+    def test_should_refuse_before_the_undo_when_a_wire_fingerprint_names_another_serializer(
+        self,
+    ):
+        # Arrange
+        wire = self._pad_a_sketch(published=True)
+        count = self.document.UndoCount
+        foreign = {**wire, "serializer": "someOtherTag"}
+
+        # Act
+        def act():
+            return self.registry.document_undo(doc=self.handle, expect_fingerprint=foreign)
+
+        # Assert
+        with self.assertRaises(ValidationError) as caught:
+            act()
+        self.assertIn("serializer", str(caught.exception))
+        self.assertEqual(self.document.UndoCount, count)
+
+    def test_should_refuse_before_the_undo_when_a_wire_fingerprint_digest_is_missing_or_not_hex(
+        self,
+    ):
+        # Arrange
+        wire = self._pad_a_sketch(published=True)
+        count = self.document.UndoCount
+        malformed = {
+            "missing digest": {"serializer": wire["serializer"]},
+            "non-hex digest": {**wire, "digest": "z" * 64},
+        }
+
+        # Act
+        def act(expected):
+            return self.registry.document_undo(doc=self.handle, expect_fingerprint=expected)
+
+        # Assert
+        for label, expected in malformed.items():
+            with self.assertRaises(ValidationError, msg=label):
+                act(expected)
+        self.assertEqual(self.document.UndoCount, count)
+
+    def test_should_state_the_byte_measurement_when_no_record_is_held_for_the_digest(self):
+        """No record is held for the digest, so only bytes are compared, and the text says so."""
+        # Arrange
+        pre_op = self._pad_a_sketch()
+        result_projection._records.clear()
+
+        # Act
         envelope = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op["digest"])
 
+        # Assert
         self.assertIs(envelope["structured_content"]["matches_pre_op"], False)
         self.assertNotIn("did NOT restore", envelope["text"])
         self.assertIn("byte comparison", envelope["text"])
-        self.assertIn("FingerprintRecord", envelope["text"])
+        self.assertIn("held no record", envelope["text"])
+        self.assertNotIn("FingerprintRecord", envelope["text"])
 
-    def _pad_a_sketch(self) -> dict:
-        """Pad a circle sketch through the bracket; return the pre-pad record."""
+    def _pad_a_sketch(self, published: bool = False) -> dict:
+        """Pad a circle sketch through the bracket; return the pre-pad record.
+
+        ``published`` returns the ``fingerprint_before`` the mutation result carries instead.
+        """
         body = self.document.addObject("PartDesign::Body", "Body")
         sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
         body.addObject(sketch)
@@ -480,7 +552,9 @@ class ExpectFingerprintRecordTest(_UndoFixture):
             pad.Length = 10.0
             return ["Pad"]
 
-        self.run_mutation("pad the sketch", _pad)
+        envelope = self.run_mutation("pad the sketch", _pad)
+        if published:
+            return envelope["structured_content"]["mutation"]["fingerprint_before"]
         return pre_op
 
     def test_a_record_expectation_still_reports_a_real_geometry_change(self):

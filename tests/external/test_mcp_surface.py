@@ -26,6 +26,7 @@ from freecad_buddy.adapters.marshal import (
 )
 from freecad_buddy.adapters.mcp_server import (
     Capabilities,
+    _to_call_result,
     build_server,
     registered_tools,
 )
@@ -677,7 +678,7 @@ def test_a_call_whose_envelope_carries_a_mutation_block_gets_no_adapter_lines(tm
 
     def _bracketed():
         envelope = _ok_envelope()
-        envelope["structured_content"] = {"mutation": {"schema": "fcb.mutation/1"}}
+        envelope["structured_content"] = {"mutation": {"schema": "fcb.mutation/2"}}
         return envelope
 
     server, _ = _suspect_server({"feature_pad": (True, _bracketed)}, audit_path)
@@ -883,3 +884,22 @@ def test_only_debug_exec_runs_off_the_main_thread(monkeypatch):
     assert seen["query_tree_summary"] == threading.get_ident(), (
         "a non-exec tool ran off the main thread"
     )
+
+
+def test_should_write_compact_json_when_an_envelope_becomes_the_text_content():
+    # Arrange
+    envelope = {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": {"mutation": {"changed": [{"name": "Pad", "com": [1.0, 2.0]}]}},
+        "text": "Mutation committed; fingerprint 3f2a.",
+    }
+
+    # Act
+    text = _to_call_result(envelope).content[0].text
+
+    # Assert
+    assert text == json.dumps(envelope, separators=(",", ":"), ensure_ascii=False)
+    assert "\n" not in text
+    assert ": " not in text

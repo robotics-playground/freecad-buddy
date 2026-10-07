@@ -329,6 +329,9 @@
     "TnpAuditBlock": {
       "additionalProperties": false,
       "properties": {
+        "counts": {
+          "type": "object"
+        },
         "element_map_version": {
           "anyOf": [
             {
@@ -356,12 +359,13 @@
       "required": [
         "status",
         "element_map_version",
+        "counts",
         "findings"
       ],
       "type": "object"
     }
   },
-  "$id": "fcb.geometry-diff/1",
+  "$id": "fcb.geometry-diff/2",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
     "counts": {
@@ -402,7 +406,7 @@
       ]
     },
     "schema": {
-      "const": "fcb.geometry-diff/1"
+      "const": "fcb.geometry-diff/2"
     },
     "tnp_precheck": {
       "$ref": "#/$defs/TnpAuditBlock"
