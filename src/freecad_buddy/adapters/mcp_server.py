@@ -30,6 +30,7 @@ from freecad_buddy.adapters.rpc_dispatch import (
 )
 from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.usecases.capabilities import (
+    AUTO_APPROVE_WARNING,
     Capabilities,
     auto_approve_enabled,
     exec_registered,
@@ -164,7 +165,7 @@ def build_server(
     if exec_registered(caps):
         logger.warning("SECURITY: debug_exec ENABLED by operator flag")
     if auto_approve_enabled(caps):
-        logger.warning("SECURITY: mutation auto-approve ENABLED by operator flag")
+        logger.warning(AUTO_APPROVE_WARNING)
     # The mutation gate and the camera fit write their own records through this sink; the handlers
     # the registry holds take no sink argument of their own.
     confirm.set_approval_sink(audit)

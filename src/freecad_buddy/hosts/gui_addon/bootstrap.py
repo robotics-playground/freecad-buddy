@@ -24,7 +24,12 @@ from freecad_buddy.adapters.rpc_listener import RpcListener
 from freecad_buddy.hosts.gui_addon.pump import QtMainThreadExecutor
 from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
-from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
+from freecad_buddy.usecases.capabilities import (
+    AUTO_APPROVE_WARNING,
+    Capabilities,
+    auto_approve_enabled,
+    exec_registered,
+)
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, sweep_temp_dir
 from freecad_buddy.usecases.exports import ExportRegistry
@@ -90,6 +95,8 @@ def start_bridge() -> RpcListener:
     # session returned may still have been being read when that call completed (AD-25).
     logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
     caps = Capabilities.from_env(dict(os.environ))
+    if auto_approve_enabled(caps):
+        logger.warning(AUTO_APPROVE_WARNING)
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)
     # Called directly, never through the marshal: start_bridge already runs on the Qt main

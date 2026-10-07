@@ -118,9 +118,9 @@ No native skill mechanism exists on this path. Skills are delivered by injection
 | GUI panel (FreeCAD dock) | Diff table + renders in panel | Native Apply/Cancel buttons | Abort, TempDoc discarded |
 | MCP client with elicitation (Claude Code/Desktop) | `structuredContent` + text mirror (+ render per §5) | Elicitation `accept`/`decline`/`cancel` | `decline`/`cancel` → typed abort |
 | MCP client without elicitation (llama.cpp, LM Studio) | `structuredContent` + text mirror | `preview_id` (confirm token) from `preview_dry_run` + client's own tool-approval prompt | Missing/stale token → reject |
-| Headless CI / agent-to-agent | Diff JSON in job log / report | **Fail-closed**: no mutation without explicit `autoApprove` flag; every auto-approval audit-logged with its diff (AD-10, AD-17) | Mutation rejected |
+| Headless CI / agent-to-agent | Diff JSON in job log / report | Operator auto-approve posture, on by default; every auto-approval audit-logged (AD-10, AD-17). `FREECAD_BUDDY_AUTO_APPROVE=0` requires a `preview_id` | With `=0`: missing/stale token → reject |
 
-Invariants: the structured diff is the mandatory payload in every row; confirmation never gates on a render succeeding; `autoApprove` is an operator-set env flag (conventions), never a client-supplied parameter. The operator may set `autoApprove` for any context, attended GUI work included; a mutation then applies in one call, every approval is audit-logged, and `preview_dry_run` stays available to the agent.
+Invariants: the structured diff is the mandatory payload in every row; confirmation never gates on a render succeeding; auto-approve is the operator-set env var `FREECAD_BUDDY_AUTO_APPROVE` (conventions), never a client-supplied parameter. It is on by default in every context, attended GUI work included: a mutation then applies in one call, every approval is audit-logged, and `preview_dry_run` stays available to the agent. `FREECAD_BUDDY_AUTO_APPROVE=0`, set before the host starts, restores the confirm rows above for every context.
 
 ## 5. Image / Render Delivery Rules (AD-10)
 
@@ -141,7 +141,7 @@ Renders are optional and capability-gated (GUI `saveImage` → offscreen/Xvfb �
 | Claude Desktop | stdio | Verify at Phase 0 pin | No — router-injected summaries | `structuredContent` + text mirror | Elicitation, else token fallback |
 | llama.cpp `llama-server` | HTTP | No | No — prompt injection | Native Qwen3 tool templates + **constrained decoding (required)** | Token fallback |
 | LM Studio (dev convenience) | stdio (`mcp.json`) | No | No — prompt injection | Native tool templates | Per-call confirm dialog (client-confirm) + token |
-| Headless CI harness | stdio / in-process | No | Forced-subset injection (ablation) | JSON report (AD-17 envelopes) | Fail-closed + `autoApprove` |
+| Headless CI harness | stdio / in-process | No | Forced-subset injection (ablation) | JSON report (AD-17 envelopes) | Auto-approve (default); token with `=0` |
 
 Capability probes at session start, never client-name sniffing (mirrors the AD-11 probe discipline).
 

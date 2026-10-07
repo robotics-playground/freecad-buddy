@@ -192,7 +192,7 @@ class AuditRecord(TypedDict, total=False):
                                     #   "verified": bool}        # AD-5: measured, never assumed
 ```
 
-Vocabulary reuse (spine Deferred table: preview must reuse this vocabulary): `fingerprint_before/after`, `verify_verdict`, `params_digest`, and the diff's `touched/new/deleted` naming (§7) are shared identifiers — the preview channel and any revision diff introduce **no synonyms** for these concepts. Every AD-10 headless `autoApprove` writes an `approval` record with `mode:"auto_approve"` and the `diff_digest` of the diff that was auto-accepted.
+Vocabulary reuse (spine Deferred table: preview must reuse this vocabulary): `fingerprint_before/after`, `verify_verdict`, `params_digest`, and the diff's `touched/new/deleted` naming (§7) are shared identifiers — the preview channel and any revision diff introduce **no synonyms** for these concepts. Every AD-10 auto-approval writes an `approval` record with `mode:"auto_approve"` and `source:"FREECAD_BUDDY_AUTO_APPROVE"`. The posture is on by default in every host.
 
 ## 7. Geometry diff (`diff.py`) — preview payload (AD-10)
 

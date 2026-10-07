@@ -1,0 +1,3 @@
+forged token, posture on: INVALID_INPUT confirm.preview_id carries an invalid signature
+no confirm, posture on: OK
+approval line: feature_body_create auto_approve FREECAD_BUDDY_AUTO_APPROVE

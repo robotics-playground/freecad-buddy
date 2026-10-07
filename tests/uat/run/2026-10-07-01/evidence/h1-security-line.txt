@@ -1,0 +1,6 @@
+# Headless H1 host (fcb env, `python -m freecad_buddy.hosts.main serve --mode inline --transport stdio`,
+# stdin closed), stderr grepped for "security|auto", 2026-10-07:
+# FREECAD_BUDDY_AUTO_APPROVE unset:
+2026-10-07 15:32:06,377 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED by operator flag
+# FREECAD_BUDDY_AUTO_APPROVE=0:
+(no matching line)

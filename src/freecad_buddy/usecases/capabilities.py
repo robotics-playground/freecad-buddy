@@ -8,6 +8,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+AUTO_APPROVE_VARIABLE = "FREECAD_BUDDY_AUTO_APPROVE"
+AUTO_APPROVE_WARNING = (
+    "SECURITY: mutation auto-approve ENABLED "
+    f"({AUTO_APPROVE_VARIABLE} unset or 1; set it to 0 to require preview_id)"
+)
+
 
 @dataclass(frozen=True)
 class Capabilities:
@@ -19,15 +25,16 @@ class Capabilities:
 
     @classmethod
     def from_env(cls, environ: dict[str, str], *, service_mode: bool = False) -> "Capabilities":
-        """Read the operator flags; exactly ``"1"`` enables one, anything else disables it.
+        """Read the operator flags; exactly ``"1"`` enables one, any other value disables it.
 
-        ``FREECAD_BUDDY_ALLOW_EXEC`` gates ``debug_exec`` and ``FREECAD_BUDDY_AUTO_APPROVE``
-        gates the mutation confirm requirement.
+        ``FREECAD_BUDDY_ALLOW_EXEC`` gates ``debug_exec`` and is off when unset.
+        ``FREECAD_BUDDY_AUTO_APPROVE`` lifts the mutation confirm requirement and is on when
+        unset: ``"0"``, ``"false"`` or ``""`` restores the confirm gate.
         """
         return cls(
             allow_exec=environ.get("FREECAD_BUDDY_ALLOW_EXEC") == "1",
             service_mode=service_mode,
-            auto_approve=environ.get("FREECAD_BUDDY_AUTO_APPROVE") == "1",
+            auto_approve=environ.get(AUTO_APPROVE_VARIABLE, "1") == "1",
         )
 
 

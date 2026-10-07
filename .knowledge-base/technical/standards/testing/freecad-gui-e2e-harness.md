@@ -18,6 +18,7 @@ Reference run with every artifact: `tests/uat/run/2026-10-03-01/` (report, evide
 | `cua-driver` CLI | on `PATH` | launch, UIA click, menu, window screenshot |
 | `launch.json` | `_automation/uat/launch.json` | `{"path": "C:\\Program Files\\FreeCAD 1.1\\bin\\freecad.exe"}` |
 | Launch helper | `tests/uat/run/2026-10-03-01/evidence/launch.sh` | launch, wait for `:8765`, print pid, window id, new `addon.log` lines |
+| Launch with environment | `_automation/uat/launch_env.sh <tag> "<set statements>"` | same as the launch helper, but `cua-driver` starts `cmd.exe`, which sets the variables and starts FreeCAD |
 | Smoke script | `tests/uat/run/2026-10-03-01/evidence/e2e.py` | 13-check mutation, measure, export, screenshot run over `:8765` |
 | One tool call | `_automation/uat/fcb.py <tool> '<json>'` or `--batch file.json` | ad hoc MCP call over HTTP |
 | Close all docs | `_automation/uat/close_all.py` | close every open document in one session |
@@ -47,6 +48,39 @@ Get-Item "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy" | Select-Obj
 known (see [Install modes](#install-modes)). Record `git status` to compare at the end.
 
 ### 2. Launch
+
+Choose the mutation approval posture first. FreeCAD gets `FREECAD_BUDDY_AUTO_APPROVE` only from
+the process that starts it, so set or clear it before the launch. A change after the launch has
+no effect until FreeCAD restarts.
+
+| `FREECAD_BUDDY_AUTO_APPROVE` | Posture |
+|------------------------------|---------|
+| unset or `1` (default) | A mutation without `confirm` applies in one call; its audit `approval` line has `mode: "auto_approve"` and `source: "FREECAD_BUDDY_AUTO_APPROVE"` |
+| `0` | A mutation without a valid `preview_id` is refused (`INVALID_INPUT`), except a `feature_set_parameters` that writes only `Visibility` |
+
+`preview_dry_run` stays available in both postures. A call that sends `confirm` is checked
+against its token in both postures: a stale, expired or forged `preview_id` is refused.
+
+- Persistent (Windows, current user): `setx FREECAD_BUDDY_AUTO_APPROVE 0`. It reaches only
+  processes started after it. Remove it with
+  `[Environment]::SetEnvironmentVariable("FREECAD_BUDDY_AUTO_APPROVE", $null, "User")`.
+  To turn the confirm gate on, use `0`. An empty value usually reaches a new process as unset,
+  so auto-approve stays on.
+- Per shell: `$env:FREECAD_BUDDY_AUTO_APPROVE = "0"` (PowerShell) or
+  `set FREECAD_BUDDY_AUTO_APPROVE=0` (`cmd.exe`), then start FreeCAD from that shell.
+- `cua-driver launch_app` takes no environment: FreeCAD gets the environment of the
+  `cua-driver` daemon, not of your shell. To set a variable for one launch, let `cua-driver`
+  start `cmd.exe`, which sets it and starts FreeCAD. The helper
+  `_automation/uat/launch_env.sh <tag> "<set statements>"` does this. Write the statements as
+  `set VAR=value&& set VAR2=value2`, with no space before `&&`: `cmd` keeps that space as part
+  of the value.
+- Set `FREECAD_BUDDY_AUDIT_LOG` to a known path the same way. Without it the audit log goes to
+  the working directory of FreeCAD, which neither a `cua-driver` nor a Start-menu launch fixes.
+
+**Check:** with auto-approve on, the new `addon.log` lines include
+`SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`.
+With `=0` the line is absent. In the audit log, an `approval` line with `mode: "auto_approve"`
+proves the posture is on; `preview_token` and `display_state` lines occur in both postures.
 
 Pass JSON to `cua-driver` on stdin. The positional form fails to parse Windows backslashes.
 
@@ -96,8 +130,10 @@ uv run python tests/uat/run/2026-10-03-01/evidence/e2e.py <tag> <absolute out di
 
 Rules the script follows:
 
-- Every `sketch_*`/`feature_*` mutation needs `preview_dry_run` first. Pass the returned
-  `preview_id` back as `"confirm": {"preview_id": ..., "elicitation_action": "accept"}`.
+- Every `sketch_*`/`feature_*` mutation runs `preview_dry_run` first and passes the returned
+  `preview_id` back as `"confirm": {"preview_id": ..., "elicitation_action": "accept"}`. With
+  `FREECAD_BUDDY_AUTO_APPROVE=0` this is required. A call that sends `confirm` is checked
+  against its token in every posture, so the token must be fresh even with auto-approve on.
 - `sketch_add_geometry` must leave the sketch fully constrained, or the mutation is rolled back
   with `SPEC_FAILED` (`dof=N`). Send the constraints in the same call
   (`"constraints": [...]`).

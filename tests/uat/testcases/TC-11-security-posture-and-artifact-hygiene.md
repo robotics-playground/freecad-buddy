@@ -351,23 +351,24 @@ one `event:"approval"` line naming what the approval covered.
 **And** the model is framed before the baseline capture — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** that framed baseline is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-11-08-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the host is started with auto-approve on and a scratch audit log  
+**When** the host is started with `FREECAD_BUDDY_AUTO_APPROVE` unset (auto-approve is on by default) and a scratch audit log  
 ```bash
-FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_AUDIT_LOG=$RUN_DIR/evidence/tc-11-08-approve.jsonl \
+env -u FREECAD_BUDDY_AUTO_APPROVE FREECAD_BUDDY_AUDIT_LOG=$RUN_DIR/evidence/tc-11-08-approve.jsonl \
   uv run python -m freecad_buddy.hosts.main serve --transport stdio --mode inline
 ```
 **And** one geometry mutation is run with NO `confirm` argument  
-**And** the same is repeated with `FREECAD_BUDDY_AUTO_APPROVE=true`  
+**And** the same is repeated with `FREECAD_BUDDY_AUTO_APPROVE=0`, and again with `FREECAD_BUDDY_AUTO_APPROVE=true`  
 
-**Then** the operator is warned at startup — verify: stderr contains `SECURITY: mutation auto-approve ENABLED by operator flag`  
+**Then** the operator is warned at startup — verify: stderr contains `SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`  
 **And** the mutation runs without a confirm token — verify: the envelope `status` is `OK` and no `this mutation requires a confirm` message appears  
 **And** one approval record was written — verify: `grep -c '"event": "approval"' "$RUN_DIR/evidence/tc-11-08-approve.jsonl"` returns `1`  
-**And** the approval names the tool — verify: that line's `tool` is the mutating tool name  
+**And** the approval names the tool and the switch — verify: that line's `tool` is the mutating tool name, and its `approval` has `"mode": "auto_approve"` and `"source": "FREECAD_BUDDY_AUTO_APPROVE"`  
 **And** the approval carries the pre-mutation fingerprint — verify: that line's `fingerprint_before` matches the mutation's own `before` line  
 **And** the approval digest matches the mutation's digest — verify: the approval line's `params_digest` equals the `before`/`after` lines' digest  
-**And** `true` does not enable it — verify: the `FREECAD_BUDDY_AUTO_APPROVE=true` run's stderr lacks the warning and the same unconfirmed mutation is refused with `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
+**And** `0` turns the confirm gate on — verify: the `FREECAD_BUDDY_AUTO_APPROVE=0` run's stderr lacks the warning and the same unconfirmed mutation is refused with `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
+**And** any value other than `1` turns it on too — verify: the `FREECAD_BUDDY_AUTO_APPROVE=true` run gives the same result as the `=0` run  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window is identical to `tc-11-08-before.png` — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-11-08-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the same single box, whole and framed, no new object in the viewport, no dialog raised. The `true` run refused its mutation; a refusal that returned the confirm-required message while the mutation nevertheless landed on the human's model is exactly what the message assertion cannot catch. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window is identical to `tc-11-08-before.png` — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-11-08-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the same single box, whole and framed, no new object in the viewport, no dialog raised. The `=0` and `true` runs refused their mutation; a refusal that returned the confirm-required message while the mutation nevertheless landed on the human's model is exactly what the message assertion cannot catch. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash

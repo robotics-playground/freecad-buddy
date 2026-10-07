@@ -252,9 +252,10 @@ _SUBELEMENT_SELECTOR_SCHEMA = {
 _CONFIRM_SCHEMA = {
     "type": "object",
     "description": (
-        "required: this mutation is refused without it. Call preview_dry_run for the same tool "
-        "and arguments on the same document, then pass back the preview_id it returned. Omit "
-        "only against a host running the operator auto-approve posture."
+        "needed when the operator turned auto-approve off (FREECAD_BUDDY_AUTO_APPROVE set to any "
+        "value other than 1); this mutation is then refused without it. When sent, it is checked "
+        "in every posture. Call preview_dry_run for the same tool and arguments on the same "
+        "document, then pass back the preview_id it returned."
     ),
     "properties": {
         "preview_id": {
@@ -803,7 +804,8 @@ def _feature_specs():
             ),
             "Edit a feature's driving properties and re-verify the solid in the same "
             "transaction. Unknown, read-only, wrong-type or wrong-unit values are rejected before "
-            "it opens.",
+            "it opens. A call whose parameters hold only Visibility (true/false) is display state "
+            "and needs no confirm in any posture.",
         ),
     ]
 

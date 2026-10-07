@@ -22,7 +22,7 @@ the available-render contrast and an H1 headless host for the no-render-port con
 
 ## Preconditions
 - [ ] FreeCAD GUI open and the addon bridge serving `:8765` (verify: `netstat -ano | grep :8765` shows LISTENING)
-- [ ] Host is NOT in auto-approve posture (verify: `mcp query_capabilities {}` reports `auto_approve: false`)
+- [ ] Host is NOT in auto-approve posture: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, because auto-approve is on by default (verify: the new `addon.log` lines from that launch do not contain `SECURITY: mutation auto-approve ENABLED`)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
 - [ ] No stale preview TempDocs (verify: `ls -d "$TEMP"/FCB_TMP_prev_* 2>/dev/null` returns nothing)
 - [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
@@ -626,11 +626,11 @@ mutating tools (`document_*`, `export_*`, `debug_exec`) carry no `confirm` and a
 here. This is the same 19 that `preview_dry_run` will accept.
 
 **Given** a document holding a body, a fully-constrained sketch, a `Pad` and a `Fillet`, so every one of the 19 tools has a valid target — verify: `mcp query_tree_summary { doc: <handle>, depth: 4 }` lists all four  
-**And** host is NOT in auto-approve posture  
+**And** the GUI host runs the confirm gate: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0` (the default is auto-approve on) — verify: the new `addon.log` lines from that launch do NOT contain `SECURITY: mutation auto-approve ENABLED`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-before.png"}' | & cua-driver call get_window_state`  
 
-**When** for each of the 19 tools an otherwise-valid call is issued with the `confirm` key OMITTED entirely  
+**When** for each of the 19 tools an otherwise-valid call is issued with the `confirm` key OMITTED entirely; the `feature_set_parameters` call writes `Length`, not `Visibility` alone (a `Visibility`-only write is display state and needs no confirm)  
 ```
 mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad2", length: { value: 30, unit: "mm" } }
 mcp sketch_create { doc: <handle>, name: "Sketch2", plane: "XZ" }
@@ -645,6 +645,7 @@ mcp sketch_create { doc: <handle>, name: "Sketch2", plane: "XZ" }
 **And** the set boundary is correct — verify: `mcp document_save { doc: <handle>, path: "$RUN_DIR/evidence/tc-08-17-save.FCStd" }` and `mcp export_stl { doc: <handle>, objects: ["Pad"], path: "$RUN_DIR/evidence/tc-08-17-export.stl" }` succeed WITHOUT a confirm, because they carry no `confirm` property  
 **And** the count is exactly 19 — verify: `mcp query_capabilities {}` or the `tools/list` response shows `confirm` in the input schema of exactly 19 tools  
 **And** each refused tool works once previewed — verify: for a sample of at least 3 of the 19, a `preview_dry_run` plus its token returns `status: "OK"`  
+**And** the display-state carve-out holds — verify: `mcp feature_set_parameters { doc: <handle>, feature: "Pad", parameters: { Visibility: false } }` with no `confirm` returns `status: "OK"` with `mutation.changed: []`, and its audit `approval` line has `mode: "display_state"`; restore with `{ Visibility: true }` before the after-capture  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* none of the 19 refusals changed the model on screen — verify: capture immediately after the 19 refused calls and BEFORE the previewed sample, to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what features you see in each. The two images must be visually IDENTICAL by eye — the same body, sketch, pad and fillet, with no added, removed or altered feature, and no error dialog left open. A fail-closed gate that nonetheless let one of the 19 reach the window is the exact defect this catches. The judgement is on the pixels alone — no MCP status, refusal message, tree summary or render may stand in for looking at the image.  
 
@@ -656,12 +657,12 @@ mcp document_close { doc: <handle> }
 
 ---
 
-### TC-08-18: Headless fails closed unless FREECAD_BUDDY_AUTO_APPROVE is exactly "1"
+### TC-08-18: Headless auto-approves by default; any value other than "1" turns the gate on
 
 **Priority**: Critical
-**Design Ref**: `mcp-tools-design.md` §4 (auto-approve is an operator posture, never a wire field)
+**Design Ref**: `mcp-tools-design.md` §4 (auto-approve is an operator posture, never a wire field; on by default; a sent token is checked in every posture)
 
-**Host**: H1 headless for the three flag postures. The closing visual asserts the separate GUI
+**Host**: H1 headless for the four flag postures. The closing visual asserts the separate GUI
 window was never touched by a headless call.
 
 **Given** the H1 headless host can be started with a controlled environment — verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"` succeeds  
@@ -670,23 +671,27 @@ window was never touched by a headless call.
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <gui handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the GUI's framed state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-before.png"}' | & cua-driver call get_window_state`  
 
-**When** H1 is started with the flag UNSET and a gated tool is called without a confirm  
-**And** H1 is started with `FREECAD_BUDDY_AUTO_APPROVE=true` (a truthy value that is not `"1"`) and the call repeated  
-**And** H1 is started with `FREECAD_BUDDY_AUTO_APPROVE=1` and the call repeated, with the audit log redirected  
+**When** H1 is started with the flag UNSET, with the audit log redirected, and a gated tool is called without a confirm  
 ```bash
-FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_AUDIT_LOG="$RUN_DIR/evidence/tc-08-18-approve.jsonl" \
+env -u FREECAD_BUDDY_AUTO_APPROVE FREECAD_BUDDY_AUDIT_LOG="$RUN_DIR/evidence/tc-08-18-approve.jsonl" \
   "$FCB_PYTHON" -m freecad_buddy.hosts.main serve --transport stdio --mode inline
 ```
+**And** on the same flag-unset host the call is repeated with a forged token, `confirm: { preview_id: "fcb-preview:forged.AAAA" }`  
+**And** H1 is started with `FREECAD_BUDDY_AUTO_APPROVE=1` and the call without a confirm repeated  
+**And** H1 is started with `FREECAD_BUDDY_AUTO_APPROVE=0` and the call repeated  
+**And** H1 is started with `FREECAD_BUDDY_AUTO_APPROVE=true` (a value that is not `"1"`) and the call repeated  
 
-**Then** unset fails closed — verify: the flag-unset run returns `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
-**And** a non-`"1"` truthy value fails closed — verify: the `=true` run returns the same refusal, because the flag is compared against the exact string `"1"`  
+**Then** unset approves — verify: the flag-unset run returns `status: "OK"` with no `confirm` in the call  
+**And** a sent token is checked under auto-approve — verify: the forged-token call on the flag-unset host returns `INVALID_INPUT` with `confirm.preview_id carries an invalid signature`  
 **And** the exact flag approves — verify: the `=1` run returns `status: "OK"` with no `confirm` in the call  
-**And** the operator posture is announced at startup — verify: `grep "SECURITY: mutation auto-approve ENABLED by operator flag" <the =1 run's stderr log>` returns a match  
-**And** the approval is audited — verify: `grep '"mode": *"auto_approve"' "$RUN_DIR/evidence/tc-08-18-approve.jsonl"` returns a line naming the tool and the document handle  
+**And** `0` turns the gate on — verify: the `=0` run returns `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
+**And** any other value turns the gate on — verify: the `=true` run returns the same refusal, because the flag is compared against the exact string `"1"`  
+**And** the operator posture is announced at startup — verify: the stderr of the flag-unset run and of the `=1` run each contain `SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`, and the stderr of the `=0` and `=true` runs do not  
+**And** the approval is audited — verify: `grep '"mode": *"auto_approve"' "$RUN_DIR/evidence/tc-08-18-approve.jsonl"` returns a line naming the tool and the document handle, with `"source": "FREECAD_BUDDY_AUTO_APPROVE"`  
 **And** the audited approval carries no token — verify: that line's `args_digest` is present while no `preview_id` appears, because an auto-approved call presented none  
-**And** the posture is reported on the capability record — verify: `mcp query_capabilities {}` on the `=1` host reports auto-approve enabled, and on the flag-unset host reports it disabled  
+**And** the refused forged-token call wrote no approval line — verify: the file holds exactly one `approval` line  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <gui handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the separate GUI window was not touched by any of the three headless runs — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. The two images must be visually IDENTICAL by eye — the same golden box, unchanged. A headless auto-approved mutation that reached across into the human's document would be a serious defect, and the audit line proving it "ran headless" is a claim under test, not evidence that the window was spared. The judgement is on the pixels alone — no MCP status, audit line or render may stand in for looking at the image.  
+**And** *(visual)* the separate GUI window was not touched by any of the headless runs — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. The two images must be visually IDENTICAL by eye — the same golden box, unchanged. A headless auto-approved mutation that reached across into the human's document would be a serious defect, and the audit line proving it "ran headless" is a claim under test, not evidence that the window was spared. The judgement is on the pixels alone — no MCP status, audit line or render may stand in for looking at the image.  
 
 **Cleanup**: stop the H1 host.
 ```bash

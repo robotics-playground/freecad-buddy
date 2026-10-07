@@ -95,7 +95,7 @@ FreeCAD comes from the host (GUI install or conda env), never from pyproject. In
 - Typed tools are the ONLY AI mutation path (AD-4). Never route model output through `exec`; `debug_exec` is operator-only (env flag, unregistered when off, permanently off in service mode, every call audit-logged).
 - In-process Python restriction (RestrictedPython, audit hooks, import blacklists) is NEVER called or treated as a security boundary — monitoring/hardening only. Real boundaries: typed layer + OS sandbox.
 - Binds: 127.0.0.1 only; per-session `secrets.token_urlsafe(32)` in a 0600 discovery file; `hmac.compare_digest` for validation; remote bind = explicit operator opt-in with stderr warning.
-- Preview/confirm gate: mutations without valid confirmation (elicitation accept / `preview_id` token / audit-logged `autoApprove`) return `INVALID_INPUT` — fail closed, never fail open.
+- Preview/confirm gate: operator auto-approve (`FREECAD_BUDDY_AUTO_APPROVE`) is on by default in every host and audit-logs each approval. With `FREECAD_BUDDY_AUTO_APPROVE=0`, mutations without valid confirmation (elicitation accept / `preview_id` token) return `INVALID_INPUT` — fail closed, never fail open — except a `Visibility`-only `feature_set_parameters` (display state).
 
 ### Development Workflow Rules
 

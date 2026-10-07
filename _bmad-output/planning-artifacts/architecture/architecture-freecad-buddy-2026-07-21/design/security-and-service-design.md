@@ -77,7 +77,7 @@ On the stdio transport, stdout **is** the MCP protocol; one stray `print()` corr
 | --- | --- | --- | --- |
 | 0 (bridge/harness) | None — operator + our own CI scripts | `debug_exec` off-by-default + unregistered (AD-4); localhost bind + token (AD-3); audit log (AD-17) | Malicious local processes with the operator's own privileges; malicious operator |
 | 1 (read-only assistant) | LLM output (hallucination, prompt injection) | Zero mutation tools registered (AD-4); read-only `query_*` only; no exec in tool list | Model reading data it's shown; local-process threats as above |
-| 2 (copilot) | LLM-driven mutation requests | Typed tools only mutation path (AD-4); AD-5 transaction + verify per mutation; AD-10 confirmation; audit log; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because the operator confirms mutations |
+| 2 (copilot) | LLM-driven mutation requests | Typed tools only mutation path (AD-4); AD-5 transaction + verify + proven rollback per mutation; audit log with one `approval` line per mutation; AD-10 auto-approve on by default, `FREECAD_BUDDY_AUTO_APPROVE=0` as the opt-in confirm gate; a sent `preview_id` is checked in every posture; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because every mutation is typed, verified, rolled back on failure and audited, and an operator who wants per-call consent sets `=0` |
 | Unattended | Agent requests = fully untrusted input, even over typed tools | Everything above; every reported field is a re-executed check (AD-17); `debug_exec` never enabled; the audit log makes the run reconstructable after the fact | This repository ships no process boundary — the operator's environment provides isolation, and a determined attacker on that host is out of scope |
 
 Threats defended across phases: LLM free-form exec as mutation path (AD-4); silent bad-part success (AD-17 re-executed checks); stdout protocol corruption (AD-3); rogue local RPC caller (token); An unattended run adds: resource exhaustion, exfiltration/egress, host FS tamper, and crash cascade — all bounded by the operator's environment rather than by anything this repository ships.
@@ -87,7 +87,7 @@ Threats defended across phases: LLM free-form exec as mutation path (AD-4); sile
 ```mermaid
 graph TB
   subgraph trusted [TRUSTED — operator-controlled]
-    op[Human operator<br/>sets env flags, confirms mutations]
+    op[Human operator<br/>sets env flags; FREECAD_BUDDY_AUTO_APPROVE=0<br/>opts in to per-call confirmation]
     typed[Typed tool layer<br/>contracts + usecases, AD-4]
     audit[(Append-only audit log, AD-17)]
   end
@@ -95,7 +95,7 @@ graph TB
     rpc[RPC listener<br/>localhost + per-session token, AD-3]
   end
   subgraph untrusted [UNTRUSTED INPUT]
-    llm[Agent tool requests<br/>attended: operator-confirmed]
+    llm[Agent tool requests<br/>attended: auto-approved by default,<br/>confirmed with =0]
     unatt[Agent tool requests<br/>unattended: no human in loop]
   end
   llm -->|MCP, typed tools only| typed
@@ -105,7 +105,7 @@ graph TB
   op -.->|FREECAD_BUDDY_ALLOW_EXEC<br/>debug_exec, never unattended| typed
 ```
 
-Key reading: untrusted input never touches an unvalidated surface, and there is only one way in — the typed MCP tool layer, for every caller (AD-35). Attended requests pass through the typed-tool schemas plus operator confirmation; unattended requests pass through the same schemas with `contracts/` validation (`INVALID_INPUT` on failure, AD-17) and the audit log as the after-the-fact record. **This repository ships no process or sandbox boundary of its own** — the operator's environment is the isolation boundary, which is why `debug_exec` is default-off and never enabled unattended.
+Key reading: untrusted input never touches an unvalidated surface, and there is only one way in — the typed MCP tool layer, for every caller (AD-35). Attended requests pass through the typed-tool schemas and the AD-5 bracket; auto-approve is on by default, so per-call operator confirmation applies only when the operator sets `FREECAD_BUDDY_AUTO_APPROVE=0`, and a `preview_id` an agent sends is checked in every posture. Every approved mutation writes an `approval` audit line naming its mode. Unattended requests pass through the same schemas with `contracts/` validation (`INVALID_INPUT` on failure, AD-17) and the audit log as the after-the-fact record. **This repository ships no process or sandbox boundary of its own** — the operator's environment is the isolation boundary, which is why `debug_exec` is default-off and never enabled unattended.
 
 ## 6. Explicitly Rejected Mechanisms (AD-4)
 

@@ -1,0 +1,20 @@
+ M .knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md
+ M _bmad-output/implementation-artifacts/deferred-work.md
+ M _bmad-output/implementation-artifacts/epic-11-context.md
+ M _bmad-output/implementation-artifacts/sprint-status.yaml
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/ARCHITECTURE-SPINE.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/component-design.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/data-contracts-design.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/integration-mcp-clients.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md
+ M _bmad-output/planning-artifacts/epics.md
+ M _bmad-output/project-context.md
+ M src/freecad_buddy/contracts/confirm.py
+ M src/freecad_buddy/hosts/tool_catalog.py
+ M src/freecad_buddy/usecases/capabilities.py
+ M src/freecad_buddy/usecases/confirm.py
+ M tests/external/test_confirm_contract.py
+ M tests/infc/test_confirm_gate.py
+?? README.md
+?? _bmad-output/implementation-artifacts/spec-11-3-one-call-per-mutation.md
+?? tests/uat/run/2026-10-07-01/

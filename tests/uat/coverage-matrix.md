@@ -182,7 +182,7 @@ Two checkpoints in this file are worth protecting from future trimming:
 | AD-7 | TNP reference audit, `UNSUPPORTED` never clean | TC-05 | 03, 04 |
 | AD-8 | Sketch PASS ⇔ `FullyConstrained` | TC-03 | 07 |
 | AD-9 | Export completes only via paired verify; failed export leaves no file | TC-07 | 09 |
-| AD-10 | Preview diff, confirm token, headless fail-closed | TC-08 | 05, 11 |
+| AD-10 | Preview diff, confirm token checked in every posture, auto-approve on by default (`=0` turns the gate on), `Visibility`-only display-state carve-out | TC-08 | 05, 11 |
 | AD-17 | Closed terminal status set, append-only audit log | TC-09 | 05, 10, 11 |
 | AD-20 | Explicit doc handle, never `ActiveDocument`, TempDoc lifecycle | TC-02 | 08, 11, 12 |
 | AD-24 | Latency budget | TC-10 | 01 · **`/healthz` gap in TC-99-08** |

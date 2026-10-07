@@ -92,6 +92,14 @@ def test_auto_approve_appears_in_no_published_schema():
         assert "auto_approve" not in text, f"{name} publishes auto_approve"
 
 
+def test_display_state_appears_in_no_published_schema():
+    """The display-state approval mode is an audit-record value, not something a client sends."""
+    for name, tool in _tools().items():
+        assert "display_state" not in json.dumps(tool.inputSchema), f"{name} publishes it"
+    for path in (SRC / "contracts" / "jsonschema").rglob("*.json"):
+        assert "display_state" not in path.read_text(encoding="utf-8"), path.name
+
+
 def test_document_undo_is_on_the_surface_and_takes_no_confirm():
     tool = _tools()["document_undo"]
     assert "confirm" not in tool.inputSchema["properties"]
@@ -213,11 +221,23 @@ def test_args_digest_ignores_key_order_but_not_values():
 # -- the operator posture ---------------------------------------------------------------------
 
 
-def test_capabilities_reads_the_auto_approve_flag_exactly_one():
-    assert Capabilities.from_env({"FREECAD_BUDDY_AUTO_APPROVE": "1"}).auto_approve is True
-    assert Capabilities.from_env({"FREECAD_BUDDY_AUTO_APPROVE": "0"}).auto_approve is False
-    assert Capabilities.from_env({"FREECAD_BUDDY_AUTO_APPROVE": "true"}).auto_approve is False
-    assert Capabilities.from_env({}).auto_approve is False
+@pytest.mark.parametrize(
+    ("environ", "expected"),
+    [
+        ({}, True),
+        ({"FREECAD_BUDDY_AUTO_APPROVE": "1"}, True),
+        ({"FREECAD_BUDDY_AUTO_APPROVE": "0"}, False),
+        ({"FREECAD_BUDDY_AUTO_APPROVE": "true"}, False),
+        ({"FREECAD_BUDDY_AUTO_APPROVE": "false"}, False),
+        ({"FREECAD_BUDDY_AUTO_APPROVE": ""}, False),
+    ],
+)
+def test_capabilities_reads_the_auto_approve_flag_on_unless_set_to_another_value(environ, expected):
+    assert Capabilities.from_env(environ).auto_approve is expected
+
+
+def test_a_code_constructed_capability_record_keeps_auto_approve_off():
+    assert auto_approve_enabled(Capabilities(allow_exec=False)) is False
     assert auto_approve_enabled(Capabilities(allow_exec=False, auto_approve=True)) is True
 
 
@@ -231,6 +251,7 @@ def test_the_auto_approve_posture_approves_without_a_token():
         auto_approve=True,
     )
     assert record["mode"] == "auto_approve"
+    assert record["source"] == "FREECAD_BUDDY_AUTO_APPROVE"
     assert record["args_digest"] == confirm.args_digest(ARGS)
 
 

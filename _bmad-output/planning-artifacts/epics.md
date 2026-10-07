@@ -1474,10 +1474,10 @@ An agent builds a part with fewer calls and a small context: every mutation stil
 
 **Acceptance Criteria:**
 
-1. **Given** `FREECAD_BUDDY_AUTO_APPROVE=1` set before FreeCAD starts, **When** an agent calls `feature_pad` without `confirm`, **Then** the pad applies under the full AD-5 bracket and the audit log records an `auto_approve` approval for it.
+1. **Given** FreeCAD started without `FREECAD_BUDDY_AUTO_APPROVE` (auto-approve is on by default; unset or `1` is on, any other value is off), **When** an agent calls `feature_pad` without `confirm`, **Then** the pad applies under the full AD-5 bracket and the audit log records an `approval` with `mode: "auto_approve"` and `source: "FREECAD_BUDDY_AUTO_APPROVE"`.
 2. **Given** the same posture and a mutation that fails post-verify, **Then** it rolls back and returns its failure status exactly as with a token.
 3. **Given** `feature_set_parameters` that writes only `Visibility`, **When** called without `confirm` and without auto-approve, **Then** it applies (display state, same carve-out as `view_fit_viewport`) and is audit-logged; any other property in the same call keeps the gate.
-4. **Given** auto-approve unset, **Then** every other mutation still needs a valid `preview_id` (no regression).
+4. **Given** `FREECAD_BUDDY_AUTO_APPROVE=0`, **Then** every other mutation still needs a valid `preview_id` (no regression).
 5. The operator setup is documented in `README.md` and in the GUI harness standard.
 
 ### Story 11.4: Cheap, Correct Rollback Proof and Fingerprints

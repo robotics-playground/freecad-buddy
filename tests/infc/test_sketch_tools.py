@@ -16,7 +16,8 @@ import unittest
 
 import FreeCAD as App
 
-from freecad_buddy.usecases import confirm, sketches, transaction
+from freecad_buddy.hosts.tool_catalog import preview_op_table
+from freecad_buddy.usecases import confirm, preview, sketches, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 
 # Snapshots live in the session workdir, not the OS temp directory (AD-25). Globbing the OS temp
@@ -1787,6 +1788,15 @@ class EnvelopeShapeTest(_SketchFixture):
 
     def test_the_audit_params_carry_the_confirm_passthrough(self):
         recorded = {}
+        # A sent confirm is checked in every posture, so the passthrough needs a real token.
+        token = preview.preview_dry_run(
+            self.registry,
+            preview_op_table(),
+            None,
+            doc=self.handle,
+            operation={"tool": "sketch_create", "args": {"name": "Confirmed", "plane": "XY"}},
+            render="off",
+        )["structured_content"]["preview_id"]
 
         class _Sink:
             def before(self, event, tool, handle, params, **kwargs):
@@ -1800,11 +1810,11 @@ class EnvelopeShapeTest(_SketchFixture):
             doc=self.handle,
             name="Confirmed",
             plane="XY",
-            confirm={"preview_id": "p-1", "elicitation_action": "accept"},
+            confirm={"preview_id": token, "elicitation_action": "accept"},
             audit_sink=_Sink(),
         )
 
-        self.assertEqual(recorded["params"]["confirm"]["preview_id"], "p-1")
+        self.assertEqual(recorded["params"]["confirm"]["preview_id"], token)
 
 
 class ReviewPatchTest(_SketchFixture):

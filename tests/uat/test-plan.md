@@ -250,7 +250,7 @@ against FreeCAD's own working directory, `C:\Program Files\FreeCAD 1.1\bin`, and
 | `FCB_ENV` | micromamba env holding FreeCAD **and** `mcp` in one interpreter, for the H1 legs | `$USERPROFILE/micromamba/envs/fcb` |
 | `FCB_PYTHON` | that env's interpreter | `$FCB_ENV/python.exe` |
 | `FREECAD_BUDDY_ALLOW_EXEC` | enable `debug_exec`; must be exactly `"1"` | `1` |
-| `FREECAD_BUDDY_AUTO_APPROVE` | bypass the confirm gate; must be exactly `"1"` | `1` |
+| `FREECAD_BUDDY_AUTO_APPROVE` | auto-approve posture: unset or `"1"` = on (default), a mutation without `confirm` applies; any other value (use `"0"`) = confirm gate on. A sent `confirm` is checked in both postures | `0` |
 | `FREECAD_BUDDY_AUDIT_LOG` | audit log path; default is cwd-relative `freecad-buddy-audit.jsonl` | `$RUN_DIR/evidence/audit.jsonl` |
 | `FREECAD_BUDDY_LOG_FILE` | addon log path | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\addon.log` |
 | `FREECAD_BUDDY_RPC_PORT` | fix the RPC listener port; a non-int value warns and falls back to ephemeral | `47111` |

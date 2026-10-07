@@ -21,7 +21,7 @@ need that host started with `FREECAD_BUDDY_ALLOW_EXEC=1` so `debug_exec` can inj
 
 - [ ] FreeCAD GUI open and the addon bridge serving `:8765` (verify: `netstat -ano | grep :8765` shows LISTENING)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
-- [ ] Host is NOT in auto-approve posture, so every mutation below carries a real `confirm` (verify: `mcp query_capabilities {}` reports `auto_approve: false`)
+- [ ] Host is NOT in auto-approve posture, so every mutation below carries a real `confirm`: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, because auto-approve is on by default (verify: the new `addon.log` lines from that launch do not contain `SECURITY: mutation auto-approve ENABLED`)
 - [ ] Temp directory writable and free of stale snapshots (verify: `ls "$TEMP" | grep FCB_TMP_snap_` returns nothing)
 - [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
 - [ ] `cua-driver` can reach the **View → Fit All** menu item, the non-MCP framing path (verify: the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view) succeeds)

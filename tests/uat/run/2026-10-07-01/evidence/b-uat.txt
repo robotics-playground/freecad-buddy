@@ -1,0 +1,19 @@
+DOC fcb-doc:tsICVaIUKCT8P3PNf3zWXA
+  [PASS] apply feature_body_create                    OK 
+  [PASS] apply sketch_create                          OK 
+  [PASS] apply sketch_add_geometry                    OK 
+  [PASS] apply feature_pad                            OK 
+  [PASS] pad post-verify passed, not rolled back      {"changed": [{"name": "Body", "volume": 1000.0, "area": 700.0, "com": [10.0, 5.0, 2.5]}, {"name": "Plate", "volume": 1000.0, "area": 700.0, 
+  [PASS] Plate volume == 1000 mm3                     vol=999.9999999999998
+  [PASS] feature_pad without confirm refused          INVALID_INPUT this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+  [PASS] Visibility+Length without confirm refused    INVALID_INPUT this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+  [PASS] Visibility-only write applies                OK changed=[] rolled_back=False
+  query_object Plate Visibility: {"name": "Plate", "label": "Plate", "type": "PartDesign::Pad", "properties": {"AddSubShape": "<Solid object at 0000026524D24450>", "AllowMultiFace": true, "AlongSketchNormal": true, "BaseFeature": null, "Direction": "Vector (0.0, 0.0, 1.0)", "ExpressionEngine": [], "FuzzyTolerance": -1.0, "Label": "Plate", "Label2": "", "Length": "5.0 mm", "Length2": "10.0 mm", "Midplane": false, "Offset": "0.0 mm
+  AUDIT {"event": "approval", "tool": "feature_body_create", "approval": {"args_digest": "d12bf23f09cd6582686aec4a43e8ebfae73020a8e4b55c73cac0caf7bbcc43cb", "doc": "fcb-doc:tsICVaIUKCT8P3PNf3zWXA", "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945", "mode": "preview_token", "tool": "feature_body_create"}}
+  AUDIT {"event": "approval", "tool": "sketch_create", "approval": {"args_digest": "77695102c165168515b5fb338ae21d28bdc7becfcf071fdc1860d7c0b5942534", "doc": "fcb-doc:tsICVaIUKCT8P3PNf3zWXA", "fingerprint_before": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338", "mode": "preview_token", "tool": "sketch_create"}}
+  AUDIT {"event": "approval", "tool": "sketch_add_geometry", "approval": {"args_digest": "ead204d901447239387e6cee66511b6083cc45756135b4a0c403e6c0bcbde445", "doc": "fcb-doc:tsICVaIUKCT8P3PNf3zWXA", "fingerprint_before": "02d4b20e41785786d5c3602ca032a2ce27023331bc87c63aabdc9cafe589434c", "mode": "preview_token", "tool": "sketch_add_geometry"}}
+  AUDIT {"event": "approval", "tool": "feature_pad", "approval": {"args_digest": "c50fb52a1ca3bb4539a18da7bca264426a4d4718f7395005084801a8555f409a", "doc": "fcb-doc:tsICVaIUKCT8P3PNf3zWXA", "fingerprint_before": "e93dfcc18b49dc896e6acd2283a8f13dc1e8c77534c3dd778ad99387d5928004", "mode": "preview_token", "tool": "feature_pad"}}
+  AUDIT {"event": "approval", "tool": "feature_set_parameters", "approval": {"args_digest": "a5c53fbf27dcbd56779179daac4ece12499acab2a4eb4e2c14087b558bbeb9b5", "doc": "fcb-doc:tsICVaIUKCT8P3PNf3zWXA", "fingerprint_before": "e43d1df1f3a63986b4b7d697895816a12c59ea86c5300e77af5e3cb89cb980be", "mode": "display_state", "tool": "feature_set_parameters"}}
+  [PASS] audit: pad preview_token, hide display_state [('feature_pad', 'preview_token'), ('feature_set_parameters', 'display_state')]
+  [PASS] audit: refused calls wrote no approval       5 approval lines
+11/11 passed

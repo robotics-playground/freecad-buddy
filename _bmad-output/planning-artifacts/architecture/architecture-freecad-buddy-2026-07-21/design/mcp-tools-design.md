@@ -98,9 +98,9 @@ Every mutation tool (column **Mut** = yes below) executes the AD-5 bracket (geoh
 }}
 ```
 
-Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). `tnp_audit` reports `UNSUPPORTED`, never clean, when the element map probe fails (AD-7, AD-11). From Phase 2, mutation tools additionally accept an optional `confirm` object (§4.8) tying execution to a `preview_dry_run` + elicitation acceptance (AD-10); headless without confirmation is fail-closed unless `autoApprove` is set, and every auto-approval is audit-logged.
+Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). `tnp_audit` reports `UNSUPPORTED`, never clean, when the element map probe fails (AD-7, AD-11). From Phase 2, mutation tools additionally accept an optional `confirm` object (§4) tying execution to a `preview_dry_run` + elicitation acceptance (AD-10). Every host runs the operator auto-approve posture by default: a mutation without `confirm` applies in one call and its `approval` audit line carries `mode: "auto_approve"` and `source: "FREECAD_BUDDY_AUTO_APPROVE"`. With `FREECAD_BUDDY_AUTO_APPROVE=0` set before the host starts, a mutation without a valid `confirm` is refused.
 
-**Lifecycle ops** (`document_save`, `document_close`, `document_recompute`, `document_undo`) change document state but carry no new geometric intent: they are audit-logged and serialized with the single-writer rule (AD-20) but are exempt from the preview/confirm gate. `document_undo` is verified by fingerprint comparison (AD-6; gate G2.3). A `feature_set_parameters` call that writes only `Visibility` is display state: it runs the AD-5 bracket and is audit-logged, but is confirm-exempt. A call that also writes any other property keeps the gate.
+**Lifecycle ops** (`document_save`, `document_close`, `document_recompute`, `document_undo`) change document state but carry no new geometric intent: they are audit-logged and serialized with the single-writer rule (AD-20) but are exempt from the preview/confirm gate. `document_undo` is verified by fingerprint comparison (AD-6; gate G2.3). A `feature_set_parameters` call that writes only `Visibility` and carries no `confirm` is display state: it runs the AD-5 bracket and writes an `approval` line with `mode: "display_state"`, but is confirm-exempt in both postures. A call that also writes any other property keeps the gate; a call that carries a `confirm` takes the token path.
 
 ## 2. Tool Inventory
 
@@ -545,12 +545,13 @@ Typical agent patterns: *isolate* (`include: [Body]`), *context-ghost* (`styles:
 ```json
 { "Confirm": { "type": "object", "properties": {
     "preview_id": { "type": "string", "description": "from preview_dry_run" },
-    "elicitation_action": { "enum": ["accept"], "description": "recorded outcome; decline/cancel never reach the mutation tool" },
-    "autoApprove": { "type": "boolean", "description": "headless only; explicit operator flag; every use audit-logged" }
-} } }
+    "elicitation_action": { "enum": ["accept"], "description": "recorded outcome; decline/cancel never reach the mutation tool" }
+  },
+  "required": ["preview_id"], "additionalProperties": false
+} }
 ```
 
-Phase 2 policy: mutation tool called without valid `confirm` in a confirm-required context → `INVALID_INPUT`, no execution. GUI panel and MCP elicitation produce the `accept`; headless is fail-closed unless `autoApprove`. Apply re-runs the operation on the live document under AD-5 — the preview result is never "promoted" to the live doc.
+`Confirm` carries no auto-approve field: the posture is the operator env var `FREECAD_BUDDY_AUTO_APPROVE`, read once at host start, and a client-sent `autoApprove` is refused as an undeclared field. The posture is on by default in every host; `FREECAD_BUDDY_AUTO_APPROVE=0` makes every mutation a confirm-required call, except the display-state carve-out (§1.4). A call that sends `confirm` takes the full token check in every posture: a stale, expired or forged `preview_id` is refused, and an accepted one is logged `preview_token`. Phase 2 policy: mutation tool called without valid `confirm` in a confirm-required context → `INVALID_INPUT`, no execution. GUI panel and MCP elicitation produce the `accept`. `preview_dry_run` stays available in both postures. Apply re-runs the operation on the live document under AD-5 — the preview result is never "promoted" to the live doc.
 
 ## 5. `debug_exec` Registration Rules (AD-4)
 

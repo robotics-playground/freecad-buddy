@@ -15,7 +15,13 @@ that issued it, which is the process that will run the mutation: the RPC listene
 mutation use cases share one interpreter.
 
 The auto-approve posture is an operator-set flag carried on ``Capabilities``, never a wire field.
-A ``confirm`` object from the wire cannot request it.
+A ``confirm`` object from the wire cannot request it, and a call that sends one is checked against
+its token in every posture.
+
+One call is approved without a token in either posture: a ``feature_set_parameters`` that writes
+only ``Visibility`` and carries no ``confirm``. Hiding or showing an object changes no geometry,
+so there is nothing for a preview to measure; the call still runs the full mutation bracket and
+writes its own ``display_state`` approval line.
 
 Stdlib only.
 """
@@ -31,6 +37,7 @@ import threading
 import time
 
 from freecad_buddy.contracts.confirm import ApprovalRecord, Confirm, PreviewTokenPayload
+from freecad_buddy.usecases.capabilities import AUTO_APPROVE_VARIABLE
 from freecad_buddy.usecases.documents import ValidationError
 
 _TOKEN_PREFIX = "fcb-preview:"
@@ -99,8 +106,8 @@ def spend_confirm(approval: ApprovalRecord, params: dict) -> None:
     Called once the mutation is going ahead — after any precheck — so a call refused before it
     runs leaves its token usable and the caller can correct the arguments and re-send.
 
-    Only the token path spends anything: an auto-approved call presented no token, and a preview
-    runs against a throwaway copy and authorized nothing.
+    Only the token path spends anything: an auto-approved or display-state call presented no
+    token, and a preview runs against a throwaway copy and authorized nothing.
     """
     if approval["mode"] != "preview_token":
         return
@@ -220,27 +227,31 @@ def verify_confirm(
 ) -> ApprovalRecord:
     """Authorize one mutation call; return the record the caller must audit.
 
-    An operator-set ``auto_approve`` posture approves without a token. Otherwise ``confirm`` must
-    carry a ``preview_id`` this process minted whose payload names this tool, these arguments,
-    this document handle and this fingerprint, and whose expiry has not passed.
+    An operator-set ``auto_approve`` posture approves a call that sends no ``confirm``. A call
+    that sends one is checked in every posture: ``confirm`` must carry a ``preview_id`` this
+    process minted whose payload names this tool, these arguments, this document handle and this
+    fingerprint, and whose expiry has not passed. A caller that went to the trouble of a preview
+    is relying on its check, so a stale or forged token is refused rather than ignored.
 
     :param tool: the tool being called, compared against the token's ``tool``.
     :param args: the caller's own arguments, digested and compared against ``args_digest``.
     :param doc_handle: the resolved document handle, compared against the token's ``doc``.
     :param fingerprint_now: the live document's current fingerprint digest, compared against the
         reading the preview took.
-    :param auto_approve: the operator posture; a wire field can never set it.
+    :param auto_approve: the operator posture, applied only when ``confirm`` is ``None``; a wire
+        field can never set it.
     :param now: epoch seconds to check the expiry against; defaults to the current clock.
     :raises ValidationError: any comparison fails, or the confirm is absent or malformed.
     """
     digest = args_digest(args)
-    if auto_approve:
+    if auto_approve and confirm is None:
         return {
             "mode": "auto_approve",
             "tool": tool,
             "doc": doc_handle,
             "args_digest": digest,
             "fingerprint_before": fingerprint_now,
+            "source": AUTO_APPROVE_VARIABLE,
         }
 
     payload = _payload_for(confirm)
@@ -295,14 +306,31 @@ def auto_approve() -> bool:
     return _AUTO_APPROVE
 
 
+def _is_display_state(tool: str, params: dict) -> bool:
+    """Whether the call writes only ``Visibility`` and asks for no token-checked approval.
+
+    A ``confirm`` present means the caller chose the token path, which is then checked in full.
+    """
+    parameters = params.get("parameters")
+    return (
+        tool == "feature_set_parameters"
+        and params.get("confirm") is None
+        and isinstance(parameters, dict)
+        and set(parameters) == {"Visibility"}
+    )
+
+
 def gate_mutation(document: object, handle: str, tool: str, params: dict) -> ApprovalRecord:
     """Authorize the mutation ``tool`` is about to run on ``document``.
 
     The confirm is taken from ``params``, and the arguments the token is compared against are
     ``params`` minus the two fields the token never covered: the document handle, which is
-    compared on its own, and the confirm itself. The live fingerprint is read on both the token
-    and the auto-approve path: the token compares against it, and the approval record carries it
-    either way, so the approval line names the same ``fingerprint_before`` as the mutation lines.
+    compared on its own, and the confirm itself. The live fingerprint is read on every approving
+    path: the token compares against it, and the approval record carries it either way, so the
+    approval line names the same ``fingerprint_before`` as the mutation lines.
+
+    A display-state call is approved in either posture; its value is still validated by the
+    tool's own precheck, which runs after this gate.
 
     :param document: the resolved document.
     :param handle: the resolved document handle.
@@ -334,6 +362,15 @@ def gate_mutation(document: object, handle: str, tool: str, params: dict) -> App
         raise ValidationError(
             f"cannot read the state of {handle} to authorize the mutation: {exc}"
         ) from exc
+
+    if _is_display_state(tool, params):
+        return {
+            "mode": "display_state",
+            "tool": tool,
+            "doc": handle,
+            "args_digest": args_digest(args),
+            "fingerprint_before": fingerprint_now,
+        }
 
     return verify_confirm(
         params.get("confirm"),

@@ -10,7 +10,7 @@ verifies a token lives in ``usecases/confirm.py``.
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 
 class Confirm(TypedDict, total=False):
@@ -28,8 +28,9 @@ class PreviewTokenPayload(TypedDict):
 
 
 class ApprovalRecord(TypedDict):
-    mode: Literal["preview_token", "auto_approve", "preview_copy"]
+    mode: Literal["preview_token", "auto_approve", "preview_copy", "display_state"]
     tool: str
     doc: str
     args_digest: str
     fingerprint_before: str | None
+    source: NotRequired[str]

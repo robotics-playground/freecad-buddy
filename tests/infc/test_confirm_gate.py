@@ -3,9 +3,10 @@
 Run via ``FreeCADCmd tests/run_tests.py``. Covers every confirm row of the I/O matrix against a
 live document: the accepted token minted by a real ``preview_dry_run``, the missing, malformed,
 forged, expired, wrong-document, wrong-operation, wrong-argument, stale-state and replayed
-rejections, the operator auto-approve posture, a client-supplied ``autoApprove`` being refused
-rather than honoured, the lifecycle-op exemption, and that a rejected call wrote no snapshot and
-opened no transaction.
+rejections, the operator auto-approve posture and its default, the display-state carve-out for a
+``Visibility``-only parameter write, a client-supplied ``autoApprove`` being refused rather than
+honoured, the lifecycle-op exemption, and that a rejected call wrote no snapshot and opened no
+transaction.
 
 The gate fires for both tool families, so the rejection rows are exercised through a
 ``feature_*`` and a ``sketch_*`` tool alike.
@@ -25,6 +26,7 @@ import Sketcher
 from freecad_buddy.adapters.audit_log import AuditSink
 from freecad_buddy.hosts.tool_catalog import preview_op_table
 from freecad_buddy.usecases import confirm, features, preview, sketches, transaction
+from freecad_buddy.usecases.capabilities import Capabilities, auto_approve_enabled
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from freecad_buddy.usecases.fingerprint import fingerprint
 
@@ -47,6 +49,23 @@ PAD_ARGS = {
 def _snapshot_leftovers():
     """Every reserved-prefix snapshot directory currently on disk."""
     return sorted(glob.glob(_SNAPSHOT_GLOB))
+
+
+def _through_a_real_audit_sink(act):
+    """Run ``act`` with the approval sink writing to a real audit file; return its result and
+    the records the file holds afterwards."""
+    directory = tempfile.mkdtemp(prefix="FCB_TMP_gate_")
+    path = os.path.join(directory, "audit.jsonl")
+    previous = confirm.set_approval_sink(AuditSink(path))
+    try:
+        result = act()
+        with open(path, encoding="utf-8") as handle:
+            records = [json.loads(line) for line in handle]
+    finally:
+        confirm.set_approval_sink(previous)
+        os.remove(path)
+        os.rmdir(directory)
+    return result, records
 
 
 class _GateFixture(unittest.TestCase):
@@ -125,6 +144,7 @@ class _GateFixture(unittest.TestCase):
         fired too late.
         """
         before = self.object_names()
+        undo_before = self.document.UndoCount
         real_snapshot_path = transaction.temp_snapshot_path
         minted = []
 
@@ -143,7 +163,9 @@ class _GateFixture(unittest.TestCase):
         self.assertEqual(self.object_names(), before, "the refused call changed the document")
         self.assertEqual(_snapshot_leftovers(), [])
         self.assertEqual(
-            self.document.UndoCount, 0, "the refused call left a transaction on the undo stack"
+            self.document.UndoCount,
+            undo_before,
+            "the refused call left a transaction on the undo stack",
         )
         return str(excinfo.exception)
 
@@ -441,6 +463,36 @@ class AutoApprovePostureTest(_GateFixture):
         confirm.set_auto_approve(False)
         self.assert_refused_without_touching_the_document(self.pad, None)
 
+    def test_a_failing_mutation_reports_the_same_outcome_as_with_a_token(self):
+        """The posture skips the token check only; post-verify and rollback run unchanged.
+
+        Dropping the square's height constraint leaves the profile one degree of freedom, so the
+        pad fails post-verify on its sketch check and rolls back on either path.
+        """
+        sketch = self.document.getObject("Sketch")
+        sketch.delConstraint(len(sketch.Constraints) - 1)
+        self.document.recompute()
+        confirm.set_auto_approve(False)
+        token = self.preview_pad()["preview_id"]
+        with_token = self.pad({"preview_id": token})
+        confirm.set_auto_approve(True)
+        sink = ApprovalAuditTest._RecordingSink()
+        self.addCleanup(confirm.set_approval_sink, confirm.set_approval_sink(sink))
+
+        auto_approved = self.pad(None)
+
+        outcomes = []
+        for envelope in (with_token, auto_approved):
+            block = envelope["structured_content"]["mutation"]
+            outcomes.append((envelope["status"], block["rolled_back"], block["rollback_proven"]))
+        self.assertEqual(outcomes[0][:2], ("SPEC_FAILED", True), with_token.get("detail"))
+        self.assertIn(outcomes[0][2], ("rolled_back_verified", "rolled_back_via_snapshot"))
+        self.assertEqual(outcomes[1], outcomes[0])
+        self.assertEqual([r[2]["mode"] for r in sink.records], ["auto_approve"])
+        # A snapshot-restore rollback reopens the document, so it is re-resolved by handle.
+        live = self.registry.with_document(self.handle, lambda h, d: d)
+        self.assertIsNone(live.getObject("Pad"))
+
 
 class ApprovalAuditTest(_GateFixture):
     """The approval record every accepted and auto-approved call must write."""
@@ -499,18 +551,12 @@ class ApprovalAuditTest(_GateFixture):
         self.assertTrue(record["args_digest"], "the approval names no params digest")
 
     def test_an_auto_approved_call_writes_three_lines_an_auditor_can_join(self):
-        directory = tempfile.mkdtemp(prefix="FCB_TMP_gate_")
-        path = os.path.join(directory, "audit.jsonl")
-        confirm.set_approval_sink(AuditSink(path))
         confirm.set_auto_approve(True)
         digest_before = fingerprint(self.document)["digest"]
-        try:
-            envelope = features.feature_body_create(self.registry, doc=self.handle, name="Bracket")
-            with open(path, encoding="utf-8") as handle:
-                records = [json.loads(line) for line in handle]
-        finally:
-            os.remove(path)
-            os.rmdir(directory)
+
+        envelope, records = _through_a_real_audit_sink(
+            lambda: features.feature_body_create(self.registry, doc=self.handle, name="Bracket")
+        )
 
         self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
         self.assertEqual(
@@ -523,6 +569,8 @@ class ApprovalAuditTest(_GateFixture):
         )
         self.assertEqual(len({r["params_digest"] for r in records}), 1, records)
         self.assertEqual({r["fingerprint_before"] for r in records}, {digest_before})
+        self.assertEqual(records[0]["approval"]["mode"], "auto_approve")
+        self.assertEqual(records[0]["approval"]["source"], "FREECAD_BUDDY_AUTO_APPROVE")
 
     def test_a_preview_writes_no_approval_record(self):
         """A preview authorizes nothing and applies nothing, so it appends no approval line.
@@ -548,6 +596,158 @@ class ApprovalAuditTest(_GateFixture):
         token = self.preview_pad()["preview_id"]
 
         self.assertEqual(self.pad({"preview_id": token})["status"], "OK")
+
+
+class OneCallPerMutationTest(_GateFixture):
+    """The default posture and the display-state carve-out, each read off its approval line."""
+
+    HIDE = {"Visibility": False}
+
+    def setUp(self):
+        super().setUp()
+        confirm.set_auto_approve(True)
+        self.assertEqual(self.pad(None)["status"], "OK")
+        confirm.set_auto_approve(False)
+        self.sink = ApprovalAuditTest._RecordingSink()
+        self._previous_sink = confirm.set_approval_sink(self.sink)
+
+    def tearDown(self):
+        confirm.set_approval_sink(self._previous_sink)
+        super().tearDown()
+
+    def set_pad_parameters(self, parameters, confirm_value=None):
+        return features.feature_set_parameters(
+            self.registry,
+            doc=self.handle,
+            feature="Pad",
+            parameters=parameters,
+            confirm=confirm_value,
+        )
+
+    def only_approval(self):
+        self.assertEqual(len(self.sink.records), 1, self.sink.records)
+        return self.sink.records[0][2]
+
+    def assert_hidden_under_the_bracket(self, envelope):
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["post_verify"]["passed"])
+        self.assertFalse(block["rolled_back"])
+        self.assertEqual(block["changed"], [])
+        self.assertFalse(self.document.getObject("Pad").Visibility)
+
+    def test_a_pad_with_no_confirm_applies_under_the_posture_an_unset_variable_selects(self):
+        confirm.set_auto_approve(auto_approve_enabled(Capabilities.from_env({})))
+
+        envelope = self.pad(None, name="Pad2", length={"value": 2.0, "unit": "mm"})
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertFalse(envelope["structured_content"]["mutation"]["rolled_back"])
+        record = self.only_approval()
+        self.assertEqual(record["mode"], "auto_approve")
+        self.assertEqual(record["source"], "FREECAD_BUDDY_AUTO_APPROVE")
+
+    def test_a_visibility_only_write_applies_with_the_gate_on(self):
+        envelope = self.set_pad_parameters(self.HIDE)
+
+        self.assert_hidden_under_the_bracket(envelope)
+        record = self.only_approval()
+        self.assertEqual(record["mode"], "display_state")
+        self.assertEqual(record["tool"], "feature_set_parameters")
+        self.assertNotIn("source", record)
+
+    def test_a_visibility_only_write_is_display_state_under_the_posture_too(self):
+        confirm.set_auto_approve(True)
+
+        envelope = self.set_pad_parameters(self.HIDE)
+
+        self.assert_hidden_under_the_bracket(envelope)
+        self.assertEqual(self.only_approval()["mode"], "display_state")
+
+    def test_a_visibility_only_write_logs_display_state_through_the_audit_file(self):
+        envelope, records = _through_a_real_audit_sink(lambda: self.set_pad_parameters(self.HIDE))
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        approval = [r["approval"] for r in records if r["event"] == "approval"]
+        self.assertEqual(len(approval), 1, records)
+        self.assertEqual(approval[0]["mode"], "display_state")
+        self.assertNotIn("source", approval[0])
+
+    def test_a_valid_token_under_the_posture_takes_the_token_path(self):
+        confirm.set_auto_approve(True)
+        token = self.preview_pad(name="Pad2")["preview_id"]
+
+        envelope = self.pad({"preview_id": token}, name="Pad2")
+
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.only_approval()["mode"], "preview_token")
+        with self.assertRaises(ValidationError) as caught:
+            self.pad({"preview_id": token}, name="Pad2")
+        self.assertIn("already authorized", str(caught.exception))
+
+    def test_a_stale_token_under_the_posture_is_refused(self):
+        token = self.preview_pad(name="Pad2")["preview_id"]
+        box = self.document.addObject("Part::Box", "Interloper")
+        box.Length = box.Width = box.Height = 1.0
+        self.document.recompute()
+        confirm.set_auto_approve(True)
+
+        message = self.assert_refused_without_touching_the_document(
+            self.pad, {"preview_id": token}, name="Pad2"
+        )
+
+        self.assertIn("changed since the preview", message)
+        self.assertEqual(self.sink.records, [])
+
+    def test_a_forged_token_under_the_posture_is_refused(self):
+        body = self.preview_pad(name="Pad2")["preview_id"].rsplit(".", 1)[0]
+        confirm.set_auto_approve(True)
+
+        message = self.assert_refused_without_touching_the_document(
+            self.pad, {"preview_id": f"{body}.{'A' * 43}"}, name="Pad2"
+        )
+
+        self.assertIn("signature", message)
+        self.assertEqual(self.sink.records, [])
+
+    def test_a_visibility_only_write_with_a_token_takes_the_token_path(self):
+        args = {"feature": "Pad", "parameters": self.HIDE}
+        token = preview.preview_dry_run(
+            self.registry,
+            preview_op_table(),
+            None,
+            doc=self.handle,
+            operation={"tool": "feature_set_parameters", "args": args},
+            render="off",
+        )["structured_content"]["preview_id"]
+
+        envelope = self.set_pad_parameters(self.HIDE, {"preview_id": token})
+
+        self.assert_hidden_under_the_bracket(envelope)
+        self.assertEqual(self.only_approval()["mode"], "preview_token")
+
+    def test_a_visibility_write_beside_another_property_keeps_the_gate(self):
+        message = self.assert_refused_without_touching_the_document(
+            self.set_pad_parameters,
+            {"Visibility": False, "Length": {"value": 7.0, "unit": "mm"}},
+        )
+
+        self.assertIn("requires a confirm", message)
+        self.assertEqual(self.sink.records, [])
+        self.assertTrue(self.document.getObject("Pad").Visibility)
+
+    def test_a_non_boolean_visibility_is_refused_by_the_precheck(self):
+        message = self.assert_refused_without_touching_the_document(
+            self.set_pad_parameters, {"Visibility": "no"}
+        )
+
+        self.assertIn("takes a boolean", message)
+        self.assertEqual(self.sink.records, [])
+
+    def test_the_carve_out_does_not_reach_another_tool(self):
+        message = self.assert_refused_without_touching_the_document(self.pad, None, name="Pad2")
+
+        self.assertIn("requires a confirm", message)
 
 
 class LifecycleExemptionTest(_GateFixture):

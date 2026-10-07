@@ -1580,3 +1580,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-2-quiet-result-envelope.md`
   summary: The DW-97 byte-level undo gap remains for an `expect_fingerprint` digest the server cache does not hold (after a FreeCAD restart, or after 64 newer records), while DW-97 reads done.
   evidence: `usecases/documents.py` `_resolve_expectation` falls back to byte comparison on a cache miss; a pad-over-sketch undo then reports `matches_pre_op: false` with the geometry restored.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-3-one-call-per-mutation.md`
+  summary: `data-contracts-design.md` §6 `AuditRecord.approval` lists modes `elicitation | client_confirm | auto_approve | operator_flag` and a `diff_digest` field; the shipped `approval` record uses modes `preview_token | auto_approve | display_state` (plus the unwritten `preview_copy`), carries `tool`, `doc`, `args_digest`, `fingerprint_before`, and `source` only on `auto_approve`, and never carries `diff_digest`.
+  evidence: Human decision D2 (2026-10-07) aligned only `source` with the change proposal. Design text at `data-contracts-design.md:187-190`; shipped shape at `contracts/confirm.py` `ApprovalRecord` and `usecases/confirm.py` `verify_confirm` / `gate_mutation`. `audit-record.schema.json` types `approval` as a plain object, so no schema drift check catches it.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-3-one-call-per-mutation.md`
+  summary: `CLAUDE.md` §15 names `README.md` as the source of the branching model and contribution rules, but the root `README.md` (first committed in Story 11.3) holds only "Operator setup".
+  evidence: Story 11.3 review, blind layer. The fix edits an agent-context file (`CLAUDE.md`) or adds README sections outside the story scope, so it is deferred.
