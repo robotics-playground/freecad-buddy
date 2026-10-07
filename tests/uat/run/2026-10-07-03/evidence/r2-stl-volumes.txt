@@ -1,0 +1,5 @@
+# Signed-tetrahedron volume of each binary STL in the Ender 3V2 project exports/ (r2 pieces, committed there before this run).
+kiwibox-drawer-duct-cover-r2.stl: 708 triangles, volume 11,227.8 mm3
+kiwibox-drawer-front-plate-r2.stl: 1172 triangles, volume 17,175.5 mm3
+kiwibox-drawer-rear-module-r2.stl: 1312 triangles, volume 12,703.6 mm3
+kiwibox-drawer-tray-r2.stl: 3740 triangles, volume 50,245.6 mm3

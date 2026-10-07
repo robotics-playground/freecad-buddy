@@ -1,0 +1,122 @@
+[
+ {
+  "doc": "kiwibox-drawer-rebuild",
+  "body": "drawer",
+  "tip": "standoff_fillets",
+  "visible": false,
+  "volume": 79410.615,
+  "area": 73525.652,
+  "valid": true,
+  "solids": 1,
+  "faces": 343,
+  "bbox": [
+   -0.66,
+   123.64,
+   -1.75,
+   135.95,
+   -6.7,
+   41.8
+  ],
+  "size": [
+   124.3,
+   137.7,
+   48.5
+  ]
+ },
+ {
+  "doc": "kiwibox-drawer-rebuild",
+  "body": "front_plate_piece",
+  "tip": "sma_boss",
+  "visible": true,
+  "volume": 17175.572,
+  "area": 14838.694,
+  "valid": true,
+  "solids": 1,
+  "faces": 62,
+  "bbox": [
+   -0.66,
+   7.54,
+   -1.75,
+   135.95,
+   -6.7,
+   41.8
+  ],
+  "size": [
+   8.2,
+   137.7,
+   48.5
+  ]
+ },
+ {
+  "doc": "kiwibox-drawer-rebuild",
+  "body": "tray_piece",
+  "tip": "tray_rib_seam_chamfer",
+  "visible": true,
+  "volume": 50230.913,
+  "area": 49146.959,
+  "valid": true,
+  "solids": 1,
+  "faces": 153,
+  "bbox": [
+   1.84,
+   109.5,
+   -0.65,
+   134.85,
+   1.8,
+   36.8
+  ],
+  "size": [
+   107.66,
+   135.5,
+   35.0
+  ]
+ },
+ {
+  "doc": "kiwibox-drawer-rebuild",
+  "body": "rear_module_piece",
+  "tip": "riser_tongue",
+  "visible": true,
+  "volume": 12703.278,
+  "area": 13458.471,
+  "valid": true,
+  "solids": 1,
+  "faces": 182,
+  "bbox": [
+   102.0,
+   123.64,
+   0.277,
+   133.923,
+   8.8,
+   36.8
+  ],
+  "size": [
+   21.64,
+   133.645,
+   28.0
+  ]
+ },
+ {
+  "doc": "kiwibox-drawer-rebuild",
+  "body": "duct_cover",
+  "tip": "duct_fan_screw_holes",
+  "visible": true,
+  "volume": 11224.913,
+  "area": 14483.301,
+  "valid": true,
+  "solids": 1,
+  "faces": 25,
+  "bbox": [
+   2.84,
+   88.64,
+   3.45,
+   80.0,
+   25.0,
+   36.8
+  ],
+  "size": [
+   85.8,
+   76.55,
+   11.8
+  ]
+ }
+]

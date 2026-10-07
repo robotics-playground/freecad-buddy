@@ -1,0 +1,3 @@
+$ uv run python scripts/automation/session_metrics.py a3153685-345b-4048-b840-576fba073d34.jsonl
+# transcript under C:/Users/thuan/.claude/projects/D--Work-3D-Printers-Ender-3V2---Klipper/
+a3153685: 220 calls, 2 previews, 1,413 chars per call (310,797 total), 0 spilled, largest 11,612, peak 582,489, 0 compactions, calls per feature median 3 over 85 features

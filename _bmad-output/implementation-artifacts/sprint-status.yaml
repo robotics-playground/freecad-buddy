@@ -167,7 +167,7 @@ development_status:
   11-3-one-call-per-mutation: review
   11-4-cheap-correct-rollback-proof-and-fingerprints: review
   11-5-build-loop-skills: review
-  11-6-measured-build-session: backlog
+  11-6-measured-build-session: review
   epic-11-retrospective: optional
 
 action_items:

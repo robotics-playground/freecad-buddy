@@ -1601,3 +1601,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
   summary: A closed document keeps its held shapes in the fingerprint entry cache until four newer documents evict it, so a closed 184-object drawer copy keeps its B-rep in memory.
   evidence: `usecases/fingerprint.py` `_ENTRY_CACHE` is keyed by `doc.Name` and no close path (`document_close`, preview copy discard, `_restore_from_snapshot`) drops the entry. Bounded at four documents.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
+  summary: In the FreeCAD GUI, the abort-path rollback proof falls back to the snapshot restore (`rolled_back_via_snapshot`, document closed and reopened, about 32 s) on `kiwibox-drawer-rebuild.FCStd`, while headless on the same file it proves `rolled_back_verified` on the same document.
+  evidence: `tests/uat/run/2026-10-07-03/` — 2 of 2 GUI runs of `time_mutation_overhead.py` (`gui-timing-rebuild*.json`) against 1 of 1 headless run (`headless-timing-rebuild.json`). A headless diagnostic (abort + recompute + fresh fingerprint) found 0 objects with changed mass properties. The audit record does not name the objects that did not match, so the root cause is unknown. Story 11.4 GUI on the original drawer passed.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
+  summary: `query_tree_summary` (depth 1, Body filter) on a 178-object document returned 11,612 chars, over the Epic 11 10K-per-result target; it was the only result over 3.3K chars in the measured session.
+  evidence: `tests/uat/run/2026-10-07-03/report.md` (AC2 FAIL row); the `tree` field holds 12,024 of the JSON chars.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
+  summary: No MCP tool makes a `Part::Common`, so an agent splits a model into print pieces with base-feature copies and region pockets; when more than one piece body takes the same master, it takes another piece as base and FreeCAD logs out-of-scope `BaseFeature` links on every recompute.
+  evidence: Build session `a3153685` summary and the headless log in `tests/uat/run/2026-10-07-03/report.md` ("Other findings"). Relates to the derived-piece rule in `skills/design-decomposition/SKILL.md`.
+- source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
+  summary: `session_metrics.py` reads a spilled result's status from its spill file; when Claude Code later deletes that file, the result silently stops counting as a feature, so the calls-per-feature median of a re-measured transcript can drift with no warning.
+  evidence: `_status` returns `None` for an absent spill file. Every spill file of the four measured transcripts exists today, so the committed numbers are unaffected; a count of missing spill files in the output line would expose drift.

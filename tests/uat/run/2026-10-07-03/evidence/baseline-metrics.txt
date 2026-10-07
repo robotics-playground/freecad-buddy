@@ -1,0 +1,5 @@
+$ uv run python scripts/automation/session_metrics.py 0320ba38-b810-444d-b672-90a9cb823009.jsonl:310 eacac40d-d1d3-4caa-a7fc-019bcfd5926b.jsonl ff604ce5-fdfa-4552-8835-a658b832360e.jsonl
+# transcripts under C:/Users/thuan/.claude/projects/D--Work-3D-Printers-Ender-3V2---Klipper/; script at 31d9318 + working tree
+0320ba38: 310 calls, 77 previews, 9,583 chars per call (2,970,754 total), 14 spilled, largest 110,267, peak 819,990, 4 compactions, calls per feature median 7.5 over 16 features
+eacac40d: 98 calls, 36 previews, 5,434 chars per call (532,568 total), 0 spilled, largest 14,407, peak 817,762, 0 compactions, calls per feature median 6.0 over 8 features
+ff604ce5: 107 calls, 39 previews, 7,167 chars per call (766,895 total), 1 spilled, largest 55,105, peak 797,499, 0 compactions, calls per feature median 6.0 over 18 features

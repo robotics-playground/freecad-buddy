@@ -1,0 +1,48 @@
+{
+  "document": "C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\3f51f9ac-bb11-44c4-8673-58d48c2fcbfd\\scratchpad\\rebuild-timing-headless.FCStd",
+  "feature": "duct_pilot",
+  "lengths": [
+    6.0,
+    5.5
+  ],
+  "mode": "headless",
+  "objects": 178,
+  "samples": [
+    {
+      "tool_seconds": 30.28991749999841,
+      "recompute_seconds": 14.94843899999978,
+      "overhead_seconds": 15.34147849999863
+    },
+    {
+      "tool_seconds": 24.338049700003467,
+      "recompute_seconds": 15.063225099998817,
+      "overhead_seconds": 9.27482460000465
+    },
+    {
+      "tool_seconds": 24.55358669999987,
+      "recompute_seconds": 14.970933500000683,
+      "overhead_seconds": 9.582653199999186
+    },
+    {
+      "tool_seconds": 24.25048969999625,
+      "recompute_seconds": 15.076048599999922,
+      "overhead_seconds": 9.17444109999633
+    },
+    {
+      "tool_seconds": 24.206704700001865,
+      "recompute_seconds": 15.023274600003788,
+      "overhead_seconds": 9.183430099998077
+    }
+  ],
+  "median_tool_seconds": 24.338049700003467,
+  "median_recompute_seconds": 15.023274600003788,
+  "median_overhead_seconds": 9.27482460000465,
+  "abort": {
+    "seconds": 22.26901910000015,
+    "status": "SPEC_FAILED",
+    "rollback_proven": "rolled_back_verified",
+    "same_document": true,
+    "close_document_calls": [],
+    "passed": true
+  }
+}

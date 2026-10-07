@@ -1,0 +1,21 @@
+Checked object: rear_module_piece
+Shape type:  Compound
+Vertices:  386
+Edges:  566
+Wires:  260
+Faces:  182
+Shells:  1
+Solids:  1
+CompSolids:  0
+Compounds:  1
+Shapes:  1397
+----------
+Area:  13458.47
+Volume:  12703.28
+Length:  8388.89
+Orientation:  Forward
+Global placement = Placement
+Tolerance information: 
+ Global minimum: 1e-07
+ Global average: 9.215964416104277e-05
+ Global maximum: 0.00031367878067027296

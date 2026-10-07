@@ -1,0 +1,6 @@
+$ uv run python tests/uat/run/2026-10-07-03/evidence/solid_feature_median.py 0320ba38-b810-444d-b672-90a9cb823009.jsonl:310 a3153685-345b-4048-b840-576fba073d34.jsonl
+# transcripts under C:/Users/thuan/.claude/projects/D--Work-3D-Printers-Ender-3V2---Klipper/
+0320ba38: solid-feature median 10 over 11 features
+  tools: preview_dry_run 77, query_screenshot 44, verify_sketch 21, document_save 18, feature_set_parameters 18, sketch_add_geometry 14, verify_shape 14, document_open 14, document_close 14, sketch_create 13, sketch_set_datum 8, view_fit_viewport 8, feature_pad 6, feature_pocket 6, query_object 6, document_list 5, feature_datum 5, verify_recompute 5, query_tree_summary 3, document_undo 3, query_sketch_info 3, sketch_remove_geometry 2, document_recompute 2, query_mass_properties 1
+a3153685: solid-feature median 3 over 51 features
+  tools: sketch_add_geometry 52, sketch_create 50, feature_datum 28, feature_pocket 25, feature_pad 22, feature_body_create 7, document_save 7, verify_shape 6, query_tree_summary 4, feature_hole 3, query_screenshot 3, preview_dry_run 2, query_capabilities 1, document_list 1, document_create 1, query_placement 1, feature_fillet 1, document_undo 1, feature_chamfer 1, query_object 1, verify_recompute 1, feature_set_parameters 1, view_fit_viewport 1

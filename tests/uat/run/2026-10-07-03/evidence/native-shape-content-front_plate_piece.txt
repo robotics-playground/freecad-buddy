@@ -1,0 +1,21 @@
+Checked object: front_plate_piece
+Shape type:  Compound
+Vertices:  112
+Edges:  170
+Wires:  88
+Faces:  62
+Shells:  1
+Solids:  1
+CompSolids:  0
+Compounds:  1
+Shapes:  435
+----------
+Area:  14838.69
+Volume:  17175.57
+Length:  6601.2
+Orientation:  Forward
+Global placement = Placement
+Tolerance information: 
+ Global minimum: 1e-07
+ Global average: 4.310917648134943e-06
+ Global maximum: 9.613506294037374e-05

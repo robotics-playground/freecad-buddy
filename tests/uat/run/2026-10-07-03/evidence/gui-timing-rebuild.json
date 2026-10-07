@@ -1,0 +1,50 @@
+{
+  "document": "C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\3f51f9ac-bb11-44c4-8673-58d48c2fcbfd\\scratchpad\\rebuild-timing-copy.FCStd",
+  "feature": "duct_pilot",
+  "lengths": [
+    6.0,
+    5.5
+  ],
+  "mode": "gui",
+  "objects": 178,
+  "samples": [
+    {
+      "tool_seconds": 31.454660800001875,
+      "recompute_seconds": 15.68932969999878,
+      "overhead_seconds": 15.765331100003095
+    },
+    {
+      "tool_seconds": 25.29937819999759,
+      "recompute_seconds": 15.710720199997013,
+      "overhead_seconds": 9.588658000000578
+    },
+    {
+      "tool_seconds": 25.094251700000314,
+      "recompute_seconds": 15.806515800002671,
+      "overhead_seconds": 9.287735899997642
+    },
+    {
+      "tool_seconds": 25.130839899997227,
+      "recompute_seconds": 15.927753199997824,
+      "overhead_seconds": 9.203086699999403
+    },
+    {
+      "tool_seconds": 24.98056930000166,
+      "recompute_seconds": 15.638041699996393,
+      "overhead_seconds": 9.342527600005269
+    }
+  ],
+  "median_tool_seconds": 25.130839899997227,
+  "median_recompute_seconds": 15.710720199997013,
+  "median_overhead_seconds": 9.342527600005269,
+  "abort": {
+    "seconds": 31.817741200000455,
+    "status": "SPEC_FAILED",
+    "rollback_proven": "rolled_back_via_snapshot",
+    "same_document": false,
+    "close_document_calls": [
+      "rebuild_timing_copy"
+    ],
+    "passed": false
+  }
+}

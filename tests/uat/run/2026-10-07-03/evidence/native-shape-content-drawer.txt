@@ -1,0 +1,21 @@
+Checked object: drawer
+Shape type:  Compound
+Vertices:  657
+Edges:  977
+Wires:  490
+Faces:  343
+Shells:  1
+Solids:  1
+CompSolids:  0
+Compounds:  1
+Shapes:  2470
+----------
+Area:  73525.65
+Volume:  79410.62
+Length:  27081.29
+Orientation:  Forward
+Global placement = Placement
+Tolerance information: 
+ Global minimum: 1e-07
+ Global average: 7.089969652122362e-05
+ Global maximum: 0.0003136787806276405

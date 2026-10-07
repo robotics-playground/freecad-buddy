@@ -1,0 +1,21 @@
+Checked object: tray_piece
+Shape type:  Compound
+Vertices:  258
+Edges:  393
+Wires:  205
+Faces:  153
+Shells:  1
+Solids:  1
+CompSolids:  0
+Compounds:  1
+Shapes:  1012
+----------
+Area:  49146.96
+Volume:  50230.91
+Length:  15962.5
+Orientation:  Forward
+Global placement = Placement
+Tolerance information: 
+ Global minimum: 1e-07
+ Global average: 0.0001073108463689186
+ Global maximum: 0.0006156199107059641

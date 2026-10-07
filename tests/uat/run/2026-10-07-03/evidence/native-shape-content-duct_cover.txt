@@ -1,0 +1,21 @@
+Checked object: duct_cover
+Shape type:  Compound
+Vertices:  43
+Edges:  66
+Wires:  31
+Faces:  25
+Shells:  1
+Solids:  1
+CompSolids:  0
+Compounds:  1
+Shapes:  168
+----------
+Area:  14483.3
+Volume:  11224.91
+Length:  2445.96
+Orientation:  Forward
+Global placement = Placement
+Tolerance information: 
+ Global minimum: 1e-07
+ Global average: 1.000000086828587e-07
+ Global maximum: 1.0000016722833583e-07
