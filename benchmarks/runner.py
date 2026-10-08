@@ -98,6 +98,7 @@ _VALIDATOR_SOURCES = {
         _SRC / "usecases" / "verify.py",
         _SRC / "usecases" / "fingerprint.py",
         _SRC / "usecases" / "assertions.py",
+        _SRC / "contracts" / "numbers.py",
     ),
     # The G1 grader's currency depends on the grader source, the rubric it encodes AND the fault
     # suite the score was measured over; a rubric edit changes the pass rule and a case edit
@@ -115,6 +116,7 @@ _VALIDATOR_SOURCES = {
         _REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
         _SRC / "usecases" / "assertions.py",
         _SRC / "usecases" / "verify.py",
+        _SRC / "contracts" / "numbers.py",
     ),
     "run_mutation": (
         _SRC / "usecases" / "transaction.py",
@@ -134,6 +136,7 @@ _VALIDATOR_SOURCES = {
         _SRC / "usecases" / "assertions.py",
         _SRC / "usecases" / "verify.py",
         _REPO_ROOT / "benchmarks" / "g3" / "fault-injection" / "score_g3_replay.py",
+        _SRC / "contracts" / "numbers.py",
     ),
 }
 

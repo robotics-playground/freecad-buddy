@@ -37,6 +37,7 @@ VALIDATOR_SOURCES = (
     SRC / "freecad_buddy" / "usecases" / "exports.py",
     SRC / "freecad_buddy" / "adapters" / "export_oracle.py",
     SRC / "freecad_buddy" / "adapters" / "export_verdict.py",
+    SRC / "freecad_buddy" / "contracts" / "numbers.py",
 )
 
 SENSITIVITY_BAR = 0.95

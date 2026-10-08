@@ -61,10 +61,10 @@ def summarize_placement(sc: dict) -> str:
     """One-line placement summary: object name and local position."""
     local = sc.get("local") or {}
     pos = local.get("position") or {}
-    x = (pos.get("x") or {}).get("value", "?")
-    y = (pos.get("y") or {}).get("value", "?")
-    z = (pos.get("z") or {}).get("value", "?")
-    angle = (local.get("angle") or {}).get("value", "?")
+    x = shim.displayed((pos.get("x") or {}).get("value", "?"))
+    y = shim.displayed((pos.get("y") or {}).get("value", "?"))
+    z = shim.displayed((pos.get("z") or {}).get("value", "?"))
+    angle = shim.displayed((local.get("angle") or {}).get("value", "?"))
     return f"{sc.get('object', '?')} at ({x}, {y}, {z}) mm, rotated {angle} deg."
 
 
@@ -88,7 +88,7 @@ def summarize_mass_properties(sc: dict) -> str:
     vol = sc.get("volume") or {}
     counts = sc.get("counts") or {}
     kind = "solid" if sc.get("solid") else "non-solid"
-    v = vol.get("value") if isinstance(vol, dict) else None
+    v = shim.displayed(vol.get("value")) if isinstance(vol, dict) else None
     v_txt = f"{v} {vol.get('unit', '')}" if v is not None else "n/a"
     return (
         f"{sc.get('name', '?')}: volume {v_txt} ({kind}), "
@@ -201,6 +201,8 @@ _JSON_MAX_DEPTH = 8
 def _json_safe(value: object, _depth: int = 0) -> object:
     """Return a JSON-safe view of a property value, stringifying anything unsupported.
 
+    A ``Quantity`` or ``Vector`` is stringified with its numbers at the display precision.
+
     Recursion is bounded at ``_JSON_MAX_DEPTH`` so a deeply-nested or self-referential property
     value (a scripted ``PropertyPythonObject`` holding a cycle) is stringified at the depth cap
     rather than overflowing the stack.
@@ -213,6 +215,15 @@ def _json_safe(value: object, _depth: int = 0) -> object:
         return [_json_safe(item, _depth + 1) for item in value]
     if isinstance(value, dict):
         return {str(key): _json_safe(item, _depth + 1) for key, item in value.items()}
+    kind = type(value).__name__
+    if kind == "Quantity":
+        # ``str`` of a Quantity is the full-length float, then a space and the unit text.
+        unit = str(value).partition(" ")[2]
+        number = shim.displayed(float(value.Value))
+        return f"{number} {unit}" if unit else str(number)
+    if kind == "Vector":
+        x, y, z = shim.displayed([value.x, value.y, value.z])
+        return f"Vector ({x}, {y}, {z})"
     return str(value)
 
 

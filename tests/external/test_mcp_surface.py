@@ -31,7 +31,7 @@ from freecad_buddy.adapters.mcp_server import (
     registered_tools,
 )
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
-from freecad_buddy.contracts import ANCHOR_FRAME_KINDS
+from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, summary_text
 from freecad_buddy.hosts.headless.entry import build_registry
 from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, tool_specs
 from freecad_buddy.usecases import confirm
@@ -874,11 +874,13 @@ def test_only_debug_exec_runs_off_the_main_thread(monkeypatch):
     monkeypatch.setattr(
         tool_catalog.queries,
         "query_tree_summary",
-        lambda *_a, **_k: seen.setdefault("query_tree_summary", threading.get_ident()),
+        lambda *_a, **_k: {"thread": seen.setdefault("query_tree_summary", threading.get_ident())},
     )
     registry = _catalog_with_short_exec(
         monkeypatch,
-        lambda _registry, _doc, _code: seen.setdefault("debug_exec", threading.get_ident()),
+        lambda _registry, _doc, _code: {
+            "thread": seen.setdefault("debug_exec", threading.get_ident())
+        },
     )
 
     registry.dispatch("debug_exec", {"doc": "fcb-doc:D", "code": "pass"})
@@ -932,3 +934,184 @@ def test_should_send_each_text_block_as_its_own_content_when_the_envelope_carrie
     assert [block.text for block in result.content[1:]] == [tree, "second"]
     assert all(block.type == "text" for block in result.content)
     assert "text_blocks" in envelope
+
+
+def _ok_envelope_with(structured: dict) -> dict:
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": structured,
+        "text": "",
+    }
+
+
+def test_should_regenerate_the_summary_text_from_rounded_content_when_it_was_generated():
+    # Arrange
+    structured = {"volume_band": 0.123456789, "verdict": "OK"}
+    envelope = {**_ok_envelope_with(structured), "text": summary_text(structured)}
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    assert result.structuredContent["text"] == "verdict: OK\nvolume_band: 0.12"
+    assert json.loads(result.content[0].text)["text"] == "verdict: OK\nvolume_band: 0.12"
+
+
+def test_should_keep_a_hand_written_text_when_it_is_not_the_generated_summary():
+    # Arrange
+    envelope = {**_ok_envelope_with({"volume": 5.999999998}), "text": "Pad: volume 6.0 mm^3."}
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    assert result.structuredContent["text"] == "Pad: volume 6.0 mm^3."
+
+
+def _server_returning(envelope: dict):
+    registry = MethodRegistry()
+    registry.register(RpcMethod(name="stub_tool", handler=lambda **_p: dict(envelope)))
+    return build_server(registry, Capabilities(allow_exec=False), AuditSink(Path("unused.jsonl")))
+
+
+def test_should_round_to_the_envelope_decimals_and_drop_the_key_when_a_result_is_wrapped():
+    # Arrange
+    envelope = {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": {
+            "checks": [{"measured": 5.12345, "tolerance": {"rel": 0.005}}],
+            "start": [-0.0, 1234.567891],
+        },
+        "text": "Shape OK.",
+        "display_decimals": 4,
+    }
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    expected = {
+        "checks": [{"measured": 5.1235, "tolerance": {"rel": 0.005}}],
+        "start": [0.0, 1234.5679],
+    }
+    first = json.loads(result.content[0].text)
+    assert first["structured_content"] == expected
+    assert result.structuredContent["structured_content"] == expected
+    assert "display_decimals" not in first
+    assert "display_decimals" not in result.structuredContent
+    assert envelope["structured_content"]["checks"][0]["measured"] == 5.12345
+
+
+def test_should_round_to_two_decimals_when_the_envelope_carries_no_display_decimals():
+    # Arrange
+    envelope = _ok_envelope_with({"value": 5.999999998})
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    assert result.structuredContent["structured_content"] == {"value": 6.0}
+
+
+def test_should_keep_every_float_raw_when_the_envelope_turns_rounding_off():
+    # Arrange
+    envelope = {**_ok_envelope_with({"value": 5.999999998}), "display_decimals": None}
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    assert result.structuredContent["structured_content"] == {"value": 5.999999998}
+    assert "display_decimals" not in result.structuredContent
+
+
+def test_should_keep_the_stamped_rounding_off_when_a_proxy_dispatches_a_freecad_envelope(
+    monkeypatch,
+):
+    # Arrange
+    from freecad_buddy.usecases import shim
+
+    monkeypatch.setattr(shim, "display_decimals", lambda: 2)
+    envelope = {**_ok_envelope_with({"value": 5.999999998}), "display_decimals": None}
+    server = _server_returning(envelope)
+
+    # Act
+    result = _call_tool_via_server(server, "stub_tool", {})
+
+    # Assert
+    assert result.structuredContent["structured_content"]["value"] == 5.999999998
+
+
+def test_should_follow_the_live_preference_when_it_changes_between_two_calls(monkeypatch):
+    # Arrange
+    from freecad_buddy.usecases import shim
+
+    server = _server_returning(_ok_envelope_with({"value": 5.12345}))
+    monkeypatch.setattr(shim, "display_decimals", lambda: 2)
+    first = _call_tool_via_server(server, "stub_tool", {})
+    monkeypatch.setattr(shim, "display_decimals", lambda: 4)
+
+    # Act
+    second = _call_tool_via_server(server, "stub_tool", {})
+
+    # Assert
+    assert first.structuredContent["structured_content"]["value"] == 5.12
+    assert second.structuredContent["structured_content"]["value"] == 5.1235
+
+
+def test_should_keep_the_stamped_decimals_when_a_proxy_dispatches_a_freecad_envelope(monkeypatch):
+    # Arrange
+    from freecad_buddy.usecases import shim
+
+    monkeypatch.setattr(shim, "display_decimals", lambda: 2)
+    server = _server_returning({**_ok_envelope_with({"value": 5.12345}), "display_decimals": 4})
+
+    # Act
+    result = _call_tool_via_server(server, "stub_tool", {})
+
+    # Assert
+    assert result.structuredContent["structured_content"]["value"] == 5.1235
+
+
+def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_verifies_a_mesh(
+    monkeypatch,
+):
+    # Arrange
+    from freecad_buddy.adapters import export_oracle, export_verdict
+    from freecad_buddy.hosts import tool_catalog
+    from freecad_buddy.usecases import shim
+
+    seen = {}
+
+    def stl_oracle(path, expected_volume, volume_band, decimals):
+        seen["decimals"] = decimals
+        return {"oracle": "trimesh_stl", "checks": [], "ok": True}
+
+    self_read = {
+        "structured_content": {
+            "source": {"volume": 1000.0, "is_mm": True},
+            "volume_band": 0.5,
+            "path": "part.stl",
+            "banner": {},
+        }
+    }
+    monkeypatch.setattr(shim, "display_decimals", lambda: 4)
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_stl", lambda *_a, **_k: self_read)
+    monkeypatch.setattr(export_oracle, "stl_oracle", stl_oracle)
+    monkeypatch.setattr(
+        export_oracle.StdlibStlOracle,
+        "check",
+        lambda _self, _path: {"oracle": "stdlib_stl", "checks": [], "ok": True},
+    )
+    monkeypatch.setattr(export_verdict, "assemble_export_verdict", lambda *_a: {"status": "OK"})
+    handler = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "stl")
+
+    # Act
+    handler(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["decimals"] == 4

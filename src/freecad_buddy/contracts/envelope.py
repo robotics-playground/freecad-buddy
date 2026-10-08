@@ -57,6 +57,10 @@ class ResultEnvelope(TypedDict, total=False):
     # Raw text the MCP adapter sends as extra content blocks after the JSON block; never part of
     # the JSON block or structuredContent, so a multi-line body stays unescaped.
     text_blocks: list[str]
+    # FreeCAD's display precision when the call ran; the MCP adapter rounds every float to it and
+    # drops the key, so it is never part of the JSON block or structuredContent. ``None`` when the
+    # operator turned rounding off: every float stays raw.
+    display_decimals: int | None
 
 
 def summary_text(structured_content: dict) -> str:

@@ -1625,3 +1625,22 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
   summary: The `run_mutation` validator hash covers `usecases/transaction.py` and `contracts/fingerprint.py` but not `usecases/fingerprint.py`, which decides the rollback proof, and no G2 fault case covers "unchanged sketch, rebuilt mesh, proof must hold".
   evidence: `benchmarks/g2/fault-injection/score_g2_validators.py:45-47`; `run_mutation` `validator_sha` did not change with this fix.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
+  summary: Assertion messages print display-rounded operands next to a once-rounded deviation, so a FAIL can read `|6.0 - 6.0| = 0.004 <= 0.001` and a straddle PASS can read `|6.02 - 6.01| = 1e-07`.
+  evidence: medium; `usecases/assertions.py` check messages; the frozen rule rounds operands for display but not for the verdict. Needs a human choice of message format (e.g. print operands with extra digits when the deviation is below the display step).
+- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
+  summary: G3 frames-check compares anchor frames read through MCP, which now rounds them to display decimals, so its stated 1e-6 mm resolution is really 0.005 mm.
+  evidence: medium; `benchmarks/g3/fault-injection/score_g3_replay.py:266-273` reads `structuredContent`, `FRAME_DECIMALS = 6` at `:80`. Option: scorer pins the `Decimals` preference to 6 for its run.
+- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
+  summary: Echoed inputs other than `tolerance`/`tol` are rounded: tessellation deflection `tess.linear` 0.0125 reads 0.01, top-level `volume_band` reads rounded while `checks[].tolerance.abs` stays raw, declared `expect` 6.015 reads 6.02.
+  evidence: low; `usecases/exports.py:234`, `adapters/export_verdict.py:90`, `contracts/numbers.py` `_RAW_KEYS`. Widening the raw-key list changes a human-frozen rule.
+- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
+  summary: `query_object` still stringifies `Rotation`, `Matrix` and `BoundBox` property values with full-length floats.
+  evidence: low; `usecases/queries.py` `_json_safe` `str(value)` fallback after the new Quantity/Vector branches.
+- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
+  summary: Verdicts near a band edge depend on the machine's `Decimals` preference, and validator runs in `benchmarks/_registry/validators.yaml` do not record the value used.
+  evidence: low; `shim.display_decimals()` reads the live preference inside scorers.
+- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
+  summary: CLAUDE.md / AGENTS.md repo map lists `contracts/` modules without the new `numbers` module.
+  evidence: low; agent-context file, deferred by rule.

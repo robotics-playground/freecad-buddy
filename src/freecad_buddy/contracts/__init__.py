@@ -69,6 +69,12 @@ from freecad_buddy.contracts.mutation import (
     TnpStatus,
     WireFingerprint,
 )
+from freecad_buddy.contracts.numbers import (
+    DEFAULT_DISPLAY_DECIMALS,
+    displayed_deviation,
+    round_display,
+    round_floats,
+)
 from freecad_buddy.contracts.render import (
     FocusSpec,
     FramingVerdict,
@@ -128,6 +134,7 @@ __all__ = [
     "ConstraintSpec",
     "ConstraintType",
     "CountDelta",
+    "DEFAULT_DISPLAY_DECIMALS",
     "DatumKind",
     "DeclaredAnchorFrame",
     "DiffCounts",
@@ -191,12 +198,15 @@ __all__ = [
     "WilsonCI",
     "WireFingerprint",
     "derive_verdict",
+    "displayed_deviation",
     "fingerprints_equal",
     "framing_warning",
     "massprops_changed",
     "massprops_equal",
     "mirror_text",
     "require_wilson_ci_for_rates",
+    "round_display",
+    "round_floats",
     "summary_text",
     "with_framing_text",
 ]

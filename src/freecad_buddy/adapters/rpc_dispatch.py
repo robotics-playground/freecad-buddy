@@ -17,6 +17,7 @@ from typing import Callable
 
 from freecad_buddy.adapters.marshal import MarshalTimeout
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
+from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import ValidationError
 
 logger = logging.getLogger("freecad_buddy.dispatch")
@@ -121,7 +122,16 @@ class MethodRegistry:
         return list(self._methods.values())
 
     def dispatch(self, name: str, params: dict) -> ResultEnvelope:
-        """Invoke a registered method, mapping any exception onto the closed status set."""
+        """Invoke a registered method, mapping any exception onto the closed status set.
+
+        The envelope carries ``display_decimals`` read when the call ran. An envelope that already
+        carries one keeps it: the GUI proxy has no FreeCAD, so it keeps the value FreeCAD stamped.
+        """
+        envelope = self._invoke(name, params)
+        envelope.setdefault("display_decimals", shim.display_decimals())
+        return envelope
+
+    def _invoke(self, name: str, params: dict) -> ResultEnvelope:
         method = self._methods.get(name)
         if method is None:
             return _error_envelope("INVALID_INPUT", ValidationError(f"unknown method: {name}"))

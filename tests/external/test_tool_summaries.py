@@ -1,8 +1,13 @@
 """Pure unit tests for per-tool summary builders (no FreeCAD required)."""
 
+import pytest
+
+from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import summarize_document_list
 from freecad_buddy.usecases.exports import summarize_export
+from freecad_buddy.usecases.preview import summarize_preview
 from freecad_buddy.usecases.queries import (
+    _json_safe,
     summarize_dependencies,
     summarize_mass_properties,
     summarize_placement,
@@ -324,3 +329,114 @@ def test_summarize_dependencies_truncated():
     }
     out = summarize_dependencies(sc)
     assert out == "1 dependency edge(s) (truncated from 5)."
+
+
+@pytest.fixture
+def two_decimals(monkeypatch):
+    monkeypatch.setattr(shim, "display_decimals", lambda: 2)
+
+
+def test_should_print_displayed_numbers_when_the_placement_carries_noise(two_decimals):
+    # Arrange
+    sc = {
+        "object": "Pad",
+        "local": {
+            "position": {
+                "x": {"value": 5.999999998, "unit": "mm"},
+                "y": {"value": -4.281973375071899e-16, "unit": "mm"},
+                "z": {"value": 1234.5678, "unit": "mm"},
+            },
+            "angle": {"value": 45.0000001, "unit": "deg"},
+        },
+    }
+
+    # Act
+    out = summarize_placement(sc)
+
+    # Assert
+    assert out == "Pad at (6.0, 0.0, 1234.57) mm, rotated 45.0 deg."
+
+
+def test_should_print_the_displayed_volume_when_mass_properties_carry_noise(two_decimals):
+    # Arrange
+    sc = {
+        "name": "Body",
+        "solid": True,
+        "volume": {"value": 5999.999999998, "unit": "mm^3"},
+        "counts": {"faces": 6, "edges": 12},
+    }
+
+    # Act
+    out = summarize_mass_properties(sc)
+
+    # Assert
+    assert out == "Body: volume 6000.0 mm^3 (solid), 6 faces, 12 edges."
+
+
+@pytest.mark.parametrize(
+    ("delta", "shown"),
+    [(-4.281973375071899e-16, "+0.0"), (1234.5678, "+1234.57"), (-3.3e-8, "-3.3e-08")],
+    ids=["noise-at-zero", "real-value", "tiny-real"],
+)
+def test_should_print_the_displayed_volume_delta_when_a_preview_is_summarized(
+    two_decimals, delta, shown
+):
+    # Arrange
+    sc = {
+        "diff": {
+            "deltas": {"volume": {"delta": delta}},
+            "counts": {"faces": {"delta": 0}},
+            "validity": {"is_valid": True},
+            "tnp_precheck": {"status": "OK"},
+        }
+    }
+
+    # Act
+    out = summarize_preview(sc)
+
+    # Assert
+    assert out == f"Preview: volume {shown} mm^3, faces +0, valid=True, tnp=OK."
+
+
+class Quantity:
+    """Stands in for ``Base.Quantity``: ``str`` is the full-length float, then the unit text."""
+
+    def __init__(self, value: float, unit: str) -> None:
+        self.Value = value
+        self.unit = unit
+
+    def __str__(self) -> str:
+        return f"{self.Value!r} {self.unit}" if self.unit else repr(self.Value)
+
+
+class Vector:
+    """Stands in for ``Base.Vector``."""
+
+    def __init__(self, x: float, y: float, z: float) -> None:
+        self.x, self.y, self.z = x, y, z
+
+    def __str__(self) -> str:
+        return f"Vector ({self.x!r}, {self.y!r}, {self.z!r})"
+
+
+@pytest.mark.parametrize(
+    ("value", "shown"),
+    [
+        (Quantity(3.33333, "mm"), "3.33 mm"),
+        (Quantity(5.999999998, "mm^2"), "6.0 mm^2"),
+        (Quantity(0.123456, ""), "0.12"),
+        (Vector(5.999999998, -0.0, 1234.5678), "Vector (6.0, 0.0, 1234.57)"),
+    ],
+    ids=["length", "area", "dimensionless", "vector"],
+)
+def test_should_render_displayed_numbers_when_a_property_is_a_quantity_or_vector(
+    two_decimals, value, shown
+):
+    # Arrange
+    target = _json_safe
+
+    # Act
+    out = target(value)
+
+    # Assert
+    assert out == shown

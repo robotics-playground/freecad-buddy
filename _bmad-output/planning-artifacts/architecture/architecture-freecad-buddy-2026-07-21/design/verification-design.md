@@ -430,6 +430,7 @@ Defaults below are starting points; **exact values are calibrated by each phase'
 | Degenerate sketch geometry | `detectDegeneratedGeometries` default tol | kernel default; calibrate |
 | Volume assertion (`expect_volume`) | ±1 % relative | magnitude sanity, not precision |
 | Floor for all of the above | `Shape.getTolerance` of the measured shape | never assert tighter than the B-rep's own tolerance |
+| Verdict comparison and output rounding | Verdicts compare the once-rounded deviation against the raw band: `displayed_deviation` takes the absolute difference of the raw measured and expected values and rounds it once at display precision. Tool output rounds every float to FreeCAD's `Decimals` unit preference (default 2), read on each call. The addon preference `RoundToDisplay` (default on) turns both off: output stays raw and verdicts compare the raw deviation | Applies to assertions and to STEP/STL/3MF export checks. Solver and kernel noise below the display step cannot change a verdict, and a verdict cannot contradict its displayed numbers. The operands are never rounded separately and the band is never rounded. Echoed tolerances stay raw. The fingerprint keeps its 1e-6 quantum |
 
 ---
 

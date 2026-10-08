@@ -32,6 +32,7 @@ from freecad_buddy.usecases import (
     preview,
     queries,
     screenshot,
+    shim,
     sketches,
     verify,
     view_fit,
@@ -90,10 +91,12 @@ def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None,
         source = facts["source"]
         band = facts["volume_band"]
         path = facts["path"]
+        decimals = shim.display_decimals()
         if fmt == "stl":
             oracle_legs = [
                 export_oracle.safe_oracle(
-                    "trimesh_stl", lambda: export_oracle.stl_oracle(path, source["volume"], band)
+                    "trimesh_stl",
+                    lambda: export_oracle.stl_oracle(path, source["volume"], band, decimals),
                 ),
                 export_oracle.safe_oracle(
                     "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
@@ -104,7 +107,7 @@ def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None,
                 export_oracle.safe_oracle(
                     "lib3mf",
                     lambda: export_oracle.mesh3mf_oracle(
-                        path, source["is_mm"], source["volume"], band
+                        path, source["is_mm"], source["volume"], band, decimals
                     ),
                 ),
             ]

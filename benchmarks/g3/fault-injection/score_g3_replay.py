@@ -73,6 +73,7 @@ VALIDATOR_SOURCES = (
     SRC / "freecad_buddy" / "usecases" / "assertions.py",
     SRC / "freecad_buddy" / "usecases" / "verify.py",
     HERE / "score_g3_replay.py",
+    SRC / "freecad_buddy" / "contracts" / "numbers.py",
 )
 # Frame kinds whose entity is an object Name. A largest_planar_face entity is a mapped face name
 # whose hasher tag differs between sessions, so it is never compared.

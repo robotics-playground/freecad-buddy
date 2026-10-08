@@ -14,6 +14,8 @@ from __future__ import annotations
 import struct
 from typing import Protocol
 
+from freecad_buddy.contracts import DEFAULT_DISPLAY_DECIMALS, displayed_deviation
+
 _ASCII_STL_MARKER = b"solid"
 
 
@@ -170,27 +172,36 @@ def safe_oracle(name: str, fn) -> dict:
         }
 
 
-def stl_oracle(path: str, expected_volume: float, volume_band: float) -> dict:
+def stl_oracle(
+    path: str,
+    expected_volume: float,
+    volume_band: float,
+    decimals: int | None = DEFAULT_DISPLAY_DECIMALS,
+) -> dict:
     """Run trimesh over an STL file; return ``{oracle, checks, ok}``.
 
     Checks ``is_watertight``, ``is_winding_consistent``, ``is_volume``, ``mesh.volume`` within
-    the deflection-derived ``volume_band`` (never ±0.1 %), and an even Euler characteristic.
+    the deflection-derived ``volume_band`` (never ±0.1 %), and an even Euler characteristic. The
+    volume deviation is compared as displayed at ``decimals`` places, or raw when ``None``.
     """
     import trimesh
 
     # process=True welds the per-facet duplicated vertices FreeCAD's binary STL emits, so a
     # sound mesh reads back watertight; a real hole or non-manifold edge still fails to weld.
     mesh = trimesh.load(path, file_type="stl", process=True)
-    return _trimesh_checks(mesh, expected_volume, volume_band, oracle="trimesh_stl")
+    return _trimesh_checks(mesh, expected_volume, volume_band, "trimesh_stl", decimals)
 
 
-def _trimesh_checks(mesh, expected_volume: float, volume_band: float, oracle: str) -> dict:
+def _trimesh_checks(
+    mesh, expected_volume: float, volume_band: float, oracle: str, decimals: int | None
+) -> dict:
     """Return the trimesh geometry checks for ``mesh`` against the expected volume/band."""
     watertight = bool(mesh.is_watertight)
     winding = bool(mesh.is_winding_consistent)
     is_volume = bool(mesh.is_volume)
     volume = abs(float(mesh.volume))
-    volume_ok = abs(volume - abs(float(expected_volume))) <= float(volume_band)
+    deviation = displayed_deviation(volume, abs(float(expected_volume)), decimals)
+    volume_ok = deviation <= float(volume_band)
     euler = int(mesh.euler_number)
     # A closed orientable surface has even Euler characteristic (sum of 2-2g over its bodies), so
     # an odd value signals a non-closed/non-manifold mesh. A specific value is NOT required: a
@@ -237,7 +248,11 @@ def _trimesh_from_lib3mf(mesh_obj):
 
 
 def mesh3mf_oracle(
-    path: str, source_is_mm: bool, expected_volume: float, volume_band: float
+    path: str,
+    source_is_mm: bool,
+    expected_volume: float,
+    volume_band: float,
+    decimals: int | None = DEFAULT_DISPLAY_DECIMALS,
 ) -> dict:
     """Run the lib3mf container layer and a trimesh geometry layer over a 3MF file.
 
@@ -299,7 +314,7 @@ def mesh3mf_oracle(
     ]
 
     trimesh_leg = _trimesh_checks(
-        _trimesh_from_lib3mf(meshes[0]), expected_volume, volume_band, oracle="trimesh_3mf"
+        _trimesh_from_lib3mf(meshes[0]), expected_volume, volume_band, "trimesh_3mf", decimals
     )
     checks.extend(trimesh_leg["checks"])
     return {"oracle": "lib3mf", "checks": checks, "ok": all(c["passed"] for c in checks)}

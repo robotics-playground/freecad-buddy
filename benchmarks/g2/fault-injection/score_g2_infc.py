@@ -84,6 +84,7 @@ VALIDATOR_SOURCES = {
         REPO_ROOT / "benchmarks" / "harness" / "assertions.py",
         _USECASES / "assertions.py",
         _USECASES / "verify.py",
+        SRC / "freecad_buddy" / "contracts" / "numbers.py",
     ),
     "run_mutation": (
         _USECASES / "transaction.py",

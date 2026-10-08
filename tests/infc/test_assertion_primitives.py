@@ -13,6 +13,7 @@ import math
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import FreeCAD as App
 import Part
@@ -23,7 +24,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from benchmarks.harness import assertions as harness  # noqa: E402
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod  # noqa: E402
-from freecad_buddy.usecases import verify  # noqa: E402
+from freecad_buddy.usecases import shim, verify  # noqa: E402
 from freecad_buddy.usecases.assertions import INVALID_INPUT_CODE  # noqa: E402
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError  # noqa: E402
 
@@ -880,6 +881,157 @@ class IoMatrixTest(_PartFixture):
         # Assert
         self.assertEqual(content["banner"]["anchor_frame"]["kind"], "global")
         self.assertTrue(content["checks"][0]["passed"], content["checks"][0]["detail"])
+
+
+# The spec's verdict rows: (row, measured, expected, band, passed). A check passes when the
+# deviation, taken from the raw values and rounded once to 2 places, is within the raw band.
+VERDICT_ROWS = [
+    ("noise", 5.999999998, 6.0, 0.05, True),
+    ("straddle", 6.0150001, 6.015, 0.001, True),
+    ("edge", 6.054, 6.0, 0.05, True),
+    ("tight", 6.004, 6.0, 0.001, False),
+]
+
+
+class DisplayPrecisionVerdictTest(_PartFixture):
+    """Every band check compares the once-rounded deviation with its raw band."""
+
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch.object(shim, "display_decimals", return_value=2)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def verdicts(self, build, fn, expect, **parameters):
+        """Rebuild the part for every row and return ``{row: (passed, check)}``."""
+        verdicts = {}
+        for row, measured, expected, band, _ in VERDICT_ROWS:
+            for obj in self.document.Objects:
+                self.document.removeObject(obj.Name)
+            self.part(build(measured))
+            check = self.check(fn, expect(expected), tol={"abs": band}, **parameters)
+            verdicts[row] = (check["passed"], check)
+        return verdicts
+
+    def assert_rows(self, verdicts):
+        for row, _, _, _, passed in VERDICT_ROWS:
+            with self.subTest(row=row):
+                self.assertIs(verdicts[row][0], passed, verdicts[row][1]["detail"])
+
+    def test_should_take_the_matrix_verdicts_when_expect_extent_is_measured(self):
+        # Arrange
+        def build(height):
+            return Part.makeBox(10, 10, height)
+
+        # Act
+        verdicts = self.verdicts(build, "expect_extent", float, direction=[0, 0, 1])
+
+        # Assert
+        self.assert_rows(verdicts)
+        self.assertIn("|6.05 - 6.0| = 0.05 <= 0.05", verdicts["edge"][1]["detail"]["message"])
+
+    def test_should_take_the_matrix_verdicts_when_expect_bbox_is_measured(self):
+        # Arrange
+        def build(height):
+            return Part.makeBox(10, 20, height)
+
+        # Act
+        verdicts = self.verdicts(build, "expect_bbox", lambda height: [10.0, 20.0, height])
+
+        # Assert
+        self.assert_rows(verdicts)
+        self.assertIn("|6.0 - 6.0| = 2e-09 <= 0.05", verdicts["noise"][1]["detail"]["message"])
+
+    def test_should_compare_the_raw_deviation_when_rounding_is_off(self):
+        # Arrange: |6.054 - 6.0| shows as 0.05, but the raw 0.054 is outside the 0.05 mm band.
+        self.part(Part.makeBox(10, 10, 6.054))
+
+        # Act
+        with mock.patch.object(shim, "display_decimals", return_value=None):
+            check = self.check("expect_extent", 6.0, tol={"abs": 0.05}, direction=[0, 0, 1])
+
+        # Assert
+        self.assertFalse(check["passed"], check["detail"])
+
+    def test_should_take_the_matrix_verdicts_when_expect_volume_is_measured(self):
+        # Arrange
+        def build(volume):
+            return Part.makeBox(1, 1, volume)
+
+        # Act
+        verdicts = self.verdicts(build, "expect_volume", float)
+
+        # Assert
+        self.assert_rows(verdicts)
+        self.assertIn(
+            "|6.0 - 6.0| = 0.004 <= 0.001 mm^3", verdicts["tight"][1]["detail"]["message"]
+        )
+
+    def test_should_take_the_matrix_verdicts_when_hole_diameter_is_measured(self):
+        # Arrange
+        def build(diameter):
+            return _plate(40, 40, 6, [(0, 0)], radius=diameter / 2)
+
+        # Act
+        verdicts = self.verdicts(build, "hole_diameter", float)
+
+        # Assert
+        self.assert_rows(verdicts)
+        self.assertIn("max deviation 1e-07 <= 0.001", verdicts["straddle"][1]["detail"]["message"])
+
+    def test_should_take_the_matrix_verdicts_when_hole_position_is_measured(self):
+        # Arrange
+        def build(x):
+            return _plate(40, 40, 6, [(x, 0)], radius=3.0)
+
+        # Act
+        verdicts = self.verdicts(build, "hole_position", lambda x: [x, 0.0])
+
+        # Assert
+        self.assert_rows(verdicts)
+
+    def test_should_take_the_matrix_verdicts_when_hole_spacing_is_measured(self):
+        # Arrange
+        def build(pitch):
+            return _plate(40, 20, 3, [(0, 0), (pitch, 0)], radius=1.0)
+
+        # Act
+        verdicts = self.verdicts(build, "hole_spacing", float)
+
+        # Assert
+        self.assert_rows(verdicts)
+
+    def test_should_select_a_hole_when_its_diameter_shows_within_the_selector_band(self):
+        # Arrange: a 6.054 mm bore; |6.054 - 6.0| shows as 0.05, within the 0.05 mm selector band.
+        self.part(_plate(40, 40, 6, [(0, 0)], radius=3.027))
+
+        # Act
+        result = self.check("hole_position", [0.0, 0.0], select={"diameter": 6.0})
+
+        # Assert
+        self.assertTrue(result["passed"], result["detail"])
+
+    def test_should_count_a_hole_as_through_when_its_shortfall_is_shown_within_the_band(self):
+        # Arrange: a 6 mm plate drilled from the top, stopping 0.054 mm short of the bottom. The
+        # shortfall shows as 0.05, within the fixed 0.05 mm band.
+        self.part(_plate(40, 40, 6).cut(_bore(3.0, 6.0 - 0.054, 0, 0, 0.054)))
+
+        # Act
+        result = self.check("hole_through", True)
+
+        # Assert
+        self.assertTrue(result["passed"], result["detail"])
+
+    def test_should_count_a_hole_as_blind_when_its_shortfall_is_shown_above_the_band(self):
+        # Arrange
+        self.part(_plate(40, 40, 6).cut(_bore(3.0, 6.0 - 0.06, 0, 0, 0.06)))
+
+        # Act
+        result = self.check("hole_through", True)
+
+        # Assert
+        self.assertFalse(result["passed"])
+        self.assertIs(result["measured"], False)
 
 
 if __name__ == "__main__":

@@ -120,6 +120,16 @@
         }
       ]
     },
+    "display_decimals": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "framing": {
       "anyOf": [
         {

@@ -422,6 +422,92 @@ class CapabilityProbeTest(unittest.TestCase):
         self.assertNotIn("FCB_TMP_varset_probe", App.listDocuments())
 
 
+class DisplayDecimalsTest(unittest.TestCase):
+    """The ``Decimals`` unit preference, read on every call; the user's own value is restored."""
+
+    def setUp(self):
+        self.units = App.ParamGet("User parameter:BaseApp/Preferences/Units")
+        self.had_decimals = "Decimals" in self.units.GetInts()
+        self.saved = self.units.GetInt("Decimals")
+        self.buddy = App.ParamGet(shim.BUDDY_PARAM_PATH)
+        self.had_round = shim.ROUND_TO_DISPLAY_KEY in self.buddy.GetBools()
+        self.saved_round = self.buddy.GetBool(shim.ROUND_TO_DISPLAY_KEY, True)
+
+    def tearDown(self):
+        if self.had_decimals:
+            self.units.SetInt("Decimals", self.saved)
+        else:
+            self.units.RemInt("Decimals")
+        if self.had_round:
+            self.buddy.SetBool(shim.ROUND_TO_DISPLAY_KEY, self.saved_round)
+        else:
+            self.buddy.RemBool(shim.ROUND_TO_DISPLAY_KEY)
+
+    def _dispatch_value(self, registry):
+        envelope = registry.dispatch("stub", {})
+        return envelope["display_decimals"]
+
+    def test_should_stamp_the_new_precision_when_the_preference_changes_between_two_calls(self):
+        # Arrange
+        registry = MethodRegistry()
+        registry.register(RpcMethod(name="stub", handler=lambda: {"status": "OK"}))
+        self.units.SetInt("Decimals", 2)
+        first = self._dispatch_value(registry)
+        self.units.SetInt("Decimals", 4)
+
+        # Act
+        second = self._dispatch_value(registry)
+
+        # Assert
+        self.assertEqual((first, second), (2, 4))
+        self.assertEqual(shim.displayed(5.12345), 5.1235)
+
+    def test_should_read_two_decimals_when_the_preference_is_missing(self):
+        # Arrange
+        self.units.RemInt("Decimals")
+
+        # Act
+        decimals = shim.display_decimals()
+
+        # Assert
+        self.assertEqual(decimals, 2)
+
+    def test_should_read_two_decimals_when_the_preference_is_negative(self):
+        # Arrange
+        self.units.SetInt("Decimals", -3)
+
+        # Act
+        decimals = shim.display_decimals()
+
+        # Assert
+        self.assertEqual(decimals, 2)
+
+    def test_should_stamp_no_precision_when_round_to_display_is_off(self):
+        # Arrange
+        registry = MethodRegistry()
+        registry.register(RpcMethod(name="stub", handler=lambda: {"status": "OK"}))
+        self.units.SetInt("Decimals", 2)
+        self.buddy.SetBool(shim.ROUND_TO_DISPLAY_KEY, False)
+
+        # Act
+        decimals = self._dispatch_value(registry)
+
+        # Assert
+        self.assertIsNone(decimals)
+        self.assertEqual(shim.displayed(5.999999998), 5.999999998)
+
+    def test_should_round_when_round_to_display_is_missing(self):
+        # Arrange
+        self.units.SetInt("Decimals", 2)
+        self.buddy.RemBool(shim.ROUND_TO_DISPLAY_KEY)
+
+        # Act
+        decimals = shim.display_decimals()
+
+        # Assert
+        self.assertEqual(decimals, 2)
+
+
 class SketcherProbeRecoveryTest(unittest.TestCase):
     """The Sketcher probe must not let one failed import disable sketching for the process."""
 

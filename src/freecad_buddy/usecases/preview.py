@@ -413,7 +413,7 @@ def summarize_preview(sc: dict) -> str:
     validity = diff.get("validity") or {}
     tnp = (diff.get("tnp_precheck") or {}).get("status", "UNSUPPORTED")
     return (
-        f"Preview: volume {volume:+.4f} mm^3, faces {faces:+d}, "
+        f"Preview: volume {shim.displayed(float(volume)):+} mm^3, faces {faces:+d}, "
         f"valid={validity.get('is_valid')}, tnp={tnp}."
     )
 

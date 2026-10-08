@@ -11,6 +11,7 @@ export result carries ``verified: false``, the self-read facts, and the bad ``ex
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import FreeCAD as App
 import Part
@@ -453,6 +454,44 @@ def _file_schema_text(path: str) -> str:
     header = Path(path).read_text(encoding="ascii").split("DATA;", 1)[0]
     quoted = header.split("FILE_SCHEMA", 1)[1]
     return quoted.split("'")[1]
+
+
+class StepVolumeVerdictTest(unittest.TestCase):
+    """The STEP volume check compares the once-rounded deviation with its raw ±0.1 % band.
+
+    The spec's verdict rows, each with an expected volume whose ±0.1 % band lets the row show
+    its rule: (row, measured, expected, passed).
+    """
+
+    ROWS = [
+        ("noise", 5.999999998, 6.0, True),
+        ("straddle", 6.0150001, 6.015, True),
+        ("edge", 60.064, 60.0, True),
+        ("tight", 1.004, 1.0, False),
+    ]
+
+    def setUp(self):
+        patcher = mock.patch.object(shim, "display_decimals", return_value=2)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def volume_check(self, measured, expected):
+        source = {"volume": expected, "faces": 6, "edges": 12, "solids": 1}
+        return exports._step_checks(Part.makeBox(1, 1, measured), source)[0]
+
+    def test_should_take_the_matrix_verdicts_when_the_step_volume_is_checked(self):
+        # Arrange
+        rows = self.ROWS
+
+        # Act
+        checks = {row: self.volume_check(measured, expected) for row, measured, expected, _ in rows}
+
+        # Assert
+        for row, _, _, passed in rows:
+            with self.subTest(row=row):
+                self.assertIs(checks[row]["passed"], passed, checks[row]["detail"])
+        self.assertEqual(checks["edge"]["detail"]["message"], "|60.06 - 60.0| = 0.06 <= 0.06")
+        self.assertEqual(checks["tight"]["tolerance"], {"rel": 0.001})
 
 
 if __name__ == "__main__":

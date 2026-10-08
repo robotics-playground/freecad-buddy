@@ -4,7 +4,7 @@
 
 verify_shape:
   suite: g0/fault-injection/
-  validator_sha: "7ee60265dc510542505a6474352eded93f489bb15eb74eb7dab4985ce8bf6d77"
+  validator_sha: "f139a2eb4e25da250daf58388b2c662f6340066454659d4b4d7d915e0e47e905"
   last_run:
     run_id: fr-2026-10-08-1
     sensitivity: 1.0
@@ -19,12 +19,12 @@ verify_shape:
 
 verify_export_stl:
   suite: g0/export-fault-injection/
-  validator_sha: "b9e65813b4e893666bcf969bac25b0d253d2769f2c3b79149e9c099123b775dd"
+  validator_sha: "ac477d9ad268de8a7ed683224c756361bd0598e325cd0ac3136310fcd10806f4"
   last_run:
-    run_id: er-2026-10-05-1
+    run_id: er-2026-10-08-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-05
+    date: 2026-10-08
     wilson_ci:
       rate: 1.0
       low: 0.7225
@@ -34,12 +34,12 @@ verify_export_stl:
 
 verify_export_3mf:
   suite: g0/export-fault-injection/
-  validator_sha: "b9e65813b4e893666bcf969bac25b0d253d2769f2c3b79149e9c099123b775dd"
+  validator_sha: "ac477d9ad268de8a7ed683224c756361bd0598e325cd0ac3136310fcd10806f4"
   last_run:
-    run_id: er-2026-10-05-1
+    run_id: er-2026-10-08-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-05
+    date: 2026-10-08
     wilson_ci:
       rate: 1.0
       low: 0.7225
@@ -49,12 +49,12 @@ verify_export_3mf:
 
 verify_export_step:
   suite: g0/export-fault-injection/
-  validator_sha: "b9e65813b4e893666bcf969bac25b0d253d2769f2c3b79149e9c099123b775dd"
+  validator_sha: "ac477d9ad268de8a7ed683224c756361bd0598e325cd0ac3136310fcd10806f4"
   last_run:
-    run_id: er-2026-10-05-1
+    run_id: er-2026-10-08-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-05
+    date: 2026-10-08
     wilson_ci:
       rate: 1.0
       low: 0.7412
@@ -79,7 +79,7 @@ grader:
 
 assertions:
   suite: g2/fault-injection/
-  validator_sha: "57b77061b6ed6cdf99ce1289cf9a7db449394c3d0563689e8b5537c627046f0d"
+  validator_sha: "ca5363cb6f06a48fd22bb53aec8003e815f57e1c4d7b8f207e0fe9ed1517a190"
   last_run:
     run_id: g2-2026-10-08-1
     sensitivity: 1.0
@@ -174,12 +174,12 @@ verify_render_tone:
 
 spec_assertions:
   suite: g3/fault-injection/corrupted-plan/
-  validator_sha: "78aa8b44c9fe07d368141a9b6c0e43db2148cc151241c3eae91436f202c0edb1"
+  validator_sha: "0d6b3fdb962d53d2e8b4359e772dd39f021212c2a1d955de85e8e3ccef23e482"
   last_run:
-    run_id: g3r-2026-10-04-1.1.3
+    run_id: g3r-2026-10-08-1.1.3
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-04
+    date: 2026-10-08
     planted: 10
     controls: 14
     wilson_ci:

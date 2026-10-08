@@ -1,4 +1,4 @@
-"""FreeCAD GUI addon entry: register the workbench and defer the bridge start.
+"""FreeCAD GUI addon entry: register the workbench and preference page, and defer the bridge start.
 
 FreeCAD executes this at GUI startup. The workbench registration does no listener work; the
 bridge starts only after ``FreeCAD.GuiUp`` is true, polled every 500 ms via
@@ -36,6 +36,15 @@ try:
     Gui.addWorkbench(FreeCADBuddyWorkbench())
 except Exception:  # noqa: BLE001 - no GUI (structural import / headless): skip registration
     logger.debug("FreeCADGui unavailable; workbench not registered", exc_info=True)
+
+try:
+    import FreeCADGui as Gui
+
+    from freecad_buddy.hosts.gui_addon.preferences import PreferencesPage
+
+    Gui.addPreferencePage(PreferencesPage, "FreeCAD Buddy")
+except Exception:  # noqa: BLE001 - no GUI (structural import / headless): skip registration
+    logger.debug("FreeCADGui unavailable; preference page not registered", exc_info=True)
 
 
 def _deferred_start(deadline: float | None = None) -> None:

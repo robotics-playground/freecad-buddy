@@ -22,7 +22,8 @@ import math
 import re
 import sys as _sys
 
-from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, ASSERTION_FNS
+from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, ASSERTION_FNS, displayed_deviation
+from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import ValidationError
 
 # Default tolerances (verification-design.md §8). A declared ``tol`` replaces the default; the
@@ -546,8 +547,17 @@ def shape_floor(shape) -> float:
 def _floored(band: float, floor: float) -> tuple[float, str]:
     """The allowance actually applied, and a note when the shape's tolerance raised it."""
     if floor > band:
-        return floor, f" (clamped to shape tolerance floor {floor})"
+        return floor, f" (clamped to shape tolerance floor {floor:g})"
     return band, ""
+
+
+def _deviation(value: float, expected: float) -> float:
+    """``|value - expected|`` as a check reports it; a check passes when this is within its band.
+
+    Taken from the raw operands and rounded once at the display precision, so solver and kernel
+    noise below the display step never decides a verdict, and the band is never widened.
+    """
+    return displayed_deviation(value, expected, shim.display_decimals())
 
 
 def _linear_band(check: dict, expected: float, floor: float) -> tuple[float, str]:
@@ -752,7 +762,7 @@ class _Measured:
 
 
 def _matches_diameter(entity: _Entity, diameter: float, band: float) -> bool:
-    return any(abs(measured - float(diameter)) <= band for measured in entity.diameters)
+    return any(_deviation(measured, float(diameter)) <= band for measured in entity.diameters)
 
 
 def _matches_hole_query(measured: _Measured, entity: _Entity, query: dict) -> bool:
@@ -844,9 +854,12 @@ def _nearest_pairs(measured: _Measured, check: dict, metric) -> list[tuple]:
 def _compare_all(fn: str, check: dict, values: list, band: float, note: str, unit: str) -> dict:
     """Pass when every measured value equals ``expect`` within ``band``."""
     expected = float(check["expect"])
-    deviations = [abs(value - expected) for value in values]
+    deviations = [_deviation(value, expected) for value in values]
     passed = all(deviation <= band for deviation in deviations)
-    message = f"{fn} {values} vs {expected} {unit}, max deviation {max(deviations)} <= {band}{note}"
+    message = (
+        f"{fn} {shim.displayed(values)} vs {shim.displayed(expected)} {unit}, "
+        f"max deviation {max(deviations)} <= {band:g}{note}"
+    )
     return _check(fn, _one_or_all(values), check["expect"], passed, message, check.get("tol"))
 
 
@@ -870,13 +883,13 @@ def _measure_expect_volume(measured: _Measured, check: dict) -> dict:
     band, note = _floored(
         _band(check.get("tol"), expected, None, _DEFAULT_VOLUME_REL), measured.floor
     )
-    delta = abs(value - expected)
+    delta = _deviation(value, expected)
     return _check(
         "expect_volume",
         value,
         check["expect"],
         delta <= band,
-        f"|{value} - {expected}| = {delta} <= {band} mm^3{note}",
+        f"|{shim.displayed(value)} - {shim.displayed(expected)}| = {delta} <= {band:g} mm^3{note}",
         check.get("tol"),
     )
 
@@ -898,15 +911,17 @@ def _measure_expect_bbox(measured: _Measured, check: dict) -> dict:
     parts, passed = [], True
     for value, wanted in zip(actual, expected, strict=True):
         band, note = _linear_band(check, wanted, measured.floor)
-        delta = abs(value - wanted)
+        delta = _deviation(value, wanted)
         passed = passed and delta <= band
-        parts.append(f"|{value} - {wanted}| = {delta} <= {band}{note}")
+        parts.append(
+            f"|{shim.displayed(value)} - {shim.displayed(wanted)}| = {delta} <= {band:g}{note}"
+        )
     return _check(
         "expect_bbox",
         extents,
         check["expect"],
         passed,
-        f"frame extents {extents}; sorted: " + "; ".join(parts),
+        f"frame extents {shim.displayed(extents)}; sorted: " + "; ".join(parts),
         check.get("tol"),
     )
 
@@ -929,13 +944,14 @@ def _measure_expect_extent(measured: _Measured, check: dict) -> dict:
     value = _optimal_extents(measured.shape.transformed(rotation))[2]
     expected = float(check["expect"])
     band, note = _linear_band(check, expected, measured.floor)
-    delta = abs(value - expected)
+    delta = _deviation(value, expected)
     return _check(
         "expect_extent",
         value,
         check["expect"],
         delta <= band,
-        f"extent along {list(direction)}: |{value} - {expected}| = {delta} <= {band}{note}",
+        f"extent along {shim.displayed(list(direction))}: "
+        f"|{shim.displayed(value)} - {shim.displayed(expected)}| = {delta} <= {band:g}{note}",
         check.get("tol"),
     )
 
@@ -984,13 +1000,14 @@ def _measure_hole_position(measured: _Measured, check: dict) -> dict:
         for value, wanted in zip(position, expected, strict=True):
             band, _ = _linear_band(check, wanted, measured.floor)
             bands.append(band)
-            passed = passed and abs(value - wanted) <= band
+            passed = passed and _deviation(value, wanted) <= band
     return _check(
         "hole_position",
         _one_or_all(positions),
         check["expect"],
         passed,
-        f"axis meets the anchor plane at {positions} vs {expected}, band {max(bands)} mm",
+        f"axis meets the anchor plane at {shim.displayed(positions)} vs "
+        f"{shim.displayed(expected)}, band {max(bands):g} mm",
         check.get("tol"),
     )
 
@@ -1028,16 +1045,22 @@ def _measure_hole_spacing(measured: _Measured, check: dict) -> dict:
     ]
     bands = {pitch: _linear_band(check, pitch, measured.floor)[0] for pitch in expected}
     unmatched_pitches = [
-        pitch for pitch in expected if not any(abs(gap - pitch) <= bands[pitch] for gap in nearest)
+        pitch
+        for pitch in expected
+        if not any(_deviation(gap, pitch) <= bands[pitch] for gap in nearest)
     ]
     stray_gaps = [
-        gap for gap in nearest if not any(abs(gap - pitch) <= bands[pitch] for pitch in expected)
+        gap
+        for gap in nearest
+        if not any(_deviation(gap, pitch) <= bands[pitch] for pitch in expected)
     ]
-    detail = f"nearest-neighbour gaps {nearest} vs declared {expected}"
+    detail = (
+        f"nearest-neighbour gaps {shim.displayed(nearest)} vs declared {shim.displayed(expected)}"
+    )
     if unmatched_pitches:
-        detail += f"; no gap matches pitch(es) {unmatched_pitches}"
+        detail += f"; no gap matches pitch(es) {shim.displayed(unmatched_pitches)}"
     if stray_gaps:
-        detail += f"; gap(s) {stray_gaps} match no declared pitch"
+        detail += f"; gap(s) {shim.displayed(stray_gaps)} match no declared pitch"
     return _check(
         "hole_spacing",
         nearest,
@@ -1068,7 +1091,8 @@ def _measure_hole_through(measured: _Measured, check: dict) -> dict:
         if wall is None:
             raise UnmeasurableGeometry("a hole wall carries too few vertexes to measure")
         material = _local_material_extent(measured.shape, hole)
-        per_hole.append(wall >= material - _DEFAULT_LINEAR_ABS)
+        shortfall = max(material - wall, 0.0)
+        per_hole.append(_deviation(shortfall, 0.0) <= _DEFAULT_LINEAR_ABS)
     value = all(per_hole)
     return _check(
         "hole_through",

@@ -25,7 +25,12 @@ import os
 import re
 import secrets
 
-from freecad_buddy.contracts import ResultEnvelope, derive_verdict, summary_text
+from freecad_buddy.contracts import (
+    ResultEnvelope,
+    derive_verdict,
+    displayed_deviation,
+    summary_text,
+)
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
@@ -334,7 +339,8 @@ def _step_checks(shape: object, source: dict) -> list[dict]:
     measured_volume = float(shape.Volume)
     expected_volume = float(source["volume"])
     band = max(abs(expected_volume) * _STEP_VOLUME_REL, _STEP_VOLUME_ABS_FLOOR)
-    volume_ok = abs(measured_volume - expected_volume) <= band
+    deviation = displayed_deviation(measured_volume, expected_volume, shim.display_decimals())
+    volume_ok = deviation <= band
 
     is_valid = bool(shape.isValid())
 
@@ -348,7 +354,12 @@ def _step_checks(shape: object, source: dict) -> list[dict]:
             "expected": expected_volume,
             "tolerance": {"rel": _STEP_VOLUME_REL},
             "passed": volume_ok,
-            "detail": {"message": f"|{measured_volume} - {expected_volume}| <= {band}"},
+            "detail": {
+                "message": (
+                    f"|{shim.displayed(measured_volume)} - {shim.displayed(expected_volume)}| "
+                    f"= {deviation} <= {band:g}"
+                )
+            },
         },
         {
             "id": "export_step.valid",

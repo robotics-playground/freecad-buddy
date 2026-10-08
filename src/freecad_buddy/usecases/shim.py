@@ -11,7 +11,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Callable, Literal, TypeVar
 
-from freecad_buddy.contracts import CapabilityBanner
+from freecad_buddy.contracts import DEFAULT_DISPLAY_DECIMALS, CapabilityBanner, round_floats
 
 T = TypeVar("T")
 
@@ -22,6 +22,10 @@ _STEP_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/Part/STEP"
 # ``Part::supportedSTEPSchemes()`` (``ImportStep.h``): the ``Scheme`` values File > Export applies.
 _FREECAD_STEP_SCHEMES = frozenset({"AP203", "AP214CD", "AP214DIS", "AP214IS", "AP242DIS"})
 _OCC_DEFAULT_STEP_SCHEME = "AP214IS"
+_UNITS_PARAM_PATH = "User parameter:BaseApp/Preferences/Units"
+# The addon's own preferences, edited on its page in Edit > Preferences.
+BUDDY_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/FreeCADBuddy"
+ROUND_TO_DISPLAY_KEY = "RoundToDisplay"
 
 # The (type_id, property) pairs the feature tools validate against a live enumeration. A caller
 # cannot know the legal set without reading it from the running build.
@@ -368,6 +372,33 @@ def freecad_version() -> str:
         return "unknown"
     version = FreeCAD.Version()
     return ".".join(str(part) for part in version[:3])
+
+
+def display_decimals() -> int | None:
+    """FreeCAD's display precision: the ``Decimals`` unit preference, read on every call.
+
+    ``None`` when the addon's ``RoundToDisplay`` preference (default on) is off, so results and
+    verdicts stay raw. Not cached: FreeCAD applies a change to either preference at once
+    (``DlgSettingsGeneral.cpp:209``), so the next tool result follows it. No FreeCAD, a missing
+    preference or a negative value gives ``DEFAULT_DISPLAY_DECIMALS``.
+    """
+    try:
+        import FreeCAD
+
+        if not FreeCAD.ParamGet(BUDDY_PARAM_PATH).GetBool(ROUND_TO_DISPLAY_KEY, True):
+            return None
+        decimals = FreeCAD.ParamGet(_UNITS_PARAM_PATH).GetInt("Decimals", DEFAULT_DISPLAY_DECIMALS)
+    except Exception:  # noqa: BLE001 - a preference that cannot be read falls back to the default
+        return DEFAULT_DISPLAY_DECIMALS
+    return decimals if decimals >= 0 else DEFAULT_DISPLAY_DECIMALS
+
+
+def displayed(value):
+    """``value`` with every float at ``display_decimals`` places, as a tool result shows it.
+
+    A message string built from ``displayed`` values states the same numbers as the rounded JSON.
+    """
+    return round_floats(value, display_decimals())
 
 
 def warm_capability_probes() -> None:

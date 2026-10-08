@@ -8,13 +8,14 @@ guarantee (document state unchanged across a full query sweep).
 
 import math
 import unittest
+from unittest import mock
 
 import FreeCAD as App
 import Part
 import Sketcher
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.usecases import queries
+from freecad_buddy.usecases import queries, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 BOX_L = 10.0
@@ -221,6 +222,55 @@ class QueryToolsTest(unittest.TestCase):
 
         self.assertEqual(before_count, len(self.document.Objects))
         self.assertEqual(before_sig, signature())
+
+
+class QueryObjectDisplayTest(unittest.TestCase):
+    """``query_object`` prints a Quantity or Vector property at the display precision."""
+
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.handle = self.registry.document_create("query_display")["structured_content"]["doc"]
+        _, self.document = self.registry.with_document(self.handle, lambda h, d: (h, d))
+        patcher = mock.patch.object(shim, "display_decimals", return_value=2)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def test_should_read_the_displayed_length_when_a_pad_is_queried(self):
+        # Arrange
+        body = self.document.addObject("PartDesign::Body", "Body")
+        sketch = body.newObject("Sketcher::SketchObject", "Sketch")
+        corners = [
+            App.Vector(0, 0, 0),
+            App.Vector(10, 0, 0),
+            App.Vector(10, 5, 0),
+            App.Vector(0, 5, 0),
+        ]
+        for start, end in zip(corners, corners[1:] + corners[:1]):
+            sketch.addGeometry(Part.LineSegment(start, end), False)
+        pad = body.newObject("PartDesign::Pad", "Pad")
+        pad.Profile = sketch
+        pad.Length = 3.33333
+        self.document.recompute()
+
+        # Act
+        envelope = queries.query_object(self.registry, doc=self.handle, object="Pad")
+
+        # Assert
+        self.assertEqual(envelope["structured_content"]["properties"]["Length"], "3.33 mm")
+
+    def test_should_render_rounded_components_when_a_vector_is_made_json_safe(self):
+        # Arrange
+        vector = App.Vector(5.999999998, -4.281973375071899e-16, 1234.5678)
+
+        # Act
+        out = queries._json_safe(vector)
+
+        # Assert
+        self.assertEqual(out, "Vector (6.0, 0.0, 1234.57)")
 
 
 if __name__ == "__main__":

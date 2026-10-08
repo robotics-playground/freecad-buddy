@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.usecases import exports
 
@@ -148,3 +150,30 @@ def test_unreadable_self_read_leg_forces_fail_verdict():
         c for c in envelope["structured_content"]["checks"] if c["id"] == "self_read.readable"
     )
     assert readable["passed"] is False
+
+
+class _StubMesh:
+    """A sound closed mesh whose volume is set directly, for the volume-band verdict alone."""
+
+    is_watertight = True
+    is_winding_consistent = True
+    is_volume = True
+    euler_number = 2
+
+    def __init__(self, volume: float) -> None:
+        self.volume = volume
+
+
+@pytest.mark.parametrize(("decimals", "passed"), [(2, True), (4, False)])
+def test_should_compare_the_displayed_deviation_when_the_volume_sits_at_the_band_edge(
+    decimals, passed
+):
+    # Arrange: |6.054 - 6.0| shows as 0.05 at 2 places (within 0.05) and 0.054 at 4 (outside).
+    mesh = _StubMesh(6.054)
+
+    # Act
+    result = export_oracle._trimesh_checks(mesh, 6.0, 0.05, "trimesh_stl", decimals)
+
+    # Assert
+    volume_check = next(c for c in result["checks"] if c["id"] == "trimesh_stl.volume_band")
+    assert volume_check["passed"] is passed
