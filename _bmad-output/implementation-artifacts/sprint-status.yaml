@@ -70,6 +70,8 @@
 #   11-1 -> 11-2 and 11-1 -> 11-4; 11-3 is parallel-eligible; 11-4 merges after 11-2; 11-1..11-4 finish before
 #   10-7 starts; 11-5 runs alongside; 11-6 is last.
 
+generated: 2026-07-21
+last_updated: 2026-10-08
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -162,12 +164,12 @@ development_status:
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional
   epic-11: in-progress
-  11-1-mass-properties-that-tell-shapes-apart: review
-  11-2-quiet-result-envelope: review
-  11-3-one-call-per-mutation: review
-  11-4-cheap-correct-rollback-proof-and-fingerprints: review
-  11-5-build-loop-skills: review
-  11-6-measured-build-session: review
+  11-1-mass-properties-that-tell-shapes-apart: done
+  11-2-quiet-result-envelope: done
+  11-3-one-call-per-mutation: done
+  11-4-cheap-correct-rollback-proof-and-fingerprints: done
+  11-5-build-loop-skills: done
+  11-6-measured-build-session: done
   epic-11-retrospective: optional
 
 action_items:
