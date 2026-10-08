@@ -29,6 +29,7 @@ from run_mcp_e2e import (  # reuse env + envelope helpers from the happy-path ha
     _fcb_env,
     _payload,
     _status,
+    _tree_names,
 )
 
 FAULT_DIR = Path(__file__).resolve().parents[2] / "benchmarks" / "g0" / "fault-injection"
@@ -44,11 +45,8 @@ async def _open_golden(session, name: str) -> str | None:
 
 
 async def _sole_object(session, handle: str) -> str | None:
-    # The nested tree lives under "tree"; it was "nodes" when this harness was written, and the
-    # rename went unnoticed because a None object name fails the checks rather than the call.
-    tree = _payload(await session.call_tool("query_tree_summary", {"doc": handle}))
-    nodes = tree.get("tree") or []
-    return nodes[0]["name"] if nodes else None
+    roots = _tree_names(await session.call_tool("query_tree_summary", {"doc": handle}))
+    return roots[0] if roots else None
 
 
 async def _edge_sweep(session: ClientSession, rep: Report) -> None:
@@ -79,11 +77,12 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
         # --- P1 boundary: depth bounds the walk without dropping the root --------------------
         r = await session.call_tool("query_tree_summary", {"doc": handle, "depth": 1})
         p = _payload(r)
-        ok = _status(r) == "OK" and p.get("returned_nodes") == len(p.get("tree", []))
+        roots = _tree_names(r)
+        ok = _status(r) == "OK" and p.get("shown") == len(roots) > 0
         rep.record(
             "depth_one_returns_roots_only",
             ok,
-            f"returned_nodes={p.get('returned_nodes')} roots={len(p.get('tree', []))}",
+            f"shown={p.get('shown')} roots={len(roots)}",
             _status(r),
         )
 

@@ -100,9 +100,9 @@ mcp query_object { doc: <handle>, object: "Box" }
 
 **Then** open returns a handle and the source path — verify: `structured_content` carries `doc`, `name`, `label`, and `path` equal to the path passed in  
 **And** the summary text is the shipped form — verify: the envelope `text` is `Opened box-10-20-30 -> fcb-doc:<token>.`  
-**And** the tree reports one object — verify: `structured_content.total_objects` is `1` and `returned_nodes` is `1`  
-**And** the node is the golden `Box` — verify: `structured_content.tree[0].name` is `Box` and `type` is `Part::Feature`  
-**And** the node is clean, so no error field appears — verify: `structured_content.tree[0]` has no `error` key, because `getStatusString()` returned `Valid`  
+**And** the tree reports one object — verify: `structured_content.total_objects` is `1` and `shown` is `1`  
+**And** the line is the golden `Box` — verify: the tree text (`content[1]`) is the one line `<v|-> [FEATURE] Box`; `FEATURE` is the code of `Part::Feature`  
+**And** the object is clean, so no error marker appears — verify: the `Box` line has no `!` suffix and the envelope `text` has no `Errors:` part, because `getStatusString()` returned `Valid`  
 **And** `query_object` reads the same object through the same handle — verify: `structured_content.name` is `Box`, `type` is `Part::Feature`, and `error` is `null`  
 **And** the properties dict is JSON-safe — verify: `structured_content.properties` is an object whose values are all JSON scalars, arrays, objects, or strings, with no Python `repr` of a live FreeCAD pointer beyond a stringified value  
 **And** the volume is analytic — verify: `mcp query_mass_properties { doc: <handle>, object: "Box" }` returns `volume` `6000.0` within 0.1 %  
@@ -141,7 +141,7 @@ mcp query_tree_summary { doc: <handle> }
 **And** the original golden file is untouched — verify: the mtime and size of `benchmarks/g0/golden-models/cylinder-r5-h20.FCStd` are unchanged from before the save  
 **And** the handle string is unchanged by the save-as — verify: the `structured_content.doc` in the save response equals the handle from the open, character for character  
 **And** the handle still resolves after the rebind — verify: the `query_tree_summary` returns `status: "OK"` with `total_objects` `1`  
-**And** the object survives the save-as — verify: `structured_content.tree[0].name` is `Cylinder`  
+**And** the object survives the save-as — verify: the first line of the tree text (`content[1]`) names `Cylinder`  
 **And** the new file reopens independently — verify: closing the handle and running `mcp document_open { path: "$RUN_DIR/evidence/tc-02-03-uat-saveas.FCStd" }` yields a fresh handle whose `query_mass_properties` on `Cylinder` returns `volume` `1570.7963` within 0.1 %  
 **And** *(visual)* the reopened file is framed — verify: `mcp view_fit_viewport { doc: "<reopened handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* look at the window and say what is on screen: one cylinder, present and whole, no edge clipped, a `Cylinder` entry in the model tree, and a title bar reading `tc-02-03-uat-saveas` rather than `cylinder-r5-h20` — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-03-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and judge it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -184,8 +184,8 @@ mcp query_object { doc: <handle B>, object: "Sphere" }
 
 **Then** two distinct handles were minted — verify: handle A and handle B are different strings, both matching `^fcb-doc:`  
 **And** `document_list` shows both — verify: `mcp document_list {}` reports `2 open document(s): box-10-20-30, sphere-r10.`  
-**And** a query on A returns A's object while B is the GUI's active document — verify: `query_tree_summary { doc: <handle A> }` returns `tree[0].name` `Box`, never `Sphere`  
-**And** a query on B returns B's object — verify: `query_tree_summary { doc: <handle B> }` returns `tree[0].name` `Sphere`  
+**And** a query on A returns A's object while B is the GUI's active document — verify: `query_tree_summary { doc: <handle A> }` returns the tree text (`content[1]`) whose first line names `Box`, never `Sphere`  
+**And** a query on B returns B's object — verify: `query_tree_summary { doc: <handle B> }` returns the tree text (`content[1]`) whose first line names `Sphere`  
 **And** an object name that exists only in B is unknown in A — verify: `mcp query_object { doc: <handle A>, object: "Sphere" }` returns `INVALID_INPUT` with message `unknown object: Sphere`  
 **And** the reverse holds — verify: `mcp query_object { doc: <handle B>, object: "Box" }` returns `INVALID_INPUT` with message `unknown object: Box`  
 **And** mass properties do not cross documents — verify: `query_mass_properties` on A's `Box` returns `6000.0` and on B's `Sphere` returns `4188.7902`, each within 0.1 %  
@@ -200,12 +200,12 @@ mcp document_close { doc: <handle B> }
 
 ---
 
-### TC-02-05: query_tree_summary depth, root, and every filter
+### TC-02-05: query_tree_summary depth, focus, expand, and the reveal filters
 
 **Priority**: Critical
-**Design Ref**: `mcp-tools-design.md` §3.2 (tree summary filters)
+**Design Ref**: `mcp-tools-design.md` §3.2 (tree text, views, reveal filters)
 
-**Given** a document with a nested PartDesign Body is open. Build one, or reuse the TC-04 body — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` shows a `PartDesign::Body` node with `children`  
+**Given** a document with a PartDesign Body named `Body` holding a sketch and a Pad named `Pad` is open. Build one, or reuse the TC-04 body — verify: `mcp query_tree_summary { doc: <handle>, focus: "Body" }` shows a `[BODY] Body` line with child lines under it  
 **And** the starting window state is captured, before any object is hidden — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-05-before.png"}' | & cua-driver call get_window_state`  
 
 **When** the tree is read at the default depth, then deeper  
@@ -213,33 +213,32 @@ mcp document_close { doc: <handle B> }
 mcp query_tree_summary { doc: <handle>, depth: 1 }
 mcp query_tree_summary { doc: <handle>, depth: 3 }
 ```
-**And** the walk is re-rooted at a named object  
+**And** the view is focused on the Body, and the Pad is expanded from the top level  
 ```
-mcp query_tree_summary { doc: <handle>, depth: 2, root: "Body" }
+mcp query_tree_summary { doc: <handle>, focus: "Body", depth: 2 }
+mcp query_tree_summary { doc: <handle>, expand: ["Pad"] }
 ```
-**And** each filter is exercised in turn  
+**And** each reveal filter is exercised in turn  
 ```
-mcp query_tree_summary { doc: <handle>, depth: 3, filters: { types: ["PartDesign::Pad"] } }
-mcp query_tree_summary { doc: <handle>, depth: 3, filters: { exclude_types: ["Sketcher::SketchObject"] } }
-mcp query_tree_summary { doc: <handle>, depth: 3, filters: { renderable_only: true } }
-mcp query_tree_summary { doc: <handle>, depth: 3, filters: { visible_only: true } }
-mcp query_tree_summary { doc: <handle>, depth: 3, filters: { name_pattern: "^Pad" } }
+mcp query_tree_summary { doc: <handle>, filters: { types: ["PAD"] } }
+mcp query_tree_summary { doc: <handle>, filters: { types: ["PartDesign::Pad"] } }
+mcp query_tree_summary { doc: <handle>, filters: { name_pattern: "^Pad" } }
+mcp query_tree_summary { doc: <handle>, filters: { types: ["PAD"], name_pattern: "zzz" } }
 ```
 
-**Then** depth 1 does not expand children — verify: at `depth: 1` the root node carries `children_count` but no `children` array, and `returned_nodes` equals the number of roots  
-**And** depth 3 expands and counts more — verify: `returned_nodes` at `depth: 3` is strictly greater than at `depth: 1`, and the root node now carries a `children` array  
-**And** `root` re-roots the walk — verify: with `root: "Body"` the single entry in `tree` has `name` `Body`, and `returned_nodes` counts only that subtree  
-**And** an unknown root is refused — verify: `mcp query_tree_summary { doc: <handle>, root: "NoSuchObject" }` returns `INVALID_INPUT` with message `unknown object: NoSuchObject`  
-**And** `types` is an allow-list — verify: every node in the `types: ["PartDesign::Pad"]` result has `type` `PartDesign::Pad`  
-**And** `exclude_types` replaces the datum default, it does not add to it — verify: `filters_applied.exclude_types` in the `exclude_types: ["Sketcher::SketchObject"]` result is exactly `["Sketcher::SketchObject"]`, and the `App::Origin`/`App::Plane`/`App::Line`/`App::Point` nodes that the default suppressed now appear  
-**And** the default excludes the datum clutter set — verify: with no `filters` at all, `filters_applied.exclude_types` is `["App::Plane", "App::Line", "App::Point", "App::Origin"]`  
-**And** `renderable_only` drops containers and datums — verify: no `PartDesign::Body`, `Sketcher::SketchObject`, or `App::Origin*` node appears in the `renderable_only: true` result  
-**And** `visible_only` honours the Visibility flag — verify: hide one object through `cua-driver` (`'{"pid":<pid>,"window_id":<wid>,"element_token":"<object tree item token>"}' | & cua-driver call click`, then `'{"pid":<pid>,"key":"Space"}' | & cua-driver call press_key`), re-run, and that object's node is absent while it is present without the filter  
-**And** `name_pattern` is a regular expression over name and label — verify: the `^Pad` result contains only nodes whose `name` or `label` starts with `Pad`  
-**And** filters AND-stack — verify: `filters: { renderable_only: true, name_pattern: "^Pad" }` returns a subset of each single-filter result  
+**Then** depth 1 lists the top level collapsed — verify: at `depth: 1` the tree text has one line per top-level object, the `Body` line ends `(+N)`, no line starts with a connector (`|-- ` or `` `-- ``), and `structured_content.shown` equals the number of lines  
+**And** depth 3 opens more — verify: `shown` at `depth: 3` is strictly greater than at `depth: 1`, and child lines with `|-- `/`` `-- `` connectors appear under the `Body` line  
+**And** `focus` scopes the view — verify: with `focus: "Body"` the first line is `path: Body`, the second line is the `[BODY] Body` line, and no line names an object outside the Body  
+**And** an unknown focus is refused — verify: `mcp query_tree_summary { doc: <handle>, focus: "NoSuchObject" }` returns `INVALID_INPUT` with message `unknown object: NoSuchObject`  
+**And** `expand` opens only the path — verify: with `expand: ["Pad"]` the `Body` line ends `(+N more)`, the one child line under it is the `[PAD] Pad` line, and the Pad's `[SKETCH]` line is shown under the Pad  
+**And** `types` reveals by code or by TypeId — verify: the `types: ["PAD"]` and `types: ["PartDesign::Pad"]` results are the same text, each Pad line sits under its opened ancestors, `structured_content.matches` equals the number of Pads, and every other top-level line stays collapsed  
+**And** `name_pattern` is a regular expression over name and label — verify: every revealed line in the `^Pad` result names an object whose `Name` or `Label` starts with `Pad`  
+**And** filters AND-stack — verify: `types: ["PAD"], name_pattern: "zzz"` returns `matches` `0` and the same tree text as `depth: 1`  
+**And** the `v`/`-` marker follows the Visibility flag — verify: hide the Pad through `cua-driver` (`'{"pid":<pid>,"window_id":<wid>,"element_token":"<Pad tree item token>"}' | & cua-driver call click`, then `'{"pid":<pid>,"key":"Space"}' | & cua-driver call press_key`), re-run `{ focus: "Body" }`, and the `Pad` line starts `- ` where it started `v ` before  
+**And** a retired filter is a schema reject — verify: `mcp query_tree_summary { doc: <handle>, filters: { visible_only: true } }` is rejected by the MCP layer as a protocol error (`isError`, no envelope)  
 **And** an unknown filter key is a schema reject — verify: `mcp query_tree_summary { doc: <handle>, filters: { unknown_filter: true } }` is rejected by the MCP layer as a protocol error (`isError`, no envelope), because the filter object is closed with `additionalProperties: false`  
 **And** *(visual)* the hidden object is restored through `cua-driver` (re-select the tree item and press `Space`) and the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* look at the window and say what is on screen: a padded solid, present and whole with no edge clipped, and the object that was hidden for the `visible_only` probe now shown again, so the two images look the same — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-05-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and judge them. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; the read-only claim is proven by the two pictures matching, not by the envelopes.  
+**And** *(visual)* look at the window and say what is on screen: a padded solid, present and whole with no edge clipped, and the Pad that was hidden for the visibility probe now shown again, so the two images look the same — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-05-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and judge them. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; the read-only claim is proven by the two pictures matching, not by the envelopes.  
 
 **Cleanup**: none. Every call in this scenario is read-only.
 
@@ -250,7 +249,7 @@ mcp query_tree_summary { doc: <handle>, depth: 3, filters: { name_pattern: "^Pad
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §3.2 (query_object), `data-contracts-design.md` §9 (error field)
 
-**Given** a document with a recomputed `PartDesign::Pad` is open — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names a `PartDesign::Pad` node  
+**Given** a document with a recomputed `PartDesign::Pad` is open — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` shows a `[PAD]` line  
 **And** the healthy state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-06-before.png"}' | & cua-driver call get_window_state`  
 
 **When** the healthy Pad is read  
@@ -300,7 +299,7 @@ mcp query_dependencies { doc: <handle> }
 ```
 
 **Then** the per-object shape is the three-key form — verify: `structured_content` keys are exactly `object`, `in_list`, `out_list`  
-**And** names are immutable `Name` values, never labels — verify: every entry in `in_list` and `out_list` matches the `name` field of a node in `query_tree_summary`, not its `label`  
+**And** names are immutable `Name` values, never labels — verify: every entry in `in_list` and `out_list` matches the `Name` on a line of the `query_tree_summary` tree text, not its quoted `"Label"`  
 **And** the Pad's profile appears downstream — verify: the Pad's `out_list` contains the `Sketcher::SketchObject` name it pads  
 **And** the Pad's Body appears upstream — verify: the Pad's `in_list` contains the `PartDesign::Body` name  
 **And** no entry is repeated — verify: `in_list` and `out_list` each contain no duplicate name, because `getOutList` returns an object reachable through two link properties twice and the tool de-duplicates  
@@ -373,7 +372,7 @@ mcp document_list {}
 **And** MCP sees the GUI-opened document — verify: `mcp document_list {}` reports `1 open document(s): box40-hole-r5.`  
 **And** a handle was minted on first sight — verify: the listed entry carries a `doc` matching `^fcb-doc:`  
 **And** an adopted document is not marked transient — verify: the entry's `transient` is `false`  
-**And** the adopted handle is usable — verify: `mcp query_tree_summary { doc: <adopted handle> }` returns `tree[0].name` `BoxHole`  
+**And** the adopted handle is usable — verify: `mcp query_tree_summary { doc: <adopted handle> }` returns the tree text (`content[1]`) whose first line names `BoxHole`  
 **And** the geometry is the real file, not a stub — verify: `mcp query_mass_properties { doc: <adopted handle>, object: "BoxHole" }` returns `volume` `15214.6018` within 0.1 %  
 **And** a second `document_list` does not mint a second handle — verify: calling `mcp document_list {}` again returns the same `doc` string and still one entry  
 **And** *(visual)* the adopted document is framed — verify: `mcp view_fit_viewport { doc: "<adopted handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -410,9 +409,9 @@ mcp query_tree_summary { doc: <handle A> }
 
 **Then** the GUI selection really moved to B — verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` shows the `two-box-compound` window as active, not `unknown`  
 **And** the handle string is unchanged — verify: handle A from the first read is still the exact string used in the re-read  
-**And** the re-read returns A's content — verify: the re-read's `tree[0].name` is `Box`, identical to the first read  
+**And** the re-read returns A's content — verify: the re-read's tree text is identical to the first read and its first line names `Box`  
 **And** the re-read is byte-identical apart from nothing — verify: the first and second `structured_content` are equal field for field, since no mutation happened between them  
-**And** B remains separately addressable — verify: `mcp query_tree_summary { doc: <handle B> }` returns `tree[0].name` `TwoBoxCompound`  
+**And** B remains separately addressable — verify: `mcp query_tree_summary { doc: <handle B> }` returns the tree text (`content[1]`) whose first line names `TwoBoxCompound`  
 **And** the compound's centre of mass is null, matching the shipped behaviour — verify: `mcp query_mass_properties { doc: <handle B>, object: "TwoBoxCompound" }` returns `volume` `2000.0` within 0.1 %, `counts.solids` `2`, and `com` `null`  
 **And** *(visual)* B is framed — verify: `mcp view_fit_viewport { doc: "<handle B>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* look at the window and say what is on screen: two separate box solids, both present and whole with no edge clipped, a title bar reading `two-box-compound` and not `box-10-20-30`, and both documents still listed in the model tree — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-10-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and judge it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Count the boxes in the picture; do not take `counts.solids` as the answer.  
@@ -430,7 +429,7 @@ mcp document_close { doc: <handle B> }
 **Priority**: High
 **Design Ref**: `mcp-tools-design.md` §3.2 (depth bound), `data-contracts-design.md` §9 (closed schemas)
 
-**Given** a document with at least two tree levels is open — verify: `mcp query_tree_summary { doc: <handle>, depth: 2 }` shows a `children` array  
+**Given** a document with at least two tree levels is open — verify: `mcp query_tree_summary { doc: <handle>, depth: 2 }` shows child lines with `|-- `/`` `-- `` connectors  
 **And** the model is framed and the undisturbed window state captured — verify: fit through the GUI with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-11-before.png"}' | & cua-driver call get_window_state`  
 
 **When** the depth boundary is probed  
@@ -445,12 +444,12 @@ mcp query_tree_summary { doc: <handle>, max_nodes: 0 }
 mcp query_tree_summary { doc: <handle>, depth: 2, max_nodes: 5 }
 ```
 
-**Then** `depth: 1` is the minimum accepted value — verify: it returns `status: "OK"` with `structured_content.depth` `1`  
-**And** `depth` defaults to 1 when omitted — verify: `mcp query_tree_summary { doc: <handle> }` returns `structured_content.depth` `1`  
+**Then** `depth: 1` is the minimum accepted value — verify: it returns `status: "OK"` with top-level lines only  
+**And** `depth` defaults to 1 when omitted — verify: `mcp query_tree_summary { doc: <handle> }` returns the same tree text as `depth: 1`  
 **And** `depth: 0` is a schema reject — verify: the call is rejected by the MCP layer as a protocol error (`isError`, no envelope), because the schema declares `minimum: 1`  
 **And** `depth: -1` is a schema reject — verify: same protocol rejection as `depth: 0`  
 **And** **`max_nodes` is retired; passing it is a schema reject** — verify: `mcp query_tree_summary { doc: <handle>, max_nodes: 0 }` is rejected by the MCP layer as a protocol error, **not** an `OK` envelope with empty nodes. The former `docs/tests/TC-09` CP6 expected `OK` with `truncated: true`; that expectation is stale. Assert the rejection.  
-**And** the rejection is caused by the closed schema — verify: the tool's input schema has `additionalProperties: false` and its `properties` are exactly `doc`, `depth`, `root`, `filters`, with no `max_nodes`  
+**And** the rejection is caused by the closed schema — verify: the tool's input schema has `additionalProperties: false` and its `properties` are exactly `doc`, `focus`, `expand`, `depth`, `filters`, with no `max_nodes`  
 **And** a valid call still works after the rejections — verify: `mcp query_tree_summary { doc: <handle>, depth: 2 }` returns `status: "OK"`, so a schema reject never poisons the handle  
 **And** *(visual)* the model is framed with the **GUI's own Fit All toolbar button** only — verify: click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`). This scenario asserts the MCP surface disturbed nothing, so the framing must not go through MCP either; the before image was framed the same way, which is what makes the two comparable.  
 **And** *(visual)* look at both windows and say whether they are the same picture: the same model, at the same size and position, no dialog or error popup raised by the five rejected calls, no document closed or added — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and judge them. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; a schema rejection that also blanked the viewport would pass every `Then` above and fail here.  
@@ -544,30 +543,30 @@ rm -f "$RUN_DIR/evidence/tc-02-13-uat-unicode.FCStd"
 ### TC-02-14: Deeply nested App::Part and App::Link tree
 
 **Priority**: Medium
-**Design Ref**: `mcp-tools-design.md` §3.2 (children vs links partition)
+**Design Ref**: `mcp-tools-design.md` §3.2 (containment children, `App::Link` lines)
 
-**Given** a document with nested `App::Part` containers and at least one `App::Link` is open. Build one with the GUI (Std Part, then Make Link) or over MCP — verify: `mcp query_tree_summary { doc: <handle>, depth: 5 }` names both an `App::Part` and an `App::Link` node  
+**Given** a document with nested `App::Part` containers and at least one `App::Link` is open. Build one with the GUI (Std Part, then Make Link) or over MCP — verify: `mcp query_tree_summary { doc: <handle>, depth: 5 }` shows both a `[PART]` line and a `[LINK]` line  
 
 **When** the tree is walked at increasing depth  
 ```
 mcp query_tree_summary { doc: <handle>, depth: 1 }
 mcp query_tree_summary { doc: <handle>, depth: 5 }
 ```
-**And** the walk is re-rooted at the inner container  
+**And** the view is focused on the inner container  
 ```
-mcp query_tree_summary { doc: <handle>, depth: 3, root: "<inner App::Part name>" }
+mcp query_tree_summary { doc: <handle>, focus: "<inner App::Part name>", depth: 3 }
 ```
 
-**Then** structural children and links are separate arrays — verify: a node with both carries `children` and `links` as two distinct keys, never one merged array  
-**And** only `App::Link*` types land in `links` — verify: every node in any `links` array has a `type` starting with `App::Link`  
-**And** counts appear at the depth boundary — verify: at `depth: 1` the root reports `children_count` and, if it has links, `links_count`, with no expanded arrays  
-**And** counts are omitted when zero — verify: a leaf node carries neither `children_count` nor `links_count`, because sparse nodes omit zero-valued fields  
-**And** nesting is preserved to the requested depth — verify: at `depth: 5` the outer `App::Part` node's `children` contains the inner `App::Part` node, which in turn carries its own `children`  
-**And** re-rooting yields the subtree only — verify: the `root: "<inner App::Part name>"` result has exactly one entry in `tree`, and `returned_nodes` is smaller than the whole-document walk at the same depth  
-**And** a link does not create a cycle in the walk — verify: the call returns within its 30 s budget and `returned_nodes` is finite and stable across two identical calls  
-**And** a link target is still reachable as a root — verify: `root: "<link target name>"` returns `status: "OK"` naming that object  
+**Then** a link is a leaf line — verify: each `App::Link` line ends `-> <target Name>` and has no child line under it at any depth  
+**And** only `App::Link` lines carry an arrow — verify: no line other than a `[LINK]` line contains ` -> `  
+**And** counts appear at the depth boundary — verify: at `depth: 1` the outer `App::Part` line ends `(+N)` and no child line is shown  
+**And** a leaf carries no count — verify: the `[LINK]` line and every shape line with no children end without `(+N)`  
+**And** nesting is preserved to the requested depth — verify: at `depth: 5` the inner `[PART]` line sits under the outer `[PART]` line, each `App::Part` lists its `[ORIGIN]` line first, and the inner Part's own child lines sit under it  
+**And** focusing yields the subtree only — verify: the `focus: "<inner App::Part name>"` result starts `path: <outer Part Name> > <inner Part Name>`, and its `shown` is smaller than the whole-document walk at `depth: 5`  
+**And** a link does not create a cycle in the walk — verify: the call returns within its 30 s budget and the tree text is identical across two identical calls  
+**And** a link target is still reachable — verify: `focus: "<link target name>"` returns `status: "OK"` and its second line names that object  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* look at the window and say what is on screen: two instances of the same shape — the link target and the linked copy — both present and whole with no edge clipped, and a model tree showing one `App::Part` item nested inside another with a link item among them; no dialog — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-14-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and judge it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; a `links` array with nothing drawn on screen is the failure this closer catches.  
+**And** *(visual)* look at the window and say what is on screen: two instances of the same shape — the link target and the linked copy — both present and whole with no edge clipped, and a model tree showing one `App::Part` item nested inside another with a link item among them; no dialog — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-14-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and judge it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image; a `[LINK]` line with nothing drawn on screen is the failure this closer catches.  
 
 **Cleanup**:
 ```
@@ -732,7 +731,7 @@ mcp document_save { doc: <handle>, path: "$RUN_DIR/evidence" }
 **And** the missing-directory save is refused — verify: the response `status` is a closed-set non-`OK` value and no directory was created (`ls "$RUN_DIR/evidence/tc-02-18-no-such-dir"` reports no such file)  
 **And** the directory-as-path save is refused — verify: the response `status` is a closed-set non-`OK` value and `$RUN_DIR/evidence` is still a directory  
 **And** the source golden file is untouched — verify: `sha256sum benchmarks/g0/golden-models/cylinder-r5-h20.FCStd` matches its value before the run  
-**And** the handle is still usable after all three failures — verify: `mcp query_tree_summary { doc: <handle> }` returns `status: "OK"` with `tree[0].name` `Cylinder`  
+**And** the handle is still usable after all three failures — verify: `mcp query_tree_summary { doc: <handle> }` returns `status: "OK"` and the tree text (`content[1]`) whose first line names `Cylinder`  
 **And** a later save to a writable path succeeds — verify: `mcp document_save { doc: <handle>, path: "$RUN_DIR/evidence/tc-02-18-writable.FCStd" }` returns `status: "OK"` with `saved: true`, proving no failed save poisoned the document  
 **And** nothing crashed — verify: `mcp query_capabilities {}` still returns `status: "OK"` and the addon log records no unhandled traceback  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  

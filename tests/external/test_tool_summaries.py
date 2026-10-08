@@ -13,47 +13,38 @@ from freecad_buddy.usecases.screenshot import summarize_screenshot
 from freecad_buddy.usecases.verify import summarize_recompute, summarize_shape
 
 
-def test_summarize_tree_reports_counts_and_errors():
-    sc = {
-        "total_objects": 201,
-        "returned_nodes": 14,
-        "tree": [
-            {
-                "name": "Assembly",
-                "label": "h96max-mainboard",
-                "type": "Assembly::AssemblyObject",
-                "visibility": True,
-                "links_count": 11,
-                "children_count": 2,
-                "children": [
-                    {
-                        "name": "Joint002",
-                        "label": "x",
-                        "type": "App::FeaturePython",
-                        "visibility": True,
-                        "error": "Broken link in: Reference1",
-                    }
-                ],
-            },
-        ],
-    }
+def test_should_report_objects_and_shown_when_the_tree_fits():
+    # Arrange
+    sc = {"doc": "fcb-doc:D", "total_objects": 5, "shown": 3, "truncated": False}
+
+    # Act
     out = summarize_tree(sc)
-    assert "201 objects" in out
-    assert "14" in out
-    assert "Joint002" in out and "Broken link" in out
+
+    # Assert
+    assert out == "5 objects, 3 shown."
 
 
-def test_summarize_tree_clean_no_error_suffix():
-    sc = {
-        "total_objects": 5,
-        "returned_nodes": 3,
-        "tree": [{"name": "Body", "label": "Body", "type": "PartDesign::Body", "visibility": True}],
-    }
+def test_should_say_truncated_when_the_cap_cut_the_tree():
+    # Arrange
+    sc = {"doc": "fcb-doc:D", "total_objects": 900, "shown": 200, "truncated": True}
+
+    # Act
     out = summarize_tree(sc)
-    assert "5 objects" in out
-    assert "3" in out
-    assert "Errors" not in out
-    assert out.endswith(".")
+
+    # Assert
+    assert out == "900 objects, 200 shown, truncated."
+
+
+def test_should_name_every_error_when_objects_in_the_start_subtree_failed():
+    # Arrange
+    sc = {"doc": "fcb-doc:D", "total_objects": 9, "shown": 2, "truncated": False}
+    errors = ["Pad: Invalid", "Sketch: Broken link in: Support"]
+
+    # Act
+    out = summarize_tree(sc, errors)
+
+    # Assert
+    assert out == "9 objects, 2 shown. Errors: Pad: Invalid; Sketch: Broken link in: Support"
 
 
 def test_summarize_mass_properties_headlines_volume():

@@ -259,12 +259,11 @@ mcp document_close {doc:<handleSphere>}
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §1.1 (document handles)
 
-**Given** a document with two visible shape-bearing objects is open — verify: `mcp query_tree_summary {doc:<handle>}` reports `visibility` true for both  
+**Given** a document with two visible top-level shape-bearing objects is open — verify: in the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` both lines start `v `  
 
 **When** the visible set is recorded  
 ```bash
 mcp query_tree_summary {doc:<handle>}
-mcp query_tree_summary {doc:<handle>, filters:{visible_only:true}}
 ```
 **And** the model is framed, then the starting state is captured under that same camera so the later comparison is like-for-like  
 ```bash
@@ -280,15 +279,14 @@ mcp query_tree_summary {doc:<handle>, filters:{visible_only:true}}
 **And** the bridge is re-read  
 ```bash
 mcp query_tree_summary {doc:<handle>}
-mcp query_tree_summary {doc:<handle>, filters:{visible_only:true}}
 ```
 **And** visibility is restored by repeating the toggle, then the bridge is re-read again  
 
 **Then** the object vanished from the viewport — verify: a `cua-driver` viewport grab after the toggle no longer shows `<ObjectB>`  
-**And** the bridge reports the new flag — verify: the post-toggle first call returns `visibility` false for `<ObjectB>` and true for `<ObjectA>`  
-**And** the `visible_only` filter drops it — verify: the post-toggle second call returns `<ObjectA>` only, where the pre-toggle second call returned both  
+**And** the bridge reports the new flag — verify: in the post-toggle tree text the `<ObjectB>` line starts `- ` and the `<ObjectA>` line starts `v `  
+**And** the hidden object is still listed — verify: the post-toggle tree text has the same lines as the pre-toggle one apart from the first character of the `<ObjectB>` line; visibility marks a line, it does not drop it  
 **And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>}` returns the same volume before and after the toggle; visibility is a view flag, not geometry  
-**And** restoring works both ways — verify: after the restore, `visibility` is true again for `<ObjectB>` and `visible_only` returns both objects  
+**And** restoring works both ways — verify: after the restore, the `<ObjectB>` line starts `v ` again and the tree text equals the pre-toggle one  
 **And** the bridge read the live flag, not a cache — verify: the post-toggle result differs from the pre-toggle result without any MCP mutation call in between  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on this build), which touches none of the code under test. Use the same fit that produced `tc-12-05-before.png`, so the two images share a camera.  
 **And** *(visual)* the hidden object is gone from the window and the tree marks it hidden — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the before PNG shows both `<ObjectA>` and `<ObjectB>` drawn in the 3D view, the after PNG shows `<ObjectA>` only, and the `<ObjectB>` tree row is drawn in the greyed style FreeCAD uses for a hidden object. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -559,7 +557,7 @@ mcp query_tree_summary {doc:<handle>, depth:3}
 ```
 **And** a filtered slice is read  
 ```bash
-mcp query_tree_summary {doc:<handle>, filters:{renderable_only:true}}
+mcp query_tree_summary {doc:<handle>, filters:{types:["PAD"]}}
 mcp query_tree_summary {doc:<handle>, filters:{name_pattern:"Pad*"}}
 ```
 **And** the GUI tree is scrolled and inspected. Re-snapshot before the scroll and act by `element_token`.  
@@ -570,9 +568,9 @@ mcp query_tree_summary {doc:<handle>, filters:{name_pattern:"Pad*"}}
 ```
 
 **Then** the GUI tree scrolls — verify: the two snapshot trees taken around the scroll expose different visible rows, so the list is navigable at this size  
-**And** the default depth stays shallow — verify: the first depth read returns only depth-1 nodes, not all 50 features; `depth` defaults to 1  
-**And** deeper depth returns more — verify: the depth-3 read returns strictly more nodes than the depth-1 read  
-**And** filters shrink the result — verify: both filtered calls return fewer nodes than the unfiltered depth-3 call  
+**And** the default depth stays shallow — verify: the first read returns top-level lines only, not all 50 features; `depth` defaults to 1  
+**And** deeper depth returns more — verify: the depth-3 read has a strictly greater `shown` than the depth-1 read, and at most 200 tree lines; when the cap cuts it, `truncated` is true and the last line is `... <K> more lines; narrow with focus or a smaller depth`  
+**And** filters reveal a slice — verify: both filtered calls report `matches`, show each match on its opened path, and have a smaller `shown` than the depth-3 call  
 **And** `max_nodes` is not a parameter — verify: `mcp query_tree_summary {doc:<handle>, max_nodes:10}` returns `INVALID_INPUT`; the schema sets `additionalProperties: false` and `max_nodes` is retired  
 **And** each call stays within its budget — verify: every `query_tree_summary` call in this scenario returns within its 30 s timeout  
 **And** the GUI stays responsive — verify: a `get_window_state` taken after the queries still returns a populated tree, not `degraded`  

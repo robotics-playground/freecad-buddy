@@ -1,0 +1,4 @@
+|-- - [POCKET] locating_groove (+1)
+`-- - [PAD] sma_boss *tip
+    `-- - [SKETCH] sma_boss_sketch
+----

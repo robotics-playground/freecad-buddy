@@ -54,6 +54,9 @@ class ResultEnvelope(TypedDict, total=False):
     text: str  # required; human-readable mirror of structured_content
     images: list[ImageRef]
     framing: FramingVerdict | None
+    # Raw text the MCP adapter sends as extra content blocks after the JSON block; never part of
+    # the JSON block or structuredContent, so a multi-line body stays unescaped.
+    text_blocks: list[str]
 
 
 def summary_text(structured_content: dict) -> str:

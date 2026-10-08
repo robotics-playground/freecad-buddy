@@ -61,6 +61,21 @@ def _payload(res) -> dict:
     return (res.structuredContent or {}).get("structured_content", {})
 
 
+def _tree_names(res) -> list[str]:
+    """Object Names on the top-level lines of a ``query_tree_summary`` tree text block.
+
+    The tree travels as the second content block, one ``<v|-> [CODE] Name ...`` line per object;
+    a child line starts with a connector or a prefix and is skipped.
+    """
+    if len(res.content) < 2:
+        return []
+    return [
+        line.split(" ")[2]
+        for line in res.content[1].text.splitlines()
+        if line[:1] in ("v", "-")
+    ]
+
+
 def _rel(measured: float, expected: float) -> float:
     return abs(measured - expected) / abs(expected) if expected else abs(measured)
 
@@ -112,14 +127,16 @@ async def _sweep(session: ClientSession, rep: Report) -> None:
             rep.record(f"open:{name}", False, str(_payload(opened)), _status(opened))
             continue
         handle = _payload(opened)["doc"]
-        # The nested tree lives under "tree"; it was "nodes" when this harness was written and
-        # the rename went unnoticed because a None object name fails the checks rather than the
-        # call, so every downstream measurement reported a tool defect that did not exist.
-        obj = _payload(await session.call_tool("query_tree_summary", {"doc": handle}))
-        tree = obj.get("tree") or []
-        obj_name = tree[0]["name"] if tree else None
+        # A None object name fails the checks rather than the call, so a missing root is
+        # recorded here instead of surfacing as a tool defect in every later measurement.
+        tree = await session.call_tool("query_tree_summary", {"doc": handle})
+        if _status(tree) != "OK":
+            rep.record(f"tree_summary:{name}", False, str(_payload(tree)), _status(tree))
+            continue
+        roots = _tree_names(tree)
+        obj_name = roots[0] if roots else None
         if obj_name is None:
-            rep.record(f"tree_summary:{name}", False, f"no root node in {sorted(obj)}", "NO_ROOT")
+            rep.record(f"tree_summary:{name}", False, "no top-level line in the tree", "NO_ROOT")
             continue
 
         # query_mass_properties — real volume within 0.1 %

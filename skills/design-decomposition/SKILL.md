@@ -10,7 +10,7 @@ description: >-
   down", ambiguous or under-dimensioned request. Do NOT use for constraining an
   individual sketch (see sketch-strategy) or choosing one feature operation
   (see tool-selection).
-version: 0.2.0
+version: 0.3.0
 freecad-versions: ['1.1']
 ---
 
@@ -144,9 +144,9 @@ drawing is reported as unverified, never scaled off the image.
   every feature, and a check call after each one. Why: the plan repeats what each
   mutation result reports, and the hand math drifts from the model. Fix: a
   parameter table and milestones; verify per milestone.
-- **Unlabeled multi-body output.** Symptom: `query_tree_summary` shows anonymous
-  solids; inspection can't tell which is which. Why: bodies with no intent names
-  lose traceability. Fix: name every body from its role.
+- **Unlabeled multi-body output.** Symptom: `query_tree_summary` lists
+  `[BODY] Body`, `[BODY] Body001`; inspection can't tell which is which. Why:
+  bodies with no intent names lose traceability. Fix: name every body from its role.
 - **Asking a question you could assume.** Symptom: a turn spent asking for a
   clearance-hole size or a cosmetic fillet. Why: the answer was defaultable and
   reportable. Fix: proceed with a stated assumption; reserve the one question for

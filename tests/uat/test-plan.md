@@ -343,8 +343,9 @@ Reading the result:
 ## 10. Known Limitations
 
 - **Retired parameter.** `query_tree_summary.max_nodes` is retired. Passing it now is a schema
-  reject. The live filter object is closed and accepts exactly
-  `types, exclude_types, renderable_only, visible_only, name_pattern`.
+  reject. So are the retired `root` parameter and the retired filters `exclude_types`,
+  `renderable_only` and `visible_only`. The live filter object is closed and accepts exactly
+  `types, name_pattern`.
 - **Broken harness reader.** `_automation/live_mcp_manual.py` reads `tree["nodes"]`, but the
   response key is now `"tree"`. It returns `None` silently instead of failing. Do not treat a
   `None` from that harness as an empty tree.

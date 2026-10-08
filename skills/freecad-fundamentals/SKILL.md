@@ -9,7 +9,7 @@ description: >-
   work", "Name vs Label", "what is the tip", "read the feature tree", "what units".
   Do NOT use for a specific PartDesign feature (see freecad-partdesign) or
   diagnosing a recompute error (see freecad-troubleshooting).
-version: 0.1.0
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -18,9 +18,11 @@ freecad-versions: ['1.1']
 Establish the mental model every other FreeCAD skill assumes: how a document holds
 objects, how a body's feature chain evaluates on recompute, the difference between
 an object's immutable Name and its editable Label, the internal unit system, and
-the vocabulary for reading a tree. This skill owns the *structure and evaluation
-model* — not how to drive a feature (freecad-partdesign), constrain a sketch
-(freecad-sketcher), or fix a broken one (freecad-troubleshooting).
+the vocabulary for reading a tree. The line format and type codes of
+`query_tree_summary` live in `references/tree-codes.md`; load it when you read a
+tree. This skill owns the *structure and evaluation model* — not how to drive a
+feature (freecad-partdesign), constrain a sketch (freecad-sketcher), or fix a
+broken one (freecad-troubleshooting).
 
 You read this document state through the **freecad-buddy MCP server** (the `query_*`,
 `verify_*`, and `document_*` tools named below). If those tools aren't available in
@@ -68,8 +70,17 @@ at it — otherwise none of these queries can run.
 
 ## Worked Examples
 
-Input: "Explain this document" on a tree returned by `query_tree_summary` showing
-`Body` → `Pad` → `Pocket001` → `Fillet`.
+Input: "Explain this document" on this `query_tree_summary` tree text
+(`focus: Body`):
+
+```
+path: Body
+v [BODY] Body
+|-- - [ORIGIN] Origin (+7)
+|-- - [PAD] Pad (+1)
+|-- - [POCKET] Pocket001 (+1)
+`-- v [FILLET] Fillet *tip
+```
 
 Reading: one PartDesign Body whose tip is `Fillet`; the solid evaluates
 `Pad` (base) → `Pocket001` (a cut) → `Fillet` (edge rounding, last as expected).

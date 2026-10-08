@@ -153,6 +153,12 @@
         },
         "text": {
           "type": "string"
+        },
+        "text_blocks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [

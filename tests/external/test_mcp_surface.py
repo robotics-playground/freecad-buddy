@@ -492,18 +492,22 @@ def test_call_tool_non_ok_status_sets_is_error():
     assert result.structuredContent["status"] == "INVALID_INPUT"
 
 
-def test_tree_summary_schema_has_depth_root_filters():
+def test_should_offer_focus_expand_depth_and_reveal_filters_when_listing_the_tree_tool():
+    # Arrange
     caps = Capabilities(allow_exec=False)
+
+    # Act
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
-    schema = tools["query_tree_summary"].inputSchema
-    props = schema["properties"]
+
+    # Assert
+    props = tools["query_tree_summary"].inputSchema["properties"]
     assert props["depth"]["default"] == 1
     assert props["depth"]["minimum"] == 1
-    assert "root" in props
-    fprops = props["filters"]["properties"]
-    for key in ("types", "exclude_types", "renderable_only", "visible_only", "name_pattern"):
-        assert key in fprops
+    assert props["focus"]["type"] == "string"
+    assert props["expand"]["items"] == {"type": "string"}
+    assert sorted(props["filters"]["properties"]) == ["name_pattern", "types"]
     assert props["filters"]["additionalProperties"] is False
+    assert "root" not in props
     assert "max_nodes" not in props
 
 
@@ -903,3 +907,28 @@ def test_should_write_compact_json_when_an_envelope_becomes_the_text_content():
     assert text == json.dumps(envelope, separators=(",", ":"), ensure_ascii=False)
     assert "\n" not in text
     assert ": " not in text
+
+
+def test_should_send_each_text_block_as_its_own_content_when_the_envelope_carries_them():
+    # Arrange
+    tree = "v [BODY] Body\n`-- v [PAD] Pad *tip"
+    envelope = {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": {"doc": "fcb-doc:D", "shown": 2},
+        "text": "3 objects, 2 shown.",
+        "text_blocks": [tree, "second"],
+    }
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    first = json.loads(result.content[0].text)
+    assert "text_blocks" not in first
+    assert "text_blocks" not in result.structuredContent
+    assert first == result.structuredContent
+    assert [block.text for block in result.content[1:]] == [tree, "second"]
+    assert all(block.type == "text" for block in result.content)
+    assert "text_blocks" in envelope

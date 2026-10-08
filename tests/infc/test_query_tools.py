@@ -67,18 +67,17 @@ class QueryToolsTest(unittest.TestCase):
             )
         return methods
 
-    def test_tree_summary_returns_ok_with_tree_and_totals(self):
+    def test_tree_summary_returns_ok_with_tree_text_and_totals(self):
         envelope = queries.query_tree_summary(self.registry, doc=self.handle, depth=1)
         content = envelope["structured_content"]
         self.assertEqual(envelope["status"], "OK")
-        self.assertGreater(content["total_objects"], 0)
-        self.assertIn("tree", content)
-        self.assertIn("returned_nodes", content)
+        self.assertEqual(content["total_objects"], 2)
+        self.assertEqual(content["shown"], 2)
+        self.assertEqual(envelope["text_blocks"], ["v [BOX] Box\nv [SKETCH] Sketch"])
 
-    def test_tree_summary_root_filter_scopes_result(self):
-        envelope = queries.query_tree_summary(self.registry, doc=self.handle, depth=1, root="Box")
-        content = envelope["structured_content"]
-        self.assertEqual(content["tree"][0]["name"], "Box")
+    def test_tree_summary_focus_scopes_result(self):
+        envelope = queries.query_tree_summary(self.registry, doc=self.handle, focus="Box")
+        self.assertEqual(envelope["text_blocks"], ["path: Box\nv [BOX] Box"])
 
     def test_query_object_reports_type_and_null_error(self):
         envelope = queries.query_object(self.registry, doc=self.handle, object="Box")

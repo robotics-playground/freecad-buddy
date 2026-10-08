@@ -33,7 +33,7 @@ of the human's FreeCAD window, so no scenario runs on the H1 headless host.
 **Design Ref**: `verification-design.md` §5 (shape assertions), `mcp-tools-design.md` §3.3 (verify surface)
 
 **Given** `box-10-20-30.FCStd` closed from any prior case — verify: `document_list` does not name it  
-**And** the golden box is open — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the returned `doc` handle as `<H>`; name its sole object `<OBJ>` via `mcp query_tree_summary { doc: <H> }` (read `tree[0].name`)  
+**And** the golden box is open — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the returned `doc` handle as `<H>`; name its sole object `<OBJ>` via `mcp query_tree_summary { doc: <H> }` (read the Name on the first line of the tree text, `content[1]`)  
 
 **When** all five assertion kinds are run in one call  
 ```

@@ -88,10 +88,11 @@ class ResultEnvelope(TypedDict, total=False):
     structured_content: dict                # required; validated by the tool's outputSchema
     text: str                               # required; human-readable mirror of structured_content
     images: list[ImageRef]                  # optional, capability-gated (AD-10)
+    text_blocks: list[str]                  # optional; raw text bodies, sent as extra content items
 ```
 
 - `structured_content` is the machine payload; per-tool `outputSchema` constrains it (spine Tool-results convention). `text` is always generated from `structured_content` server-side — never authored independently, so the two cannot diverge.
-- MCP mapping (adapter concern, defined here so both sides agree): envelope → `structuredContent`; `text` → first `content[]` text item; `images` → `image`/`resource_link` content items with `annotations.audience:["user"]`; `status != "OK"` additionally sets MCP `isError: true`.
+- MCP mapping (adapter concern, defined here so both sides agree): envelope → `structuredContent`; `text` → first `content[]` text item; each `text_blocks` entry → one more raw `text` content item after the JSON one, with `text_blocks` removed from both the JSON item and `structuredContent`; `images` → `image`/`resource_link` content items with `annotations.audience:["user"]`; `status != "OK"` additionally sets MCP `isError: true`.
 - Verify tools put their `ValidationReport` (§5) inside `structured_content.report` — the envelope wraps, never duplicates, report fields.
 
 ## 5. `ValidationReport` (`report.py`)

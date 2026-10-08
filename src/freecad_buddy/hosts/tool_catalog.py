@@ -1176,26 +1176,55 @@ def tool_specs() -> list[ToolSpec]:
                 "type": "object",
                 "properties": {
                     "doc": _DOC_SCHEMA,
-                    "depth": {"type": "integer", "default": 1, "minimum": 1},
-                    "root": {"type": "string"},
+                    "focus": {
+                        "type": "string",
+                        "description": "object Name; show only its subtree under a 'path:' line",
+                    },
+                    "expand": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "object Names to open one level; their ancestors open "
+                        "only along the path",
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "default": 1,
+                        "minimum": 1,
+                        "description": "levels open below the start. With focus the start is "
+                        "that object (depth 1 = it and its children); without focus the start is "
+                        "the document (depth 1 = top level, collapsed). Ignored when filters are "
+                        "given",
+                    },
                     "filters": {
                         "type": "object",
                         "additionalProperties": False,
+                        "description": "reveal matches inside the start subtree on their "
+                        "paths, in place of depth; both given = a match passes both",
                         "properties": {
-                            "types": {"type": "array", "items": {"type": "string"}},
-                            "exclude_types": {"type": "array", "items": {"type": "string"}},
-                            "renderable_only": {"type": "boolean"},
-                            "visible_only": {"type": "boolean"},
-                            "name_pattern": {"type": "string"},
+                            "types": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "tree codes in any case (PAD), or TypeIds "
+                                "matched exactly. A code is not unique (Part::Plane and "
+                                "App::Plane are both PLANE); give the TypeId to select one",
+                            },
+                            "name_pattern": {
+                                "type": "string",
+                                "description": "regex searched over 'Name Label'",
+                            },
                         },
                     },
                 },
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Depth-bounded, filterable feature-tree summary with nesting of children/App::Link. "
-            "A filter searches below a container that fails types, name_pattern or "
-            "renderable_only at any depth.",
+            "Document tree as plain text in the shape of FreeCAD's Model panel (containment, "
+            "not dependencies), sent as the second content block. One object per line: "
+            "'<v|-> [CODE] Name[ \"Label\"][ (+N)][ *tip][ !status]'. v = visible, - = hidden; "
+            "CODE = type code (BODY, PAD, SKETCH, DPLANE...); (+N) = N children not shown; "
+            "(+N more) = an ancestor opened only along a path; *tip = the Body's Tip; "
+            "!status = error state; an App::Link line ends '-> target'. Capped at 200 lines. "
+            "The one-line text names every errored object in the start subtree.",
         ),
         _query_method(
             "query_object",

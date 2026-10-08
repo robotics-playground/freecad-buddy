@@ -57,7 +57,7 @@ A caller-supplied bare `Face6` is resolved to a mapped name at call time and nev
 
 ### 1.3 Result envelope & error surface (AD-17)
 
-Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). No namespace defines a variant envelope.
+Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). A tool whose payload is a long text body (today only `query_tree_summary`) puts it in the optional `text_blocks: list[str]`; the adapter sends each entry as an extra raw `TextContent` after the JSON block and never serializes `text_blocks` into the JSON block or `structuredContent`. No namespace defines a variant envelope.
 
 The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contracts-design.md §4) — this catalog consumes it, never redefines it:
 
@@ -70,7 +70,8 @@ The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contrac
     "detail": { "type": ["object", "null"], "description": "ErrorDetail — machine code + required human message on non-OK; constraint diagnostics as {solver_id (1-based), name} per Constraints[id-1]" },
     "structured_content": { "type": "object", "description": "tool-specific payload, per-tool schema below (called `result` in §3 fragments); echoes the doc handle (AD-20)" },
     "text": { "type": "string", "description": "per-tool one-line human summary of structured_content (counts/headline/error flags); never a JSON re-dump" },
-    "images": { "type": "array", "description": "ImageRef[], capability-gated (AD-10)" }
+    "images": { "type": "array", "description": "ImageRef[], capability-gated (AD-10)" },
+    "text_blocks": { "type": "array", "items": { "type": "string" }, "description": "raw text bodies sent as content[1..]; absent from the JSON block and structuredContent" }
   },
   "required": ["status", "structured_content", "text"]
 }}}
@@ -125,7 +126,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
-| `query_tree_summary` | 0 | Bounded, summarized feature-tree overview (G1.3 large-tree safe) | no |
+| `query_tree_summary` | 0 | Plain-text containment tree in the shape of the Model panel, line-capped (G1.3 large-tree safe) | no |
 | `query_object` | 0 | One object: type, label, properties, error state + `getStatusString()` | no |
 | `query_mass_properties` | 0 | Volume/area/bbox/COM/inertia + topology counts for an object | no |
 | `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc (whole-doc `edges` capped at `max_edges`, truncation flagged) | no |
@@ -133,7 +134,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_placement` | 0 | Local + global placement of an object | no |
 | `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `debug_exec` state | no |
 | `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1920 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport; renders a document with a pending/broken recompute (`render.dirty_document: true`) rather than hard-failing. Reports unavailable when no GL — never fails hard | no |
-| `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns depth/root/filter navigation — **planned** | no |
+| `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns focus/expand/depth/reveal navigation — **planned** | no |
 | `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) — **planned** | no |
 
 ### `export_` — artifact output (AD-9: each pairs with its `verify_export_*`)
@@ -245,37 +246,40 @@ A save target is checked before FreeCAD writes. A directory, a missing parent fo
 
 ### 3.2 `query_tree_summary`
 
-Depth-bounded, filterable, nested tree walk (G1.3 context-overflow guard by explore-then-expand, not a flat node cap). `depth` expands N levels from the document roots (or from `root`); at the depth boundary a node reports only its counts. Children are partitioned into structural `children` and `App::Link` instance `links`. `filters` AND-stacks; `exclude_types` defaults to the datum/origin clutter set. A node that fails `types`, `name_pattern` or `renderable_only` is dropped, and its matching descendants, searched at any depth, take its place, each `Name` once. A node that fails `visible_only` or `exclude_types` drops its whole subtree, and a failing `App::Link` hoists nothing. Nodes are sparse — a field appears only when it carries a value; `name`/`label`/`type`/`visibility` are always present.
+The document tree as plain text in the shape of FreeCAD's Model panel (G1.3 context-overflow guard by explore-then-expand plus a line cap). The tree travels in the envelope's `text_blocks` (§1.3) and reaches the client as `content[1]`; `structured_content` carries only the counts.
+
+**Line.** `<prefix><v|-> [<CODE>] <Name>[ "<Label>"][ (+N)][ *tip][ !<status>]`. `v` = `Visibility` true (the App value; FreeCAD syncs it with the view provider both ways). The label appears only when it differs from the name. `(+N)` = N children not shown; a node opened only along a path ends `(+N more)`, N excluding the shown child. `*tip` = the Tip of its Body. `!<status>` = a genuine `getStatusString()` error. A Label is whitespace-collapsed and its `"` escaped as `\"`, so each object stays on one line. An `App::Link` (or `App::LinkPython`) line ends `-> <target>` and has no children. Connectors: `|-- ` for a middle child, `` `-- `` for the last; prefix `|   ` below a middle child, four spaces below the last.
+
+**Type code.** The `TypeId` after `::` in capitals (a `TypeId` without `::` in capitals as it is), except a fixed override table: `PartDesign::Plane`→`DPLANE`, `App::Plane`→`PLANE`, `App::Line`→`AXIS`, `PartDesign::Line`→`DLINE`, `App::Point`→`POINT`, `PartDesign::Point`→`DPOINT`, `Sketcher::SketchObject`→`SKETCH`, `PartDesign::FeatureBase`→`BASE`, `PartDesign::Body`→`BODY`, `App::Origin`→`ORIGIN`, `App::Link`→`LINK`. A code is not unique (`Part::Plane` and `App::Plane` are both `PLANE`; `Part::Fillet` and `PartDesign::Fillet` are both `FILLET`). The table lives in `usecases/tree_text.py`; `skills/freecad-fundamentals/references/tree-codes.md` publishes it, and `tests/external/test_tree_text.py` fails when the two differ.
+
+**Children (containment, not `OutList`).** Each rule copies a FreeCAD view provider's `claimChildren` (`docs/references/FreeCAD/src`). An origin group (Body, `App::Part`) lists its `Origin` first, then `Group`, leaving out each member that another member claims (`ViewProviderGeoFeatureGroupExtension.cpp:78-108`). A group lists `Group`; an `App::LinkGroup` lists `ElementList`. An `App::Origin` lists `OriginFeatures`. `Part::Boolean` lists `Base`, `Tool`; `Part::MultiFuse`/`Part::MultiCommon` list `Shapes`; `PartDesign::Loft` lists its profile and `Sections`, `PartDesign::Pipe` its profile, `Sections`, `Spine` and `AuxiliarySpine` (2D objects only, as the source filters); `PartDesign::MultiTransform` lists `Transformations`. Any other sketch-based feature lists its `Profile` when it is a sketch. Top level = objects no other object holds as a child. A containment cycle is cut where it repeats. Dependencies stay in `query_dependencies`.
+
+**Views.** Without `focus`, every top-level object is listed. With `focus`, the first line is `path: <A> > <B> > <Name>` and only that node's subtree follows. `depth` = levels open below the start: with `focus` the start is that object (`depth` 1 = it and its children); without `focus` the start is the document (`depth` 1 = the top level, collapsed). `expand` opens each named node one level and opens its ancestors only along the path. `filters.name_pattern` (regex over `"Name Label"`) and `filters.types` (codes in any case, or `TypeId`s matched exactly; both filters given = a match passes both) select matches inside the start subtree; each match is shown on its opened path, not opened itself unless `expand` names it, and every other line stays collapsed (`depth` does not open levels). With 0 matches the tree shows the start level only.
+
+**Bounds and errors.** 200 tree lines; past that the last line is `... <K> more lines; narrow with focus or a smaller depth` and `truncated` is true. An unknown `focus` or `expand` name → `INVALID_INPUT` "unknown object: <name>"; an `expand` name outside the `focus` subtree → `INVALID_INPUT` "<name> is outside focus <focus>"; `depth < 1` or an invalid `name_pattern` → `INVALID_INPUT`.
 
 ```json
 { "inputSchema": { "type": "object", "properties": {
     "doc": { "type": "string" },
-    "depth": { "type": "integer", "default": 1, "minimum": 1, "description": "levels to expand; 1 = top containers only" },
-    "root": { "type": "string", "description": "expand the subtree under this object instead of the document roots" },
+    "focus": { "type": "string", "description": "object Name; show only its subtree under a 'path:' line" },
+    "expand": { "type": "array", "items": { "type": "string" }, "description": "object Names to open one level; ancestors open only along the path" },
+    "depth": { "type": "integer", "default": 1, "minimum": 1, "description": "levels open below the start (focus, or the top level)" },
     "filters": { "type": "object", "additionalProperties": false, "properties": {
-      "types": { "type": "array", "items": { "type": "string" } },
-      "exclude_types": { "type": "array", "items": { "type": "string" }, "description": "defaults to App::Plane/Line/Point/Origin" },
-      "renderable_only": { "type": "boolean" },
-      "visible_only": { "type": "boolean" },
-      "name_pattern": { "type": "string" }
+      "types": { "type": "array", "items": { "type": "string" }, "description": "tree codes (PAD) or TypeIds" },
+      "name_pattern": { "type": "string", "description": "regex searched over 'Name Label'" }
     } }
-  }, "required": ["doc"] },
+  }, "required": ["doc"], "additionalProperties": false },
   "outputSchema-result": { "type": "object", "properties": {
     "doc": { "type": "string" }, "total_objects": { "type": "integer" },
-    "returned_nodes": { "type": "integer", "description": "emitted node count after depth + filter" },
-    "depth": { "type": "integer" }, "filters_applied": { "type": "object" },
-    "tree": { "type": "array", "items": { "type": "object", "properties": {
-      "name": { "type": "string" }, "label": { "type": "string" },
-      "type": { "type": "string", "description": "e.g. PartDesign::Pad" },
-      "visibility": { "type": "boolean" },
-      "error": { "type": "string", "description": "getStatusString() — present only when in error state" },
-      "children_count": { "type": "integer", "description": "present only when non-zero" },
-      "children": { "type": "array", "description": "structural children; present only when expanded and non-empty" },
-      "links_count": { "type": "integer", "description": "App::Link children; present only when non-zero" },
-      "links": { "type": "array", "description": "App::Link instances; present only when expanded and non-empty" }
-    }, "required": ["name", "label", "type", "visibility"] } }
-  }, "required": ["doc", "total_objects", "returned_nodes", "depth", "tree"] } }
+    "shown": { "type": "integer", "description": "tree lines shown, at most 200" },
+    "truncated": { "type": "boolean" },
+    "matches": { "type": "integer", "description": "present only when filters are given" }
+  }, "required": ["doc", "total_objects", "shown", "truncated"] } }
 ```
+
+The envelope's `text_blocks` holds one entry, the tree text (optional `path:` line, tree lines, steering line); the adapter sends it as `content[1]`.
+
+`text`: `"<total_objects> objects, <shown> shown."`, with `, truncated` before the period when the cap cut the tree. When objects in the start subtree are in error, shown or not, the period is followed by ` Errors: <Name>: <status>; <Name>: <status>`.
 
 ### 3.2.1 `query_dependencies`
 

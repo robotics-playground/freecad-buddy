@@ -7,6 +7,9 @@ block goes through ``result_projection.project_mutation``, each preview diff get
 op and the projected audit and its text from ``summarize_preview``, and every envelope is written
 through ``mcp_server._to_call_result``, so the numbers measure the code that ships.
 
+Only the first text item of a result is the envelope; a later item (the ``query_tree_summary``
+tree text) is carried unchanged and counted in both sizes.
+
 A recorded result whose text is not valid JSON (Claude Code cut it and kept no spill file, or the
 client refused the call before it reached the server) cannot be projected. It is excluded from the
 totals and named in the report.
@@ -47,6 +50,15 @@ class Result:
     index: int
     tool: str
     text: str
+    extra: list[str]
+
+    @property
+    def extra_size(self) -> int:
+        return sum(len(block) for block in self.extra)
+
+    @property
+    def size(self) -> int:
+        return len(self.text) + self.extra_size
 
 
 def _argument(spec: str) -> tuple[Path, int | None]:
@@ -57,15 +69,18 @@ def _argument(spec: str) -> tuple[Path, int | None]:
     return Path(spec), None
 
 
-def _result_text(content: object) -> str:
+def _result_texts(content: object) -> list[str]:
+    """The result's text items, the envelope first; a spilled envelope is read from its file."""
     if isinstance(content, str):
-        text = content
+        texts = [content]
     else:
-        text = "".join(item.get("text", "") for item in content or [] if isinstance(item, dict))
-    spilled = _SPILL.match(text)
+        texts = [item.get("text", "") for item in content or [] if isinstance(item, dict)]
+    if not texts:
+        return [""]
+    spilled = _SPILL.match(texts[0])
     if spilled:
-        return Path(spilled.group(2)).read_text(encoding="utf-8")
-    return text
+        texts[0] = Path(spilled.group(2)).read_text(encoding="utf-8")
+    return texts
 
 
 def load(path: Path, limit: int | None) -> list[Result]:
@@ -84,12 +99,14 @@ def load(path: Path, limit: int | None) -> list[Result]:
                 elif item.get("type") == "tool_result":
                     name = tool_names.get(item.get("tool_use_id"), "")
                     if name.startswith(_TOOL_PREFIX):
+                        texts = _result_texts(item.get("content"))
                         results.append(
                             Result(
                                 path.stem[:8],
                                 len(results),
                                 name[len(_TOOL_PREFIX) :],
-                                _result_text(item.get("content")),
+                                texts[0],
+                                texts[1:],
                             )
                         )
     return results[:limit]
@@ -154,13 +171,13 @@ def main(argv: list[str]) -> int:
             projected, count = project(envelope)
             filled += count
             text = _to_call_result(projected).content[0].text
-            rows.append((result, len(text)))
+            rows.append((result, len(text) + result.extra_size))
 
     sessions: dict[str, list[int]] = {}
     for result, after in rows:
         totals = sessions.setdefault(result.session, [0, 0, 0, 0])
         totals[0] += 1
-        totals[1] += len(result.text)
+        totals[1] += result.size
         totals[2] += after
         totals[3] = max(totals[3], after)
     for session, (count, before, after, largest) in sessions.items():
@@ -168,7 +185,7 @@ def main(argv: list[str]) -> int:
             f"{session}: {count} results, before {before:,}, after {after:,}, "
             f"drop {_drop(before, after)}, largest {largest:,}"
         )
-    before = sum(len(result.text) for result, _ in rows)
+    before = sum(result.size for result, _ in rows)
     after = sum(size for _, size in rows)
     print(
         f"total: {len(rows)} results, before {before:,}, after {after:,}, "
@@ -187,7 +204,7 @@ def main(argv: list[str]) -> int:
     )
     print(f"excluded, not a JSON envelope: {len(excluded)}")
     for result in excluded:
-        print(f"  {result.session} #{result.index} {result.tool}: {len(result.text):,} chars")
+        print(f"  {result.session} #{result.index} {result.tool}: {result.size:,} chars")
     return 0
 
 

@@ -295,7 +295,7 @@ rm -f "$RUN_DIR/evidence/tc-06-05-"*.png
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** a document with two visible shape-bearing objects is open — verify: `mcp query_tree_summary {doc:<handle>}` reports `visibility` true for both  
+**Given** a document with two visible shape-bearing objects is open — verify: in the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` both object lines start `v `  
 **And** the FreeCAD model tree is exposed in the accessibility tree — verify: `'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state` lists a `Tree` role element  
 
 **When** the default scene is rendered and `scene.rendered_objects` is recorded  
@@ -317,7 +317,7 @@ Use `element_token`, never a bare `element_index`; indices are per-snapshot and 
 **This route is unreliable and MUST be verified, then retried if it did not land** (observed
 2026-09-12: the same call landed on one attempt and silently did nothing on another, in both
 cases reporting `effect: "unverifiable"`). Confirm with
-`mcp query_tree_summary {doc:<handle>}` and repeat until `visibility` actually flips.
+`mcp query_tree_summary {doc:<handle>}` and repeat until the `<ObjectB>` line marker actually flips.
 
 **Hazard — match the token by role and label, never by position.** Tokens are per-snapshot. In a
 live run an adjacent token was the tree's inline **rename editor**, and the `space` keystroke
@@ -332,13 +332,13 @@ mcp query_screenshot {doc:<handle>, view:{include:["<ObjectB>"]}}
 **And** visibility is restored by repeating the hide step, and confirmed with the bridge  
 
 **Then** the hide landed in the GUI — verify: `'{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"<ObjectB>"},"exists":true}}]}' | & cua-driver call verify_state` returns `satisfied`. A result of `unknown` is NOT success — record the scenario as inconclusive and stop.  
-**And** the bridge sees the new visibility — verify: `mcp query_tree_summary {doc:<handle>}` reports `visibility` false for `<ObjectB>`  
+**And** the bridge sees the new visibility — verify: in the tree text of `mcp query_tree_summary {doc:<handle>}` the `<ObjectB>` line starts `- `  
 **And** the hidden object drops out of the default render — verify: the post-hide default render returns `scene.rendered_objects` WITHOUT `<ObjectB>`  
 **And** an explicit include still renders it — verify: the explicit-include call returns `scene.rendered_objects` equal to `["<ObjectB>"]` with a non-null `render.resource_link`  
 **And** the default render matches the viewport — verify: a viewport grab taken after the hide, to `$RUN_DIR/evidence/tc-06-06-hidden.png`, shows the same object set as the post-hide default render  
-**And** visibility is restored — verify: after the restore step, `mcp query_tree_summary {doc:<handle>}` reports `visibility` true for `<ObjectB>` and the default render lists it again  
+**And** visibility is restored — verify: after the restore step, the `<ObjectB>` line of `mcp query_tree_summary {doc:<handle>}` starts `v ` again and the default render lists it again  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows both objects again, and the restored default render depicts that same pair — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say how many solids are on screen and which they are, as the user would see it. `Read` `$RUN_DIR/evidence/tc-06-06-hidden.png` and say the same for the hidden state — one solid, `<ObjectB>` absent. Then `Read` the final default render and judge it against the after description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `visibility` flag, or render may stand in for looking at the image. Where the two disagree on which objects are on screen, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows both objects again, and the restored default render depicts that same pair — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say how many solids are on screen and which they are, as the user would see it. `Read` `$RUN_DIR/evidence/tc-06-06-hidden.png` and say the same for the hidden state — one solid, `<ObjectB>` absent. Then `Read` the final default render and judge it against the after description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `v`/`-` marker, or render may stand in for looking at the image. Where the two disagree on which objects are on screen, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -456,7 +456,7 @@ mcp query_tree_summary {doc:<handle>, depth:2}
 
 **Then** the volume is unchanged — verify: the after `volume` equals the before `volume` exactly, and equals `6000.0` mm3 for `box-10-20-30`  
 **And** the centre of mass is unchanged — verify: the after `com` equals the before `com` exactly  
-**And** the tree is unchanged — verify: the after `query_tree_summary` output equals the before output, including every `visibility` flag  
+**And** the tree is unchanged — verify: the after `query_tree_summary` output equals the before output, including every `v`/`-` marker  
 **And** the strict guard is active — verify: every render response has `render.dirty_document` false, which is the state in which the before-equals-after mutation assertion runs  
 **And** no document dirty flag is set — verify: `mcp verify_recompute {doc:<handle>}` after the renders still reports no touched object; a render must not touch the document  
 **And** styles did not persist — verify: a render with no `styles` after the styled render shows `Box` in its original color, so the style override lived only in the constructed scene  

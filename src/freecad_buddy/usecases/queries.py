@@ -16,6 +16,14 @@ from typing import Literal
 from freecad_buddy.contracts import CapabilityBanner, ResultEnvelope, summary_text
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.tree_text import (
+    LINE_CAP,
+    TreeNode,
+    cap_lines,
+    path_line,
+    tree_lines,
+    type_code,
+)
 
 
 def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope:
@@ -28,23 +36,18 @@ def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope
     }
 
 
-def summarize_tree(sc: dict) -> str:
-    """One-line tree summary: object counts + any errored nodes."""
-    errors = _collect_errors(sc.get("tree", []))
-    head = f"{sc.get('total_objects', '?')} objects, {sc.get('returned_nodes', '?')} shown"
+def summarize_tree(sc: dict, errors: list[str] | None = None) -> str:
+    """One-line tree summary: object count, lines shown, a cut by the cap, and every error.
+
+    ``errors`` holds ``"<Name>: <status>"`` for each errored object in the start subtree, so an
+    error below a collapsed line still reaches the agent.
+    """
+    head = f"{sc.get('total_objects', '?')} objects, {sc.get('shown', '?')} shown"
+    if sc.get("truncated"):
+        head += ", truncated"
     if errors:
         return f"{head}. Errors: " + "; ".join(errors)
     return head + "."
-
-
-def _collect_errors(nodes: list) -> list:
-    out = []
-    for n in nodes:
-        if "error" in n:
-            out.append(f"{n['name']}: {n['error']}")
-        out += _collect_errors(n.get("children", []))
-        out += _collect_errors(n.get("links", []))
-    return out
 
 
 def summarize_sketch_info(sc: dict) -> str:
@@ -179,93 +182,6 @@ def _status_string(obj: object) -> str | None:
     return None if status in _CLEAN_STATUS else status
 
 
-_DATUM_EXCLUDE_DEFAULT = ("App::Plane", "App::Line", "App::Point", "App::Origin")
-
-# A shape-bearing leaf the offscreen renderer draws — mirrors the render skip-set: datum/origin
-# features and the two container types (Body/Sketch has a Shape but is not a drawable leaf).
-_RENDER_SKIP_PREFIXES = ("App::Origin", "App::Line", "App::Plane", "App::Point")
-_RENDER_SKIP_TYPES = frozenset({"PartDesign::Body", "Sketcher::SketchObject"})
-
-
-def _is_renderable(obj: object) -> bool:
-    """Whether ``obj`` is a shape-bearing leaf the default render would draw (not datum/container)."""  # noqa: E501
-    type_id = str(getattr(obj, "TypeId", ""))
-    if type_id in _RENDER_SKIP_TYPES or type_id.startswith(_RENDER_SKIP_PREFIXES):
-        return False
-    shape = getattr(obj, "Shape", None)
-    is_null = getattr(shape, "isNull", None)
-    return shape is not None and not (is_null is not None and is_null())
-
-
-def _node_passes(obj: object, filters: dict) -> bool:
-    """Whether ``obj`` survives every provided filter (AND-stacked)."""
-    type_id = str(getattr(obj, "TypeId", ""))
-    types = filters.get("types")
-    if types is not None and type_id not in types:
-        return False
-    exclude = filters.get("exclude_types")
-    if exclude is not None and type_id in exclude:
-        return False
-    if filters.get("renderable_only") and not _is_renderable(obj):
-        return False
-    if filters.get("visible_only") and not bool(getattr(obj, "Visibility", False)):
-        return False
-    pattern = filters.get("name_pattern")
-    if pattern is not None:
-        haystack = f"{getattr(obj, 'Name', '')} {getattr(obj, 'Label', '')}"
-        if not re.search(pattern, haystack):
-            return False
-    return True
-
-
-def _prunes_subtree(obj: object, filters: dict) -> bool:
-    """Whether a failing ``obj`` takes its whole subtree with it instead of hoisting matches.
-
-    ``visible_only`` and ``exclude_types`` describe the container and everything in it: a hidden
-    Body hides its Pad, whose own ``Visibility`` stays true. An ``App::Link``'s ``OutList`` is
-    its target, which is not its content and may live in another document.
-    """
-    if _is_link(obj):
-        return True
-    exclude = filters.get("exclude_types")
-    if exclude is not None and str(getattr(obj, "TypeId", "")) in exclude:
-        return True
-    return bool(filters.get("visible_only")) and not bool(getattr(obj, "Visibility", False))
-
-
-def _sparse_node(
-    obj: object,
-    children: list,
-    links: list,
-    children_count: int,
-    links_count: int,
-) -> dict:
-    """Assemble a tree node, omitting any field that carries no value.
-
-    Always emits name/label/type/visibility. Emits ``error`` only for a genuine error status,
-    ``children``/``links`` only when a non-empty expanded array is supplied, and
-    ``children_count``/``links_count`` only when non-zero.
-    """
-    node = {
-        "name": obj.Name,
-        "label": obj.Label,
-        "type": obj.TypeId,
-        "visibility": bool(getattr(obj, "Visibility", False)),
-    }
-    error = _status_string(obj)
-    if error is not None:
-        node["error"] = error
-    if children_count:
-        node["children_count"] = children_count
-    if links_count:
-        node["links_count"] = links_count
-    if children:
-        node["children"] = children
-    if links:
-        node["links"] = links
-    return node
-
-
 def _resolve_object(document: object, name: str | None):
     """Return the object named ``name`` on ``document``, or raise ``ValidationError``.
 
@@ -328,81 +244,251 @@ def _constraint_quantity(constraint_type: str, value: float) -> dict | None:
 def query_tree_summary(
     registry: DocumentRegistry,
     doc: str | None = None,
+    focus: str | None = None,
+    expand: list[str] | None = None,
     depth: int = 1,
-    root: str | None = None,
     filters: dict | None = None,
 ) -> ResultEnvelope:
-    """Summarize the feature tree as a nested, depth-bounded, filtered node tree.
+    """Render the document tree as plain text in the shape of FreeCAD's Model panel.
 
-    Expands ``depth`` levels from the document roots (or from ``root`` when given). Each object's
-    children are partitioned into structural ``children`` and ``App::Link`` ``links``; at the depth
-    boundary a node reports only its ``children_count``/``links_count``. ``filters`` AND-stacks
-    ``types``/``exclude_types``/``renderable_only``/``visible_only``/``name_pattern``;
-    ``exclude_types`` defaults to the datum/origin clutter set. A node that fails the filters is
-    dropped and its matching descendants, searched at any depth, take its place, each ``Name``
-    once per level; a node failing ``visible_only`` or ``exclude_types``, or a failing
-    ``App::Link``, drops its whole subtree instead. Nodes are sparse — a field appears only when
-    it carries a value; ``name``/``label``/``type``/``visibility`` are always present.
+    Children are containment, not dependencies (see :func:`_containment_children`). The start is
+    ``focus`` or the top level; ``depth`` levels open below it. ``expand`` opens each named node
+    one level and opens its ancestors only along the path. ``filters.name_pattern``/
+    ``filters.types`` select matches inside the start subtree and open only their paths, in place
+    of ``depth``.
+
+    The tree text travels in ``text_blocks``; ``structured_content`` holds only the counts, and
+    ``text`` names every errored object in the start subtree, shown or not. Raises
+    ``ValidationError`` for an unknown ``focus``/``expand`` name, an ``expand`` name outside the
+    ``focus`` subtree, a ``depth`` below ``1``, or a ``name_pattern`` that is not a regular
+    expression.
     """
-    effective = dict(filters or {})
-    effective.setdefault("exclude_types", list(_DATUM_EXCLUDE_DEFAULT))
+    if not isinstance(depth, int) or isinstance(depth, bool) or depth < 1:
+        raise ValidationError(f"depth must be an integer >= 1: {depth!r}")
+    reveal = filters or {}
+    pattern = _compile_name_pattern(reveal.get("name_pattern"))
+    types = reveal.get("types")
+    revealing = pattern is not None or types is not None
+    expanded = list(expand or [])
 
-    def read(_handle: str, document: object) -> ResultEnvelope:
-        by_name = {obj.Name: obj for obj in document.Objects}
-        if root is not None:
-            root_obj = by_name.get(root)
-            if root_obj is None:
-                raise ValidationError(f"unknown object: {root}")
-            roots = [root_obj]
-        else:
-            in_lists = {c.Name for o in document.Objects if not _is_link(o) for c in _out_list(o)}
-            roots = [o for o in document.Objects if o.Name not in in_lists]
+    def read(handle: str, document: object) -> ResultEnvelope:
+        objects = list(document.Objects)
+        names = {obj.Name for obj in objects}
+        for name in ([focus] if focus is not None else []) + expanded:
+            if name not in names:
+                raise ValidationError(f"unknown object: {name}")
 
-        counter = {"n": 0}
+        children = {obj.Name: _containment_children(obj) for obj in objects}
+        parent: dict[str, str] = {}
+        for obj in objects:
+            for child in children[obj.Name]:
+                parent.setdefault(child.Name, obj.Name)
 
-        def matching(candidates: list) -> list:
-            """``candidates`` that pass the filters, each failing one replaced by its matches.
+        def chain(name: str) -> list[str]:
+            """Names from the top level down to ``name``; a containment cycle ends the walk."""
+            upward = [name]
+            while upward[-1] in parent and parent[upward[-1]] not in upward:
+                upward.append(parent[upward[-1]])
+            return upward[::-1]
 
-            The search under a failing object is not bounded by ``depth``: a Pad inside a Body
-            must be found when the Body itself fails the filter. It never descends where
-            :func:`_prunes_subtree` holds. The ``seen`` set returns each ``Name`` once and stops
-            on a cyclic ``OutList``.
-            """
-            found, seen = [], set()
-            stack = list(reversed(candidates))
-            while stack:
-                obj = stack.pop()
-                if obj.Name in seen:
-                    continue
-                seen.add(obj.Name)
-                if _node_passes(obj, effective):
-                    found.append(obj)
-                elif not _prunes_subtree(obj, effective):
-                    stack.extend(reversed(_out_list(obj)))
-            return found
+        def below_start(name: str) -> list[str] | None:
+            """The chain from the start down to ``name``; ``None`` outside the start subtree."""
+            full = chain(name)
+            if focus is None:
+                return full
+            return full[full.index(focus) :] if focus in full else None
 
-        def build(obj: object, remaining: int) -> dict:
-            out = _out_list(obj)
-            children, links = [], []
-            if remaining > 1:
-                for match in matching(out):
-                    (links if _is_link(match) else children).append(build(match, remaining - 1))
-            counter["n"] += 1
-            links_count = sum(1 for c in out if _is_link(c))
-            return _sparse_node(obj, children, links, len(out) - links_count, links_count)
-
-        tree = [build(o, depth) for o in matching(roots)]
-        structured = {
-            "doc": _handle,
-            "total_objects": len(document.Objects),
-            "returned_nodes": counter["n"],
-            "depth": depth,
-            "filters_applied": effective,
-            "tree": tree,
+        for name in expanded:
+            if below_start(name) is None:
+                raise ValidationError(f"{name} is outside focus {focus}")
+        in_start = [obj for obj in objects if below_start(obj.Name) is not None]
+        matched = [obj.Name for obj in in_start if revealing and _reveals(obj, pattern, types)]
+        errors = [
+            f"{obj.Name}: {' '.join(status.split())}"
+            for obj in in_start
+            if (status := _status_string(obj)) is not None
+        ]
+        on_path: set[str] = set()
+        marked: set[str] = set()
+        for target in expanded + matched:
+            path = below_start(target)
+            on_path.update(path[:-1])
+            marked.update(path)
+        open_names = set(expanded)
+        tips = {
+            obj.Tip.Name
+            for obj in objects
+            if obj.isDerivedFrom("PartDesign::Body") and getattr(obj, "Tip", None) is not None
         }
-        return _ok_envelope(structured, summarize_tree(structured))
+
+        def build(obj: object, remaining: int, ancestors: frozenset[str]) -> TreeNode:
+            kids = [kid for kid in children.get(obj.Name, []) if kid.Name not in ancestors]
+            inner = ancestors | {obj.Name}
+            if remaining >= 1 or obj.Name in open_names:
+                shown = [build(kid, remaining - 1, inner) for kid in kids]
+            elif obj.Name in on_path:
+                shown = [build(kid, 0, inner) for kid in kids if kid.Name in marked]
+            else:
+                shown = []
+            return TreeNode(
+                name=obj.Name,
+                label=obj.Label,
+                type_id=obj.TypeId,
+                visible=bool(getattr(obj, "Visibility", False)),
+                tip=obj.Name in tips,
+                status=_status_string(obj),
+                link_target=_link_target(obj),
+                children=shown,
+                not_shown=len(kids) - len(shown),
+            )
+
+        budget = 0 if revealing else depth
+        if focus is None:
+            roots = [
+                build(obj, budget - 1, frozenset()) for obj in objects if obj.Name not in parent
+            ]
+            head: list[str] = []
+        else:
+            roots = [build(document.getObject(focus), budget, frozenset())]
+            head = [path_line(chain(focus))]
+        lines = tree_lines(roots)
+        capped, truncated = cap_lines(lines)
+        structured = {
+            "doc": handle,
+            "total_objects": len(objects),
+            "shown": min(len(lines), LINE_CAP),
+            "truncated": truncated,
+        }
+        if revealing:
+            structured["matches"] = len(matched)
+        envelope = _ok_envelope(structured, summarize_tree(structured, errors))
+        envelope["text_blocks"] = ["\n".join(head + capped)]
+        return envelope
 
     return registry.with_document(doc, read)
+
+
+def _compile_name_pattern(pattern: str | None) -> re.Pattern | None:
+    if pattern is None:
+        return None
+    try:
+        return re.compile(pattern)
+    except re.error as exc:
+        raise ValidationError(f"invalid name_pattern {pattern!r}: {exc}") from exc
+
+
+def _reveals(obj: object, pattern: re.Pattern | None, types: list[str] | None) -> bool:
+    """Whether ``obj`` passes every given reveal filter.
+
+    ``types`` takes tree codes in any case (``PAD``, ``pad``) or exact ``TypeId``s; ``pattern``
+    searches ``"Name Label"``.
+    """
+    if types is not None and obj.TypeId not in types:
+        if type_code(obj.TypeId) not in {entry.upper() for entry in types}:
+            return False
+    return pattern is None or pattern.search(f"{obj.Name} {obj.Label}") is not None
+
+
+def _linked_objects(value: object) -> list:
+    """The objects a link property holds, for ``PropertyLink`` through ``PropertyLinkSubList``.
+
+    A sub-link reads as ``(object, subnames)`` and a sub-link list repeats one object per
+    subname, so each entry is unwrapped and repeats are dropped.
+    """
+    entries = value if isinstance(value, list) else [value]
+    targets = [entry[0] if isinstance(entry, tuple) else entry for entry in entries]
+    return _dedup_by_name(target for target in targets if target is not None)
+
+
+_CLAIMED_PROPERTIES: tuple[tuple[str, tuple[str, ...], bool], ...] = (
+    ("Part::Boolean", ("Base", "Tool"), False),
+    ("Part::MultiFuse", ("Shapes",), False),
+    ("Part::MultiCommon", ("Shapes",), False),
+    ("PartDesign::Loft", ("Profile", "Sections"), True),
+    ("PartDesign::Pipe", ("Profile", "Sections", "Spine", "AuxiliarySpine"), True),
+    ("PartDesign::MultiTransform", ("Transformations",), False),
+)
+
+
+def _claimed_children(obj: object) -> list:
+    """The objects a feature's view provider claims as tree children.
+
+    Each ``_CLAIMED_PROPERTIES`` row copies a ``claimChildren`` in
+    ``docs/references/FreeCAD/src``; the flag keeps only ``Part::Part2DObject`` targets, as the
+    source does:
+
+    - ``Part::Boolean``: ``Mod/Part/Gui/ViewProviderBoolean.cpp:109-116``.
+    - ``Part::MultiFuse``/``Part::MultiCommon``: ``ViewProviderBoolean.cpp:260-263,404-407``.
+    - ``PartDesign::Loft``: ``Mod/PartDesign/Gui/ViewProviderLoft.cpp:43-61``.
+    - ``PartDesign::Pipe``: ``Mod/PartDesign/Gui/ViewProviderPipe.cpp:43-71``.
+    - ``PartDesign::MultiTransform``: ``Mod/PartDesign/Gui/ViewProviderMultiTransform.cpp:51-60``.
+    - any other feature with a ``Profile`` sketch:
+      ``Mod/PartDesign/Gui/ViewProviderSketchBased.cpp:75-84``, narrowed to sketches.
+    """
+    for type_id, properties, only_2d in _CLAIMED_PROPERTIES:
+        if obj.isDerivedFrom(type_id):
+            targets = _dedup_by_name(
+                target
+                for prop in properties
+                for target in _linked_objects(getattr(obj, prop, None))
+            )
+            if only_2d:
+                return [target for target in targets if target.isDerivedFrom("Part::Part2DObject")]
+            return targets
+    profile = _profile_sketch(obj)
+    return [profile] if profile is not None else []
+
+
+def _profile_sketch(obj: object) -> object | None:
+    """The sketch a sketch-based feature claims as its ``Profile``, else ``None``."""
+    if "Profile" not in getattr(obj, "PropertiesList", ()):
+        return None
+    value = obj.Profile
+    target = value[0] if isinstance(value, tuple) else value
+    if str(getattr(target, "TypeId", "")).startswith("Sketcher::SketchObject"):
+        return target
+    return None
+
+
+def _containment_children(obj: object) -> list:
+    """The children FreeCAD's Model panel shows under ``obj``, in panel order.
+
+    Every origin group puts its ``Origin`` first, as ``ViewProviderOriginGroupExtension`` does;
+    without that an ``App::Part``'s origin would be listed as a top-level object. A geometry group
+    (Body, Part) leaves out each member that another member claims, as
+    ``Gui/ViewProviderGeoFeatureGroupExtension.cpp:78-108`` does. An ``App::LinkGroup`` lists its
+    ``ElementList``; an ``App::Link`` lists nothing.
+    """
+    if _is_link(obj):
+        return []
+    if obj.TypeId.startswith("App::LinkGroup"):
+        return _linked_objects(list(obj.ElementList))
+    if obj.isDerivedFrom("App::Origin"):
+        return list(obj.OriginFeatures)
+    claimed = _claimed_children(obj)
+    if claimed:
+        return claimed
+    group = list(obj.Group) if obj.hasExtension("App::GroupExtension") else []
+    if obj.hasExtension("App::GeoFeatureGroupExtension"):
+        taken = {
+            child.Name
+            for member in group
+            if not member.hasExtension("App::GeoFeatureGroupExtension")
+            for child in _claimed_children(member)
+        }
+        group = [member for member in group if member.Name not in taken]
+    origin = obj.Origin if obj.hasExtension("App::OriginGroupExtension") else None
+    return ([origin] if origin is not None else []) + group
+
+
+def _link_target(obj: object) -> str | None:
+    """The ``Name`` an ``App::Link`` points at, else ``None``."""
+    if not _is_link(obj):
+        return None
+    target = getattr(obj, "LinkedObject", None)
+    if isinstance(target, tuple):
+        target = target[0]
+    return getattr(target, "Name", None)
 
 
 def _dedup_by_name(objects) -> list:
@@ -429,9 +515,15 @@ def _out_list(obj: object) -> list:
     return _dedup_by_name(getattr(obj, "OutList", []) or [])
 
 
+_LEAF_LINK_TYPES = frozenset({"App::Link", "App::LinkPython"})
+
+
 def _is_link(obj: object) -> bool:
-    """Whether ``obj`` is an ``App::Link`` instance, grouped separately from structural children."""
-    return str(getattr(obj, "TypeId", "")).startswith("App::Link")
+    """Whether ``obj`` is an ``App::Link``, which the tree shows without children.
+
+    ``App::LinkGroup`` and ``App::LinkElement`` are not: a link group lists its elements.
+    """
+    return str(getattr(obj, "TypeId", "")) in _LEAF_LINK_TYPES
 
 
 def query_object(

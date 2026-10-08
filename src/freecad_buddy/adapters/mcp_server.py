@@ -83,11 +83,20 @@ def registered_tools(registry: MethodRegistry, caps: Capabilities) -> list[types
 
 
 def _to_call_result(envelope: dict) -> types.CallToolResult:
-    """Wrap a result envelope as a ``CallToolResult``, flagging non-OK statuses as errors."""
-    text = json.dumps(envelope, separators=(",", ":"), ensure_ascii=False)
+    """Wrap a result envelope as a ``CallToolResult``, flagging non-OK statuses as errors.
+
+    Each ``text_blocks`` entry follows the JSON block as its own raw ``TextContent`` and is left
+    out of both the JSON block and ``structuredContent``.
+    """
+    body = dict(envelope)
+    text_blocks = body.pop("text_blocks", None) or []
+    text = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
     return types.CallToolResult(
-        content=[types.TextContent(type="text", text=text)],
-        structuredContent=dict(envelope),
+        content=[
+            types.TextContent(type="text", text=text),
+            *(types.TextContent(type="text", text=block) for block in text_blocks),
+        ],
+        structuredContent=body,
         isError=envelope.get("status") != "OK",
     )
 

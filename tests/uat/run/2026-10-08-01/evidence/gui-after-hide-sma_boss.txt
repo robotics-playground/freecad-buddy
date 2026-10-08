@@ -1,0 +1,11 @@
+{"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"doc":"fcb-doc:pxJ6BlbE7fNva8ri06t-DA","total_objects":178,"shown":7,"truncated":false},"text":"178 objects, 7 shown.","framing":{"fits":null,"ratio":null,"checked":"unavailable","stale_reason":"every projected corner was an implausible magnitude"}}
+----
+path: front_plate_piece
+v [BODY] front_plate_piece
+|-- - [ORIGIN] Origin002 "Origin004" (+7)
+|-- - [BASE] BaseFeature
+|-- v [DPLANE] front_plate_piece_back_plane
+|-- - [POCKET] front_plate_region_cut (+1)
+|-- - [POCKET] locating_groove (+1)
+`-- - [PAD] sma_boss (+1) *tip
+----

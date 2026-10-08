@@ -63,7 +63,7 @@ So, in every scenario below:
 
 Both directions of the asymmetry are confirmed on this build. A tree-targeted `press_key` with
 `space` returned `effect:"unverifiable"` with `escalation:{reason:"delivery_failed",
-target:"foreground"}` and DID land — `query_tree_summary` flipped to `"visibility": true`. A
+target:"foreground"}` and DID land — `query_tree_summary` flipped the `Box` line to start `v `. A
 viewport-targeted `press_key` (camera key `0`) returned `effect:"unverifiable"` and did NOT land —
 the camera was unchanged in a fresh screenshot. Never record a pass from a delivered action and
 never record a failure from an `unverifiable` result. Verify the postcondition through MCP state or
@@ -192,7 +192,7 @@ Do not save.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §1.1 (document handles), `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** `box-10-20-30` is open and still hidden as shipped — verify: `mcp query_tree_summary {doc:<handle>}` reports `"visibility": false` for `Box`  
+**Given** `box-10-20-30` is open and still hidden as shipped — verify: the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` is `- [FEATURE] Box`  
 
 **When** the hidden state is recorded on both sides  
 ```bash
@@ -210,7 +210,7 @@ mcp query_screenshot {doc:<handle>}
 '{"pid":<PID>,"element_token":"<Box TreeItem token from THIS snapshot>","key":"space"}' | & cua-driver call press_key
 ```
 The result is expected to report `effect:"unverifiable"`. That is not the verdict. Confirm with the
-re-read below. If `visibility` did not change, repeat this action once with
+re-read below. If the `Box` line still starts `-`, repeat this action once with
 `"delivery_mode":"foreground"` and confirm again.
 **And** both sides are re-read  
 ```bash
@@ -221,11 +221,11 @@ mcp query_screenshot {doc:<handle>}
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-03-visible.png"}' | & cua-driver call get_window_state
 ```
 
-**Then** hidden agrees on both sides — verify: the first `query_tree_summary` reports `"visibility": false` for `Box`, AND `$RUN_DIR/evidence/tc-13-03-hidden.png` shows an empty viewport with the tree eye icon struck through  
+**Then** hidden agrees on both sides — verify: the first `query_tree_summary` tree text is `- [FEATURE] Box`, AND `$RUN_DIR/evidence/tc-13-03-hidden.png` shows an empty viewport with the tree eye icon struck through  
 **And** the hidden default render is honest — verify: the first `query_screenshot` returns `render.empty_scene` true, `scene.rendered_objects` `[]`, and NO `resource_link`. This is correct behavior, not a render failure  
-**And** visible agrees on both sides — verify: the second `query_tree_summary` reports `"visibility": true` for `Box`, AND `$RUN_DIR/evidence/tc-13-03-visible.png` shows the box drawn in the viewport  
+**And** visible agrees on both sides — verify: the second `query_tree_summary` tree text is `v [FEATURE] Box`, AND `$RUN_DIR/evidence/tc-13-03-visible.png` shows the box drawn in the viewport  
 **And** the default render follows the live flag — verify: the second `query_screenshot` returns `scene.rendered_objects` equal to `["Box"]` with a non-null `resource_link`  
-**And** an explicit include overrides the flag in EITHER state — verify: `mcp query_screenshot {doc:<handle>, view:{include:["Box"]}}` returns `rendered_objects: ["Box"]` and a PNG while `visibility` is false  
+**And** an explicit include overrides the flag in EITHER state — verify: `mcp query_screenshot {doc:<handle>, view:{include:["Box"]}}` returns `rendered_objects: ["Box"]` and a PNG while the `Box` line starts `-`  
 **And** the toggle changed no geometry — verify: `mcp query_mass_properties {doc:<handle>, object:"Box"}` returns `volume` `6000.0` in both states  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the pixels followed the flag in both directions — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-03-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-03-hidden.png` and `$RUN_DIR/evidence/tc-13-03-after.png` and say what each viewport contains. The hidden capture shows no solid, the after capture shows one box. A numeric flag flip with no pixel change is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -329,7 +329,7 @@ Do not save.
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** `box40-hole-r5` is open and `BoxHole` has been made visible — verify: `mcp query_tree_summary {doc:<handle>}` reports `"visibility": true` for `BoxHole`  
+**Given** `box40-hole-r5` is open and `BoxHole` has been made visible — verify: the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` has a `BoxHole` line starting `v `  
 **And** the geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.601836602547` and the 40 x 40 x 10 mm `bbox`  
 
 **When** a shared camera is set through the toolbar, not a keystroke: re-snapshot, press `Standard Views`, re-snapshot, then select the isometric entry by its token from the NEW snapshot  
@@ -496,7 +496,7 @@ mcp query_mass_properties {doc:<handle>, object:"Box"}
 **And** the GUI gained the tree root — verify: the post-open `TreeItem` set contains a row for the `box-10-20-30` document that the before set did not have  
 **And** the GUI gained the object row — verify: the post-open `TreeItem` set contains a row labelled `Box`, matching the node in `query_tree_summary`  
 **And** the geometry agrees immediately — verify: `query_mass_properties` returns `volume` `6000.0`, `bbox` 0 to 10 by 0 to 20 by 0 to 30 mm, `com` `(5, 10, 15)`, faces `6`, edges `12`, vertices `8`, solids `1`  
-**And** the shipped visibility flag survived the open — verify: `query_tree_summary` reports `"visibility": false` for `Box`, and the GUI tree eye icon is struck through in `$RUN_DIR/evidence/tc-13-09-after-open.png`  
+**And** the shipped visibility flag survived the open — verify: the `query_tree_summary` `Box` line starts `- `, and the GUI tree eye icon is struck through in `$RUN_DIR/evidence/tc-13-09-after-open.png`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the MCP-opened document reached the human's screen — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-09-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the tab bar and Model panel show the opened document. The viewport is EXPECTED to be empty, because the fixture ships hidden. `document_open` returning a handle is the claim; the document visible in the tab bar is the evidence. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
@@ -699,15 +699,14 @@ Do not save either document.
 ### TC-13-14: A GUI visibility toggle is observed by MCP
 
 **Priority**: Critical
-**Design Ref**: `mcp-tools-design.md` §3.2 (tree summary filters), `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
+**Design Ref**: `mcp-tools-design.md` §3.2 (tree text `v`/`-` marker), `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
 
-**Given** `box-10-20-30` is open and hidden as shipped — verify: `mcp query_tree_summary {doc:<handle>}` reports `"visibility": false` for `Box`  
+**Given** `box-10-20-30` is open and hidden as shipped — verify: the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` is `- [FEATURE] Box`  
 **And** the FreeCAD Model tree is exposed in the accessibility tree — verify: a snapshot lists a `Tree` role element  
 
 **When** the MCP state is recorded before any GUI action  
 ```bash
 mcp query_tree_summary {doc:<handle>}
-mcp query_tree_summary {doc:<handle>, filters:{visible_only:true}}
 ```
 **And** the `Box` row is selected: re-snapshot first and match on `role == "TreeItem"` AND `label == "Box"`  
 ```bash
@@ -724,19 +723,18 @@ a `space` sent there edits the Label instead of the visibility flag — see TC-1
 **And** MCP is read, which is the only verdict  
 ```bash
 mcp query_tree_summary {doc:<handle>}
-mcp query_tree_summary {doc:<handle>, filters:{visible_only:true}}
 ```
-If `visibility` did not change, repeat the `space` action once with `"delivery_mode":"foreground"`
+If the `Box` line still starts `-`, repeat the `space` action once with `"delivery_mode":"foreground"`
 and read MCP again. Record every attempt.
 
-**Then** MCP sees the flip — verify: the post-toggle read reports `"visibility": true` for `Box`, where the pre-toggle read reported false  
-**And** the `visible_only` filter follows — verify: the pre-toggle filtered call returned no node and the post-toggle filtered call returns `Box`  
+**Then** MCP sees the flip — verify: the post-toggle tree text is `v [FEATURE] Box`, where the pre-toggle read was `- [FEATURE] Box`  
+**And** only the marker changed — verify: apart from the first character, the post-toggle line equals the pre-toggle line  
 **And** `unverifiable` was not treated as a verdict — verify: the `press_key` result is recorded verbatim, including `effect` and any `escalation`, and the pass or fail came from the MCP re-read only. This route is confirmed to report `effect:"unverifiable"` with `escalation:{reason:"delivery_failed", target:"foreground"}` and still land  
 **And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"Box"}` returns `volume` `6000.0` before and after; visibility is a view flag  
-**And** the label was NOT edited — verify: the post-toggle read reports `label` `Box`, not a string containing a space. If the label changed, the keystroke hit the rename editor and the toggle did not happen; undo with `Ctrl+Z` and re-run the `space` action from a fresh snapshot  
+**And** the label was NOT edited — verify: the post-toggle `Box` line carries no quoted `"<Label>"`, so the Label still equals the Name `Box` and holds no space. If the label changed, the keystroke hit the rename editor and the toggle did not happen; undo with `Ctrl+Z` and re-run the `space` action from a fresh snapshot  
 **And** MCP read the live flag, not a cache — verify: the post-toggle result differs from the pre-toggle result with no MCP mutation call between them  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
-**And** *(visual)* the GUI toggle is the ground truth and the MCP flag is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-14-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state, from the image alone, whether the box is drawn in the viewport. The GUI action and this window are the ground truth; only after reading the image, check that the MCP `visibility` flag agrees with what you saw. A window showing the box while MCP still reports `false` is a finding against the bridge, recorded in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the GUI toggle is the ground truth and the MCP flag is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-14-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state, from the image alone, whether the box is drawn in the viewport. The GUI action and this window are the ground truth; only after reading the image, check that the `v`/`-` marker on the MCP `Box` line agrees with what you saw. A window showing the box while the MCP line still starts `-` is a finding against the bridge, recorded in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 Restore `Box` to hidden through the same route, confirm with `query_tree_summary`, then:

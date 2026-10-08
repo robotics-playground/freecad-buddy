@@ -9,7 +9,7 @@ description: >-
   it", at a milestone or a finished part. Do NOT use for planning the build
   order (see design-decomposition) or diagnosing a recompute error (see
   freecad-troubleshooting).
-version: 0.2.0
+version: 0.3.0
 freecad-versions: ['1.1']
 ---
 
@@ -61,7 +61,7 @@ it — otherwise none of these checks can run.
   `query_placement` for distances and offsets — because an unchecked dimension is
   an unverified claim, and the point of verifying is to falsify a wrong part.
 - Run a baseline inspection at each milestone before the spec checks:
-  `query_tree_summary` + `query_object` for labels and error states,
+  `query_tree_summary` (`focus` on the body) for names and `!<status>` errors,
   `query_mass_properties` for a scale sanity check. An order-of-magnitude or
   centering error passes narrow checks but shows up in the baseline.
 - Check an interface that should be flush or centered with `query_placement`
@@ -121,8 +121,8 @@ Verification read:
    `fully_constrained` true and `dof` 0, `post_verify.passed` true,
    `tnp_audit.status` `CLEAN`, `changed` lists the new feature and the body. No
    `verify_*` call, no screenshot.
-2. Milestone (plate finished). Baseline: `query_tree_summary` (one solid, named,
-   no error state); `query_mass_properties` → bbox ≈ 60×40×5.
+2. Milestone (plate finished). Baseline: `query_tree_summary` on the body
+   (named, `*tip` last, no `!` line); `query_mass_properties` → bbox ≈ 60×40×5.
 3. One `verify_shape` with every spec check in `checks`: `is_valid_solid`,
    `count_cylindrical_holes == 2`, `hole_diameter == 5.5`, `hole_spacing == 40`.
 4. `query_screenshot` (single iso — simple static part per the packet guide). The

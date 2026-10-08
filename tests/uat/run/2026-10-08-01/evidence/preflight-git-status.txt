@@ -1,0 +1,36 @@
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/ARCHITECTURE-SPINE.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/data-contracts-design.md
+ M _bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md
+ M scripts/automation/replay_result_sizes.py
+ M scripts/automation/run_mcp_e2e.py
+ M scripts/automation/run_mcp_edge_cases.py
+ M skills/design-decomposition/SKILL.md
+ M skills/freecad-fundamentals/SKILL.md
+ M skills/freecad-troubleshooting/SKILL.md
+ M skills/freecad-troubleshooting/references/symptom-cause-fix.md
+ M skills/verification-thinking/SKILL.md
+ M src/freecad_buddy/adapters/mcp_server.py
+ M src/freecad_buddy/contracts/envelope.py
+ M src/freecad_buddy/contracts/jsonschema/job-status.schema.json
+ M src/freecad_buddy/contracts/jsonschema/result-envelope.schema.json
+ M src/freecad_buddy/hosts/tool_catalog.py
+ M src/freecad_buddy/usecases/queries.py
+ M tests/external/test_mcp_surface.py
+ M tests/external/test_tool_summaries.py
+ D tests/external/test_tree_helpers.py
+ M tests/infc/test_query_tools.py
+ M tests/infc/test_tree_summary.py
+ M tests/uat/test-plan.md
+ M tests/uat/testcases/TC-02-document-ingestion-and-handles.md
+ M tests/uat/testcases/TC-06-render-and-gui-visual-fidelity.md
+ M tests/uat/testcases/TC-07-verification-and-export-pairing.md
+ M tests/uat/testcases/TC-09-error-contract-and-fault-injection.md
+ M tests/uat/testcases/TC-12-gui-workflows.md
+ M tests/uat/testcases/TC-13-gui-mcp-parity.md
+?? _bmad-output/implementation-artifacts/spec-ascii-document-tree.md
+?? _bmad-output/planning-artifacts/research/technical-agent-tree-exploration-for-mcp-2026-10-07/
+?? skills/freecad-fundamentals/references/
+?? src/freecad_buddy/usecases/tree_text.py
+?? tests/external/test_replay_result_sizes.py
+?? tests/external/test_tree_text.py
+?? tests/uat/run/2026-10-08-01/

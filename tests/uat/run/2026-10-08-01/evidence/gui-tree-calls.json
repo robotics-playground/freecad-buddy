@@ -1,0 +1,410 @@
+[
+  {
+    "case": "top-level",
+    "args": {},
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 5,
+        "truncated": false
+      },
+      "text": "178 objects, 5 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 333,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "- [BODY] drawer (+49)\nv [BODY] front_plate_piece (+6)\nv [BODY] tray_piece (+10)\nv [BODY] rear_module_piece (+13)\nv [BODY] duct_cover (+10)",
+    "total_chars": 471
+  },
+  {
+    "case": "focus-body",
+    "args": {
+      "focus": "front_plate_piece"
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 7,
+        "truncated": false
+      },
+      "text": "178 objects, 7 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 333,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "path: front_plate_piece\nv [BODY] front_plate_piece\n|-- - [ORIGIN] Origin002 \"Origin004\" (+7)\n|-- - [BASE] BaseFeature\n|-- v [DPLANE] front_plate_piece_back_plane\n|-- - [POCKET] front_plate_region_cut (+1)\n|-- - [POCKET] locating_groove (+1)\n`-- v [PAD] sma_boss (+1) *tip",
+    "total_chars": 604
+  },
+  {
+    "case": "expand-deep",
+    "args": {
+      "expand": [
+        "sma_boss"
+      ]
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 7,
+        "truncated": false
+      },
+      "text": "178 objects, 7 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 333,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "- [BODY] drawer (+49)\nv [BODY] front_plate_piece (+5 more)\n`-- v [PAD] sma_boss *tip\n    `-- v [SKETCH] sma_boss_sketch\nv [BODY] tray_piece (+10)\nv [BODY] rear_module_piece (+13)\nv [BODY] duct_cover (+10)",
+    "total_chars": 537
+  },
+  {
+    "case": "focus-expand-sample",
+    "args": {
+      "focus": "front_plate_piece",
+      "expand": [
+        "sma_boss"
+      ]
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 8,
+        "truncated": false
+      },
+      "text": "178 objects, 8 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 333,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "path: front_plate_piece\nv [BODY] front_plate_piece\n|-- - [ORIGIN] Origin002 \"Origin004\" (+7)\n|-- - [BASE] BaseFeature\n|-- v [DPLANE] front_plate_piece_back_plane\n|-- - [POCKET] front_plate_region_cut (+1)\n|-- - [POCKET] locating_groove (+1)\n`-- v [PAD] sma_boss *tip\n    `-- v [SKETCH] sma_boss_sketch",
+    "total_chars": 634
+  },
+  {
+    "case": "call-128-shape",
+    "args": {
+      "focus": "front_plate_piece",
+      "depth": 3
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 17,
+        "truncated": false
+      },
+      "text": "178 objects, 17 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 335,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "path: front_plate_piece\nv [BODY] front_plate_piece\n|-- - [ORIGIN] Origin002 \"Origin004\"\n|   |-- v [AXIS] X_Axis001 \"X-axis001\"\n|   |-- v [AXIS] Y_Axis001 \"Y-axis001\"\n|   |-- v [AXIS] Z_Axis001 \"Z-axis001\"\n|   |-- v [PLANE] XY_Plane001 \"XY-plane001\"\n|   |-- v [PLANE] XZ_Plane001 \"XZ-plane001\"\n|   |-- v [PLANE] YZ_Plane001 \"YZ-plane001\"\n|   `-- v [POINT] Origin003\n|-- - [BASE] BaseFeature\n|-- v [DPLANE] front_plate_piece_back_plane\n|-- - [POCKET] front_plate_region_cut\n|   `-- v [SKETCH] front_plate_region_sketch\n|-- - [POCKET] locating_groove\n|   `-- v [SKETCH] locating_groove_sketch\n`-- v [PAD] sma_boss *tip\n    `-- v [SKETCH] sma_boss_sketch",
+    "total_chars": 985
+  },
+  {
+    "case": "cross-body-base",
+    "args": {
+      "focus": "tray_piece",
+      "depth": 3
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 22,
+        "truncated": false
+      },
+      "text": "178 objects, 22 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 335,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "path: tray_piece\nv [BODY] tray_piece\n|-- - [ORIGIN] Origin004 \"Origin007\"\n|   |-- v [AXIS] X_Axis002 \"X-axis002\"\n|   |-- v [AXIS] Y_Axis002 \"Y-axis002\"\n|   |-- v [AXIS] Z_Axis002 \"Z-axis002\"\n|   |-- v [PLANE] XY_Plane002 \"XY-plane002\"\n|   |-- v [PLANE] XZ_Plane002 \"XZ-plane002\"\n|   |-- v [PLANE] YZ_Plane002 \"YZ-plane002\"\n|   `-- v [POINT] Origin005 \"Origin006\"\n|-- - [BASE] BaseFeature001\n|-- v [DPLANE] tray_piece_front_plane\n|-- v [DPLANE] tray_piece_joint_plane\n|-- v [DPLANE] tray_piece_rear_plane\n|-- - [POCKET] tray_front_cut\n|   `-- v [SKETCH] tray_front_region_sketch\n|-- - [POCKET] tray_rear_cut\n|   `-- v [SKETCH] tray_rear_region_sketch\n|-- - [POCKET] riser_zone\n|   `-- v [SKETCH] riser_zone_sketch\n|-- - [PAD] locating_lip\n|   `-- v [SKETCH] locating_lip_sketch\n`-- v [CHAMFER] tray_rib_seam_chamfer *tip",
+    "total_chars": 1154
+  },
+  {
+    "case": "reveal-name",
+    "args": {
+      "filters": {
+        "name_pattern": "joint2.*"
+      }
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 29,
+        "truncated": false,
+        "matches": 24
+      },
+      "text": "178 objects, 29 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 348,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "- [BODY] drawer (+41 more)\n|-- v [DPLANE] joint2_right_insert_plane\n|-- v [DPLANE] joint2_left_insert_plane\n|-- - [PAD] joint2_tray_right_block\n|   `-- v [SKETCH] joint2_tray_right_block_sketch\n|-- - [PAD] joint2_tray_left_column\n|   `-- v [SKETCH] joint2_tray_left_column_sketch\n|-- - [PAD] joint2_rear_right_block\n|   `-- v [SKETCH] joint2_rear_right_block_sketch\n|-- - [PAD] joint2_rear_left_block\n|   `-- v [SKETCH] joint2_rear_left_block_sketch\n|-- - [POCKET] joint2_right_insert\n|   `-- v [SKETCH] joint2_right_insert_sketch\n`-- - [POCKET] joint2_left_insert\n    `-- v [SKETCH] joint2_left_insert_sketch\nv [BODY] front_plate_piece (+6)\nv [BODY] tray_piece (+10)\nv [BODY] rear_module_piece (+7 more)\n|-- v [DPLANE] joint2_right_tab_top_plane\n|-- v [DPLANE] joint2_left_tab_top_plane\n|-- - [PAD] joint2_right_tab\n|   `-- v [SKETCH] joint2_right_tab_sketch\n|-- - [PAD] joint2_left_tab\n|   `-- v [SKETCH] joint2_left_tab_sketch\n|-- - [POCKET] joint2_right_tab_hole\n|   `-- v [SKETCH] joint2_right_tab_hole_sketch\n`-- - [POCKET] joint2_left_tab_hole\n    `-- v [SKETCH] joint2_left_tab_hole_sketch\nv [BODY] duct_cover (+10)",
+    "total_chars": 1471
+  },
+  {
+    "case": "reveal-code",
+    "args": {
+      "focus": "tray_piece",
+      "filters": {
+        "types": [
+          "DPLANE"
+        ]
+      }
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 4,
+        "truncated": false,
+        "matches": 3
+      },
+      "text": "178 objects, 4 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 345,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "path: tray_piece\nv [BODY] tray_piece (+7 more)\n|-- v [DPLANE] tray_piece_front_plane\n|-- v [DPLANE] tray_piece_joint_plane\n`-- v [DPLANE] tray_piece_rear_plane",
+    "total_chars": 504
+  },
+  {
+    "case": "no-match",
+    "args": {
+      "filters": {
+        "name_pattern": "zzz"
+      }
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 5,
+        "truncated": false,
+        "matches": 0
+      },
+      "text": "178 objects, 5 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 345,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "- [BODY] drawer (+49)\nv [BODY] front_plate_piece (+6)\nv [BODY] tray_piece (+10)\nv [BODY] rear_module_piece (+13)\nv [BODY] duct_cover (+10)",
+    "total_chars": 483
+  },
+  {
+    "case": "all-open",
+    "args": {
+      "depth": 6
+    },
+    "blocks": 2,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:tqf9tWwggYUP9NHh1yc84g",
+        "total_objects": 178,
+        "shown": 178,
+        "truncated": false
+      },
+      "text": "178 objects, 178 shown.",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "every projected corner was an implausible magnitude"
+      }
+    },
+    "json_block_chars": 337,
+    "structured_keys": [
+      "detail",
+      "framing",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": "- [BODY] drawer\n|-- - [ORIGIN] Origin\n|   |-- v [AXIS] X_Axis \"X-axis\"\n|   |-- v [AXIS] Y_Axis \"Y-axis\"\n|   |-- v [AXIS] Z_Axis \"Z-axis\"\n|   |-- v [PLANE] XY_Plane \"XY-plane\"\n|   |-- v [PLANE] XZ_Plane \"XZ-plane\"\n|   |-- v [PLANE] YZ_Plane \"YZ-plane\"\n|   `-- v [POINT] Origin001\n|-- v [DPLANE] body_bottom_plane\n|-- v [DPLANE] floor_top_plane\n|-- v [DPLANE] rib_bottom_plane\n|-- v [DPLANE] wall_top_plane\n|-- v [DPLANE] plate_front_plane\n|-- v [DPLANE] body_front_plane\n|-- v [DPLANE] body_rear_plane\n|-- v [DPLANE] standoff_top_plane\n|-- v [DPLANE] fan_plate_plane\n|-- v [DPLANE] fan_gusset_left_plane\n|-- v [DPLANE] fan_gusset_right_plane\n|-- v [DPLANE] duct_seat_plane\n|-- v [DPLANE] joint_plane\n|-- v [DPLANE] raised_floor_top_plane\n|-- v [DPLANE] joint2_right_insert_plane\n|-- v [DPLANE] joint2_left_insert_plane\n|-- - [PAD] body_block\n|   `-- v [SKETCH] body_block_sketch\n|-- - [POCKET] left_part_cut\n|   `-- v [SKETCH] left_part_sketch\n|-- - [POCKET] rear_step_cut\n|   `-- v [SKETCH] rear_step_sketch\n|-- - [POCKET] interior_main\n|   `-- v [SKETCH] interior_main_sketch\n|-- - [POCKET] interior_rear\n|   `-- v [SKETCH] interior_rear_sketch\n|-- - [PAD] front_plate\n|   `-- v [SKETCH] front_plate_sketch\n|-- - [PAD] rail_ribs\n|   `-- v [SKETCH] rail_ribs_sketch\n|-- - [POCKET] rear_vents\n|   `-- v [SKETCH] rear_vent_sketch\n|-- - [PAD] standoffs\n|   `-- v [SKETCH] standoffs_sketch\n|-- - [POCKET] pilot_holes\n|   `-- v [SKETCH] pilot_holes_sketch\n|-- - [PAD] fan_plate\n|   `-- v [SKETCH] fan_plate_sketch\n|-- - [PAD] fan_gusset_left\n|   `-- v [SKETCH] fan_gusset_left_sketch\n|-- - [PAD] fan_gusset_right\n|   `-- v [SKETCH] fan_gusset_right_sketch\n|-- - [POCKET] stop_channel\n|   `-- v [SKETCH] stop_channel_sketch\n|-- - [POCKET] front_openings\n|   `-- v [SKETCH] front_openings_sketch\n|-- - [POCKET] pcb_edge_recess\n|   `-- v [SKETCH] pcb_edge_recess_sketch\n|-- - [POCKET] rear_cable_hole\n|   `-- v [SKETCH] rear_cable_hole_sketch\n|-- - [PAD] rear_cable_hole_ring\n|   `-- v [SKETCH] rear_cable_hole_ring_sketch\n|-- - [POCKET] intake_slots\n|   `-- v [SKETCH] intake_slots_sketch\n|-- - [PAD] joint1_right_block\n|   `-- v [SKETCH] joint1_right_block_sketch\n|-- - [PAD] joint1_columns\n|   `-- v [SKETCH] joint1_columns_sketch\n|-- - [POCKET] joint1_inserts\n|   `-- v [SKETCH] joint1_inserts_sketch\n|-- - [HOLE] joint1_plate_holes\n|   `-- v [SKETCH] joint1_plate_holes_sketch\n|-- - [POCKET] duct_insert\n|   `-- v [SKETCH] duct_insert_sketch\n|-- - [POCKET] duct_pilot\n|   `-- v [SKETCH] duct_pilot_sketch\n|-- - [PAD] joint2_tray_right_block\n|   `-- v [SKETCH] joint2_tray_right_block_sketch\n|-- - [PAD] joint2_tray_left_column\n|   `-- v [SKETCH] joint2_tray_left_column_sketch\n|-- - [PAD] joint2_rear_right_block\n|   `-- v [SKETCH] joint2_rear_right_block_sketch\n|-- - [PAD] joint2_rear_left_block\n|   `-- v [SKETCH] joint2_rear_left_block_sketch\n|-- - [POCKET] joint2_right_insert\n|   `-- v [SKETCH] joint2_right_insert_sketch\n|-- - [POCKET] joint2_left_insert\n|   `-- v [SKETCH] joint2_left_insert_sketch\n`-- v [FILLET] standoff_fillets *tip\nv [BODY] front_plate_piece\n|-- - [ORIGIN] Origin002 \"Origin004\"\n|   |-- v [AXIS] X_Axis001 \"X-axis001\"\n|   |-- v [AXIS] Y_Axis001 \"Y-axis001\"\n|   |-- v [AXIS] Z_Axis001 \"Z-axis001\"\n|   |-- v [PLANE] XY_Plane001 \"XY-plane001\"\n|   |-- v [PLANE] XZ_Plane001 \"XZ-plane001\"\n|   |-- v [PLANE] YZ_Plane001 \"YZ-plane001\"\n|   `-- v [POINT] Origin003\n|-- - [BASE] BaseFeature\n|-- v [DPLANE] front_plate_piece_back_plane\n|-- - [POCKET] front_plate_region_cut\n|   `-- v [SKETCH] front_plate_region_sketch\n|-- - [POCKET] locating_groove\n|   `-- v [SKETCH] locating_groove_sketch\n`-- v [PAD] sma_boss *tip\n    `-- v [SKETCH] sma_boss_sketch\nv [BODY] tray_piece\n|-- - [ORIGIN] Origin004 \"Origin007\"\n|   |-- v [AXIS] X_Axis002 \"X-axis002\"\n|   |-- v [AXIS] Y_Axis002 \"Y-axis002\"\n|   |-- v [AXIS] Z_Axis002 \"Z-axis002\"\n|   |-- v [PLANE] XY_Plane002 \"XY-plane002\"\n|   |-- v [PLANE] XZ_Plane002 \"XZ-plane002\"\n|   |-- v [PLANE] YZ_Plane002 \"YZ-plane002\"\n|   `-- v [POINT] Origin005 \"Origin006\"\n|-- - [BASE] BaseFeature001\n|-- v [DPLANE] tray_piece_front_plane\n|-- v [DPLANE] tray_piece_joint_plane\n|-- v [DPLANE] tray_piece_rear_plane\n|-- - [POCKET] tray_front_cut\n|   `-- v [SKETCH] tray_front_region_sketch\n|-- - [POCKET] tray_rear_cut\n|   `-- v [SKETCH] tray_rear_region_sketch\n|-- - [POCKET] riser_zone\n|   `-- v [SKETCH] riser_zone_sketch\n|-- - [PAD] locating_lip\n|   `-- v [SKETCH] locating_lip_sketch\n`-- v [CHAMFER] tray_rib_seam_chamfer *tip\nv [BODY] rear_module_piece\n|-- - [ORIGIN] Origin006 \"Origin010\"\n|   |-- v [AXIS] X_Axis003 \"X-axis003\"\n|   |-- v [AXIS] Y_Axis003 \"Y-axis003\"\n|   |-- v [AXIS] Z_Axis003 \"Z-axis003\"\n|   |-- v [PLANE] XY_Plane003 \"XY-plane003\"\n|   |-- v [PLANE] XZ_Plane003 \"XZ-plane003\"\n|   |-- v [PLANE] YZ_Plane003 \"YZ-plane003\"\n|   `-- v [POINT] Origin007 \"Origin009\"\n|-- - [BASE] BaseFeature002\n|-- v [DPLANE] rear_module_joint_plane\n|-- v [DPLANE] joint2_right_tab_top_plane\n|-- v [DPLANE] joint2_left_tab_top_plane\n|-- v [DPLANE] rear_module_raised_floor_plane\n|-- - [POCKET] rear_front_cut\n|   `-- v [SKETCH] rear_front_region_sketch\n|-- - [POCKET] riser_zone_cut\n|   `-- v [SKETCH] riser_zone_cut_sketch\n|-- - [PAD] joint2_right_tab\n|   `-- v [SKETCH] joint2_right_tab_sketch\n|-- - [PAD] joint2_left_tab\n|   `-- v [SKETCH] joint2_left_tab_sketch\n|-- - [POCKET] joint2_right_tab_hole\n|   `-- v [SKETCH] joint2_right_tab_hole_sketch\n|-- - [POCKET] joint2_left_tab_hole\n|   `-- v [SKETCH] joint2_left_tab_hole_sketch\n`-- v [PAD] riser_tongue *tip\n    `-- v [SKETCH] riser_tongue_sketch\nv [BODY] duct_cover\n|-- - [ORIGIN] Origin008 \"Origin012\"\n|   |-- v [AXIS] X_Axis004 \"X-axis004\"\n|   |-- v [AXIS] Y_Axis004 \"Y-axis004\"\n|   |-- v [AXIS] Z_Axis004 \"Z-axis004\"\n|   |-- v [PLANE] XY_Plane004 \"XY-plane004\"\n|   |-- v [PLANE] XZ_Plane004 \"XZ-plane004\"\n|   |-- v [PLANE] YZ_Plane004 \"YZ-plane004\"\n|   `-- v [POINT] Origin009 \"Origin011\"\n|-- v [DPLANE] duct_top_plane\n|-- v [DPLANE] duct_lip_plane\n|-- v [DPLANE] duct_vane_plane\n|-- v [DPLANE] duct_screw_plane\n|-- - [PAD] duct_top\n|   `-- v [SKETCH] duct_top_sketch\n|-- - [PAD] duct_lip\n|   `-- v [SKETCH] duct_lip_sketch\n|-- - [PAD] duct_vane\n|   `-- v [SKETCH] duct_vane_sketch\n|-- - [HOLE] duct_screw_hole\n|   `-- v [SKETCH] duct_screw_sketch\n`-- v [HOLE] duct_fan_screw_holes *tip\n    `-- v [SKETCH] duct_fan_screw_sketch",
+    "total_chars": 6665
+  },
+  {
+    "case": "bad-name",
+    "args": {
+      "focus": "nope"
+    },
+    "blocks": 1,
+    "json_block": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+        "code": "INVALID_INPUT",
+        "message": "unknown object: nope",
+        "data": {
+          "exception": "ValidationError",
+          "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 129, in dispatch\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 1419, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\hosts\\tool_catalog.py\", line 833, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 368, in query_tree_summary\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\usecases\\queries.py\", line 279, in read\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: nope\n"
+        }
+      },
+      "structured_content": {},
+      "text": ""
+    },
+    "json_block_chars": 1648,
+    "structured_keys": [
+      "detail",
+      "schema",
+      "status",
+      "structured_content",
+      "text"
+    ],
+    "tree": null,
+    "total_chars": 1648
+  }
+]

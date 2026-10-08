@@ -9,7 +9,7 @@ description: >-
   reference", "the object is in error", "why won't this recompute", "dangling
   sketch", "fix this". Do NOT use for planning a build (see design-decomposition)
   or the normal use of a specific feature (see freecad-partdesign).
-version: 0.2.0
+version: 0.3.0
 freecad-versions: ['1.1']
 ---
 
@@ -38,9 +38,10 @@ MCP client at it — otherwise none of these repair steps can run.
   dependent checks → report remaining risk.** Guessing a fix without classifying
   the cause usually breaks something else and hides the real problem.
 - Find the **one failing object** before touching anything, using
-  `query_tree_summary` for the tree-wide error states and `query_object` for the
-  failing object's status string, because a document reports the specific object
-  and reason that failed — fixing the wrong object leaves the real fault in place.
+  `query_tree_summary` (`focus` on the body, `depth` 2; a failing object's line
+  ends `!<status>`) and `query_object` for the failing object's status string,
+  because a document reports the specific object and reason that failed — fixing
+  the wrong object leaves the real fault in place.
 - **Recompute after any abort or undo before you diagnose**, because undo and abort
   restore properties but do not recompute; reading the error state before
   recomputing shows you a stale result, not the current one.
@@ -79,8 +80,8 @@ Input: a document with a deliberately broken recompute — a pad whose sketch lo
 its external reference.
 
 Diagnosis loop:
-1. `query_tree_summary` → the pad and its sketch show an error state; everything
-   downstream is also flagged.
+1. `query_tree_summary` with `focus` on the body and `depth` 2 → the pad and
+   its sketch lines end `!<status>`; everything downstream is also flagged.
 2. `query_object` on the sketch → status names the missing external geometry (the
    `?`-marked reference). The *root* is the sketch's dropped reference, not the pad.
 3. Smallest fix: re-attach the sketch's external reference to a stable datum or a
