@@ -295,7 +295,7 @@ rm -f "$RUN_DIR/evidence/tc-06-05-"*.png
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** a document with two visible shape-bearing objects is open — verify: in the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` both object lines start `v `  
+**Given** a document with two visible shape-bearing objects is open — verify: in the tree lines of `mcp query_tree_summary {doc:<handle>}` both object lines start `v `  
 **And** the FreeCAD model tree is exposed in the accessibility tree — verify: `'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state` lists a `Tree` role element  
 
 **When** the default scene is rendered and `scene.rendered_objects` is recorded  

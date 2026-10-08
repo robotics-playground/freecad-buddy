@@ -36,6 +36,7 @@ freecad-buddy/
 │       │   ├── sketch.py             # sketch geometry/constraint wire types
 │       │   ├── feature.py            # feature parameter wire types
 │       │   ├── render.py             # ImageRef + view-control types (AD-10)
+│       │   ├── numbers.py            # display rounding of result floats and check deviations
 │       │   └── jsonschema/           # generated per-tool/per-type schemas, drift-checked in CI (AD-28)
 │       ├── usecases/                 # stdlib + FreeCAD App via shim (AD-1, AD-12)
 │       │   ├── __init__.py
@@ -75,7 +76,8 @@ freecad-buddy/
 │           ├── gui_addon/
 │           │   ├── InitGui.py        # addon entry source-of-truth; copied to addon root at build (§2.2)
 │           │   ├── bootstrap.py      # start_bridge: deferred start (GuiUp + QTimer), listener + MCP auto-spawn (AD-2)
-│           │   └── pump.py           # Qt event pump — Qt lives here, not in adapters (AD-1)
+│           │   ├── pump.py           # Qt event pump — Qt lives here, not in adapters (AD-1)
+│           │   └── preferences.py    # FreeCAD Buddy page in Edit > Preferences (RoundToDisplay)
 │           ├── gui_external/
 │           │   └── entry.py          # external GUI host
 │           └── headless/

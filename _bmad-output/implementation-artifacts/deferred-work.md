@@ -1573,7 +1573,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: The only step test pins the formula; a regression test needs a committed large part whose recompute reproduces last-bit jitter.
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-2-quiet-result-envelope.md`
   summary: The MCP text content is the whole result envelope as JSON, while `mcp-tools-design.md` §1.3 says `content` carries the one-line `text` summary and `structuredContent` the data.
-  evidence: `adapters/mcp_server.py:86` dumps the envelope (compact since Story 11.2) and also sends `structuredContent=dict(envelope)`. Pre-existing divergence. A fix needs evidence of what the MCP client (Claude Code) passes to the model from `structuredContent`, or the agent loses the structured data.
+  evidence: `adapters/mcp_server.py:86` dumps the envelope (compact since Story 11.2) and also sends `structuredContent=dict(envelope)`. Pre-existing divergence. Evidence (2026-10-08): Claude Code passes only `structuredContent` to the model when a result has it, so the JSON content block reaches only other clients. `query_tree_summary` now sends one plain text block and no `structuredContent`.
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-2-quiet-result-envelope.md`
   summary: UAT test cases still describe the `fcb.mutation/1` and `fcb.geometry-diff/1` shapes; Story 10.7 must move them to `/2`.
   evidence: `tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md:53` (`transaction_id`, `/1`), `:119` (`findings == []` no longer tells the short-circuit block apart; use `counts`), `:331` (`transaction_id`), `:372` (full record), `:479` (`fingerprint_before.objects`), `:515` (`{digest: "abc"}` now fails the serializer check, not the `objects` check), `:547` (PASS findings dropped; use `counts`); `TC-08-preview-confirm-and-undo.md:48` (`fcb.geometry-diff/1`).
@@ -1631,7 +1631,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: medium; `usecases/assertions.py` check messages; the frozen rule rounds operands for display but not for the verdict. Needs a human choice of message format (e.g. print operands with extra digits when the deviation is below the display step).
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: G3 frames-check compares anchor frames read through MCP, which now rounds them to display decimals, so its stated 1e-6 mm resolution is really 0.005 mm.
-  evidence: medium; `benchmarks/g3/fault-injection/score_g3_replay.py:266-273` reads `structuredContent`, `FRAME_DECIMALS = 6` at `:80`. Option: scorer pins the `Decimals` preference to 6 for its run.
+  evidence: medium; `benchmarks/g3/fault-injection/score_g3_replay.py:266-273` reads `structuredContent`, `FRAME_DECIMALS = 6` at `:80`. Options: scorer pins the `Decimals` preference to 6 for its run, or turns the `RoundToDisplay` preference off.
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: Echoed inputs other than `tolerance`/`tol` are rounded: tessellation deflection `tess.linear` 0.0125 reads 0.01, top-level `volume_band` reads rounded while `checks[].tolerance.abs` stays raw, declared `expect` 6.015 reads 6.02.
   evidence: low; `usecases/exports.py:234`, `adapters/export_verdict.py:90`, `contracts/numbers.py` `_RAW_KEYS`. Widening the raw-key list changes a human-frozen rule.
@@ -1641,6 +1641,3 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: Verdicts near a band edge depend on the machine's `Decimals` preference, and validator runs in `benchmarks/_registry/validators.yaml` do not record the value used.
   evidence: low; `shim.display_decimals()` reads the live preference inside scorers.
-- source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
-  summary: CLAUDE.md / AGENTS.md repo map lists `contracts/` modules without the new `numbers` module.
-  evidence: low; agent-context file, deferred by rule.

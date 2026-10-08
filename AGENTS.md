@@ -265,10 +265,10 @@ The summary below is the working map; that document decides any disagreement abo
 
 Single installable package, four Clean Architecture rings (AD-1). Imports cross ring boundaries **inward only**: `contracts/` ← `usecases/` ← `adapters/` ← `hosts/`. `check_imports.py` enforces it; don't fight it, fix the placement.
 
-- `src/freecad_buddy/contracts/` — wire types, stdlib ONLY (no FreeCAD, no third-party). `status` `envelope` `report` `job` `audit` `diff` `document` `fingerprint` `rpc` `assertions` `render`; `jsonschema/` generated + drift-checked.
+- `src/freecad_buddy/contracts/` — wire types, stdlib ONLY (no FreeCAD, no third-party). `status` `envelope` `report` `job` `audit` `diff` `document` `fingerprint` `rpc` `assertions` `render` `numbers`; `jsonschema/` generated + drift-checked.
 - `src/freecad_buddy/usecases/` — tool impls, stdlib + FreeCAD App via `shim.py`. `documents` `queries` `verify` `exports` `screenshot` `fingerprint` `capabilities` `debug_exec` `stats` `shim`.
 - `src/freecad_buddy/adapters/` — MCP + RPC + oracles, external-process deps live here. `mcp_server` `rpc_client` `rpc_listener` `rpc_dispatch` `marshal` (QtCore only) `render_probe` (Qt) `audit_log` `export_oracle` `export_verdict`.
-- `src/freecad_buddy/hosts/` — entry points; Qt/`FreeCADGui` legal here. `gui_addon/` (`InitGui` `bootstrap` `pump`), `gui_external/`, `headless/`, `main.py`, `tool_catalog.py`.
+- `src/freecad_buddy/hosts/` — entry points; Qt/`FreeCADGui` legal here. `gui_addon/` (`InitGui` `bootstrap` `pump` `preferences`), `gui_external/`, `headless/`, `main.py`, `tool_catalog.py`.
 - `contracts/` ← `usecases/` ← `adapters/` ← `hosts/`; `adapters/__init__.py` + `hosts/__init__.py` stay EMPTY.
 - `benchmarks/` — gate runner + data. `runner.py`, `harness/`, `g0/` (golden-models, fault-injection, cases), `heldout/` (SEALED — never open outside `gate run --exit`), `_registry/` (validators + provenance).
 - `tests/` — two worlds, never mixed. `infc/` runs under `FreeCADCmd` with stdlib `unittest` (via `run_tests.py`); `external/` runs under pytest in uv env.

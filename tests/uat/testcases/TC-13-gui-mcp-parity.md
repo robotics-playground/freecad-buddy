@@ -174,7 +174,7 @@ rows.
 **And** the status bar also confirms validity — verify: the status bar text begins `Valid,`, and the MCP `error` is null or absent. A `Valid` status bar with a non-null MCP `error` is a parity defect  
 **And** the label agrees — verify: the MCP `label` equals the value in the property panel `Label` row and equals the `TreeItem` label used for the selection  
 **And** the type is reported — verify: the MCP `type` is a non-empty FreeCAD type string, and the object it names is the one the tree row selects  
-**And** selection did not mutate anything — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.601836602547` both before and after the selection  
+**And** selection did not mutate anything — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` both before and after the selection  
 **And** face naming agrees on hover — verify: hovering a face makes the status bar read `Preselected: <doc>.BoxHole.<FaceN>`, and the object segment of that string equals the MCP `name`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the window states the identity, and the MCP report is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-02-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-02-selected.png` and `$RUN_DIR/evidence/tc-13-02-after.png`. Read off the images which row is highlighted, what the status bar says, and what the property panel `Label` row reads. Confirm the highlighted row is `BoxHole`, the status bar shows the internal name, and the `Label` row shows the same label — then check the MCP `name` and `label` against what you read. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -192,7 +192,7 @@ Do not save.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §1.1 (document handles), `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** `box-10-20-30` is open and still hidden as shipped — verify: the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` is `- [FEATURE] Box`  
+**Given** `box-10-20-30` is open and still hidden as shipped — verify: the tree lines of `mcp query_tree_summary {doc:<handle>}` is `- [FEATURE] Box`  
 
 **When** the hidden state is recorded on both sides  
 ```bash
@@ -264,8 +264,8 @@ mcp query_screenshot {doc:<handle>, view:{camera:"iso", include:["BoxHole"]}}
 ```
 **And** both PNGs are read side by side  
 
-**Then** volume matches the verified reference — verify: the mass-properties read returns `volume` `15214.601836602547` mm3, within `rel: 0.001` of the `expected.yaml` analytic value  
-**And** surface area matches — verify: the same read returns `area` `4957.079632679489` mm2  
+**Then** volume matches the verified reference — verify: the mass-properties read returns `volume` `15214.6` mm3, within `rel: 0.001` of the `expected.yaml` analytic value  
+**And** surface area matches — verify: the same read returns `area` `4957.08` mm2  
 **And** the bounding box matches — verify: the same read returns `bbox` spanning 0 to 40 mm in x, 0 to 40 mm in y, and 0 to 10 mm in z  
 **And** topology counts are exact — verify: the same read returns faces `7`, edges `15`, vertices `10`, solids `1`. These carry no tolerance  
 **And** `com` is `null` and stays `null` — verify: the same read returns `com` null for `BoxHole`; a scenario asserting a number here is wrong  
@@ -329,8 +329,8 @@ Do not save.
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** `box40-hole-r5` is open and `BoxHole` has been made visible — verify: the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` has a `BoxHole` line starting `v `  
-**And** the geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.601836602547` and the 40 x 40 x 10 mm `bbox`  
+**Given** `box40-hole-r5` is open and `BoxHole` has been made visible — verify: the tree lines of `mcp query_tree_summary {doc:<handle>}` has a `BoxHole` line starting `v `  
+**And** the geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` and the 40 x 40 x 10 mm `bbox`  
 
 **When** a shared camera is set through the toolbar, not a keystroke: re-snapshot, press `Standard Views`, re-snapshot, then select the isometric entry by its token from the NEW snapshot  
 ```bash
@@ -701,7 +701,7 @@ Do not save either document.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §3.2 (tree text `v`/`-` marker), `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
 
-**Given** `box-10-20-30` is open and hidden as shipped — verify: the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` is `- [FEATURE] Box`  
+**Given** `box-10-20-30` is open and hidden as shipped — verify: the tree lines of `mcp query_tree_summary {doc:<handle>}` is `- [FEATURE] Box`  
 **And** the FreeCAD Model tree is exposed in the accessibility tree — verify: a snapshot lists a `Tree` role element  
 
 **When** the MCP state is recorded before any GUI action  
@@ -794,7 +794,7 @@ mcp query_tree_summary {doc:<handle>}
 **And** `Ctrl+Z` reverts on both sides — verify: the second post-rename `query_tree_summary` reports `label` `BoxHole` again, and a fresh snapshot's `TreeItem` row reads `BoxHole`  
 **And** MCP catches an ACCIDENTAL rename too — verify: this is the real incident this scenario is built from. On 2026-09-12 a `space` keystroke aimed at a tree row landed in the inline rename editor at the adjacent token, and `query_tree_summary` immediately reported `label: " "`. Reproduce it deliberately: send `space` to the rename editor token, read `query_tree_summary`, confirm `label` is `" "`, then `Ctrl+Z` with `delivery_mode:"foreground"` and confirm the label is restored  
 **And** a value readback from the editor is NOT proof — verify: the pass comes from `query_tree_summary` after the `enter` commit, not from the editor echoing its own value. An editor that shows the new text while MCP still reports the old label is the parity defect this assertion exists to catch  
-**And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.601836602547` throughout  
+**And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` throughout  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the GUI rename is the ground truth and the MCP read is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-15-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-15-before.png`, `$RUN_DIR/evidence/tc-13-15-editing.png`, and `$RUN_DIR/evidence/tc-13-15-after.png`. The editing image shows the inline editor open on the row. Read the tree row label off the after image; only then check that `query_tree_summary` reports that same label. A rename claimed without the editor ever opening is not proven, and a window label that MCP does not match is a finding against the bridge, recorded in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 

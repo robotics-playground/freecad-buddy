@@ -33,7 +33,7 @@ of the human's FreeCAD window, so no scenario runs on the H1 headless host.
 **Design Ref**: `verification-design.md` §5 (shape assertions), `mcp-tools-design.md` §3.3 (verify surface)
 
 **Given** `box-10-20-30.FCStd` closed from any prior case — verify: `document_list` does not name it  
-**And** the golden box is open — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the returned `doc` handle as `<H>`; name its sole object `<OBJ>` via `mcp query_tree_summary { doc: <H> }` (read the Name on the first line of the tree text, `content[1]`)  
+**And** the golden box is open — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the returned `doc` handle as `<H>`; name its sole object `<OBJ>` via `mcp query_tree_summary { doc: <H> }` (read the Name on the first tree line)  
 
 **When** all five assertion kinds are run in one call  
 ```
@@ -79,7 +79,7 @@ mcp verify_shape { doc: <H>, object: <OBJ> }
 **And** the five measured facts are reported — verify: `structured_content.checks` has exactly the ids `shape.volume`, `shape.bbox`, `shape.solid_count`, `shape.valid`, `shape.watertight`  
 **And** no check carries an `expected` — verify: no element of `structured_content.checks` has an `expected` key  
 **And** every fact is marked `passed: true` (nothing was asserted, so nothing can fail) — verify: all `checks[*].passed` are `true`  
-**And** the measured volume matches the analytic cylinder — verify: the `shape.volume` `measured` is within 0.001 of `1570.7963`  
+**And** the measured volume matches the analytic cylinder — verify: the `shape.volume` `measured` is within 0.01 of `1570.7963` (results carry 2 decimals)  
 **And** measurement-only mode never grades — verify: repeating the call with `expect_volume` of `1.0` returns `SPEC_FAILED`, proving the `passed: true` facts came from the absent `checks`, not from a lenient grader  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the window shows a cylinder, not some other solid — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-02-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: one body with a round cross-section and two flat circular ends, standing roughly twice as tall as it is wide. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  

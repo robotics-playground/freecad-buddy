@@ -30,6 +30,9 @@ in a fresh clone. The two `tests/uat/run/2026-10-03-01/evidence/` scripts are co
 Call tools through `fcb.py` or the smoke script. The session `mcp__freecad-buddy__*` tools connect
 only at session start, and a reconnect needs `/mcp`, which is a human step.
 
+The session tools show only `structuredContent` when a result has it; `fcb.py` prints the
+content blocks. To judge what the agent reads, call the tool through the session tools.
+
 ## Steps
 
 ### 1. Preflight
@@ -113,6 +116,7 @@ Confirmed on FreeCAD 1.1.1:
 | `invoke_menu ["File","Exit"]` | works; clean shutdown |
 | `invoke_menu ["File","New"]` | refused at segment 1 (label differs on this build) |
 | `hotkey ["ctrl","n"]`, background delivery | dropped |
+| UIA click on `Edit > Preferences` (FreeCAD 1.1.4) | opens the modal dialog, but the click call blocks and the UIA provider stays busy until the dialog closes; later background clicks return `background_unavailable` (`uia_status: busy`); `zoom` still captures pixels. Open a modal dialog only when foreground input is authorized |
 
 `invoke_menu` fires the command as soon as it resolves the path. Send only a path whose effect you
 want.

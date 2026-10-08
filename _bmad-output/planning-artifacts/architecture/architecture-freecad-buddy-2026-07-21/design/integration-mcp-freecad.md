@@ -133,6 +133,8 @@ def _deferred_start():
 QtCore.QTimer.singleShot(0, _deferred_start)
 ```
 
+`InitGui.py` also registers `PreferencesPage` from `hosts/gui_addon/preferences.py` with `Gui.addPreferencePage`. Tool calls read its `RoundToDisplay` value on every call, so a change applies without a restart.
+
 `start_bridge()` (idempotent): create `QtMainThreadExecutor` (§3.3) on the main thread → build `MethodRegistry` from usecases → generate session token → start `RpcListener` accept thread → write connection file → **auto-spawn the external MCP HTTP proxy** (`freecad-buddy serve --mode rpc --transport http`, port 8765) as a child process so opening FreeCAD is the only step to reach the bridge over MCP. The proxy runs in the **external project venv** interpreter (it imports `mcp`, forbidden in-FreeCAD per AD-12), **auto-discovered from the addon's own install path** — walk from the package `__file__` to the repo root (a built copy finds the venv through the `repo-root.txt` marker written by `build_addon.py`) and run the repo `.venv`/`venv` python's serve module directly, no env vars needed (`FREECAD_BUDDY_MCP_CMD` is an optional verbatim override; `FREECAD_BUDDY_REPO`+`uv` a legacy fallback). Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set or `:8765` is already served. The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
 
 ### 3.2 RPC listener (`adapters/rpc_listener.py`, stdlib only)

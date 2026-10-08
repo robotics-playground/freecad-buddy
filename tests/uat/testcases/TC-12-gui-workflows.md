@@ -259,7 +259,7 @@ mcp document_close {doc:<handleSphere>}
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §1.1 (document handles)
 
-**Given** a document with two visible top-level shape-bearing objects is open — verify: in the tree text (`content[1]`) of `mcp query_tree_summary {doc:<handle>}` both lines start `v `  
+**Given** a document with two visible top-level shape-bearing objects is open — verify: in the tree lines of `mcp query_tree_summary {doc:<handle>}` both lines start `v `  
 
 **When** the visible set is recorded  
 ```bash

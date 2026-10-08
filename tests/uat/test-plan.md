@@ -123,6 +123,7 @@ Every test case file has this shape, and nothing else:
 8. **Screenshots land in `$RUN_DIR/evidence/`.** `cua-driver` writes them with
    `screenshot_out_file` so image bytes stay out of the agent's context until the agent chooses to
    `Read` one.
+9. **Tree lines.** A `query_tree_summary` result is one text block. Its first line reads `<STATUS>: <N> objects, <M> shown[, <K> matches][, truncated][. Errors: ...]`; a `framing:` line follows when a 3D view is open. The **tree lines** are the lines after those. Results round floats to FreeCAD's `Decimals` preference (default 2), so a value check names the displayed value or a band of at least 0.01.
 
 ### Why the visual `Then` is not optional
 

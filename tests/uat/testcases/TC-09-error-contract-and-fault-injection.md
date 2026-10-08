@@ -300,7 +300,7 @@ mcp feature_pattern { doc: <H>, ..., kind: "linear", occurrences: 1, ... }
 **Then** `depth: 0` → protocol rejection (below `minimum: 1`)  
 **And** `depth: -1` → protocol rejection  
 **And** `depth: 2147483647` is inside the declared range, so it is accepted and bounded by the real tree — verify: an `OK` envelope whose `shown` equals the document's actual object count (or `200` with `truncated: true` when the document has more lines), with no hang  
-**And** `depth: 1` is the documented default and returns the top level only — verify: `OK` with `shown` equal to the number of lines in the tree text (`content[1]`), and no line starts with a connector (`|-- ` or `` `-- ``)  
+**And** `depth: 1` is the documented default and returns the top level only — verify: a first line starting `OK:` whose `<M> shown` equals the number of tree lines, and no line starts with a connector (`|-- ` or `` `-- ``)  
 **And** `max_edges: 0` and `max_edges: -1` → protocol rejection (below `minimum: 1`)  
 **And** `max_edges: 1` is legal and truncates — verify: `OK` with at most one edge reported  
 **And** `occurrences: 0` and `occurrences: 1` → protocol rejection (below `minimum: 2`); a one-occurrence pattern is not expressible on the wire  
@@ -344,7 +344,7 @@ mcp export_step { doc: <H>, path: "$RUN_DIR/evidence/tc-09-08-n2.step", ap: null
 **Then** `checks` absent returns measurement-only facts — verify: `OK` with five checks carrying no `expected` key  
 **And** `checks: null` is a protocol rejection — verify: `isError` set, because the schema declares `checks` as `array`, and `null` is not an array  
 **And** `checks: []` is accepted and takes the same measurement-only path — verify: `OK` with the same five fact ids as the absent-`checks` call; an empty list is falsy at `verify.py:332`  
-**And** `depth` absent applies the declared default of 1 — verify: `OK` with `shown` equal to the number of top-level lines in the tree text (`content[1]`)  
+**And** `depth` absent applies the declared default of 1 — verify: a first line starting `OK:` whose `<M> shown` equals the number of top-level tree lines  
 **And** `depth: null` is a protocol rejection — verify: `isError` set; `null` is not an integer, so the default never applies  
 **And** `ap` absent applies the default `AP242` — verify: `grep -c AP242` on the written file is non-zero  
 **And** `ap: null` is a protocol rejection — verify: `isError` set; `null` is outside the enum `["AP214","AP242"]`, so it is not treated as "use the default"  
@@ -459,8 +459,8 @@ python3 -c "import json;print(json.load(open('$RUN_DIR/evidence/tc-09-05-tool_su
 **And** `max_nodes: 50` → protocol rejection; the value is irrelevant, the key itself is unknown  
 **And** the OLD documented behaviour is GONE — verify: neither call returns `OK`, neither returns an empty tree, and neither returns `truncated: true`. The former `docs/tests/TC-09` CP6 asserted `OK` + truncated; that expectation is stale and must not be revived from git history.  
 **And** the shipped property list confirms the retirement — verify: the property-list command prints `['doc', 'focus', 'expand', 'depth', 'filters']` with no `max_nodes`  
-**And** `truncated` now reports the 200-line cap, not `max_nodes` — verify: a successful `query_tree_summary { doc: <H> }` returns `structured_content.truncated` `false` for the one-object box  
-**And** bounding now happens through `focus`, `depth`, and the 200-line cap — verify: `depth: 1` returns the top level only and `shown` equals the number of lines in the tree text (`content[1]`)  
+**And** `truncated` now reports the 200-line cap, not `max_nodes` — verify: a successful `query_tree_summary { doc: <H> }` returns a first line with no `truncated` for the one-object box  
+**And** bounding now happens through `focus`, `depth`, and the 200-line cap — verify: `depth: 1` returns the top level only and the `<M> shown` count equals the number of tree lines  
 **And** the automated sweep asserts the same thing — verify: `$RUN_DIR/evidence/tc-09-01-edge_report.json` names `retired_max_nodes_rejected` as a passed check  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the two retired-parameter rejects left the window untouched — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the same single box, the two images visually identical, no error dialog or modal raised, and no tree-panel change. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  

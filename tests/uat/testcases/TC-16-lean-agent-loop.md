@@ -206,10 +206,10 @@ Quit FreeCAD with `invoke_menu ["File","Exit"]`; discard the copy.
 mcp query_tree_summary { doc: <handle>, focus: "front_plate_piece", depth: 3 }
 ```
 
-**Then** the result has two content blocks — verify: block 1 is JSON, block 2 is the tree text; neither block 1 nor `structuredContent` contains `|--` or `[BODY]`  
-**And** the total is at most 10,000 chars — verify: sum of the block character counts; record it (run `2026-10-08-01` measured 985)  
-**And** no line comes from another body — verify: block 2 names no feature of `tray_piece`, `rear_module_piece`, `duct_cover` or `drawer`  
-**And** *(visual)* the Model panel has the same children — verify: expand `front_plate_piece` in the Model panel with `cua-driver`, capture to `$RUN_DIR/evidence/tc-16-06-panel.png`, `Read` it: the children and their order equal the block 2 lines at depth 1 under `front_plate_piece`  
+**Then** the result is one text block — verify: line 1 starts `OK:` and ends `shown.`, a `framing:` line follows, then the tree lines; the block holds no `{` and there is no `structuredContent`  
+**And** the total is at most 10,000 chars — verify: the block character count; record it (run `2026-10-08-01` measured 985)  
+**And** no line comes from another body — verify: the tree lines name no feature of `tray_piece`, `rear_module_piece`, `duct_cover` or `drawer`  
+**And** *(visual)* the Model panel has the same children — verify: expand `front_plate_piece` in the Model panel with `cua-driver`, capture to `$RUN_DIR/evidence/tc-16-06-panel.png`, `Read` it: the children and their order equal the tree lines at depth 1 under `front_plate_piece`  
 
 **Cleanup**:
 ```

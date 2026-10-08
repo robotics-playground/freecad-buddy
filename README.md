@@ -87,3 +87,15 @@ it.
 Set `FREECAD_BUDDY_AUDIT_LOG` to a known file path before FreeCAD starts. Without it, the audit
 log is `freecad-buddy-audit.jsonl` in the working directory of FreeCAD, and a Start-menu launch
 has no known working directory.
+
+### Display rounding
+
+Tool results show numbers as the FreeCAD GUI shows them. Every float is rounded to the
+**Decimals** setting in Edit > Preferences > General > Units (default 2), so a solver value of
+`5.999999998` reads `6.0`. Checks compare the rounded difference with their tolerance, so noise
+below the display step never changes a verdict.
+
+To turn rounding off, open Edit > Preferences > **FreeCAD Buddy** and clear **Round numbers to
+FreeCAD display precision**. It is on by default. The next tool call uses the new setting; no
+restart is needed. With rounding off, results carry full floats and checks compare the raw
+difference.
