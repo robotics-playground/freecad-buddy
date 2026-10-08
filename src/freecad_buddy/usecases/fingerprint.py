@@ -140,12 +140,15 @@ def _center_of_mass(shape: object) -> tuple[float, float, float]:
     """Return the centre of mass, falling back to the bounding-box centre for compounds.
 
     ``CenterOfMass`` is undefined on some shape types (compounds, empty shapes); the bbox
-    centre is a deterministic substitute in that case.
+    centre is a deterministic substitute in that case. The box is the exact one: ``BoundBox``
+    reads the display mesh when one is attached, and the GUI rebuilds that mesh on recompute,
+    also on sketch edges shared with a downstream solid, so its centre moves on an unchanged
+    sketch and a rollback proof on mass properties fails.
     """
     com = getattr(shape, "CenterOfMass", None)
     if com is not None:
         return float(com.x), float(com.y), float(com.z)
-    bb = shape.BoundBox
+    bb = shape.optimalBoundingBox(False, False)
     return (
         float(bb.XMin + bb.XMax) / 2,
         float(bb.YMin + bb.YMax) / 2,

@@ -1613,3 +1613,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: `session_metrics.py` reads a spilled result's status from its spill file; when Claude Code later deletes that file, the result silently stops counting as a feature, so the calls-per-feature median of a re-measured transcript can drift with no warning.
   evidence: `_status` returns `None` for an absent spill file. Every spill file of the four measured transcripts exists today, so the committed numbers are unaffected; a count of missing spill files in the output line would expose drift.
+- source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
+  summary: `fingerprint` raises on a non-null empty `Compound` (no vertices); `_center_of_mass` now raises `RuntimeError: Bnd_Box is void` from `optimalBoundingBox` before `_quantize` raises `OverflowError` on the void `BoundBox` field, so a fix of B2 cause 1 in `_quantize` alone still leaves the fingerprint failing on that shape.
+  evidence: `Part.Compound([]).optimalBoundingBox(False, False)` raises `RuntimeError: Bnd_Box is void` on FreeCAD 1.1.4; `BoundBox` returns ±1.797e308. B2 in `tests/uat/run/2026-10-08-02/bugs.md` produces that shape (empty Pocket result).
+- source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
+  summary: Other readers of `Shape.BoundBox` depend on the GUI display mesh too: the fingerprint `bbox` field (in the digest) and the TNP witness `element.BoundBox` (`usecases/tnp_guard.py:171`); a GUI mesh rebuild can move a witness on an unchanged edge.
+  evidence: maybe-false for the TNP witness (medium if true): not measured. Settle by recording a witness, rebuilding the downstream mesh in the GUI (or `tessellate` headless on a sub-edge shared with a solid), and comparing. The `bbox` dependence is measured: `BoundBox` changed on 8 of 14 drawer sketches after meshing.
+- source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
+  summary: The mutation audit record does not name the objects that failed the rollback proof, which kept B1's cause unknown across two UAT runs; `massprops_changed` already returns those names.
+  evidence: `deferred-work.md` B1 entry ("The audit record does not name the objects that did not match"); the cause was found only with an ad hoc in-GUI probe.
+- source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
+  summary: The `run_mutation` validator hash covers `usecases/transaction.py` and `contracts/fingerprint.py` but not `usecases/fingerprint.py`, which decides the rollback proof, and no G2 fault case covers "unchanged sketch, rebuilt mesh, proof must hold".
+  evidence: `benchmarks/g2/fault-injection/score_g2_validators.py:45-47`; `run_mutation` `validator_sha` did not change with this fix.

@@ -622,6 +622,35 @@ class NullShapeFingerprintTest(_MutationFixture):
         self.assertEqual(entry["massprops"]["volume"], 0.0)
 
 
+class DisplayMeshFingerprintTest(_MutationFixture):
+    def test_should_keep_the_centre_of_a_sketch_compound_when_a_display_mesh_is_attached(self):
+        # Arrange
+        # The GUI view providers clear and rebuild the display mesh on recompute, also on sketch
+        # edges shared with a downstream solid. A centre read from a mesh-aware box then moves
+        # on an unchanged sketch and the abort's mass-property proof fails.
+        sketch = self.document.addObject("Sketcher::SketchObject", "Arcs")
+        normal = App.Vector(0, 0, 1)
+        sketch.addGeometry(
+            Part.ArcOfCircle(Part.Circle(App.Vector(0, 0, 0), normal, 10.0), 0.3, 2.0)
+        )
+        sketch.addGeometry(
+            Part.ArcOfCircle(Part.Circle(App.Vector(40, 0, 0), normal, 5.0), 0.2, 1.3)
+        )
+        self.document.recompute()
+        self.assertFalse(hasattr(sketch.Shape, "CenterOfMass"), sketch.Shape.ShapeType)
+        before = fingerprint(self.document, fresh=True)
+
+        # Act
+        sketch.Shape.tessellate(1.0)
+        after = fingerprint(self.document, fresh=True)
+
+        # Assert
+        def centre(record):
+            return next(e for e in record["objects"] if e["name"] == "Arcs")["massprops"]["com"]
+
+        self.assertEqual(centre(after), centre(before))
+
+
 class SerializerTagTest(_MutationFixture):
     def test_cross_tag_comparison_propagates_the_contract_value_error(self):
         record = fingerprint(self.document)

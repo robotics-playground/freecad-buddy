@@ -136,7 +136,9 @@ def _massprops(shape):
                                                          #   PrincipalProperties, parallel axis
         moments = eigenvalues(tensor)
     else:                                                # wire, face, shell; one-wire sketch
-        volume, com = shape.Volume, center_of_mass(shape)    # bbox centre when not exposed
+        volume, com = shape.Volume, center_of_mass(shape)    # when not exposed: centre of
+                                                         #   optimalBoundingBox(False, False),
+                                                         #   which ignores the display mesh
         moments = principal_moments(shape)               # PrincipalProperties, else matrix diagonal
         tensor = components(shape.MatrixOfInertia) if exposed else (0,) * 6
     t = (volume, shape.Area,
