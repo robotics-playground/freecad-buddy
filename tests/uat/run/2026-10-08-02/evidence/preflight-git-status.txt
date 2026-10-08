@@ -1,0 +1,5 @@
+ M _bmad-output/implementation-artifacts/sprint-status.yaml
+ M tests/uat/test-plan.md
+ M tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md
+?? tests/uat/run/2026-10-08-02/
+?? tests/uat/testcases/TC-16-lean-agent-loop.md

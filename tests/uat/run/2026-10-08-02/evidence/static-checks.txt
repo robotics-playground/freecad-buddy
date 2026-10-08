@@ -1,0 +1,13 @@
+## check_skill_shape
+exit=0
+## stale skill refs
+grep exit=1 (1 = no match)
+## ruff
+All checks passed!
+exit=0
+## gen_schemas --check
+gen_schemas --check OK
+exit=0
+## check_imports
+check_imports OK
+exit=0

@@ -1,0 +1,50 @@
+{
+  "document": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-08-02\\evidence\\drawer-timing.FCStd",
+  "feature": "duct_pilot",
+  "lengths": [
+    6.0,
+    5.5
+  ],
+  "mode": "gui",
+  "objects": 178,
+  "samples": [
+    {
+      "tool_seconds": 31.35205770000084,
+      "recompute_seconds": 15.657283599999573,
+      "overhead_seconds": 15.694774100001268
+    },
+    {
+      "tool_seconds": 26.95491949999996,
+      "recompute_seconds": 17.497624800000267,
+      "overhead_seconds": 9.457294699999693
+    },
+    {
+      "tool_seconds": 25.950575200000458,
+      "recompute_seconds": 16.65326189999996,
+      "overhead_seconds": 9.297313300000496
+    },
+    {
+      "tool_seconds": 25.453657900000508,
+      "recompute_seconds": 16.508438199999546,
+      "overhead_seconds": 8.945219700000962
+    },
+    {
+      "tool_seconds": 25.783591200000046,
+      "recompute_seconds": 16.59963280000011,
+      "overhead_seconds": 9.183958399999938
+    }
+  ],
+  "median_tool_seconds": 25.950575200000458,
+  "median_recompute_seconds": 16.59963280000011,
+  "median_overhead_seconds": 9.297313300000496,
+  "abort": {
+    "seconds": 32.941106899999795,
+    "status": "SPEC_FAILED",
+    "rollback_proven": "rolled_back_via_snapshot",
+    "same_document": false,
+    "close_document_calls": [
+      "drawer_timing"
+    ],
+    "passed": false
+  }
+}

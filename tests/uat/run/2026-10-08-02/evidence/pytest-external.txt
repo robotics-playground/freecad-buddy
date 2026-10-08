@@ -1,0 +1,5 @@
+  D:\Work\Personal\Sources\freecad-buddy\.venv\Lib\site-packages\trimesh\triangles.py:302: RuntimeWarning: invalid value encountered in divide
+    center_mass = integrated[1:4] / volume
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1330 passed, 5 warnings in 91.15s (0:01:31)

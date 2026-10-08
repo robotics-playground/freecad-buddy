@@ -278,6 +278,7 @@ against FreeCAD's own working directory, `C:\Program Files\FreeCAD 1.1\bin`, and
 | TC-12 | GUI workflows (maximal) | High | GUI | integration-mcp-freecad, cua-driver |
 | TC-13 | GUI ↔ MCP parity | Critical | GUI/Parity | mcp-tools-design §1.1, integration-mcp-freecad |
 | TC-14 | Viewport framing & auto-fit (Epic 8) | Critical | Quality/Output | spine §AD-29..§AD-33, FR24-FR26 |
+| TC-16 | Lean agent loop (Epic 11) | Critical | Mutation/Output | spine §AD-5, §AD-6, §AD-7, §AD-10, §AD-17 |
 | TC-99 | AD conformance gaps (EXPECTED-FAIL) | Informational | Conformance | spine §AD-3, §AD-25, §AD-26 |
 
 ## 8. Test Data

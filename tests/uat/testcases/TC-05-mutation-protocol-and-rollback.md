@@ -50,7 +50,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **And** both fingerprints present and different — verify: `structured_content.mutation.fingerprint_before.digest` and `fingerprint_after.digest` are both 64-hex strings and are not equal  
 **And** post_verify passed with no explanation — verify: `mutation.post_verify.passed` is `true` and `mutation.post_verify.explanation` is `null`  
 **And** not rolled back, no proof path taken — verify: `mutation.rolled_back` is `false` and `mutation.rollback_proven` is `null`  
-**And** transaction id reported — verify: `mutation.transaction_id` equals `"0"` and `mutation.schema` equals `"fcb.mutation/1"`  
+**And** the wire block is the compact one — verify: `mutation.schema` equals `"fcb.mutation/2"` and the block has no `transaction_id` key (the audit log `mutation` line keeps it)  
 **And** summary names the commit — verify: envelope `text` starts with `Mutation committed; fingerprint ` and carries the first 12 chars of `fingerprint_after.digest`  
 **And** geometry matches the request — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` returns `volume` = `12000.0` (20 x 20 x 30 mm)  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -85,7 +85,7 @@ kill %1
 **Then** a snapshot directory existed mid-operation — verify: `grep -c FCB_TMP_snap_ "$RUN_DIR/evidence/tc-05-02-snapwatch.log"` returns a count of at least 1  
 **And** the snapshot file was the document itself — verify: the logged directory contained `<DocumentName>.FCStd` while the bracket was open  
 **And** snapshot gone after commit — verify: `ls -d "$TEMP"/FCB_TMP_snap_* 2>/dev/null` returns nothing  
-**And** envelope names no snapshot — verify: `mutation.snapshot_path` is `null` on the `OK` envelope  
+**And** envelope names no snapshot — verify: the `OK` envelope's mutation block has no `snapshot_path` key  
 **And** no orphan `.FCBak` sibling left behind — verify: `ls "$TEMP"/*.FCBak 2>/dev/null` returns nothing  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the human's window shows a solid box, so the deleted snapshot accompanied a real commit — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-02-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a shaded solid prism, whole, not clipped at any viewport edge, with no error dialog. An empty viewport here means the snapshot was deleted after a mutation that never reached the user, which the filesystem checks above cannot detect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -183,8 +183,8 @@ mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "Fillet", e
 
 **Then** the call did not raise — verify: a `ResultEnvelope` was returned, not an MCP `isError` response  
 **And** rollback is claimed and proven — verify: `mutation.rolled_back` is `true` and `mutation.rollback_proven` equals `"rolled_back_verified"`  
-**And** the abort path, not the snapshot path — verify: `mutation.snapshot_path` is `null` (it is populated only for `rolled_back_via_snapshot`)  
-**And** the fingerprint returned to the pre-mutation value — verify: `mutation.fingerprint_after.digest` equals the `diff.fingerprint_before` recorded in the preview  
+**And** the abort path, not the snapshot path — verify: the mutation block has no `snapshot_path` key (it is present only for `rolled_back_via_snapshot`)  
+**And** the geometry returned to the pre-mutation value — verify: `mutation.changed` is `[]`; `mutation.fingerprint_after.digest` equals the preview's `diff.fingerprint_before`, or differs only because the abort re-wrote B-rep bytes with equal mass properties (the proof accepts `massprops_equal`, AD-5)  
 **And** status is the failing check's status — verify: envelope `status` is `SPEC_FAILED` or `RECOMPUTE_ERROR`, and `detail.code` equals `mutation.` plus that status lowercased  
 **And** summary names the proof path — verify: envelope `text` starts with `Mutation rolled back (rolled_back_verified): `  
 **And** the document really is unchanged — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` still returns `volume` = `12000.0` and `mcp query_tree_summary { doc: <handle>, depth: 3 }` does not list `Fillet`  
@@ -328,7 +328,7 @@ mcp feature_fillet { doc: <handle>, body: "Body", base: "Pad", name: "GoodFillet
 ```
 
 **Then** the follow-up mutation succeeded after every failure path — verify: each `GoodFillet` call returns `status: "OK"`  
-**And** the follow-up opened its own transaction, not a nested one — verify: its `mutation.transaction_id` equals `"0"`  
+**And** the follow-up opened its own transaction, not a nested one — verify: the audit log `mutation` line of the follow-up has `transaction_id` `"0"` (the wire block no longer carries it)  
 **And** no transaction is pending after the failure — verify: `mcp document_undo { doc: <handle> }` is NOT refused with `has an open transaction; undo would commit it`  
 **And** `document_undo` reverts the follow-up, not a leaked bracket — verify: `document_undo` returns `undone` equal to `buddy: <the follow-up label>`  
 **And** no snapshot leaked across the failure paths — verify: `ls -d "$TEMP"/FCB_TMP_snap_* 2>/dev/null` returns nothing after the successful follow-up  
@@ -368,7 +368,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **Then** the failure is reported, not raised — verify: a `ResultEnvelope` is returned with `status: "SPEC_FAILED"`  
 **And** the injected cause is named — verify: `mutation.post_verify.explanation` equals `RuntimeError: injected commit failure`  
 **And** rollback is claimed — verify: `mutation.rolled_back` is `true`  
-**And** the snapshot was deleted — verify: `mutation.snapshot_path` is `null` and `ls -d "$TEMP"/FCB_TMP_snap_* 2>/dev/null` returns nothing  
+**And** the snapshot was deleted — verify: the mutation block has no `snapshot_path` key and `ls -d "$TEMP"/FCB_TMP_snap_* 2>/dev/null` returns nothing  
 **And** no after-fingerprint was taken — verify: `mutation.fingerprint_after` is `null`, while `fingerprint_before` is a full record  
 **And** the bracket is closed — verify: a subsequent well-formed `feature_pad` returns `status: "OK"` on the same handle  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -442,7 +442,7 @@ mcp debug_exec { doc: <handle>, code: "from freecad_buddy.usecases import transa
 **And** no after-fingerprint either — verify: `mutation.fingerprint_after` is `null`  
 **And** rollback is not claimed — verify: `mutation.rolled_back` is `false` and `mutation.rollback_proven` is `null`  
 **And** `touched` is empty — verify: `mutation.touched` equals `[]`  
-**And** no snapshot survives — verify: `mutation.snapshot_path` is `null` and `ls -d "$TEMP"/FCB_TMP_snap_* 2>/dev/null` returns nothing  
+**And** no snapshot survives — verify: the mutation block has no `snapshot_path` key and `ls -d "$TEMP"/FCB_TMP_snap_* 2>/dev/null` returns nothing  
 **And** no transaction was opened — verify: `mcp document_undo { doc: <handle> }` reports `undone` equal to the label of the LAST successful mutation, not `buddy: <the failed label>`  
 **And** the document is untouched — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` still returns `volume` = `12000.0`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -476,7 +476,7 @@ mcp preview_dry_run { doc: <handle-b>, operation: { tool: "feature_body_create",
 **And** the tag is the same on both sides of one bracket — verify: `mutation.fingerprint_before.serializer` equals `mutation.fingerprint_after.serializer`  
 **And** identical documents give identical digests — verify: the two `diff.fingerprint_before` values from the two previews are equal  
 **And** the digest is a SHA-256 — verify: it matches `^[0-9a-f]{64}$`  
-**And** the record carries per-object entries — verify: `mutation.fingerprint_before.objects` is a list whose members each hold `name`, `brep_sha256` and `massprops`  
+**And** the wire carries the digest, not the record — verify: `mutation.fingerprint_before` has exactly the keys `digest` and `serializer` (the per-object record stays in the server's digest-keyed cache)  
 **And** a real geometry change moves the digest — verify: after a successful `feature_pad`, `fingerprint_after.digest` differs from `fingerprint_before.digest`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle-a> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the human's window shows a real box, so the two equal digests describe a visible document — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: one shaded rectangular solid with three visibly different edge lengths, whole and unclipped, and no error dialog. Two identical digests taken over an empty document would also be equal, so an empty viewport here voids the determinism claim. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  

@@ -1,0 +1,5 @@
+2026-10-08 12:11:20,909 INFO freecad_buddy.hosts.headless: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-08 12:11:21,081 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-08-02\evidence\tc-08-18-approve.jsonl
+2026-10-08 12:11:21,081 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)
+2026-10-08 12:11:21,081 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-08 12:11:21,176 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id carries an invalid signature
