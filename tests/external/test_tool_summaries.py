@@ -40,6 +40,17 @@ def test_should_say_truncated_when_the_cap_cut_the_tree():
     assert out == "900 objects, 200 shown, truncated."
 
 
+def test_should_count_the_matches_when_filters_revealed_them():
+    # Arrange
+    sc = {"doc": "fcb-doc:D", "total_objects": 184, "shown": 59, "truncated": False, "matches": 51}
+
+    # Act
+    out = summarize_tree(sc)
+
+    # Assert
+    assert out == "184 objects, 59 shown, 51 matches."
+
+
 def test_should_name_every_error_when_objects_in_the_start_subtree_failed():
     # Arrange
     sc = {"doc": "fcb-doc:D", "total_objects": 9, "shown": 2, "truncated": False}

@@ -37,12 +37,15 @@ def _ok_envelope(structured: dict, summary: str | None = None) -> ResultEnvelope
 
 
 def summarize_tree(sc: dict, errors: list[str] | None = None) -> str:
-    """One-line tree summary: object count, lines shown, a cut by the cap, and every error.
+    """One-line tree summary: object count, lines shown, filter matches, a cut by the cap, and
+    every error.
 
     ``errors`` holds ``"<Name>: <status>"`` for each errored object in the start subtree, so an
     error below a collapsed line still reaches the agent.
     """
     head = f"{sc.get('total_objects', '?')} objects, {sc.get('shown', '?')} shown"
+    if "matches" in sc:
+        head += f", {sc['matches']} matches"
     if sc.get("truncated"):
         head += ", truncated"
     if errors:

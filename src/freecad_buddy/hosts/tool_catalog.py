@@ -1224,7 +1224,8 @@ def tool_specs() -> list[ToolSpec]:
                 "additionalProperties": False,
             },
             "Document tree as plain text in the shape of FreeCAD's Model panel (containment, "
-            "not dependencies), sent as the second content block. One object per line: "
+            "not dependencies), as plain text: a '<STATUS>: <summary>' line, a 'framing:' line "
+            "when a viewport is open, then the tree. One object per line: "
             "'<v|-> [CODE] Name[ \"Label\"][ (+N)][ *tip][ !status]'. v = visible, - = hidden; "
             "CODE = type code (BODY, PAD, SKETCH, DPLANE...); (+N) = N children not shown; "
             "(+N more) = an ancestor opened only along a path; *tip = the Body's Tip; "

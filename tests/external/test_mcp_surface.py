@@ -944,33 +944,64 @@ def test_should_send_each_text_block_as_its_own_content_when_the_envelope_carrie
     assert "text_blocks" in envelope
 
 
-def test_should_send_only_content_blocks_when_the_tool_has_no_structured_output():
+def _tree_server(envelope: dict):
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(name="tree_tool", handler=lambda **_p: dict(envelope), structured_output=False)
+    )
+    return build_server(registry, Capabilities(allow_exec=False), AuditSink(Path("unused.jsonl")))
+
+
+def test_should_send_one_plain_text_block_when_the_tool_has_no_structured_output():
     # Arrange
     tree = "v [BODY] Body\n`-- v [PAD] Pad *tip"
     envelope = {
         "schema": "fcb.result-envelope/1",
         "status": "OK",
         "detail": None,
-        "structured_content": {"doc": "fcb-doc:D", "shown": 2},
+        "structured_content": {"doc": "fcb-doc:D", "total_objects": 3, "shown": 2},
         "text": "3 objects, 2 shown.",
         "text_blocks": [tree],
+        "framing": {
+            "fits": True,
+            "ratio": 0.6068376068376068,
+            "checked": "cached",
+            "stale_reason": "served from cache",
+        },
     }
-    registry = MethodRegistry()
-    registry.register(
-        RpcMethod(name="tree_tool", handler=lambda **_p: dict(envelope), structured_output=False)
-    )
-    server = build_server(registry, Capabilities(allow_exec=False), AuditSink(Path("unused.jsonl")))
+    server = _tree_server(envelope)
 
     # Act
     result = _call_tool_via_server(server, "tree_tool", {})
 
     # Assert
     assert result.structuredContent is None
-    assert json.loads(result.content[0].text)["structured_content"] == {
-        "doc": "fcb-doc:D",
-        "shown": 2,
+    assert result.isError is False
+    assert [block.text for block in result.content] == [
+        "OK: 3 objects, 2 shown.\n"
+        "framing: fits, ratio 0.61, cached, served from cache\n"
+        "v [BODY] Body\n"
+        "`-- v [PAD] Pad *tip"
+    ]
+
+
+def test_should_state_the_status_and_message_when_a_plain_text_tool_fails():
+    # Arrange
+    envelope = {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {"code": "INVALID_INPUT", "message": "unknown object: Pad", "data": {}},
+        "structured_content": {},
+        "text": "",
     }
-    assert result.content[1].text == tree
+    server = _tree_server(envelope)
+
+    # Act
+    result = _call_tool_via_server(server, "tree_tool", {})
+
+    # Assert
+    assert result.isError is True
+    assert [block.text for block in result.content] == ["INVALID_INPUT: unknown object: Pad"]
 
 
 def _ok_envelope_with(structured: dict) -> dict:

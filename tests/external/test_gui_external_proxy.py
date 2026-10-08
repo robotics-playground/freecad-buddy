@@ -104,4 +104,4 @@ def test_should_send_the_tree_without_structured_content_when_the_proxy_serves_t
 
     # Assert
     assert result.structuredContent is None
-    assert [block.text for block in result.content[1:]] == [tree]
+    assert [block.text for block in result.content] == [f"OK: 3 objects, 2 shown.\n{tree}"]

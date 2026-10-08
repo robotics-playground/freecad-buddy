@@ -1,9 +1,10 @@
 # Reading `query_tree_summary` lines
 
 Load this when you read the tree text that `query_tree_summary` returns. The
-tree text is the second content block of the result. The first block is a small
-JSON envelope with the counts (`total_objects`, `shown`, `truncated`, and
-`matches` when you gave `filters`).
+result is plain text. The first line is the status and the counts, for example
+`OK: 184 objects, 59 shown, 51 matches.` (`matches` only when you gave
+`filters`, `truncated` when the line cap cut the tree, then any errors). A
+`framing:` line follows when a 3D view is open. The tree lines come next.
 
 ## Line format
 
