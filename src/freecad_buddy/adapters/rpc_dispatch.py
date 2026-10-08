@@ -41,6 +41,10 @@ class RpcMethod:
     mutating: bool = False
     audit_event: str = "mutation"
     internal: bool = False
+    # False for a tool whose payload travels in ``text_blocks``: it declares no ``outputSchema``
+    # and sends no ``structuredContent``, because a client that finds ``structuredContent`` (Claude
+    # Code) shows the agent only that and drops every content block.
+    structured_output: bool = True
 
 
 # Tools whose calls are audited despite carrying ``mutating=False``. ``preview_dry_run`` mutates

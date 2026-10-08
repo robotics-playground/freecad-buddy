@@ -304,15 +304,23 @@ def test_dispatch_export_with_unknown_handle_is_invalid_input():
         assert envelope["status"] == "INVALID_INPUT", name
 
 
+# Tools whose payload travels in extra text blocks; they declare no outputSchema so a client
+# that prefers structuredContent still shows the agent those blocks.
+TEXT_BLOCK_TOOLS = {"query_tree_summary"}
+
+
 def test_every_tool_has_input_output_schema_and_docstring():
     caps = Capabilities(allow_exec=False)
     tools = registered_tools(_registry(caps), caps)
     for tool in tools:
         assert tool.inputSchema, f"{tool.name} missing inputSchema"
         assert tool.inputSchema.get("type") == "object"
+        assert tool.description, f"{tool.name} missing docstring/description"
+        if tool.name in TEXT_BLOCK_TOOLS:
+            assert tool.outputSchema is None, f"{tool.name} must not declare an outputSchema"
+            continue
         assert tool.outputSchema, f"{tool.name} missing outputSchema"
         assert "status" in tool.outputSchema["properties"], f"{tool.name} outputSchema not envelope"
-        assert tool.description, f"{tool.name} missing docstring/description"
 
 
 def test_tool_names_use_underscore_no_dots():
@@ -934,6 +942,35 @@ def test_should_send_each_text_block_as_its_own_content_when_the_envelope_carrie
     assert [block.text for block in result.content[1:]] == [tree, "second"]
     assert all(block.type == "text" for block in result.content)
     assert "text_blocks" in envelope
+
+
+def test_should_send_only_content_blocks_when_the_tool_has_no_structured_output():
+    # Arrange
+    tree = "v [BODY] Body\n`-- v [PAD] Pad *tip"
+    envelope = {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": {"doc": "fcb-doc:D", "shown": 2},
+        "text": "3 objects, 2 shown.",
+        "text_blocks": [tree],
+    }
+    registry = MethodRegistry()
+    registry.register(
+        RpcMethod(name="tree_tool", handler=lambda **_p: dict(envelope), structured_output=False)
+    )
+    server = build_server(registry, Capabilities(allow_exec=False), AuditSink(Path("unused.jsonl")))
+
+    # Act
+    result = _call_tool_via_server(server, "tree_tool", {})
+
+    # Assert
+    assert result.structuredContent is None
+    assert json.loads(result.content[0].text)["structured_content"] == {
+        "doc": "fcb-doc:D",
+        "shown": 2,
+    }
+    assert result.content[1].text == tree
 
 
 def _ok_envelope_with(structured: dict) -> dict:

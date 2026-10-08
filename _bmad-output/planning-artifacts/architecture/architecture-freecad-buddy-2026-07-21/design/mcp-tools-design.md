@@ -57,7 +57,7 @@ A caller-supplied bare `Face6` is resolved to a mapped name at call time and nev
 
 ### 1.3 Result envelope & error surface (AD-17)
 
-Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). A tool whose payload is a long text body (today only `query_tree_summary`) puts it in the optional `text_blocks: list[str]`; the adapter sends each entry as an extra raw `TextContent` after the JSON block and never serializes `text_blocks` into the JSON block or `structuredContent`. No namespace defines a variant envelope.
+Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). A tool whose payload is a long text body (today only `query_tree_summary`) puts it in the optional `text_blocks: list[str]`; the adapter sends each entry as an extra raw `TextContent` after the JSON block and never serializes `text_blocks` into the JSON block or `structuredContent`. Such a tool declares no `outputSchema` and sends no `structuredContent` (`RpcMethod.structured_output=False`): Claude Code shows the agent only `structuredContent` when a result carries it and drops every content block, so the tree would never reach the agent. No namespace defines a variant envelope.
 
 The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contracts-design.md §4) — this catalog consumes it, never redefines it:
 
@@ -216,7 +216,7 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | **AI-visible total** | | | | | **50** | **45** |
 | `debug_` (operator-only) | 1 | — | — | — | 1 | 1 |
 
-**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus operator-only `debug_exec` (unregistered by default, never counted in the AI-visible registry) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule).
+**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus operator-only `debug_exec` (unregistered by default, never counted in the AI-visible registry) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
 The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **45**; with `DEBUG_EXEC_SPEC` that is 46 registered specs.
 

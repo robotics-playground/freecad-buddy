@@ -128,6 +128,7 @@ def build_proxy_registry(client: RpcClient, caps: Capabilities) -> MethodRegistr
                 timeout_s=spec.timeout_s,
                 mutating=spec.mutating,
                 audit_event=spec.audit_event,
+                structured_output=spec.structured_output,
             )
         )
     return methods
@@ -145,7 +146,8 @@ def build_proxy_server(registry: MethodRegistry, caps: Capabilities) -> Server:
     async def _call_tool(tool_name: str, arguments: dict) -> types.CallToolResult:
         args = arguments if isinstance(arguments, dict) else {}
         envelope = await anyio.to_thread.run_sync(lambda: registry.dispatch(tool_name, args))
-        return _to_call_result(envelope)
+        method = registry.get(tool_name)
+        return _to_call_result(envelope, structured=method is None or method.structured_output)
 
     return server
 

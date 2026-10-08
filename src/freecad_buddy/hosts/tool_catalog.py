@@ -68,6 +68,7 @@ class ToolSpec:
     timeout_s: float
     mutating: bool = False
     audit_event: str = "mutation"
+    structured_output: bool = True
 
 
 def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None, fmt):
@@ -829,7 +830,7 @@ def _doc_method(attr, timeout, schema, description, *, mutating):
     )
 
 
-def _query_method(name, fn, timeout, schema, description):
+def _query_method(name, fn, timeout, schema, description, *, structured_output=True):
     """A ``ToolSpec`` for a read-only query use case taking the doc registry."""
 
     def make(doc_registry, export_registry, caps, render_port, viewport_port):  # noqa: ARG001
@@ -842,6 +843,7 @@ def _query_method(name, fn, timeout, schema, description):
         description=description,
         timeout_s=timeout,
         mutating=False,
+        structured_output=structured_output,
     )
 
 
@@ -1228,6 +1230,7 @@ def tool_specs() -> list[ToolSpec]:
             "(+N more) = an ancestor opened only along a path; *tip = the Body's Tip; "
             "!status = error state; an App::Link line ends '-> target'. Capped at 200 lines. "
             "The one-line text names every errored object in the start subtree.",
+            structured_output=False,
         ),
         _query_method(
             "query_object",
@@ -1550,6 +1553,7 @@ def build_inline_handlers(
                 timeout_s=spec.timeout_s,
                 mutating=spec.mutating,
                 audit_event=spec.audit_event,
+                structured_output=spec.structured_output,
             )
         )
 
