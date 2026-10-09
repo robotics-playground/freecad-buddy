@@ -13,7 +13,7 @@ agent's context pays for.
 
 **Host**: GUI through the H2 proxy for every scenario. TC-16-01 .. TC-16-04 and TC-16-06 run under
 the default posture (auto-approve on). TC-16-07 needs a FreeCAD started with
-`FREECAD_BUDDY_AUTO_APPROVE=0`. TC-16-05 runs `scripts/automation/time_mutation_overhead.py` as a
+`FREECAD_BUDDY_AUTO_APPROVE=0`, or with the **Auto-approve mutations** preference off. TC-16-05 runs `scripts/automation/time_mutation_overhead.py` as a
 GUI macro in its own FreeCAD launch.
 
 ## Preconditions
@@ -116,7 +116,7 @@ mcp document_close { doc: <handle> }
 **Priority**: Critical
 **Design Ref**: spine AD-10; `mcp-tools-design.md` §4; `usecases/confirm.py` (auto-approve); `freecad-gui-e2e-harness.md` §2
 
-**Given** FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE` unset — verify: the new `addon.log` lines contain `SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`  
+**Given** FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE` unset and the **Auto-approve mutations** preference on — verify: the new `addon.log` lines contain `SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`  
 **And** the `feature_pad` of TC-16-02 is the call under test, made with no `preview_dry_run` before it on a fresh document `tc16_once` (same body and sketch as TC-16-02)  
 
 **When** the count of tool calls from the sketch to the solid is recorded  
@@ -223,7 +223,7 @@ mcp document_close { doc: <handle> }
 **Priority**: High
 **Design Ref**: Story 11.3 AC3, AC4; spine AD-10; `usecases/confirm.py` (display state)
 
-**Given** FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0` — verify: the new `addon.log` lines do not contain `SECURITY: mutation auto-approve ENABLED`  
+**Given** FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, or with the **Auto-approve mutations** preference off and the variable unset — verify: the new `addon.log` lines do not contain `SECURITY: mutation auto-approve ENABLED`  
 **And** a document `tc16_vis` with body `Body`, a 20 x 20 mm sketch and a 30 mm `Pad` built with preview tokens  
 **And** the before image is captured after a fit — verify: capture to `$RUN_DIR/evidence/tc-16-07-before.png`  
 

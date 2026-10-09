@@ -1,0 +1,32 @@
+{
+  "name": "freecad-buddy",
+  "owner": {
+    "name": "TanNT"
+  },
+  "metadata": {
+    "description": "FreeCAD Buddy: CAD skills and the FreeCAD MCP server for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "freecad-buddy",
+      "source": "./skills",
+      "description": "FreeCAD modelling skills plus the freecad-buddy MCP server that the FreeCAD addon serves on http://127.0.0.1:8765/mcp",
+      "version": "0.0.1",
+      "author": {
+        "name": "TanNT"
+      },
+      "license": "MIT",
+      "homepage": "https://github.com/robotics-playground/freecad-buddy",
+      "repository": "https://github.com/robotics-playground/freecad-buddy",
+      "keywords": ["freecad", "cad", "mcp"],
+      "strict": false,
+      "skills": "./",
+      "mcpServers": {
+        "freecad-buddy": {
+          "type": "http",
+          "url": "http://127.0.0.1:8765/mcp"
+        }
+      }
+    }
+  ]
+}

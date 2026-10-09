@@ -2,7 +2,7 @@
 <package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
   <name>FreeCAD Buddy</name>
   <description>Verify-first MCP bridge for FreeCAD</description>
-  <version>0.0.1</version>
+  <version>0.0.1</version> <!-- x-release-please-version -->
   <freecadmin>1.1</freecadmin>
   <content>
     <workbench>

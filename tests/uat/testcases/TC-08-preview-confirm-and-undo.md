@@ -22,7 +22,7 @@ the available-render contrast and an H1 headless host for the no-render-port con
 
 ## Preconditions
 - [ ] FreeCAD GUI open and the addon bridge serving `:8765` (verify: `netstat -ano | grep :8765` shows LISTENING)
-- [ ] Host is NOT in auto-approve posture: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, because auto-approve is on by default (verify: the new `addon.log` lines from that launch do not contain `SECURITY: mutation auto-approve ENABLED`)
+- [ ] Host is NOT in auto-approve posture: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, or with the **Auto-approve mutations** preference off and the variable unset, because auto-approve is on by default (verify: the new `addon.log` lines from that launch do not contain `SECURITY: mutation auto-approve ENABLED`)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
 - [ ] No stale preview TempDocs (verify: `ls -d "$TEMP"/FCB_TMP_prev_* 2>/dev/null` returns nothing)
 - [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
@@ -626,7 +626,7 @@ mutating tools (`document_*`, `export_*`, `debug_exec`) carry no `confirm` and a
 here. This is the same 19 that `preview_dry_run` will accept.
 
 **Given** a document holding a body, a fully-constrained sketch, a `Pad` and a `Fillet`, so every one of the 19 tools has a valid target — verify: `mcp query_tree_summary { doc: <handle>, depth: 4 }` lists all four  
-**And** the GUI host runs the confirm gate: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0` (the default is auto-approve on) — verify: the new `addon.log` lines from that launch do NOT contain `SECURITY: mutation auto-approve ENABLED`  
+**And** the GUI host runs the confirm gate: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, or with the **Auto-approve mutations** preference off and the variable unset (the default is auto-approve on) — verify: the new `addon.log` lines from that launch do NOT contain `SECURITY: mutation auto-approve ENABLED`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-before.png"}' | & cua-driver call get_window_state`  
 
@@ -686,7 +686,7 @@ env -u FREECAD_BUDDY_AUTO_APPROVE FREECAD_BUDDY_AUDIT_LOG="$RUN_DIR/evidence/tc-
 **And** the exact flag approves — verify: the `=1` run returns `status: "OK"` with no `confirm` in the call  
 **And** `0` turns the gate on — verify: the `=0` run returns `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
 **And** any other value turns the gate on — verify: the `=true` run returns the same refusal, because the flag is compared against the exact string `"1"`  
-**And** the operator posture is announced at startup — verify: the stderr of the flag-unset run and of the `=1` run each contain `SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`, and the stderr of the `=0` and `=true` runs do not  
+**And** the operator posture is announced at startup — verify: the stderr of the flag-unset run and of the `=1` run each contain `SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`, and the stderr of the `=0` and `=true` runs do not  
 **And** the approval is audited — verify: `grep '"mode": *"auto_approve"' "$RUN_DIR/evidence/tc-08-18-approve.jsonl"` returns a line naming the tool and the document handle, with `"source": "FREECAD_BUDDY_AUTO_APPROVE"`  
 **And** the audited approval carries no token — verify: that line's `args_digest` is present while no `preview_id` appears, because an auto-approved call presented none  
 **And** the refused forged-token call wrote no approval line — verify: the file holds exactly one `approval` line  

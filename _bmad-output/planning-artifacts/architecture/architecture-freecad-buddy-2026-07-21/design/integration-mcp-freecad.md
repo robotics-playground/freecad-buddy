@@ -96,7 +96,7 @@ class MethodRegistry:
     def dispatch(self, name: str, params: dict) -> ResultEnvelope: ...
 ```
 
-`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `debug_exec` is registered only when `FREECAD_BUDDY_ALLOW_EXEC` is set by the operator (AD-4) and every invocation is appended to the audit log (AD-17).
+`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `debug_exec` is registered only when the operator turns it on — `FREECAD_BUDDY_ALLOW_EXEC=1`, or in GUI mode the **Allow debug_exec** preference with the variable unset (AD-4) and every invocation is appended to the audit log (AD-17).
 
 ### 2.6 Discovery (connection file)
 
@@ -133,9 +133,29 @@ def _deferred_start():
 QtCore.QTimer.singleShot(0, _deferred_start)
 ```
 
-`InitGui.py` also registers `PreferencesPage` from `hosts/gui_addon/preferences.py` with `Gui.addPreferencePage`. Tool calls read its `RoundToDisplay` value on every call, so a change applies without a restart.
+`InitGui.py` also registers `PreferencesPage` from `hosts/gui_addon/preferences.py` with `Gui.addPreferencePage`. Tool calls read its `RoundToDisplay` value on every call, so a change applies without a restart. The page also holds the operator settings, stored under `User parameter:BaseApp/Preferences/Mod/FreeCADBuddy`:
 
-`start_bridge()` (idempotent): create `QtMainThreadExecutor` (§3.3) on the main thread → build `MethodRegistry` from usecases → generate session token → start `RpcListener` accept thread → write connection file → **auto-spawn the external MCP HTTP proxy** (`freecad-buddy serve --mode rpc --transport http`, port 8765) as a child process so opening FreeCAD is the only step to reach the bridge over MCP. The proxy runs in the **external project venv** interpreter (it imports `mcp`, forbidden in-FreeCAD per AD-12), **auto-discovered from the addon's own install path** — walk from the package `__file__` to the repo root (a built copy finds the venv through the `repo-root.txt` marker written by `build_addon.py`) and run the repo `.venv`/`venv` python's serve module directly, no env vars needed (`FREECAD_BUDDY_MCP_CMD` is an optional verbatim override; `FREECAD_BUDDY_REPO`+`uv` a legacy fallback). Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set or `:8765` is already served. The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
+| Field | Key | Default | Variable that overrides it |
+| --- | --- | --- | --- |
+| Auto-approve mutations | `AutoApprove` | on | `FREECAD_BUDDY_AUTO_APPROVE` |
+| Allow debug_exec | `AllowExec` | off | `FREECAD_BUDDY_ALLOW_EXEC` |
+| Start the MCP server with FreeCAD | `AutoStartMcp` | on | `FREECAD_BUDDY_NO_AUTO_MCP` (off writes `1`) |
+| MCP command | `McpCommand` | empty | `FREECAD_BUDDY_MCP_CMD` |
+| uv path | `UvPath` | empty (`uv` on `PATH`) | none |
+| Audit log file | `AuditLogPath` | empty | `FREECAD_BUDDY_AUDIT_LOG` |
+
+`start_bridge` reads them once, right after it configures logging. `usecases/operator_settings.resolve_env_overlay` applies the precedence: a variable that is set wins, else the preference, else the default. The result goes into `os.environ` before the temp sweep and the capability read, so every reader and the proxy child see one effective value. When nothing sets them, the audit log is `<FreeCAD user app data>/freecad-buddy/audit.jsonl` and the workdir `<FreeCAD user app data>/freecad-buddy/workdir`, so the GUI host never depends on its working directory. `addon.log` records the effective values in one `operator settings:` line. A change needs a FreeCAD restart.
+
+`start_bridge()` (idempotent): create `QtMainThreadExecutor` (§3.3) on the main thread → build `MethodRegistry` from usecases → generate session token → start `RpcListener` accept thread → write connection file → **auto-spawn the external MCP HTTP proxy** (`freecad-buddy serve --mode rpc --transport http`, port 8765) as a child process so opening FreeCAD is the only step to reach the bridge over MCP. The proxy runs in an **external venv** interpreter (it imports `mcp`, forbidden in-FreeCAD per AD-12). The launch command resolves in this order, with no env vars needed:
+
+1. `FREECAD_BUDDY_MCP_CMD` (or the **MCP command** preference) — a verbatim override.
+2. The repo `.venv`/`venv` python, **auto-discovered from the addon's own install path** — walk from the package `__file__` to the repo root (a built copy finds the venv through the `repo-root.txt` marker written by `build_addon.py`) and run its serve module directly. This is the dev install.
+3. `FREECAD_BUDDY_REPO`/`FREECAD_BUDDY_SRC` + `uv` — a legacy fallback.
+4. The **managed venv** `<FreeCAD user app data>/FreeCADBuddy/venv`, when its `freecad-buddy-wheel.sha256` marker equals the SHA-256 of the wheel in `<addon>/wheels/`. This is the release install.
+5. A release install with `uv` found (the **uv path** preference, else `PATH`) and no current managed venv: `hosts/gui_addon/managed_venv.provision` builds it on a daemon thread (`uv venv --clear --python >=3.11`, then `uv pip install` the bundled wheel; marker written last), then the thread spawns the proxy. A lock file `FreeCADBuddy/venv.lock` lets one FreeCAD instance provision while another skips; a lock older than 10 min is taken over. `uv` output goes to `freecad-buddy/provision.log`. The thread never touches Qt; `stop_bridge` sets its cancel event and joins it before it terminates the proxy. A changed wheel (an upgrade) fails the marker check and provisions again.
+6. Else one log line says why; with a bundled wheel but no `uv`, it names the **uv path** preference.
+
+A failed spawn or provisioning is logged and leaves the RPC listener up. Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set (or the **Start the MCP server with FreeCAD** preference is off) or `:8765` is already served. The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
 
 ### 3.2 RPC listener (`adapters/rpc_listener.py`, stdlib only)
 
@@ -243,7 +263,7 @@ FreeCADCmd run_server.py            # or: xvfb-run -a FreeCADCmd run_server.py (
 | `render` | detection ladder result §6: `"gui_constructed" \| "offscreen" \| "none"` |
 | `element_map` | `shim.element_map_available()` |
 | `varset` | `shim` VarSet probe (façade reports `varset` vs `spreadsheet` backend) |
-| `exec_enabled` | `FREECAD_BUDDY_ALLOW_EXEC` env (AD-4) |
+| `exec_enabled` | `FREECAD_BUDDY_ALLOW_EXEC` env; in GUI mode the **Allow debug_exec** preference fills it when unset (AD-4) |
 
 ## 5. Version Shim (`usecases/shim.py`, AD-11)
 

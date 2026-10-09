@@ -1641,3 +1641,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: Verdicts near a band edge depend on the machine's `Decimals` preference, and validator runs in `benchmarks/_registry/validators.yaml` do not record the value used.
   evidence: low; `shim.display_decimals()` reads the live preference inside scorers.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-release-0-0-1.md`
+  summary: Remove `"release-as": "0.0.1"` from `release-please-config.json` once `v0.0.1` is tagged.
+  evidence: The pin is required for the first release only; while it stays, every later release-please PR proposes 0.0.1 again (review findings BH5/EC15).

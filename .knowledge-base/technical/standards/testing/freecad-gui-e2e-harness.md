@@ -22,7 +22,7 @@ Reference run with every artifact: `tests/uat/run/2026-10-03-01/` (report, evide
 | Smoke script | `tests/uat/run/2026-10-03-01/evidence/e2e.py` | 13-check mutation, measure, export, screenshot run over `:8765` |
 | One tool call | `_automation/uat/fcb.py <tool> '<json>'` or `--batch file.json` | ad hoc MCP call over HTTP |
 | Close all docs | `_automation/uat/close_all.py` | close every open document in one session |
-| Logs | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\addon.log`, `mcp-proxy.log` | bridge start, proxy spawn, errors |
+| Logs | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\addon.log`, `mcp-proxy.log`, `provision.log` | bridge start, operator settings, venv provisioning, proxy spawn, errors |
 
 `_automation/` is gitignored: the `_automation/uat/` files exist only in a working checkout, not
 in a fresh clone. The two `tests/uat/run/2026-10-03-01/evidence/` scripts are committed.
@@ -52,14 +52,17 @@ known (see [Install modes](#install-modes)). Record `git status` to compare at t
 
 ### 2. Launch
 
-Choose the mutation approval posture first. FreeCAD gets `FREECAD_BUDDY_AUTO_APPROVE` only from
-the process that starts it, so set or clear it before the launch. A change after the launch has
-no effect until FreeCAD restarts.
+Choose the mutation approval posture first. Two controls set it. The bridge reads both once, at
+start, so a change has no effect until FreeCAD restarts:
 
-| `FREECAD_BUDDY_AUTO_APPROVE` | Posture |
-|------------------------------|---------|
-| unset or `1` (default) | A mutation without `confirm` applies in one call; its audit `approval` line has `mode: "auto_approve"` and `source: "FREECAD_BUDDY_AUTO_APPROVE"` |
-| `0` | A mutation without a valid `preview_id` is refused (`INVALID_INPUT`), except a `feature_set_parameters` that writes only `Visibility` |
+- the **Auto-approve mutations** box on Edit > Preferences > **FreeCAD Buddy** (default on);
+- the `FREECAD_BUDDY_AUTO_APPROVE` variable. FreeCAD gets it only from the process that starts
+  it. When it is set, it wins over the preference.
+
+| Effective value | Posture |
+|-----------------|---------|
+| `1` (preference on, variable unset — the default) | A mutation without `confirm` applies in one call; its audit `approval` line has `mode: "auto_approve"` and `source: "FREECAD_BUDDY_AUTO_APPROVE"` |
+| `0` (preference off, or variable `0`) | A mutation without a valid `preview_id` is refused (`INVALID_INPUT`), except a `feature_set_parameters` that writes only `Visibility` |
 
 `preview_dry_run` stays available in both postures. A call that sends `confirm` is checked
 against its token in both postures: a stale, expired or forged `preview_id` is refused.
@@ -77,12 +80,15 @@ against its token in both postures: a stale, expired or forged `preview_id` is r
   `_automation/uat/launch_env.sh <tag> "<set statements>"` does this. Write the statements as
   `set VAR=value&& set VAR2=value2`, with no space before `&&`: `cmd` keeps that space as part
   of the value.
-- Set `FREECAD_BUDDY_AUDIT_LOG` to a known path the same way. Without it the audit log goes to
-  the working directory of FreeCAD, which neither a `cua-driver` nor a Start-menu launch fixes.
+- The audit log goes to the **Audit log file** preference, else to
+  `%APPDATA%\FreeCAD\v1-1\freecad-buddy\audit.jsonl`. `FREECAD_BUDDY_AUDIT_LOG`, set the same
+  way as above, wins over both.
 
-**Check:** with auto-approve on, the new `addon.log` lines include
-`SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`.
-With `=0` the line is absent. In the audit log, an `approval` line with `mode: "auto_approve"`
+**Check:** the new `addon.log` lines include one `operator settings:` line. It gives each
+`FREECAD_BUDDY_*` value and its source (`env`, `preference`, `default` or `unset`). With auto-approve on,
+they also include
+`SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`.
+With the effective value `0` the line is absent. In the audit log, an `approval` line with `mode: "auto_approve"`
 proves the posture is on; `preview_token` and `display_state` lines occur in both postures.
 
 Pass JSON to `cua-driver` on stdin. The positional form fails to parse Windows backslashes.
@@ -136,7 +142,7 @@ Rules the script follows:
 
 - Every `sketch_*`/`feature_*` mutation runs `preview_dry_run` first and passes the returned
   `preview_id` back as `"confirm": {"preview_id": ..., "elicitation_action": "accept"}`. With
-  `FREECAD_BUDDY_AUTO_APPROVE=0` this is required. A call that sends `confirm` is checked
+  auto-approve off (preference or `FREECAD_BUDDY_AUTO_APPROVE=0`) this is required. A call that sends `confirm` is checked
   against its token in every posture, so the token must be fresh even with auto-approve on.
 - `sketch_add_geometry` must leave the sketch fully constrained, or the mutation is rolled back
   with `SPEC_FAILED` (`dof=N`). Send the constraints in the same call
@@ -191,6 +197,7 @@ with `Stop-Process -Id <pid>`.
 |------|--------|------|-----------------|
 | Junction (dev) | `Mod\FreeCADBuddy\freecad_buddy` → `<repo>\src\freecad_buddy` | every source edit | walk from `bootstrap.py` to the repo `.venv` |
 | Built copy | real copy of `dist/addon` | testing the packaged addon | `repo-root.txt` marker written by `scripts/build_addon.py` |
+| Release zip | `FreeCADBuddy-<ver>.zip` extracted into `Mod\` (no marker, wheel in `wheels\`) | testing a release install | managed venv `%APPDATA%\FreeCAD\v1-1\FreeCADBuddy\venv`; on first start `uv` provisions it on a background thread (`provision.log`), then the proxy spawns |
 
 Switch to a built copy:
 
@@ -199,6 +206,12 @@ uv run python scripts/build_addon.py
 Move-Item "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy" "$env:APPDATA\FreeCAD\v1-1\FreeCADBuddy.harness-backup"
 Copy-Item dist\addon "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy" -Recurse
 ```
+
+Switch to a release install the same way: build it with
+`uv run python scripts/build_addon.py --release`, then extract `dist\FreeCADBuddy-<ver>.zip` into
+`Mod\` in place of the copy. `uv` must be on `PATH` or named in the **uv path** preference. The
+first start provisions the venv; read `addon.log` for `MCP proxy venv ready` before you wait on
+`:8765`.
 
 Keep the backup **outside** `Mod\`. FreeCAD loads every folder under `Mod\` as an addon, and a
 backup there wins the `freecad_buddy` import.

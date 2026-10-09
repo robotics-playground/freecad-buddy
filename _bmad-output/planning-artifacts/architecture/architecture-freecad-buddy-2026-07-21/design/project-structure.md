@@ -16,6 +16,11 @@ Expands the spine's structural seed to Phase 0 file level: repo tree, dual packa
 freecad-buddy/
 ├── pyproject.toml                    # uv-managed external process (§2.1)
 ├── uv.lock
+├── LICENSE                           # MIT, TanNT
+├── release-please-config.json        # release-please on main; version files it bumps (§2.4)
+├── .release-please-manifest.json
+├── .claude-plugin/
+│   └── marketplace.json              # Claude Code marketplace: plugin source ./skills + MCP entry (§2.4)
 ├── src/
 │   └── freecad_buddy/
 │       ├── __init__.py               # version string only; no imports
@@ -40,7 +45,8 @@ freecad-buddy/
 │       │   └── jsonschema/           # generated per-tool/per-type schemas, drift-checked in CI (AD-28)
 │       ├── usecases/                 # stdlib + FreeCAD App via shim (AD-1, AD-12)
 │       │   ├── __init__.py
-│       │   ├── shim.py               # ALL version-sensitive calls; capability probes (AD-11)
+│       │   ├── shim.py               # ALL version-sensitive calls; capability probes (AD-11); preference keys
+│       │   ├── operator_settings.py  # PreferenceValues + resolve_env_overlay: env wins, else preference, else default
 │       │   ├── fingerprint.py        # single fingerprint() impl, serializer-tagged (AD-6)
 │       │   ├── transaction.py        # AD-5 mutation protocol: run_mutation(), the only mutation path
 │       │   ├── tnp_guard.py          # snapshot/audit_references (AD-7; capability-gated via shim)
@@ -77,7 +83,8 @@ freecad-buddy/
 │           │   ├── InitGui.py        # addon entry source-of-truth; copied to addon root at build (§2.2)
 │           │   ├── bootstrap.py      # start_bridge: deferred start (GuiUp + QTimer), listener + MCP auto-spawn (AD-2)
 │           │   ├── pump.py           # Qt event pump — Qt lives here, not in adapters (AD-1)
-│           │   └── preferences.py    # FreeCAD Buddy page in Edit > Preferences (RoundToDisplay)
+│           │   ├── managed_venv.py   # release install: find uv, provision the proxy venv from the bundled wheel; stdlib only
+│           │   └── preferences.py    # FreeCAD Buddy page in Edit > Preferences (rounding + operator settings)
 │           ├── gui_external/
 │           │   └── entry.py          # external GUI host
 │           └── headless/
@@ -108,14 +115,15 @@ freecad-buddy/
 │   ├── check_status_vocab.py         # holds the AD-17 closed status set — CI job
 │   ├── check_provenance.py           # benchmark provenance manifests (AD-16) — CI job
 │   ├── gen_schemas.py                # generates contracts/jsonschema/, `--check` drift-fails CI (AD-28)
-│   ├── build_addon.py                # assembles dist/addon/FreeCADBuddy/ (§2.2); stdlib only
+│   ├── build_addon.py                # assembles dist/addon/ (§2.2); --release adds the wheel + zip; stdlib only
 │   └── automation/                   # run_mcp_e2e.py, run_mcp_edge_cases.py — live MCP manual harness
 │
 │   # check_skill_shape.py (AD-15): 4 sections + word cap; front-matter, description and cross-skill rules are Story 6.1.
 └── .github/
     └── workflows/
         ├── ci.yml                    # blocking matrix + arch checks + render leg (§5)
-        └── canary.yml                # weekly 1.2-dev allowed-to-fail leg (AD-11)
+        ├── canary.yml                # weekly 1.2-dev allowed-to-fail leg (AD-11)
+        └── release.yml               # release-please on main; uploads wheel, sdist, addon zip (§2.4)
 ```
 
 Deferred (dirs reserved, no Phase 0 files): `benchmarks/dev/phase{1,2}/`, per-phase fault suites (AD-19 lands each at its entry gate).
@@ -129,6 +137,11 @@ Deferred (dirs reserved, no Phase 0 files): `benchmarks/dev/phase{1,2}/`, per-ph
 [project]
 name = "freecad-buddy"
 version = "0.0.1"
+description = "Verify-first MCP bridge that lets AI agents build and check FreeCAD models"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "TanNT" }]
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=1.28,<2",       # official MCP python-sdk, CLOSED at the Phase 0 gate (decision 005); low-level Server,
@@ -151,7 +164,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/freecad_buddy"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/freecad_buddy", "/addon", "/README.md", "/LICENSE"]
 ```
+
+`[project.urls]` names the GitHub repository. The repository is private, so there is no PyPI publish; the wheel and sdist ship only as GitHub release assets (§2.4).
 
 - `uv sync --all-extras` creates the dev venv; `uv.lock` committed.
 - No FreeCAD dependency in pyproject — FreeCAD comes from the host (GUI install or conda env, §4).
@@ -161,12 +179,15 @@ packages = ["src/freecad_buddy"]
 `scripts/build_addon.py` assembles the installable addon (nothing hand-maintained twice):
 
 ```text
-dist/addon/FreeCADBuddy/
+dist/addon/
 ├── package.xml           # copied from addon/package.xml
-├── InitGui.py            # copied from src/freecad_buddy/hosts/InitGui.py
-├── repo-root.txt         # absolute repo path; lets a copied install find the project .venv
+├── InitGui.py            # generated shim: puts the package on sys.path, imports hosts/gui_addon/InitGui.py
+├── repo-root.txt         # dev build only: absolute repo path; lets a copied install find the project .venv
+├── wheels/               # --release only: freecad_buddy-<ver>-py3-none-any.whl for the managed venv
 └── freecad_buddy/        # full package copy from src/freecad_buddy/
 ```
+
+- `build_addon.py --release [--wheel PATH]` builds the release tree: the wheel goes in `wheels/` (built with `uv build --wheel` when `--wheel` is absent) and no marker is written. `package_zip` then writes `dist/FreeCADBuddy-<ver>.zip` with the top folder `FreeCADBuddy/`, so extracting it into `Mod/` gives `Mod/FreeCADBuddy/`. On first start the addon provisions `<FreeCAD user app data>/FreeCADBuddy/venv` from that wheel with `uv` and runs the MCP proxy from it (integration-mcp-freecad §3.1).
 
 - FreeCAD adds each `Mod/<addon>/` dir to `sys.path` → `import freecad_buddy` resolves in-process with zero path hacks.
 - The full package is copied, including `[ext-only]` modules; AD-12 holds because in-FreeCAD code never *imports* them (§2.3). Copying whole beats a curated subset: no drift between two package layouts.
@@ -198,6 +219,12 @@ dist/addon/FreeCADBuddy/
 
 Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.py` are empty; every module imports its own deps at module top; in-FreeCAD code paths (`rpc_listener`, `marshal`, `gui_addon`, all of `usecases/`+`contracts/`) never import an `[ext-only]` module. `check_imports.py` asserts, per AST walk: `contracts/` = stdlib only; `usecases/` = stdlib + {FreeCAD, Part, Sketcher, PartDesign, Mesh, MeshPart} via shim; `rpc_listener.py` = stdlib only; `FreeCADGui`/`PySide*` nowhere outside `hosts/`, `marshal.py`, `render_probe.py` (AD-1 + §7).
 
+### 2.4 Release and plugin
+
+- **release-please** (`.github/workflows/release.yml`, on push to `main`) opens the release PR; the user merges it. `release-please-config.json`: release type `python`, `include-component-in-tag: false` (tag `v<ver>`), `bootstrap-sha` and `release-as` pin the first release. Besides `pyproject.toml` it bumps `src/freecad_buddy/__init__.py` and `addon/package.xml` (generic `x-release-please-version` markers), `.claude-plugin/marketplace.json` (`$.plugins[0].version`) and `uv.lock` (toml). `tests/external/test_version_consistency.py` keeps the four checked-in versions equal.
+- When a release is created, the workflow runs `uv build` and `build_addon.py --release`, then `gh release upload` attaches the wheel, the sdist and `FreeCADBuddy-<ver>.zip`.
+- **Claude Code plugin.** `.claude-plugin/marketplace.json` holds one plugin, `freecad-buddy`, with `source: "./skills"`, `strict: false` and `skills: "./"`, so the plugin cache gets only the `skills/` folder and no `plugin.json` lives inside `skills/`. The entry also registers the MCP server `freecad-buddy` → `http://127.0.0.1:8765/mcp`.
+
 ## 3. Python / FreeCAD version strategy per CI leg (AD-11, spine Stack)
 
 | Leg | FreeCAD | Python (matches bundled interpreter) | Source | Blocking |
@@ -215,9 +242,15 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 
 1. Install FreeCAD 1.1.x GUI (official installer).
 2. `uv sync --all-extras` in repo root.
-3. `python scripts/build_addon.py "<FreeCAD user dir>/Mod/FreeCADBuddy"` — assembles the addon (package copy + `package.xml` + generated `InitGui.py` shim) at that path. With no argument it writes to `dist/addon/FreeCADBuddy/` instead. The generated shim resolves the package from its own install location, so a junction from `Mod/FreeCADBuddy` to the built dir gives edit-in-place development without a re-copy per change.
-4. Start FreeCAD → the addon starts the RPC listener on localhost with a per-session token AND **auto-spawns the external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp`. The proxy interpreter is the project `.venv`/`venv` python, **auto-discovered from the addon's install path** — no env var to set (the addon never imports `mcp`; AD-2/3, AD-12). So the whole setup is: install the addon, `uv sync`, open FreeCAD; the MCP client connects straight to `:8765`.
+3. `python scripts/build_addon.py "<FreeCAD user dir>/Mod/FreeCADBuddy"` — assembles the addon (package copy + `package.xml` + generated `InitGui.py` shim) at that path. With no argument it writes to `dist/addon/` instead. The generated shim resolves the package from its own install location, so a junction from `Mod/FreeCADBuddy` to the built dir gives edit-in-place development without a re-copy per change.
+4. Start FreeCAD → the addon starts the RPC listener on localhost with a per-session token AND **auto-spawns the external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp`. The proxy interpreter is the project `.venv`/`venv` python, **auto-discovered from the addon's install path** — no env var to set (the addon never imports `mcp`; AD-2/3, AD-12). So the whole setup is: install the addon, `uv sync`, open FreeCAD; the MCP client connects straight to `:8765`. Operator settings live on Edit > Preferences > FreeCAD Buddy; a `FREECAD_BUDDY_*` env var overrides the matching field.
 5. **(debug/troubleshoot only)** If the auto-spawned proxy is unavailable, start it by hand: `uv run freecad-buddy serve --mode rpc --transport http`. The `--mode rpc` CLI is a fallback for when auto-start is disabled (`FREECAD_BUDDY_NO_AUTO_MCP`) or no venv is discoverable — never the normal path.
+
+### 4.1a Release install (operator)
+
+1. Install FreeCAD 1.1.x and `uv`.
+2. Download `FreeCADBuddy-<ver>.zip` from the GitHub release (needs access to the private repo) and extract it into `<FreeCAD user dir>/Mod/`, which gives `Mod/FreeCADBuddy/`.
+3. Start FreeCAD. The first start provisions the managed venv on a background thread (`freecad-buddy/provision.log`), then spawns the proxy on `:8765`. Later starts reuse the venv until the bundled wheel changes.
 
 ### 4.2 CI (ubuntu-latest, micromamba conda-forge)
 

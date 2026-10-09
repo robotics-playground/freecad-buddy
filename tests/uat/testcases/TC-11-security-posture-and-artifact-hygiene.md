@@ -30,7 +30,7 @@ baseline, and its closing visual asserts the security check never reached the li
 ## Preconditions
 
 - [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
-- [ ] `FREECAD_BUDDY_ALLOW_EXEC` is unset in the shell used for the default-posture scenarios (verify: `env | grep FREECAD_BUDDY_ALLOW_EXEC` returns nothing)
+- [ ] `FREECAD_BUDDY_ALLOW_EXEC` is unset in the shell used for the default-posture scenarios, and the GUI's **Allow debug_exec** preference (Edit > Preferences > FreeCAD Buddy) is off (verify: `env | grep FREECAD_BUDDY_ALLOW_EXEC` returns nothing, and the `operator settings:` line in `addon.log` contains `FREECAD_BUDDY_ALLOW_EXEC='0'`)
 - [ ] The host machine has a non-loopback IPv4 address for the bind scenarios (verify: `ipconfig | grep IPv4`)
 - [ ] FreeCAD GUI is running with a 3D view open, so each scenario's closing visual has a baseline (verify: the FreeCAD window shows a 3D view; confirm by looking at a `cua-driver` capture, not by an MCP field)
 - [ ] Golden models are present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
@@ -359,7 +359,7 @@ env -u FREECAD_BUDDY_AUTO_APPROVE FREECAD_BUDDY_AUDIT_LOG=$RUN_DIR/evidence/tc-1
 **And** one geometry mutation is run with NO `confirm` argument  
 **And** the same is repeated with `FREECAD_BUDDY_AUTO_APPROVE=0`, and again with `FREECAD_BUDDY_AUTO_APPROVE=true`  
 
-**Then** the operator is warned at startup — verify: stderr contains `SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`  
+**Then** the operator is warned at startup — verify: stderr contains `SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`  
 **And** the mutation runs without a confirm token — verify: the envelope `status` is `OK` and no `this mutation requires a confirm` message appears  
 **And** one approval record was written — verify: `grep -c '"event": "approval"' "$RUN_DIR/evidence/tc-11-08-approve.jsonl"` returns `1`  
 **And** the approval names the tool and the switch — verify: that line's `tool` is the mutating tool name, and its `approval` has `"mode": "auto_approve"` and `"source": "FREECAD_BUDDY_AUTO_APPROVE"`  
@@ -654,7 +654,7 @@ rotates, or reads it.
 **And** the line count grew — verify: the post-comparison line count is greater than the first-batch count  
 **And** no line was rewritten — verify: the digest of the first N lines equals the first-batch digest  
 **And** the file is opened append-only — verify: `grep -n 'open(self._path, "a"' src/freecad_buddy/adapters/audit_log.py` returns line 46  
-**And** no bridge tool reads the audit log — verify: `grep -rn "FREECAD_BUDDY_AUDIT_LOG\|audit.jsonl" src/freecad_buddy/usecases/ src/freecad_buddy/contracts/` returns nothing  
+**And** no bridge tool reads the audit log — verify: `grep -rn "FREECAD_BUDDY_AUDIT_LOG\|audit.jsonl" src/freecad_buddy/usecases/ src/freecad_buddy/contracts/ | grep -v operator_settings.py` returns nothing. `usecases/operator_settings.py` only names the default path for the GUI host's environment and never opens it  
 **And** no rotation or truncation exists — verify: `grep -rniE "rotate|truncate|\"w\"|'w'" src/freecad_buddy/adapters/audit_log.py` returns nothing  
 **And** writes are serialized — verify: the file after a concurrent two-writer run contains no interleaved partial line; every line parses as JSON  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  

@@ -12,15 +12,16 @@ import atexit
 import logging
 import os
 import secrets
-import shutil
 import socket
 import subprocess
+import threading
 from pathlib import Path
 
 from freecad_buddy.adapters.audit_log import AuditSink, default_audit_path
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_listener import RpcListener
+from freecad_buddy.hosts.gui_addon import managed_venv
 from freecad_buddy.hosts.gui_addon.pump import QtMainThreadExecutor
 from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
@@ -33,6 +34,14 @@ from freecad_buddy.usecases.capabilities import (
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, sweep_temp_dir
 from freecad_buddy.usecases.exports import ExportRegistry
+from freecad_buddy.usecases.operator_settings import (
+    AUDIT_LOG_VARIABLE,
+    OPERATOR_VARIABLES,
+    WORKDIR_VARIABLE,
+    PreferenceValues,
+    environment_overrides,
+    resolve_env_overlay,
+)
 
 logger = logging.getLogger("freecad_buddy.hosts.gui_addon.bootstrap")
 
@@ -41,6 +50,31 @@ _MCP_PORT = 8765
 
 _listener: RpcListener | None = None
 _mcp_proxy: subprocess.Popen | None = None
+_provisioner: threading.Thread | None = None
+_cancel_provisioning = threading.Event()
+# The operator variables the environment set before the preferences were added to it.
+_startup_overrides: dict[str, str] | None = None
+
+
+def _user_app_data_dir() -> Path | None:
+    try:
+        import FreeCAD
+
+        return Path(FreeCAD.getUserAppDataDir())
+    except Exception:  # noqa: BLE001 - no FreeCAD data dir: callers fall back to cwd
+        return None
+
+
+def _data_dir() -> Path:
+    """``<FreeCAD user app data>/freecad-buddy``: logs, discovery files, audit log, workdir."""
+    base = _user_app_data_dir()
+    return base / "freecad-buddy" if base is not None else Path("freecad-buddy")
+
+
+def _managed_venv_dir() -> Path:
+    """``<FreeCAD user app data>/FreeCADBuddy/venv``: the proxy venv a release install builds."""
+    base = _user_app_data_dir()
+    return (base if base is not None else Path()) / "FreeCADBuddy" / "venv"
 
 
 def _log_file_path() -> Path:
@@ -53,13 +87,7 @@ def _log_file_path() -> Path:
     override = os.environ.get("FREECAD_BUDDY_LOG_FILE")
     if override:
         return Path(override)
-    try:
-        import FreeCAD
-
-        base = Path(FreeCAD.getUserAppDataDir()) / "freecad-buddy"
-    except Exception:  # noqa: BLE001 - no FreeCAD data dir: fall back to cwd
-        base = Path("freecad-buddy")
-    return base / "addon.log"
+    return _data_dir() / "addon.log"
 
 
 def _configure_file_logging() -> None:
@@ -91,6 +119,8 @@ def start_bridge() -> RpcListener:
         return _listener
 
     _configure_file_logging()
+    # Before the sweep and the capability read: both take their settings from the environment.
+    preferences = _apply_operator_settings()
     # Session start is the only safe moment to clear temp artifacts: a render link the previous
     # session returned may still have been being read when that call completed (AD-25).
     logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
@@ -143,8 +173,46 @@ def start_bridge() -> RpcListener:
     logger.info("freecad-buddy RPC listener started on %s:%s", host, bound_port)
     _listener = listener
     _register_shutdown()
-    _start_mcp_proxy()
+    _start_mcp_proxy(preferences.uv_path)
     return listener
+
+
+def _apply_operator_settings() -> PreferenceValues:
+    """Add the preference page values to ``os.environ`` where no variable is set, and log them.
+
+    The MCP proxy child inherits the environment, so it sees the same effective settings.
+    """
+    global _startup_overrides
+    preferences = shim.read_operator_preferences()
+    _startup_overrides = environment_overrides(os.environ)
+    overlay = resolve_env_overlay(os.environ, preferences, _data_dir())
+    os.environ.update(overlay)
+    # No preference sets the workdir; an empty audit log field leaves the default path.
+    defaulted = {WORKDIR_VARIABLE}
+    if not preferences.audit_log_path:
+        defaulted.add(AUDIT_LOG_VARIABLE)
+
+    def source(name: str) -> str:
+        if name in overlay:
+            return "default" if name in defaulted else "preference"
+        return "env" if name in _startup_overrides else "unset"
+
+    effective = ", ".join(
+        f"{name}={os.environ.get(name, '')!r} ({source(name)})" for name in OPERATOR_VARIABLES
+    )
+    logger.info("operator settings: %s, uv path %r", effective, preferences.uv_path)
+    return preferences
+
+
+def startup_overrides() -> dict[str, str]:
+    """The operator variables set by the environment FreeCAD started with.
+
+    Before the bridge starts, ``os.environ`` is still that environment; after, it also holds the
+    preference values, so the snapshot taken at start answers instead.
+    """
+    if _startup_overrides is not None:
+        return dict(_startup_overrides)
+    return environment_overrides(os.environ)
 
 
 def _port_open(host: str, port: int) -> bool:
@@ -211,16 +279,22 @@ def _discover_external_python(here: Path | None = None) -> Path | None:
     return None
 
 
-def _mcp_proxy_command() -> list[str] | None:
-    """Resolve the external MCP-proxy launch command, or ``None`` when it cannot be determined.
+def _addon_root() -> Path:
+    """``<addon>``: bootstrap.py is ``<addon>/freecad_buddy/hosts/gui_addon/bootstrap.py``."""
+    return Path(__file__).resolve().parents[3]
+
+
+def _mcp_proxy_command(uv: Path | None, wheel: Path | None) -> list[str] | None:
+    """Resolve an MCP-proxy launch command that needs no provisioning, or ``None``.
 
     Resolution order:
-      1. ``FREECAD_BUDDY_MCP_CMD`` — explicit space-separated command, used verbatim (override).
+      1. ``FREECAD_BUDDY_MCP_CMD`` — explicit space-separated command, used verbatim (override;
+         the preference page sets it when the variable is unset).
       2. **Auto-discovered venv python** next to the installed addon → run the serve module
-         directly (no env vars, no ``uv`` needed). This is the default so opening FreeCAD is the
-         only step.
-      3. ``FREECAD_BUDDY_REPO``/``FREECAD_BUDDY_SRC`` + ``uv`` on PATH → ``uv run`` fallback.
-    None of these resolve → ``None`` (the listener still runs; start the proxy manually to debug).
+         directly. This is the dev install: a repo junction or a ``build_addon.py`` copy.
+      3. ``FREECAD_BUDDY_REPO``/``FREECAD_BUDDY_SRC`` + ``uv`` → ``uv run`` fallback.
+      4. The managed venv, when it was provisioned from the bundled ``wheel``.
+    ``None`` leaves the caller to provision the managed venv or report why it cannot.
     """
     explicit = os.environ.get("FREECAD_BUDDY_MCP_CMD")
     if explicit:
@@ -231,44 +305,94 @@ def _mcp_proxy_command() -> list[str] | None:
         return [str(python), *_SERVE_ARGS]
 
     repo = os.environ.get("FREECAD_BUDDY_REPO") or os.environ.get("FREECAD_BUDDY_SRC")
-    uv = shutil.which("uv")
     if repo and uv:
         repo_root = Path(repo)
         if repo_root.name == "freecad_buddy":
             repo_root = repo_root.parent.parent
-        return [uv, "run", "--project", str(repo_root), "freecad-buddy",
+        return [str(uv), "run", "--project", str(repo_root), "freecad-buddy",
                 "serve", "--mode", "rpc", "--transport", "http"]
+
+    venv = _managed_venv_dir()
+    if wheel is not None and managed_venv.is_current(venv, wheel):
+        return [str(managed_venv.venv_python(venv)), *_SERVE_ARGS]
     return None
 
 
-def _start_mcp_proxy() -> None:
+def _start_mcp_proxy(uv_path: str) -> None:
     """Spawn the external MCP HTTP proxy so opening FreeCAD is the only step to reach the bridge.
 
-    Skips when ``FREECAD_BUDDY_NO_AUTO_MCP`` is set, when port 8765 is already served, or when the
-    launch command cannot be resolved. The child inherits the operator's env (so the exec flag and
-    ``FREECAD_BUDDY_RPC_DIR`` carry through) and is terminated in ``stop_bridge``.
+    Skips when ``FREECAD_BUDDY_NO_AUTO_MCP`` is set or port 8765 is already served. A release
+    install without a current managed venv provisions it on a daemon thread and spawns the proxy
+    when that finishes, so the GUI start never waits on ``uv``. The child inherits the operator's
+    env (so the exec flag and ``FREECAD_BUDDY_RPC_DIR`` carry through) and is terminated in
+    ``stop_bridge``.
     """
-    global _mcp_proxy
+    global _provisioner
     if os.environ.get("FREECAD_BUDDY_NO_AUTO_MCP"):
         logger.info("FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy")
         return
     if _port_open(_MCP_HOST, _MCP_PORT):
         logger.info("MCP proxy already on http://%s:%s/mcp; not spawning", _MCP_HOST, _MCP_PORT)
         return
-    command = _mcp_proxy_command()
-    if command is None:
-        logger.info(
-            "MCP proxy not auto-started: no .venv/venv interpreter found next to the addon and no "
-            "FREECAD_BUDDY_MCP_CMD override. Create the project venv (uv sync) so the addon can "
-            "find it, or set FREECAD_BUDDY_MCP_CMD. The RPC listener is up; start the proxy "
-            "manually (serve --mode rpc) to reach it over MCP in the meantime."
+    uv = managed_venv.find_uv(uv_path)
+    logger.info("uv: %s", uv if uv is not None else "not found")
+    wheel = managed_venv.bundled_wheel(_addon_root())
+    command = _mcp_proxy_command(uv, wheel)
+    if command is not None:
+        _spawn_mcp_proxy(command)
+        return
+    if wheel is not None and uv is not None:
+        _cancel_provisioning.clear()
+        _provisioner = threading.Thread(
+            target=_provision_and_spawn,
+            args=(uv, wheel),
+            name="freecad-buddy-provision",
+            daemon=True,
+        )
+        _provisioner.start()
+        return
+    if wheel is not None:
+        logger.warning(
+            "MCP proxy not started: uv not found. Install uv, or set its path in Edit > "
+            "Preferences > FreeCAD Buddy > uv path, then restart FreeCAD. The RPC listener is up."
         )
         return
+    logger.info(
+        "MCP proxy not auto-started: no .venv/venv interpreter found next to the addon, no bundled "
+        "wheel and no MCP command. Create the project venv (uv sync) so the addon can find it, or "
+        "set the MCP command in Edit > Preferences > FreeCAD Buddy. The RPC listener is up; start "
+        "the proxy manually (serve --mode rpc) to reach it over MCP in the meantime."
+    )
+
+
+def _provision_and_spawn(uv: Path, wheel: Path) -> None:
+    """Provisioning thread: build the managed venv, then spawn the proxy from it."""
+    venv = _managed_venv_dir()
+    log_path = _log_file_path().parent / "provision.log"
+    logger.info(
+        "provisioning the MCP proxy venv at %s from %s; log: %s", venv, wheel.name, log_path
+    )
+    try:
+        ready = managed_venv.provision(uv, wheel, venv, log_path, _cancel_provisioning)
+    except Exception:  # noqa: BLE001 - provisioning must never take the listener down
+        logger.exception("MCP proxy venv provisioning failed; the RPC listener is still up")
+        return
+    if not ready or _cancel_provisioning.is_set():
+        return
+    logger.info("MCP proxy venv ready at %s", venv)
+    if _port_open(_MCP_HOST, _MCP_PORT):
+        logger.info("MCP proxy already on http://%s:%s/mcp; not spawning", _MCP_HOST, _MCP_PORT)
+        return
+    _spawn_mcp_proxy([str(managed_venv.venv_python(venv)), *_SERVE_ARGS])
+
+
+def _spawn_mcp_proxy(command: list[str]) -> None:
+    global _mcp_proxy
     try:
         proxy_log = _log_file_path().parent / "mcp-proxy.log"
         logfile = open(proxy_log, "w", encoding="utf-8")  # noqa: SIM115 - child owns it for its life
         _mcp_proxy = subprocess.Popen(  # noqa: S603 - operator-configured launch command
-            command, **_no_window_kwargs(logfile)
+            command, **managed_venv.no_window_kwargs(logfile)
         )
         logger.info(
             "spawned MCP proxy (pid %s) -> http://%s:%s/mcp; proxy log: %s",
@@ -279,26 +403,15 @@ def _start_mcp_proxy() -> None:
         _mcp_proxy = None
 
 
-def _no_window_kwargs(logfile) -> dict:
-    """Popen kwargs that spawn the proxy silently in the background (no console window).
-
-    On Windows a bare console-app child pops a cmd window; ``CREATE_NO_WINDOW`` suppresses it and
-    ``DETACHED_PROCESS`` gives the child its own process group so it is not tied to FreeCAD's
-    console. The child's stdout/stderr go to ``logfile`` (the proxy's own diagnostics), not a
-    window. On POSIX, ``start_new_session`` detaches it.
-    """
-    kwargs: dict = {"stdin": subprocess.DEVNULL, "stdout": logfile, "stderr": logfile}
-    if os.name == "nt":
-        # 0x08000000 CREATE_NO_WINDOW | 0x00000008 DETACHED_PROCESS
-        kwargs["creationflags"] = 0x08000000 | 0x00000008
-    else:
-        kwargs["start_new_session"] = True
-    return kwargs
-
-
 def stop_bridge() -> None:
-    """Stop the MCP proxy (if we spawned it) and the listener, and clear the singletons."""
-    global _listener, _mcp_proxy
+    """Stop provisioning, the MCP proxy (if spawned) and the listener; clear the singletons."""
+    global _listener, _mcp_proxy, _provisioner
+    # Joined before the proxy teardown: a provisioning thread that finishes now spawns the proxy,
+    # and only after the join is that child visible here to terminate.
+    _cancel_provisioning.set()
+    if _provisioner is not None:
+        _provisioner.join(timeout=10)
+        _provisioner = None
     if _mcp_proxy is not None:
         try:
             _mcp_proxy.terminate()

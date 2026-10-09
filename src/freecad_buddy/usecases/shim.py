@@ -12,6 +12,7 @@ from functools import lru_cache
 from typing import Callable, Literal, TypeVar
 
 from freecad_buddy.contracts import DEFAULT_DISPLAY_DECIMALS, CapabilityBanner, round_floats
+from freecad_buddy.usecases.operator_settings import PreferenceValues
 
 T = TypeVar("T")
 
@@ -26,6 +27,12 @@ _UNITS_PARAM_PATH = "User parameter:BaseApp/Preferences/Units"
 # The addon's own preferences, edited on its page in Edit > Preferences.
 BUDDY_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/FreeCADBuddy"
 ROUND_TO_DISPLAY_KEY = "RoundToDisplay"
+AUTO_APPROVE_KEY = "AutoApprove"
+ALLOW_EXEC_KEY = "AllowExec"
+AUTO_START_MCP_KEY = "AutoStartMcp"
+MCP_COMMAND_KEY = "McpCommand"
+UV_PATH_KEY = "UvPath"
+AUDIT_LOG_PATH_KEY = "AuditLogPath"
 
 # The (type_id, property) pairs the feature tools validate against a live enumeration. A caller
 # cannot know the legal set without reading it from the running build.
@@ -391,6 +398,28 @@ def display_decimals() -> int | None:
     except Exception:  # noqa: BLE001 - a preference that cannot be read falls back to the default
         return DEFAULT_DISPLAY_DECIMALS
     return decimals if decimals >= 0 else DEFAULT_DISPLAY_DECIMALS
+
+
+def read_operator_preferences() -> PreferenceValues:
+    """The operator settings from the addon's preference page; the defaults without FreeCAD.
+
+    Read once at bridge start. Unlike ``RoundToDisplay``, a change applies after a restart.
+    """
+    defaults = PreferenceValues()
+    try:
+        import FreeCAD
+
+        preferences = FreeCAD.ParamGet(BUDDY_PARAM_PATH)
+        return PreferenceValues(
+            auto_approve=preferences.GetBool(AUTO_APPROVE_KEY, defaults.auto_approve),
+            allow_exec=preferences.GetBool(ALLOW_EXEC_KEY, defaults.allow_exec),
+            auto_start_mcp=preferences.GetBool(AUTO_START_MCP_KEY, defaults.auto_start_mcp),
+            mcp_command=preferences.GetString(MCP_COMMAND_KEY, defaults.mcp_command),
+            uv_path=preferences.GetString(UV_PATH_KEY, defaults.uv_path),
+            audit_log_path=preferences.GetString(AUDIT_LOG_PATH_KEY, defaults.audit_log_path),
+        )
+    except Exception:  # noqa: BLE001 - no FreeCAD or an unreadable group: run on the defaults
+        return defaults
 
 
 def displayed(value):

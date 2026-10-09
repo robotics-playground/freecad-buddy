@@ -3,7 +3,8 @@
 ## 1. Overview
 
 This suite validates the **shipped** tool surface of the FreeCAD MCP bridge: **45 tools** returned by
-`tool_specs()`, plus `debug_exec` which is gated behind `FREECAD_BUDDY_ALLOW_EXEC=1`. It covers the
+`tool_specs()`, plus `debug_exec` which is gated behind the **Allow debug_exec** preference or
+`FREECAD_BUDDY_ALLOW_EXEC=1`. It covers the
 work of Epics 1-3 (Phases 0-2) across all three hosts: the GUI addon path, the H1 headless
 single-process host, and the H2 external HTTP proxy on `http://127.0.0.1:8765/mcp`.
 
@@ -243,6 +244,12 @@ mkdir -p "$RUN_DIR/evidence"
 `RUN_DIR` is **absolute**, because MCP `path` arguments must be absolute (a relative path resolves
 against FreeCAD's own working directory, `C:\Program Files\FreeCAD 1.1\bin`, and the call fails).
 
+The GUI host reads its operator settings once, at bridge start, from Edit > Preferences >
+**FreeCAD Buddy**. A `FREECAD_BUDDY_*` variable that is set in the environment FreeCAD inherits wins
+over the matching preference. The `operator settings:` line in `addon.log` gives each effective
+value and its source (`env`, `preference`, `default` or `unset`). A change to either needs a FreeCAD restart;
+only **Round numbers to FreeCAD display precision** applies at once.
+
 | Variable | Purpose | Example |
 | --- | --- | --- |
 | `PROJECT_ROOT` | repository checkout root; every fixture and golden-model path is written against it | `D:/Work/.../freecad-buddy` |
@@ -250,16 +257,17 @@ against FreeCAD's own working directory, `C:\Program Files\FreeCAD 1.1\bin`, and
 | `FREECAD_EXE` | FreeCAD launcher, passed to `cua-driver call launch_app` | `C:/Program Files/FreeCAD 1.1/bin/freecad.exe` |
 | `FCB_ENV` | micromamba env holding FreeCAD **and** `mcp` in one interpreter, for the H1 legs | `$USERPROFILE/micromamba/envs/fcb` |
 | `FCB_PYTHON` | that env's interpreter | `$FCB_ENV/python.exe` |
-| `FREECAD_BUDDY_ALLOW_EXEC` | enable `debug_exec`; must be exactly `"1"` | `1` |
-| `FREECAD_BUDDY_AUTO_APPROVE` | auto-approve posture: unset or `"1"` = on (default), a mutation without `confirm` applies; any other value (use `"0"`) = confirm gate on. A sent `confirm` is checked in both postures | `0` |
-| `FREECAD_BUDDY_AUDIT_LOG` | audit log path; default is cwd-relative `freecad-buddy-audit.jsonl` | `$RUN_DIR/evidence/audit.jsonl` |
+| `FREECAD_BUDDY_ALLOW_EXEC` | enable `debug_exec`; must be exactly `"1"`. Overrides the **Allow debug_exec** preference (default off) | `1` |
+| `FREECAD_BUDDY_AUTO_APPROVE` | auto-approve posture: `"1"` = on, a mutation without `confirm` applies; any other value (use `"0"`) = confirm gate on. Overrides the **Auto-approve mutations** preference (default on). A sent `confirm` is checked in both postures | `0` |
+| `FREECAD_BUDDY_AUDIT_LOG` | audit log path. Overrides the **Audit log file** preference. GUI default `%APPDATA%\FreeCAD\v1-1\freecad-buddy\audit.jsonl`; the headless default is cwd-relative `freecad-buddy-audit.jsonl` | `$RUN_DIR/evidence/audit.jsonl` |
+| `FREECAD_BUDDY_WORKDIR` | session workdir. GUI default `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`; the headless default is cwd-relative `freecad-buddy-workdir` | `$RUN_DIR/workdir` |
 | `FREECAD_BUDDY_LOG_FILE` | addon log path | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\addon.log` |
 | `FREECAD_BUDDY_RPC_PORT` | fix the RPC listener port; a non-int value warns and falls back to ephemeral | `47111` |
 | `FREECAD_BUDDY_RPC_DIR` | directory for the RPC discovery file (mode `0o600`) | `%TEMP%\fcb-rpc` |
-| `FREECAD_BUDDY_MCP_CMD` | verbatim proxy launch command; space-split, no quoting support | `C:\path\python.exe -m ...` |
+| `FREECAD_BUDDY_MCP_CMD` | verbatim proxy launch command; space-split, no quoting support. Overrides the **MCP command** preference | `C:\path\python.exe -m ...` |
 | `FREECAD_BUDDY_REPO` | legacy `uv` fallback for proxy launch | `$PROJECT_ROOT` |
 | `FREECAD_BUDDY_SRC` | source root override | `D:\...\src` |
-| `FREECAD_BUDDY_NO_AUTO_MCP` | suppress proxy auto-spawn; evaluated for **truthiness**, not `"1"` | `1` |
+| `FREECAD_BUDDY_NO_AUTO_MCP` | suppress proxy auto-spawn; evaluated for **truthiness**, not `"1"`. Overrides the **Start the MCP server with FreeCAD** preference (default on) | `1` |
 
 ## 7. Test Case Index
 

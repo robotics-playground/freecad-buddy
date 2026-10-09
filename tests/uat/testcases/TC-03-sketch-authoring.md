@@ -20,8 +20,8 @@ document, so the closing visual reads the human's own 3D view.
 
 - [ ] FreeCAD GUI is open and the addon spawned the proxy (verify: `netstat -ano | grep :8765` shows LISTENING)
 - [ ] The MCP tool surface is complete (verify: `mcp query_capabilities {}` lists 44 tools)
-- [ ] The host runs the operator auto-approve posture, so a mutation needs no `preview_id` (verify: the addon log carries `SECURITY: mutation auto-approve ENABLED (FREECAD_BUDDY_AUTO_APPROVE unset or 1; set it to 0 to require preview_id)`)
-- [ ] `FREECAD_BUDDY_AUTO_APPROVE` was unset or `1` in the environment that launched FreeCAD; auto-approve is the default, and `0` turns the confirm gate on (verify: the banner line above is present in `%APPDATA%/FreeCAD/v1-1/freecad-buddy/addon.log` for this launch)
+- [ ] The host runs the operator auto-approve posture, so a mutation needs no `preview_id` (verify: the addon log carries `SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`)
+- [ ] Auto-approve is on for this launch: the **Auto-approve mutations** preference is on (the default) and `FREECAD_BUDDY_AUTO_APPROVE` is unset, or the variable is `1` in the environment that launched FreeCAD. The preference off or the variable `0` turns the confirm gate on (verify: the banner line above is present in `%APPDATA%/FreeCAD/v1-1/freecad-buddy/addon.log` for this launch)
 - [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
 - [ ] `cua-driver` can reach the View menu, so framing never depends on the code under test (verify: the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view) moves the camera)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)

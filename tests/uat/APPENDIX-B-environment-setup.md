@@ -42,6 +42,12 @@ Rebuild **only** if the link is absent:
 uv run python scripts/build_addon.py
 ```
 
+A release install is a different layout: `FreeCADBuddy-<ver>.zip` (from
+`uv run python scripts/build_addon.py --release`) extracted into `Mod\`. It has no repo link and
+no `repo-root.txt`; it carries the wheel in `wheels\` and runs the proxy from the managed venv
+`%APPDATA%\FreeCAD\v1-1\FreeCADBuddy\venv`, which `uv` provisions on the first start. Test it
+only in a scenario that asks for it, then restore the link.
+
 **Warning:** `%APPDATA%\FreeCAD\Mod\` is the legacy directory and is empty on this machine. The
 real one is `%APPDATA%\FreeCAD\v1-1\Mod\`. Checking the legacy path gives a false negative.
 
@@ -122,7 +128,8 @@ the listener you are testing is not the one the addon owns — kill it and relau
 - [ ] `export_self_read_stl` and `export_self_read_3mf` are **ABSENT**. They are internal RPC-only
       and are filtered out of `tools/list`.
 - [ ] `debug_exec` is **ABSENT** from the default surface. It appears only when
-      `FREECAD_BUDDY_ALLOW_EXEC=1` is set. With the flag unset, calling it returns
+      the **Allow debug_exec** preference is on or `FREECAD_BUDDY_ALLOW_EXEC=1` is set (the
+      variable wins over the preference). With both off, calling it returns
       `debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)`.
 
 Expected counts by family: `document_` 7, `query_` 8, `verify_` 6, `export_` 3, `sketch_` 8,
@@ -133,63 +140,46 @@ it produces are setup artifacts, not findings.
 
 ---
 
-## Step 6a — Set `FREECAD_BUDDY_AUDIT_LOG` before FreeCAD starts — MUTATIONS FAIL WITHOUT IT
+## Step 6a — Confirm the audit log is writable — MUTATIONS FAIL WITHOUT IT
 
-**Blocking. Verified 2026-09-12.** With the variable unset, **every mutation tool fails** with
+Every mutation appends to the audit log. If the append fails, **every mutation tool fails** with
 
 ```
 SPEC_FAILED  mutation.spec_failed
 OSError: Failed to write all data to file Permission denied
 ```
 
-and the addon log records the real cause:
+and the addon log records the real cause (`ERROR freecad_buddy.rpc_listener: audit write
+failed`, `PermissionError`). The envelope message names the *write*, not the audit log, so this
+reads as a snapshot or `saveAs` problem. It is neither.
 
-```
-ERROR freecad_buddy.rpc_listener: audit write failed
-PermissionError: [Errno 13] Permission denied: 'freecad-buddy-audit.jsonl'
-```
+The GUI host takes the audit path in this order, once, at bridge start:
 
-`default_audit_path()` (`src/freecad_buddy/adapters/audit_log.py:24`) falls back to the
-**cwd-relative** name `freecad-buddy-audit.jsonl`. A GUI FreeCAD launched normally has
-`C:\Program Files\FreeCAD 1.1\bin` as its working directory, which is not writable, so the
-audit append raises and the AD-5 bracket reports `SPEC_FAILED`.
+| Source | Path |
+| --- | --- |
+| `FREECAD_BUDDY_AUDIT_LOG` set in the environment FreeCAD inherits | that path |
+| **Audit log file** on Edit > Preferences > FreeCAD Buddy | that path |
+| default | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\audit.jsonl` |
 
-The envelope message names the *write*, not the audit log, so this reads as a snapshot or
-`saveAs` problem. It is neither: `document_save` to an absolute path on the same drive
-**succeeds** while the mutation fails, and no `FCB_TMP_snap_*` directory is ever created.
+The default does not depend on the working directory, so a Start-menu launch and a `cua-driver`
+launch write to the same file. The `operator settings:` line in `addon.log` names the effective
+path and its source. Only the headless host still falls back to the cwd-relative
+`freecad-buddy-audit.jsonl`.
 
-**The controlling factor is the working directory FreeCAD inherits, not the variable alone.**
-Verified 2026-09-12 by testing both:
-
-| FreeCAD launched from | Effective audit path | Mutations |
-| --- | --- | --- |
-| Windows shortcut / Start menu | `C:\Program Files\FreeCAD 1.1\bin\freecad-buddy-audit.jsonl` | **all fail** |
-| `cua-driver launch_app` (daemon cwd = `C:\Users\thuan`) | `C:\Users\thuan\freecad-buddy-audit.jsonl` | **succeed** |
-
-So a FreeCAD launched through `cua-driver` already works, because the daemon's working directory
-is writable. A FreeCAD the operator started from the desktop does not.
-
+- [ ] The effective path is writable (verify: the `operator settings:` line in the new `addon.log`
+      lines gives `FREECAD_BUDDY_AUDIT_LOG=` with a path in a writable folder)
 - [ ] A mutation actually commits (verify: `preview_dry_run` then `feature_body_create` on a
       scratch document returns `status: "OK"` with `post_verify.passed: true`). **This is the real
       check.** Run it before any mutation scenario; do not infer it from the environment.
-- [ ] If that fails, locate the audit file the running process is using and confirm its directory
-      is writable:
-      ```powershell
-      Get-ChildItem C:\Users\$env:USERNAME,"C:\Program Files\FreeCAD 1.1\bin" `
-        -Filter "freecad-buddy-audit.jsonl" -EA SilentlyContinue |
-        Select-Object FullName,Length,LastWriteTime
-      ```
 
-Setting `FREECAD_BUDDY_AUDIT_LOG` to an absolute writable path is the explicit fix, but it must be
-set **in the environment the FreeCAD process inherits**, before that process starts. A `User`-scope
-variable set after the `cua-driver` daemon started does **not** reach a FreeCAD the daemon
-launches — the daemon passes on its own environment. Restart the daemon, or relaunch FreeCAD from
-a shell that already carries the variable.
+A variable must be set **in the environment the FreeCAD process inherits**, before that process
+starts. A `User`-scope variable set after the `cua-driver` daemon started does **not** reach a
+FreeCAD the daemon launches — the daemon passes on its own environment. Restart the daemon, or
+relaunch FreeCAD from a shell that already carries the variable. A preference change needs a
+FreeCAD restart.
 
-This is the AD-25 gap recorded as TC-99-06, but its practical severity is higher than that
-scenario implies: it does not merely scatter a log file, it makes the entire mutation surface
-unusable on a default GUI launch. Every scenario in TC-03, TC-04, TC-05, TC-08 and TC-13 group B
-depends on this step.
+Every scenario in TC-03, TC-04, TC-05, TC-08 and TC-13 group B depends on this step. TC-99-06
+records the remaining AD-25 gap: the log is one file, not a dated file per session.
 
 ---
 

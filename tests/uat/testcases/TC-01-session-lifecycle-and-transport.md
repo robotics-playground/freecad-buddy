@@ -156,7 +156,7 @@ rm -f "$RUN_DIR/evidence/tc-01-03-tools_list.json"
 **Design Ref**: `integration-mcp-freecad.md` §2 (capability probes), `data-contracts-design.md` §9 (banner)
 
 **Given** the FreeCAD GUI is the process serving the bridge — verify: the proxy pid from TC-01-01 is still alive  
-**And** `FREECAD_BUDDY_ALLOW_EXEC` is unset — verify: `echo "${FREECAD_BUDDY_ALLOW_EXEC:-unset}"` returns `unset`  
+**And** `FREECAD_BUDDY_ALLOW_EXEC` is unset and the **Allow debug_exec** preference is off — verify: `echo "${FREECAD_BUDDY_ALLOW_EXEC:-unset}"` returns `unset`, and the `operator settings:` line of this launch in `addon.log` contains `FREECAD_BUDDY_ALLOW_EXEC='0' (preference)`  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 
 **When** the capability banner is read over MCP  

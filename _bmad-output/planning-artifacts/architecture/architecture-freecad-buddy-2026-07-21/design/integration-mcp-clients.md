@@ -63,15 +63,15 @@ The FreeCAD addon starts the RPC listener AND **auto-spawns the external MCP HTT
 }
 ```
 
-Equivalent CLI: `claude mcp add --transport http freecad-buddy http://127.0.0.1:8765/mcp`.
+Equivalent CLI: `claude mcp add --transport http freecad-buddy http://127.0.0.1:8765/mcp`. The Claude Code plugin from `.claude-plugin/marketplace.json` (project-structure §2.4) registers the same entry, so a plugin install needs no manual MCP step.
 
 ### 2.3 Tool discovery
 
-Standard `tools/list`. Names follow the underscore convention (`query_*`, `verify_*`, `preview_*`, …) — dots are illegal in MCP tool names (spine Consistency Conventions). Every tool ships `outputSchema`; results carry `structuredContent` plus text mirror (AD-17, conventions). Exception: `query_tree_summary` ships no `outputSchema` and returns one plain text item (status line, framing line, tree) with no `structuredContent`, because Claude Code shows the agent only `structuredContent` when it is present. `debug_exec` is unregistered from the tool list unless the operator env flag is set (AD-4) — Claude clients never see it by default.
+Standard `tools/list`. Names follow the underscore convention (`query_*`, `verify_*`, `preview_*`, …) — dots are illegal in MCP tool names (spine Consistency Conventions). Every tool ships `outputSchema`; results carry `structuredContent` plus text mirror (AD-17, conventions). Exception: `query_tree_summary` ships no `outputSchema` and returns one plain text item (status line, framing line, tree) with no `structuredContent`, because Claude Code shows the agent only `structuredContent` when it is present. `debug_exec` is unregistered from the tool list unless the operator turns it on — `FREECAD_BUDDY_ALLOW_EXEC=1`, or the **Allow debug_exec** preference in the GUI (AD-4) — Claude clients never see it by default.
 
 ### 2.4 Skills loading (AD-15)
 
-One skill store (`skills/`, `SKILL.md` + `references/`). For Claude Code, the production metadata-first router maps directly onto the native skill mechanism: skill descriptions resident, 2–5 bodies loaded per task on trigger. Delivery = expose the store to Claude Code as native skills (symlink or generated `.claude/skills/` entries pointing at the single store — no second copy of skill bodies). The routed subset is logged per AD-15; the ≤~10K token skill budget applies.
+One skill store (`skills/`, `SKILL.md` + `references/`). For Claude Code, the production metadata-first router maps directly onto the native skill mechanism: skill descriptions resident, 2–5 bodies loaded per task on trigger. Delivery = expose the store to Claude Code as native skills (symlink or generated `.claude/skills/` entries pointing at the single store — no second copy of skill bodies). For users outside the repo, the plugin `freecad-buddy` in `.claude-plugin/marketplace.json` uses `source: "./skills"`, so the plugin cache gets exactly this store and nothing else. The routed subset is logged per AD-15; the ≤~10K token skill budget applies.
 
 Ablation runs against Claude Code use the forced-subset injection path with native auto-activation disabled — same mechanism as the local backend (§3.3), which is what makes it the portable second harness.
 
@@ -118,9 +118,9 @@ No native skill mechanism exists on this path. Skills are delivered by injection
 | GUI panel (FreeCAD dock) | Diff table + renders in panel | Native Apply/Cancel buttons | Abort, TempDoc discarded |
 | MCP client with elicitation (Claude Code/Desktop) | `structuredContent` + text mirror (+ render per §5) | Elicitation `accept`/`decline`/`cancel` | `decline`/`cancel` → typed abort |
 | MCP client without elicitation (llama.cpp, LM Studio) | `structuredContent` + text mirror | `preview_id` (confirm token) from `preview_dry_run` + client's own tool-approval prompt | Missing/stale token → reject |
-| Headless CI / agent-to-agent | Diff JSON in job log / report | Operator auto-approve posture, on by default; every auto-approval audit-logged (AD-10, AD-17). `FREECAD_BUDDY_AUTO_APPROVE=0` requires a `preview_id` | With `=0`: missing/stale token → reject |
+| Headless CI / agent-to-agent | Diff JSON in job log / report | Operator auto-approve posture, on by default; every auto-approval audit-logged (AD-10, AD-17). `FREECAD_BUDDY_AUTO_APPROVE=0` (or, on the GUI host, the **Auto-approve mutations** preference off) requires a `preview_id` | With `=0`: missing/stale token → reject |
 
-Invariants: the structured diff is the mandatory payload in every row; confirmation never gates on a render succeeding; auto-approve is the operator-set env var `FREECAD_BUDDY_AUTO_APPROVE` (conventions), never a client-supplied parameter. It is on by default in every context, attended GUI work included: a mutation then applies in one call, every approval is audit-logged, and `preview_dry_run` stays available to the agent. `FREECAD_BUDDY_AUTO_APPROVE=0`, set before the host starts, restores the confirm rows above for every context.
+Invariants: the structured diff is the mandatory payload in every row; confirmation never gates on a render succeeding; auto-approve is operator-set — the env var `FREECAD_BUDDY_AUTO_APPROVE` (conventions), or on the GUI host the **Auto-approve mutations** preference when the variable is unset — never a client-supplied parameter. It is on by default in every context, attended GUI work included: a mutation then applies in one call, every approval is audit-logged, and `preview_dry_run` stays available to the agent. `FREECAD_BUDDY_AUTO_APPROVE=0` set before the host starts, or the preference cleared before a GUI restart, restores the confirm rows above for every context.
 
 ## 5. Image / Render Delivery Rules (AD-10)
 

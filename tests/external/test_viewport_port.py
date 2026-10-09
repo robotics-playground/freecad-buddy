@@ -17,6 +17,7 @@ import pytest
 
 from freecad_buddy.contracts import RenderPort, ViewportPort
 from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
+from freecad_buddy.usecases.operator_settings import PreferenceValues
 
 # ---- fakes -----------------------------------------------------------------------------------
 
@@ -465,7 +466,8 @@ def test_gui_addon_injects_a_live_viewport_port_at_the_wiring_seam(monkeypatch, 
     monkeypatch.setattr(bootstrap, "build_inline_handlers", _capture)
     monkeypatch.setattr(bootstrap, "RpcListener", _FakeListener)
     monkeypatch.setattr(bootstrap, "_register_shutdown", lambda: None)
-    monkeypatch.setattr(bootstrap, "_start_mcp_proxy", lambda: None)
+    monkeypatch.setattr(bootstrap, "_apply_operator_settings", lambda: PreferenceValues())
+    monkeypatch.setattr(bootstrap, "_start_mcp_proxy", lambda uv_path: None)
     monkeypatch.setattr(bootstrap, "_listener", None)
 
     try:
