@@ -18,7 +18,11 @@
       "license": "MIT",
       "homepage": "https://github.com/robotics-playground/freecad-buddy",
       "repository": "https://github.com/robotics-playground/freecad-buddy",
-      "keywords": ["freecad", "cad", "mcp"],
+      "keywords": [
+        "freecad",
+        "cad",
+        "mcp"
+      ],
       "strict": false,
       "skills": "./",
       "mcpServers": {
