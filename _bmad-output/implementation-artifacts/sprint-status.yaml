@@ -71,7 +71,7 @@
 #   10-7 starts; 11-5 runs alongside; 11-6 is last.
 
 generated: 2026-07-21
-last_updated: 2026-10-08
+last_updated: 2026-10-09
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -107,8 +107,8 @@ development_status:
   3-8-gate-g2-exit: done
   epic-3-retrospective: optional
   epic-4: in-progress
-  4-1-entry-gate-g3e-spec-set-assertions-fault-suite: review
-  4-2-assertion-primitives: review
+  4-1-entry-gate-g3e-spec-set-assertions-fault-suite: done
+  4-2-assertion-primitives: done
   4-3-drawing-generator: backlog
   4-4-parametric-editability: backlog
   4-5-gate-g3-exit: backlog
@@ -153,17 +153,17 @@ development_status:
   9-4-temp-files-inside-session-workdir: done
   epic-9-retrospective: optional
   epic-10: in-progress
-  10-1-documents-and-queries: review
-  10-2-sketch-and-verify-correctness: review
-  10-3-feature-tools-and-mutation-protocol: review
-  10-4-render-and-framing: review
-  10-5-step-export-schema: review
+  10-1-documents-and-queries: done
+  10-2-sketch-and-verify-correctness: done
+  10-3-feature-tools-and-mutation-protocol: done
+  10-4-render-and-framing: done
+  10-5-step-export-schema: done
   10-6-session-transport-and-bounded-execution: backlog
   10-7-uat-suite-and-harness-maintenance: backlog
   10-7b-scripted-uat-runner-and-freecad-probe: backlog
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional
-  epic-11: in-progress
+  epic-11: done
   11-1-mass-properties-that-tell-shapes-apart: done
   11-2-quiet-result-envelope: done
   11-3-one-call-per-mutation: done
