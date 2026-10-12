@@ -452,7 +452,7 @@ freecad-buddy/
   .github/workflows/  # ci.yml: one blocking 1.1.x leg + 1.2-dev canary
 ```
 
-**Environments:** dev = GUI addon + external server (HTTP) on Windows/Linux desktop; CI = `ubuntu-latest`, micromamba conda-forge FreeCAD, `FreeCADCmd run_tests.py`, xvfb + software-GL leg for render tests (isolated, non-blocking); unattended = the same headless bridge, driven by an agent the operator starts, with no service or worker pool of our own (AD-35).
+**Environments:** dev = GUI addon + external server (HTTP) on Windows/Linux desktop; CI = `ubuntu-latest`, micromamba conda-forge FreeCAD, `FreeCADCmd run_tests.py`, xvfb + software-GL leg for render tests (a separate job, blocking); unattended = the same headless bridge, driven by an agent the operator starts, with no service or worker pool of our own (AD-35).
 
 ## Capability → Architecture Map
 
