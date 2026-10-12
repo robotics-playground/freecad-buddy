@@ -366,6 +366,32 @@ def _drawn_pixels(path):
     )
 
 
+_SKETCH_EDGE_COLOR_KEY = "SketchEdgeColor"
+_WHITE = 0xFFFFFFFF
+_SKETCH_LINE_RGB = (0x21, 0x25, 0x29)
+
+
+def _pixel(path, x, y):
+    """The packed RGB value of pixel (``x``, ``y``) in the PNG at ``path``."""
+    from PySide import QtGui
+
+    return QtGui.QImage(path).pixel(x, y)
+
+
+def _pixels_of(path, rgb):
+    """How many pixels of the PNG at ``path`` are exactly the color ``rgb``."""
+    from PySide import QtGui
+
+    image = QtGui.QImage(path)
+    wanted = QtGui.QColor(*rgb).rgb()
+    return sum(
+        1
+        for y in range(image.height())
+        for x in range(image.width())
+        if image.pixel(x, y) == wanted
+    )
+
+
 class DefaultSetTest(unittest.TestCase):
     """The default (no-``include``) set draws visible sketches and meshes, never datums."""
 
@@ -381,15 +407,19 @@ class DefaultSetTest(unittest.TestCase):
         for name in list(App.listDocuments().keys()):
             App.closeDocument(name)
 
-    def _shot(self):
+    def _shot(self, **view):
         return screenshot.query_screenshot(
-            self.registry, self.port, doc=self.handle, view={"width": 200, "height": 200}
+            self.registry,
+            self.port,
+            doc=self.handle,
+            view={"width": 200, "height": 200, **view},
         )
 
     def test_should_draw_a_visible_sketch_when_it_is_the_only_object(self):
         if not _render_available():
             self.skipTest("no render context on this leg")
-        # Arrange
+        # Arrange: FreeCAD's default sketch edge color, white on the white render background.
+        _pin_view_color(self, _SKETCH_EDGE_COLOR_KEY, _WHITE)
         _add_square(self.document.addObject("Sketcher::SketchObject", "Sketch"))
         self.document.recompute()
 
@@ -398,10 +428,36 @@ class DefaultSetTest(unittest.TestCase):
 
         # Assert
         render = envelope["structured_content"]["render"]
+        self.addCleanup(os.remove, render["resource_link"])
         self.assertEqual(envelope["structured_content"]["scene"]["rendered_objects"], ["Sketch"])
         self.assertFalse(render["empty_scene"])
-        self.assertGreater(_drawn_pixels(render["resource_link"]), 0, "the sketch PNG is blank")
-        os.remove(render["resource_link"])
+        self.assertGreater(
+            _pixels_of(render["resource_link"], _SKETCH_LINE_RGB), 0, "no #212529 sketch line"
+        )
+        # The camera frames the square's bbox, so its centre is the image centre.
+        self.assertEqual(
+            _pixel(render["resource_link"], 100, 100),
+            _pixel(render["resource_link"], 0, 0),
+            "the closed sketch's inside is filled",
+        )
+
+    def test_should_draw_the_style_color_when_a_style_colors_the_sketch(self):
+        if not _render_available():
+            self.skipTest("no render context on this leg")
+        # Arrange
+        _pin_view_color(self, _SKETCH_EDGE_COLOR_KEY, _WHITE)
+        _add_square(self.document.addObject("Sketcher::SketchObject", "Sketch"))
+        self.document.recompute()
+        styles = [{"object": "Sketch", "color": [1.0, 0.0, 0.0]}]
+
+        # Act
+        envelope = self._shot(styles=styles)
+
+        # Assert
+        link = envelope["structured_content"]["render"]["resource_link"]
+        self.addCleanup(os.remove, link)
+        self.assertGreater(_pixels_of(link, (255, 0, 0)), 0, "no red sketch line")
+        self.assertEqual(_pixels_of(link, _SKETCH_LINE_RGB), 0, "the fixed color beat the style")
 
     def test_should_leave_out_a_hidden_sketch_when_the_default_set_is_built(self):
         if not _render_available():
@@ -762,7 +818,7 @@ _STYLE_TRANSPARENCY = 0.8
 _COIN_DEFAULT_TRANSPARENCY = 0.0
 
 
-def _wrapped_material(style, is_highlight):
+def _wrapped_material(style, is_highlight, base_color=None):
     """Call ``_wrap_style`` on a bare subgraph and read back the prepended material.
 
     Returns ``(wrapped, diffuse, transparency, is_override)`` where ``wrapped`` says whether a
@@ -773,7 +829,7 @@ def _wrapped_material(style, is_highlight):
     from pivy import coin
 
     subgraph = coin.SoSeparator()
-    result = render_probe._wrap_style(coin, subgraph, style, is_highlight)
+    result = render_probe._wrap_style(coin, subgraph, style, is_highlight, base_color)
     if result is subgraph:
         return False, None, None, None
     material = result.getChild(0)
@@ -883,24 +939,126 @@ class WrapStyleTest(unittest.TestCase):
     def test_empty_style_on_a_plain_object_returns_the_subgraph_unwrapped(self):
         self.assertFalse(_wrapped_material(StyleSpec(object="Box"), False)[0])
 
+    def test_should_override_with_the_base_color_when_there_is_no_style_or_highlight(self):
+        # Act
+        wrapped, diffuse, _, is_override = _wrapped_material(None, False, _BASE_COLOR)
+
+        # Assert
+        self.assertTrue(wrapped)
+        self._assert_diffuse(diffuse, _BASE_COLOR)
+        self.assertTrue(is_override)
+
+    def test_should_use_the_style_color_when_a_style_color_meets_a_base_color(self):
+        # Arrange
+        style = StyleSpec(object="Sketch", color=_STYLE_COLOR)
+
+        # Act
+        _, diffuse, _, _ = _wrapped_material(style, False, _BASE_COLOR)
+
+        # Assert
+        self._assert_diffuse(diffuse, _STYLE_COLOR)
+
+    def test_should_use_the_accent_when_a_highlight_meets_a_base_color(self):
+        # Act
+        _, diffuse, _, _ = _wrapped_material(None, True, _BASE_COLOR)
+
+        # Assert
+        self._assert_diffuse(diffuse, render_probe._ACCENT_COLOR)
+
+    def test_should_keep_the_base_color_when_the_style_sets_only_transparency(self):
+        # Arrange
+        style = StyleSpec(object="Sketch", transparency=0.5)
+
+        # Act
+        _, diffuse, transparency, _ = _wrapped_material(style, False, _BASE_COLOR)
+
+        # Assert
+        self._assert_diffuse(diffuse, _BASE_COLOR)
+        self.assertAlmostEqual(transparency, 0.5, places=5)
+
+
+_BASE_COLOR = (0.4, 0.5, 0.6)
+
+
+class _CubeGui:
+    """A ``FreeCADGui`` stand-in whose every subgraph is a cube, so no GL context is needed."""
+
+    @staticmethod
+    def subgraphFromObject(_obj):  # noqa: N802 - mirrors the FreeCADGui API name
+        from pivy import coin
+
+        return coin.SoCube()
+
+
+class SubgraphLineColorTest(unittest.TestCase):
+    """``_add_subgraphs`` gives an unstyled sketch the fixed line color and leaves a solid alone.
+
+    Pure Coin node manipulation over a stand-in GUI -- no rasterization -- so these run on a leg
+    with no render capability.
+    """
+
+    def setUp(self):
+        self.document = App.newDocument("screenshot_line_color")
+        self.document.addObject("Part::Box", "Box")
+        _add_square(self.document.addObject("Sketcher::SketchObject", "Sketch"))
+        self.document.recompute()
+
+    def tearDown(self):
+        App.closeDocument(self.document.Name)
+
+    def _first_child(self, name):
+        """Add ``name``'s subgraph to a fresh root; return (is the bare cube, override diffuse).
+
+        The diffuse is ``None`` when the cube was added unwrapped. Values are copied out while the
+        root still owns the nodes, because Coin frees a child with its dropped parent.
+        """
+        from pivy import coin
+
+        root = coin.SoSeparator()
+        scene = SceneSpec(
+            objects=[name], orientation=screenshot._CAMERA_QUATS["iso"], width=64, height=64
+        )
+        live = render_probe._LiveState(_CubeGui, self.document, "offscreen")
+        viewport = coin.SbViewportRegion(64, 64)
+        render_probe._add_subgraphs(_CubeGui, coin, root, self.document, scene, viewport, live)
+        child = root.getChild(0)
+        if child.isOfType(coin.SoCube.getClassTypeId()):
+            return True, None
+        return False, child.getChild(0).diffuseColor.getValues()[0].getValue()
+
+    def test_should_add_the_solid_unwrapped_when_it_has_no_style(self):
+        # Act
+        bare, diffuse = self._first_child("Box")
+
+        # Assert
+        self.assertTrue(bare, f"the solid gained a material override: {diffuse}")
+
+    def test_should_override_the_sketch_with_the_fixed_line_color_when_it_has_no_style(self):
+        # Act
+        bare, diffuse = self._first_child("Sketch")
+
+        # Assert
+        self.assertFalse(bare)
+        expected = tuple(channel / 255.0 for channel in _SKETCH_LINE_RGB)
+        for actual, want in zip(diffuse, expected):
+            self.assertAlmostEqual(actual, want, places=5)
+
 
 _RED_SHAPE_COLOR = 0xE61A1AFF
 
 
-def _pin_shape_color(test, packed_rgba):
-    """Set the ``DefaultShapeColor`` preference for one test and restore it on cleanup.
+def _pin_view_color(test, key, packed_rgba):
+    """Set the View color preference ``key`` for one test and restore it on cleanup.
 
-    A headless view provider takes its color from this preference, so pinning it fixes the color
-    every subgraph built during the test is drawn with.
+    A headless view provider takes its colors from these preferences, so pinning one fixes the
+    color every subgraph built during the test is drawn with.
     """
     preferences = App.ParamGet(_VIEW_PREFERENCES)
-    if _SHAPE_COLOR_KEY in preferences.GetUnsigneds():
-        test.addCleanup(
-            preferences.SetUnsigned, _SHAPE_COLOR_KEY, preferences.GetUnsigned(_SHAPE_COLOR_KEY)
-        )
+    if key in preferences.GetUnsigneds():
+        test.addCleanup(preferences.SetUnsigned, key, preferences.GetUnsigned(key))
     else:
-        test.addCleanup(preferences.RemUnsigned, _SHAPE_COLOR_KEY)
-    preferences.SetUnsigned(_SHAPE_COLOR_KEY, packed_rgba)
+        test.addCleanup(preferences.RemUnsigned, key)
+    preferences.SetUnsigned(key, packed_rgba)
 
 
 class StyleReachesThePixelsTest(unittest.TestCase):
@@ -958,7 +1116,7 @@ class StyleReachesThePixelsTest(unittest.TestCase):
         if not _render_available():
             self.skipTest("no render context on this leg")
         # Arrange: a red shape color, so "hue kept" is a channel order the grey default breaks.
-        _pin_shape_color(self, _RED_SHAPE_COLOR)
+        _pin_view_color(self, _SHAPE_COLOR_KEY, _RED_SHAPE_COLOR)
         plain = self._center_pixel([], None)
 
         # Act

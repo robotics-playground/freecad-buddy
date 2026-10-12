@@ -1645,3 +1645,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-release-0-0-1.md`
   summary: Remove `"release-as": "0.0.1"` from `release-please-config.json` once `v0.0.1` is tagged.
   evidence: The pin is required for the first release only; while it stays, every later release-please PR proposes 0.0.1 again (review findings BH5/EC15).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ci-honest-green.md`
+  summary: G3.2 and G3.3 cite `verify_recompute`, but no fault scorer scores it, so it has no `validators.yaml` entry and no `_VALIDATOR_SOURCES` entry; G3 leg-b reports it `not in registry` until a fault suite and scorer exist.
+  evidence: medium; `benchmarks/g3/gate.yaml:129,133`. `tests/external/test_g0_ci_check.py` names it as the one exception (`_UNSCORED_CITED`) to the rule that every cited validator has a `_VALIDATOR_SOURCES` entry, because it has no scorer whose source list the map can match. When a scorer registers it, that test fails: remove it from `_UNSCORED_CITED` and add its `_VALIDATOR_SOURCES` entry.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ci-honest-green.md`
+  summary: Decide whether `runner.py ci-check G0` should also require G0.2 (tool count and schema), which CI already produces and passes.
+  evidence: CI log shows `G0.2: PASS (verdict=OK)` from CI evidence alone; decision D2 named only G0.4 (review finding EC2).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-ci-honest-green.md`
+  summary: Make the G0.4 CI evidence measure the real headless test count and result instead of the fixed `emit_ci_evidence.py --green true --tests 30`.
+  evidence: The headless job always emits green with 30 tests, so the G0.4 half of `ci-check` can fail only on missing evidence (review finding VG2; pre-existing).

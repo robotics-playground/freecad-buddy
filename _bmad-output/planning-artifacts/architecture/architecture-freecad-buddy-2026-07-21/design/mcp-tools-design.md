@@ -500,6 +500,8 @@ The agent (or the human it serves) reduces visual noise by **composing the scene
 
 A document with a pending or broken recompute (a `Touched`/`Invalid`/`Error` object) is self-unstable — reading `.Shape` while fingerprinting re-triggers the failing recompute, so the render's before==after mutation guard cannot distinguish a render mutation from that pre-existing churn. When the document is dirty the guard is skipped and the render proceeds with `render.dirty_document: true`; a clean document keeps the strict read-only assertion. A broken object with a null shape is signalled by `obj.State`, not a mass-property diff.
 
+A sketch with no style `color` and no highlight renders its lines in #212529, whatever its own line colour or the `SketchEdgeColor` preference. FreeCAD's default sketch line is white, which does not show on the white render background. A style `color` or a highlight still sets the colour.
+
 ```json
 { "inputSchema": { "type": "object", "properties": {
     "doc": { "type": "string" },

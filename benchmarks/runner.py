@@ -46,10 +46,17 @@ from benchmarks.harness.report_build import (  # noqa: E402
 )
 from benchmarks.harness.verdict import (  # noqa: E402
     ArtifactError,
+    _criterion_of,
     bind_hash,
+    check_validator_currency,
     compute_verdict,
+    load_reports,
 )
-from freecad_buddy.contracts.report import Check, require_wilson_ci_for_rates  # noqa: E402
+from freecad_buddy.contracts.report import (  # noqa: E402
+    Check,
+    derive_verdict,
+    require_wilson_ci_for_rates,
+)
 
 # Known gates map to their benchmark dir (uppercase ids only; lowercase is a usage error).
 KNOWN_GATES = {"G0": "g0", "G1": "g1", "G2": "g2", "G3": "g3"}
@@ -61,7 +68,7 @@ _EXIT_FAIL = 1
 _EXIT_OK = 0
 
 _REGISTRY_YAML = BENCHMARKS_ROOT / "_registry" / "validators.yaml"
-_SUBCOMMANDS = {"run", "verdict", "attest", "faults", "seal"}
+_SUBCOMMANDS = {"run", "verdict", "ci-check", "attest", "faults", "seal"}
 
 # The unseal key is read ONLY from this env var — never committed, never a CI secret. `seal` and
 # `run --exit` refuse (exit-2) without it; neither ever falls back to an offline default.
@@ -98,6 +105,13 @@ _VALIDATOR_SOURCES = {
         _SRC / "usecases" / "verify.py",
         _SRC / "usecases" / "fingerprint.py",
         _SRC / "usecases" / "assertions.py",
+        _SRC / "contracts" / "numbers.py",
+    ),
+    # Order matches score_export_verify.py's VALIDATOR_SOURCES.
+    "verify_export_step": (
+        _SRC / "usecases" / "exports.py",
+        _SRC / "adapters" / "export_oracle.py",
+        _SRC / "adapters" / "export_verdict.py",
         _SRC / "contracts" / "numbers.py",
     ),
     # The G1 grader's currency depends on the grader source, the rubric it encodes AND the fault
@@ -643,6 +657,46 @@ def verdict_command(gate: str, run_id: str) -> int:
     return _EXIT_OK if result.passed else _EXIT_FAIL
 
 
+# The criteria whose evidence CI itself produces, per gate. The other G0 legs need operator
+# evidence (G0.1/G0.3/G0.5 local runs, the gui_smoke token) that no CI job can create.
+_CI_CHECK_CRITERIA = {"G0": ("G0.4",)}
+
+
+def ci_check_command(gate: str, run_id: str) -> int:
+    """Check the CI-producible part of ``gate``: its CI criteria re-derive OK, its validators are
+    current. Exit 0 (PASS) / 1 (FAIL), printing each failure.
+
+    This is a subset of ``verdict``, never a replacement: a gate exit still runs the full verdict.
+    """
+    criteria = _CI_CHECK_CRITERIA.get(gate)
+    if criteria is None:
+        raise UsageError(f"ci-check covers gate(s) {', '.join(_CI_CHECK_CRITERIA)} only: '{gate}'")
+    gate_def = _load_gate_def(gate)
+    run_dir = _run_dir(gate, run_id)
+    if not run_dir.is_dir():
+        raise UsageError(f"run '{run_id}' not found: {run_dir}")
+    try:
+        reports = load_reports(run_dir, list(criteria))
+    except ArtifactError as exc:
+        raise UsageError(str(exc)) from exc
+
+    failures = []
+    for criterion_id, report in zip(criteria, reports):
+        subject_id = _criterion_of(report)
+        if subject_id != criterion_id:
+            failures.append(f"{criterion_id} (report subject mismatch: {subject_id!r})")
+            continue
+        verdict = derive_verdict(report)
+        if verdict != "OK":
+            failures.append(f"{criterion_id} (verdict {verdict})")
+    failures += check_validator_currency(gate_def, _load_validators(), _validator_src_hasher)
+    print(f"ci-check {gate} --run {run_id}:")
+    for failure in failures:
+        print(f"  FAILURE {failure}")
+    print(f"gate {gate} ci-check: {'PASS' if not failures else 'FAIL'}")
+    return _EXIT_OK if not failures else _EXIT_FAIL
+
+
 def _exit_verdict_command(gate: str, run_id: str, gate_def: dict, run_dir: Path) -> int:
     """Re-derive the exit verdict (leg-a per case + leg-c) from the stored exit reports.
 
@@ -684,8 +738,6 @@ def attest_command(gate: str, run_id: str, token_type: str, outcome: str) -> int
             raise UsageError(f"exit run '{run_id}' has no stored reports: {run_dir / 'reports'}")
     else:
         expected_ids = [c["id"] for c in gate_def["criteria"] if "id" in c]
-        from benchmarks.harness.verdict import load_reports
-
         try:
             reports = load_reports(run_dir, expected_ids)
         except ArtifactError as exc:
@@ -1372,6 +1424,9 @@ def _parse_subcommand(argv: list[str]) -> argparse.Namespace:
     verdict_parser = sub.add_parser("verdict")
     verdict_parser.add_argument("gate", help="gate id, e.g. G0")
     verdict_parser.add_argument("--run", dest="run_id", required=True, help="run id")
+    ci_check_parser = sub.add_parser("ci-check")
+    ci_check_parser.add_argument("gate", help="gate id, e.g. G0")
+    ci_check_parser.add_argument("--run", dest="run_id", required=True, help="run id")
     attest = sub.add_parser("attest")
     attest.add_argument("gate", help="gate id, e.g. G0")
     attest.add_argument("--run", dest="run_id", required=True, help="run id")
@@ -1401,6 +1456,8 @@ def _run_subcommand(argv: list[str]) -> int:
             return run_command(args.gate, args.run_id)
         if args.command == "verdict":
             return verdict_command(args.gate, args.run_id)
+        if args.command == "ci-check":
+            return ci_check_command(args.gate, args.run_id)
         if args.command == "faults":
             return faults_command(args.gate, args.frames_evidence)
         if args.command == "seal":

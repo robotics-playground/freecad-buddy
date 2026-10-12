@@ -128,8 +128,16 @@ uv run gate run g2 --exit                   # prompts for unseal key
 uv run gate faults g2                       # run fault suite -> sensitivity/FA (§6)
 uv run gate ablate design-decomposition --set gs/ablation-sets/dd-n40 -R 10   # paired A/B (§5)
 uv run gate verdict g2 --run <run-id>       # recompute verdict from stored reports only
+uv run gate ci-check G0 --run <run-id>      # CI scope of G0 only (see below)
 uv run gate seal g2                         # human ceremony: encrypt heldout, write SEAL.json
 ```
+
+**CI scope of G0.** CI cannot produce the full G0 verdict. G0.1, G0.3 and G0.5 need local evidence, and leg-d needs the `gui_smoke` token. So the blocking `g0-verdict` CI job runs `run G0` to write the reports, then `ci-check G0`. `ci-check` passes (exit 0) only when two conditions hold:
+
+- the stored G0.4 report re-derives to `OK`;
+- every validator that G0 cites is current (leg-b, the same `check_validator_currency` rule as `verdict`).
+
+It prints each failure and exits 1 otherwise. A missing report is exit 2. `ci-check` is a subset of `verdict`, not a replacement: a gate exit still runs the full `verdict`.
 
 `--skills` maps to the AD-15 forced explicit-subset injection path with auto-activation disabled; the routed/injected subset is logged into every `ValidationReport`.
 

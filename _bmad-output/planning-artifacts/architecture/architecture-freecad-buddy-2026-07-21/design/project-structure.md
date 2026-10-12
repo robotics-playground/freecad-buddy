@@ -231,7 +231,7 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 | --- | --- | --- | --- | --- |
 | headless | 1.1.x latest patch on conda-forge (1.1.3) | 3.11 | micromamba conda-forge | yes |
 | canary | 1.2-dev weekly | as shipped (do not pin) | conda-forge if published, else weekly AppImage | no (allowed-to-fail) |
-| render | 1.1.x (same build as headless) | 3.11 | micromamba + xvfb + Mesa sw GL | no (isolated) |
+| render | 1.1.x (same build as headless) | 3.11 | micromamba + xvfb + Mesa sw GL | yes (separate job) |
 | arch/fast | none | 3.12 | uv only | yes |
 
 `requires-python = ">=3.11"`; no 3.10-or-lower syntax; 3.12-only syntax banned while the CI 1.1.x leg runs Python 3.11.
@@ -278,7 +278,8 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 | --- | --- | --- | --- |
 | `arch-checks` | — (uv, py3.12) | `uv sync` → `check_imports.py` → `check_status_vocab.py` → `gen_schemas.py --check` → `check_provenance.py` → `check_skill_shape.py` → `ruff check` (T201 print ban) → `pytest tests/external` | yes |
 | `headless` | `{freecad: 1.1.x/py3.11}` | micromamba (cached) → pip layer-in → `FreeCADCmd tests/run_tests.py` → `pytest tests/external` → `benchmarks/runner.py --gate G0` | yes (G0.4) |
-| `render` | 1.1.x only | same env + `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1`, render-tagged tests only | no (`continue-on-error: true`) |
+| `render` | 1.1.x only | same env + `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE=1`, render-tagged tests only | yes |
+| `g0-verdict` | — (uv), after `headless` | download the G0.4 leg artifact → `runner.py run G0` (exit 0 or 1 accepted, the `run G0: wrote` summary line required) → `runner.py ci-check G0` (G0.4 passes, every validator G0 cites is current) | yes |
 
 ```yaml
 # .github/workflows/ci.yml — load-bearing fragment (headless job)
@@ -311,11 +312,11 @@ jobs:
           micromamba run -n fc python benchmarks/runner.py --gate G0
 ```
 
-Isolation rules: render job never gates merges (upstream evidence: GUI/xvfb path is the fragile one); `heldout/` is excluded from every `ci.yml` job — only a manually-dispatched gate-exit workflow (added at first phase exit) may pass `--gate-exit` to the runner (AD-13 sealing).
+Isolation rules: the render tests run in their own job, because the GUI/xvfb path is the fragile one (upstream evidence), and that job blocks merges like every other `ci.yml` job; `heldout/` is excluded from every `ci.yml` job — only a manually-dispatched gate-exit workflow (added at first phase exit) may pass `--gate-exit` to the runner (AD-13 sealing).
 
 ### 5.2 `canary.yml` — weekly schedule
 
-Single job, `continue-on-error: true`: resolve FreeCAD 1.2-dev (conda-forge dev label if published, else download latest weekly AppImage + `--appimage-extract`), run the same two suites. Failure opens/updates a pinned issue; never blocks (AD-11).
+Single job, no `continue-on-error`: resolve FreeCAD 1.2-dev (conda-forge dev label if published, else download latest weekly AppImage + `--appimage-extract`), run the same two suites. The workflow runs only on schedule and manual dispatch, never on push or PR. A failure shows red in Actions but never blocks a PR (AD-11). No step opens an issue.
 
 ### 5.3 Caching
 

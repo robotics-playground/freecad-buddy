@@ -21,6 +21,12 @@ _PROBE_SIZE = 8
 
 _ACCENT_COLOR = (1.0, 0.55, 0.0)
 
+# A sketch draws its lines in the ``SketchEdgeColor`` preference, whose default is white
+# (ViewProviderSketch.cpp:390-396) — invisible on the white render background. Screenshots draw
+# every unstyled sketch in this fixed dark #212529 instead, so the image never depends on the
+# operator's profile.
+_SKETCH_LINE_COLOR = (0x21 / 255.0, 0x25 / 255.0, 0x29 / 255.0)
+
 # Focus framing: the bbox spans 1/_FRAME_GROW of the frame's binding axis, leaving ~20% margin.
 # _MIN_FRAME_EXTENT floors every derived extent so a bbox degenerate on a projected axis still
 # yields a valid view volume.
@@ -297,9 +303,15 @@ def _add_subgraphs(gui, coin, root, document, scene, viewport, live: _LiveState)
         sub = gui.subgraphFromObject(source)
         if sub is None or _is_empty(coin, sub, viewport):
             continue
-        root.addChild(_wrap_style(coin, sub, styles.get(name), scene.highlight == name))
+        base_color = _SKETCH_LINE_COLOR if _is_sketch(source) else None
+        root.addChild(_wrap_style(coin, sub, styles.get(name), scene.highlight == name, base_color))
         rendered.append(name)
     return rendered
+
+
+def _is_sketch(obj) -> bool:
+    is_derived_from = getattr(obj, "isDerivedFrom", None)
+    return is_derived_from is not None and bool(is_derived_from("Sketcher::SketchObject"))
 
 
 def _subgraph_source(obj):
@@ -332,30 +344,35 @@ _MATERIAL_FIELDS = (
 )
 
 
-def _wrap_style(coin, subgraph, style, is_highlight):
+def _wrap_style(coin, subgraph, style, is_highlight, base_color=None):
     """Wrap ``subgraph`` in a separator with a prepended overriding material.
 
-    A highlight sets the diffuse color to ``_ACCENT_COLOR``, taking precedence over ``style.color``;
-    ``style.transparency`` is applied whether or not the object is highlighted. Returns the raw
-    subgraph unchanged when there is no highlight and no style field to apply.
+    A highlight sets the diffuse color to ``_ACCENT_COLOR``, taking precedence over ``style.color``,
+    which in turn takes precedence over ``base_color``; ``style.transparency`` is applied whether
+    or not the object is highlighted. Returns the raw subgraph unchanged when there is no color and
+    no transparency to apply.
 
     The material always overrides, because the object's own material sits deeper in the subgraph
     and would otherwise win. Every field it does not write is marked ignored, so only the written
     fields override: a transparency-only style keeps the object's own color, and a color-only
     style keeps its own transparency.
     """
-    has_style = style is not None and (style.color is not None or style.transparency is not None)
-    if not has_style and not is_highlight:
+    style_color = style.color if style is not None else None
+    transparency = style.transparency if style is not None else None
+    if is_highlight:
+        color = _ACCENT_COLOR
+    else:
+        color = style_color if style_color is not None else base_color
+    if color is None and transparency is None:
         return subgraph
     separator = coin.SoSeparator()
     material = coin.SoMaterial()
     written = set()
-    color = _ACCENT_COLOR if is_highlight else style.color
     if color is not None:
         material.diffuseColor.setValue(*color)
         written.add("diffuseColor")
-    if style is not None and style.transparency is not None:
-        material.transparency.setValue(style.transparency)
+    if transparency is not None:
+        material.transparency.setValue(transparency)
         written.add("transparency")
     for field_name in _MATERIAL_FIELDS:
         if field_name not in written:

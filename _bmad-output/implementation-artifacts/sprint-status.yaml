@@ -196,7 +196,7 @@ action_items:
   - epic: 1
     action: "Fix gate.yaml G0.5 validator citation (verify_shape -> verify_export_step)"
     owner: "dev-loop"
-    status: open
+    status: done
   - epic: 7
     action: "Scope a Phase-5 Assemblies capability as an epic BEFORE Epic 7 — URDF/SDF export consumes its kinematic joint tree (native Assembly WB exists; Python-exposure of joints is the gap). Also decide CROSS-addon-vs-hand-rolled-XML at the G5-robot entry gate."
     owner: "TanNT"

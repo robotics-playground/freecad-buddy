@@ -1,6 +1,7 @@
 name: canary
 
-# Weekly allowed-to-fail leg tracking FreeCAD 1.2-dev (AD-11). Never blocks.
+# Weekly allowed-to-fail leg tracking FreeCAD 1.2-dev (AD-11). A failure shows red in Actions but
+# never blocks a PR: the workflow runs only on schedule and dispatch, never on push or PR.
 on:
   schedule:
     - cron: "0 6 * * 1"  # Mondays 06:00 UTC
@@ -9,7 +10,6 @@ on:
 jobs:
   canary-1_2-dev:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       # Resolve FreeCAD 1.2-dev from the conda-forge dev label if published.

@@ -138,11 +138,12 @@ jobs:
           path: benchmarks/gate-artifacts/g3/ci-${{ github.sha }}/
 
   g0-verdict:
-    # Downloads the 1.1.x headless-leg G0.4 artifact into the run dir and runs run+verdict on
-    # the same --run ci-<sha> the evidence landed in (non-blocking: the G0 gate is not yet green).
+    # Downloads the 1.1.x headless-leg G0.4 artifact into the run dir, writes the G0 reports on
+    # the same --run ci-<sha> the evidence landed in, then blocks on `ci-check`: G0.4 passes and
+    # every validator G0 cites is current. The full `verdict` also needs local G0.1/G0.3/G0.5
+    # evidence and the gui_smoke token, which no CI job produces, so it is not run here.
     needs: [headless]
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -152,14 +153,23 @@ jobs:
         with:
           name: g0-4-1.1.x
           path: benchmarks/gate-artifacts/g0/ci-${{ github.sha }}/evidence/
-      - name: Consume G0.4 evidence via run + verdict (non-blocking)
+      - name: Write the G0 reports
+        # Exit 1 is the honest failure of the criteria CI has no evidence for; the reports are
+        # written either way. 2 is a usage/loader error and must not pass, and a traceback also
+        # exits 1, so the summary line proves the reports were written.
         run: |
-          uv run python benchmarks/runner.py run G0 --run ci-${{ github.sha }} || true
-          uv run python benchmarks/runner.py verdict G0 --run ci-${{ github.sha }} || true
+          set +e
+          out=$(uv run python benchmarks/runner.py run G0 --run ci-${{ github.sha }} 2>&1)
+          code=$?
+          echo "$out"
+          if [ "$code" -gt 1 ] || ! echo "$out" | grep -q "^run G0: wrote"; then
+            echo "run G0 exited $code without writing its reports"; exit 1;
+          fi
+      - name: G0 CI check (G0.4 passes, cited validators current)
+        run: uv run python benchmarks/runner.py ci-check G0 --run ci-${{ github.sha }}
 
   render:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: mamba-org/setup-micromamba@v2
