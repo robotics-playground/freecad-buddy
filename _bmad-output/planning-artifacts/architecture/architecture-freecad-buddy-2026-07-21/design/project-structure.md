@@ -59,7 +59,7 @@ freecad-buddy/
 │       │   ├── screenshot.py         # constructed-scene render; _MAX_DIM = 1920 (AD-10)
 │       │   ├── capabilities.py       # runtime capability map surfaced by query_capabilities
 │       │   ├── confirm.py            # preview_id confirm-token issue/validate (AD-10)
-│       │   ├── debug_exec.py         # operator-only, off by default, audit-logged (AD-4)
+│       │   ├── script_exec.py        # agent Python exec, on by default, raw, audit-logged (AD-4)
 │       │   ├── stats.py              # Wilson/McNemar rate statistics (AD-14); stdlib-only so the
 │       │   │                         #   in-FreeCAD G2 scorer can import it too
 │       │   └── verify.py             # verify_shape, verify_sketch, in-FreeCAD leg of verify_export_* (AD-8, AD-9)
@@ -328,7 +328,7 @@ Single job, no `continue-on-error`: resolve FreeCAD 1.2-dev (conda-forge dev lab
 
 ## 6. Tool-count runway (G0.2 ≥15 tools)
 
-The authoritative Phase 0 tool catalog is **mcp-tools-design.md** (§2): **24 AI-visible Phase 0 tools + 1 operator-only** (`debug_exec`, unregistered when off per AD-4). Of the 24, **17** fall in the gate's literal `query_`/`document_`/`export_` namespace set (≥15, G0.2 satisfied) and **7** are `verify_`. Names, schemas, and counts live there — this doc only maps them to files (`usecases/` per §1). The shipped surface is whatever `hosts/tool_catalog.py:tool_specs()` returns; any count in a document is a claim about that function.
+The authoritative Phase 0 tool catalog is **mcp-tools-design.md** (§2): **24 AI-visible Phase 0 tools + `script_exec`** (registered by default, outside `tool_specs()`, unregistered when off per AD-4). Of the 24, **17** fall in the gate's literal `query_`/`document_`/`export_` namespace set (≥15, G0.2 satisfied) and **7** are `verify_`. Names, schemas, and counts live there — this doc only maps them to files (`usecases/` per §1). The shipped surface is whatever `hosts/tool_catalog.py:tool_specs()` returns; any count in a document is a claim about that function.
 
 ## 7. Conflicts
 

@@ -179,7 +179,7 @@ class AuditRecord(TypedDict, total=False):
     actor: str                      # "ai:<model-or-client-id>" | "human:<operator>" |
                                     # "harness:<run-id>" | "agent"
     event: Literal["mutation", "exec", "preview", "approval", "rollback"]
-    tool: str                       # wire tool name ("feature_pocket", "debug_exec", …)
+    tool: str                       # wire tool name ("feature_pocket", "script_exec", …)
     doc: DocHandle                  # §9 — required for document-touching events
     params_digest: str              # "sha256:<hex>" over canonical-JSON params (params
                                     #   themselves may be large/sensitive; digest is mandatory,

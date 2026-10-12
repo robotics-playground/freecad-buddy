@@ -132,7 +132,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc (whole-doc `edges` capped at `max_edges`, truncation flagged) | no |
 | `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
 | `query_placement` | 0 | Local + global placement of an object | no |
-| `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `debug_exec` state | no |
+| `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `script_exec` state | no |
 | `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1920 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport; renders a document with a pending/broken recompute (`render.dirty_document: true`) rather than hard-failing. Reports unavailable when no GL — never fails hard | no |
 | `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns focus/expand/depth/reveal navigation — **planned** | no |
 | `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) — **planned** | no |
@@ -197,7 +197,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
-| `debug_exec` | 0 | Trusted-operator Python exec for bring-up/CI-authored scripts; see §5 | yes |
+| `script_exec` | 0 | Agent Python exec inside FreeCAD for operations no typed tool covers; raw, outside the AD-5 bracket; see §5 | yes |
 
 ### Counts & G0.2
 
@@ -216,9 +216,9 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | **AI-visible total** | | | | | **50** | **45** |
 | `debug_` (operator-only) | 1 | — | — | — | 1 | 1 |
 
-**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus operator-only `debug_exec` (unregistered by default, never counted in the AI-visible registry) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
+**G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **45**; with `DEBUG_EXEC_SPEC` that is 46 registered specs.
+The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **45**; with `SCRIPT_EXEC_SPEC` that is 46 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -559,14 +559,15 @@ Typical agent patterns: *isolate* (`include: [Body]`), *context-ghost* (`styles:
 
 `Confirm` carries no auto-approve field: the posture is the operator env var `FREECAD_BUDDY_AUTO_APPROVE`, read once at host start, and a client-sent `autoApprove` is refused as an undeclared field. The posture is on by default in every host; `FREECAD_BUDDY_AUTO_APPROVE=0` makes every mutation a confirm-required call, except the display-state carve-out (§1.4). A call that sends `confirm` takes the full token check in every posture: a stale, expired or forged `preview_id` is refused, and an accepted one is logged `preview_token`. Phase 2 policy: mutation tool called without valid `confirm` in a confirm-required context → `INVALID_INPUT`, no execution. GUI panel and MCP elicitation produce the `accept`. `preview_dry_run` stays available in both postures. Apply re-runs the operation on the live document under AD-5 — the preview result is never "promoted" to the live doc.
 
-## 5. `debug_exec` Registration Rules (AD-4)
+## 5. `script_exec` Registration Rules (AD-4)
 
-1. **Off by default.** Registered into the MCP tool list only when the human operator sets `FREECAD_BUDDY_ALLOW_EXEC=1` at server start. When off it is *unregistered* — absent from `tools/list`, not merely erroring.
-2. **Never an AI mutation path.** Excluded from `preview_dry_run.operation.tool`, from the confirm flow, and from every benchmark/harness agent toolset. G1.6/registry introspection must show zero mutation tools *and* no `debug_exec` in AI-facing registries.
-3. **Audited.** Every call appended to the append-only audit log (code, timestamp, caller, doc handle, resulting fingerprint) — from Phase 0 (AD-17).
-4. **Not a sandbox.** Namespace reduction (FreeCAD API globals only) is hygiene, never described as a security boundary; this repository ships no isolation boundary, so the operator's environment is the only one (AD-35, exec-sandbox research Finding 1).
-5. **Never enabled in an unattended run:** the flag is a human act, and no agent may set it.
-6. Input `{ "doc": handle, "code": string }`; result `{ "stdout", "value_repr", "fingerprint_after" }`. It still requires an explicit doc handle (AD-20) and its mutations are audit-logged, though it bypasses AD-5 typing by definition — which is exactly why it is operator-only.
+1. **On by default.** Registered unless the operator sets `FREECAD_BUDDY_SCRIPT_EXEC` to a value other than `1`, or — GUI host, variable unset — clears the **Allow script_exec** preference (`ScriptExec`). When off it is *unregistered*: absent from `tools/list`, not present-and-refusing.
+2. **Unattended runs.** With `FREECAD_BUDDY_UNATTENDED=1` it is unregistered unless `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. Both variables are read once at start, env only; exactly `"1"` is on.
+3. **Typed tools first.** Excluded from `preview_dry_run.operation.tool`, from the confirm flow, from the read-only assistant profile, and from every benchmark and gate toolset. G1.6/registry introspection must show zero mutation tools *and* no `script_exec` in the read-only profile. `FREECAD_BUDDY_AUTO_APPROVE` does not gate it; an operator who wants per-call control turns `ScriptExec` off.
+4. **Raw.** No AD-5 bracket, fingerprint, or rollback (AD-5 exception). `mutating=True`, so a `TIMEOUT` marks the document suspect and the call writes an audit pair.
+5. **Audited.** Every call appends a `before` record carrying the full source ahead of execution, and an `after` record (AD-17).
+6. **Not a sandbox.** Namespace reduction (FreeCAD API globals only) is hygiene, never described as a security boundary; this repository ships no isolation boundary, so the operator's environment is the only one (AD-35, exec-sandbox research Finding 1).
+7. Input `{ "doc": handle, "code": string }`; result `{ "stdout", "value_repr", "fingerprint_after" }`. It requires an explicit doc handle (AD-20).
 
 ## 6. Registration & Phasing Rules
 

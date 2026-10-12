@@ -69,9 +69,12 @@
 # - Epic 11 (sprint-change-proposal-2026-10-06) cuts agent calls, result size and bridge time.
 #   11-1 -> 11-2 and 11-1 -> 11-4; 11-3 is parallel-eligible; 11-4 merges after 11-2; 11-1..11-4 finish before
 #   10-7 starts; 11-5 runs alongside; 11-6 is last.
+# - Epic 12 (sprint-change-proposal-2026-10-12) makes script_exec (was debug_exec) an official tool,
+#   on by default. 12-1 runs before 10-6 (both edit the exec wiring in hosts/tool_catalog.py).
+#   Opens no gate, reopens no epic.
 
 generated: 2026-07-21
-last_updated: 2026-10-09
+last_updated: 2026-10-12
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -171,6 +174,9 @@ development_status:
   11-5-build-loop-skills: done
   11-6-measured-build-session: done
   epic-11-retrospective: optional
+  epic-12: backlog
+  12-1-script-exec-official-tool: backlog
+  epic-12-retrospective: optional
 
 action_items:
   - epic: 1
