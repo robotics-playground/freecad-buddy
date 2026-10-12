@@ -117,9 +117,9 @@ Tests: `tests/external/test_mcp_surface.py` (49 references), `test_operator_sett
 
 ### Deferred work that this change makes more important
 
-- **DW-19** (`deferred-work.md:158`): the audit `before` record stores only `params_digest`, not the
-  executed source. `security-and-service-design.md` §1 item 3 already requires the full source. With
-  agents running scripts by default, the audit log cannot show what an agent ran.
+- **DW-19** (`deferred-work.md:158`): already done 2026-07-23 (`72eb277`). `audit_log.py` stores
+  the full `code` on every `event:"exec"` record. With agents running scripts by default, this
+  record is how an operator sees what an agent ran, so Story 12.1 keeps a regression check on it.
 - **GUI freeze** (`deferred-work.md:610`): a script that never returns keeps the Qt main thread.
   The listener returns `TIMEOUT`, but FreeCAD stays frozen. An agent can now cause this with one
   loop. Story 10.6 fixes only the headless host; goals B–D (GUI) stay deferred.
@@ -136,9 +136,8 @@ story that renames the tool, flips the default, adds the unattended marker, and 
 - **Risk:** security risk as stated in §1, accepted by D2. Technical risk is low: the exec body,
   timeout, audit pair, and suspect-set rules do not change.
 - **Timeline:** Story 12.1 is added before Story 10.6. Epic 10 is delayed by one story.
-- **Included by recommendation (remove in review if not wanted):** Story 12.1 AC7 closes DW-19,
-  so the audit log stores each script's source. Without it, the audit log cannot show what an
-  agent ran.
+- **Regression check:** Story 12.1 AC7 checks that the audit log still stores each script's
+  source (DW-19, done 2026-07-23).
 
 ## 4. Detailed Change Proposals
 
@@ -298,7 +297,7 @@ NEW: `` Capability flags via env vars set by the human operator (`FREECAD_BUDDY_
   > 4. **Given** a `user.cfg` that stores `AllowExec=false` **When** the GUI bridge starts **Then** `script_exec` is registered; `FREECAD_BUDDY_ALLOW_EXEC` and `AllowExec` are read nowhere in `src/`.
   > 5. **Given** the GUI preference page **When** it opens **Then** it shows **Allow script_exec** (default on) with the red risk text, and the `addon.log` `operator settings:` line lists `FREECAD_BUDDY_SCRIPT_EXEC`, `FREECAD_BUDDY_UNATTENDED` and `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` with their sources.
   > 6. **Given** the read-only assistant profile and `preview_dry_run` **When** they are built or called **Then** neither includes or accepts `script_exec`.
-  > 7. **Given** a `script_exec` call **When** its `before` audit record is written **Then** the record carries the full `code`, ahead of execution (closes DW-19).
+  > 7. **Given** a `script_exec` call **When** its `before` audit record is written **Then** the record carries the full `code`, ahead of execution (DW-19, done 2026-07-23; regression check).
   > 8. **Given** the skill `freecad-scripting-idioms` **When** an agent reads it **Then** it says: use a typed tool when one covers the operation; else use `script_exec`; open and commit a transaction in the script so `document_undo` covers it; check geometry with `verify_*` afterwards; never loop without an exit, because a script that does not return freezes the GUI host. `check_skill_shape.py` passes.
   > 9. **Given** `README.md`, `AGENTS.md`, `CLAUDE.md` section 16 and `_bmad-output/project-context.md` **When** read **Then** they describe the new name, default and variables.
   > 10. The CI checks pass: `uv run ruff check .`, `uv run pytest tests/external`, the `infc` suite under `FreeCADCmd`, `scripts/check_imports.py`, `scripts/check_skill_shape.py` and `scripts/gen_schemas.py --check`.

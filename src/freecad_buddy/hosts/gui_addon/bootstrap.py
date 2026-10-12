@@ -27,6 +27,7 @@ from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
 from freecad_buddy.hosts.tool_catalog import build_inline_handlers
 from freecad_buddy.usecases.capabilities import (
     AUTO_APPROVE_WARNING,
+    SCRIPT_EXEC_WARNING,
     Capabilities,
     auto_approve_enabled,
     exec_registered,
@@ -127,6 +128,8 @@ def start_bridge() -> RpcListener:
     caps = Capabilities.from_env(dict(os.environ))
     if auto_approve_enabled(caps):
         logger.warning(AUTO_APPROVE_WARNING)
+    if exec_registered(caps):
+        logger.warning(SCRIPT_EXEC_WARNING)
     executor = QtMainThreadExecutor()
     marshal = Marshal(executor)
     # Called directly, never through the marshal: start_bridge already runs on the Qt main

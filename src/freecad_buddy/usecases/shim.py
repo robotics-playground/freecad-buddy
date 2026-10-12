@@ -28,7 +28,7 @@ _UNITS_PARAM_PATH = "User parameter:BaseApp/Preferences/Units"
 BUDDY_PARAM_PATH = "User parameter:BaseApp/Preferences/Mod/FreeCADBuddy"
 ROUND_TO_DISPLAY_KEY = "RoundToDisplay"
 AUTO_APPROVE_KEY = "AutoApprove"
-ALLOW_EXEC_KEY = "AllowExec"
+SCRIPT_EXEC_KEY = "ScriptExec"
 AUTO_START_MCP_KEY = "AutoStartMcp"
 MCP_COMMAND_KEY = "McpCommand"
 UV_PATH_KEY = "UvPath"
@@ -412,7 +412,7 @@ def read_operator_preferences() -> PreferenceValues:
         preferences = FreeCAD.ParamGet(BUDDY_PARAM_PATH)
         return PreferenceValues(
             auto_approve=preferences.GetBool(AUTO_APPROVE_KEY, defaults.auto_approve),
-            allow_exec=preferences.GetBool(ALLOW_EXEC_KEY, defaults.allow_exec),
+            script_exec=preferences.GetBool(SCRIPT_EXEC_KEY, defaults.script_exec),
             auto_start_mcp=preferences.GetBool(AUTO_START_MCP_KEY, defaults.auto_start_mcp),
             mcp_command=preferences.GetString(MCP_COMMAND_KEY, defaults.mcp_command),
             uv_path=preferences.GetString(UV_PATH_KEY, defaults.uv_path),

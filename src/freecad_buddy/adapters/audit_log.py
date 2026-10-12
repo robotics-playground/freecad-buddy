@@ -1,10 +1,10 @@
 """Append-only ``fcb.audit-record/1`` JSON-lines sink.
 
-Every lifecycle mutation and every ``debug_exec`` call appends one ``before`` and one ``after``
-record. A ``debug_exec`` call writes its ``before`` record ahead of execution. A bracketed
+Every lifecycle mutation and every ``script_exec`` call appends one ``before`` and one ``after``
+record. A ``script_exec`` call writes its ``before`` record ahead of execution. A bracketed
 mutation writes both from inside ``run_mutation``; a mutating call that never reaches the bracket
 gets both from the adapter after dispatch. Lifecycle operations use ``event:"mutation"`` and
-``debug_exec`` uses ``event:"exec"``. An authorized geometry mutation additionally appends one
+``script_exec`` uses ``event:"exec"``. An authorized geometry mutation additionally appends one
 ``event:"approval"`` record naming what the approval covered. The file is opened in append mode;
 this sink never truncates, rotates, or reads it.
 """
@@ -78,7 +78,7 @@ class AuditSink:
         """Append the pre-execution record for a mutation or exec call.
 
         ``fingerprint_before`` is the pre-mutation fingerprint digest; a caller that has not
-        fingerprinted the document (a lifecycle op, or ``debug_exec``) omits it and the field
+        fingerprinted the document (a lifecycle op, or ``script_exec``) omits it and the field
         records ``None``.
         """
         record = self._record(event, tool, doc, params)

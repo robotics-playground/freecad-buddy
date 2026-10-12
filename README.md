@@ -180,7 +180,7 @@ Open Edit > Preferences > **FreeCAD Buddy**.
 |-------|---------|--------|
 | Round numbers to FreeCAD display precision | on | Round result numbers to the **Decimals** setting in General > Units. Applies at the next tool call. |
 | Auto-approve mutations | on | On: a `sketch_*` or `feature_*` call applies in one call. Off: every mutation needs the `preview_id` of a `preview_dry_run`. |
-| Allow debug_exec | off | Registers `debug_exec`, which runs any Python inside FreeCAD. Only for trusted bring-up. Never for an unattended agent. |
+| Allow script_exec | on | Registers `script_exec`, which runs any Python inside FreeCAD with your user rights, for any MCP client of this bridge. Clear it when you do not trust the agent or what it reads. |
 | Start the MCP server with FreeCAD | on | Serve `http://127.0.0.1:8765/mcp` while FreeCAD runs. |
 | MCP command | empty | A command that starts the MCP server. Empty: found automatically. Split on spaces with no quoting, so a path that contains a space is not supported. |
 | uv path | empty | Path to the `uv` executable. Empty: `uv` on `PATH`. A path that is not a file is ignored with a warning in the addon log. |
@@ -191,7 +191,7 @@ Restart FreeCAD to apply a change. Only rounding applies at once.
 At start the addon writes the effective settings to `addon.log`, one line:
 
 ```text
-operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_ALLOW_EXEC='0' (preference), ...
+operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), ...
 ```
 
 Each value names its source: `env` (an environment variable), `preference`, `default`, or
@@ -227,14 +227,17 @@ SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-appro
 A variable that is set wins over the preference. Use variables for scripted and test runs. FreeCAD
 gets a variable only from the process that starts it, so set it before FreeCAD starts.
 
-`FREECAD_BUDDY_AUTO_APPROVE` and `FREECAD_BUDDY_ALLOW_EXEC` count as set when they exist, also
-with an empty value. The other variables count as set only when they are not empty. The
-preference page disables each field that a variable sets, and names the variable.
+`FREECAD_BUDDY_AUTO_APPROVE`, `FREECAD_BUDDY_SCRIPT_EXEC`, `FREECAD_BUDDY_UNATTENDED` and
+`FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` count as set when they exist, also with an empty value.
+The other variables count as set only when they are not empty. The preference page disables
+each field that a variable sets, and names the variable.
 
 | Variable | Overrides | Values |
 |----------|-----------|--------|
 | `FREECAD_BUDDY_AUTO_APPROVE` | Auto-approve mutations | `1` on; `0` confirm gate |
-| `FREECAD_BUDDY_ALLOW_EXEC` | Allow debug_exec | exactly `1` enables; any other value is off |
+| `FREECAD_BUDDY_SCRIPT_EXEC` | Allow script_exec | `1` on; any other value off; unset: the preference decides in the GUI, on in the headless host |
+| `FREECAD_BUDDY_UNATTENDED` | — | exactly `1` marks an unattended run and turns `script_exec` off |
+| `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` | — | exactly `1` keeps `script_exec` on in a marked run |
 | `FREECAD_BUDDY_NO_AUTO_MCP` | Start the MCP server with FreeCAD | any non-empty value: do not start |
 | `FREECAD_BUDDY_MCP_CMD` | MCP command | space-separated command |
 | `FREECAD_BUDDY_AUDIT_LOG` | Audit log file | file path |
@@ -264,12 +267,18 @@ Do not use an empty value to turn the confirm gate on. A new process usually get
 
 ## Security
 
-- The only path for an agent to change a model is a typed tool over MCP.
+- An agent changes a model only through MCP tools: a typed tool, or `script_exec` for an
+  operation no typed tool covers.
 - The MCP endpoint and the internal RPC listener bind `127.0.0.1` only. The RPC listener checks a
   per-session token.
-- `debug_exec` is off by default. It is not even listed when off. Turn it on only when you are
-  present and trust the caller.
-- Every mutation and every `debug_exec` call is written to the append-only audit log.
+- `script_exec` is on by default. It runs any Python inside FreeCAD with your user rights, for any
+  MCP client of this bridge, and has no transaction, fingerprint or rollback of its own. Turn it
+  off (clear **Allow script_exec**, or set `FREECAD_BUDDY_SCRIPT_EXEC=0`) when you do not trust
+  the agent or what it reads. It is not even listed when off.
+- For an unattended agent, set `FREECAD_BUDDY_UNATTENDED=1`. That turns `script_exec` off unless
+  you also set `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`.
+- Every mutation and every `script_exec` call is written to the append-only audit log. A
+  `script_exec` record carries the full script.
 - The bridge runs with your user rights inside your FreeCAD. It ships no sandbox. If you run an
   unattended agent, give it an isolated computer or account.
 

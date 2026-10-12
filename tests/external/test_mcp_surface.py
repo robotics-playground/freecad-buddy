@@ -1,6 +1,6 @@
 """MCP surface, dispatch, and audit tests that run without FreeCAD.
 
-Covers the tool surface, schema/docstring presence, the ``debug_exec`` env-flag gate, the
+Covers the tool surface, schema/docstring presence, the ``script_exec`` env-flag gate, the
 dispatch error boundary, the call-tool result wrapping, and audit-line validity. The
 in-FreeCAD lifecycle and probe behavior lives in ``tests/infc/``.
 """
@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import json
+import logging
 import threading
 import time
 from pathlib import Path
@@ -33,8 +34,9 @@ from freecad_buddy.adapters.mcp_server import (
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
 from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, summary_text
 from freecad_buddy.hosts.headless.entry import build_registry
-from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, tool_specs
+from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, SCRIPT_EXEC_SPEC, tool_specs
 from freecad_buddy.usecases import confirm
+from freecad_buddy.usecases.capabilities import SCRIPT_EXEC_WARNING
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -111,7 +113,7 @@ def _registry(caps: Capabilities) -> MethodRegistry:
 
 
 def test_tools_list_exec_off_lists_document_and_query_tools():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = registered_tools(_registry(caps), caps)
     names = {t.name for t in tools}
 
@@ -124,7 +126,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
     assert "query_capabilities" in names
     assert "query_screenshot" in names
     assert "view_fit_viewport" in names
-    assert "debug_exec" not in names
+    assert "script_exec" not in names
     assert names == (
         EXPECTED_DOCUMENT_TOOLS
         | EXPECTED_QUERY_TOOLS
@@ -137,7 +139,7 @@ def test_tools_list_exec_off_lists_document_and_query_tools():
 
 
 def test_query_tools_require_doc_and_reject_unknown_keys():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
     for name in EXPECTED_QUERY_TOOLS:
         schema = tools[name].inputSchema
@@ -150,7 +152,7 @@ def test_query_tools_require_doc_and_reject_unknown_keys():
 
 
 def test_screenshot_schema_is_tightened_on_view_and_selectors():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
     schema = tools["query_screenshot"].inputSchema
     assert schema["additionalProperties"] is False
@@ -201,7 +203,7 @@ def test_view_fit_viewport_is_audited_by_dispatch():
     move from the audit log — the opposite of AD-31's intent.
     """
     # Arrange
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     method = _registry(caps).get("view_fit_viewport")
 
     # Act
@@ -213,7 +215,7 @@ def test_view_fit_viewport_is_audited_by_dispatch():
 
 def test_dispatch_view_fit_with_unknown_handle_is_invalid_input():
     # Arrange
-    registry = _registry(Capabilities(allow_exec=False))
+    registry = _registry(Capabilities(script_exec=False))
 
     # Act
     envelope = registry.dispatch("view_fit_viewport", {"doc": "fcb-doc:missing"})
@@ -223,14 +225,14 @@ def test_dispatch_view_fit_with_unknown_handle_is_invalid_input():
 
 
 def test_dispatch_query_with_unknown_handle_is_invalid_input():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     registry = _registry(caps)
     envelope = registry.dispatch("query_object", {"doc": "fcb-doc:missing", "object": "Box"})
     assert envelope["status"] == "INVALID_INPUT"
 
 
 def test_verify_tools_require_doc_and_reject_unknown_keys():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
     for name in EXPECTED_VERIFY_TOOLS:
         schema = tools[name].inputSchema
@@ -242,7 +244,7 @@ def test_verify_tools_require_doc_and_reject_unknown_keys():
 
 def test_should_declare_a_closed_anchor_frame_when_verify_shape_lists_its_input_schema():
     # Arrange
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
 
     # Act
@@ -255,14 +257,14 @@ def test_should_declare_a_closed_anchor_frame_when_verify_shape_lists_its_input_
 
 
 def test_dispatch_verify_recompute_with_unknown_handle_is_invalid_input():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     registry = _registry(caps)
     envelope = registry.dispatch("verify_recompute", {"doc": "fcb-doc:missing"})
     assert envelope["status"] == "INVALID_INPUT"
 
 
 def test_export_tools_require_doc_path_and_reject_unknown_keys():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
     for name in EXPECTED_EXPORT_TOOLS:
         schema = tools[name].inputSchema
@@ -273,7 +275,7 @@ def test_export_tools_require_doc_path_and_reject_unknown_keys():
 
 
 def test_verify_export_tools_require_export_id():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
     for name in ("verify_export_step", "verify_export_stl", "verify_export_3mf"):
         schema = tools[name].inputSchema
@@ -283,14 +285,14 @@ def test_verify_export_tools_require_export_id():
 
 
 def test_export_tools_document_verified_false():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
     for name in EXPECTED_EXPORT_TOOLS:
         assert "verified" in tools[name].description
 
 
 def test_dispatch_export_with_unknown_handle_is_invalid_input():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     registry = _registry(caps)
     for name, args in (
         ("export_step", {"doc": "fcb-doc:missing", "path": "x.step"}),
@@ -310,7 +312,7 @@ TEXT_BLOCK_TOOLS = {"query_tree_summary"}
 
 
 def test_every_tool_has_input_output_schema_and_docstring():
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities.from_env({})
     tools = registered_tools(_registry(caps), caps)
     for tool in tools:
         assert tool.inputSchema, f"{tool.name} missing inputSchema"
@@ -324,31 +326,147 @@ def test_every_tool_has_input_output_schema_and_docstring():
 
 
 def test_tool_names_use_underscore_no_dots():
-    caps = Capabilities(allow_exec=True)
+    caps = Capabilities(script_exec=True)
     tools = registered_tools(_registry(caps), caps)
     for tool in tools:
         assert "." not in tool.name, f"dot in tool name {tool.name} (illegal on the wire)"
         assert "-" not in tool.name
 
 
-def test_debug_exec_present_when_flag_set():
-    caps = Capabilities(allow_exec=True)
-    tools = registered_tools(_registry(caps), caps)
-    names = {t.name for t in tools}
-    assert "debug_exec" in names
+def _listed_tool_names(caps: Capabilities) -> set[str]:
+    return {tool.name for tool in registered_tools(_registry(caps), caps)}
 
 
-def test_debug_exec_absent_in_service_mode_even_when_flag_set():
-    caps = Capabilities(allow_exec=True, service_mode=True)
-    tools = registered_tools(_registry(caps), caps)
-    assert "debug_exec" not in {t.name for t in tools}
+def test_Should_list_script_exec_and_not_debug_exec_When_no_exec_variable_is_set():
+    # Arrange
+    caps = Capabilities.from_env({})
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" in names
+    assert "debug_exec" not in names
 
 
-def test_capabilities_from_env_reads_flag_exactly_one():
-    assert Capabilities.from_env({"FREECAD_BUDDY_ALLOW_EXEC": "1"}).allow_exec is True
-    assert Capabilities.from_env({"FREECAD_BUDDY_ALLOW_EXEC": "0"}).allow_exec is False
-    assert Capabilities.from_env({"FREECAD_BUDDY_ALLOW_EXEC": "true"}).allow_exec is False
-    assert Capabilities.from_env({}).allow_exec is False
+@pytest.mark.parametrize("value", ["0", "", "true"])
+def test_Should_not_list_script_exec_When_the_switch_is_not_exactly_one(value):
+    # Arrange
+    caps = Capabilities.from_env({"FREECAD_BUDDY_SCRIPT_EXEC": value})
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" not in names
+
+
+def test_Should_deny_and_audit_a_direct_script_exec_call_When_the_switch_is_off(tmp_path):
+    # Arrange
+    audit_path = tmp_path / "audit.jsonl"
+    caps = Capabilities.from_env({"FREECAD_BUDDY_SCRIPT_EXEC": "0"})
+    target = build_server(_registry(caps), caps, AuditSink(audit_path))
+
+    # Act
+    result = _call_tool_via_server(target, "script_exec", {"doc": "fcb-doc:D", "code": "1+1"})
+
+    # Assert
+    assert result.structuredContent["status"] == "INVALID_INPUT"
+    message = result.structuredContent["detail"]["message"]
+    for switch in (
+        "FREECAD_BUDDY_SCRIPT_EXEC",
+        "ScriptExec",
+        "FREECAD_BUDDY_UNATTENDED=1",
+        "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1",
+    ):
+        assert switch in message
+    records = _audit_records(audit_path)
+    assert [(r["event"], r["tool"]) for r in records] == [("exec", "script_exec")] * 2
+    assert records[0]["code"] == "1+1"
+    assert records[1]["verify_verdict"] == "INVALID_INPUT"
+
+
+def test_Should_not_list_script_exec_When_the_run_is_marked_unattended():
+    # Arrange
+    caps = Capabilities.from_env({"FREECAD_BUDDY_UNATTENDED": "1"})
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" not in names
+
+
+def test_Should_list_script_exec_When_an_unattended_run_opts_in():
+    # Arrange
+    caps = Capabilities.from_env(
+        {"FREECAD_BUDDY_UNATTENDED": "1", "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED": "1"}
+    )
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" in names
+
+
+def test_Should_not_list_script_exec_When_the_switch_is_off_in_an_opted_in_unattended_run():
+    # Arrange
+    caps = Capabilities.from_env(
+        {
+            "FREECAD_BUDDY_SCRIPT_EXEC": "0",
+            "FREECAD_BUDDY_UNATTENDED": "1",
+            "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED": "1",
+        }
+    )
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" not in names
+
+
+@pytest.mark.parametrize(
+    ("environ", "expected_count"),
+    [({}, 1), ({"FREECAD_BUDDY_SCRIPT_EXEC": "0"}, 0)],
+)
+def test_Should_log_the_script_exec_warning_once_When_exec_is_on(
+    environ, expected_count, caplog, tmp_path
+):
+    # Arrange
+    caps = Capabilities.from_env(environ)
+
+    # Act
+    with caplog.at_level(logging.WARNING, logger="freecad_buddy.mcp_server"):
+        build_server(MethodRegistry(), caps, AuditSink(tmp_path / "audit.jsonl"))
+
+    # Assert
+    warnings = [r for r in caplog.records if r.getMessage() == SCRIPT_EXEC_WARNING]
+    assert len(warnings) == expected_count
+
+
+def test_Should_list_script_exec_When_the_unattended_marker_is_not_exactly_one():
+    # Arrange
+    caps = Capabilities.from_env({"FREECAD_BUDDY_UNATTENDED": "true"})
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" in names
+
+
+def test_Should_not_list_script_exec_When_in_service_mode_with_every_switch_on():
+    # Arrange
+    environ = {"FREECAD_BUDDY_SCRIPT_EXEC": "1", "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED": "1"}
+    caps = Capabilities.from_env(environ, service_mode=True)
+
+    # Act
+    names = _listed_tool_names(caps)
+
+    # Assert
+    assert "script_exec" not in names
 
 
 def test_dispatch_maps_validation_error_to_invalid_input():
@@ -409,8 +527,8 @@ def test_audit_sink_appends_valid_mutation_and_exec_lines(tmp_path):
 
     sink.before("mutation", "document_create", "fcb-doc:abc", {"label": "part"})
     sink.after("mutation", "document_create", "fcb-doc:abc", {"label": "part"}, "OK")
-    sink.before("exec", "debug_exec", "fcb-doc:abc", {"code": "1+1"})
-    sink.after("exec", "debug_exec", "fcb-doc:abc", {"code": "1+1"}, "OK")
+    sink.before("exec", "script_exec", "fcb-doc:abc", {"code": "1+1"})
+    sink.after("exec", "script_exec", "fcb-doc:abc", {"code": "1+1"}, "OK")
 
     schema = _load_schema("audit-record.schema.json")
     lines = audit_path.read_text(encoding="utf-8").splitlines()
@@ -481,7 +599,7 @@ def _server_with_stub(status: str, structured: dict):
             },
         )
     )
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     audit = AuditSink(Path("unused-audit.jsonl"))
     return build_server(registry, caps, audit)
 
@@ -502,7 +620,7 @@ def test_call_tool_non_ok_status_sets_is_error():
 
 def test_should_offer_focus_expand_depth_and_reveal_filters_when_listing_the_tree_tool():
     # Arrange
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
 
     # Act
     tools = {t.name: t for t in registered_tools(_registry(caps), caps)}
@@ -574,7 +692,7 @@ def _suspect_server(behaviors: dict, audit_path: Path):
             return _factory()
 
         registry.register(RpcMethod(name=name, handler=_handler, mutating=mutating))
-    server = build_server(registry, Capabilities(allow_exec=False), AuditSink(audit_path))
+    server = build_server(registry, Capabilities(script_exec=False), AuditSink(audit_path))
     return server, calls
 
 
@@ -704,14 +822,14 @@ def test_build_server_installs_its_audit_sink_as_the_sink_run_mutation_writes_th
     audit = AuditSink(tmp_path / "audit.jsonl")
     previous = confirm.set_approval_sink(None)
     try:
-        build_server(MethodRegistry(), Capabilities(allow_exec=False), audit)
+        build_server(MethodRegistry(), Capabilities(script_exec=False), audit)
 
         assert confirm.host_audit_sink() is audit
     finally:
         confirm.set_approval_sink(previous)
 
 
-def test_a_debug_exec_call_writes_its_before_line_before_the_code_runs(tmp_path):
+def test_a_script_exec_call_writes_its_before_line_before_the_code_runs(tmp_path):
     audit_path = tmp_path / "audit.jsonl"
     seen_while_running: list[list[dict]] = []
 
@@ -721,16 +839,23 @@ def test_a_debug_exec_call_writes_its_before_line_before_the_code_runs(tmp_path)
 
     registry = MethodRegistry()
     registry.register(
-        RpcMethod(name="debug_exec", handler=_exec, mutating=False, audit_event="exec")
+        RpcMethod(
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=_exec,
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+            timeout_s=SCRIPT_EXEC_SPEC.timeout_s,
+        )
     )
-    server = build_server(registry, Capabilities(allow_exec=True), AuditSink(audit_path))
+    server = build_server(registry, Capabilities(script_exec=True), AuditSink(audit_path))
 
-    _call_tool_via_server(server, "debug_exec", {"doc": "fcb-doc:D", "code": "1+1"})
+    _call_tool_via_server(server, "script_exec", {"doc": "fcb-doc:D", "code": "1+1"})
 
     assert len(seen_while_running) == 1
     assert [(r["event"], r.get("code")) for r in seen_while_running[0]] == [("exec", "1+1")]
     records = _audit_records(audit_path)
     assert [r["event"] for r in records] == ["exec", "exec"]
+    assert "verify_verdict" not in records[0]
     assert records[1]["verify_verdict"] == "OK"
 
 
@@ -841,31 +966,31 @@ def test_suspect_state_is_per_server(tmp_path):
 
 
 def _catalog_with_short_exec(monkeypatch, exec_body):
-    """Build the production catalog with ``debug_exec`` on a short budget and a stub body."""
+    """Build the production catalog with ``script_exec`` on a short budget and a stub body."""
     from freecad_buddy.hosts import tool_catalog
 
     monkeypatch.setattr(
         tool_catalog,
-        "DEBUG_EXEC_SPEC",
-        dataclasses.replace(tool_catalog.DEBUG_EXEC_SPEC, timeout_s=_BUDGET),
+        "SCRIPT_EXEC_SPEC",
+        dataclasses.replace(tool_catalog.SCRIPT_EXEC_SPEC, timeout_s=_BUDGET),
     )
-    monkeypatch.setattr(tool_catalog.debug_exec_uc, "debug_exec", exec_body)
+    monkeypatch.setattr(tool_catalog.script_exec_uc, "script_exec", exec_body)
     return tool_catalog.build_inline_handlers(
         DocumentRegistry(),
         tool_catalog.ExportRegistry(),
-        Capabilities(allow_exec=True),
+        Capabilities(script_exec=True),
         Marshal(InlineExecutor()),
         render_port=object(),
     )
 
 
-def test_debug_exec_overrunning_its_budget_times_out_through_the_real_catalog(monkeypatch, release):
+def test_script_exec_overrunning_its_budget_times_out_via_the_real_catalog(monkeypatch, release):
     registry = _catalog_with_short_exec(
         monkeypatch, lambda _registry, _doc, _code: release.wait(30.0)
     )
     started = time.monotonic()
 
-    envelope = registry.dispatch("debug_exec", {"doc": "fcb-doc:D", "code": "pass"})
+    envelope = registry.dispatch("script_exec", {"doc": "fcb-doc:D", "code": "pass"})
 
     elapsed = time.monotonic() - started
     assert envelope["status"] == "TIMEOUT"
@@ -874,8 +999,8 @@ def test_debug_exec_overrunning_its_budget_times_out_through_the_real_catalog(mo
     assert not release.is_set(), "exec body finished on its own; the test proves nothing"
 
 
-def test_only_debug_exec_runs_off_the_main_thread(monkeypatch):
-    """A non-exec tool must stay on the caller's thread; only ``debug_exec`` may be threaded."""
+def test_only_script_exec_runs_off_the_main_thread(monkeypatch):
+    """A non-exec tool must stay on the caller's thread; only ``script_exec`` may be threaded."""
     from freecad_buddy.hosts import tool_catalog
 
     seen: dict[str, int] = {}
@@ -887,14 +1012,14 @@ def test_only_debug_exec_runs_off_the_main_thread(monkeypatch):
     registry = _catalog_with_short_exec(
         monkeypatch,
         lambda _registry, _doc, _code: {
-            "thread": seen.setdefault("debug_exec", threading.get_ident())
+            "thread": seen.setdefault("script_exec", threading.get_ident())
         },
     )
 
-    registry.dispatch("debug_exec", {"doc": "fcb-doc:D", "code": "pass"})
+    registry.dispatch("script_exec", {"doc": "fcb-doc:D", "code": "pass"})
     registry.dispatch("query_tree_summary", {"doc": "fcb-doc:D"})
 
-    assert seen["debug_exec"] != threading.get_ident(), "debug_exec did not run on a worker"
+    assert seen["script_exec"] != threading.get_ident(), "script_exec did not run on a worker"
     assert seen["query_tree_summary"] == threading.get_ident(), (
         "a non-exec tool ran off the main thread"
     )
@@ -949,7 +1074,7 @@ def _tree_server(envelope: dict):
     registry.register(
         RpcMethod(name="tree_tool", handler=lambda **_p: dict(envelope), structured_output=False)
     )
-    return build_server(registry, Capabilities(allow_exec=False), AuditSink(Path("unused.jsonl")))
+    return build_server(registry, Capabilities(script_exec=False), AuditSink(Path("unused.jsonl")))
 
 
 def test_should_send_one_plain_text_block_when_the_tool_has_no_structured_output():
@@ -1041,7 +1166,7 @@ def test_should_keep_a_hand_written_text_when_it_is_not_the_generated_summary():
 def _server_returning(envelope: dict):
     registry = MethodRegistry()
     registry.register(RpcMethod(name="stub_tool", handler=lambda **_p: dict(envelope)))
-    return build_server(registry, Capabilities(allow_exec=False), AuditSink(Path("unused.jsonl")))
+    return build_server(registry, Capabilities(script_exec=False), AuditSink(Path("unused.jsonl")))
 
 
 def test_should_round_to_the_envelope_decimals_and_drop_the_key_when_a_result_is_wrapped():

@@ -1657,3 +1657,23 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-ci-honest-green.md`
   summary: Make the G0.4 CI evidence measure the real headless test count and result instead of the fixed `emit_ci_evidence.py --green true --tests 30`.
   evidence: The headless job always emits green with 30 tests, so the G0.4 half of `ci-check` can fail only on missing evidence (review finding VG2; pre-existing).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
+  summary: The `script_exec` audit record shape in `security-and-service-design.md` §1 (`exec_call`/`exec_result`, `code_sha256`, `caller`) differs from the code (`event:"exec"`, `params_digest`, `code`, no caller identity).
+  evidence: Pre-existing design drift since `72eb277`; with `script_exec` on for any MCP client, the missing caller identity matters more. Decide: correct the design, or add the fields (review finding 16).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
+  summary: `CLAUDE.md`/`AGENTS.md` section 16 says headless automation is unaffected, but the headless `tools/list` now includes `script_exec`, and no CI job, `run_mcp_*` sweep or bmad-loop run sets `FREECAD_BUDDY_UNATTENDED=1`.
+  evidence: Default flipped to on (Story 12.1); decide whether automation without a human sets the marker, then fix the agent-context text (review finding 17).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
+  summary: Audit records carry `"actor": "operator"` for every call, including agent `script_exec` calls.
+  evidence: `AuditSink.__init__(path, actor="operator")` is a pre-existing default; a log reader can take an agent script for an operator action (review finding 20).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
+  summary: The GUI proxy answers a direct `script_exec` call while it is off with `unknown method` and writes no audit pair; only `build_server` has the denied path.
+  evidence: Pre-existing: `build_proxy_server` (`hosts/gui_external/entry.py`) never had a denied branch for `debug_exec` either (review finding 23).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
+  summary: A hand-started or orphan MCP proxy lists `script_exec` from its own environment while the GUI listener has it off (`ScriptExec` cleared), so calls fail with `unknown method`.
+  evidence: `gui_external/entry.py:185` reads `Capabilities.from_env` of the proxy process only; the new default-on makes the mismatch reachable. Possible fix: AND with the listener handshake `exec_enabled`. Related to Story 10.6 AC4 orphan proxies (review finding 24).

@@ -33,7 +33,7 @@ FINGERPRINT = "a" * 64
 
 
 def _tools() -> dict:
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     registry = build_registry(DocumentRegistry(), caps, Marshal(InlineExecutor()))
     return {t.name: t for t in registered_tools(registry, caps)}
 
@@ -237,8 +237,8 @@ def test_capabilities_reads_the_auto_approve_flag_on_unless_set_to_another_value
 
 
 def test_a_code_constructed_capability_record_keeps_auto_approve_off():
-    assert auto_approve_enabled(Capabilities(allow_exec=False)) is False
-    assert auto_approve_enabled(Capabilities(allow_exec=False, auto_approve=True)) is True
+    assert auto_approve_enabled(Capabilities(script_exec=False)) is False
+    assert auto_approve_enabled(Capabilities(script_exec=False, auto_approve=True)) is True
 
 
 def test_the_auto_approve_posture_approves_without_a_token():
@@ -260,13 +260,13 @@ def test_building_the_catalog_applies_the_posture_to_the_process():
     try:
         build_registry(
             DocumentRegistry(),
-            Capabilities(allow_exec=False, auto_approve=True),
+            Capabilities(script_exec=False, auto_approve=True),
             Marshal(InlineExecutor()),
         )
         assert confirm.auto_approve() is True
         build_registry(
             DocumentRegistry(),
-            Capabilities(allow_exec=False, auto_approve=False),
+            Capabilities(script_exec=False, auto_approve=False),
             Marshal(InlineExecutor()),
         )
         assert confirm.auto_approve() is False
@@ -289,7 +289,7 @@ def test_building_the_readonly_profile_does_not_touch_the_posture():
         build_readonly_profile(
             DocumentRegistry(),
             ExportRegistry(),
-            Capabilities(allow_exec=False, auto_approve=True),
+            Capabilities(script_exec=False, auto_approve=True),
             Marshal(InlineExecutor()),
         )
         assert confirm.auto_approve() is False

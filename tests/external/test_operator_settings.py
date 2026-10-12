@@ -66,7 +66,9 @@ def test_Should_write_the_default_flags_When_the_preferences_are_defaults():
 
     # Assert
     assert overlay["FREECAD_BUDDY_AUTO_APPROVE"] == "1"
-    assert overlay["FREECAD_BUDDY_ALLOW_EXEC"] == "0"
+    assert overlay["FREECAD_BUDDY_SCRIPT_EXEC"] == "1"
+    assert "FREECAD_BUDDY_UNATTENDED" not in overlay
+    assert "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED" not in overlay
     assert "FREECAD_BUDDY_NO_AUTO_MCP" not in overlay
     assert "FREECAD_BUDDY_MCP_CMD" not in overlay
 
@@ -82,15 +84,15 @@ def test_Should_write_no_auto_mcp_When_auto_start_is_off():
     assert overlay["FREECAD_BUDDY_NO_AUTO_MCP"] == "1"
 
 
-def test_Should_write_allow_exec_1_and_the_mcp_command_When_the_preferences_set_them():
+def test_Should_write_script_exec_0_and_the_mcp_command_When_the_preferences_set_them():
     # Arrange
-    prefs = PreferenceValues(allow_exec=True, mcp_command="uv run freecad-buddy serve")
+    prefs = PreferenceValues(script_exec=False, mcp_command="uv run freecad-buddy serve")
 
     # Act
     overlay = resolve_env_overlay({}, prefs, DEFAULT_DIR)
 
     # Assert
-    assert overlay["FREECAD_BUDDY_ALLOW_EXEC"] == "1"
+    assert overlay["FREECAD_BUDDY_SCRIPT_EXEC"] == "0"
     assert overlay["FREECAD_BUDDY_MCP_CMD"] == "uv run freecad-buddy serve"
 
 
@@ -98,7 +100,7 @@ def test_Should_return_an_empty_overlay_When_the_env_sets_every_variable():
     # Arrange
     environ = {
         "FREECAD_BUDDY_AUTO_APPROVE": "0",
-        "FREECAD_BUDDY_ALLOW_EXEC": "1",
+        "FREECAD_BUDDY_SCRIPT_EXEC": "1",
         "FREECAD_BUDDY_NO_AUTO_MCP": "1",
         "FREECAD_BUDDY_MCP_CMD": "custom",
         "FREECAD_BUDDY_AUDIT_LOG": "audit.jsonl",
@@ -139,23 +141,25 @@ def test_Should_apply_the_auto_start_and_command_preferences_When_the_env_sets_t
     assert overlay["FREECAD_BUDDY_MCP_CMD"] == "custom-proxy"
 
 
-def test_Should_keep_an_empty_flag_When_the_env_sets_auto_approve_or_allow_exec_empty():
+def test_Should_keep_an_empty_flag_When_the_env_sets_auto_approve_or_script_exec_empty():
     # Arrange
-    environ = {"FREECAD_BUDDY_AUTO_APPROVE": "", "FREECAD_BUDDY_ALLOW_EXEC": ""}
-    prefs = PreferenceValues(allow_exec=True)
+    environ = {"FREECAD_BUDDY_AUTO_APPROVE": "", "FREECAD_BUDDY_SCRIPT_EXEC": ""}
+    prefs = PreferenceValues(script_exec=True)
 
     # Act
     overlay = resolve_env_overlay(environ, prefs, DEFAULT_DIR)
 
     # Assert
     assert "FREECAD_BUDDY_AUTO_APPROVE" not in overlay
-    assert "FREECAD_BUDDY_ALLOW_EXEC" not in overlay
+    assert "FREECAD_BUDDY_SCRIPT_EXEC" not in overlay
 
 
 def test_Should_list_only_the_variables_that_count_as_set_When_reading_overrides():
     # Arrange
     environ = {
         "FREECAD_BUDDY_AUTO_APPROVE": "",
+        "FREECAD_BUDDY_UNATTENDED": "",
+        "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED": "1",
         "FREECAD_BUDDY_AUDIT_LOG": "D:/audit.jsonl",
         "FREECAD_BUDDY_MCP_CMD": "",
         "PATH": "C:/Windows",
@@ -167,5 +171,7 @@ def test_Should_list_only_the_variables_that_count_as_set_When_reading_overrides
     # Assert
     assert overrides == {
         "FREECAD_BUDDY_AUTO_APPROVE": "",
+        "FREECAD_BUDDY_UNATTENDED": "",
+        "FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED": "1",
         "FREECAD_BUDDY_AUDIT_LOG": "D:/audit.jsonl",
     }

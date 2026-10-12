@@ -17,7 +17,12 @@ import FreeCAD  # noqa: F401 - FreeCAD init puts its Ext/PySide shim on sys.path
 
 from freecad_buddy.hosts.gui_addon import bootstrap, managed_venv
 from freecad_buddy.usecases import shim
-from freecad_buddy.usecases.operator_settings import OPERATOR_VARIABLES, PreferenceValues
+from freecad_buddy.usecases.capabilities import Capabilities, exec_registered
+from freecad_buddy.usecases.operator_settings import (
+    OPERATOR_VARIABLES,
+    PreferenceValues,
+    resolve_env_overlay,
+)
 
 
 class _StopAtCapabilityRead(Exception):
@@ -55,7 +60,10 @@ class StartBridgeSettingsTest(_TempEnvTest):
             return_value=PreferenceValues(auto_approve=False),
         )
         self._patch(bootstrap, "sweep_temp_dir", side_effect=self._record_sweep)
-        self._patch(bootstrap.Capabilities, "from_env", side_effect=self._record_capability_read)
+        self._real_capability_read = bootstrap.Capabilities.from_env
+        self.capability_read = self._patch(
+            bootstrap.Capabilities, "from_env", side_effect=self._record_capability_read
+        )
 
     def _record_sweep(self):
         self.sweep_workdir.append(os.environ.get("FREECAD_BUDDY_WORKDIR"))
@@ -87,6 +95,34 @@ class StartBridgeSettingsTest(_TempEnvTest):
 
         # Assert
         self.assertEqual(self.capability_env["FREECAD_BUDDY_AUTO_APPROVE"], "1")
+
+    def _start_logs_past_the_capability_read(self) -> list[str]:
+        self.capability_read.side_effect = self._real_capability_read
+        self._patch(bootstrap, "QtMainThreadExecutor", side_effect=_StopAtCapabilityRead)
+        with self.assertLogs(bootstrap.logger, "INFO") as logs:
+            with self.assertRaises(_StopAtCapabilityRead):
+                bootstrap.start_bridge()
+        return [record.getMessage() for record in logs.records]
+
+    def test_Should_log_the_script_exec_warning_When_exec_is_on(self):
+        # Arrange
+        expected = bootstrap.SCRIPT_EXEC_WARNING
+
+        # Act
+        messages = self._start_logs_past_the_capability_read()
+
+        # Assert
+        self.assertEqual(messages.count(expected), 1)
+
+    def test_Should_not_log_the_script_exec_warning_When_the_env_turns_exec_off(self):
+        # Arrange
+        os.environ["FREECAD_BUDDY_SCRIPT_EXEC"] = "0"
+
+        # Act
+        messages = self._start_logs_past_the_capability_read()
+
+        # Assert
+        self.assertNotIn(bootstrap.SCRIPT_EXEC_WARNING, messages)
 
     def test_Should_sweep_the_data_dir_workdir_When_no_workdir_is_configured(self):
         # Arrange
@@ -272,7 +308,14 @@ class AddonRootTest(unittest.TestCase):
         self.assertEqual(root / "freecad_buddy" / "hosts" / "gui_addon" / "bootstrap.py", expected)
 
 
-_BOOL_KEYS = (shim.AUTO_APPROVE_KEY, shim.ALLOW_EXEC_KEY, shim.AUTO_START_MCP_KEY)
+# A user.cfg can still hold this key; nothing reads it, so a stored value must not turn exec off.
+_STALE_ALLOW_EXEC_KEY = "AllowExec"
+_BOOL_KEYS = (
+    shim.AUTO_APPROVE_KEY,
+    shim.SCRIPT_EXEC_KEY,
+    shim.AUTO_START_MCP_KEY,
+    _STALE_ALLOW_EXEC_KEY,
+)
 _STRING_KEYS = (shim.MCP_COMMAND_KEY, shim.UV_PATH_KEY, shim.AUDIT_LOG_PATH_KEY)
 
 
@@ -314,7 +357,7 @@ class ReadOperatorPreferencesTest(unittest.TestCase):
     def test_Should_map_each_key_When_every_key_is_stored(self):
         # Arrange
         self.group.SetBool(shim.AUTO_APPROVE_KEY, False)
-        self.group.SetBool(shim.ALLOW_EXEC_KEY, True)
+        self.group.SetBool(shim.SCRIPT_EXEC_KEY, False)
         self.group.SetBool(shim.AUTO_START_MCP_KEY, False)
         self.group.SetString(shim.MCP_COMMAND_KEY, "custom-proxy")
         self.group.SetString(shim.UV_PATH_KEY, "D:/tools/uv.exe")
@@ -328,13 +371,26 @@ class ReadOperatorPreferencesTest(unittest.TestCase):
             values,
             PreferenceValues(
                 auto_approve=False,
-                allow_exec=True,
+                script_exec=False,
                 auto_start_mcp=False,
                 mcp_command="custom-proxy",
                 uv_path="D:/tools/uv.exe",
                 audit_log_path="D:/logs/audit.jsonl",
             ),
         )
+
+    def test_Should_register_script_exec_When_only_a_stale_allow_exec_false_is_stored(self):
+        # Arrange
+        self.group.SetBool(_STALE_ALLOW_EXEC_KEY, False)
+
+        # Act
+        values = shim.read_operator_preferences()
+        overlay = resolve_env_overlay({}, values, Path(tempfile.gettempdir()))
+        registered = exec_registered(Capabilities.from_env(overlay))
+
+        # Assert
+        self.assertTrue(values.script_exec)
+        self.assertTrue(registered)
 
 
 class StopBridgeTest(_TempEnvTest):

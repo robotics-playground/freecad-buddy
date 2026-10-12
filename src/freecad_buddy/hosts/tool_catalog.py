@@ -8,7 +8,7 @@ the use-case registries.
 passed each handler is wrapped in ``marshal.call`` (the headless inline host, whose
 ``InlineExecutor`` is a same-thread no-op); when ``marshal`` is ``None`` the handler calls the
 use case directly (the listener path, where the ``RpcListener`` owns the single ``marshal.call``
-and a second layer would deadlock the Qt main thread). ``debug_exec`` is the one exception on
+and a second layer would deadlock the Qt main thread). ``script_exec`` is the one exception on
 the inline host: it gets a further bounded layer that runs the exec body on a worker thread so
 its declared budget is enforced.
 """
@@ -23,7 +23,7 @@ from freecad_buddy.adapters.marshal import Marshal, ThreadExecutor
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, RenderPort, ViewportPort, with_framing_text
-from freecad_buddy.usecases import debug_exec as debug_exec_uc
+from freecad_buddy.usecases import script_exec as script_exec_uc
 from freecad_buddy.usecases import (
     confirm,
     exports,
@@ -951,7 +951,7 @@ def _view_fit_spec():
 # assistant needs `document_open` to load the fixture it answers about. The allow-list names the
 # seven read-only queries, the three read-only verifiers, and the three non-geometry
 # document-lifecycle tools; every geometry-mutation tool (`sketch_*`/`feature_*`/`preview_*`/
-# `document_create`/`document_save`/`debug_exec`) is absent by construction.
+# `document_create`/`document_save`/`script_exec`) is absent by construction.
 # Four read-only (`mutating=False`) tools are also deliberately excluded: `verify_export_step`/
 # `_stl`/`_3mf` require an `export_id` from a prior export (a mutation the read-only assistant
 # cannot perform, so they are inert here), and `query_screenshot` is a render the text-QA
@@ -989,7 +989,7 @@ def preview_op_table() -> dict:
     Derived from the catalog's own ``sketch_*``/``feature_*`` spec lists intersected with the
     matching module-level use-case functions, so a tool registered without becoming previewable
     (or the reverse) is a mismatch the tests catch rather than a hand-maintained name list that
-    drifts. ``debug_exec`` is excluded structurally: it is in neither spec list and carries
+    drifts. ``script_exec`` is excluded structurally: it is in neither spec list and carries
     neither name prefix.
 
     The entries are the bare use-case functions, not the wired handlers: the handlers close over
@@ -1048,10 +1048,10 @@ READ_ONLY_PROFILE = frozenset(
 )
 
 
-DEBUG_EXEC_SPEC = ToolSpec(
-    name="debug_exec",
+SCRIPT_EXEC_SPEC = ToolSpec(
+    name="script_exec",
     make_handler=lambda doc_registry, export_registry, caps, render_port, viewport_port: (
-        lambda **params: debug_exec_uc.debug_exec(
+        lambda **params: script_exec_uc.script_exec(
             doc_registry, params.get("doc"), params.get("code", "")
         )
     ),
@@ -1061,8 +1061,11 @@ DEBUG_EXEC_SPEC = ToolSpec(
         "required": ["doc", "code"],
         "additionalProperties": False,
     },
-    description="Operator-only Python exec for bring-up. Off unless "
-    "FREECAD_BUDDY_ALLOW_EXEC=1; every call is audit-logged.",
+    description="Run Python inside FreeCAD for an operation no typed tool covers. Globals: "
+    "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. Raw: no transaction, "
+    "fingerprint or rollback. Open and commit a transaction in the script so `document_undo` "
+    "covers it, and check geometry with `verify_*` afterwards. Every call is audit-logged with "
+    "its source.",
     timeout_s=30.0,
     mutating=True,
     audit_event="exec",
@@ -1070,7 +1073,7 @@ DEBUG_EXEC_SPEC = ToolSpec(
 
 
 def tool_specs() -> list[ToolSpec]:
-    """The ordered tool surface, excluding ``debug_exec`` (gated via ``DEBUG_EXEC_SPEC``)."""
+    """The ordered tool surface, excluding ``script_exec`` (gated via ``SCRIPT_EXEC_SPEC``)."""
     return [
         _doc_method(
             "document_create",
@@ -1502,7 +1505,7 @@ def build_inline_handlers(
     other host injects ``None``. It is threaded into every ``make_handler``; a host without one
     passes ``None`` and ``view_fit_viewport``, its only consumer, degrades honestly.
 
-    With a ``marshal``, ``debug_exec`` alone gets an inner bounded marshal so its body runs on a
+    With a ``marshal``, ``script_exec`` alone gets an inner bounded marshal so its body runs on a
     worker thread and its budget is enforced; every other tool stays on the calling thread.
 
     The auto-approve posture is applied to the process here rather than closed into each mutation
@@ -1538,11 +1541,11 @@ def build_inline_handlers(
 
     specs = list(tool_specs())
     if exec_registered(caps):
-        specs.append(DEBUG_EXEC_SPEC)
+        specs.append(SCRIPT_EXEC_SPEC)
 
     for spec in specs:
         raw = spec.make_handler(doc_registry, export_registry, caps, port, viewport_port)
-        if spec.name == "debug_exec":
+        if spec.name == "script_exec":
             raw = bound_off_main_thread(raw, spec.timeout_s)
         framed = with_framing(raw, doc_registry, viewport_port)
         methods.register(
@@ -1592,7 +1595,7 @@ def build_readonly_profile(
     Builds the full catalog registry via ``build_inline_handlers`` (so each tool is wired exactly
     as the production server wires it), then re-registers only the methods whose name is in the
     allow-list. Every geometry-mutation tool is absent because it is not in the allow-list —
-    ``debug_exec`` is excluded even when exec is enabled. The returned registry is the same shape
+    ``script_exec`` is excluded even when exec is enabled. The returned registry is the same shape
     the MCP server consumes, so the assistant drives the identical tool surface (no private path).
 
     The auto-approve posture is not applied: this build is a means of wiring handlers, not a host
@@ -1609,8 +1612,8 @@ def build_readonly_profile(
 
 
 __all__ = [
-    "DEBUG_EXEC_SPEC",
     "READ_ONLY_PROFILE",
+    "SCRIPT_EXEC_SPEC",
     "ToolSpec",
     "build_inline_handlers",
     "build_readonly_profile",
