@@ -32,7 +32,7 @@ from freecad_buddy.adapters.mcp_server import (
 from freecad_buddy.adapters.rpc_client import RpcClient
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.contracts import DEFAULT_DISPLAY_DECIMALS
-from freecad_buddy.hosts.tool_catalog import DEBUG_EXEC_SPEC, tool_specs
+from freecad_buddy.hosts.tool_catalog import SCRIPT_EXEC_SPEC, tool_specs
 
 logger = logging.getLogger("freecad_buddy.hosts.gui_external")
 
@@ -112,7 +112,7 @@ def build_proxy_registry(client: RpcClient, caps: Capabilities) -> MethodRegistr
 
     specs = list(tool_specs())
     if exec_registered(caps):
-        specs.append(DEBUG_EXEC_SPEC)
+        specs.append(SCRIPT_EXEC_SPEC)
 
     for spec in specs:
         if spec.name in _MESH_VERIFY_SELF_READ:

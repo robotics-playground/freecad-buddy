@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.mcp_server import Capabilities, _to_call_result
 from freecad_buddy.hosts.gui_external.entry import build_proxy_registry
@@ -63,7 +65,7 @@ def test_should_run_the_oracle_and_round_at_freecad_decimals_when_a_proxy_verifi
         },
     )
     registry = build_proxy_registry(
-        _FakeClient(_self_read_envelope(4)), Capabilities(allow_exec=False)
+        _FakeClient(_self_read_envelope(4)), Capabilities(script_exec=False)
     )
 
     # Act
@@ -92,7 +94,7 @@ def test_should_send_the_tree_without_structured_content_when_the_proxy_serves_t
         "text_blocks": [tree],
         "display_decimals": 2,
     }
-    caps = Capabilities(allow_exec=False)
+    caps = Capabilities(script_exec=False)
     server = build_proxy_server(build_proxy_registry(_FakeClient(envelope), caps), caps)
     request = types.CallToolRequest(
         method="tools/call",
@@ -105,3 +107,18 @@ def test_should_send_the_tree_without_structured_content_when_the_proxy_serves_t
     # Assert
     assert result.structuredContent is None
     assert [block.text for block in result.content] == [f"OK: 3 objects, 2 shown.\n{tree}"]
+
+
+@pytest.mark.parametrize(
+    ("environ", "listed"),
+    [({}, True), ({"FREECAD_BUDDY_SCRIPT_EXEC": "0"}, False)],
+)
+def test_should_follow_the_exec_switch_when_the_proxy_builds_its_registry(environ, listed):
+    # Arrange
+    caps = Capabilities.from_env(environ)
+
+    # Act
+    registry = build_proxy_registry(_FakeClient(_self_read_envelope(4)), caps)
+
+    # Assert
+    assert ("script_exec" in {method.name for method in registry.methods()}) is listed

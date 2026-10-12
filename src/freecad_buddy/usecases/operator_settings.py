@@ -12,9 +12,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-from freecad_buddy.usecases.capabilities import AUTO_APPROVE_VARIABLE
+from freecad_buddy.usecases.capabilities import (
+    AUTO_APPROVE_VARIABLE,
+    SCRIPT_EXEC_UNATTENDED_VARIABLE,
+    SCRIPT_EXEC_VARIABLE,
+    UNATTENDED_VARIABLE,
+)
 
-ALLOW_EXEC_VARIABLE = "FREECAD_BUDDY_ALLOW_EXEC"
 NO_AUTO_MCP_VARIABLE = "FREECAD_BUDDY_NO_AUTO_MCP"
 MCP_CMD_VARIABLE = "FREECAD_BUDDY_MCP_CMD"
 AUDIT_LOG_VARIABLE = "FREECAD_BUDDY_AUDIT_LOG"
@@ -22,7 +26,9 @@ WORKDIR_VARIABLE = "FREECAD_BUDDY_WORKDIR"
 
 OPERATOR_VARIABLES = (
     AUTO_APPROVE_VARIABLE,
-    ALLOW_EXEC_VARIABLE,
+    SCRIPT_EXEC_VARIABLE,
+    UNATTENDED_VARIABLE,
+    SCRIPT_EXEC_UNATTENDED_VARIABLE,
     NO_AUTO_MCP_VARIABLE,
     MCP_CMD_VARIABLE,
     AUDIT_LOG_VARIABLE,
@@ -35,7 +41,7 @@ class PreferenceValues:
     """The operator settings stored on the FreeCAD Buddy preference page."""
 
     auto_approve: bool = True
-    allow_exec: bool = False
+    script_exec: bool = True
     auto_start_mcp: bool = True
     mcp_command: str = ""
     uv_path: str = ""
@@ -49,11 +55,16 @@ def _flag(enabled: bool) -> str:
 def variable_is_set(environ: Mapping[str, str], name: str) -> bool:
     """Whether ``environ`` sets the operator variable ``name``, so it wins over the preference.
 
-    The two flags count as set when present, even empty, because ``Capabilities.from_env`` reads
+    The flags count as set when present, even empty, because ``Capabilities.from_env`` reads
     an empty flag as off. A path or command counts only when non-empty: the host treats an empty
     one as absent, and an empty ``FREECAD_BUDDY_AUDIT_LOG`` would name no file.
     """
-    if name in (AUTO_APPROVE_VARIABLE, ALLOW_EXEC_VARIABLE):
+    if name in (
+        AUTO_APPROVE_VARIABLE,
+        SCRIPT_EXEC_VARIABLE,
+        UNATTENDED_VARIABLE,
+        SCRIPT_EXEC_UNATTENDED_VARIABLE,
+    ):
         return name in environ
     return bool(environ.get(name))
 
@@ -73,7 +84,7 @@ def resolve_env_overlay(
     """
     wanted = {
         AUTO_APPROVE_VARIABLE: _flag(prefs.auto_approve),
-        ALLOW_EXEC_VARIABLE: _flag(prefs.allow_exec),
+        SCRIPT_EXEC_VARIABLE: _flag(prefs.script_exec),
         AUDIT_LOG_VARIABLE: prefs.audit_log_path or str(default_dir / "audit.jsonl"),
         WORKDIR_VARIABLE: str(default_dir / "workdir"),
     }

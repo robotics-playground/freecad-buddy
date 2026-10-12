@@ -11,21 +11,20 @@ from __future__ import annotations
 import FreeCAD
 from PySide import QtWidgets
 
-from freecad_buddy.usecases.capabilities import AUTO_APPROVE_VARIABLE
+from freecad_buddy.usecases.capabilities import AUTO_APPROVE_VARIABLE, SCRIPT_EXEC_VARIABLE
 from freecad_buddy.usecases.operator_settings import (
-    ALLOW_EXEC_VARIABLE,
     AUDIT_LOG_VARIABLE,
     MCP_CMD_VARIABLE,
     NO_AUTO_MCP_VARIABLE,
 )
 from freecad_buddy.usecases.shim import (
-    ALLOW_EXEC_KEY,
     AUDIT_LOG_PATH_KEY,
     AUTO_APPROVE_KEY,
     AUTO_START_MCP_KEY,
     BUDDY_PARAM_PATH,
     MCP_COMMAND_KEY,
     ROUND_TO_DISPLAY_KEY,
+    SCRIPT_EXEC_KEY,
     UV_PATH_KEY,
     read_operator_preferences,
 )
@@ -45,11 +44,15 @@ class PreferencesPage:
             "On: a sketch_* or feature_* call applies without a preview. Off: every mutation needs "
             "the preview_id of a preview_dry_run. FREECAD_BUDDY_AUTO_APPROVE overrides this."
         )
-        self.allow_exec = QtWidgets.QCheckBox("Allow debug_exec")
-        self.allow_exec.setToolTip("Registers debug_exec. FREECAD_BUDDY_ALLOW_EXEC overrides this.")
+        self.script_exec = QtWidgets.QCheckBox("Allow script_exec")
+        self.script_exec.setToolTip(
+            "Registers script_exec. FREECAD_BUDDY_SCRIPT_EXEC overrides this. "
+            "FREECAD_BUDDY_UNATTENDED=1 turns it off unless FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1."
+        )
         exec_warning = QtWidgets.QLabel(
-            "debug_exec runs any Python inside FreeCAD. Turn it on only for trusted bring-up, "
-            "never for an unattended agent."
+            "script_exec runs any Python inside FreeCAD with your user rights, for any MCP client "
+            "of this bridge. Turn it off when you do not trust the agent or what it reads. For an "
+            "unattended agent, set FREECAD_BUDDY_UNATTENDED=1 or use an isolated computer."
         )
         exec_warning.setWordWrap(True)
         exec_warning.setStyleSheet("color: red;")
@@ -84,7 +87,7 @@ class PreferencesPage:
         layout = QtWidgets.QVBoxLayout(self.form)
         layout.addWidget(self.round_to_display)
         layout.addWidget(self.auto_approve)
-        layout.addWidget(self.allow_exec)
+        layout.addWidget(self.script_exec)
         layout.addWidget(exec_warning)
         layout.addWidget(self.auto_start_mcp)
         layout.addLayout(fields)
@@ -97,7 +100,7 @@ class PreferencesPage:
         self.round_to_display.setChecked(preferences.GetBool(ROUND_TO_DISPLAY_KEY, True))
         values = read_operator_preferences()
         self.auto_approve.setChecked(values.auto_approve)
-        self.allow_exec.setChecked(values.allow_exec)
+        self.script_exec.setChecked(values.script_exec)
         self.auto_start_mcp.setChecked(values.auto_start_mcp)
         self.mcp_command.setText(values.mcp_command)
         self.uv_path.setText(values.uv_path)
@@ -111,7 +114,7 @@ class PreferencesPage:
         overrides = startup_overrides()
         fields = {
             AUTO_APPROVE_VARIABLE: self.auto_approve,
-            ALLOW_EXEC_VARIABLE: self.allow_exec,
+            SCRIPT_EXEC_VARIABLE: self.script_exec,
             NO_AUTO_MCP_VARIABLE: self.auto_start_mcp,
             MCP_CMD_VARIABLE: self.mcp_command,
             AUDIT_LOG_VARIABLE: self.audit_log_path,
@@ -141,7 +144,7 @@ class PreferencesPage:
         # stored preference with a value the operator never chose.
         for key, box in (
             (AUTO_APPROVE_KEY, self.auto_approve),
-            (ALLOW_EXEC_KEY, self.allow_exec),
+            (SCRIPT_EXEC_KEY, self.script_exec),
             (AUTO_START_MCP_KEY, self.auto_start_mcp),
         ):
             if box.isEnabled():

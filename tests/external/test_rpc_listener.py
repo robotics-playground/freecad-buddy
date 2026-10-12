@@ -16,6 +16,7 @@ import time
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.adapters.rpc_listener import RpcListener
+from freecad_buddy.hosts.tool_catalog import SCRIPT_EXEC_SPEC
 from freecad_buddy.usecases import confirm
 from freecad_buddy.usecases.documents import ValidationError
 
@@ -507,7 +508,7 @@ def test_listener_writes_the_before_line_of_a_refused_call_after_it_ran(tmp_path
         listener.stop()
 
 
-def test_listener_writes_the_before_line_of_a_debug_exec_call_before_it_runs(tmp_path):
+def test_listener_writes_the_before_line_of_a_script_exec_call_before_it_runs(tmp_path):
     audit = RecordingAudit()
     order = []
     audit_before = audit.before
@@ -525,18 +526,22 @@ def test_listener_writes_the_before_line_of_a_debug_exec_call_before_it_runs(tmp
     registry = MethodRegistry()
     registry.register(
         RpcMethod(
-            name="debug_exec", handler=_exec, mutating=False, audit_event="exec", timeout_s=0.5
+            name=SCRIPT_EXEC_SPEC.name,
+            handler=_exec,
+            mutating=SCRIPT_EXEC_SPEC.mutating,
+            audit_event=SCRIPT_EXEC_SPEC.audit_event,
+            timeout_s=SCRIPT_EXEC_SPEC.timeout_s,
         )
     )
     listener, host, port = _start_listener(registry, ThreadedExecutor(), tmp_path, audit=audit)
     try:
         conn = Conn(host, port)
         conn.hello()
-        conn.call("debug_exec", {"doc": "fcb-doc:a", "code": "1+1"})
+        conn.call("script_exec", {"doc": "fcb-doc:a", "code": "1+1"})
         time.sleep(0.05)
         assert order == ["before", "handler"]
-        assert audit.before_calls == [("exec", "debug_exec", "fcb-doc:a")]
-        assert audit.after_calls == [("exec", "debug_exec", "fcb-doc:a", "OK")]
+        assert audit.before_calls == [("exec", "script_exec", "fcb-doc:a")]
+        assert audit.after_calls == [("exec", "script_exec", "fcb-doc:a", "OK")]
         conn.close()
     finally:
         listener.stop()

@@ -4,7 +4,7 @@ Prove the G1.6 read-only guarantee at the profile level: the ``READ_ONLY_PROFILE
 exactly the read-only queries + read-only verifiers + non-geometry document lifecycle, and the
 built profile registry registers ZERO geometry-mutation tools. The absence set is the
 geometry/model-mutation set (``feature_*``/``sketch_*``/``preview_*``/``document_create``/
-``document_save``/``debug_exec``), asserted explicitly — not ``all(not mutating)`` — because
+``document_save``/``script_exec``), asserted explicitly — not ``all(not mutating)`` — because
 ``document_open``/``close`` carry ``mutating=True`` yet are non-geometry lifecycle the assistant
 needs.
 """
@@ -14,8 +14,8 @@ from __future__ import annotations
 from freecad_buddy.adapters.marshal import InlineExecutor, Marshal
 from freecad_buddy.adapters.mcp_server import Capabilities
 from freecad_buddy.hosts.tool_catalog import (
-    DEBUG_EXEC_SPEC,
     READ_ONLY_PROFILE,
+    SCRIPT_EXEC_SPEC,
     ToolSpec,
     build_readonly_profile,
     tool_specs,
@@ -64,12 +64,12 @@ GEOMETRY_MUTATION_TOOLS = {
     "export_step",
     "export_stl",
     "export_3mf",
-    "debug_exec",
+    "script_exec",
 }
 
 
 def _catalog_names() -> set[str]:
-    return {spec.name for spec in tool_specs()} | {DEBUG_EXEC_SPEC.name}
+    return {spec.name for spec in tool_specs()} | {SCRIPT_EXEC_SPEC.name}
 
 
 def test_allow_list_matches_expected_read_only_set():
@@ -106,7 +106,7 @@ def test_profile_excludes_every_mutating_geometry_spec():
     but are the non-geometry lifecycle the assistant is explicitly allowed. So the assertion is
     scoped to the geometry-mutation names, not all ``mutating=True`` specs.
     """
-    specs: list[ToolSpec] = [*tool_specs(), DEBUG_EXEC_SPEC]
+    specs: list[ToolSpec] = [*tool_specs(), SCRIPT_EXEC_SPEC]
     for spec in specs:
         if spec.name in GEOMETRY_MUTATION_TOOLS:
             assert spec.name not in READ_ONLY_PROFILE, spec.name
@@ -128,7 +128,7 @@ def _real_profile():
     return build_readonly_profile(
         DocumentRegistry(),
         ExportRegistry(),
-        Capabilities(allow_exec=False),
+        Capabilities(script_exec=False),
         Marshal(InlineExecutor()),
         OffscreenRenderPort(),
     )

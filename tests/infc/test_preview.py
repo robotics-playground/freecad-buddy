@@ -384,10 +384,10 @@ class RejectedOperationTest(_PreviewFixture):
         with self.assertRaises(ValidationError):
             self._preview(operation={"tool": "query_mass_properties", "args": {}})
 
-    def test_debug_exec_is_not_previewable(self):
-        self.assertNotIn("debug_exec", self.op_table)
+    def test_script_exec_is_not_previewable(self):
+        self.assertNotIn("script_exec", self.op_table)
         with self.assertRaises(ValidationError):
-            self._preview(operation={"tool": "debug_exec", "args": {"code": "1"}})
+            self._preview(operation={"tool": "script_exec", "args": {"code": "1"}})
 
     def test_a_missing_operation_is_invalid_input(self):
         with self.assertRaises(ValidationError):

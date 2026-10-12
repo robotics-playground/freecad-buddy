@@ -13,7 +13,7 @@ context:
 
 ## Intent
 
-**Problem:** The headless H1 host bounds only `debug_exec`. Every other tool runs inline on the asyncio thread through `Marshal(InlineExecutor())`, so its registry `timeout_s` is never enforced: a 130 s `verify_recompute` returned `OK` (TC-10-11). After a `debug_exec` `TIMEOUT`, the abandoned body still holds the `DocumentRegistry` lock, so the next call blocked 11.3 s (F-33). This is Story 10.6 goal A (AC1, AC2).
+**Problem:** The headless H1 host bounds only `script_exec`. Every other tool runs inline on the asyncio thread through `Marshal(InlineExecutor())`, so its registry `timeout_s` is never enforced: a 130 s `verify_recompute` returned `OK` (TC-10-11). After a `script_exec` `TIMEOUT`, the abandoned body still holds the `DocumentRegistry` lock, so the next call blocked 11.3 s (F-33). This is Story 10.6 goal A (AC1, AC2).
 
 **Approach:** H1 adopts the GUI thread model. FreeCAD runs on the process main thread, which pumps a job queue. The MCP stdio server runs on a background thread and submits each call through `Marshal.call(fn, spec.timeout_s)`, so every tool's budget is real. While a timed-out body still runs, the session is quarantined: each new call returns `TIMEOUT` at once, without dispatch, and without waiting on any lock. The quarantine lifts by itself when the body returns.
 
@@ -56,7 +56,7 @@ context:
 
 - `src/freecad_buddy/adapters/marshal.py:26-87` -- `InlineExecutor`, `ThreadExecutor`, `MarshalTimeout`, `Marshal.call`. Add the main-thread queue executor here (stdlib only) and the in-flight tracking of abandoned bodies.
 - `src/freecad_buddy/hosts/headless/entry.py:74-108` -- `run()`: today `Marshal(InlineExecutor())` and `asyncio.run(serve_stdio(server))` on the main thread. Restructure: run the warm-up on the main thread, start the server thread, then pump on the main thread.
-- `src/freecad_buddy/hosts/tool_catalog.py:1441-1512` -- `build_inline_handlers`: `wrap` (outer marshal) and `bound_off_main_thread` (inner `ThreadExecutor` for `debug_exec` only). The inner bound becomes redundant.
+- `src/freecad_buddy/hosts/tool_catalog.py:1441-1512` -- `build_inline_handlers`: `wrap` (outer marshal) and `bound_off_main_thread` (inner `ThreadExecutor` for `script_exec` only). The inner bound becomes redundant.
 - `src/freecad_buddy/adapters/rpc_dispatch.py:122-140` -- `dispatch` maps `MarshalTimeout` to `TIMEOUT` with `marshal_timeout`/`maybe_still_running`. Add the quarantine mapping (`quarantined:true`, no `marshal_timeout`).
 - `src/freecad_buddy/adapters/rpc_listener.py:336-343` -- GUI listener's own `marshal.call` and `except MarshalTimeout` suspect marking. Do not change; the reason the refusal lives in `wrap`.
 - `src/freecad_buddy/adapters/mcp_server.py:123-148,174-228` -- `_is_marshal_timeout`, `_with_suspect_message`, the suspect set. Reuse as is: a refusal without `marshal_timeout` must pass through untouched.
@@ -71,7 +71,7 @@ context:
 **Execution:**
 - [ ] `src/freecad_buddy/adapters/marshal.py` -- add `MainThreadQueueExecutor` (`submit` enqueues; `pump(stop)` runs jobs on the calling thread until `stop` is set). `Marshal` records, for a call it abandoned, the completion event, the budget and the time of the timeout, and exposes `abandoned_body()` returning `None` once the body has returned, else whether it has run past 2× its budget; `Marshal.call` itself does not refuse. Add `SessionQuarantined(escalated: bool)` (not a `MarshalTimeout` subclass). Remove `ThreadExecutor` if it has no caller left. -- one source of bounded execution.
 - [ ] `src/freecad_buddy/adapters/rpc_dispatch.py` -- map `SessionQuarantined` to `TIMEOUT` (or `WORKER_CRASHED` when `escalated`) with `quarantined:true`, `maybe_still_running:true` and a message saying the call was not dispatched (escalated: restart the headless host). -- the suspect set must not fire on a refusal.
-- [ ] `src/freecad_buddy/hosts/tool_catalog.py` -- drop `bound_off_main_thread`. Every handler goes through the one `wrap`, which raises `SessionQuarantined` before `marshal.call` while `marshal.abandoned_body()` is not `None`. -- `debug_exec` is now bounded like every tool; only H1 passes a `marshal`, so the GUI path is untouched.
+- [ ] `src/freecad_buddy/hosts/tool_catalog.py` -- drop `bound_off_main_thread`. Every handler goes through the one `wrap`, which raises `SessionQuarantined` before `marshal.call` while `marshal.abandoned_body()` is not `None`. -- `script_exec` is now bounded like every tool; only H1 passes a `marshal`, so the GUI path is untouched.
 - [ ] `src/freecad_buddy/hosts/headless/entry.py` -- warm-up on the main thread, then start `serve_stdio` on a daemon thread that sets `stop` when it ends, then `executor.pump(stop)`. When `stop` is set while a job runs, a watchdog waits 5 s for the pump, then logs once at ERROR and calls `os._exit(1)` (D1). -- FreeCAD and Qt stay on the main thread; the process never outlives its client.
 - [ ] `tests/external/test_marshal_quarantine.py` (new) -- with the queue executor and a pumping thread: under budget returns; overrun raises `MarshalTimeout`; next call raises `SessionQuarantined(escalated=False)` in < 1 s without running; past 2× budget it is `escalated=True`; after the body ends, calls run again. A pump test: `stop` set while a job blocks makes the watchdog call an injected exit hook. `tests/external/test_mcp_surface.py` -- a dispatch-level test that a refusal envelope carries `quarantined:true`, and through `build_server` a refusal on a mutating tool marks no suspect.
 - [ ] `tests/infc/` -- an H1 stack test under FreeCAD: a `verify_recompute` whose recompute overruns a reduced budget returns `TIMEOUT`, the next call is refused, and calls serve again after the body ends. A real FreeCAD body on the pumped main thread.
@@ -79,7 +79,7 @@ context:
 
 **Acceptance Criteria:**
 - Given the H1 host and any tool, when the body overruns the registry `timeout_s`, then the envelope is `TIMEOUT` within `timeout_s` + 1 s (TC-10-11).
-- Given a `debug_exec` that timed out, when the next call arrives while the body runs, then it is refused in under 1 s and never waits on the registry lock (F-33).
+- Given a `script_exec` that timed out, when the next call arrives while the body runs, then it is refused in under 1 s and never waits on the registry lock (F-33).
 - Given an abandoned body that never returns, when calls keep arriving, then each returns at once, and after 2× its budget they return `WORKER_CRASHED` (D1).
 - Given the H1 host started over stdio, when a client sends `initialize`, `tools/list` and `query_capabilities`, then each returns as before (thread change is invisible).
 

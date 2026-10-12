@@ -6,7 +6,8 @@ description: >-
   object naming and identity, recompute timing, when properties are fresh to read,
   property value types and units, and headless vs GUI differences. Trigger phrases:
   "why is the property stale", "Name vs Label in code", "when do I recompute",
-  "does this work headless", "the value didn't update", "object identity". Do NOT
+  "does this work headless", "the value didn't update", "object identity", "no tool
+  covers this operation", "when to use script_exec". Do NOT
   use for the document/recompute mental model at a conceptual level (see
   freecad-fundamentals) or diagnosing a specific error (see freecad-troubleshooting).
 version: 0.2.0
@@ -50,10 +51,16 @@ MCP client at it — otherwise none of these steps can run.
   an enum is one of a fixed set of members (which do not always match the GUI
   dropdown order), and a reference is a link, not a string. Confirm an enum member
   with `query_object` rather than guessing it.
-- Drive every mutation through the **typed tools** (`sketch_*`, `feature_*`,
-  `document_*`), never through free-form code, because the typed path runs the
-  transaction, verification, and reference audit around the change — raw execution
-  bypasses all of it and leaves an unverified, possibly corrupt document.
+- Drive a mutation through a **typed tool** (`sketch_*`, `feature_*`, `document_*`)
+  whenever one covers it, because the typed path runs the transaction, verification,
+  and reference audit around the change. Use `script_exec` only for an operation no
+  typed tool covers. It runs raw: open and commit a transaction in the script
+  (`doc.openTransaction(...)` … `doc.commitTransaction()`) so `document_undo` covers
+  it, then check the result with `verify_*`. Wrap the script body in `try`/`except`
+  that calls `doc.abortTransaction()` and re-raises, so a failed script leaves no
+  half-applied change. A script has a 30 s budget, and a `TIMEOUT` marks the
+  document suspect. A script must always return — one that loops forever freezes
+  FreeCAD.
 - Take an **explicit document handle** on every call; never rely on the active
   document, because "the active document" is whichever the user last focused and an
   implicit target silently drives the wrong file.
@@ -74,11 +81,14 @@ MCP client at it — otherwise none of these steps can run.
   skips the transaction, verification, and reference audit, and the GUI keeps its
   in-memory copy, so the next typed call or `document_save` works on stale state
   or overwrites the script's change.
-- The fallback for a gap is a **headless script on the closed document**: close it
-  in the GUI, edit and save with `freecadcmd`, reopen with `document_open`, then run
-  the full verification and one `document_save` from the GUI. In a script,
-  `body.removeObject(feature)` relinks the next feature's `BaseFeature`, and
-  `body.newObject(...)` inserts after the Tip and becomes the new Tip.
+- The fallback for a gap is **`script_exec` on the live document**, with the
+  transaction and `verify_*` rule above. In a script, `body.removeObject(feature)`
+  relinks the next feature's `BaseFeature`, and `body.newObject(...)` inserts after
+  the Tip and becomes the new Tip. Only when `script_exec` is absent
+  (`query_capabilities` reports `exec_enabled: false`), use a **headless script on
+  the closed document**: close it in the GUI, edit and save with `freecadcmd`,
+  reopen with `document_open`, then run the full verification and one
+  `document_save` from the GUI.
 - A headless save **drops the GUI display state** (`GuiDocument.xml`), and the GUI
   then reopens the body hidden. Set `Visibility` true on the body *and* its Tip
   (the body alone stays blank), hide sketches and datums, then save once from the
@@ -106,9 +116,10 @@ human-facing handle, give the feature an intent-bearing Name when you create it.
   first (or let the mutation tool do it).
 - **Keying lookups on Label.** Symptom: a lookup fails after a rename. Why: Label is
   mutable. Fix: identify by immutable Name.
-- **Free-form execution for a mutation.** Symptom: an unverified or corrupt document
-  that recompiled fine. Why: raw code bypassed the transaction/verify/audit wrapper.
-  Fix: use the typed `sketch_*`/`feature_*`/`document_*` tools.
+- **`script_exec` where a typed tool exists.** Symptom: an unverified or corrupt
+  document that recomputed fine. Why: raw code bypassed the transaction/verify
+  wrapper. Fix: use the typed tool; when none exists, wrap the script in a
+  transaction and run `verify_*` after it.
 - **Scripting the open document.** Symptom: a headless edit vanishes after the next
   GUI save, or the GUI shows geometry the file no longer has. Why: the script and
   the bridge edited two copies of one model. Fix: use a typed tool, or close the

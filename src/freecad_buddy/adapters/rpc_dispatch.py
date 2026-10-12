@@ -55,12 +55,12 @@ _AUDITED_NON_MUTATING_EVENTS = frozenset({"preview"})
 def is_audited(method: RpcMethod) -> bool:
     """Whether a call to ``method`` writes before/after audit records.
 
-    Every mutating tool is audited, plus ``debug_exec`` and every tool whose ``audit_event`` names
+    Every mutating tool is audited, plus ``script_exec`` and every tool whose ``audit_event`` names
     a non-mutating event the audit log must still carry.
     """
     return bool(
         method.mutating
-        or method.name == "debug_exec"
+        or method.name == "script_exec"
         or method.audit_event in _AUDITED_NON_MUTATING_EVENTS
     )
 

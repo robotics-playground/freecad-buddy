@@ -2,7 +2,7 @@
 
 Builds the low-level ``mcp.server.lowlevel.Server`` and exposes ``tools/list`` and
 ``tools/call`` over a ``MethodRegistry``. Each tool carries a hand-authored ``inputSchema``,
-the shared result-envelope ``outputSchema``, and a description. ``debug_exec`` is surfaced
+the shared result-envelope ``outputSchema``, and a description. ``script_exec`` is surfaced
 only when the startup capability record enables it. Mutating and exec calls are audit-logged
 before and after execution; all logging goes to stderr.
 
@@ -32,6 +32,10 @@ from freecad_buddy.contracts import DEFAULT_DISPLAY_DECIMALS, round_floats, summ
 from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.usecases.capabilities import (
     AUTO_APPROVE_WARNING,
+    SCRIPT_EXEC_UNATTENDED_VARIABLE,
+    SCRIPT_EXEC_VARIABLE,
+    SCRIPT_EXEC_WARNING,
+    UNATTENDED_VARIABLE,
     Capabilities,
     auto_approve_enabled,
     exec_registered,
@@ -72,12 +76,12 @@ def _tool_for(method: RpcMethod) -> types.Tool:
 
 
 def registered_tools(registry: MethodRegistry, caps: Capabilities) -> list[types.Tool]:
-    """Tools surfaced by ``tools/list``; ``debug_exec`` is present only when enabled."""
+    """Tools surfaced by ``tools/list``; ``script_exec`` is present only when enabled."""
     tools: list[types.Tool] = []
     for method in registry.methods():
         if method.internal:
             continue
-        if method.name == "debug_exec" and not exec_registered(caps):
+        if method.name == "script_exec" and not exec_registered(caps):
             continue
         tools.append(_tool_for(method))
     return tools
@@ -216,7 +220,7 @@ def build_server(
 ) -> Server:
     """Wire the low-level MCP ``Server``: ``tools/list`` and ``tools/call`` over the registry."""
     if exec_registered(caps):
-        logger.warning("SECURITY: debug_exec ENABLED by operator flag")
+        logger.warning(SCRIPT_EXEC_WARNING)
     if auto_approve_enabled(caps):
         logger.warning(AUTO_APPROVE_WARNING)
     # The mutation gate and the camera fit write their own records through this sink; the handlers
@@ -236,7 +240,7 @@ def build_server(
         args = arguments if isinstance(arguments, dict) else {}
         doc = args.get("doc")
 
-        if tool_name == "debug_exec" and not exec_registered(caps):
+        if tool_name == "script_exec" and not exec_registered(caps):
             # Unreachable via tools/list, but still fail closed and audit the denied attempt.
             _audit_safe(audit.before, "exec", tool_name, doc, args)
             envelope = _denied_exec_envelope()
@@ -268,10 +272,11 @@ def build_server(
             return _to_call_result(envelope, structured=structured)
 
         # A mutating call's pair is written after dispatch so a bracketed mutation, which wrote
-        # its own joinable pair, gets no second one. Every other audited call (debug_exec,
-        # preview_dry_run) records its `before` line ahead of execution, so the line survives a
-        # call that never returns.
-        if audited and not mutating:
+        # its own joinable pair, gets no second one. script_exec (mutating, but never bracketed)
+        # and every non-mutating audited call (preview_dry_run) record their `before` line ahead
+        # of execution, so the line survives a call that never returns.
+        before_first = audited and (not mutating or event == "exec")
+        if before_first:
             _audit_safe(audit.before, event, tool_name, doc, args)
         envelope = registry.dispatch(tool_name, args)
         if _is_marshal_timeout(envelope):
@@ -281,7 +286,7 @@ def build_server(
         elif method is not None and not mutating and envelope.get("status") == "OK":
             suspect.clear(doc)
         if audited and not (mutating and wrote_own_audit(envelope)):
-            if mutating:
+            if not before_first:
                 _audit_safe(audit.before, event, tool_name, doc, args)
             _audit_safe(audit.after, event, tool_name, doc, args, envelope.get("status"))
         return _to_call_result(envelope, structured=structured)
@@ -316,7 +321,8 @@ def _invalid_input_envelope(message: str) -> dict:
 
 def _denied_exec_envelope() -> dict:
     return _invalid_input_envelope(
-        "debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)"
+        f"script_exec is off: {SCRIPT_EXEC_VARIABLE} or the ScriptExec preference turned it off, "
+        f"or {UNATTENDED_VARIABLE}=1 is set without {SCRIPT_EXEC_UNATTENDED_VARIABLE}=1"
     )
 
 

@@ -1,7 +1,7 @@
-"""Operator ``debug_exec`` handler.
+"""``script_exec`` handler: Python inside FreeCAD for an operation no typed tool covers.
 
-Trusted-operator bring-up tool, never an AI mutation path. Registration is gated on the exec
-env flag and every call is audit-logged by the dispatch boundary. The reduced namespace is
+Raw exec: no bridge transaction, fingerprint or rollback. Registration follows the operator
+switches and every call is audit-logged by the dispatch boundary. The reduced namespace is
 blast-radius hygiene, not a security boundary. Requires an explicit ``doc`` handle.
 """
 
@@ -16,14 +16,14 @@ from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 _UNSET = object()
 
 
-def debug_exec(registry: DocumentRegistry, doc: str | None, code: str) -> ResultEnvelope:
-    """Execute operator-supplied ``code`` against the document named by ``doc``.
+def script_exec(registry: DocumentRegistry, doc: str | None, code: str) -> ResultEnvelope:
+    """Execute the caller's ``code`` against the document named by ``doc``.
 
     ``value_repr`` is the repr of a bound ``result`` variable when the code sets one. On an
     exception the captured stdout is preserved on the raised error's message.
     """
     if not code:
-        raise ValidationError("debug_exec requires 'code'")
+        raise ValidationError("script_exec requires 'code'")
 
     import FreeCAD
 
@@ -41,7 +41,7 @@ def debug_exec(registry: DocumentRegistry, doc: str | None, code: str) -> Result
         namespace["doc"] = document
         try:
             with redirect_stdout(buffer):
-                exec(code, namespace)  # noqa: S102 - operator-only bring-up path
+                exec(code, namespace)  # noqa: S102 - raw exec is the tool's purpose
         except Exception as exc:
             captured = buffer.getvalue()
             if captured:

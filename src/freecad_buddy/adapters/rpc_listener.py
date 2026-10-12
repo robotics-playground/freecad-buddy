@@ -328,10 +328,11 @@ class RpcListener:
         doc_str = doc if isinstance(doc, str) else None
         audit = self._audit if audited else None
         # A mutating call's pair is written after dispatch so a bracketed mutation, which wrote
-        # its own joinable pair, gets no second one. Every other audited call (debug_exec,
-        # preview_dry_run) records its `before` line ahead of execution, so the line survives a
-        # call that never returns.
-        if audit is not None and not mutating:
+        # its own joinable pair, gets no second one. script_exec (mutating, but never bracketed)
+        # and every non-mutating audited call (preview_dry_run) record their `before` line ahead
+        # of execution, so the line survives a call that never returns.
+        before_first = audit is not None and (not mutating or event == "exec")
+        if before_first:
             self._audit_safe(audit.before, event, name, doc_str, params)
 
         timeout_s = method.timeout_s if method is not None else 30.0
@@ -343,7 +344,7 @@ class RpcListener:
                 self._mark_suspect(doc)
 
         if audit is not None and not (mutating and wrote_own_audit(env)):
-            if mutating:
+            if not before_first:
                 self._audit_safe(audit.before, event, name, doc_str, params)
             self._audit_safe(audit.after, event, name, doc_str, params, env.get("status"))
 
