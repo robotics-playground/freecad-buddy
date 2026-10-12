@@ -22,7 +22,7 @@ defect, not a drawing choice.
 **The agent never calls a use case directly. Every call crosses the MCP protocol.** There is no
 in-process path from an agent to `usecases/`, no Python import, no direct function call — the MCP
 surface is the *only* way in, for every caller: the interactive agent, a spawned subagent, a
-benchmark actor, and the operator driving `debug_exec`. Scenario 2 draws that crossing in full
+benchmark actor, and an agent calling `script_exec`. Scenario 2 draws that crossing in full
 (Proxy → Listener → Marshal → use case); the later diagrams collapse it to one **MCP surface**
 participant so the scenario's own logic stays readable, but the hop is always there. An arrow drawn
 from an agent straight to a use case would misstate the architecture — the protocol boundary is
@@ -442,10 +442,10 @@ status of its least-citable input.
 
 ---
 
-## 8. Operator escape hatch — `debug_exec`
+## 8. Script path — `script_exec`
 
-Off by default, unregistered from the tool list when off, and never enabled in an unattended run —
-the flag is a human act, and no agent may set it (AD-4).
+On by default; unregistered when the operator turns it off, or in a marked unattended run without
+opt-in (AD-4). Raw: no AD-5 bracket.
 
 ```mermaid
 sequenceDiagram
@@ -454,18 +454,20 @@ sequenceDiagram
   participant Boot as bootstrap
   participant Cat as tool_catalog
   participant MCP as MCP surface
-  participant U as usecases/debug_exec
+  participant U as usecases/script_exec
   participant Audit as adapters/audit_log
+  actor Agent
 
-  Operator->>Boot: set the enabling env flag (human, never a wire field)
-  Boot->>Cat: register debug_exec
+  Operator->>Boot: set the switches at start (human, never a wire field)
+  Boot->>Cat: register script_exec (default on)
   Note over Cat: when off, the tool is absent from the list —<br/>not present-and-refusing
-  Operator->>MCP: debug_exec(arbitrary Python)
-  Note over MCP: still a typed MCP tool — the operator<br/>drives it through the same surface an agent would
+  Agent->>MCP: script_exec(Python)
+  Note over MCP: still an MCP tool — the agent<br/>reaches it through the same surface as every typed tool
   MCP->>U: dispatch
-  U->>Audit: append-only record (before execution)
+  U->>Audit: append-only record with source (before execution)
   U-->>MCP: result
-  MCP-->>Operator: envelope
+  MCP-->>Agent: envelope
+  Note over Agent: no fingerprint or rollback —<br/>the agent checks with verify_* afterwards
   Note over U: in-process restriction is never called a security<br/>boundary — this repo ships NO boundary of its<br/>own, so the operator's environment is it
 ```
 

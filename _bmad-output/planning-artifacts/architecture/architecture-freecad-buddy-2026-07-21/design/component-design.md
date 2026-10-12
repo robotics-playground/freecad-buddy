@@ -40,7 +40,7 @@ Module layout and type shapes are owned by **data-contracts-design.md** (§1); i
 | `sketches.py` | P2 | `sketch_*` typed mutations (geometry + constraints), 1-based solver-ID → `Constraints[id-1]` diagnostic mapping | contracts, shim, transaction |
 | `features.py` | P2 | `feature_*` typed mutations (pad/pocket/hole/dress-up…), intent-bearing generated `Name`s | contracts, shim, transaction |
 | `preview.py` | P2 | `preview_dry_run` on `copyObject` TempDoc (AD-10, AD-20): structured diff (Δvolume/area/bbox/COM, counts, validity, TNP pre-check); apply path re-runs op under AD-5 | contracts, shim, documents, transaction |
-| `debug_exec.py` | P0 | Operator-only exec (AD-4): env-flag gated, unregistered when off, audit-logged, never enabled unattended | contracts, shim |
+| `script_exec.py` | P0 | Agent Python exec (AD-4): on by default, unregistered when off or unattended without opt-in, raw (AD-5 exception), audit-logged | contracts, shim |
 
 Key entry points:
 
@@ -80,7 +80,7 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 | `rpc_client.py` | P0 | External-process side of the bridge: encodes tool invocations as `rpc_protocol` frames, sends over localhost + per-session token (AD-3), maps replies to `ResultEnvelope` | used by `mcp_server` in GUI mode |
 | `rpc_listener.py` | P0 | In-FreeCAD RPC listener (AD-2): accepts frames off-thread, validates token + handshake, hands work to `marshal`. **Stdlib + FreeCAD only** (AD-12); CI no-`Gui`-import check applies (AD-1) | runs inside FreeCAD GUI process |
 | `marshal.py` | P0 | Main-thread marshal (AD-2): Mod/Web `postEvent` pattern — queue callable to Qt main thread, block for result. Headless degrade: direct inline call (no Qt loop). Holds **no Qt import** — the Qt event pump lives in `hosts/gui_addon/pump.py`, so this module needs no AD-1 exemption | research §2.3/§4.3 |
-| `rpc_dispatch.py` | P0 | The single AD-17 error boundary: maps use-case exceptions onto the closed status set (`INVALID_INPUT`, `RECOMPUTE_ERROR`, `TIMEOUT`; unexpected → `RECOMPUTE_ERROR` + `detail.unexpected`), attaches machine detail (exception class, message, truncated traceback), gates `debug_exec` registration (AD-4) | integration §3.5 |
+| `rpc_dispatch.py` | P0 | The single AD-17 error boundary: maps use-case exceptions onto the closed status set (`INVALID_INPUT`, `RECOMPUTE_ERROR`, `TIMEOUT`; unexpected → `RECOMPUTE_ERROR` + `detail.unexpected`), attaches machine detail (exception class, message, truncated traceback), gates `script_exec` registration (AD-4) | integration §3.5 |
 | `audit_log.py` | P0 | `AuditSink` implementation: append-only JSON-lines per session (AD-17, conventions) | injected into `transaction` |
 | `export_oracle.py` + `export_verdict.py` | P0 | External-side orchestration of `verify_export_*` (AD-9): STEP re-import round-trip, trimesh primary + second oracle (admesh or Phase 0-gate fallback) for STL, lib3mf + trimesh + in-FreeCAD self-read (via RPC) for 3MF; oracle disagreement = fail; mesh tolerance derived from deflection | third-party oracles |
 | `benchmarks/runner.py` + `benchmarks/harness/` | P0 | **Gate runner** core (AD-13, AD-14, AD-19): runs benchmarks/fault-injection suites via pytest, computes majority-of-R, Wilson CI, McNemar; emits contracts-owned `ValidationReport` with banner; verdict from report fields only. Thin CLI lives in `benchmarks/runner.py` (`gate` console alias) | external process only |
@@ -191,7 +191,7 @@ sequenceDiagram
 
 | Phase | Components first shipped |
 | --- | --- |
-| P0 (G0) | All contracts; shim, fingerprint, tnp_guard (Layer 0), transaction, documents, queries, verify (shape/document), exports, debug_exec; mcp_server, rpc_client, rpc_listener, marshal, audit_log, export_oracle, export_verdict; gui_addon/{InitGui,bootstrap,pump}.py, gui_external/entry.py, headless/entry.py, main.py, tool_catalog.py. Entry gate G0.E artifacts (fault suite, golden benchmark) precede implementation (AD-19) |
+| P0 (G0) | All contracts; shim, fingerprint, tnp_guard (Layer 0), transaction, documents, queries, verify (shape/document), exports, script_exec; mcp_server, rpc_client, rpc_listener, marshal, audit_log, export_oracle, export_verdict; gui_addon/{InitGui,bootstrap,pump}.py, gui_external/entry.py, headless/entry.py, main.py, tool_catalog.py. Entry gate G0.E artifacts (fault suite, golden benchmark) precede implementation (AD-19) |
 | P1 (G1) | skills_loader (router mode), read-only registry filter, large-tree summarized queries; skills `freecad-fundamentals`, `freecad-troubleshooting` |
 | GS.E | skills_loader forced-subset ablation mode + CI shape check (`check_skill_shape.py`, Story 6.1) |
 | P2 (G2) | sketches, features, preview, verify_sketch, render_probe, elicitation/confirm glue; tnp_guard Layers 1–2 + 5-scenario fault suite |

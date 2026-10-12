@@ -69,7 +69,7 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 
 #### Cross-cutting
 
-- **FR19** — `debug_exec` exists as operator-only capability: env-flag gated, unregistered when off, permanently off in service mode, every call audit-logged. *(AD-4)*
+- **FR19** — `script_exec` lets an agent run Python inside FreeCAD for operations no typed tool covers. On by default; unregistered when the operator turns it off, or in a run marked unattended without opt-in; permanently off in service mode; every call audit-logged with its source. *(AD-4)*
 - **FR20** — An append-only audit log records every mutation, exec, preview, approval, and rollback from Phase 0 using the contracts-owned record type. *(AD-17)*
 
 #### Robot-description & sourcing — CAP-8 *(Phase 5)*
@@ -170,7 +170,7 @@ None — no UX design contract exists yet (deliberate: no UI before the Phase 1/
 | --- | --- | --- |
 | FR1–FR6 | Epic 1 | Bridge tools: documents, queries, screenshots, exports, verify family, three hosts |
 | FR17, FR18 | Epic 1 | Gate runner core + fault-injection framework (G0 slice; extended per later gate) |
-| FR19, FR20 | Epic 1 | debug_exec gating; append-only audit log from Phase 0 |
+| FR19, FR20 | Epic 1 | script_exec gating; append-only audit log from Phase 0 |
 | FR7 | Epic 2 | Read-only assistant on ≥2 backends |
 | FR8–FR11 | Epic 3 | Typed mutations + transaction protocol; preview/confirm; verified undo; TNP guard |
 | FR12–FR14 | Epic 4 | Assertion primitives, render/drawing path, parametric parameters — the agent's loop lives in `design-loop` |
@@ -1215,7 +1215,7 @@ The bridge does what the design says when a real agent drives it through the rea
 
 **Why now:** UAT run `2026-10-03-04` (HEAD `bece7ac`, FreeCAD 1.1.4) was the first to execute all of TC-01..TC-14. Gate 1 is red: 34 of 251 scenarios fail, 29 of them on product defects F-01..F-33 (`tests/uat/run/2026-10-03-04/report.md`, "Findings"). Most are the spine already being right and the code not matching it. The user requires Gate 1 green before Story 4.3.
 
-**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); Epic 11 Stories 11.1-11.4 -> 10.7 (the test cases are written once, against the new envelope); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
+**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); Epic 11 Stories 11.1-11.4 -> 10.7 (the test cases are written once, against the new envelope); Epic 12 Story 12.1 -> 10.6 (both edit the exec wiring in `hosts/tool_catalog.py`); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
 
 **Acceptance for the epic:** Story 10.8 — a full UAT run with Gate 1 green.
 
@@ -1340,7 +1340,7 @@ The bridge does what the design says when a real agent drives it through the rea
 1. **Given** any tool in the headless host
    **When** it runs past its registry `timeout_s`
    **Then** it returns `TIMEOUT` and the session is quarantined per AD-27 (TC-10-11, `design/integration-mcp-freecad.md` §2.4)
-2. **Given** a `debug_exec` that timed out
+2. **Given** a `script_exec` that timed out
    **When** the next call arrives
    **Then** it is refused or served without waiting on the abandoned body's registry lock (F-33)
 3. **Given** a second RPC client
@@ -1380,6 +1380,9 @@ The bridge does what the design says when a real agent drives it through the rea
 6. **Given** TC-06-10 and TC-13-17 (BLOCKED: no route to a Touched document)
    **When** the test cases are updated
    **Then** they build the Touched state through a route the bridge offers, or are retired with the reason
+7. **Given** the change to `script_exec` (sprint-change-proposal-2026-10-12)
+   **When** the UAT suite is updated
+   **Then** TC-01, TC-05, TC-08, TC-09, TC-11, `coverage-matrix.md`, `APPENDIX-B-environment-setup.md` and `test-plan.md` use `script_exec`, test it on by default, off with `FREECAD_BUDDY_SCRIPT_EXEC=0`, off with `FREECAD_BUDDY_UNATTENDED=1`, and on again with `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`; past run reports keep their text
 
 ### Story 10.7b: Scripted UAT Runner and FreeCAD Probe
 
@@ -1522,3 +1525,28 @@ An agent builds a part with fewer calls and a small context: every mutation stil
 3. **Given** the same session, **Then** the median bridge overhead per mutation, measured by the Story 11.4 timing method, is ≤ 3 s.
 4. The agent visually checks the finished part against a real FreeCAD screenshot, and a native Check Geometry passes (`freecad-native-validation` standard).
 5. The report, with the baseline numbers beside the new numbers, is committed under `tests/uat/run/`.
+
+## Epic 12: Script Execution Tool
+
+An agent can do any FreeCAD operation: typed tools when they cover it, `script_exec` when they do not.
+
+**Why now:** the typed tools do not cover all of FreeCAD, and the exec tool was operator-only (sprint-change-proposal-2026-10-12).
+
+**Sequencing:** 12.1 runs before Story 10.6 (both edit the exec wiring in `hosts/tool_catalog.py`). **Opens no gate and reopens no epic** (AD-19).
+
+### Story 12.1: script_exec as an Official Tool
+
+> **As** an agent, **I want** `script_exec` on by default, so that I can do an operation no typed tool covers.
+
+**Acceptance Criteria:**
+
+1. **Given** no `FREECAD_BUDDY_*` exec variable and no preference stored **When** `tools/list` runs **Then** `script_exec` is present and `debug_exec` is absent; a call `script_exec(doc, code)` returns the same envelope `debug_exec` returned (`doc`, `stdout`, `value_repr`, `fingerprint_after: null`).
+2. **Given** `FREECAD_BUDDY_SCRIPT_EXEC=0`, or the GUI preference `ScriptExec` off with the variable unset **When** `tools/list` runs **Then** `script_exec` is absent, and a direct call returns `INVALID_INPUT` naming the switch and is audit-logged.
+3. **Given** `FREECAD_BUDDY_UNATTENDED=1` **When** `tools/list` runs **Then** `script_exec` is absent; with `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1` also set it is present. Any value other than exactly `"1"` is off for both variables.
+4. **Given** a `user.cfg` that stores `AllowExec=false` **When** the GUI bridge starts **Then** `script_exec` is registered; `FREECAD_BUDDY_ALLOW_EXEC` and `AllowExec` are read nowhere in `src/`.
+5. **Given** the GUI preference page **When** it opens **Then** it shows **Allow script_exec** (default on) with the red risk text, and the `addon.log` `operator settings:` line lists `FREECAD_BUDDY_SCRIPT_EXEC`, `FREECAD_BUDDY_UNATTENDED` and `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` with their sources.
+6. **Given** the read-only assistant profile and `preview_dry_run` **When** they are built or called **Then** neither includes or accepts `script_exec`.
+7. **Given** a `script_exec` call **When** its `before` audit record is written **Then** the record carries the full `code`, ahead of execution (closes DW-19).
+8. **Given** the skill `freecad-scripting-idioms` **When** an agent reads it **Then** it says: use a typed tool when one covers the operation; else use `script_exec`; open and commit a transaction in the script so `document_undo` covers it; check geometry with `verify_*` afterwards; never loop without an exit, because a script that does not return freezes the GUI host. `check_skill_shape.py` passes.
+9. **Given** `README.md`, `AGENTS.md`, `CLAUDE.md` section 16 and `_bmad-output/project-context.md` **When** read **Then** they describe the new name, default and variables.
+10. The CI checks pass: `uv run ruff check .`, `uv run pytest tests/external`, the `infc` suite under `FreeCADCmd`, `scripts/check_imports.py`, `scripts/check_skill_shape.py` and `scripts/gen_schemas.py --check`.

@@ -207,7 +207,7 @@ Each phase has a SMART goal: **S**pecific scope, **M**easurable exit criteria, *
 
 > *Make FreeCAD programmatically drivable and verifiable. No AI yet.*
 
-**Specific.** Build the Python bridge exposing FreeCAD via MCP: document lifecycle (new/open/save), object tree inspection, operator-only `debug_exec`, geometry queries (volume, area, bounding box, mass properties, shape validity), screenshot capture, and export (STEP, STL). Works both inside the FreeCAD GUI and headless via `FreeCADCmd`. Set up the golden-model test harness in CI.
+**Specific.** Build the Python bridge exposing FreeCAD via MCP: document lifecycle (new/open/save), object tree inspection, `script_exec` for operations no typed tool covers, geometry queries (volume, area, bounding box, mass properties, shape validity), screenshot capture, and export (STEP, STL). Works both inside the FreeCAD GUI and headless via `FreeCADCmd`. Set up the golden-model test harness in CI.
 
 **Measurable — exit criteria:**
 - [ ] MCP server starts inside FreeCAD (as addon/workbench) and headless; an MCP client (e.g. Claude Code) can list and call its tools.

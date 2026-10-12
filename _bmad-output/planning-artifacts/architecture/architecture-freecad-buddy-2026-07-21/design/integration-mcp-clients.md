@@ -67,7 +67,7 @@ Equivalent CLI: `claude mcp add --transport http freecad-buddy http://127.0.0.1:
 
 ### 2.3 Tool discovery
 
-Standard `tools/list`. Names follow the underscore convention (`query_*`, `verify_*`, `preview_*`, …) — dots are illegal in MCP tool names (spine Consistency Conventions). Every tool ships `outputSchema`; results carry `structuredContent` plus text mirror (AD-17, conventions). Exception: `query_tree_summary` ships no `outputSchema` and returns one plain text item (status line, framing line, tree) with no `structuredContent`, because Claude Code shows the agent only `structuredContent` when it is present. `debug_exec` is unregistered from the tool list unless the operator turns it on — `FREECAD_BUDDY_ALLOW_EXEC=1`, or the **Allow debug_exec** preference in the GUI (AD-4) — Claude clients never see it by default.
+Standard `tools/list`. Names follow the underscore convention (`query_*`, `verify_*`, `preview_*`, …) — dots are illegal in MCP tool names (spine Consistency Conventions). Every tool ships `outputSchema`; results carry `structuredContent` plus text mirror (AD-17, conventions). Exception: `query_tree_summary` ships no `outputSchema` and returns one plain text item (status line, framing line, tree) with no `structuredContent`, because Claude Code shows the agent only `structuredContent` when it is present. `script_exec` is in the tool list unless the operator turns it off or marks the run unattended (AD-4). Agents use it only when no typed tool covers the operation.
 
 ### 2.4 Skills loading (AD-15)
 

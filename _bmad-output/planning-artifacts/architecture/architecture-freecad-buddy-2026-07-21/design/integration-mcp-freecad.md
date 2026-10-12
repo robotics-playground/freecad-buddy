@@ -53,11 +53,11 @@ First frame on every connection MUST be `rpc_hello`; anything else → error `-3
 
 - Token: `secrets.token_urlsafe(32)`, generated once per listener start (session = host lifetime), compared with `hmac.compare_digest`. Mismatch → `-32000`, close. (AD-3)
 - `contract_version` mismatch → `-32004` with server's supported versions in `error.data`; client refuses to proceed. Bump the version on any frame/field semantic change.
-- `capabilities` drive tool registration on the MCP side: e.g. `render:"none"` → screenshot tools report unavailable rather than failing at call time; `element_map:false` → TNP audit returns `UNSUPPORTED` (AD-7 via AD-11 probe); `exec_enabled` reflects the AD-4 operator flag (`debug_exec` is unregistered when false).
+- `capabilities` drive tool registration on the MCP side: e.g. `render:"none"` → screenshot tools report unavailable rather than failing at call time; `element_map:false` → TNP audit returns `UNSUPPORTED` (AD-7 via AD-11 probe); `exec_enabled` reflects AD-4 registration (`script_exec` is unregistered when false).
 
 ### 2.3 Requests, responses, errors
 
-- **Method names mirror the use-case surface** (spine naming convention): `query_*`, `document_*`, `sketch_*`, `feature_*`, `export_*`, `preview_*`, `verify_*` (in-FreeCAD legs only, e.g. the AD-9 self-read), `debug_exec` (gated), plus `rpc_hello`, `rpc_ping`, `rpc_capabilities`.
+- **Method names mirror the use-case surface** (spine naming convention): `query_*`, `document_*`, `sketch_*`, `feature_*`, `export_*`, `preview_*`, `verify_*` (in-FreeCAD legs only, e.g. the AD-9 self-read), `script_exec` (gated), plus `rpc_hello`, `rpc_ping`, `rpc_capabilities`.
 - `params` is the tool's parameter object; every document-touching method carries an explicit document handle (**AD-20** — no implicit `ActiveDocument`).
 - **`result` is always a `ResultEnvelope`** (contracts-owned, AD-17 closed status set). Domain failures — recompute errors, invalid input, verify failures, marshal timeout — are envelopes, never JSON-RPC errors.
 - **JSON-RPC `error` is protocol-layer only:**
@@ -96,7 +96,7 @@ class MethodRegistry:
     def dispatch(self, name: str, params: dict) -> ResultEnvelope: ...
 ```
 
-`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `debug_exec` is registered only when the operator turns it on — `FREECAD_BUDDY_ALLOW_EXEC=1`, or in GUI mode the **Allow debug_exec** preference with the variable unset (AD-4) and every invocation is appended to the audit log (AD-17).
+`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `script_exec` is registered unless the operator turns it off — `FREECAD_BUDDY_SCRIPT_EXEC`, or in GUI mode the **Allow script_exec** preference with the variable unset — or the run is marked unattended without opt-in (AD-4), and every invocation is appended to the audit log (AD-17).
 
 ### 2.6 Discovery (connection file)
 
@@ -138,7 +138,7 @@ QtCore.QTimer.singleShot(0, _deferred_start)
 | Field | Key | Default | Variable that overrides it |
 | --- | --- | --- | --- |
 | Auto-approve mutations | `AutoApprove` | on | `FREECAD_BUDDY_AUTO_APPROVE` |
-| Allow debug_exec | `AllowExec` | off | `FREECAD_BUDDY_ALLOW_EXEC` |
+| Allow script_exec | `ScriptExec` | on | `FREECAD_BUDDY_SCRIPT_EXEC` |
 | Start the MCP server with FreeCAD | `AutoStartMcp` | on | `FREECAD_BUDDY_NO_AUTO_MCP` (off writes `1`) |
 | MCP command | `McpCommand` | empty | `FREECAD_BUDDY_MCP_CMD` |
 | uv path | `UvPath` | empty (`uv` on `PATH`) | none |
@@ -263,7 +263,7 @@ FreeCADCmd run_server.py            # or: xvfb-run -a FreeCADCmd run_server.py (
 | `render` | detection ladder result §6: `"gui_constructed" \| "offscreen" \| "none"` |
 | `element_map` | `shim.element_map_available()` |
 | `varset` | `shim` VarSet probe (façade reports `varset` vs `spreadsheet` backend) |
-| `exec_enabled` | `FREECAD_BUDDY_ALLOW_EXEC` env; in GUI mode the **Allow debug_exec** preference fills it when unset (AD-4) |
+| `exec_enabled` | `FREECAD_BUDDY_SCRIPT_EXEC` env; in GUI mode the **Allow script_exec** preference fills it when unset; off in a run marked `FREECAD_BUDDY_UNATTENDED=1` unless `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1` (AD-4) |
 
 ## 5. Version Shim (`usecases/shim.py`, AD-11)
 
