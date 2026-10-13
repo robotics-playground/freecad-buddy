@@ -74,7 +74,7 @@
 #   Opens no gate, reopens no epic.
 
 generated: 2026-07-21
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -174,8 +174,8 @@ development_status:
   11-5-build-loop-skills: done
   11-6-measured-build-session: done
   epic-11-retrospective: optional
-  epic-12: in-progress
-  12-1-script-exec-official-tool: review
+  epic-12: done
+  12-1-script-exec-official-tool: done
   epic-12-retrospective: optional
 
 action_items:
