@@ -150,30 +150,39 @@ class RpcClient:
         self._buf = bytearray()
         self._next_id = 0
         self._connect_error: str | None = None
+        self._probe: socket.socket | None = None
+        self._probe_buf = bytearray()
 
     def _record(self) -> dict | None:
         if self._endpoint is not None:
             return self._endpoint
         return discover(self._appdata_dir)
 
-    def _ensure_connected(self) -> bool:
-        if self._sock is not None:
-            return True
+    def _connect(self) -> tuple[socket.socket, object] | None:
+        """Open a TCP connection to the listener; return it with the record's token."""
         record = self._record()
         if record is None:
             self._connect_error = "no live listener discovery file"
-            return False
+            return None
         host = record.get("host")
         port = record.get("port")
-        token = record.get("token")
         if not isinstance(host, str) or not isinstance(port, int):
             self._connect_error = "discovery record missing host/port"
-            return False
+            return None
         try:
             sock = socket.create_connection((host, port), timeout=_CONNECT_TIMEOUT_S)
         except OSError:
             self._connect_error = "connect refused"
+            return None
+        return sock, record.get("token")
+
+    def _ensure_connected(self) -> bool:
+        if self._sock is not None:
+            return True
+        connected = self._connect()
+        if connected is None:
             return False
+        sock, token = connected
         try:
             sock.settimeout(_HELLO_TIMEOUT_S)
             self._sock = sock
@@ -189,8 +198,8 @@ class RpcClient:
         sock.settimeout(self._read_timeout_s)
         return True
 
-    def _handshake(self, token) -> bool:
-        req = {
+    def _hello_request(self, token) -> dict:
+        return {
             "jsonrpc": "2.0",
             "id": self._alloc_id(),
             "method": "rpc_hello",
@@ -200,18 +209,93 @@ class RpcClient:
                 "token": token if isinstance(token, str) else "",
             },
         }
-        self._send(req)
+
+    def _handshake(self, token) -> bool:
+        self._send(self._hello_request(token))
         try:
             resp = self._read_frame()
         except (ValueError, OSError):
             return False
-        return isinstance(resp, dict) and "result" in resp and "error" not in resp
+        return _is_hello_accepted(resp)
 
-    def call(self, method: str, params: dict | None = None) -> ResultEnvelope:
-        """Call a tool and return its envelope. Never raises."""
+    def reconnect_answered(self) -> bool:
+        """Reconnect without waiting for the hello reply; True once the listener has answered it.
+
+        The first call connects and sends ``rpc_hello``; each later call reads what has arrived
+        and never blocks. A listener that serves one connection at a time accepts this one only
+        after it has finished the call it is running, so the answer proves that call returned.
+        One such connection at most is pending: a new one per call would queue stale connections
+        in the listener's backlog. The answered connection becomes this client's connection.
+        """
+        if self._sock is not None:
+            return True
+        if self._probe is None and not self._open_probe():
+            return False
+        assert self._probe is not None
+        try:
+            while b"\n" not in self._probe_buf:
+                chunk = self._probe.recv(65536)
+                if not chunk:
+                    self._close_probe()
+                    return False
+                self._probe_buf.extend(chunk)
+        except BlockingIOError:
+            return False
+        except OSError:
+            self._close_probe()
+            return False
+        line, _newline, rest = bytes(self._probe_buf).partition(b"\n")
+        try:
+            accepted = _is_hello_accepted(json.loads(line.decode("utf-8")))
+        except ValueError:
+            accepted = False
+        if not accepted:
+            self._close_probe()
+            return False
+        self._sock, self._probe = self._probe, None
+        self._buf = bytearray(rest)
+        self._probe_buf = bytearray()
+        self._sock.settimeout(self._read_timeout_s)
+        return True
+
+    def _open_probe(self) -> bool:
+        connected = self._connect()
+        if connected is None:
+            return False
+        sock, token = connected
+        try:
+            sock.sendall(_encode(self._hello_request(token)))
+        except OSError:
+            sock.close()
+            return False
+        sock.setblocking(False)
+        self._probe = sock
+        self._probe_buf = bytearray()
+        return True
+
+    def _close_probe(self) -> None:
+        if self._probe is not None:
+            try:
+                self._probe.close()
+            except OSError:
+                pass
+            self._probe = None
+        self._probe_buf = bytearray()
+
+    def call(
+        self, method: str, params: dict | None = None, *, read_timeout_s: float | None = None
+    ) -> ResultEnvelope:
+        """Call a tool and return its envelope. Never raises.
+
+        ``read_timeout_s`` replaces the client's read timeout for this call only.
+        """
         try:
             if not self._ensure_connected():
                 return _worker_crashed(self._connect_error or "unreachable", unreachable=True)
+            assert self._sock is not None
+            self._sock.settimeout(
+                self._read_timeout_s if read_timeout_s is None else read_timeout_s
+            )
             req = {
                 "jsonrpc": "2.0",
                 "id": self._alloc_id(),
@@ -241,6 +325,7 @@ class RpcClient:
 
     def close(self) -> None:
         self._close()
+        self._close_probe()
 
     # -- framing -----------------------------------------------------------------------------
 
@@ -250,7 +335,7 @@ class RpcClient:
 
     def _send(self, obj: dict) -> None:
         assert self._sock is not None
-        self._sock.sendall((json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8"))
+        self._sock.sendall(_encode(obj))
 
     def _read_frame(self):
         assert self._sock is not None
@@ -275,6 +360,14 @@ class RpcClient:
                 pass
             self._sock = None
         self._buf = bytearray()
+
+
+def _encode(obj: dict) -> bytes:
+    return (json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+def _is_hello_accepted(resp) -> bool:
+    return isinstance(resp, dict) and "result" in resp and "error" not in resp
 
 
 __all__ = ["RpcClient", "discover"]

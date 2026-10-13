@@ -77,6 +77,7 @@ First frame on every connection MUST be `rpc_hello`; anything else → error `-3
 | TCP connect | 2 s | client side |
 | `rpc_hello` | 5 s | |
 | Call (read) timeout, client | method `timeout_s` + 5 s margin | |
+| Call (read) timeout, H1 front | method `timeout_s` | the bound; the worker's inline marshal never times out |
 | Marshal timeout, server | method `timeout_s` (default 30 s; mutation/recompute methods 120 s; render 60 s) | per-`RpcMethod` override |
 
 Marshal timeout returns an envelope `status:"TIMEOUT"` with `detail:{"marshal_timeout":true,"maybe_still_running":true}` — see §7.

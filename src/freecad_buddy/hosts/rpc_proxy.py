@@ -68,6 +68,17 @@ def _mesh_verify_proxy_handler(client: RpcClient, lock, tool_name: str):
     return handler
 
 
+def call_budgets() -> dict[str, float]:
+    """The ``timeout_s`` of each RPC method the proxy calls, by method name.
+
+    A mesh verifier's self-read leg gets the budget of its verify tool.
+    """
+    budgets = {spec.name: spec.timeout_s for spec in (*tool_specs(), SCRIPT_EXEC_SPEC)}
+    for tool_name, self_read_method in _MESH_VERIFY_SELF_READ.items():
+        budgets[self_read_method] = budgets[tool_name]
+    return budgets
+
+
 def build_proxy_registry(client: RpcClient, caps: Capabilities) -> MethodRegistry:
     """Build a registry whose handlers forward each call to the listener via ``client``.
 

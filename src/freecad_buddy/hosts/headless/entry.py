@@ -25,6 +25,7 @@ import os
 import secrets
 import subprocess
 import sys
+import time
 
 from freecad_buddy.adapters.audit_log import AuditSink, default_audit_path
 from freecad_buddy.adapters.mcp_server import (
@@ -34,8 +35,8 @@ from freecad_buddy.adapters.mcp_server import (
     serve_stdio,
 )
 from freecad_buddy.adapters.rpc_client import RpcClient, _worker_crashed
-from freecad_buddy.contracts import ResultEnvelope
-from freecad_buddy.hosts.rpc_proxy import build_proxy_registry
+from freecad_buddy.contracts import ResultEnvelope, mirror_text
+from freecad_buddy.hosts.rpc_proxy import build_proxy_registry, call_budgets
 
 logger = logging.getLogger("freecad_buddy.hosts.headless")
 
@@ -44,12 +45,61 @@ _WORKER_HOST = "127.0.0.1"
 _SHUTDOWN_GRACE_S = 5.0
 
 
-class WorkerClient:
-    """The worker's ``RpcClient``, which stops calling once the worker process has exited."""
+def _envelope(status: str, message: str, data: dict) -> ResultEnvelope:
+    structured: dict = {}
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": status,  # type: ignore[typeddict-item]
+        "detail": {"code": status, "message": message, "data": data},  # type: ignore[typeddict-item]
+        "structured_content": structured,
+        "text": mirror_text(structured),
+    }
 
-    def __init__(self, client: RpcClient, process: subprocess.Popen) -> None:
+
+class _AbandonedCall:
+    """A call whose budget ran out while its body still runs in the worker."""
+
+    def __init__(self, method: str, budget_s: float) -> None:
+        self.method = method
+        self.budget_s = budget_s
+        self.timed_out_at = time.monotonic()
+
+    def refusal(self) -> ResultEnvelope:
+        data = {"quarantined": True}
+        if time.monotonic() - self.timed_out_at >= self.budget_s:
+            return _envelope(
+                "WORKER_CRASHED",
+                f"not dispatched: a timed-out {self.method} call has run past twice its "
+                f"{self.budget_s:g} s budget in the headless worker; the session recovers on its "
+                "own if the call returns, else restart the headless host, which discards unsaved "
+                "open documents",
+                data,
+            )
+        return _envelope(
+            "TIMEOUT",
+            f"not dispatched: the session is quarantined while a timed-out {self.method} call "
+            "still runs in the headless worker; call again after it returns",
+            data,
+        )
+
+
+class WorkerClient:
+    """The worker's ``RpcClient``, bounded per call and quarantined after a timeout (AD-27).
+
+    Each call waits for the worker's reply for at most its method budget from ``budgets``. A
+    call that runs out returns ``TIMEOUT`` and leaves its body running in the worker; until that
+    body returns, every call is refused without dispatch. The refusal becomes ``WORKER_CRASHED``
+    once the body has run its budget a second time, but the worker is never ended, so no open
+    document is lost. Once the worker has exited, every call returns ``WORKER_CRASHED``.
+    """
+
+    def __init__(
+        self, client: RpcClient, process: subprocess.Popen, budgets: dict[str, float]
+    ) -> None:
         self._client = client
         self._process = process
+        self._budgets = budgets
+        self._abandoned: _AbandonedCall | None = None
 
     def call(self, method: str, params: dict | None = None) -> ResultEnvelope:
         code = self._process.poll()
@@ -58,7 +108,23 @@ class WorkerClient:
                 f"headless worker exited with code {code}; restart the headless host",
                 unreachable=True,
             )
-        return self._client.call(method, params)
+        if self._abandoned is not None:
+            if not self._client.reconnect_answered():
+                return self._abandoned.refusal()
+            self._abandoned = None
+        budget_s = self._budgets[method]
+        envelope = self._client.call(method, params, read_timeout_s=budget_s)
+        # The worker's inline marshal never times out, so a TIMEOUT is this client's read timeout.
+        if envelope.get("status") != "TIMEOUT":
+            return envelope
+        # Connect now, so the worker answers as soon as the abandoned body returns.
+        if not self._client.reconnect_answered():
+            self._abandoned = _AbandonedCall(method, budget_s)
+        return _envelope(
+            "TIMEOUT",
+            f"the headless worker did not answer {method} within its {budget_s:g} s budget",
+            {"marshal_timeout": True, "maybe_still_running": True},
+        )
 
     def close(self) -> None:
         self._client.close()
@@ -116,7 +182,7 @@ def run(argv: list[str] | None = None) -> int:  # noqa: ARG001 - reserved for fu
     if endpoint is None:
         return worker.wait()
 
-    client = WorkerClient(RpcClient(endpoint=endpoint, read_timeout_s=None), worker)
+    client = WorkerClient(RpcClient(endpoint=endpoint, read_timeout_s=None), worker, call_budgets())
     caps = Capabilities.from_env(dict(os.environ))
     audit_path = default_audit_path().resolve()
     logger.info("audit log: %s", audit_path)
