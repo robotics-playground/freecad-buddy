@@ -18,7 +18,7 @@ import pytest
 
 from freecad_buddy.adapters.marshal import InlineExecutor, Marshal
 from freecad_buddy.adapters.mcp_server import Capabilities, registered_tools
-from freecad_buddy.hosts.headless.entry import build_registry
+from freecad_buddy.hosts.headless.worker import build_registry
 from freecad_buddy.usecases import confirm
 from freecad_buddy.usecases.capabilities import auto_approve_enabled
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError

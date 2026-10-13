@@ -127,16 +127,22 @@ def discover(appdata_dir: str | Path | None = None) -> dict | None:
 
 
 class RpcClient:
-    """One connection to a discovered listener; ``call`` never raises."""
+    """One connection to a discovered listener; ``call`` never raises.
+
+    ``endpoint`` (``host``, ``port``, ``token``) replaces discovery when the caller already knows
+    its listener. ``read_timeout_s=None`` makes a read block until the reply arrives.
+    """
 
     def __init__(
         self,
         appdata_dir: str | Path | None = None,
         contract_version: str = "1",
         client: str = "freecad-buddy-external",
-        read_timeout_s: float = _DEFAULT_READ_TIMEOUT_S,
+        read_timeout_s: float | None = _DEFAULT_READ_TIMEOUT_S,
+        endpoint: dict | None = None,
     ) -> None:
         self._appdata_dir = appdata_dir
+        self._endpoint = endpoint
         self._contract_version = contract_version
         self._client = client
         self._read_timeout_s = read_timeout_s
@@ -146,6 +152,8 @@ class RpcClient:
         self._connect_error: str | None = None
 
     def _record(self) -> dict | None:
+        if self._endpoint is not None:
+            return self._endpoint
         return discover(self._appdata_dir)
 
     def _ensure_connected(self) -> bool:
