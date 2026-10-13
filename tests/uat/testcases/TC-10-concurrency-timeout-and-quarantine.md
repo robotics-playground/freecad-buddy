@@ -117,46 +117,44 @@ mcp document_close { doc: "<handle>" }
 
 ---
 
-### TC-10-03: A second client while the first is connected (SHIPPED behavior)
+### TC-10-03: A second client while a session is active is refused busy
 
 **Priority**: Critical
-**Design Ref**: `integration-mcp-freecad.md` §2.4 (single-client listener), `security-and-service-design.md` §2 (session)
+**Design Ref**: `integration-mcp-freecad.md` §3.2 (accept thread, busy refusal), §7 (FreeCAD busy), spine AD-26
 
-**Host**: the in-FreeCAD RPC listener.
+**Host**: the in-FreeCAD RPC listener, with the addon's MCP proxy as the active session.
 
-**This scenario pins what the code does, not what AD-26 specifies.** `_accept_loop`
-(`adapters/rpc_listener.py:217-234`) is a plain sequential loop: `sock.accept()` on line 222,
-then `self._serve_conn(conn)` on line 227, then close, then loop. While the first connection is
-served the loop is never back at `accept()`, so a second client does NOT receive an `-32000`
-busy refusal — it sits in the listen backlog (`sock.listen(1)` at line 145) and is served after
-the first disconnects. **The AD-26 busy refusal is not implemented; see TC-99-03.**
+AD-26: the bridge serves one client session at a time. The listener's accept thread runs every
+handshake, so a second client that authenticates while a session is active gets JSON-RPC `-32000`
+with the message `bridge busy: another client session is active`, and its connection is closed.
+Authentication runs first: a wrong token gets `auth failed`, never the busy message.
 
 **Given** the FreeCAD GUI is running with the addon loaded  
 **And** the discovery file is readable — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-"*.json`  
-**And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
+**And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle. This call also makes the proxy connect, and it keeps that connection as the active session  
+**And** the proxy holds the session — verify: `netstat -ano | findstr <listener-port>` shows one `ESTABLISHED` pair owned by the proxy pid  
 **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-03-before.png"}' | & cua-driver call get_window_state`  
 
 **When** the host, port and token are read from the discovery file  
 ```bash
 python3 -c "import glob,json,os;p=glob.glob(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-*.json'))[0];r=json.load(open(p));print(r['host'],r['port'],r['token'])"
 ```
-**And** client A is opened, completes `rpc_hello`, then issues a long read and holds the connection open  
-**And** while A is still connected, client B is opened to the same port, sends its `rpc_hello`, and the time until a reply frame arrives is recorded  
-**And** client A is closed, and when B's handshake reply lands is observed  
+**And** client B opens a TCP connection to that port, sends a valid `rpc_hello`, and records the time until the first reply frame arrives  
+**And** client C opens a TCP connection to that port and sends `rpc_hello` with a wrong token  
+**And** a `document_list` is issued through the proxy — `mcp document_list {}`  
 
-**Then** B's TCP connect succeeds immediately — verify: B's `socket.connect` returns without raising while A is connected  
-**And** B receives NO reply frame while A is connected — verify: a 5 s `recv` on B's socket times out with no bytes read  
-**And** B is NOT refused with `-32000` — verify: no frame carrying `"code": -32000` is ever read on B  
-**And** after A disconnects, B's `rpc_hello` is answered — verify: B reads one frame carrying `result.contract_version` equal to `"1"`  
-**And** B's served calls behave normally after that — verify: a `document_list` on B returns `status=OK`  
-**And** the listener logged no crash across the handover — verify: `grep -i "connection handler crashed" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns nothing  
-**And** the AD-26 gap is recorded — verify: `tests/uat/TC-99-ad-conformance-gaps.md` contains scenario `TC-99-03` asserting the unimplemented `-32000` refusal  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. A **View → Fit All** that itself hangs is diagnostic evidence that the GUI is blocked — and with a client holding the listener busy, that is the specific failure worth recording.  
-**And** *(visual)* the FreeCAD window is alive and shows a single coherent model state after the two clients settled — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-03-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the window paints, the title bar carries no `Not Responding`, no modal is stuck on screen, and one whole box is drawn and framed — not blank and not half-painted. A backlogged second client must never freeze the human's window. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**Then** B's TCP connect succeeds immediately — verify: `socket.create_connection((host, port), timeout=5)` returns without raising  
+**And** B is refused busy within 1 s — verify: B's first frame carries `"error": {"code": -32000, "message": "bridge busy: another client session is active"}` and arrived less than 1 s after B sent its hello  
+**And** B's connection is closed by the listener — verify: B's next `recv` returns zero bytes  
+**And** C is refused for its token, not for the session — verify: C's first frame carries `"error": {"code": -32000, "message": "auth failed"}`  
+**And** the session was undisturbed — verify: `mcp document_list {}` returns `OK` and lists the handle  
+**And** the listener logged the refusal and no crash — verify: `grep -c "refused a second client: a session is active" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` is at least 1, and `grep -i "connection handler crashed\|handshake crashed" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns nothing  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. A **View → Fit All** that itself hangs is diagnostic evidence that the GUI is blocked — record it as the finding.  
+**And** *(visual)* the FreeCAD window is alive and shows a single coherent model state after the refusals — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-03-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the window paints, the title bar carries no `Not Responding`, no modal is stuck on screen, and one whole box is drawn and framed at the same size and position as in the before image — not blank and not half-painted. A refused second client must never freeze the human's window. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
-# Close both test sockets; no files are written.
+# Close the test sockets; no files are written.
 ```
 ```
 mcp document_close { doc: "<handle>" }

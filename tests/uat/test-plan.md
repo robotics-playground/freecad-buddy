@@ -177,7 +177,7 @@ PASS-with-note.
 ### Out-of-Scope
 - Epics 4-7 work: designer loop, repair loop, `verify_visual`, TechDraw judging, Phase-4 service.
   Every deferred item and its reason is listed in `APPENDIX-A-deferred-coverage.md`.
-- The three known AD conformance gaps (AD-3, AD-25, AD-26). They are recorded in TC-99 as
+- The known AD conformance gaps (AD-3, AD-25). They are recorded in TC-99 as
   expected-fail scenarios and are **not** part of the green gate.
 - The two internal RPC-only tools `export_self_read_stl` and `export_self_read_3mf`. They are
   filtered out of `tools/list` by design; their absence is asserted in TC-01, nothing else.
@@ -288,7 +288,7 @@ only **Round numbers to FreeCAD display precision** applies at once.
 | TC-13 | GUI ↔ MCP parity | Critical | GUI/Parity | mcp-tools-design §1.1, integration-mcp-freecad |
 | TC-14 | Viewport framing & auto-fit (Epic 8) | Critical | Quality/Output | spine §AD-29..§AD-33, FR24-FR26 |
 | TC-16 | Lean agent loop (Epic 11) | Critical | Mutation/Output | spine §AD-5, §AD-6, §AD-7, §AD-10, §AD-17 |
-| TC-99 | AD conformance gaps (EXPECTED-FAIL) | Informational | Conformance | spine §AD-3, §AD-25, §AD-26 |
+| TC-99 | AD conformance gaps (EXPECTED-FAIL) | Informational | Conformance | spine §AD-3, §AD-25 |
 
 ## 8. Test Data
 
@@ -340,8 +340,6 @@ behaviour that deviates from it:
 - **AD-25** — no per-session working directory. Snapshots use `tempfile.mkdtemp`; the audit log
   path is cwd-relative (`adapters/audit_log.py:23`). There is no `snap/ exports/ audit.log tmp/`
   layout and no start-of-session sweep.
-- **AD-26** — `_accept_loop` in the RPC listener is sequential (accept → serve → close → loop). A
-  second client blocks in the accept backlog instead of receiving a `-32000` busy error.
 
 Reading the result:
 - A TC-99 scenario that **fails** is the recorded, accepted state. It does not block the release.

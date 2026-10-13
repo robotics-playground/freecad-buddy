@@ -16,13 +16,22 @@ import socket
 from pathlib import Path
 
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
-from freecad_buddy.contracts.rpc import CHANNEL_ERROR_STATUS
+from freecad_buddy.contracts.rpc import (
+    CHANNEL_ERROR_STATUS,
+    RPC_BUSY_MESSAGE,
+    RPC_ERROR_WORKER_CRASHED,
+)
 from freecad_buddy.usecases.process import pid_alive
 
 logger = logging.getLogger("freecad_buddy.rpc_client")
 
 _CONNECT_TIMEOUT_S = 2.0
 _HELLO_TIMEOUT_S = 5.0
+# How long a re-asked probe waits for the listener's answer. Measured on Windows: an idle listener
+# accepts a hello in 0.16 ms at most (300 runs), so 0.1 s leaves room for a loaded worker. A busy
+# listener answers only after its 0.2 s grace (rpc_listener._BUSY_GRACE_S), so the probe stays
+# pending and the quarantined call is refused after at most this wait.
+_PROBE_REASK_WAIT_S = 0.1
 _DEFAULT_READ_TIMEOUT_S = 130.0
 _MAX_FRAME_BYTES = 16 * 1024 * 1024
 
@@ -187,9 +196,10 @@ class RpcClient:
             sock.settimeout(_HELLO_TIMEOUT_S)
             self._sock = sock
             self._buf = bytearray()
-            if not self._handshake(token):
+            rejection = self._handshake(token)
+            if rejection is not None:
                 self._close()
-                self._connect_error = "handshake rejected"
+                self._connect_error = rejection
                 return False
         except OSError:
             self._close()
@@ -210,28 +220,56 @@ class RpcClient:
             },
         }
 
-    def _handshake(self, token) -> bool:
+    def _handshake(self, token) -> str | None:
+        """Send ``rpc_hello``; ``None`` when accepted, else why it was not."""
         self._send(self._hello_request(token))
         try:
             resp = self._read_frame()
         except (ValueError, OSError):
-            return False
-        return _is_hello_accepted(resp)
+            return "handshake rejected"
+        if _is_hello_accepted(resp):
+            return None
+        if _is_busy(resp):
+            return RPC_BUSY_MESSAGE
+        return "handshake rejected"
 
     def reconnect_answered(self) -> bool:
-        """Reconnect without waiting for the hello reply; True once the listener has answered it.
+        """Reconnect without waiting for the hello reply; True once the listener has accepted it.
 
-        The first call connects and sends ``rpc_hello``; each later call reads what has arrived
-        and never blocks. A listener that serves one connection at a time accepts this one only
-        after it has finished the call it is running, so the answer proves that call returned.
-        One such connection at most is pending: a new one per call would queue stale connections
-        in the listener's backlog. The answered connection becomes this client's connection.
+        The first call connects and sends ``rpc_hello``; each later call reads what has arrived.
+        The listener accepts this hello only after the previous session has ended, and that
+        session's serving loop ends only after the call it is running returns, so an accepted
+        hello proves that call returned. A busy refusal is only as recent as the probe that got
+        it, and the call may have returned since, so a refused probe is replaced by a new one that
+        gets a short wait for its answer. One probe at most is pending. The accepted connection
+        becomes this client's connection.
         """
         if self._sock is not None:
             return True
         if self._probe is None and not self._open_probe():
             return False
+        accepted = self._probe_accepted(0.0)
+        if accepted is False:
+            if not self._open_probe():
+                return False
+            accepted = self._probe_accepted(_PROBE_REASK_WAIT_S)
+        if not accepted:
+            return False
         assert self._probe is not None
+        rest = bytes(self._probe_buf).partition(b"\n")[2]
+        self._sock, self._probe = self._probe, None
+        self._buf = bytearray(rest)
+        self._probe_buf = bytearray()
+        self._sock.settimeout(self._read_timeout_s)
+        return True
+
+    def _probe_accepted(self, wait_s: float) -> bool | None:
+        """Whether the probe's hello was accepted; ``None`` while no reply arrives in ``wait_s``.
+
+        A refused or failed probe is closed.
+        """
+        assert self._probe is not None
+        self._probe.settimeout(wait_s)
         try:
             while b"\n" not in self._probe_buf:
                 chunk = self._probe.recv(65536)
@@ -239,24 +277,19 @@ class RpcClient:
                     self._close_probe()
                     return False
                 self._probe_buf.extend(chunk)
-        except BlockingIOError:
-            return False
+        except (BlockingIOError, socket.timeout):
+            return None
         except OSError:
             self._close_probe()
             return False
-        line, _newline, rest = bytes(self._probe_buf).partition(b"\n")
+        line = bytes(self._probe_buf).partition(b"\n")[0]
         try:
             accepted = _is_hello_accepted(json.loads(line.decode("utf-8")))
         except ValueError:
             accepted = False
         if not accepted:
             self._close_probe()
-            return False
-        self._sock, self._probe = self._probe, None
-        self._buf = bytearray(rest)
-        self._probe_buf = bytearray()
-        self._sock.settimeout(self._read_timeout_s)
-        return True
+        return accepted
 
     def _open_probe(self) -> bool:
         connected = self._connect()
@@ -291,7 +324,9 @@ class RpcClient:
         """
         try:
             if not self._ensure_connected():
-                return _worker_crashed(self._connect_error or "unreachable", unreachable=True)
+                # A busy bridge is reachable; only its session slot is taken.
+                busy = self._connect_error == RPC_BUSY_MESSAGE
+                return _worker_crashed(self._connect_error or "unreachable", unreachable=not busy)
             assert self._sock is not None
             self._sock.settimeout(
                 self._read_timeout_s if read_timeout_s is None else read_timeout_s
@@ -369,6 +404,15 @@ def _encode(obj: dict) -> bytes:
 
 def _is_hello_accepted(resp) -> bool:
     return isinstance(resp, dict) and "result" in resp and "error" not in resp
+
+
+def _is_busy(resp) -> bool:
+    error = resp.get("error") if isinstance(resp, dict) else None
+    return (
+        isinstance(error, dict)
+        and error.get("code") == RPC_ERROR_WORKER_CRASHED
+        and error.get("message") == RPC_BUSY_MESSAGE
+    )
 
 
 __all__ = ["RpcClient", "discover"]

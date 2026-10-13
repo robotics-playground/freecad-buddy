@@ -44,7 +44,7 @@ The HTTP host and port are hard-coded in `gui_external/entry.py` as `_HOST="127.
 
 ## Known deviations
 
-Three architecture decisions are recorded in the spine but are not met by the shipped code. They
+Two architecture decisions are recorded in the spine but are not met by the shipped code. They
 are **not** deferred — the surface exists and is testable, it just behaves differently than the
 decision says. Each has a case in **TC-99**, which is an expected-fail gate, separate from the
 green gate.
@@ -53,7 +53,6 @@ green gate.
 | --- | --- | --- |
 | AD-3 | The MCP endpoint is authenticated | `:8765` has no auth. `gui_external/entry.py` is a bare Starlette `Mount("/mcp")` — no middleware, no bearer token, no `Origin` check, no CORS. The loopback bind is the only control. A source search for `Bearer`, `Authorization`, or `Origin` hits only FreeCAD's own `App::Origin`. |
 | AD-25 | Each session gets a working directory (`snap/ exports/ audit.log tmp/`) swept at start | No session workdir. Snapshots go to `tempfile.mkdtemp` with prefix `FCB_TMP_snap_`; the audit log path is cwd-relative (`adapters/audit_log.py:23`). There is no start-of-session sweep. |
-| AD-26 | A second RPC client is refused with a `-32000` busy error | `_accept_loop` is sequential: accept → serve → close → loop. A second client blocks in the accept backlog and never receives `-32000`. |
 
 See `test-plan.md` §7 Gate 2 for how to read a TC-99 result. A TC-99 case that starts passing is a
 signal to promote it into the green gate, not a regression.

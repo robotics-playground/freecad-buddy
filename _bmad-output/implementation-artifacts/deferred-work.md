@@ -1709,3 +1709,11 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6d-rpc-logging-and-discovery-acl.md`
   summary: The UAT test cases still look for the old `frame read failed` ERROR lines and have no step for the new INFO/WARNING levels, the absence of tracebacks, or the method name in the `mcp-proxy.log` drop line.
   evidence: `tests/uat/testcases/TC-10-concurrency-timeout-and-quarantine.md:450,484,529` grep the old messages only.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6b-rpc-busy-refusal.md`
+  summary: The RPC listener runs every handshake on one accept thread with a 5 s hello deadline, so a local process that keeps opening silent connections makes each new client wait up to 5 s, and a valid client queued behind it can hit its own 5 s hello timeout.
+  evidence: `rpc_listener.py` `_accept_loop` calls `_handshake` inline; `_HELLO_TIMEOUT_S = 5.0` on both ends. A short-lived thread per handshake would close it. The active session is not affected (review finding 11).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6b-rpc-busy-refusal.md`
+  summary: TC-10 cites `rpc_listener.py` line numbers that moved, and no UAT step covers the 5 s hello deadline, the headless probe lift after a busy answer, or the unbuilt AD-26 multi-client mode.
+  evidence: For example TC-10 cites `adapters/rpc_listener.py:36` for `_MAX_FRAME_BYTES`, now at `:43`. Fits Story 10.7 (UAT suite and harness maintenance) (review finding 17).

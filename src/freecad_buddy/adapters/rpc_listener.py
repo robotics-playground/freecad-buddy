@@ -5,8 +5,12 @@ NDJSON JSON-RPC over a localhost TCP socket. The first frame on every connection
 request is dispatched through **exactly one** ``marshal.call`` — the registry it dispatches holds
 un-marshaled handlers, because a second marshal layer on the single Qt main thread would
 deadlock. Requests run strictly sequentially per connection. A malformed frame never kills the
-accept loop: it yields an ``INVALID_INPUT`` envelope where decodable, otherwise closes just that
+serving loop: it yields an ``INVALID_INPUT`` envelope where decodable, otherwise closes just that
 connection.
+
+One client session at a time (AD-26): an accept thread runs every handshake, so a second client
+that authenticates while a session is active gets the busy refusal within 1 s instead of waiting in
+the backlog. The serving loop runs the session's calls.
 """
 
 from __future__ import annotations
@@ -15,8 +19,10 @@ import hmac
 import json
 import logging
 import os
+import queue
 import socket
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -26,6 +32,7 @@ from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited, wrot
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.contracts.rpc import (
+    RPC_BUSY_MESSAGE,
     RPC_ERROR_NO_HANDSHAKE,
     RPC_ERROR_VERSION_MISMATCH,
     RPC_ERROR_WORKER_CRASHED,
@@ -35,6 +42,17 @@ logger = logging.getLogger("freecad_buddy.rpc_listener")
 
 _MAX_FRAME_BYTES = 16 * 1024 * 1024
 _SUPPORTED_VERSIONS = ["1"]
+# The client's own hello budget (rpc_client._HELLO_TIMEOUT_S): a client that has not sent its
+# hello by then has given up, and the accept thread must not wait longer on it.
+_HELLO_TIMEOUT_S = 5.0
+# How long an authenticated hello waits for the active session to end before the busy refusal.
+# A client that reconnects right after it closes its session (a restarted proxy, the headless
+# front's probe after an abandoned body returns) arrives before the serving loop has read the
+# end of the old connection; without this wait it is refused. Measured on Windows: an idle process
+# marks the session ended within 0.15 ms of the client's close (p99 of 300), but under pytest with
+# no wait, about 1 run in 25 refused the reconnect. 0.2 s covers a loaded process and keeps the
+# busy reply well under 1 s.
+_BUSY_GRACE_S = 0.2
 
 
 def _appdata_dir() -> Path:
@@ -61,11 +79,12 @@ class _FrameReader:
         self._conn = conn
         self._buf = bytearray()
 
-    def read_line(self) -> str | None:
+    def read_line(self, deadline: float | None = None) -> str | None:
         """Return the next ``\\n``-terminated line decoded UTF-8, or ``None`` at EOF.
 
         Raises ``ValueError`` on an over-cap frame or non-UTF-8 bytes so the caller can reply
-        ``INVALID_INPUT`` / close the connection without killing the accept loop.
+        ``INVALID_INPUT`` / close the connection without stopping the listener. Raises
+        ``socket.timeout`` when ``deadline`` (a ``time.monotonic`` value) passes first.
         """
         while True:
             nl = self._buf.find(b"\n")
@@ -75,6 +94,11 @@ class _FrameReader:
                 return raw.decode("utf-8")
             if len(self._buf) > _MAX_FRAME_BYTES:
                 raise ValueError("frame exceeds 16 MiB cap")
+            if deadline is not None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise socket.timeout("deadline passed")
+                self._conn.settimeout(remaining)
             chunk = self._conn.recv(65536)
             if not chunk:
                 if self._buf:
@@ -137,6 +161,11 @@ class RpcListener:
         self._sock: socket.socket | None = None
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
+        # Cleared by the accept thread once it has answered a session's hello; set by the serving
+        # loop after that session ends.
+        self._idle = threading.Event()
+        self._idle.set()
+        self._sessions: queue.Queue[tuple[socket.socket, _FrameReader] | None] = queue.Queue()
         self._suspect_docs: set[str] = set()
         self._suspect_no_doc = False
         self._discovery_path: Path | None = None
@@ -148,7 +177,7 @@ class RpcListener:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self._host, self._port))
-        sock.listen(1)
+        sock.listen(socket.SOMAXCONN)
         self._sock = sock
         host, port = sock.getsockname()[:2]
         self._port = port
@@ -157,22 +186,29 @@ class RpcListener:
         return host, port
 
     def start_threaded(self) -> tuple[str, int]:
-        """Bind, write the discovery file when enabled, and run the accept loop on a thread."""
+        """Bind, write the discovery file when enabled, and run the serving loop on a thread."""
         host, port = self.bind()
-        self._thread = threading.Thread(target=self._accept_loop, name="fcb-rpc", daemon=True)
+        self._start_accept_thread()
+        self._thread = threading.Thread(target=self._serve_loop, name="fcb-rpc", daemon=True)
         self._thread.start()
         return host, port
 
     def serve_forever_inline(self) -> tuple[str, int]:
-        """Bind unless ``bind`` already ran, then run the accept loop on the calling thread."""
+        """Bind unless ``bind`` already ran, then run the serving loop on the calling thread."""
         if self._sock is None:
             self.bind()
-        self._accept_loop()
+        self._start_accept_thread()
+        self._serve_loop()
         return self._host, self._port
 
     def stop(self) -> None:
-        """Stop accepting, close the socket, and delete the discovery file when one was written."""
+        """Stop accepting, close the socket, and delete the discovery file when one was written.
+
+        An idle serving loop returns at once; one that serves a session returns when that
+        session's connection closes.
+        """
         self._stop.set()
+        self._sessions.put(None)
         sock = self._sock
         if sock is not None:
             # On Linux, close() alone does not wake an accept() blocked on another thread;
@@ -231,6 +267,9 @@ class RpcListener:
 
     # -- accept / serve ----------------------------------------------------------------------
 
+    def _start_accept_thread(self) -> None:
+        threading.Thread(target=self._accept_loop, name="fcb-rpc-accept", daemon=True).start()
+
     def _accept_loop(self) -> None:
         sock = self._sock
         assert sock is not None
@@ -240,8 +279,33 @@ class RpcListener:
             except OSError:
                 # Socket closed by stop(), or a transient accept error: end the loop cleanly.
                 return
+            reader = _FrameReader(conn)
             try:
-                self._serve_conn(conn)
+                admitted = self._handshake(conn, reader)
+            except Exception:  # noqa: BLE001 - one bad connection must not stop the listener
+                logger.exception("handshake crashed")
+                admitted = False
+            if admitted and self._stop.is_set():
+                # stop() has already queued the serving loop's end; nothing would serve this one.
+                self._idle.set()
+                admitted = False
+            if admitted:
+                conn.settimeout(None)
+                self._sessions.put((conn, reader))
+                continue
+            try:
+                conn.close()
+            except OSError:
+                pass
+
+    def _serve_loop(self) -> None:
+        while not self._stop.is_set():
+            session = self._sessions.get()
+            if session is None:
+                return
+            conn, reader = session
+            try:
+                self._serve_conn(conn, reader)
             except Exception:  # noqa: BLE001 - one bad connection must not stop the listener
                 logger.exception("connection handler crashed")
             finally:
@@ -249,11 +313,9 @@ class RpcListener:
                     conn.close()
                 except OSError:
                     pass
+                self._idle.set()
 
-    def _serve_conn(self, conn: socket.socket) -> None:
-        reader = _FrameReader(conn)
-        if not self._handshake(conn, reader):
-            return
+    def _serve_conn(self, conn: socket.socket, reader: _FrameReader) -> None:
         while not self._stop.is_set():
             line = self._read_line(reader)
             if line is None:
@@ -266,10 +328,13 @@ class RpcListener:
             if not self._write_frame(conn, {"jsonrpc": "2.0", "id": _safe_id(line), "result": env}):
                 return
 
-    def _read_line(self, reader: _FrameReader) -> str | None:
+    def _read_line(self, reader: _FrameReader, deadline: float | None = None) -> str | None:
         """Read one frame; ``None`` when the connection has ended, logged once by cause."""
         try:
-            line = reader.read_line()
+            line = reader.read_line(deadline)
+        except socket.timeout:
+            logger.warning("no rpc_hello within %g s; closing", _HELLO_TIMEOUT_S)
+            return None
         except ConnectionError as exc:
             # A client that exits without a clean shutdown resets its socket; that also ends a
             # session normally.
@@ -286,7 +351,8 @@ class RpcListener:
     # -- handshake ---------------------------------------------------------------------------
 
     def _handshake(self, conn: socket.socket, reader: _FrameReader) -> bool:
-        line = self._read_line(reader)
+        """True when this connection authenticated and became the session."""
+        line = self._read_line(reader, time.monotonic() + _HELLO_TIMEOUT_S)
         if line is None:
             return False
         try:
@@ -318,12 +384,21 @@ class RpcListener:
                 data={"supported": list(_SUPPORTED_VERSIONS)},
             )
             return False
+        # Checked after authentication, so an unauthenticated caller learns nothing about the
+        # session.
+        if not self._idle.wait(_BUSY_GRACE_S):
+            logger.info("refused a second client: a session is active")
+            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, RPC_BUSY_MESSAGE)
+            return False
         result = {
             "contract_version": self._contract_version,
             "freecad_version": self._freecad_version,
             "capabilities": dict(self._capabilities),
         }
-        return self._write_frame(conn, {"jsonrpc": "2.0", "id": req_id, "result": result})
+        if not self._write_frame(conn, {"jsonrpc": "2.0", "id": req_id, "result": result}):
+            return False
+        self._idle.clear()
+        return True
 
     # -- request handling --------------------------------------------------------------------
 
