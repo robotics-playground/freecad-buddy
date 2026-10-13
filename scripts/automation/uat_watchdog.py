@@ -172,6 +172,21 @@ def _created_after(path: Path, since: datetime) -> bool:
     return datetime.fromtimestamp(created) > since
 
 
+def parse_since(value: str) -> datetime:
+    """Parse the ``--since`` cutoff as local naive time, the form ``_created_after`` compares.
+
+    An aware timestamp (``+07:00``, ``Z``) is converted to local time and its offset dropped:
+    comparing it with the naive ``datetime.fromtimestamp`` raises ``TypeError``.
+    """
+    try:
+        since = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"not an ISO timestamp: {value!r}") from exc
+    if since.tzinfo is not None:
+        since = since.astimezone().replace(tzinfo=None)
+    return since
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--session", default="uat", help="cua-driver session id (default: uat)")
@@ -179,6 +194,7 @@ def main() -> int:
     parser.add_argument("--window", type=int, default=None, help="expected FreeCAD window id")
     parser.add_argument(
         "--since",
+        type=parse_since,
         default=None,
         help="ISO timestamp; fail if a snapshot dir was created after it",
     )
@@ -190,13 +206,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    since = datetime.fromisoformat(args.since) if args.since else None
-
     checks = (
         ("cua-session", lambda: check_cua_session(args.session, args.revive)),
         ("freecad-window", lambda: check_window(args.session, args.pid, args.window)),
         ("mcp-proxy", check_proxy),
-        ("temp-hygiene", lambda: check_temp(since)),
+        ("temp-hygiene", lambda: check_temp(args.since)),
     )
 
     for name, run in checks:

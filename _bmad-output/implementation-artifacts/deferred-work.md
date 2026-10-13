@@ -1733,3 +1733,19 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6c-proxy-identity-and-orphan-exit.md`
   summary: No UAT scenario covers a second live FreeCAD whose proxy holds `:8765`, the forced orphan wait, or the provisioning path with a held port; `/healthz` adds an unauthenticated route that reveals the FreeCAD pid, under the open AD-3 HTTP auth gap.
   evidence: TC-01-14, TC-10-12, TC-12-15 relaunch only after the orphan is gone; TC-99-02 records the AD-3 gap (review findings 20, 21, 22).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7-uat-suite-and-harness-maintenance.md`
+  summary: `uat_watchdog.py` `check_temp` scans the OS temp folder for `FCB_TMP_snap_*`, but snapshots now live under `<workdir>/tmp/FCB_TMP_session_*/`, so the `--since` leak check can never fire, and `tests/uat/README.md` rule 9 still promises that stop.
+  evidence: `scripts/automation/uat_watchdog.py:149-150` vs `usecases/transaction.py:107` and `usecases/documents.py:61-73`. Story 10.7 decision D1 fixed only the timestamp crash (review finding 2).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7-uat-suite-and-harness-maintenance.md`
+  summary: The Story 10.7 live route checks ran on a FreeCAD above the agent shell's integrity level, so the `Stop-Process` unclean-kill route (TC-12-15, harness §7) and the `launch_app` `additional_arguments` open route are unconfirmed on 1.1.4.
+  evidence: `get_Handle()` on pid 33392 returned "Access is denied" (spec Implementation Notes). Settle in the 10.7b or 10.8 preflight with the `cua-driver` daemon started from the agent shell (review findings 7, 8).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7-uat-suite-and-harness-maintenance.md`
+  summary: TC-12-09 opens the modal Preferences dialog through a `script_exec` `QTimer` and dismisses it with a second `script_exec`; if marshalled calls stall behind the modal loop, the dialog stays up for the rest of the suite (medium, unverified).
+  evidence: Route never run. Settle by running TC-12-09 once and checking that a `script_exec` call is served while the modal loop is up (review finding 10).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7-uat-suite-and-harness-maintenance.md`
+  summary: Committed UAT test cases and the GUI harness standard depend on gitignored `_automation/uat/` scripts (`launch_env.sh`, `close_all.py`, `fcb.py`, `launch.json`) with machine-specific paths, so another operator or the 10.7b runner cannot reproduce them from the repository.
+  evidence: `.gitignore:32`; harness Tools table; TC-11-17 launch step. Natural owner is Story 10.7b, which builds the scripted runner (review finding 11).

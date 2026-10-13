@@ -20,13 +20,19 @@ mutation and every scenario closes on a capture of the human's own FreeCAD windo
 
 ## Preconditions
 
+- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
 - [ ] FreeCAD GUI is open and the addon spawned the proxy (verify: `netstat -ano | grep :8765` shows LISTENING)
-- [ ] The MCP tool surface is complete (verify: `mcp query_capabilities {}` lists 44 tools)
+- [ ] The MCP tool surface is complete (verify: `tools/list` returns the live count: 45 typed tools, plus `script_exec` when it is on, so 46 by default)
 - [ ] PartDesign is available on this build (verify: `mcp feature_body_create { doc: <handle>, name: "ProbeBody" }` returns `status=OK`, not `PartDesign is unavailable on this FreeCAD build`)
 - [ ] The host runs the operator auto-approve posture, so a mutation needs no `preview_id` (verify: the addon log carries `SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`)
 - [ ] Auto-approve is on for this launch: the **Auto-approve mutations** preference is on (the default) and `FREECAD_BUDDY_AUTO_APPROVE` is unset, or the variable is `1` in the environment that launched FreeCAD. The preference off or the variable `0` turns the confirm gate on (verify: the banner line above is present in `%APPDATA%/FreeCAD/v1-1/freecad-buddy/addon.log` for this launch)
 - [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
+- [ ] `script_exec` is on (the default; verify: `tools/list` includes `script_exec`). Scenarios use it as an outside oracle and to build fixtures the typed tools refuse. It opens no transaction, so `document_undo` does not revert it.
+- [ ] **Topology oracle.** `query_object` returns type, label and properties only, not face or edge names. Take sub-element names from an outside oracle: `mcp script_exec { doc: <handle>, code: "o = doc.getObject('<name>'); result = [(i + 1, round(e.Length, 3), [round(v, 3) for v in (e.BoundBox.XMin, e.BoundBox.YMin, e.BoundBox.ZMin, e.BoundBox.XMax, e.BoundBox.YMax, e.BoundBox.ZMax)]) for i, e in enumerate(o.Shape.Edges)]" }` (use `o.Shape.Faces` with `f.Surface` and `f.BoundBox` for faces), or the `fcb` env. Edge and face numbers below are the FreeCAD 1.1.4 values; on another build, take them from the oracle.
+- [ ] **Link targets in `query_object`.** `query_object` shows a linked object by its type, not its name: a link property reads `["<PartDesign::Pad>", ["Face6"]]` (`_json_safe`, `queries.py:204-230`). The sub-element names are exact. Read the link target itself through `mcp query_dependencies { doc: <handle>, object: <feature> }` (`out_list`), or through `script_exec`.
+- [ ] **Session temp path.** The bridge writes its snapshots under `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`), never under `$TEMP`. Written `<session tmp>` below. The agent shell may get "Access is denied" on it: list it in-process with `mcp script_exec { doc: <handle>, code: "import os; result = os.listdir(r'<session tmp>')" }`, or take the folder from a `mutation.snapshot_path`.
 
 **Confirm convention for this file**: every `feature_*` call below is a geometry-intent mutation and
 is gated by AD-10. This file runs under the operator auto-approve posture, so no scenario passes a
@@ -56,13 +62,13 @@ mcp feature_body_create { doc: <boxhandle>, name: "AdoptBody", base_feature: "Bo
 
 **Then** The empty Body commits — verify: step 1 returns `status=OK` with `mutation.rolled_back=false`  
 **And** An empty Body carries no solid — verify: `mcp query_object { doc: <handle>, object: "PlateBody" }` reports no Tip, because a new Body's `Shape` is null until a feature is added  
-**And** The Body brings its origin — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` shows an `App::Origin` child under `PlateBody` with its plane, line and point children  
+**And** The Body brings its origin — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` shows a tree line `[ORIGIN] Origin` under `PlateBody`, with its `[AXIS]` lines (`X_Axis`, `Y_Axis`, `Z_Axis`) and `[PLANE]` lines (`XY_Plane`, `XZ_Plane`, `YZ_Plane`) under it  
 **And** The adoption commits — verify: step 2 returns `status=OK` with `mutation.rolled_back=false`  
 **And** The adopted Body reports the base volume — verify: `mcp query_mass_properties { doc: <boxhandle>, object: "AdoptBody" }` returns `volume=6000.0` within 0.1 %  
 **And** The adopted Body is a valid solid — verify: `mcp verify_shape { doc: <boxhandle>, object: "AdoptBody" }` returns `status=OK`  
 **And** A double adoption is refused — verify: a second `feature_body_create { base_feature: "Box" }` returns `status=INVALID_INPUT` naming `is already adopted by a Body`  
 **And** A shapeless base is refused — verify: `base_feature` naming a sketch returns `status=INVALID_INPUT` naming `carries no shape to adopt`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <boxhandle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: <boxhandle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the adopted 10 x 20 x 30 box standing alone as the adopting Body's solid — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm one rectangular solid of 10 x 20 x 30 proportions is wholly inside the viewport, and that the empty `PlateBody` contributes no visible geometry. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -99,7 +105,7 @@ mcp query_mass_properties { doc: <handle>, object: "BlockPad" }
 **And** The pad became the Body Tip — verify: the same envelope's `feature_state` reports `body="BlockBody"` and `is_tip=true`  
 **And** `up_to` defaults to Length — verify: `mcp query_object { doc: <handle>, object: "BlockPad" }` reports the extrude `Type` as `Length`, because `up_to` was omitted  
 **And** The post-verify gate passed every step — verify: the envelope carries `mutation.post_verify.passed=true`, `recompute_clean=true`, `is_valid=true` and `tnp_audit.status=CLEAN`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows one padded rectangular solid of 20 x 30 x 10 proportions — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-02-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm a single box-shaped solid whose 20 x 30 footprint is visibly wider than its 10 mm height, wholly inside the viewport, with no second solid and no leftover sketch outline standing proud of it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -134,7 +140,7 @@ mcp query_placement { doc: <handle>, object: "MidPad" }
 **And** The solid is symmetric about the sketch plane — verify: `mcp query_mass_properties { doc: <handle>, object: "MidPad" }` reports a bounding box running from z = -5 mm to z = +5 mm, not 0 to 10  
 **And** The centre of mass sits on the plane — verify: the same read reports `com.z` equal to `{value: 0, unit: "mm"}` within 0.1 %  
 **And** The solid is valid — verify: `mcp verify_shape { doc: <handle>, object: "MidPad" }` returns `status=OK`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows one 20 x 30 x 10 solid straddling the XY plane, half above and half below — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-03-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the solid sits centred on the origin planes rather than resting entirely on top of the XY plane. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -176,7 +182,7 @@ mcp feature_pad { doc: <handle>, body: "TaperBody", profile: "TaperProfile",
 **And** `taper_angle` changes the side faces — verify: `mcp query_mass_properties { doc: <handle>, object: "TaperPad" }` returns a volume different from `6000.0`, and `mcp query_object { doc: <handle>, object: "TaperPad" }` reports `TaperAngle` as `5 deg`  
 **And** All three solids are valid — verify: `mcp verify_shape` returns `status=OK` for each of `RevPad`, `TwoPad`, `TaperPad`  
 **And** A taper outside -90..90 degrees is rejected — verify: `taper_angle: { value: 120, unit: "deg" }` returns `status=INVALID_INPUT` naming `taper_angle must be in` its bound, with no `mutation.snapshot_path`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows three distinct padded solids — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm `RevPad` grows downward from its sketch plane, `TwoPad` is visibly taller than `RevPad` because it carries material on both sides, and `TaperPad` has sloped side faces rather than vertical ones. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -213,7 +219,7 @@ mcp feature_pocket { doc: <handle>, body: "PlateBody", profile: "ThroughProfile"
 **And** Both solids are valid — verify: `mcp verify_shape { doc: <handle>, object: "ThroughPocket" }` returns `status=OK`  
 **And** `ThroughAll` is checked against the live Pocket enum — verify: `mcp query_object { doc: <handle>, object: "ThroughPocket" }` reports `Type=ThroughAll`; the same value on a `feature_pad` is refused, because Pad carries a different member at that position  
 **And** A ThroughAll pocket needs no length — verify: step 2 supplied no `length` and was not refused; only a length-driven type requires one  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows a 60 x 40 x 5 mm plate carrying one shallow square recess and one square hole cut clean through — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-05-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the `SlotPocket` recess still has a visible floor while the `ThroughPocket` opening shows the background or the far side through it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -246,12 +252,12 @@ mcp query_mass_properties { doc: <handle>, object: "ShaftRev" }
 **Then** The revolution commits — verify: the envelope returns `status=OK` with `mutation.rolled_back=false`  
 **And** The volume matches the golden cylinder — verify: `mcp query_mass_properties { doc: <handle>, object: "ShaftRev" }` returns `volume=1570.7963` mm³ (r=5, h=20) within 0.1 %, the same value as `benchmarks/g0/golden-models/cylinder-r5-h20.FCStd`  
 **And** The solid is a closed cylinder — verify: the mutation envelope's `feature_state.shape_summary` reports `solid_count=1`, `face_count=3` and `is_valid=true`  
-**And** `ReferenceAxis` was written — verify: `mcp query_object { doc: <handle>, object: "ShaftRev" }` names `ShaftProfile` and `V_Axis` as the reference axis  
+**And** `ReferenceAxis` was written — verify: `mcp query_object { doc: <handle>, object: "ShaftRev" }` reports `ReferenceAxis` as `["<Sketcher::SketchObject>", ["V_Axis"]]` (the link target shows as its type; Preconditions, **Link targets**), and `mcp query_dependencies { doc: <handle>, object: "ShaftRev" }` lists `ShaftProfile` in `out_list`  
 **And** The solid verifies — verify: `mcp verify_shape { doc: <handle>, object: "ShaftRev" }` returns `status=OK`  
 **And** A non-axis subelement on the profile is rejected — verify: `mapped_name: "Edge1"` on the profile sketch returns `status=INVALID_INPUT` naming `axis on the profile sketch must be one of ['H_Axis', 'N_Axis', 'V_Axis']`  
 **And** An angle above 360 degrees is rejected — verify: `angle: { value: 400, unit: "deg" }` returns `status=INVALID_INPUT` with no `mutation.snapshot_path`  
 **And** `second_angle` without the two-angle type is rejected — verify: supplying `second_angle` while `up_to` is omitted returns `status=INVALID_INPUT` naming `second_angle is only read when up_to='TwoAngles'`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows one closed cylinder about 10 mm across and 20 mm tall — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-06-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm a full round solid of revolution, not a partial wedge and not an open surface, with its height visibly about twice its diameter. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -282,14 +288,14 @@ mcp query_mass_properties { doc: <handle>, object: "ClearanceHole" }
 ```
 
 **Then** The hole commits — verify: the envelope returns `status=OK` with `mutation.rolled_back=false`  
-**And** The volume falls by the bore — verify: `mcp query_mass_properties { doc: <handle>, object: "ClearanceHole" }` returns `volume=11928.7` mm³ (12000 - pi x 2.75² x 3) within 0.1 %  
+**And** The volume falls by the bore — verify: `mcp query_mass_properties { doc: <handle>, object: "ClearanceHole" }` returns `volume=11915.64` mm³ within 0.1 %: 12000 minus the 3 mm bore (pi x 2.75² x 3 = 71.27) minus the cone tip of FreeCAD's default `DrillPoint` `Angled` 118° ((1/3) x pi x 2.75² x 2.75 / tan 59° = 13.09); `mcp query_object { doc: <handle>, object: "ClearanceHole" }` reports `DrillPoint=Angled`  
 **And** `depth_type` defaults to Dimension — verify: `mcp query_object { doc: <handle>, object: "ClearanceHole" }` reports `DepthType=Dimension`, because `depth_type` was omitted  
 **And** The hole is a blind bore, not a through cut — verify: the mutation envelope's `feature_state.shape_summary` reports `solid_count=1` and a `face_count` higher than the plate's 6  
 **And** The solid verifies — verify: `mcp verify_shape { doc: <handle>, object: "ClearanceHole" }` returns `status=OK`  
 **And** A Dimension hole without a depth is rejected — verify: omitting `depth` returns `status=INVALID_INPUT` naming `depth_type='Dimension' is depth-driven; 'depth' is required`  
 **And** ThroughAll cuts the full thickness — verify: `depth_type: "ThroughAll"` with no `depth` returns `status=OK` and a volume of `11881.2` mm³ (12000 - pi x 2.75² x 5) within 0.1 %  
 **And** A zero diameter is rejected — verify: `diameter: { value: 0, unit: "mm" }` returns `status=INVALID_INPUT` naming `diameter must be positive`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows a 60 x 40 x 5 mm plate with one round bore in its top face — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-07-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the bore is circular, sits at the M5 hole position, and is a blind pocket with a visible floor rather than an opening through the plate. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -326,7 +332,7 @@ mcp query_object { doc: <handle>, object: "ThreadedHole" }
 **And** A cut type illegal for that thread is rejected — verify: a `cut_type` outside the set the chosen `thread_type` re-populates returns `status=INVALID_INPUT` naming `is not one of`  
 **And** An unknown thread type is rejected pre-transaction — verify: `thread_type: "ISOMetricFake"` returns `status=INVALID_INPUT` with no `mutation.snapshot_path`  
 **And** The solid verifies — verify: `mcp verify_shape { doc: <handle>, object: "ThreadedHole" }` returns `status=OK`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows a plate with one counterbored hole — a wide shallow step at the top face narrowing to the threaded bore below — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-08-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm two concentric circular diameters at the hole, not a single plain bore. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Conditional skip**: the exact member spellings of `ThreadType` and `HoleCutType` differ between
@@ -346,16 +352,16 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_fillet`), `mcp-tools-design.md` §1.2 (selectors)
 
 **Given** a Body holds a 60 x 40 x 5 mm plate pad named `PlatePad` — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` returns `volume=12000.0` within 0.1 %  
-**And** the four vertical corner edge names are known — verify: `mcp query_object { doc: <handle>, object: "PlatePad" }` lists the edge names  
+**And** the four vertical corner edge names are known — verify: the topology oracle (Preconditions) lists `PlatePad` edges; the four 5 mm edges parallel to Z are the vertical corners (`Edge1`, `Edge2`, `Edge5`, `Edge8` on 1.1.4). `Edge3` and `Edge7` are horizontal 60 mm and 40 mm edges  
 
 **When** the four corners are filleted with a 2 mm radius  
 ```
 mcp feature_fillet { doc: <handle>, body: "PlateBody", base: "PlatePad",
                      name: "CornerFillet",
                      edges: [ { kind: "mapped_name", object: "PlatePad", mapped_name: "Edge1" },
-                              { kind: "mapped_name", object: "PlatePad", mapped_name: "Edge3" },
+                              { kind: "mapped_name", object: "PlatePad", mapped_name: "Edge2" },
                               { kind: "mapped_name", object: "PlatePad", mapped_name: "Edge5" },
-                              { kind: "mapped_name", object: "PlatePad", mapped_name: "Edge7" } ],
+                              { kind: "mapped_name", object: "PlatePad", mapped_name: "Edge8" } ],
                      radius: { value: 2, unit: "mm" } }
 ```
 
@@ -363,11 +369,11 @@ mcp feature_fillet { doc: <handle>, body: "PlateBody", base: "PlatePad",
 **And** The volume falls by the corner material — verify: `mcp query_mass_properties { doc: <handle>, object: "CornerFillet" }` returns `volume=11982.8` mm³ — 12000 minus 4 x (4 - pi) x 5 for the removed corner prisms — within 0.1 %  
 **And** Every requested edge was dressed — verify: the mutation envelope's `feature_state.shape_summary` reports `face_count=10`, which is the plate's 6 plus one new face per filleted edge  
 **And** The solid is valid and single — verify: the same `shape_summary` reports `solid_count=1` and `is_valid=true`, and `mcp verify_shape { doc: <handle>, object: "CornerFillet" }` returns `status=OK`  
-**And** The surface area rises — verify: `mcp query_mass_properties { doc: <handle>, object: "CornerFillet" }` reports an `area` consistent with four 2 mm quarter-cylinder faces replacing four sharp corners  
+**And** The surface area matches four quarter-cylinder faces — verify: `mcp query_mass_properties { doc: <handle>, object: "CornerFillet" }` reports `area=5775.96` mm² within 0.1 %: the plate's 5800 minus 8 x (4 - pi) on the top and bottom faces and 80 on the side faces, plus 4 x pi x 5 for the four quarter-cylinders. The area falls, because each round is shorter than the two sharp sides it replaces  
 **And** A base outside the Body is rejected — verify: `base` naming a feature in a different Body returns `status=INVALID_INPUT` naming `is not in Body`  
 **And** An edge naming a different object than the base is rejected — verify: an `edges` entry whose `object` is not the base returns `status=INVALID_INPUT` naming `not the dress-up base`  
 **And** A repeated edge is rejected — verify: listing `Edge1` twice returns `status=INVALID_INPUT` naming `repeats Edge1`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows a 60 x 40 x 5 mm plate whose four vertical corners are rounded — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-09-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm all four corners carry a visible 2 mm round, with none left sharp. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -383,7 +389,8 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_chamfer`)
 
 **Given** a Body holds a 60 x 40 x 5 mm plate pad named `PlatePad` — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` returns `volume=12000.0` within 0.1 %  
-**And** the build's `ChamferType` enumeration is known — verify: read it from a chamfer created with defaults, or from `mcp query_object` on an existing chamfer  
+**And** the build's `ChamferType` enumeration is known — verify: read it from a chamfer created with defaults, or from `mcp query_object` on an existing chamfer (`['Equal distance', 'Two distances', 'Distance and Angle']` on 1.1.4)  
+**And** the edge names are known — verify: the topology oracle (Preconditions) on each base. On 1.1.4: `PlatePad` `Edge1` and `EqualChamfer` `Edge3` are vertical corners; on `TwoSizeChamfer` the remaining vertical corner at (60, 40) is `Edge17`, while `Edge5` there is a 2.24 mm edge of the new bevel face  
 
 **When** one edge is chamfered with an equal-distance chamfer  
 ```
@@ -408,8 +415,8 @@ mcp feature_chamfer { doc: <handle>, body: "PlateBody", base: "EqualChamfer",
 mcp feature_chamfer { doc: <handle>, body: "PlateBody", base: "TwoSizeChamfer",
                       name: "AngleChamfer",
                       edges: [ { kind: "mapped_name", object: "TwoSizeChamfer",
-                                 mapped_name: "Edge5" } ],
-                      chamfer_type: "Distance and angle",
+                                 mapped_name: "Edge17" } ],
+                      chamfer_type: "Distance and Angle",
                       size: { value: 2, unit: "mm" },
                       angle: { value: 30, unit: "deg" } }
 ```
@@ -421,7 +428,7 @@ mcp feature_chamfer { doc: <handle>, body: "PlateBody", base: "TwoSizeChamfer",
 **And** The angle bound is enforced — verify: `angle: { value: 200, unit: "deg" }` returns `status=INVALID_INPUT` naming `angle must be in` its bound  
 **And** A zero size is rejected — verify: `size: { value: 0, unit: "mm" }` returns `status=INVALID_INPUT` naming `size must be positive`  
 **And** Every solid is valid — verify: `mcp verify_shape { doc: <handle>, object: "AngleChamfer" }` returns `status=OK` with `solid_count=1`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows a 60 x 40 x 5 mm plate with three chamfered edges — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-10-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm three flat bevel faces cut back three different edges, not rounds, and that the three bevels differ in width because they were sized differently. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Conditional skip**: the `ChamferType` member spellings differ between builds. Read the live
@@ -440,8 +447,8 @@ mcp document_close { doc: <handle> }
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_pattern`, conditional requirements)
 
-**Given** a Body holds a 60 x 40 x 5 mm plate pad and one M5 clearance hole named `ClearanceHole` — verify: `mcp query_mass_properties { doc: <handle>, object: "ClearanceHole" }` returns `volume=11881.2` for a through hole within 0.1 %  
-**And** a second Body holds a disc pad and one hole for the polar case — verify: `mcp verify_shape { doc: <handle>, object: "DiscHole" }` returns `status=OK`  
+**Given** a Body holds a 60 x 40 x 5 mm plate pad placed at x = 40..100, y = 0..40, so it does not overlap the disc below, and one M5 clearance hole named `ClearanceHole` — verify: `mcp query_mass_properties { doc: <handle>, object: "ClearanceHole" }` returns `volume=11881.2` for a through hole within 0.1 %  
+**And** a second Body holds a disc pad (radius 30, centred on the origin, so the polar axis `DiscProfile` `N_Axis` is its own axis) and one hole on its top face for the polar case — verify: `mcp verify_shape { doc: <handle>, object: "DiscHole" }` returns `status=OK`  
 
 **When** the hole is repeated twice along the plate's X axis on 40 mm spacing. `occurrences` counts the original, so 2 is the original plus one copy  
 ```
@@ -468,7 +475,7 @@ mcp feature_pattern { doc: <handle>, body: "DiscBody", name: "HoleRing", kind: "
 **And** Both solids are valid — verify: `mcp verify_shape` returns `status=OK` for `HoleRow` and `HoleRing`  
 **And** `originals` defaults to the Body Tip — verify: omitting `originals` on an equivalent call returns `status=OK` and patterns the Tip feature  
 **And** A kind outside the enum is a schema reject — verify: `kind: "mirror"` is refused against the enum `["linear","polar"]`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows a plate carrying exactly two holes 40 mm apart along its long axis, and a disc carrying exactly six holes evenly spaced around its centre — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-11-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and count the holes in each body; three on the plate or five or seven on the disc is a defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -484,7 +491,9 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_mirror`), `verification-design.md` §5
 
 **Given** a Body holds a 20 x 30 x 10 mm pad named `HalfPad` sitting entirely on one side of the YZ plane, so its mirror does not overlap it — verify: `mcp query_mass_properties { doc: <handle>, object: "HalfPad" }` returns `volume=6000.0` and a bounding box with `x` running 5..25 mm  
-**And** a datum plane named `MirrorPlane` exists in the same Body — verify: `mcp query_placement { doc: <handle>, object: "MirrorPlane" }` returns `status=OK`  
+**And** a second Body `DatumBody` holds `DatumPad` (the same 20 x 30 x 10 block, x = 5..25) and a datum plane `MirrorPlane` made with `feature_datum { body: "DatumBody", kind: "plane", attachment: { kind: "mapped_name", object: "<DatumBody YZ plane>" }, offset: { value: 30, unit: "mm" } }`, where `<DatumBody YZ plane>` is that Body's own origin plane (its Name carries a suffix such as `YZ_Plane001`; read it from `query_tree_summary`). `sketch_create` cannot attach to a datum, so the plane is a `feature_datum` object — verify: `mcp query_placement { doc: <handle>, object: "MirrorPlane" }` reports `position.x` equal to `{value: 30, unit: "mm"}`  
+**And** a third Body `FaceBody` holds `FacePad`, and its planar `Face1` is known from the topology oracle (Preconditions)  
+**And** the three Bodies stand apart in Y (for example `HalfBody` at y = 0..30, `DatumBody` at y = 50..80, `FaceBody` at y = 100..130), so no result overlaps another Body  
 
 **When** the pad is mirrored across the Body origin's YZ base plane  
 ```
@@ -511,9 +520,10 @@ mcp feature_mirror { doc: <handle>, body: "FaceBody", name: "FaceMirror",
 **And** The bounding box spans both halves — verify: the mutation envelope's `feature_state.shape_summary` reports `bbox=[50, 30, 10]`, the original x-extent reflected about x=0  
 **And** A whole-object selector needs no `mapped_name` — verify: step 1 and step 2 omit `mapped_name` and are accepted, because a datum or base plane is referenced as a whole object  
 **And** A face selector carries its `mapped_name` — verify: step 3 is accepted with `mapped_name: "Face1"`  
-**And** Every mirrored solid is valid — verify: `mcp verify_shape` returns `status=OK` with `solid_count=1` for each of `PlaneMirror`, `DatumMirror`, `FaceMirror`  
+**And** Every mirrored solid is valid — verify: `mcp verify_shape` returns `status=OK` for each of `PlaneMirror`, `DatumMirror`, `FaceMirror`  
+**And** The solid count follows the overlap — verify: the mutation envelopes' `feature_state.shape_summary` report `solid_count=2` for `PlaneMirror` and `DatumMirror` (each mirror image stands clear of its original, so the Body holds two disjoint solids) and `solid_count=1` for `FaceMirror` (the image touches the original on `Face1`)  
 **And** An unknown mirror plane is rejected pre-transaction — verify: `object: "NoSuchPlane"` returns `status=INVALID_INPUT` naming `unknown object in mirror_plane` with no `mutation.snapshot_path`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows each mirrored Body as two matching halves reflected about their plane — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-12-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm `PlaneMirror` shows two separated 20 x 30 x 10 blocks, one on each side of the YZ plane, rather than a single block. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -529,7 +539,7 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_datum`), `verification-design.md` §3 (attachment references, AD-7)
 
 **Given** a Body holds a 60 x 40 x 5 mm plate pad named `PlatePad` — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` returns `volume=12000.0` within 0.1 %  
-**And** the plate's top face name is known — verify: `mcp query_object { doc: <handle>, object: "PlatePad" }` lists the face names  
+**And** the plate's sub-element names are known — verify: the topology oracle (Preconditions) lists `PlatePad` faces, edges and vertices; the top face is the plane face at `z = 5` (`Face6` on 1.1.4), and `Edge1` is a straight edge  
 
 **When** a datum plane is created on the top face, offset 10 mm along its local Z. `map_mode` defaults to `"FlatFace"`  
 ```
@@ -538,16 +548,16 @@ mcp feature_datum { doc: <handle>, body: "PlateBody", name: "RaisedPlane", kind:
                                   mapped_name: "Face6" },
                     offset: { value: 10, unit: "mm" } }
 ```
-**And** the other three kinds are created against their own attachments  
+**And** the other three kinds are created against their own attachments, each with a map mode its sub-element fits: `TwoPointLine` takes a straight edge, `Vertex` takes a vertex  
 ```
 mcp feature_datum { doc: <handle>, body: "PlateBody", name: "EdgeAxis", kind: "axis",
                     attachment: { kind: "mapped_name", object: "PlatePad",
                                   mapped_name: "Edge1" },
-                    map_mode: "ObjectXY" }
+                    map_mode: "TwoPointLine" }
 mcp feature_datum { doc: <handle>, body: "PlateBody", name: "CornerPoint", kind: "point",
                     attachment: { kind: "mapped_name", object: "PlatePad",
                                   mapped_name: "Vertex1" },
-                    map_mode: "ObjectOrigin" }
+                    map_mode: "Vertex" }
 mcp feature_datum { doc: <handle>, body: "PlateBody", name: "FaceCS", kind: "cs",
                     attachment: { kind: "mapped_name", object: "PlatePad",
                                   mapped_name: "Face6" } }
@@ -556,12 +566,12 @@ mcp feature_datum { doc: <handle>, body: "PlateBody", name: "FaceCS", kind: "cs"
 **Then** All four kinds commit — verify: each envelope returns `status=OK` with `mutation.rolled_back=false`, covering the enum `["plane","axis","point","cs"]`  
 **And** The offset moved the plane — verify: `mcp query_placement { doc: <handle>, object: "RaisedPlane" }` reports `position.z` equal to `{value: 15, unit: "mm"}` — the 5 mm face plus the 10 mm offset  
 **And** `map_mode` defaults to FlatFace — verify: `mcp query_object { doc: <handle>, object: "RaisedPlane" }` reports `MapMode=FlatFace`, because `map_mode` was omitted  
-**And** `AttachmentSupport` names the target — verify: the same read names `PlatePad` and `Face6` as the attachment support  
+**And** `AttachmentSupport` names the target — verify: the same read reports `AttachmentSupport` as `[["<PartDesign::Pad>", ["Face6"]]]` (the face is named; the object shows as its type, Preconditions, **Link targets**), and `mcp query_dependencies { doc: <handle>, object: "RaisedPlane" }` lists `PlatePad` in `out_list`  
 **And** A datum is not a solid — verify: `mcp query_mass_properties { doc: <handle>, object: "RaisedPlane" }` returns no solid volume; a datum carries no material  
 **And** The tree carries all four — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` lists `RaisedPlane`, `EdgeAxis`, `CornerPoint` and `FaceCS` under `PlateBody`  
 **And** A fifth kind is a schema reject — verify: `kind: "curve"` is refused against the enum `["plane","axis","point","cs"]`  
 **And** A map_mode the kind cannot use is rejected pre-transaction — verify: a mode the datum kind's attach engine does not implement returns `status=INVALID_INPUT` naming `is not implemented for kind` with no `mutation.snapshot_path`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the 60 x 40 x 5 mm plate with a datum plane floating 10 mm above its top face, plus the datum axis, point and coordinate system — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the datums are drawn as reference geometry above and on the plate and that the plate's own solid is unchanged — a datum adds no material. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -577,7 +587,7 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_set_parameters`), `verification-design.md` §1 (mutation protocol)
 
 **Given** a Body holds a 20 x 30 mm profile padded 10 mm, named `BlockPad` — verify: `mcp query_mass_properties { doc: <handle>, object: "BlockPad" }` returns `volume=6000.0` within 0.1 %  
-**And** the 10 mm starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-14-before.png"}' | & cua-driver call get_window_state`  
+**And** the 10 mm starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-14-before.png"}' | & cua-driver call get_window_state`  
 
 **When** the pad length is changed from 10 mm to 25 mm in one transaction  
 ```
@@ -597,7 +607,7 @@ mcp query_mass_properties { doc: <handle>, object: "BlockPad" }
 **And** Several properties change together — verify: `parameters: { Length: { value: 12, unit: "mm" }, Reversed: true }` returns `status=OK` and both properties read back changed  
 **And** A boolean and an enum are accepted — verify: `parameters: { Midplane: true }` and `parameters: { Type: "Length" }` each return `status=OK`  
 **And** An empty parameters object is rejected — verify: `parameters: {}` returns `status=INVALID_INPUT` naming `feature_set_parameters requires a non-empty 'parameters' object`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the same 20 x 30 footprint grown visibly taller — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-14-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the solid's height relative to its 20 x 30 footprint is greater in the after image, the footprint itself is unchanged, and no second solid appeared. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -612,15 +622,16 @@ mcp document_close { doc: <handle> }
 **Priority**: High
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_pad`, live enum validation)
 
-**Given** a Body holds a base solid and a fully constrained profile sketch below it, so an up-to extrude has a target — verify: `mcp verify_shape { doc: <handle>, object: "BasePad" }` returns `status=OK` and `mcp verify_sketch { doc: <handle>, sketch: "RiserProfile" }` returns `subject.dof=0`  
-**And** the target face name on the base solid is known — verify: `mcp query_object { doc: <handle>, object: "BasePad" }` lists the face names  
+**Given** a Body `PlateBody` holds the base solid `BasePad`: a fully constrained 60 x 5 mm rectangle sketch on XZ (x = 0..60, z = 20..25) padded 40 mm with `midplane: true`, so the slab spans y = -20..20 and z = 20..25 — verify: `mcp verify_shape { doc: <handle>, object: "BasePad" }` returns `status=OK` and `mcp query_mass_properties { doc: <handle>, object: "BasePad" }` returns `volume=12000.0` within 0.1 %  
+**And** a fully constrained 10 x 10 mm rectangle sketch `RiserProfile` sits on XY at z = 0 under the slab (x = 25..35, y = -5..5), so an up-to extrude has a target — verify: `mcp verify_sketch { doc: <handle>, sketch: "RiserProfile" }` returns `subject.dof=0`  
+**And** the target face name on the base solid is known — verify: the topology oracle (Preconditions) lists `BasePad` faces; the target is the slab's underside, the plane face at `z = 20` (`Face1` on 1.1.4). A side face (`Face5`) is parallel to the extrusion and FreeCAD refuses it  
 
 **When** the profile is padded up to a named face  
 ```
 mcp feature_pad { doc: <handle>, body: "PlateBody", profile: "RiserProfile",
                   name: "RiserPad", up_to: "UpToFace",
                   up_to_face: { kind: "mapped_name", object: "BasePad",
-                                mapped_name: "Face5" } }
+                                mapped_name: "Face1" } }
 ```
 **And** a value outside the live enumeration is tried  
 ```
@@ -629,13 +640,13 @@ mcp feature_pad { doc: <handle>, body: "PlateBody", profile: "RiserProfile",
 ```
 
 **Then** The up-to pad commits — verify: step 1 returns `status=OK` with `mutation.rolled_back=false`  
-**And** The extrude stopped at the face — verify: the mutation envelope's `feature_state.shape_summary` reports a `bbox` whose z-extent ends at the target face's z, not at an arbitrary length  
+**And** The extrude stopped at the face — verify: the mutation envelope's `feature_state.shape_summary` reports a `bbox` running z = 0..25, and `mcp query_mass_properties { doc: <handle>, object: "RiserPad" }` returns `volume=14000.0` within 0.1 % (the slab plus a 10 x 10 x 20 riser that stops at z = 20)  
 **And** `UpToFace` needs no length — verify: step 1 supplied no `length` and was not refused; only a length-driven type requires one  
-**And** `UpToFace` was written — verify: `mcp query_object { doc: <handle>, object: "RiserPad" }` reports `Type=UpToFace` and names `BasePad` with `Face5` as the up-to face  
+**And** `UpToFace` was written — verify: `mcp query_object { doc: <handle>, object: "RiserPad" }` reports `Type=UpToFace` and `UpToFace` as `["<PartDesign::Pad>", ["Face1"]]` (Preconditions, **Link targets**), and `mcp query_dependencies { doc: <handle>, object: "RiserPad" }` lists `BasePad` in `out_list`  
 **And** A bad enum value is rejected — verify: step 2 returns `status=INVALID_INPUT` naming `up_to 'UpToInfinity' is not one of` followed by this build's members  
 **And** The rejection is pre-transaction — verify: the step 2 envelope carries no `mutation.snapshot_path`, and `mcp query_tree_summary { doc: <handle>, depth: 3 }` names no `BadTypePad`  
 **And** The solid verifies — verify: `mcp verify_shape { doc: <handle>, object: "RiserPad" }` returns `status=OK`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the riser solid reaching the base solid's target face and stopping there — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the riser meets the base face flush, with no gap below it and no material passing through it, and that no second `BadTypePad` solid exists. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Conditional skip**: the `Type` member spellings differ between builds and one position carries a
@@ -655,15 +666,15 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `verification-design.md` §1 (mutation protocol, AD-5), `mcp-tools-design.md` §3.7
 
 **Given** a Body holds a 60 x 40 x 5 mm plate pad named `PlatePad` — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` returns `volume=12000.0` within 0.1 %  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the untouched plate is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-16-before.png"}' | & cua-driver call get_window_state`  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the untouched plate is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-16-before.png"}' | & cua-driver call get_window_state`  
 
-**When** a fillet radius larger than the plate can carry is asked for — 20 mm on a 5 mm thick plate  
+**When** a fillet radius larger than the plate can carry is asked for — 20 mm on a horizontal edge of a 5 mm thick plate. `Edge3` is the 60 mm bottom edge on 1.1.4 (topology oracle, Preconditions). A vertical 5 mm corner edge such as `Edge1` takes a 20 mm round, because its faces are 60 and 40 mm wide, so it does not fail  
 ```
 mcp feature_fillet { doc: <handle>, body: "PlateBody", base: "PlatePad",
                      name: "TooBigFillet",
                      edges: [ { kind: "mapped_name", object: "PlatePad",
-                                mapped_name: "Edge1" } ],
+                                mapped_name: "Edge3" } ],
                      radius: { value: 20, unit: "mm" } }
 ```
 
@@ -673,10 +684,10 @@ mcp feature_fillet { doc: <handle>, body: "PlateBody", base: "PlatePad",
 **And** No partial solid survives — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names no `TooBigFillet`  
 **And** The plate is unchanged — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` again returns `volume=12000.0` within 0.1 %  
 **And** The fingerprint proves it — verify: `mutation.fingerprint_before.digest` equals `mutation.fingerprint_after.digest`, or the rollback state is `rolled_back_via_snapshot`  
-**And** The snapshot was deleted — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing, because a proven rollback removes its snapshot  
+**And** The snapshot was deleted — verify: `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`, because a proven rollback removes its snapshot  
 **And** The document still recomputes clean — verify: `mcp verify_recompute { doc: <handle> }` returns `status=OK`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the FreeCAD window shows the plate exactly as the `Given` left it — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-16-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the plate still has four sharp corners, no rounded edge, and no half-built fillet face; the rolled-back feature must leave no visible trace. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the FreeCAD window shows the plate exactly as the `Given` left it — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-16-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the plate still has sharp edges and corners, no rounded edge, and no half-built fillet face; the rolled-back feature must leave no visible trace. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -690,16 +701,16 @@ mcp document_close { doc: <handle> }
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_fillet` edge check)
 
-**Given** a Body holds a solid with at least one edge whose faces meet tangentially — a cylinder's seam edge or the join between a fillet and its flat face — verify: `mcp query_object { doc: <handle>, object: "ShaftRev" }` lists the edge names, and the seam edge is identified  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the untouched solid is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-17-before.png"}' | & cua-driver call get_window_state`  
+**Given** a Body holds a solid with at least one edge whose faces meet tangentially — a cylinder's seam edge or the join between a fillet and its flat face — verify: the topology oracle (Preconditions) lists `ShaftRev` edges, and the seam edge is identified: the straight 20 mm edge that the cylinder face meets on both sides (`Edge3` on 1.1.4). `Edge1` and `Edge2` are the bottom and top circles, which are real creases  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the untouched solid is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-17-before.png"}' | & cua-driver call get_window_state`  
 
 **When** a fillet is asked for on the tangential edge  
 ```
 mcp feature_fillet { doc: <handle>, body: "ShaftBody", base: "ShaftRev",
                      name: "DropFillet",
                      edges: [ { kind: "mapped_name", object: "ShaftRev",
-                                mapped_name: "Edge2" } ],
+                                mapped_name: "Edge3" } ],
                      radius: { value: 1, unit: "mm" } }
 ```
 **And** one good edge and one droppable edge are mixed in the same call  
@@ -709,18 +720,18 @@ mcp feature_fillet { doc: <handle>, body: "ShaftBody", base: "ShaftRev",
                      edges: [ { kind: "mapped_name", object: "ShaftRev",
                                 mapped_name: "Edge1" },
                               { kind: "mapped_name", object: "ShaftRev",
-                                mapped_name: "Edge2" } ],
+                                mapped_name: "Edge3" } ],
                      radius: { value: 1, unit: "mm" } }
 ```
 
 **Then** The droppable edge is refused — verify: step 1 returns `status=INVALID_INPUT` naming `cannot be shown to survive the dress-up` and listing the edge  
 **And** The reason is stated — verify: the same detail names `each needs exactly two adjacent faces meeting at a measurable crease, and FreeCAD drops the rest without reporting it`  
-**And** The refusal is pre-transaction — verify: the step 1 envelope carries no `mutation.snapshot_path`, and `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
+**And** The refusal is pre-transaction — verify: the step 1 envelope carries no `mutation.snapshot_path`, and `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
 **And** A mixed request is refused whole — verify: step 2 returns `status=INVALID_INPUT`; the good edge is not filleted on its own  
 **And** Nothing was created — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names neither `DropFillet` nor `MixedFillet`  
 **And** The base solid is untouched — verify: `mcp query_mass_properties { doc: <handle>, object: "ShaftRev" }` returns the same volume as before both steps  
-**And** A committed dress-up that dressed fewer edges than asked is caught inside the transaction — verify: any such case returns `status=SPEC_FAILED` with `mutation.rolled_back=true` and an explanation naming `dressed N of the M requested edge(s)`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(conditional)* A committed dress-up that dressed fewer edges than asked is caught inside the transaction — verify: if the run finds an input that passes the up-front edge check and then dresses fewer edges than asked, that call returns `status=SPEC_FAILED` with `mutation.rolled_back=true` and an explanation naming `dressed N of the M requested edge(s)`. No such input is known; when none is found, record this Then as NOT RUN with that reason  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the cylinder exactly as the `Given` left it — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-17-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm no edge of the solid carries a round, including the good `Edge1` from the mixed call; a partially dressed solid is the exact defect this scenario catches. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -737,7 +748,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a Body holds a plate pad and one hole feature to pattern — verify: `mcp verify_shape { doc: <handle>, object: "ClearanceHole" }` returns `status=OK`  
 **And** the document object list before the calls is recorded — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }`  
-**And** the starting state of the plate is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-18-before.png"}' | & cua-driver call get_window_state`  
+**And** the starting state of the plate is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-18-before.png"}' | & cua-driver call get_window_state`  
 
 **When** one occurrence is asked for  
 ```
@@ -768,7 +779,7 @@ mcp feature_pattern { doc: <handle>, body: "PlateBody", name: "NoAxis", kind: "p
 **And** The complementary field is not required — verify: a valid linear call carrying `direction` and no `axis` returns `status=OK`, so the conditional does not demand both  
 **And** A very large count is refused rather than handed to OCCT — verify: `occurrences: 5000` returns `status=INVALID_INPUT` naming `occurrences must be an integer between 2 and 1000`  
 **And** Nothing was created — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` lists the same objects as the precondition, naming no `OnePattern`, `ZeroPattern`, `NoDirection` or `NoAxis`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the plate still carrying its single original hole — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-18-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the hole count is unchanged between them; any extra bore means one of the refused patterns partly ran. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -784,8 +795,8 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_pad`), `mcp-tools-design.md` §1.4 (quantity fields)
 
 **Given** a Body holds a fully constrained 20 x 30 mm profile sketch — verify: `mcp verify_sketch { doc: <handle>, sketch: "BlockProfile" }` returns `subject.dof=0`  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the solid-free starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-19-before.png"}' | & cua-driver call get_window_state`  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the solid-free starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-19-before.png"}' | & cua-driver call get_window_state`  
 
 **When** a pad with zero length is asked for  
 ```
@@ -806,12 +817,11 @@ mcp feature_pad { doc: <handle>, body: "BlockBody", profile: "BlockProfile",
 **Then** Zero is refused — verify: step 1 returns `status=INVALID_INPUT` naming `length must be positive, got 0`  
 **And** Negative is refused — verify: step 2 returns `status=INVALID_INPUT` naming `length must be positive, got -10`  
 **And** A missing length on a length-driven type is refused — verify: step 3 returns `status=INVALID_INPUT` naming `up_to='Length' is length-driven; 'length' is required`  
-**And** Every refusal is pre-transaction — verify: none of the three envelopes carries `mutation.snapshot_path`  
-**And** No snapshot was written — verify: `ls "$TEMP"/FCB_TMP_snap_*` still lists nothing after all three steps  
+**And** Every refusal is pre-transaction — verify: none of the three envelopes carries `mutation.snapshot_path`. A non-finite length is not tested: JSON cannot carry Infinity, so no MCP client can send it  
+**And** No snapshot was written — verify: after all three steps `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
 **And** Nothing was created — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names no `ZeroPad`, `NegPad` or `NoLenPad`  
-**And** A non-finite length is refused — verify: a length encoding as infinity returns `status=INVALID_INPUT` naming `must be finite`  
 **And** The Body still carries no solid — verify: `mcp query_object { doc: <handle>, object: "BlockBody" }` reports no Tip, because no pad was ever created  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows only the flat rectangle sketch and no padded solid — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-19-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the view is unchanged and carries no extruded material, not even a zero-height sliver. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -827,7 +837,7 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_fillet`, `feature_chamfer` defaults)
 
 **Given** a Body holds a 60 x 40 x 5 mm plate pad named `PlatePad` — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` returns `volume=12000.0` within 0.1 %  
-**And** two corner edge names are known — verify: `mcp query_object { doc: <handle>, object: "PlatePad" }` lists the edge names  
+**And** two corner edge names are known — verify: the topology oracle (Preconditions) lists the edges of `PlatePad` and then of `DefaultFillet`; on 1.1.4 `PlatePad` `Edge1` and `DefaultFillet` `Edge3` (the corner at (60, 0)) are vertical corners  
 
 **When** one edge is filleted with no radius at all  
 ```
@@ -850,7 +860,7 @@ mcp feature_chamfer { doc: <handle>, body: "PlateBody", base: "DefaultFillet",
 **And** The chamfer commits without a size — verify: step 2 returns `status=OK` with `mutation.rolled_back=false`  
 **And** The chamfer size is FreeCAD's own 1 mm — verify: `mcp query_object { doc: <handle>, object: "DefaultChamfer" }` reports `Size` as `1 mm`  
 **And** Both solids are valid — verify: `mcp verify_shape { doc: <handle>, object: "DefaultChamfer" }` returns `status=OK` with `solid_count=1`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the plate with one small rounded corner and one small flat bevel, both about 1 mm — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-20-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm both dress-ups are visible but small against the 60 x 40 plate, and that the round and the bevel sit on different edges. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Conditional skip**: the 1 mm default is FreeCAD's property default, not a value this package sets.
@@ -870,8 +880,8 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_set_parameters` pre-transaction validation)
 
 **Given** a Body holds a 20 x 30 x 10 mm pad named `BlockPad` — verify: `mcp query_mass_properties { doc: <handle>, object: "BlockPad" }` returns `volume=6000.0` within 0.1 %  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the 10 mm pad is captured before the four refusals — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-21-before.png"}' | & cua-driver call get_window_state`  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the 10 mm pad is captured before the four refusals — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-21-before.png"}' | & cua-driver call get_window_state`  
 
 **When** a property the feature does not carry is named  
 ```
@@ -895,14 +905,14 @@ mcp feature_set_parameters { doc: <handle>, feature: "BlockPad",
 ```
 
 **Then** An unknown property is refused — verify: step 1 returns `status=INVALID_INPUT` naming `BlockPad has no property named 'Thickness'`  
-**And** A read-only property is refused — verify: step 2 returns `status=INVALID_INPUT` naming `BlockPad.Shape is read-only`  
+**And** A property the tool cannot write is refused — verify: step 2 returns `status=INVALID_INPUT` naming `BlockPad.Shape is a Part::PropertyPartShape, which feature_set_parameters cannot write` (`features.py:1764`); a revolution's `Base` gets `ShaftRev.Base is read-only`  
 **And** A wrong unit is refused — verify: step 3 returns `status=INVALID_INPUT` naming `Length value unit must be one of ['mm'], got 'deg'`  
 **And** An unsupported value type is refused — verify: step 4 returns `status=INVALID_INPUT` naming `Length value must be a quantity, number, boolean or enum string`  
 **And** Every refusal is pre-transaction — verify: none of the four envelopes carries `mutation.snapshot_path`  
-**And** No snapshot was written — verify: `ls "$TEMP"/FCB_TMP_snap_*` still lists nothing after all four steps  
+**And** No snapshot was written — verify: after all four steps `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
 **And** The feature is unchanged — verify: `mcp query_mass_properties { doc: <handle>, object: "BlockPad" }` again returns `volume=6000.0` within 0.1 %  
 **And** A whole batch is refused when one entry is bad — verify: `parameters: { Length: { value: 12, unit: "mm" }, Thickness: 3 }` returns `status=INVALID_INPUT` and `Length` reads back unchanged at `10 mm`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the pad at its original 10 mm height — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-21-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the solid's proportions are identical; a taller or differently shaped pad means one refused write partly landed. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -918,8 +928,8 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §1.3 (error surface, AD-17), `mcp-tools-design.md` §3.7
 
 **Given** a document holds exactly one Body named `PlateBody`, one sketch named `PlateProfile` and one pad named `PlatePad` — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` lists them  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the single-pad starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-22-before.png"}' | & cua-driver call get_window_state`  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the single-pad starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-22-before.png"}' | & cua-driver call get_window_state`  
 
 **When** a Body that does not exist is named  
 ```
@@ -950,9 +960,9 @@ mcp feature_pad { doc: <handle>, body: "PlateProfile", profile: "PlateProfile",
 **And** A wrong-typed Body is `INVALID_INPUT` — verify: step 4 returns `status=INVALID_INPUT` naming `object is not a PartDesign Body: PlateProfile`  
 **And** Nothing was created — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` lists the same objects as the precondition, naming no `OrphanPad`, `OrphanFillet` or `WrongTypePad`  
 **And** No transaction opened — verify: none of the four envelopes carries `mutation.snapshot_path`  
-**And** No snapshot was written — verify: `ls "$TEMP"/FCB_TMP_snap_*` still lists nothing after all four steps  
+**And** No snapshot was written — verify: after all four steps `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
 **And** A taken name is also refused — verify: `name: "PlatePad"` on a fresh pad returns `status=INVALID_INPUT` naming `an object named PlatePad already exists`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows the one original `PlatePad` solid and nothing else — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-22-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the two images are the same model: one solid, no orphan pad, no fillet on any edge. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -967,9 +977,13 @@ mcp document_close { doc: <handle> }
 **Priority**: Critical
 **Design Ref**: `verification-design.md` §4 (AD-8), `verification-design.md` §1.3 (`post_verify` composition)
 
-**Given** a Body holds a sketch that is deliberately under-constrained: a rectangle whose position is not pinned to the origin — verify: `mcp verify_sketch { doc: <handle>, sketch: "LooseProfile" }` returns a non-`OK` status with `subject.dof` greater than 0  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the solid-free starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-23-before.png"}' | & cua-driver call get_window_state`  
+**Given** a Body `LooseBody` holds a sketch that is deliberately under-constrained: a rectangle whose position is not pinned to the origin. The sketch tools roll back any sketch they leave under-constrained (AD-8), so the fixture is built in two steps. First `sketch_add_geometry` builds a fully constrained 20 x 30 mm rectangle in `LooseProfile` whose position is fixed by two constraints named `PosX` (a single-point `DistanceX` on the first corner) and `PosY` (a single-point `DistanceY` on the same corner). Then `script_exec` deletes those two constraints:  
+```
+mcp script_exec { doc: <handle>, code: "s = doc.getObject('LooseProfile'); [s.delConstraint(i) for i in sorted((i for i, c in enumerate(s.Constraints) if c.Name in ('PosX', 'PosY')), reverse=True)]; doc.recompute(); s.solve(); result = s.DoF" }
+```
+— verify: the call returns `value_repr` `2`, and `mcp verify_sketch { doc: <handle>, sketch: "LooseProfile" }` returns a non-`OK` status with `subject.dof=2`  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the solid-free starting state is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-23-before.png"}' | & cua-driver call get_window_state`  
 
 **When** the under-constrained sketch is padded  
 ```
@@ -984,8 +998,8 @@ mcp feature_pad { doc: <handle>, body: "LooseBody", profile: "LooseProfile",
 **And** No partial solid survives — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names no `LoosePad`  
 **And** The Body carries no Tip — verify: `mcp query_object { doc: <handle>, object: "LooseBody" }` reports no Tip feature  
 **And** The fingerprint proves the rollback — verify: `mutation.fingerprint_before.digest` equals `mutation.fingerprint_after.digest`, or the rollback state is `rolled_back_via_snapshot`  
-**And** The snapshot was deleted — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** The snapshot was deleted — verify: `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the FreeCAD window shows only the loose rectangle sketch and no padded solid — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-23-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm no extruded material appeared; a visible 10 mm block would mean the rollback restored the tree but not the view. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -1000,14 +1014,14 @@ mcp document_close { doc: <handle> }
 **Priority**: Critical
 **Design Ref**: `verification-design.md` §1.3 (`post_verify` composition, status mapping), `mcp-tools-design.md` §1.3 (closed status set)
 
-**Given** a Body holds a chain of features where one can be driven into an engine failure — a pocket deeper than the material, or a fillet whose radius consumes its face — verify: `mcp verify_recompute { doc: <handle> }` returns `status=OK` before the call  
-**And** the temp directory holds no snapshot from a prior run — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing  
-**And** the healthy starting model is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-24-before.png"}' | & cua-driver call get_window_state`  
+**Given** a Body `PlateBody` holds the 60 x 40 x 5 mm plate `PlatePad` and a 1 mm fillet `EdgeFillet` on its 60 mm bottom edge (`Edge3` on 1.1.4, topology oracle in Preconditions), so a larger radius can drive the engine into a failure. A deeper pocket is not a failure: a 500 mm pocket only cuts through the plate and commits. A large round on a vertical corner fits its 40 and 60 mm faces and commits too — verify: `mcp verify_recompute { doc: <handle> }` returns `status=OK` before the call  
+**And** the snapshot folders already in the session temp folder are recorded — verify: list the `FCB_TMP_snap_*` entries of `<session tmp>` (Preconditions)  
+**And** the healthy starting model is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (if it does not, fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-24-before.png"}' | & cua-driver call get_window_state`  
 
-**When** an existing feature is driven into a state the engine cannot build. A pocket length is set far beyond the solid, so the recompute leaves the feature in an error state  
+**When** an existing feature is driven into a state the engine cannot build. The fillet radius is set to 20 mm on an edge whose faces are 5 mm wide, so the recompute leaves the feature in an error state (`BRep_API: command not done`)  
 ```
-mcp feature_set_parameters { doc: <handle>, feature: "SlotPocket",
-                             parameters: { Length: { value: 500, unit: "mm" } } }
+mcp feature_set_parameters { doc: <handle>, feature: "EdgeFillet",
+                             parameters: { Radius: { value: 20, unit: "mm" } } }
 ```
 **And** the document's recompute health is read afterwards  
 ```
@@ -1016,14 +1030,14 @@ mcp verify_recompute { doc: <handle> }
 
 **Then** The status is `RECOMPUTE_ERROR` — verify: the envelope returns `status=RECOMPUTE_ERROR`, never `SPEC_FAILED`; only a recompute that left an object invalid maps to that value  
 **And** The recompute flag is false — verify: the envelope carries `mutation.post_verify.recompute_clean=false`  
-**And** The later checks were not measured — verify: the same block carries `is_valid` and `fully_constrained` as not-measured, because the checklist short-circuits at the first hard failure  
+**And** The later checks were not run — verify: the same block carries `is_valid=false` (the `isValid()` result the recompute check itself read, `transaction.py:266`) and `fully_constrained` as not-measured, because the checklist short-circuits at the first hard failure  
 **And** The engine's own message is quoted — verify: `mutation.post_verify.explanation` starts `recompute left` and names the object with its `getStatusString()` text  
 **And** The rollback is proven — verify: the envelope carries `mutation.rolled_back=true`  
-**And** The old value is restored — verify: `mcp query_object { doc: <handle>, object: "SlotPocket" }` reports the original `Length`, not `500 mm`  
+**And** The old value is restored — verify: `mcp query_object { doc: <handle>, object: "EdgeFillet" }` reports `Radius` as `1 mm`, not `20 mm`  
 **And** The document recomputes clean again — verify: `mcp verify_recompute { doc: <handle> }` returns `status=OK` with no failing checks  
-**And** The snapshot was deleted — verify: `ls "$TEMP"/FCB_TMP_snap_*` lists nothing, because a proven rollback removes its snapshot  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the FreeCAD window shows the model restored to its healthy shape — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-24-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the solid matches the before image, with the original shallow pocket and no 500 mm cut through or past the material, and no error marker drawn on the tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** The snapshot was deleted — verify: `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`, because a proven rollback removes its snapshot  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the FreeCAD window shows the model restored to its healthy shape — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-24-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm the solid matches the before image, with the original small 1 mm round on the bottom edge and no 20 mm round, and no error marker drawn on the tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash

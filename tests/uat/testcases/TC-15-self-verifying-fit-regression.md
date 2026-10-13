@@ -19,7 +19,7 @@ fixed guard behave identically, so a single-document scenario passes against the
 **Host**: GUI via H2 proxy. Every scenario needs the live viewport, so none run under H1 headless.
 
 ## Preconditions
-- [ ] FreeCAD 1.1.1 is running and its process started **after** the addon files were last written
+- [ ] FreeCAD 1.1.x is running (record `query_capabilities.freecad_version`) and its process started **after** the addon files were last written
       (verify: compare `Get-Process -Id <pid>` `StartTime` against the `LastWriteTime` of
       `$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy\usecases\view_fit.py`)
 - [ ] The installed addon matches the source under test
