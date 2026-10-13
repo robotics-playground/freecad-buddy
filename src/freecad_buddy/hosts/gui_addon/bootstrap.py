@@ -9,18 +9,22 @@ FreeCAD shutdown so the listener + discovery file don't leak.
 from __future__ import annotations
 
 import atexit
+import http.client
+import json
 import logging
 import os
 import secrets
 import socket
 import subprocess
 import threading
+import time
 from pathlib import Path
 
 from freecad_buddy.adapters.audit_log import AuditSink, default_audit_path
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort
 from freecad_buddy.adapters.rpc_listener import RpcListener
+from freecad_buddy.contracts.rpc import MCP_PROXY_SERVICE
 from freecad_buddy.hosts.gui_addon import managed_venv
 from freecad_buddy.hosts.gui_addon.pump import QtMainThreadExecutor
 from freecad_buddy.hosts.gui_addon.viewport import GuiViewportPort
@@ -43,14 +47,22 @@ from freecad_buddy.usecases.operator_settings import (
     environment_overrides,
     resolve_env_overlay,
 )
+from freecad_buddy.usecases.process import pid_alive
 
 logger = logging.getLogger("freecad_buddy.hosts.gui_addon.bootstrap")
 
 _MCP_HOST = "127.0.0.1"
 _MCP_PORT = 8765
+_HEALTHZ_TIMEOUT_S = 1.0
+_HEALTHZ_MAX_BYTES = 64 * 1024
+# How long a holder that may still exit keeps the port before the addon gives up. An orphan
+# proxy's watchdog checks once a second and exits one second later, so it frees the port in ~2 s.
+_ORPHAN_EXIT_WAIT_S = 10.0
+_PORT_POLL_S = 0.2
 
 _listener: RpcListener | None = None
 _mcp_proxy: subprocess.Popen | None = None
+# The background proxy start: the port probe and orphan wait, and the managed-venv provisioning.
 _provisioner: threading.Thread | None = None
 _cancel_provisioning = threading.Event()
 # The operator variables the environment set before the preferences were added to it.
@@ -324,35 +336,55 @@ def _mcp_proxy_command(uv: Path | None, wheel: Path | None) -> list[str] | None:
 def _start_mcp_proxy(uv_path: str) -> None:
     """Spawn the external MCP HTTP proxy so opening FreeCAD is the only step to reach the bridge.
 
-    Skips when ``FREECAD_BUDDY_NO_AUTO_MCP`` is set or port 8765 is already served. A release
-    install without a current managed venv provisions it on a daemon thread and spawns the proxy
-    when that finishes, so the GUI start never waits on ``uv``. The child inherits the operator's
-    env (so the exec flag and ``FREECAD_BUDDY_RPC_DIR`` carry through) and is terminated in
-    ``stop_bridge``.
+    Skips when ``FREECAD_BUDDY_NO_AUTO_MCP`` is set. When port 8765 is already served, the probe
+    and the orphan wait (``_mcp_port_free``) run on a daemon thread, and so does provisioning a
+    release install without a current managed venv, so the GUI start never waits on either. The
+    child inherits the operator's env (so the exec flag and ``FREECAD_BUDDY_RPC_DIR`` carry
+    through) and is terminated in ``stop_bridge``.
     """
-    global _provisioner
     if os.environ.get("FREECAD_BUDDY_NO_AUTO_MCP"):
         logger.info("FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy")
         return
     if _port_open(_MCP_HOST, _MCP_PORT):
-        logger.info("MCP proxy already on http://%s:%s/mcp; not spawning", _MCP_HOST, _MCP_PORT)
+        _start_in_background(_spawn_when_port_frees, uv_path)
         return
+    _resolve_and_spawn(uv_path, on_thread=False)
+
+
+def _start_in_background(target, *args) -> None:
+    global _provisioner
+    _cancel_provisioning.clear()
+    _provisioner = threading.Thread(
+        target=target, args=args, name="freecad-buddy-proxy-start", daemon=True
+    )
+    _provisioner.start()
+
+
+def _spawn_when_port_frees(uv_path: str) -> None:
+    if _mcp_port_free():
+        _resolve_and_spawn(uv_path, on_thread=True)
+
+
+def _resolve_and_spawn(uv_path: str, *, on_thread: bool) -> None:
+    """Spawn the proxy from the resolved command, or provision the managed venv first.
+
+    ``on_thread`` says the caller already is the background thread, which then provisions inline.
+    """
     uv = managed_venv.find_uv(uv_path)
     logger.info("uv: %s", uv if uv is not None else "not found")
     wheel = managed_venv.bundled_wheel(_addon_root())
     command = _mcp_proxy_command(uv, wheel)
     if command is not None:
+        # stop_bridge may have set the event after the port freed; a spawn now outlives the quit.
+        if on_thread and _cancel_provisioning.is_set():
+            return
         _spawn_mcp_proxy(command)
         return
     if wheel is not None and uv is not None:
-        _cancel_provisioning.clear()
-        _provisioner = threading.Thread(
-            target=_provision_and_spawn,
-            args=(uv, wheel),
-            name="freecad-buddy-provision",
-            daemon=True,
-        )
-        _provisioner.start()
+        if on_thread:
+            _provision_and_spawn(uv, wheel)
+        else:
+            _start_in_background(_provision_and_spawn, uv, wheel)
         return
     if wheel is not None:
         logger.warning(
@@ -383,10 +415,79 @@ def _provision_and_spawn(uv: Path, wheel: Path) -> None:
     if not ready or _cancel_provisioning.is_set():
         return
     logger.info("MCP proxy venv ready at %s", venv)
-    if _port_open(_MCP_HOST, _MCP_PORT):
-        logger.info("MCP proxy already on http://%s:%s/mcp; not spawning", _MCP_HOST, _MCP_PORT)
+    if not _mcp_port_free() or _cancel_provisioning.is_set():
         return
     _spawn_mcp_proxy([str(managed_venv.venv_python(venv)), *_SERVE_ARGS])
+
+
+def _mcp_port_free() -> bool:
+    """Whether port 8765 is free for a new proxy, after waiting for an orphan proxy to exit.
+
+    Runs off the Qt main thread. A served port is never reused (AD-2): ``/healthz`` tells a
+    freecad-buddy proxy from another program. A proxy whose FreeCAD is gone ends itself, and a
+    holder without ``/healthz`` may be a proxy of an older build that the operator is ending, so
+    both are waited for. Each outcome that leaves the port held logs one ERROR.
+    """
+    if not _port_open(_MCP_HOST, _MCP_PORT):
+        return True
+    health = _probe_healthz()
+    if health is None or health.get("service") != MCP_PROXY_SERVICE:
+        holder = "another program, or by an MCP proxy from an older freecad-buddy build"
+    else:
+        pid = health.get("freecad_pid")
+        if pid is None:
+            logger.error(
+                "MCP proxy not started: port %s is held by an MCP proxy that serves no FreeCAD; "
+                "it does not exit on its own. End it, then restart FreeCAD. The RPC listener is "
+                "up.",
+                _MCP_PORT,
+            )
+            return False
+        if isinstance(pid, int) and pid_alive(pid):
+            logger.error(
+                "MCP proxy not started: port %s is held by the MCP proxy of another FreeCAD "
+                "(pid %s). Close that FreeCAD, then restart this one. The RPC listener is up.",
+                _MCP_PORT,
+                pid,
+            )
+            return False
+        holder = f"an orphan MCP proxy whose FreeCAD (pid {pid}) is gone"
+    logger.info(
+        "port %s is held by %s; waiting up to %s s for it to free",
+        _MCP_PORT,
+        holder,
+        _ORPHAN_EXIT_WAIT_S,
+    )
+    deadline = time.monotonic() + _ORPHAN_EXIT_WAIT_S
+    while time.monotonic() < deadline:
+        if _cancel_provisioning.wait(_PORT_POLL_S):
+            return False
+        if not _port_open(_MCP_HOST, _MCP_PORT):
+            return True
+    logger.error(
+        "MCP proxy not started: port %s is still held by %s after %s s. End that process by "
+        "hand, then restart FreeCAD. The RPC listener is up.",
+        _MCP_PORT,
+        holder,
+        _ORPHAN_EXIT_WAIT_S,
+    )
+    return False
+
+
+def _probe_healthz() -> dict | None:
+    """The JSON object that ``GET /healthz`` on port 8765 answers with, or ``None``."""
+    connection = http.client.HTTPConnection(_MCP_HOST, _MCP_PORT, timeout=_HEALTHZ_TIMEOUT_S)
+    try:
+        connection.request("GET", "/healthz")
+        response = connection.getresponse()
+        if response.status != 200:
+            return None
+        body = json.loads(response.read(_HEALTHZ_MAX_BYTES))
+    except (OSError, http.client.HTTPException, ValueError):
+        return None
+    finally:
+        connection.close()
+    return body if isinstance(body, dict) else None
 
 
 def _spawn_mcp_proxy(command: list[str]) -> None:
@@ -407,9 +508,9 @@ def _spawn_mcp_proxy(command: list[str]) -> None:
 
 
 def stop_bridge() -> None:
-    """Stop provisioning, the MCP proxy (if spawned) and the listener; clear the singletons."""
+    """Stop the background proxy start, the MCP proxy (if spawned) and the listener."""
     global _listener, _mcp_proxy, _provisioner
-    # Joined before the proxy teardown: a provisioning thread that finishes now spawns the proxy,
+    # Joined before the proxy teardown: a background start that finishes now spawns the proxy,
     # and only after the join is that child visible here to terminate.
     _cancel_provisioning.set()
     if _provisioner is not None:

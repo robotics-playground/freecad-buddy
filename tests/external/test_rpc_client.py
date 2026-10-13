@@ -245,3 +245,117 @@ def test_should_log_one_warning_naming_the_method_when_the_connection_drops_in_f
     assert records[0].levelno == logging.WARNING
     assert records[0].getMessage().startswith("listener connection dropped during document_create")
     assert records[0].exc_info is None
+
+
+# -- pinned client (AD-2) ---------------------------------------------------------------------
+
+
+def _handle_listener(handle: str, served: list[str], token: str = TOKEN):
+    """A listener without a discovery file whose ``document_create`` answers ``handle``."""
+
+    def _create(**params):
+        served.append(handle)
+        return {**_ok_envelope(), "structured_content": {"handle": handle}}
+
+    registry = MethodRegistry()
+    registry.register(RpcMethod(name="document_create", handler=_create, mutating=True))
+    listener = RpcListener(
+        registry, Marshal(ThreadedExecutor()), token, freecad_version="1.1.1", discovery=False
+    )
+    host, port = listener.start_threaded()
+    return listener, {"schema": 1, "pid": 0, "host": host, "port": port, "token": token}
+
+
+def _write_pid_record(tmp_path, record, mtime, name=None):
+    disco = tmp_path / "freecad-buddy"
+    disco.mkdir(parents=True, exist_ok=True)
+    path = disco / (name or f"rpc-{record['pid']}.json")
+    path.write_text(json.dumps(record), encoding="utf-8")
+    os.utime(path, (mtime, mtime))
+
+
+def _pinned_then_newer_record(tmp_path, pinned_freecad):
+    """Pin a client to listener A, then add a newer record for listener B and drop the link."""
+    served: list[str] = []
+    listener_a, record_a = _handle_listener("A", served)
+    listener_b, record_b = _handle_listener("B", served)
+    _write_pid_record(tmp_path, {**record_a, "pid": pinned_freecad.pid}, mtime=1_000_000)
+    target = RpcClient(appdata_dir=str(tmp_path), pin=True)
+    target.call("document_create", {})
+    _write_pid_record(tmp_path, {**record_b, "pid": os.getpid()}, mtime=2_000_000)
+    target.close()
+    return target, served, (listener_a, listener_b)
+
+
+def test_should_reconnect_only_to_the_pinned_record_when_a_newer_record_appears(tmp_path):
+    # Arrange
+    freecad = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    target, served, listeners = _pinned_then_newer_record(tmp_path, freecad)
+
+    # Act
+    try:
+        envelope = target.call("document_create", {})
+    finally:
+        target.close()
+        for listener in listeners:
+            listener.stop()
+        freecad.kill()
+        freecad.wait()
+
+    # Assert
+    assert envelope["structured_content"]["handle"] == "A"
+    assert served == ["A", "A"]
+    assert target.pinned_record["pid"] == freecad.pid
+
+
+def test_should_return_worker_crashed_and_not_adopt_when_the_pinned_pid_is_gone(tmp_path):
+    # Arrange
+    freecad = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    target, served, listeners = _pinned_then_newer_record(tmp_path, freecad)
+    freecad.kill()
+    freecad.wait()
+
+    # Act
+    try:
+        envelope = target.call("document_create", {})
+    finally:
+        target.close()
+        for listener in listeners:
+            listener.stop()
+
+    # Assert
+    assert envelope["status"] == "WORKER_CRASHED"
+    assert f"pid {freecad.pid}" in envelope["detail"]["message"]
+    assert served == ["A"]
+
+
+def test_should_not_connect_to_a_newer_record_with_the_pinned_pid_and_another_token(tmp_path):
+    # Arrange
+    freecad = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+    served: list[str] = []
+    listener_a, record_a = _handle_listener("A", served)
+    listener_b, record_b = _handle_listener("B", served, token="restarted-session-token")
+    _write_pid_record(tmp_path, {**record_a, "pid": freecad.pid}, mtime=1_000_000)
+    target = RpcClient(appdata_dir=str(tmp_path), pin=True)
+    target.call("document_create", {})
+    _write_pid_record(
+        tmp_path,
+        {**record_b, "pid": freecad.pid},
+        mtime=2_000_000,
+        name=f"rpc-{freecad.pid}-restarted.json",
+    )
+    target.close()
+
+    # Act
+    try:
+        envelope = target.call("document_create", {})
+    finally:
+        target.close()
+        listener_a.stop()
+        listener_b.stop()
+        freecad.kill()
+        freecad.wait()
+
+    # Assert
+    assert envelope["structured_content"]["handle"] == "A"
+    assert served == ["A", "A"]

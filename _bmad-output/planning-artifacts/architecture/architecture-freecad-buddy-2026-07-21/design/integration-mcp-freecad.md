@@ -2,7 +2,7 @@
 title: 'Integration Design — MCP <-> FreeCAD Bridge'
 status: final
 date: '2026-07-21'
-ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20, AD-26, AD-27]
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20, AD-24, AD-26, AD-27]
 sources:
   - _bmad-output/planning-artifacts/research/technical-mcp-embedding-freecad-gui-process-research-2026-07-20.md
   - _bmad-output/planning-artifacts/research/technical-offscreen-screenshot-freecadcmd-research-2026-07-20.md
@@ -110,7 +110,7 @@ The listener writes `<FreeCAD user app data>/freecad-buddy/rpc-<pid>.json` (mode
  "token":"...","freecad_version":"1.1.1","started":"2026-07-21T09:00:00Z"}
 ```
 
-Port: `FREECAD_BUDDY_RPC_PORT` env if set, else ephemeral (`bind(0)`, actual port written to the file). Bind is `127.0.0.1` only; remote bind is explicit operator opt-in (AD-3). External server discovers by reading the newest file whose `pid` is alive; stale files are deleted by the listener on clean shutdown and skipped by clients on liveness failure.
+Port: `FREECAD_BUDDY_RPC_PORT` env if set, else ephemeral (`bind(0)`, actual port written to the file). Bind is `127.0.0.1` only; remote bind is explicit operator opt-in (AD-3). External server discovers by reading the newest file whose `pid` is alive (the GUI proxy then pins that record, §3.1); stale files are deleted by the listener on clean shutdown and skipped by clients on liveness failure.
 
 ## 3. GUI Mode
 
@@ -158,7 +158,24 @@ QtCore.QTimer.singleShot(0, _deferred_start)
 5. A release install with `uv` found (the **uv path** preference, else `PATH`) and no current managed venv: `hosts/gui_addon/managed_venv.provision` builds it on a daemon thread (`uv venv --clear --python >=3.11`, then `uv pip install` the bundled wheel; marker written last), then the thread spawns the proxy. A lock file `FreeCADBuddy/venv.lock` lets one FreeCAD instance provision while another skips; a lock older than 10 min is taken over. `uv` output goes to `freecad-buddy/provision.log`. The thread never touches Qt; `stop_bridge` sets its cancel event and joins it before it terminates the proxy. A changed wheel (an upgrade) fails the marker check and provisions again.
 6. Else one log line says why; with a bundled wheel but no `uv`, it names the **uv path** preference.
 
-A failed spawn or provisioning is logged and leaves the RPC listener up. Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set (or the **Start the MCP server with FreeCAD** preference is off) or `:8765` is already served. The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
+A failed spawn or provisioning is logged and leaves the RPC listener up. Skipped when `FREECAD_BUDDY_NO_AUTO_MCP` is set (or the **Start the MCP server with FreeCAD** preference is off), or when `:8765` stays held (below). The addon never imports `mcp`; it only spawns the process (consistent with AD-2 — the addon starts the listener, the MCP protocol server is external). Shutdown hook (workbench deactivate / app quit): terminate the proxy child, stop listener, delete connection file.
+
+**Proxy identity (AD-2, AD-24).** The proxy is bound to one FreeCAD:
+
+- **Pin.** At start, the proxy's `RpcClient(pin=True)` pins the newest live discovery record. The addon writes that record before it spawns the proxy, so the pin is the spawning FreeCAD even when no tool is ever called. A proxy started before any FreeCAD pins on its first connect. A proxy run by hand (`serve --mode rpc --transport http`) works the same way: it pins its FreeCAD and exits with it. After the pin, the client reconnects only to a live record with the same `pid` and `token`. It never moves to a newer FreeCAD; when the pinned record is gone, calls return `WORKER_CRASHED`.
+- **Watchdog.** A daemon thread checks the pinned `pid` once a second (`usecases/process.pid_alive`). When that FreeCAD is gone, the proxy logs one WARNING line to `mcp-proxy.log`, waits 1 s so that a call that failed with the FreeCAD can deliver its `WORKER_CRASHED` reply, and ends with `os._exit(0)`. It does not use a graceful uvicorn shutdown, because that waits for open MCP streams. The port is free within about 2 s of the kill. The pin uses the discovery record's `pid`, not the proxy's parent pid: on Windows the venv launcher starts a second python, so the parent is not FreeCAD.
+- **`GET /healthz`** returns `200` with `{"service": "freecad-buddy-mcp-proxy", "freecad_pid": <pinned pid>, "session_id": <first 16 hex of SHA-256(token)>}`. Both values are `null` before a pin. The body never holds the token, a path, or an environment value. `contracts/rpc.MCP_PROXY_SERVICE` holds the service name for both sides.
+- **Already-served check.** At start, when `:8765` accepts a TCP connect, the addon never reuses what it finds. On a daemon thread (`start_bridge` runs on the Qt main thread), it probes `/healthz` with stdlib `http.client` (1 s timeout):
+
+| `:8765` holder | Addon behavior |
+| --- | --- |
+| Free | Spawn as normal |
+| `/healthz` absent, no answer in 1 s, not `200`, or another `service` | Another program, or a proxy from an older build that the operator may be ending: wait up to 10 s for the port to free, then spawn; still held → ERROR `port 8765 is still held by another program …`; no spawn |
+| freecad-buddy proxy, `freecad_pid` alive | ERROR naming that pid; no spawn |
+| freecad-buddy proxy, `freecad_pid` `null` | Unpinned proxy; its watchdog never ends it. ERROR `held by an MCP proxy that serves no FreeCAD` at once; no wait, no spawn |
+| freecad-buddy proxy, `freecad_pid` dead | Wait up to 10 s for the port to free (its watchdog ends it), then spawn; still held → ERROR `still held by an orphan MCP proxy … End that process by hand`; no spawn |
+
+The addon reads the pid from `/healthz` only to log it and to test liveness. It never ends a process it did not spawn. The provisioning thread runs the same check before it spawns. `stop_bridge` sets the cancel event and joins the thread, so the 10 s wait ends at once on quit, and the thread checks the event again right before it spawns. The RPC listener is up in every row.
 
 ### 3.2 RPC listener (`adapters/rpc_listener.py`, stdlib only)
 
@@ -377,6 +394,8 @@ CI render leg: `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE
 | --- | --- | --- |
 | Listener down / not started | TCP connect refused, or connection file absent/stale (`pid` dead) | MCP tool returns envelope `WORKER_CRASHED` + detail `{"rpc":"unreachable"}`; client guidance: start/restart the addon. No auto-retry beyond one reconnect attempt. |
 | Stale connection file | `pid` liveness check fails | Skip file; report as listener-down. Listener deletes own file on clean stop. |
+| FreeCAD killed uncleanly (GUI) | proxy watchdog: pinned `pid` dead | Proxy logs once and exits within about 2 s, freeing `:8765`; it never adopts a newer FreeCAD (§3.1). |
+| `:8765` held at addon start (GUI) | TCP connect succeeds; `/healthz` probe | Never reused. Live proxy of another FreeCAD, or an unpinned proxy → ERROR, no spawn; orphan proxy or a holder without `/healthz` → wait up to 10 s, then spawn or ERROR. Listener stays up (§3.1). |
 | Auth token mismatch | `rpc_hello` compare fails | JSON-RPC `-32000`, connection closed, attempt logged to stderr. |
 | Contract version mismatch | handshake check | `-32004` + supported list; external server refuses session, surfaces upgrade instruction. |
 | FreeCAD busy (long recompute / modal dialog / prior call running) | serialized dispatch: the session's next frame queues behind its in-flight call | Call waits its turn; if total wait exceeds method `timeout_s` → `TIMEOUT` envelope. No preemption. |

@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import socket
+from collections.abc import Iterator
 from pathlib import Path
 
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
@@ -115,14 +116,14 @@ def _timeout_envelope(message: str) -> ResultEnvelope:
     }
 
 
-def discover(appdata_dir: str | Path | None = None) -> dict | None:
-    """Return the newest live listener discovery record, or ``None`` if none is reachable."""
+def _live_records(appdata_dir: str | Path | None) -> Iterator[dict]:
+    """The discovery records whose ``pid`` is alive, newest first."""
     base = Path(appdata_dir) if appdata_dir is not None else _appdata_dir()
     directory = base / "freecad-buddy"
     try:
         files = sorted(directory.glob("rpc-*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
     except OSError:
-        return None
+        return
     for path in files:
         try:
             record = json.loads(path.read_text(encoding="utf-8"))
@@ -131,15 +132,21 @@ def discover(appdata_dir: str | Path | None = None) -> dict | None:
         pid = record.get("pid")
         if not isinstance(pid, int) or not pid_alive(pid):
             continue
-        return record
-    return None
+        yield record
+
+
+def discover(appdata_dir: str | Path | None = None) -> dict | None:
+    """Return the newest live listener discovery record, or ``None`` if none is reachable."""
+    return next(_live_records(appdata_dir), None)
 
 
 class RpcClient:
     """One connection to a discovered listener; ``call`` never raises.
 
     ``endpoint`` (``host``, ``port``, ``token``) replaces discovery when the caller already knows
-    its listener. ``read_timeout_s=None`` makes a read block until the reply arrives.
+    its listener. ``read_timeout_s=None`` makes a read block until the reply arrives. ``pin=True``
+    binds the client to the first record it connects to: it then reconnects only to a live record
+    with that record's ``pid`` and ``token``, never to a newer FreeCAD (AD-2).
     """
 
     def __init__(
@@ -149,9 +156,12 @@ class RpcClient:
         client: str = "freecad-buddy-external",
         read_timeout_s: float | None = _DEFAULT_READ_TIMEOUT_S,
         endpoint: dict | None = None,
+        pin: bool = False,
     ) -> None:
         self._appdata_dir = appdata_dir
         self._endpoint = endpoint
+        self._pin = pin
+        self._pinned: dict | None = None
         self._contract_version = contract_version
         self._client = client
         self._read_timeout_s = read_timeout_s
@@ -162,16 +172,44 @@ class RpcClient:
         self._probe: socket.socket | None = None
         self._probe_buf = bytearray()
 
+    @property
+    def pinned_record(self) -> dict | None:
+        """The discovery record this client is pinned to, or ``None`` while nothing is pinned."""
+        return self._pinned
+
+    def pin(self) -> dict | None:
+        """Pin the newest live record now, unless a record is pinned already; return the pin."""
+        if self._pinned is None:
+            self._pinned = discover(self._appdata_dir)
+        return self._pinned
+
     def _record(self) -> dict | None:
         if self._endpoint is not None:
             return self._endpoint
+        if self._pinned is not None:
+            pid, token = self._pinned.get("pid"), self._pinned.get("token")
+            return next(
+                (
+                    record
+                    for record in _live_records(self._appdata_dir)
+                    if record.get("pid") == pid and record.get("token") == token
+                ),
+                None,
+            )
+        if self._pin:
+            return self.pin()
         return discover(self._appdata_dir)
 
     def _connect(self) -> tuple[socket.socket, object] | None:
         """Open a TCP connection to the listener; return it with the record's token."""
         record = self._record()
         if record is None:
-            self._connect_error = "no live listener discovery file"
+            if self._pinned is not None:
+                self._connect_error = (
+                    f"the pinned listener (FreeCAD pid {self._pinned.get('pid')}) is gone"
+                )
+            else:
+                self._connect_error = "no live listener discovery file"
             return None
         host = record.get("host")
         port = record.get("port")

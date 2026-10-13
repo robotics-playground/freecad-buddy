@@ -24,11 +24,11 @@ Expected output: `shipped: 45 missing: none`.
 | Metric | Value |
 | --- | --- |
 | Test-case files | 15 (TC-01..TC-14 green gate, TC-99 conformance gate) |
-| Scenarios | 259 |
-| Checkpoints | 1637 |
+| Scenarios | 258 |
+| Checkpoints | 1731 |
 | Shipped tools covered | 45 / 45 |
-| Green-gate scenarios | 251 |
-| Conformance-gate scenarios (expected-fail) | 8 |
+| Green-gate scenarios | 252 |
+| Conformance-gate scenarios (expected-fail) | 6 |
 
 ## 2. Scenario allocation by file
 
@@ -38,7 +38,7 @@ are executed: **GUI** = `cua-driver` against the live FreeCAD window, **MCP** = 
 
 | TC | Title | Gate | Pri | Driver | Scenarios | CPs |
 | --- | --- | --- | --- | --- | --- | --- |
-| TC-01 | Session lifecycle & transport | green | Critical | GUI+MCP+H1 | 14 | 94 |
+| TC-01 | Session lifecycle & transport | green | Critical | GUI+MCP+H1 | 15 | 108 |
 | TC-02 | Document ingestion & handles | green | Critical | GUI+MCP | 18 | 139 |
 | TC-03 | Sketch authoring | green | Critical | MCP+GUI | 21 | 145 |
 | TC-04 | Feature modelling | green | Critical | MCP+GUI | 24 | 181 |
@@ -47,12 +47,12 @@ are executed: **GUI** = `cua-driver` against the live FreeCAD window, **MCP** = 
 | TC-07 | Verification & export pairing | green | Critical | MCP+H1 | 21 | 137 |
 | TC-08 | Preview, confirm & undo | green | Critical | MCP+GUI | 21 | 138 |
 | TC-09 | Error contract & fault injection | green | Critical | MCP+H1 | 23 | 153 |
-| TC-10 | Concurrency, timeout & quarantine | green | High | MCP×2+H1 | 14 | 86 |
+| TC-10 | Concurrency, timeout & quarantine | green | High | MCP×2+H1 | 14 | 87 |
 | TC-11 | Security posture & artifact hygiene | green | High | MCP+GUI | 16 | 109 |
-| TC-12 | GUI workflows (maximal) | green | High | **GUI** | 15 | 98 |
+| TC-12 | GUI workflows (maximal) | green | High | **GUI** | 15 | 99 |
 | TC-13 | GUI ↔ MCP parity | green | Critical | **GUI+MCP** | 18 | 123 |
 | TC-14 | Viewport framing & auto-fit | green | Critical | **GUI+MCP+H1** | 16 | 88 |
-| TC-99 | AD conformance gaps | conformance | — | MCP×2 | 8 | 47 |
+| TC-99 | AD conformance gaps | conformance | — | MCP×2 | 6 | 37 |
 
 ## 3. Tool → TC coverage
 
@@ -174,7 +174,7 @@ Two checkpoints in this file are worth protecting from future trimming:
 
 | AD | Rule | Primary | Also in |
 | --- | --- | --- | --- |
-| AD-2 | Process topology, addon auto-spawn, main-thread marshal | TC-01 | 10, 12 |
+| AD-2 | Process topology, addon auto-spawn, proxy pinned to its FreeCAD, main-thread marshal | TC-01 | 10, 12 |
 | AD-3 | Transport, loopback bind, per-session RPC token | TC-11 | 01 · **gap in TC-99-01/02** |
 | AD-4 | Typed tools are the only mutation path; `debug_exec` gating | TC-11 | 01 |
 | AD-5 | Mutation transaction protocol, proven rollback | TC-05 | 03, 04, 08 |
@@ -185,7 +185,7 @@ Two checkpoints in this file are worth protecting from future trimming:
 | AD-10 | Preview diff, confirm token checked in every posture, auto-approve on by default (`=0` turns the gate on), `Visibility`-only display-state carve-out | TC-08 | 05, 11 |
 | AD-17 | Closed terminal status set, append-only audit log | TC-09 | 05, 10, 11 |
 | AD-20 | Explicit doc handle, never `ActiveDocument`, TempDoc lifecycle | TC-02 | 08, 11, 12 |
-| AD-24 | Latency budget | TC-10 | 01 · **`/healthz` gap in TC-99-08** |
+| AD-24 | Latency budget, proxy `/healthz` | TC-10 | 01 |
 | AD-25 | Session workdir, snapshot deletion on every exit path | TC-11 | 05 · **gap in TC-99-04/05/06/07** |
 | AD-26 | Single client session, second client refused busy | TC-10 | 03 |
 | AD-27 | Post-timeout quarantine, no automatic mutation retry | TC-10 | 09 |
@@ -195,7 +195,7 @@ Two checkpoints in this file are worth protecting from future trimming:
 
 | TC | Happy | Edge | Abnormal |
 | --- | --- | --- | --- |
-| TC-01 | 5 | 4 | 5 |
+| TC-01 | 5 | 4 | 6 |
 | TC-02 | 7 | 6 | 5 |
 | TC-03 | 8 | 7 | 6 |
 | TC-04 | 11 | 8 | 5 |
@@ -207,12 +207,12 @@ Two checkpoints in this file are worth protecting from future trimming:
 | TC-10 | 2 | 4 | 8 |
 | TC-11 | 4 | 5 | 7 |
 | TC-12 | 8 | 4 | 3 |
-| TC-99 | 0 | 0 | 8 |
-| **Total** | **71** | **69** | **85** |
+| TC-99 | 0 | 0 | 6 |
+| **Total** | **71** | **69** | **84** |
 
 Abnormal cases outnumber happy-path cases. That is intended: the suite exists to prove the bridge
 fails correctly, not only that it succeeds. The five resilience-heavy files (TC-05, TC-08, TC-09,
-TC-10, TC-11) carry 44 of the 85 abnormal scenarios.
+TC-10, TC-11) carry 44 of the 84 abnormal scenarios.
 
 ## 6. Known coverage boundaries
 

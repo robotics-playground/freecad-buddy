@@ -74,23 +74,28 @@ sequenceDiagram
   Note over Boot: start deferred until FreeCAD.GuiUp<br/>via QTimer.singleShot (AD-2)
   Boot->>Boot: token = secrets.token_urlsafe(32)
   Boot->>L: start on ephemeral localhost port
+  L->>L: write connection file rpc-PID.json (token + FreeCAD PID)
   L-->>Boot: bound port
-  Boot->>Boot: probe :8765 /healthz for own session id
-  alt foreign or stale listener on :8765
-    Boot-->>Operator: error surfaced — never a silent reuse
-  else port free
+  opt :8765 served (on a daemon thread — the Qt main thread never waits)
+    Boot->>Boot: GET :8765/healthz — never reuse what answers
+    Note over Boot: proxy of a live FreeCAD, or unpinned proxy → held<br/>orphan proxy or no /healthz → wait up to 10 s for :8765 to free
+  end
+  alt :8765 still held
+    Boot-->>Operator: ERROR in addon.log, no spawn — never a silent reuse
+  else :8765 free
     Boot->>Boot: _mcp_proxy_command() — resolve project venv<br/>from the addon's own install path
     Boot->>Proxy: Popen (detached, no console)
-    Boot->>Boot: write connection file (token + addon PID)
+    Proxy->>Proxy: pin the newest live connection file (this FreeCAD)
   end
-  Agent->>Proxy: MCP initialize (bearer token, Origin checked)
+  Agent->>Proxy: MCP initialize
   Proxy-->>Agent: tool list
-  Note over Proxy,L: proxy exits once the PID it was spawned for is gone
+  Note over Proxy,L: proxy exits once the pinned PID is gone
 ```
 
-**Why the PID is in the connection file:** a fast FreeCAD restart otherwise leaves an orphan proxy
-owning the port and wired to a dead listener — which the client experiences as a hang rather than
-a status (AD-2).
+**Why the connection file comes first and holds the PID:** the proxy pins the record it finds at
+start, so the record must exist before the spawn. A fast FreeCAD restart otherwise leaves an orphan
+proxy owning the port and wired to a dead listener — which the client experiences as a hang rather
+than a status (AD-2).
 
 ---
 
