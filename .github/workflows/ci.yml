@@ -98,10 +98,11 @@ jobs:
       # Install the package WITHOUT runtime deps (no third-party wheels built against
       # FreeCAD's bundled interpreter for the in-FreeCAD suite). The external suite needs
       # `mcp` (pin CLOSED in decision 005) because the MCP-surface tests import the H1 host
-      # wiring; add it alongside the test tools. H1 is a single process (FreeCAD + mcp in one
-      # interpreter), so `mcp` living in this conda env is also what makes `--mode inline`
-      # servable on this leg. The export-oracle tests call trimesh and lib3mf, the package's own
-      # runtime deps, so they are installed here too.
+      # wiring; add it alongside the test tools. H1 runs as two processes of this one interpreter:
+      # the front serves MCP and the worker imports FreeCAD. The front needs `mcp`, so `mcp` living
+      # in this conda env is what makes `--mode inline` servable on this leg. The export-oracle
+      # tests call trimesh and lib3mf, the package's own runtime deps, so they are installed here
+      # too.
       - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install "mcp>=1.28,<2" "trimesh==4.*" "lib3mf==2.*" pytest jsonschema pyyaml
       - name: In-FreeCAD suite (stdlib unittest, one process)
         timeout-minutes: 15
@@ -109,6 +110,17 @@ jobs:
       - name: External suite (MCP surface, dispatch, audit)
         timeout-minutes: 15
         run: micromamba run -n fc pytest tests/external
+      # The two-process host tests need `import FreeCAD` in the test interpreter. conda-forge puts
+      # FreeCAD.so in <env prefix>/lib, which is off the default module path, so this step sets
+      # PYTHONPATH as score_g3_replay does for its host. It is separate from the external suite,
+      # which keeps a test that expects FreeCAD to be absent. Those three tests skip silently when
+      # FreeCAD does not import, so the step also fails unless all three report PASSED.
+      - name: Two-process headless host (stdio end to end, import probes)
+        timeout-minutes: 10
+        run: |
+          set -o pipefail
+          micromamba run -n fc bash -c 'PYTHONPATH="$(python -c "import sys; print(sys.prefix)")/lib" pytest tests/external/test_headless_two_process.py -p no:cacheprovider -rA' | tee two-process.log
+          test "$(grep -cE '^PASSED .*::test_should_(serve_the_single_process_surface|hold_no_freecad|hold_no_mcp)' two-process.log)" -eq 3
       - name: Emit G0.4 leg evidence (green iff both suites above passed)
         run: >-
           python benchmarks/g0/emit_ci_evidence.py

@@ -8,6 +8,7 @@ probe that cannot run returns a conservative default rather than raising.
 
 from __future__ import annotations
 
+import sys
 from functools import lru_cache
 from typing import Callable, Literal, TypeVar
 
@@ -388,13 +389,16 @@ def display_decimals() -> int | None:
     verdicts stay raw. Not cached: FreeCAD applies a change to either preference at once
     (``DlgSettingsGeneral.cpp:209``), so the next tool result follows it. No FreeCAD, a missing
     preference or a negative value gives ``DEFAULT_DISPLAY_DECIMALS``.
-    """
-    try:
-        import FreeCAD
 
-        if not FreeCAD.ParamGet(BUDDY_PARAM_PATH).GetBool(ROUND_TO_DISPLAY_KEY, True):
+    FreeCAD is read only when this process has already loaded it; this function never loads it.
+    """
+    freecad = sys.modules.get("FreeCAD")
+    if freecad is None:
+        return DEFAULT_DISPLAY_DECIMALS
+    try:
+        if not freecad.ParamGet(BUDDY_PARAM_PATH).GetBool(ROUND_TO_DISPLAY_KEY, True):
             return None
-        decimals = FreeCAD.ParamGet(_UNITS_PARAM_PATH).GetInt("Decimals", DEFAULT_DISPLAY_DECIMALS)
+        decimals = freecad.ParamGet(_UNITS_PARAM_PATH).GetInt("Decimals", DEFAULT_DISPLAY_DECIMALS)
     except Exception:  # noqa: BLE001 - a preference that cannot be read falls back to the default
         return DEFAULT_DISPLAY_DECIMALS
     return decimals if decimals >= 0 else DEFAULT_DISPLAY_DECIMALS

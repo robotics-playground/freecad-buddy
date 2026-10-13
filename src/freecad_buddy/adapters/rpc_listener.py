@@ -113,6 +113,7 @@ class RpcListener:
         capabilities: dict | None = None,
         appdata_dir: str | Path | None = None,
         audit=None,
+        discovery: bool = True,
     ) -> None:
         self._registry = registry
         self._marshal = marshal
@@ -124,6 +125,9 @@ class RpcListener:
         self._capabilities = capabilities or {}
         self._appdata_dir = Path(appdata_dir) if appdata_dir is not None else None
         self._audit = audit
+        # The headless worker hands its endpoint to its front directly; a discovery file would let
+        # a GUI proxy on the same machine connect to it.
+        self._discovery = discovery
         # The mutation gate and the camera fit write their own records through this sink; the
         # handlers the registry holds take no sink argument of their own.
         if audit is not None:
@@ -139,7 +143,8 @@ class RpcListener:
 
     # -- lifecycle ---------------------------------------------------------------------------
 
-    def _bind(self) -> tuple[str, int]:
+    def bind(self) -> tuple[str, int]:
+        """Bind and listen, write the discovery file when enabled, and return the bound address."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind((self._host, self._port))
@@ -147,27 +152,36 @@ class RpcListener:
         self._sock = sock
         host, port = sock.getsockname()[:2]
         self._port = port
-        self._write_discovery(host, port)
+        if self._discovery:
+            self._write_discovery(host, port)
         return host, port
 
     def start_threaded(self) -> tuple[str, int]:
-        """Bind, write the discovery file, and run the accept loop on a daemon thread."""
-        host, port = self._bind()
+        """Bind, write the discovery file when enabled, and run the accept loop on a thread."""
+        host, port = self.bind()
         self._thread = threading.Thread(target=self._accept_loop, name="fcb-rpc", daemon=True)
         self._thread.start()
         return host, port
 
     def serve_forever_inline(self) -> tuple[str, int]:
-        """Bind and run the accept loop on the calling (main) thread until ``stop``."""
-        host, port = self._bind()
+        """Bind unless ``bind`` already ran, then run the accept loop on the calling thread."""
+        if self._sock is None:
+            self.bind()
         self._accept_loop()
-        return host, port
+        return self._host, self._port
 
     def stop(self) -> None:
-        """Stop accepting, close the socket, and delete the discovery file."""
+        """Stop accepting, close the socket, and delete the discovery file when one was written."""
         self._stop.set()
         sock = self._sock
         if sock is not None:
+            # On Linux, close() alone does not wake an accept() blocked on another thread;
+            # shutdown() does. Windows refuses shutdown() on a listening socket, and its close()
+            # wakes the accept on its own.
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
             try:
                 sock.close()
             except OSError:

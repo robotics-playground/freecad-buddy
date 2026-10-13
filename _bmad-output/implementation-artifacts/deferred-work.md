@@ -1677,3 +1677,11 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
   summary: A hand-started or orphan MCP proxy lists `script_exec` from its own environment while the GUI listener has it off (`ScriptExec` cleared), so calls fail with `unknown method`.
   evidence: `gui_external/entry.py:185` reads `Capabilities.from_env` of the proxy process only; the new default-on makes the mismatch reachable. Possible fix: AND with the listener handshake `exec_enabled`. Related to Story 10.6 AC4 orphan proxies (review finding 24).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6a-two-process-headless-host.md`
+  summary: A local process that connects to the RPC listener and sends nothing holds its only connection, because `_handshake` has no read timeout and `_accept_loop` serves one connection at a time; the headless front's first call then fails with `WORKER_CRASHED`.
+  evidence: `adapters/rpc_listener.py` `_handshake` reads the hello line with no `settimeout`. Same in GUI mode, where the discovery file publishes the port; the headless worker port is not published but is reachable by a scan. Possible fix: a short handshake timeout on accepted connections (review finding 11).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6a-two-process-headless-host.md`
+  summary: No test drives the headless CLI, kills the real worker, and checks that the next call returns the "restart the headless host" message.
+  evidence: `test_should_return_the_restart_message_without_rpc_when_the_worker_has_exited` uses a fake `_ExitedProcess`; passing a bare `RpcClient` in `hosts/headless/entry.py` `run()` would fail no test. Story 10.6 tests drive the same front-to-worker path (review finding 12).

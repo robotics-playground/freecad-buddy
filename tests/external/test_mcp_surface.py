@@ -33,7 +33,7 @@ from freecad_buddy.adapters.mcp_server import (
 )
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod, is_audited
 from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, summary_text
-from freecad_buddy.hosts.headless.entry import build_registry
+from freecad_buddy.hosts.headless.worker import build_registry
 from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, SCRIPT_EXEC_SPEC, tool_specs
 from freecad_buddy.usecases import confirm
 from freecad_buddy.usecases.capabilities import SCRIPT_EXEC_WARNING

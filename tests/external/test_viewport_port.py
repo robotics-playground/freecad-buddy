@@ -482,7 +482,7 @@ def test_gui_addon_injects_a_live_viewport_port_at_the_wiring_seam(monkeypatch, 
 
 def test_headless_host_injects_no_viewport_port(monkeypatch):
     """The headless host has no live view, so it must state ``viewport_port=None``."""
-    from freecad_buddy.hosts.headless import entry
+    from freecad_buddy.hosts.headless import worker
 
     captured = {}
 
@@ -490,8 +490,8 @@ def test_headless_host_injects_no_viewport_port(monkeypatch):
         captured.update(kwargs)
         return "registry"
 
-    monkeypatch.setattr(entry, "build_inline_handlers", _capture)
-    entry.build_registry(object(), object(), object())
+    monkeypatch.setattr(worker, "build_inline_handlers", _capture)
+    worker.build_registry(object(), object(), object())
 
     assert "viewport_port" in captured, "the headless host must state the no-viewport case"
     assert captured["viewport_port"] is None

@@ -79,6 +79,7 @@ freecad-buddy/
 │           ├── __init__.py           # EMPTY
 │           ├── tool_catalog.py       # shared tool surface: schemas, timeouts, mutating flags, audit events
 │           ├── main.py               # CLI: serve --mode inline|rpc --transport stdio|http
+│           ├── rpc_proxy.py          # proxy registry shared by gui_external and the headless front: forward each tool over RPC
 │           ├── gui_addon/
 │           │   ├── InitGui.py        # addon entry source-of-truth; copied to addon root at build (§2.2)
 │           │   ├── bootstrap.py      # start_bridge: deferred start (GuiUp + QTimer), listener + MCP auto-spawn (AD-2)
