@@ -558,9 +558,11 @@ print('elapsed', round(time.monotonic()-t0, 2))
 **Then** FreeCAD is gone — verify: `tasklist | grep <freecad pid>` returns nothing  
 **And** the RPC port no longer accepts — verify: the connect attempt prints `refused:` and never `connected`  
 **And** the failure is fast, not a hang — verify: the printed `elapsed` is under the 5 s connect timeout  
-**And** the proxy child does not outlive its parent as a serving endpoint — verify: either `tasklist | grep <proxy pid>` returns nothing, or the proxy is alive but `mcp query_capabilities {}` returns a transport-level failure rather than a fabricated `OK`  
+**And** the proxy exits once its FreeCAD is gone — verify: within 5 s of the kill, `tasklist | grep <proxy pid>` returns nothing and `netstat -ano | grep :8765` shows no `LISTENING` row. The proxy pid is the `LISTENING` pid on `:8765` recorded in the `Given`.  
+**And** the proxy logs its exit once — verify: `grep -c "FreeCAD pid <freecad pid> has exited; the MCP proxy exits and frees port 8765" "$APPDATA/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log"` prints `1`. Read the log before the relaunch: the new proxy rewrites it.  
 **And** the kill leaves a stale discovery file, matching the shipped behaviour — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<killed pid>.json"` still lists the file. A clean exit deletes it (TC-01-10); an unclean kill does not. Record this as observed state, not a defect.  
 **And** a fresh launch is not blocked by the stale state — verify: relaunching FreeCAD writes a new `rpc-<new pid>.json` and `:8765` returns to `LISTENING`  
+**And** the relaunched FreeCAD is served by its own new proxy, not by an adopted one — verify: `curl -s http://127.0.0.1:8765/healthz` returns `200` with `"service": "freecad-buddy-mcp-proxy"` and `"freecad_pid"` equal to the new FreeCAD pid, the `LISTENING` pid on `:8765` differs from the killed session's proxy pid, and the new session's `addon.log` lines hold no `MCP proxy not started` ERROR  
 **And** the new session mints a different token — verify: the `token` in the new discovery file differs from the killed session's token, and the old token no longer authenticates  
 **And** *(visual)* a golden model is opened in the **relaunched** FreeCAD and framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. The killed session has no MCP surface left, so the pre-kill framing in the `Given` was done through the GUI menu for that reason.  
 **And** *(visual)* the killed window is gone and the relaunched one is healthy — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-14-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the before PNG shows the killed session's FreeCAD window with its 3D view; the after PNG shows a FreeCAD window on the new pid with one box-shaped solid inside the view, whole, no edge cut off, and no crash dialog or recovery prompt left up. The killed pid must not capture at all. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -571,4 +573,62 @@ mcp document_close { doc: "<handle>" }
 ```
 ```bash
 rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<killed pid>.json"
+```
+
+---
+
+### TC-01-15: The proxy serves /healthz, and the addon never adopts a foreign server on :8765
+
+**Priority**: Critical
+**Design Ref**: `integration-mcp-freecad.md` §3.1 (proxy identity and the already-served check), AD-2, AD-24
+
+**Given** FreeCAD is running with its auto-spawned proxy — verify: `netstat -ano | grep :8765` shows `LISTENING`, and the FreeCAD pid and the `token` from `rpc-<freecad pid>.json` are recorded  
+**And** a golden model is open as an untouched baseline — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
+**And** the baseline is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** the framed baseline is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-before.png"}' | & cua-driver call get_window_state`  
+
+**When** the health route is probed  
+```bash
+curl -s -i http://127.0.0.1:8765/healthz
+```
+
+**Then** `/healthz` answers — verify: the status line is `HTTP/1.1 200 OK` and the body is JSON  
+**And** the body names the proxy and its FreeCAD — verify: `"service"` is `"freecad-buddy-mcp-proxy"` and `"freecad_pid"` equals the recorded FreeCAD pid  
+**And** the body carries a session id and no secret — verify: `"session_id"` is a non-empty string, the recorded `token` does not occur anywhere in the response, and the body holds no path and no environment value  
+**And** *(visual)* the probe left the baseline unchanged — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-probed.png"}' | & cua-driver call get_window_state`, then `Read` it beside the before PNG and say what is on screen: the same box, whole, at the same size and position, with no dialog raised. The judgement is on the pixels alone.  
+
+**When** the document is closed and FreeCAD is closed cleanly  
+```
+mcp document_close { doc: "<handle>" }
+cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "Exit"] }
+```
+**And** `:8765` is held by an unrelated HTTP server, and the addon log is moved aside  
+```bash
+netstat -ano | grep :8765        # must return nothing first
+uv run python -m http.server 8765 --bind 127.0.0.1 &
+netstat -ano | grep ":8765.*LISTENING"   # record the last column: the Windows pid that holds the port
+mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+```
+**And** FreeCAD is launched and the addon log is read after 15 s, past the addon's 10 s wait for the port to free  
+```
+cua-driver call launch_app { path: "$FREECAD_EXE" }
+```
+```bash
+cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+```
+
+**Then** the addon reports the foreign holder once — verify: `grep -c "ERROR" addon.log` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
+**And** no proxy was spawned — verify: `grep "spawned MCP proxy" addon.log` returns nothing, and `netstat -ano | grep :8765` shows `LISTENING` only on the holder pid recorded from `netstat`  
+**And** the RPC listener is up — verify: `grep "freecad-buddy RPC listener started on" addon.log` returns a line, and `rpc-<new freecad pid>.json` exists  
+**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, tree panel and 3D view, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
+
+**Cleanup**: stop the process that holds `:8765`, then restart FreeCAD so later scenarios get the auto-spawned proxy. Use the Windows pid from `netstat`; the shell's `$!` names the `uv` wrapper, not the python child that holds the port.
+```bash
+powershell -c "Stop-Process -Id <holder pid> -Force"
+netstat -ano | grep ":8765.*LISTENING"   # must return nothing
+rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+```
+```
+cua-driver call kill_app { pid: <new freecad pid> }
+cua-driver call launch_app { path: "$FREECAD_EXE" }
 ```

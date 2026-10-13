@@ -23,7 +23,6 @@ in `src/freecad_buddy/`. "Not in `tool_specs()`" means the tool name never reach
 | `query_parameters` | Epic 2 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-04. |
 | `verify_fingerprint` | Epic 3 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-07. |
 | `verify_references` | Epic 3 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-07. |
-| `/healthz` endpoint | Epic 3 | Absent. A source search for `healthz` returns zero hits. The HTTP host mounts only `/mcp`. | An endpoint is added to `gui_external/entry.py`; add to TC-01. |
 | Job tools | Epic 5 | No job tool of any kind in `tool_specs()`. | A job tool ships with a defined lifecycle and terminal states. |
 | Assembly tools | Epic 6 | No assembly tool in `tool_specs()`. | An assembly tool ships. |
 | Measurement tools | Epic 6 | No measurement tool in `tool_specs()`. | A measurement tool ships with an analytic expectation to check against. |

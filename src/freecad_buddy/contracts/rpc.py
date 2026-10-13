@@ -22,6 +22,10 @@ RPC_ERROR_VERSION_MISMATCH = -32004  # contract_version mismatch
 # active (AD-26); the client matches it to name the busy condition.
 RPC_BUSY_MESSAGE = "bridge busy: another client session is active"
 
+# The ``service`` the GUI MCP proxy names in its ``GET /healthz`` reply. The addon matches it to
+# tell a freecad-buddy proxy on the MCP port from another program (AD-2, AD-24).
+MCP_PROXY_SERVICE = "freecad-buddy-mcp-proxy"
+
 # Channel error code to closed-status mapping. Callers embed {status, detail} in
 # `error.data` so one decoder serves both paths.
 CHANNEL_ERROR_STATUS: dict[int, str] = {

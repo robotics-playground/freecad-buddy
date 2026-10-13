@@ -5,7 +5,7 @@ the green suite.**
 
 Every scenario below asserts a behavior an architecture decision specifies and the shipped code
 does NOT implement. **Every scenario here is expected to FAIL against the current build.** A run
-that reports all seven failing is the correct, expected result.
+that reports all six failing is the correct, expected result.
 
 Reading the result:
 - A scenario that **fails** is the recorded, accepted state. It does not block the release.
@@ -410,61 +410,6 @@ mcp document_close { doc: "<handle>" }
 
 ---
 
-### TC-99-08: The bridge exposes /healthz returning the session id
-
-**Priority**: Critical
-**Design Ref**: `integration-mcp-freecad.md` §7 (AD-24 liveness), `integration-mcp-clients.md` §transport (AD-2 already-served check)
-
-**What AD-24 specifies**: the bridge serves a `/healthz` route that returns the session id, and
-AD-2's already-served check probes that route so the addon can tell its own live bridge from an
-unrelated process holding port 8765.
-
-**Shipped behavior today**: no `healthz` route exists. A repository-wide search for the string
-across `src/` returns zero hits. The Starlette application is built with exactly one route:
-`Starlette(routes=[Mount("/mcp", app=_handle)], lifespan=_lifespan)` at
-`src/freecad_buddy/hosts/gui_external/entry.py:157`. There is no session id to return either —
-see TC-99-04, where no session-scoped concept exists at all. The only liveness signal the addon
-has is a raw TCP connect to `127.0.0.1:8765`, which cannot distinguish this bridge from any other
-process that happens to hold the port, and which therefore cannot tell a healthy bridge from a
-stale one.
-
-**Given** the proxy is serving on `127.0.0.1:8765`  
-**And** a golden model is open as an untouched baseline — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the baseline is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the framed baseline is captured, after that same fit, so both images share a camera — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-99-08-before.png"}' | & cua-driver call get_window_state`  
-
-**When** the health route is probed  
-```bash
-curl -s -i http://127.0.0.1:8765/healthz
-```
-**And** the source is searched for any health route  
-```bash
-grep -rn "healthz" src/
-```
-**And** port 8765 is occupied with an unrelated process and the addon is started, observing whether it detects the impostor  
-
-**Then** `/healthz` returns a success status — verify: the `curl` response status is `200`. **Expected failure: Starlette returns `404`; the only route is `/mcp`.**  
-**And** the body carries a session id — verify: the response body contains a session identifier. **Expected failure: the body is a 404 page.**  
-**And** the route exists in source — verify: the `grep -rn "healthz" src/` returns a match. **Expected failure: it returns nothing.**  
-**And** the already-served check probes `/healthz` — verify: the addon bootstrap's port check issues an HTTP request to `/healthz`. **Expected failure: it performs a raw TCP connect only.**  
-**And** an impostor on the port is detected — verify: the addon reports that `:8765` is held by a process that is not this bridge. **Expected failure: the raw connect succeeds, so the addon treats the impostor as its own bridge and does not spawn.**  
-**And** *(visual)* the model is framed — verify: fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. The impostor holds `:8765`, so `mcp view_fit_viewport` may be unreachable; use it only if it returns `OK`.  
-**And** *(visual)* the health probe and the impostor left the application coherent and the baseline unchanged — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-99-08-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen: the baseline box drawn whole inside the frame, the viewport fully painted with no blank or torn region, no port-conflict dialog or addon-failure popup raised by the impostor, no "Not Responding" in the title bar, and the after image showing the same box at the same size and position as the before image. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
-
-**Expected result**: FAIL. `/healthz` returns `404` with a 404 body and no session id; `grep -rn  
-"healthz" src/` returns nothing; the addon's already-served check is a raw TCP connect that accepts
-an impostor on `:8765` as its own bridge and does not spawn. Only the visual closer passes.
-
-**Cleanup**:
-```bash
-# Release the impostor process from port 8765.
-```
-```
-mcp document_close { doc: "<handle>" }
-```
-
----
-
 ## Gap summary
 
 | AD | Scenario | Shipped evidence (`file:line`) | What must change to make it pass |
@@ -475,4 +420,3 @@ mcp document_close { doc: "<handle>" }
 | AD-25 | TC-99-05 snapshots in `snap/` | `usecases/transaction.py:94` `tempfile.mkdtemp(prefix=_SNAPSHOT_PREFIX)`; prefix at `:39` | Replace the `mkdtemp` with a path under the session workdir's `snap/` |
 | AD-25 | TC-99-06 per-session dated audit log | `adapters/audit_log.py:24` — CWD-relative `freecad-buddy-audit.jsonl` default; `:49-66` record carries no session field | Default the audit path to a dated file under the session workdir and add a session field to the record |
 | AD-25 | TC-99-07 start-of-session sweep | No sweep in `src/`; `usecases/transaction.py:584-601` and `:375-391` deliberately keep snapshots with no later cleaner | Sweep reserved-prefix orphans at bridge start, logging what was removed |
-| AD-24 | TC-99-08 `/healthz` | Zero `healthz` hits in `src/`; the only route is `hosts/gui_external/entry.py:157` | Add a `/healthz` route returning the session id, and make the AD-2 already-served check probe it instead of a raw TCP connect |

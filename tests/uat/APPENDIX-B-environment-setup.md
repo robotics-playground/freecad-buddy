@@ -116,8 +116,12 @@ must appear without any manual command.
 The host and port are hard-coded: `_HOST="127.0.0.1"`, `_PORT=8765` in `gui_external/entry.py`.
 There are no `--host` or `--port` flags.
 
-If `:8765` was already served before FreeCAD started, the addon does not double-spawn. In that case
-the listener you are testing is not the one the addon owns — kill it and relaunch FreeCAD.
+If `:8765` was already served before FreeCAD started, the addon never reuses it. It probes
+`http://127.0.0.1:8765/healthz` and spawns no proxy of its own while the port stays held. It waits up
+to 10 s for an orphan proxy (one whose FreeCAD has exited) or a holder without `/healthz` to free the
+port, then spawns. In every other case `addon.log` gets one ERROR line that starts
+`MCP proxy not started:` and names the holder. Stop the holder and relaunch FreeCAD. Before you
+test, confirm that `/healthz` reports `"freecad_pid"` equal to the FreeCAD pid under test.
 
 ---
 

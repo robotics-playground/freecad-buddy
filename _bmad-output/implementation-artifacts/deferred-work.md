@@ -1717,3 +1717,19 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6b-rpc-busy-refusal.md`
   summary: TC-10 cites `rpc_listener.py` line numbers that moved, and no UAT step covers the 5 s hello deadline, the headless probe lift after a busy answer, or the unbuilt AD-26 multi-client mode.
   evidence: For example TC-10 cites `adapters/rpc_listener.py:36` for `_MAX_FRAME_BYTES`, now at `:43`. Fits Story 10.7 (UAT suite and harness maintenance) (review finding 17).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6c-proxy-identity-and-orphan-exit.md`
+  summary: The MCP proxy pins the newest live discovery record at start, so a second FreeCAD that writes its record before the proxy pins can take the proxy away from the FreeCAD that spawned it.
+  evidence: `gui_external/entry.py` `run` calls `client.pin()`, which uses `discover()` (newest by mtime). Passing the addon pid to the child (a CLI option) would remove the race (review finding 13).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6c-proxy-identity-and-orphan-exit.md`
+  summary: An orphan MCP proxy never exits when Windows reuses its FreeCAD pid or `pid_alive` answers True on access denied, and the relaunched addon then refuses to spawn and names an unrelated pid.
+  evidence: `usecases/process.py:25,33` return True on `ERROR_ACCESS_DENIED` and on exceptions; the watchdog and the addon both rely on `pid_alive` alone. A second signal (process creation time in the discovery record) would close it (review finding 14).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6c-proxy-identity-and-orphan-exit.md`
+  summary: AD-2 says the addon probes `/healthz` "for the session id", but the addon classifies the holder by service and pid and nothing reads `session_id`.
+  evidence: `ARCHITECTURE-SPINE.md:53`. Owner edit (review finding 18).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6c-proxy-identity-and-orphan-exit.md`
+  summary: No UAT scenario covers a second live FreeCAD whose proxy holds `:8765`, the forced orphan wait, or the provisioning path with a held port; `/healthz` adds an unauthenticated route that reveals the FreeCAD pid, under the open AD-3 HTTP auth gap.
+  evidence: TC-01-14, TC-10-12, TC-12-15 relaunch only after the orphan is gone; TC-99-02 records the AD-3 gap (review findings 20, 21, 22).
