@@ -1,0 +1,129 @@
+{
+  "id": "TC-02-17",
+  "tc": "TC-02",
+  "title": "Bad open paths are refused, and a missing file is distinguishable",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "missing",
+      "mcp": "document_open",
+      "args": {
+        "path": "$RUN_DIR/tc-02-17-does-not-exist.FCStd"
+      }
+    },
+    {
+      "name": "not_fcstd",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/tests/uat/README.md"
+      }
+    },
+    {
+      "name": "empty",
+      "mcp": "document_open",
+      "args": {
+        "path": ""
+      }
+    },
+    {
+      "name": "directory",
+      "mcp": "document_open",
+      "args": {
+        "path": "$RUN_DIR"
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "capabilities",
+      "mcp": "query_capabilities",
+      "args": {}
+    }
+  ],
+  "expect": [
+    {
+      "step": "missing",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "missing",
+      "path": "detail.message",
+      "regex": "^document_open failed for '.*tc-02-17-does-not-exist\\.FCStd': .*does not exist"
+    },
+    {
+      "step": "not_fcstd",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "not_fcstd",
+      "path": "detail.message",
+      "regex": "^document_open failed for '.*README\\.md': Invalid project file"
+    },
+    {
+      "step": "empty",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "empty",
+      "path": "detail.message",
+      "equals": "document_open requires a 'path'"
+    },
+    {
+      "step": "directory",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "directory",
+      "path": "detail.message",
+      "regex": "^document_open failed for '"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.0.name",
+      "equals": "box_10_20_30"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.1",
+      "absent": true
+    },
+    {
+      "step": "capabilities",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then."
+}

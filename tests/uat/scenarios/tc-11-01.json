@@ -1,0 +1,84 @@
+{
+  "id": "TC-11-01",
+  "tc": "TC-11",
+  "title": "script_exec is registered by default (GUI proxy part)",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "capabilities",
+      "mcp": "query_capabilities",
+      "args": {}
+    },
+    {
+      "name": "exec",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "code": "result = len(doc.Objects)"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "capabilities",
+      "path": "structured_content.exec_enabled",
+      "equals": true
+    },
+    {
+      "step": "exec",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "exec",
+      "path": "structured_content.value_repr",
+      "equals": "1"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

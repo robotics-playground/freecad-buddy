@@ -243,29 +243,51 @@ class _FakeRect:
         return self._height
 
 
-def _fake_view(size, logical_visible, ratio, visible=True):
+_TOP_LEFT = object()
+
+
+def _map_to_global(point, logical_origin):
+    assert point is _TOP_LEFT
+    return SimpleNamespace(x=lambda: logical_origin[0], y=lambda: logical_origin[1])
+
+
+def _fake_view(size, logical_visible, ratio, visible=True, logical_origin=(100, 80)):
+    """A 3D view whose projection maps a point to ``(100 x, 30 y)`` device pixels, Coin style."""
     region = SimpleNamespace(
         boundingRect=lambda: _FakeRect(*logical_visible),
         isEmpty=lambda: logical_visible[0] * logical_visible[1] == 0,
     )
     graphics_view = SimpleNamespace(
-        visibleRegion=lambda: region, devicePixelRatioF=lambda: ratio, isVisible=lambda: visible
+        visibleRegion=lambda: region,
+        devicePixelRatioF=lambda: ratio,
+        isVisible=lambda: visible,
+        rect=lambda: SimpleNamespace(topLeft=lambda: _TOP_LEFT),
+        mapToGlobal=lambda point: _map_to_global(point, logical_origin),
     )
     return SimpleNamespace(
         graphicsView=lambda: graphics_view,
         getSize=lambda: tuple(size),
         getCamera=lambda: "#Inventor V2.1 ascii",
+        getPointOnViewport=lambda point: (int(point.x * 100), int(point.y * 30)),
     )
 
 
-def _fake_box_document():
-    bound_box = SimpleNamespace(XMin=0.0, YMin=0.0, ZMin=0.0, XMax=10.0, YMax=20.0, ZMax=30.0)
+def _fake_box_document(name="box"):
+    bound_box = SimpleNamespace(
+        XMin=0.0,
+        YMin=0.0,
+        ZMin=0.0,
+        XMax=10.0,
+        YMax=20.0,
+        ZMax=30.0,
+        Center=SimpleNamespace(x=5.0, y=10.0, z=15.0),
+    )
     shape = SimpleNamespace(
         isNull=lambda: False, isValid=lambda: True, Volume=6000.0, BoundBox=bound_box
     )
     box = SimpleNamespace(Name="Box", TypeId="Part::Feature", Visibility=True, Shape=shape)
     origin = SimpleNamespace(Name="Origin", TypeId="App::Origin", Visibility=False)
-    return SimpleNamespace(Name="box", Label="box-10-20-30", Objects=[box, origin])
+    return SimpleNamespace(Name=name, Label="box-10-20-30", Objects=[box, origin])
 
 
 def _fake_freecad(documents, view):
@@ -301,8 +323,15 @@ def test_Should_return_the_matrix_fields_When_one_document_is_open():
                         "type": "Part::Feature",
                         "visibility": True,
                         "shape": {"valid": True, "volume": 6000.0, "bbox": [0, 0, 0, 10, 20, 30]},
+                        "screen_center": [625, 797],
                     },
-                    {"name": "Origin", "type": "App::Origin", "visibility": False, "shape": None},
+                    {
+                        "name": "Origin",
+                        "type": "App::Origin",
+                        "visibility": False,
+                        "shape": None,
+                        "screen_center": None,
+                    },
                 ],
             }
         ],
@@ -311,8 +340,49 @@ def test_Should_return_the_matrix_fields_When_one_document_is_open():
             "size": [1917, 998],
             "visible_size": [1917, 998],
             "clipped": False,
+            "rect": [125, 100, 1917, 998],
         },
     }
+
+
+def test_Should_flip_y_into_global_device_pixels_When_a_point_is_projected():
+    # Arrange
+    view = _fake_view(
+        size=[800, 600], logical_visible=[800, 600], ratio=1.0, logical_origin=(10, 20)
+    )
+    rect = snapshot.read_view(view)["rect"]
+    centre = SimpleNamespace(x=4.0, y=2.0, z=0.0)
+
+    # Act
+    point = snapshot.screen_point(view, rect, centre)
+
+    # Assert
+    assert rect == [10, 20, 800, 600]
+    assert point == [10 + 400, 20 + 600 - 1 - 60]
+
+
+def test_Should_report_null_screen_centers_When_the_active_view_is_not_a_3d_view():
+    # Arrange
+    app, gui = _fake_freecad([_fake_box_document()], SimpleNamespace())
+
+    # Act
+    result = snapshot.take_snapshot(app, gui)
+
+    # Assert
+    assert [o["screen_center"] for o in result["documents"][0]["objects"]] == [None, None]
+
+
+def test_Should_project_only_the_active_document_When_two_documents_are_open():
+    # Arrange
+    view = _fake_view(size=[1917, 998], logical_visible=[1534, 799], ratio=1.25)
+    app, gui = _fake_freecad([_fake_box_document("active"), _fake_box_document("other")], view)
+
+    # Act
+    result = snapshot.take_snapshot(app, gui)
+
+    # Assert
+    centers = {d["name"]: d["objects"][0]["screen_center"] for d in result["documents"]}
+    assert centers == {"active": [625, 797], "other": None}
 
 
 def test_Should_mark_the_view_clipped_When_the_visible_region_is_smaller_than_the_view():

@@ -1,0 +1,238 @@
+{
+  "id": "TC-02-04",
+  "tc": "TC-02",
+  "title": "Two open documents stay isolated",
+  "steps": [
+    {
+      "name": "open_a",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "name": "open_b",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/sphere-r10.FCStd"
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "tree_a",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open_a.structured_content.doc"
+      }
+    },
+    {
+      "name": "tree_b",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open_b.structured_content.doc"
+      }
+    },
+    {
+      "name": "object_a",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$open_a.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "object_b",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$open_b.structured_content.doc",
+        "object": "Sphere"
+      }
+    },
+    {
+      "name": "sphere_in_a",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$open_a.structured_content.doc",
+        "object": "Sphere"
+      }
+    },
+    {
+      "name": "box_in_b",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$open_b.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "mass_a",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open_a.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open_b.structured_content.doc",
+        "object": "Sphere"
+      }
+    },
+    {
+      "name": "close_a",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$open_a.structured_content.doc"
+      }
+    },
+    {
+      "name": "tree_b_after",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open_b.structured_content.doc"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open_b.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "open_a",
+      "path": "structured_content.doc",
+      "regex": "^fcb-doc:"
+    },
+    {
+      "step": "open_b",
+      "path": "structured_content.doc",
+      "regex": "^fcb-doc:"
+    },
+    {
+      "step": "listed",
+      "path": "text",
+      "equals": "2 open document(s): box-10-20-30, sphere-r10."
+    },
+    {
+      "step": "tree_a",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[\\w+\\] Box$"
+    },
+    {
+      "step": "tree_a",
+      "path": "text",
+      "regex": "^(?![\\s\\S]*Sphere)"
+    },
+    {
+      "step": "tree_b",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[\\w+\\] Sphere$"
+    },
+    {
+      "step": "object_a",
+      "path": "structured_content.name",
+      "equals": "Box"
+    },
+    {
+      "step": "object_b",
+      "path": "structured_content.name",
+      "equals": "Sphere"
+    },
+    {
+      "step": "sphere_in_a",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "sphere_in_a",
+      "path": "detail.message",
+      "equals": "unknown object: Sphere"
+    },
+    {
+      "step": "box_in_b",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "box_in_b",
+      "path": "detail.message",
+      "equals": "unknown object: Box"
+    },
+    {
+      "step": "mass_a",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 4188.7902,
+      "tolerance": 4.19
+    },
+    {
+      "step": "close_a",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree_b_after",
+      "path": "text",
+      "regex": "^OK:"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.001,
+    "active_document": "sphere_r10",
+    "documents": {
+      "sphere_r10": {
+        "objects": {
+          "Sphere": {
+            "visibility": true,
+            "volume": 4188.790205
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.sphere_r10.objects.Sphere.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "sphere_r10.Sphere"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

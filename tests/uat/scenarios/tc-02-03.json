@@ -1,0 +1,137 @@
+{
+  "id": "TC-02-03",
+  "tc": "TC-02",
+  "title": "Save-as writes a new path and rebinds the handle",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      }
+    },
+    {
+      "name": "save",
+      "mcp": "document_save",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "path": "$RUN_DIR/tc-02-03-uat-saveas.FCStd"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "reopen",
+      "mcp": "document_open",
+      "args": {
+        "path": "$RUN_DIR/tc-02-03-uat-saveas.FCStd"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$reopen.structured_content.doc",
+        "object": "Cylinder"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$reopen.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "save",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "save",
+      "path": "structured_content.doc",
+      "equals": "$open.structured_content.doc"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^OK: 1 objects"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[\\w+\\] Cylinder$"
+    },
+    {
+      "step": "reopen",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 1570.7963,
+      "tolerance": 1.57
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.001,
+    "active_document": "tc_02_03_uat_saveas",
+    "documents": {
+      "tc_02_03_uat_saveas": {
+        "objects": {
+          "Cylinder": {
+            "visibility": true,
+            "valid": true,
+            "volume": 1570.796327
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.tc_02_03_uat_saveas.objects.Cylinder.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "tc_02_03_uat_saveas.Cylinder"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

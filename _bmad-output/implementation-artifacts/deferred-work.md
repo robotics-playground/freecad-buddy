@@ -1761,3 +1761,11 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: none
   summary: Story 10.7b part V — replay every deterministic Then of UAT run 2026-10-03-04 through the scripted runner and explain every verdict difference (epics.md Story 10.7b AC9).
   evidence: Split from Story 10.7b at bmad-build scope check (2026-10-13): needs parts P and R plus encoded scenarios; it is the acceptance proof for the runner.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
+  summary: The first `query_capabilities` in a GUI session leaves FreeCAD with no active document or 3D view for the probe, and `View > Visibility` is then refused; the capability probes open `FCB_TMP_varset_probe`, `FCB_TMP_partdesign_probe` and `FCB_TMP_type_probe` without `hidden=True` (conflicts with AD-31, no GUI change the user did not ask for).
+  evidence: `src/freecad_buddy/usecases/shim.py:85,200,227` (the map-mode and enum probes at `:311`, `:344` pass `hidden=True`). Scripted UAT pilot: TC-11-17 FAIL `pixel view: expected "a 3D view", observed null`, while its capture shows the box (part R review finding 15). Settle with a regression test that the active document and view are unchanged after the banner.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
+  summary: `cua-driver invoke_menu` intermittently refuses the allow-listed `View > Visibility > Show All Objects` step (`menu_path_unavailable`, "menu path segment 1 …") during an unattended scripted UAT run, so one pilot scenario per run lands in the escalation queue for a harness reason.
+  evidence: Part R live runs 6 and verify-r2: TC-02-02 then TC-14-02 ESCALATE on that step; both PASS in earlier runs with unchanged files. Options for part V: a bounded retry of menu delivery only (a transport step, not a check), or a non-menu route to show the golden objects.

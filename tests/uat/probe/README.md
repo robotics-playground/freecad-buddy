@@ -78,11 +78,12 @@ Snapshot:
     {"modified": false, "name": "box_10_20_30", "label": "box-10-20-30",
      "objects": [
        {"name": "Box", "type": "Part::Feature", "visibility": true,
-        "shape": {"valid": true, "volume": 6000.0, "bbox": [0, 0, 0, 10, 20, 30]}}
+        "shape": {"valid": true, "volume": 6000.0, "bbox": [0, 0, 0, 10, 20, 30]},
+        "screen_center": [967, 565]}
      ]}
   ],
-  "view": {"camera": "#Inventor V2.1 ascii ...", "size": [1917, 998],
-           "visible_size": [1917, 998], "clipped": false}
+  "view": {"camera": "#Inventor V2.1 ascii ...", "size": [1265, 712],
+           "visible_size": [1265, 712], "clipped": false, "rect": [334, 210, 1265, 712]}
 }
 ```
 
@@ -98,6 +99,13 @@ Snapshot:
   subwindow. The 1 px slack covers the pixel scale, which was measured only at 1.25.
 - `visible_size` and `clipped` are `null` when the view is hidden or minimized (empty visible
   region): such a view says nothing about clipping.
+- `rect` is `[x, y, width, height]` of the render area in global device pixels: the widget's
+  global origin times the device pixel ratio, and `size`. On one monitor this is the unit of a
+  window capture, before the capture is scaled.
+- `screen_center` is the centre of the object's bounding box projected into the view
+  (`getPointOnViewport`), in global device pixels. It is set only for an object with a shape in
+  the active document while `view` is not `null`; otherwise it is `null`. The offline reader
+  has no `screen_center`.
 - No document open: `active_document: null`, `documents: []`, `view: null`.
 
 A file saved without a GUI (for example `benchmarks/g0/golden-models/*.FCStd`) opens in the GUI
@@ -111,9 +119,9 @@ shows.
 ```
 
 `out.json` is `{"freecad_version", "documents": [{"name", "label", "objects"}]}`, with the same
-per-object fields as the snapshot and no GUI fields (`modified`, `view`). The reader opens the
-file, reads it and closes it; it never saves. FreeCADCmd hides stdout, so the result goes only
-to `out.json`. A missing or unreadable file gives `{"error": "<message>"}` and exit code 1.
+per-object fields as the snapshot and no GUI fields (`modified`, `screen_center`, `view`). The
+reader opens the file, reads it and closes it; it never saves. FreeCADCmd hides stdout, so the
+result goes only to `out.json`. A missing or unreadable file gives `{"error": "<message>"}` and exit code 1.
 
 ## Comparator
 
