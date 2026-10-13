@@ -1,0 +1,67 @@
+{
+  "scene": "benchmarks/g0/golden-models/box-10-20-30.FCStd",
+  "expectation": {
+    "tolerance": 1e-6,
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "label": "box-10-20-30",
+        "modified": false,
+        "objects": {
+          "Box": {
+            "type": "Part::Feature",
+            "visibility": true,
+            "valid": true,
+            "volume": 6000,
+            "bbox": [0, 0, 0, 10, 20, 30]
+          }
+        }
+      }
+    },
+    "view": {"clipped": false}
+  },
+  "cases": [
+    {
+      "id": "wrong-visibility",
+      "kind": "fault",
+      "macro": "wrong_visibility.FCMacro",
+      "field": "documents.box_10_20_30.objects.Box.visibility"
+    },
+    {
+      "id": "wrong-volume",
+      "kind": "fault",
+      "macro": "wrong_volume.FCMacro",
+      "field": "documents.box_10_20_30.objects.Box.volume"
+    },
+    {
+      "id": "modified-flag",
+      "kind": "fault",
+      "macro": "modified_flag.FCMacro",
+      "field": "documents.box_10_20_30.modified"
+    },
+    {
+      "id": "wrong-active-document",
+      "kind": "fault",
+      "macro": "wrong_active_document.FCMacro",
+      "field": "active_document"
+    },
+    {
+      "id": "clipped-view",
+      "kind": "fault",
+      "macro": "clipped_view.FCMacro",
+      "field": "view.clipped"
+    },
+    {
+      "id": "clean",
+      "kind": "control",
+      "macro": "clean.FCMacro",
+      "queries": 1
+    },
+    {
+      "id": "clean-queried-twice",
+      "kind": "control",
+      "macro": "clean.FCMacro",
+      "queries": 2
+    }
+  ]
+}

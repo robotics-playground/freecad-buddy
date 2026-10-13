@@ -1,0 +1,20 @@
+# Fault: the 3D view is a non-maximized subwindow pushed partly outside the MDI area, so the
+# area clips part of the view while getSize() stays the full widget.
+import fault_scene
+import FreeCADGui
+from PySide import QtWidgets
+
+doc = fault_scene.open_clean_scene()
+mdi = FreeCADGui.getMainWindow().findChild(QtWidgets.QMdiArea)
+mdi.setViewMode(QtWidgets.QMdiArea.SubWindowView)
+window = FreeCADGui.getDocument(doc.Name).ActiveView.graphicsView()
+while window is not None and not isinstance(window, QtWidgets.QMdiSubWindow):
+    window = window.parentWidget()
+if window is None:
+    fault_scene.mark_planted("the 3D view has no QMdiSubWindow parent")
+else:
+    window.showNormal()
+    window.resize(400, 300)
+    area = mdi.viewport().size()
+    window.move(area.width() - 200, area.height() - 150)
+    fault_scene.mark_planted()

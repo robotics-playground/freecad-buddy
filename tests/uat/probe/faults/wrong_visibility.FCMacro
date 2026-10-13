@@ -1,0 +1,6 @@
+# Fault: the box is hidden.
+import fault_scene
+
+doc = fault_scene.open_clean_scene()
+doc.getObject("Box").Visibility = False
+fault_scene.mark_planted()
