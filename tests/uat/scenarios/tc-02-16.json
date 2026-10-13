@@ -1,0 +1,136 @@
+{
+  "id": "TC-02-16",
+  "tc": "TC-02",
+  "title": "Double document_close is refused, not crashed",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/sphere-r10.FCStd"
+      }
+    },
+    {
+      "name": "close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "close_again",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "capabilities",
+      "mcp": "query_capabilities",
+      "args": {}
+    },
+    {
+      "name": "reopen",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/sphere-r10.FCStd"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$reopen.structured_content.doc",
+        "object": "Sphere"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    }
+  ],
+  "expect": [
+    {
+      "step": "close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "close",
+      "path": "structured_content.closed",
+      "equals": true
+    },
+    {
+      "step": "close",
+      "path": "structured_content.name",
+      "equals": "sphere_r10"
+    },
+    {
+      "step": "close_again",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "close_again",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: $open.structured_content.doc"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "equals": "INVALID_INPUT: unknown or stale document handle: $open.structured_content.doc"
+    },
+    {
+      "step": "listed",
+      "path": "text",
+      "equals": "0 open document(s)."
+    },
+    {
+      "step": "capabilities",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 4188.7902,
+      "tolerance": 4.19
+    }
+  ],
+  "probe": {
+    "tolerance": 0.001,
+    "documents": {
+      "sphere_r10": {
+        "objects": {
+          "Sphere": {
+            "visibility": true,
+            "volume": 4188.790205
+          }
+        }
+      }
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.sphere_r10.objects.Sphere.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then."
+}

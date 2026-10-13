@@ -1,0 +1,148 @@
+{
+  "id": "TC-02-02",
+  "tc": "TC-02",
+  "title": "Open a golden model and read its tree",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "open",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "open",
+      "path": "structured_content.path",
+      "equals": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+    },
+    {
+      "step": "open",
+      "path": "structured_content.label",
+      "equals": "box-10-20-30"
+    },
+    {
+      "step": "open",
+      "path": "text",
+      "regex": "^Opened box-10-20-30 -> fcb-doc:\\S+\\.$"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^OK: 1 objects, 1 shown\\."
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[FEATURE\\] Box$"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^(?![\\s\\S]*Errors:)"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.name",
+      "equals": "Box"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.type",
+      "equals": "Part::Feature"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.error",
+      "equals": null
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000,
+            "type": "Part::Feature"
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.box_10_20_30.objects.Box.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

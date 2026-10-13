@@ -1,0 +1,86 @@
+{
+  "id": "TC-14-02",
+  "tc": "TC-14",
+  "title": "A fit on a framed document returns OK and reports the camera it recorded",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "structured_content.fitted",
+      "equals": true
+    },
+    {
+      "step": "fit",
+      "path": "structured_content.document",
+      "equals": "$open.structured_content.name"
+    },
+    {
+      "step": "fit",
+      "path": "structured_content.camera_recorded",
+      "equals": true
+    },
+    {
+      "step": "fit",
+      "path": "text",
+      "equals": "fitted the live viewport to 'box_10_20_30'"
+    },
+    {
+      "step": "fit",
+      "path": "detail",
+      "equals": null
+    }
+  ],
+  "probe": {
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

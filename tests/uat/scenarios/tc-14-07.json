@@ -1,0 +1,136 @@
+{
+  "id": "TC-14-07",
+  "tc": "TC-14",
+  "title": "An unknown, stale, or missing handle is INVALID_INPUT before any viewport work",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "second",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/sphere-r10.FCStd"
+      }
+    },
+    {
+      "name": "close_second",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$second.structured_content.doc"
+      }
+    },
+    {
+      "name": "unknown",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "no-such-handle"
+      }
+    },
+    {
+      "name": "stale",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$second.structured_content.doc"
+      }
+    },
+    {
+      "name": "missing",
+      "mcp": "view_fit_viewport",
+      "args": {}
+    },
+    {
+      "name": "refit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "unknown",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown",
+      "path": "detail.message",
+      "regex": "no-such-handle"
+    },
+    {
+      "step": "unknown",
+      "path": "detail.message",
+      "regex": "^(?![\\s\\S]*(viewport|3D view))"
+    },
+    {
+      "step": "stale",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "stale",
+      "path": "detail.message",
+      "regex": "^(?![\\s\\S]*(viewport|3D view))"
+    },
+    {
+      "step": "missing",
+      "path": "text",
+      "regex": "Input validation error: 'doc' is a required property"
+    },
+    {
+      "step": "refit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "id": "TC-14-16",
+  "tc": "TC-14",
+  "title": "The fit does not alter geometry",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "shape_before",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "mass_before",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "shape_after",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "recompute",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "shape_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "mass_before",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "shape_after",
+      "path": "structured_content",
+      "equals": "$shape_before.structured_content"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "recompute",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "recompute",
+      "path": "structured_content.subject.failing_objects",
+      "equals": []
+    }
+  ],
+  "probe": {
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "modified": true,
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "volume": 6000,
+            "bbox": [
+              0,
+              0,
+              0,
+              10,
+              20,
+              30
+            ]
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.box_10_20_30.objects.Box.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "id": "TC-02-01",
+  "tc": "TC-02",
+  "title": "Create, list, save, close round trip",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "uat-roundtrip"
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "bare_save",
+      "mcp": "document_save",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "save",
+      "mcp": "document_save",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "path": "$RUN_DIR/tc-02-01-uat-roundtrip.FCStd"
+      }
+    },
+    {
+      "name": "listed_saved",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "listed_closed",
+      "mcp": "document_list",
+      "args": {}
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "structured_content.doc",
+      "regex": "^fcb-doc:"
+    },
+    {
+      "step": "create",
+      "path": "structured_content.label",
+      "equals": "uat-roundtrip"
+    },
+    {
+      "step": "create",
+      "path": "structured_content.name",
+      "absent": false
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.0.doc",
+      "equals": "$create.structured_content.doc"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.0.transient",
+      "equals": true
+    },
+    {
+      "step": "bare_save",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "bare_save",
+      "path": "detail.message",
+      "equals": "document has no save target; call document_save with a 'path' first"
+    },
+    {
+      "step": "save",
+      "path": "structured_content.saved",
+      "equals": true
+    },
+    {
+      "step": "save",
+      "path": "structured_content.label",
+      "equals": "tc-02-01-uat-roundtrip"
+    },
+    {
+      "step": "listed_saved",
+      "path": "structured_content.documents.0.transient",
+      "equals": false
+    },
+    {
+      "step": "close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "close",
+      "path": "structured_content.closed",
+      "equals": true
+    },
+    {
+      "step": "listed_closed",
+      "path": "text",
+      "equals": "0 open document(s)."
+    }
+  ],
+  "probe": {
+    "active_document": null,
+    "documents": {}
+  }
+}

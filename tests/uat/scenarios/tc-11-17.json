@@ -1,0 +1,104 @@
+{
+  "id": "TC-11-17",
+  "tc": "TC-11",
+  "title": "A script_exec call while it is off is refused and never runs (GUI proxy part)",
+  "launch": {
+    "FREECAD_BUDDY_SCRIPT_EXEC": "0"
+  },
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "capabilities",
+      "mcp": "query_capabilities",
+      "args": {}
+    },
+    {
+      "name": "exec",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "code": "doc.addObject('Part::Box', 'Leak'); doc.recompute()"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "capabilities",
+      "path": "structured_content.exec_enabled",
+      "equals": false
+    },
+    {
+      "step": "exec",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "exec",
+      "path": "detail.message",
+      "equals": "unknown method: script_exec"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[\\w+\\] Box$"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^(?![\\s\\S]*Leak)"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

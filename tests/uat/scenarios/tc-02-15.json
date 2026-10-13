@@ -1,0 +1,393 @@
+{
+  "id": "TC-02-15",
+  "tc": "TC-02",
+  "title": "Unknown or stale handle is refused by every document-taking tool",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "mass_stale",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "dependencies",
+      "mcp": "query_dependencies",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "placement",
+      "mcp": "query_placement",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "save",
+      "mcp": "document_save",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "recompute",
+      "mcp": "document_recompute",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "undo",
+      "mcp": "document_undo",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "screenshot",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "fcb-doc:not-a-real-handle"
+      }
+    },
+    {
+      "name": "not_a_string",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": 12345
+      }
+    },
+    {
+      "name": "omitted",
+      "mcp": "query_tree_summary",
+      "args": {}
+    },
+    {
+      "name": "capabilities",
+      "mcp": "query_capabilities",
+      "args": {}
+    },
+    {
+      "name": "live",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree",
+      "path": "text",
+      "equals": "INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "object",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "object",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "object",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "object",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "mass_stale",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "mass_stale",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "mass_stale",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "mass_stale",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "dependencies",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "dependencies",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "dependencies",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "dependencies",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "placement",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "placement",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "placement",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "placement",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "sketch",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "sketch",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "sketch",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "save",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "save",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "save",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "save",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "close",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "close",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "close",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "close",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "recompute",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "recompute",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "recompute",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "recompute",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "undo",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "undo",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "undo",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "undo",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "shape",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "shape",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "shape",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "screenshot",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "screenshot",
+      "path": "detail.message",
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+    },
+    {
+      "step": "screenshot",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "screenshot",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "not_a_string",
+      "path": "text",
+      "regex": "Input validation error: 12345 is not of type 'string'|doc handle must be a string"
+    },
+    {
+      "step": "omitted",
+      "path": "text",
+      "regex": "Input validation error: 'doc' is a required property"
+    },
+    {
+      "step": "capabilities",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "live",
+      "path": "text",
+      "regex": "^OK:"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then."
+}
