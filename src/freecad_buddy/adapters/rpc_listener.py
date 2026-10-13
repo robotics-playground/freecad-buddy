@@ -209,8 +209,10 @@ class RpcListener:
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / f"rpc-{os.getpid()}.json"
         path.write_text(json.dumps(record), encoding="utf-8")
-        # 0600 is best-effort: on Windows chmod only toggles the read-only bit, so the loopback
-        # bind + per-session token remain the enforced posture.
+        # On POSIX this sets owner-only mode. On Windows chmod sets only the read-only bit, which
+        # 0o600 leaves clear, so the file keeps the ACL it inherits from its folder; the default
+        # FreeCAD user appdata folder grants owner, SYSTEM and Administrators only. On both, the
+        # loopback bind and the per-session token are the enforced posture.
         try:
             os.chmod(path, 0o600)
         except OSError:
@@ -253,12 +255,7 @@ class RpcListener:
         if not self._handshake(conn, reader):
             return
         while not self._stop.is_set():
-            try:
-                line = reader.read_line()
-            except (ValueError, OSError):
-                # Over-cap / non-UTF-8 / dropped mid-frame: close just this connection.
-                logger.exception("frame read failed; closing connection")
-                return
+            line = self._read_line(reader)
             if line is None:
                 return
             try:
@@ -266,21 +263,36 @@ class RpcListener:
             except Exception:  # noqa: BLE001 - one bad frame never kills the loop
                 logger.exception("malformed request")
                 env = _invalid_input("malformed request")
-            self._write_frame(conn, {"jsonrpc": "2.0", "id": _safe_id(line), "result": env})
+            if not self._write_frame(conn, {"jsonrpc": "2.0", "id": _safe_id(line), "result": env}):
+                return
+
+    def _read_line(self, reader: _FrameReader) -> str | None:
+        """Read one frame; ``None`` when the connection has ended, logged once by cause."""
+        try:
+            line = reader.read_line()
+        except ConnectionError as exc:
+            # A client that exits without a clean shutdown resets its socket; that also ends a
+            # session normally.
+            logger.info("client reset the connection (%s)", exc)
+            return None
+        except (ValueError, OSError) as exc:
+            # Over-cap, non-UTF-8 or cut mid-frame: close just this connection.
+            logger.warning("frame read failed; closing connection: %s", exc)
+            return None
+        if line is None:
+            logger.info("client closed the connection")
+        return line
 
     # -- handshake ---------------------------------------------------------------------------
 
     def _handshake(self, conn: socket.socket, reader: _FrameReader) -> bool:
-        try:
-            line = reader.read_line()
-        except (ValueError, OSError):
-            logger.exception("handshake frame read failed")
-            return False
+        line = self._read_line(reader)
         if line is None:
             return False
         try:
             req = json.loads(line)
         except ValueError:
+            logger.warning("first frame was not valid JSON; closing")
             self._write_error(conn, None, RPC_ERROR_NO_HANDSHAKE, "handshake required")
             return False
         req_id = req.get("id") if isinstance(req, dict) else None
@@ -311,8 +323,7 @@ class RpcListener:
             "freecad_version": self._freecad_version,
             "capabilities": dict(self._capabilities),
         }
-        self._write_frame(conn, {"jsonrpc": "2.0", "id": req_id, "result": result})
-        return True
+        return self._write_frame(conn, {"jsonrpc": "2.0", "id": req_id, "result": result})
 
     # -- request handling --------------------------------------------------------------------
 
@@ -399,12 +410,15 @@ class RpcListener:
 
     # -- framing -----------------------------------------------------------------------------
 
-    def _write_frame(self, conn: socket.socket, obj: dict) -> None:
+    def _write_frame(self, conn: socket.socket, obj: dict) -> bool:
+        """Send one frame; False when the client has gone, logged once."""
         data = (json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8")
         try:
             conn.sendall(data)
-        except OSError:
-            logger.exception("failed to write frame")
+        except OSError as exc:
+            logger.warning("could not send the reply; the client has gone: %s", exc)
+            return False
+        return True
 
     def _write_error(
         self, conn: socket.socket, req_id, code: int, message: str, data: dict | None = None

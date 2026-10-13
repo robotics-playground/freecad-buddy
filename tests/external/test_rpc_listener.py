@@ -8,8 +8,11 @@ inline path (the double-marshal regression guard), and the trivial inline path.
 from __future__ import annotations
 
 import json
+import logging
 import queue
 import socket
+import struct
+import sys
 import threading
 import time
 
@@ -561,3 +564,173 @@ def test_discovery_file_written_0600_and_deleted_on_stop(tmp_path):
     assert record["token"] == TOKEN
     listener.stop()
     assert list(disco_dir.glob("rpc-*.json")) == []
+
+
+# -- connection-end logging ------------------------------------------------------------------
+
+_LISTENER_LOGGER = "freecad_buddy.rpc_listener"
+
+
+def _listener_records(caplog) -> list[logging.LogRecord]:
+    return [r for r in caplog.records if r.name == _LISTENER_LOGGER]
+
+
+def _after_handler_returned(caplog, host, port) -> list[logging.LogRecord]:
+    """The listener's records once it has finished the previous connection.
+
+    The accept loop serves one connection at a time, so a second handshake that completes proves
+    the previous handler has returned and written its log line. The probe's own lines are cut off.
+    """
+    probe = Conn(host, port)
+    probe.hello()
+    records = _listener_records(caplog)
+    probe.close()
+    return records
+
+
+def _reset(sock: socket.socket) -> None:
+    """Close with a TCP reset, as a client process that exits without a clean shutdown does."""
+    linger = struct.pack("HH" if sys.platform == "win32" else "ii", 1, 0)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, linger)
+    sock.close()
+
+
+def _slow_registry(seconds: float) -> MethodRegistry:
+    def slow(**_params):
+        time.sleep(seconds)
+        return _ok_envelope()
+
+    registry = MethodRegistry()
+    registry.register(RpcMethod(name="slow_read", handler=slow, timeout_s=5.0))
+    return registry
+
+
+def test_should_log_one_warning_without_traceback_when_the_first_frame_is_not_json(
+    tmp_path, caplog
+):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    conn = Conn(host, port)
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        conn.send_raw("not json at all{{{")
+        response = conn.recv()
+        conn.close()
+        records = _after_handler_returned(caplog, host, port)
+    listener.stop()
+
+    # Assert
+    assert response["error"]["code"] == -32002
+    assert [(r.levelno, r.getMessage()) for r in records] == [
+        (logging.WARNING, "first frame was not valid JSON; closing")
+    ]
+    assert all(r.exc_info is None for r in records)
+
+
+def test_should_log_one_info_line_without_traceback_when_the_client_resets_its_connection(
+    tmp_path, caplog
+):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    conn = Conn(host, port)
+    conn.hello()
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        _reset(conn.sock)
+        records = _after_handler_returned(caplog, host, port)
+    listener.stop()
+
+    # Assert
+    assert len(records) == 1
+    assert records[0].levelno == logging.INFO
+    assert records[0].getMessage().startswith("client reset the connection")
+    assert records[0].exc_info is None
+
+
+def test_should_log_one_info_line_when_the_client_closes_its_connection_cleanly(tmp_path, caplog):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    conn = Conn(host, port)
+    conn.hello()
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        conn.sock.shutdown(socket.SHUT_RDWR)
+        conn.close()
+        records = _after_handler_returned(caplog, host, port)
+    listener.stop()
+
+    # Assert
+    assert [(r.levelno, r.getMessage(), r.exc_info) for r in records] == [
+        (logging.INFO, "client closed the connection", None)
+    ]
+
+
+def test_should_log_one_warning_without_traceback_when_a_frame_is_cut_off(tmp_path, caplog):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    conn = Conn(host, port)
+    conn.hello()
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        conn.sock.sendall(b'{"jsonrpc": "2.0", "id": 2, "method": "document_list"')
+        conn.sock.shutdown(socket.SHUT_WR)
+        conn.close()
+        records = _after_handler_returned(caplog, host, port)
+    listener.stop()
+
+    # Assert
+    assert [(r.levelno, r.getMessage(), r.exc_info) for r in records] == [
+        (
+            logging.WARNING,
+            "frame read failed; closing connection: connection closed mid-frame",
+            None,
+        )
+    ]
+
+
+def test_should_log_one_warning_without_traceback_when_a_frame_is_not_utf8(tmp_path, caplog):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    conn = Conn(host, port)
+    conn.hello()
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        conn.sock.sendall(b"\xff\xfe\n")
+        closed = conn.recv_maybe_closed()
+        conn.close()
+        records = _after_handler_returned(caplog, host, port)
+    listener.stop()
+
+    # Assert
+    assert closed is None
+    assert len(records) == 1
+    assert records[0].levelno == logging.WARNING
+    assert records[0].getMessage().startswith("frame read failed; closing connection:")
+    assert records[0].exc_info is None
+
+
+def test_should_log_one_warning_and_end_the_connection_when_the_client_goes_before_the_reply(
+    tmp_path, caplog
+):
+    # Arrange
+    listener, host, port = _start_listener(_slow_registry(0.5), ThreadedExecutor(), tmp_path)
+    conn = Conn(host, port)
+    conn.hello()
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        conn.send({"jsonrpc": "2.0", "id": 2, "method": "slow_read", "params": {}})
+        _reset(conn.sock)
+        records = _after_handler_returned(caplog, host, port)
+    listener.stop()
+
+    # Assert
+    assert len(records) == 1
+    assert records[0].levelno == logging.WARNING
+    assert records[0].getMessage().startswith("could not send the reply; the client has gone")
+    assert records[0].exc_info is None

@@ -7,6 +7,7 @@ assert it synthesizes an envelope (never raises) on every failure path.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import socket
 import subprocess
@@ -206,3 +207,41 @@ def test_handshake_rejected_is_worker_crashed(tmp_path):
         assert env["detail"]["data"]["rpc"] == "unreachable"
     finally:
         sock.close()
+
+
+def test_should_log_one_warning_naming_the_method_when_the_connection_drops_in_flight(
+    tmp_path, caplog
+):
+    # Arrange
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("127.0.0.1", 0))
+    sock.listen(1)
+    host, port = sock.getsockname()
+
+    def _serve():
+        conn, _ = sock.accept()
+        reader = conn.makefile("rb")
+        reader.readline()
+        hello = {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1"}}
+        conn.sendall((json.dumps(hello) + "\n").encode())
+        reader.readline()
+        reader.close()
+        conn.close()
+
+    server_thread = threading.Thread(target=_serve, daemon=True)
+    server_thread.start()
+    target = RpcClient(endpoint={"host": host, "port": port, "token": TOKEN})
+
+    # Act
+    with caplog.at_level(logging.INFO, logger="freecad_buddy.rpc_client"):
+        envelope = target.call("document_create", {})
+    sock.close()
+
+    # Assert
+    records = [r for r in caplog.records if r.name == "freecad_buddy.rpc_client"]
+    assert envelope["status"] == "WORKER_CRASHED"
+    assert envelope["detail"]["message"] == "listener connection dropped"
+    assert len(records) == 1
+    assert records[0].levelno == logging.WARNING
+    assert records[0].getMessage().startswith("listener connection dropped during document_create")
+    assert records[0].exc_info is None

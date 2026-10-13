@@ -307,8 +307,9 @@ class RpcClient:
         except socket.timeout:
             self._close()
             return _timeout_envelope("listener read timed out")
-        except (ValueError, OSError):
+        except (ValueError, OSError) as exc:
             self._close()
+            logger.warning("listener connection dropped during %s: %s", method, exc)
             return _worker_crashed("listener connection dropped", unreachable=True)
         except (KeyError, TypeError):
             self._close()

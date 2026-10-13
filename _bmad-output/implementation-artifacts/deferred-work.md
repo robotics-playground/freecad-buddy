@@ -1689,3 +1689,23 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6-headless-bounded-execution.md`
   summary: The `script_exec` `ThreadExecutor` bound in `build_inline_handlers` has no production host since the headless worker passes no marshal; its docstring still names the headless inline host, and `test_mcp_surface.py` tests that path as "the real catalog".
   evidence: `hosts/headless/worker.py` `run()` passes `None`, as `gui_addon/bootstrap.py:144` does. Kept because sprint-change-proposal-2026-10-13 §2 keeps `test_mcp_surface.py` and `test_confirm_contract.py` unchanged; remove the path and point those tests at `marshal=None` in a later story (review finding 6).
+
+- source_spec: none
+  summary: Story 10.6 goal B (AC3) — a second RPC client that connects while a session is active gets the AD-26 busy error, never a hang.
+  evidence: Split again at the step-01 scope check of the goal D plan (2026-10-13); independent of goal D. Also covers the 10.6a review finding that a silent local connection can hold the listener's only slot.
+
+- source_spec: none
+  summary: Story 10.6 goal C (AC4, F-26) — after an unclean FreeCAD kill, the relaunched addon must not adopt an orphan or foreign server on `:8765`; it verifies `/healthz` session identity first.
+  evidence: Split again at the step-01 scope check of the goal D plan (2026-10-13); touches the GUI bootstrap and proxy health endpoint and needs a cua-driver GUI check.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6d-rpc-logging-and-discovery-acl.md`
+  summary: `RpcClient` writes no log line for a read timeout, a refused connect, a rejected handshake or a malformed reply, so `mcp-proxy.log` has no record of those failed calls.
+  evidence: Only the dropped in-flight call logs (F-24, AC5); `rpc_client.py` `_timeout_envelope("listener read timed out")`, `connect refused`, `handshake rejected` and `malformed listener response` return envelopes silently.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6d-rpc-logging-and-discovery-acl.md`
+  summary: On POSIX the discovery file holding the session token is created with the umask mode and only then set to 0600, and a `chmod` failure is ignored without a log line.
+  evidence: `rpc_listener.py` `_write_discovery` calls `path.write_text(...)` then `os.chmod(path, 0o600)` inside `except OSError: pass`. Creating it with `os.open(..., 0o600)` removes the window.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6d-rpc-logging-and-discovery-acl.md`
+  summary: The UAT test cases still look for the old `frame read failed` ERROR lines and have no step for the new INFO/WARNING levels, the absence of tracebacks, or the method name in the `mcp-proxy.log` drop line.
+  evidence: `tests/uat/testcases/TC-10-concurrency-timeout-and-quarantine.md:450,484,529` grep the old messages only.
