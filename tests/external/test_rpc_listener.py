@@ -16,9 +16,12 @@ import sys
 import threading
 import time
 
+from freecad_buddy.adapters import rpc_listener
 from freecad_buddy.adapters.marshal import Marshal
+from freecad_buddy.adapters.rpc_client import RpcClient
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.adapters.rpc_listener import RpcListener
+from freecad_buddy.contracts.rpc import RPC_BUSY_MESSAGE
 from freecad_buddy.hosts.tool_catalog import SCRIPT_EXEC_SPEC
 from freecad_buddy.usecases import confirm
 from freecad_buddy.usecases.documents import ValidationError
@@ -575,17 +578,25 @@ def _listener_records(caplog) -> list[logging.LogRecord]:
     return [r for r in caplog.records if r.name == _LISTENER_LOGGER]
 
 
+_BUSY_LOG = "refused a second client: a session is active"
+
+
 def _after_handler_returned(caplog, host, port) -> list[logging.LogRecord]:
     """The listener's records once it has finished the previous connection.
 
-    The accept loop serves one connection at a time, so a second handshake that completes proves
-    the previous handler has returned and written its log line. The probe's own lines are cut off.
+    A probe's hello is accepted only after the previous session's serving loop has returned and
+    written its log line; a busy refusal means it has not yet, so the probe tries again. The
+    probes' own lines are cut off.
     """
-    probe = Conn(host, port)
-    probe.hello()
-    records = _listener_records(caplog)
-    probe.close()
-    return records
+    deadline = time.monotonic() + 5.0
+    while True:
+        probe = Conn(host, port)
+        accepted = "result" in probe.hello()
+        records = [r for r in _listener_records(caplog) if r.getMessage() != _BUSY_LOG]
+        probe.close()
+        if accepted:
+            return records
+        assert time.monotonic() < deadline, "the previous session never ended"
 
 
 def _reset(sock: socket.socket) -> None:
@@ -595,8 +606,9 @@ def _reset(sock: socket.socket) -> None:
     sock.close()
 
 
-def _slow_registry(seconds: float) -> MethodRegistry:
+def _slow_registry(seconds: float, started: threading.Event) -> MethodRegistry:
     def slow(**_params):
+        started.set()
         time.sleep(seconds)
         return _ok_envelope()
 
@@ -718,13 +730,18 @@ def test_should_log_one_warning_and_end_the_connection_when_the_client_goes_befo
     tmp_path, caplog
 ):
     # Arrange
-    listener, host, port = _start_listener(_slow_registry(0.5), ThreadedExecutor(), tmp_path)
+    started = threading.Event()
+    listener, host, port = _start_listener(
+        _slow_registry(0.5, started), ThreadedExecutor(), tmp_path
+    )
     conn = Conn(host, port)
     conn.hello()
 
     # Act
     with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
         conn.send({"jsonrpc": "2.0", "id": 2, "method": "slow_read", "params": {}})
+        # Windows drops received bytes on a reset, so reset only once the call is being served.
+        started.wait(5)
         _reset(conn.sock)
         records = _after_handler_returned(caplog, host, port)
     listener.stop()
@@ -734,3 +751,194 @@ def test_should_log_one_warning_and_end_the_connection_when_the_client_goes_befo
     assert records[0].levelno == logging.WARNING
     assert records[0].getMessage().startswith("could not send the reply; the client has gone")
     assert records[0].exc_info is None
+
+
+# -- one client session at a time (AD-26) ----------------------------------------------------
+
+
+def test_should_refuse_a_second_client_as_busy_within_a_second_when_a_session_is_active(
+    tmp_path,
+):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    session = Conn(host, port)
+    session.hello()
+    second = Conn(host, port)
+
+    # Act
+    started = time.monotonic()
+    refusal = second.hello()
+    elapsed_s = time.monotonic() - started
+    closed = second.recv_maybe_closed()
+    served = session.call("document_list")
+    second.close()
+    session.close()
+    listener.stop()
+
+    # Assert
+    assert refusal["error"] == {"code": -32000, "message": RPC_BUSY_MESSAGE}
+    assert elapsed_s < 1.0
+    assert closed is None
+    assert served["result"]["status"] == "OK"
+
+
+def test_should_refuse_as_auth_failed_when_a_second_client_has_a_bad_token_during_a_session(
+    tmp_path,
+):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    session = Conn(host, port)
+    session.hello()
+    second = Conn(host, port)
+
+    # Act
+    refusal = second.hello(token="wrong")
+    second.close()
+    session.close()
+    listener.stop()
+
+    # Assert
+    assert refusal["error"] == {"code": -32000, "message": "auth failed"}
+
+
+def test_should_accept_the_next_client_when_the_session_has_ended(tmp_path):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    first = Conn(host, port)
+    first.hello()
+    first.close()
+    second = Conn(host, port)
+
+    # Act
+    accepted = second.hello()
+    served = second.call("document_list")
+    second.close()
+    listener.stop()
+
+    # Assert
+    assert "result" in accepted
+    assert served["result"]["status"] == "OK"
+
+
+def test_should_close_a_silent_connection_and_serve_others_when_the_hello_deadline_passes(
+    tmp_path, caplog, monkeypatch
+):
+    # Arrange
+    monkeypatch.setattr(rpc_listener, "_HELLO_TIMEOUT_S", 0.3)
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    silent = Conn(host, port)
+    other = Conn(host, port)
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        accepted = other.hello()
+        closed = silent.recv_maybe_closed()
+        records = _listener_records(caplog)
+    other.close()
+    silent.close()
+    listener.stop()
+
+    # Assert
+    assert "result" in accepted
+    assert closed is None
+    assert [(r.levelno, r.getMessage(), r.exc_info) for r in records] == [
+        (logging.WARNING, "no rpc_hello within 0.3 s; closing", None)
+    ]
+
+
+def test_should_return_worker_crashed_naming_the_busy_bridge_when_the_client_hello_is_refused(
+    tmp_path,
+):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    session = Conn(host, port)
+    session.hello()
+    target = RpcClient(endpoint={"host": host, "port": port, "token": TOKEN})
+
+    # Act
+    envelope = target.call("document_list", {})
+    target.close()
+    session.close()
+    listener.stop()
+
+    # Assert
+    assert envelope["status"] == "WORKER_CRASHED"
+    assert envelope["detail"]["message"] == RPC_BUSY_MESSAGE
+    assert envelope["detail"]["data"] == {}
+
+
+def test_should_refuse_as_version_mismatch_when_a_second_client_sends_a_wrong_version(
+    tmp_path,
+):
+    # Arrange
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    session = Conn(host, port)
+    session.hello()
+    second = Conn(host, port)
+
+    # Act
+    refusal = second.hello(version="99")
+    second.close()
+    session.close()
+    listener.stop()
+
+    # Assert
+    assert refusal["error"]["code"] == -32004
+    assert refusal["error"]["message"] == "contract version unsupported"
+
+
+def test_should_serve_a_session_idle_past_the_hello_deadline(tmp_path, caplog, monkeypatch):
+    # Arrange
+    monkeypatch.setattr(rpc_listener, "_HELLO_TIMEOUT_S", 0.3)
+    listener, host, port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    session = Conn(host, port)
+    session.hello()
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=_LISTENER_LOGGER):
+        time.sleep(0.6)
+        served = session.call("document_list")
+        records = _listener_records(caplog)
+    session.close()
+    listener.stop()
+
+    # Assert
+    assert served["result"]["status"] == "OK"
+    assert not [r for r in records if r.getMessage().startswith("no rpc_hello")]
+
+
+def test_should_accept_a_client_that_arrives_while_the_closed_session_finishes_its_last_call(
+    tmp_path,
+):
+    # Arrange
+    started = threading.Event()
+    listener, host, port = _start_listener(
+        _slow_registry(0.05, started), ThreadedExecutor(), tmp_path
+    )
+    first = Conn(host, port)
+    first.hello()
+    first.send({"jsonrpc": "2.0", "id": 2, "method": "slow_read", "params": {}})
+    started.wait(5)
+    first.close()
+    second = Conn(host, port)
+
+    # Act
+    accepted = second.hello()
+    second.close()
+    listener.stop()
+
+    # Assert
+    assert "result" in accepted
+
+
+def test_should_end_the_idle_serving_thread_when_stop_runs(tmp_path):
+    # Arrange
+    listener, _host, _port = _start_listener(_fake_registry(), ThreadedExecutor(), tmp_path)
+    serving = listener._thread
+
+    # Act
+    listener.stop()
+    serving.join(timeout=5)
+
+    # Assert
+    assert not serving.is_alive()

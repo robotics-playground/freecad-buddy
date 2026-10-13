@@ -187,7 +187,7 @@ Two checkpoints in this file are worth protecting from future trimming:
 | AD-20 | Explicit doc handle, never `ActiveDocument`, TempDoc lifecycle | TC-02 | 08, 11, 12 |
 | AD-24 | Latency budget | TC-10 | 01 · **`/healthz` gap in TC-99-08** |
 | AD-25 | Session workdir, snapshot deletion on every exit path | TC-11 | 05 · **gap in TC-99-04/05/06/07** |
-| AD-26 | Single client session | — | **gap in TC-99-03**; shipped serialization pinned in TC-10-03 |
+| AD-26 | Single client session, second client refused busy | TC-10 | 03 |
 | AD-27 | Post-timeout quarantine, no automatic mutation retry | TC-10 | 09 |
 | AD-28 | Schema evolution, `contract_version` handshake | TC-01 | 11 |
 

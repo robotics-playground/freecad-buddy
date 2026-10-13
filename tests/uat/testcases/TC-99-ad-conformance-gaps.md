@@ -5,7 +5,7 @@ the green suite.**
 
 Every scenario below asserts a behavior an architecture decision specifies and the shipped code
 does NOT implement. **Every scenario here is expected to FAIL against the current build.** A run
-that reports all eight failing is the correct, expected result.
+that reports all seven failing is the correct, expected result.
 
 Reading the result:
 - A scenario that **fails** is the recorded, accepted state. It does not block the release.
@@ -162,69 +162,6 @@ in source. The localhost checkpoint passes vacuously. Only the visual closer pas
 **Cleanup**:
 ```bash
 # No files written.
-```
-```
-mcp document_close { doc: "<handle>" }
-```
-
----
-
-### TC-99-03: A second client is refused -32000 with a busy detail
-
-**Priority**: Critical
-**Design Ref**: `integration-mcp-freecad.md` §2.4 (AD-26 single-client listener)
-
-**What AD-26 specifies**: the listener serves one client at a time. A second client that
-presents a valid session token while the first is connected is refused with JSON-RPC error
-`-32000` and a detail saying the bridge is busy, so the second client fails fast instead of
-waiting.
-
-**Shipped behavior today**: `_accept_loop` at `src/freecad_buddy/adapters/rpc_listener.py:217`
-is a plain sequential loop. Line 222 is `conn, _addr = sock.accept()`, line 227 is
-`self._serve_conn(conn)`, and the loop only returns to `accept()` after that connection has
-closed. While the first client is served the loop is never at `accept()`, so the second client's
-connection sits in the listen backlog (`sock.listen(1)` at
-`src/freecad_buddy/adapters/rpc_listener.py:145`) and is eventually served in full. There is no
-busy path: `-32000` (`RPC_ERROR_WORKER_CRASHED`) is only ever emitted for `auth failed` at
-`src/freecad_buddy/adapters/rpc_listener.py:283`. The shipped serialization behavior is pinned in
-TC-10-03.
-
-**Observed on 2026-09-12 (FreeCAD 1.1.1, GUI host, proxy connected):** the shipped behavior is
-**worse than "B waits"**. Because the accept loop is inside `_serve_conn` for the whole life of the
-first connection, the `sock.listen(1)` backlog fills, and Windows then **refuses the TCP connect
-outright** with `WinError 10061 (ConnectionRefusedError)`. This was verified twice, and a
-single-client baseline connect to the same port was refused identically while the addon's own MCP
-proxy held the listener. So a second client does not block and does not get `-32000` — it cannot
-connect at all, and the error it sees is indistinguishable from "the bridge is not running".
-
-**Given** the GUI addon is running and its MCP proxy holds the RPC listener — verify: `netstat -ano | findstr <listener-port>` shows one `ESTABLISHED` pair owned by the proxy pid  
-**And** the listener port and token are read from the discovery file `%APPDATA%\FreeCAD\v1-1\freecad-buddy\rpc-<pid>.json`  
-**And** a golden model is open as an untouched baseline — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the baseline is framed — verify: this scenario saturates the listener, so fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Do not rely on `mcp view_fit_viewport` here: the transport it needs is the thing under test and may never answer.  
-**And** the framed baseline is captured, after that same fit, so both images share a camera — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-99-03-before.png"}' | & cua-driver call get_window_state`  
-
-**When** `host`, `port` and `token` are read from the discovery file  
-**And** while the proxy holds the listener, a TCP connection is opened to that port with a 5 s timeout and, if it connects, a valid `rpc_hello` is sent  
-**And** whether the connect succeeded is recorded, and if so the first reply frame is read with a 10 s deadline  
-
-**Then** the second client can connect at all — verify: `socket.create_connection((host, port), timeout=5)` succeeds. **Expected failure: `ConnectionRefusedError [WinError 10061]`. The backlog is full, so the connect is refused before any protocol frame is exchanged.**  
-**And** the reply is a JSON-RPC error — verify: the first frame carries an `error` object. **Expected failure: no frame is ever exchanged; there is no connection to carry one.**  
-**And** the error code is `-32000` — verify: `error.code` is `-32000`. **Expected failure: no error frame is sent.**  
-**And** the detail says the bridge is busy — verify: `error.message` names the busy condition. **Expected failure: no such message exists in source.**  
-**And** the refusal is distinguishable from a dead bridge — verify: the second client can tell "busy" from "not running". **Expected failure: both present as `ConnectionRefusedError` on the same port. This is the practical harm of the gap — a client cannot diagnose why it failed.**  
-**And** a busy path exists in source — verify: `grep -n "busy" src/freecad_buddy/adapters/rpc_listener.py` returns a match. **Expected failure: it returns nothing.**  
-**And** the listen backlog admits a waiting client — verify: `grep -n "listen(" src/freecad_buddy/adapters/rpc_listener.py` shows a backlog greater than 1. **Expected failure: `sock.listen(1)` at line 145.**  
-**And** *(visual)* the model is framed, while the second client is still blocked — verify: fit through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. `mcp view_fit_viewport` is not usable here: its transport is the thing under test. A **View → Fit All** that itself hangs or times out is diagnostic evidence that the GUI thread is blocked, which is a finding beyond the documented AD-26 gap — record it in `$RUN_DIR/bugs.md` and still capture the image.  
-**And** *(visual)* the GUI did not freeze or render partially while the second client was blocked in the accept backlog — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-99-03-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen: the box drawn whole inside the frame, the viewport fully painted with no blank, grey or half-drawn region, no "Not Responding" in the title bar, no modal dialog, and the after image showing the same box at the same size and position as the before image. The sequential accept loop runs on the bridge side; a frozen or torn viewport here would mean the backlog stall reached the human's event loop, which is a finding beyond the documented gap. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
-
-**Expected result**: FAIL, and fails **earlier** than the AD's shape: the second client never  
-connects (`ConnectionRefusedError [WinError 10061]`), so no `-32000` frame, no busy message, and
-no way to tell "busy" from "not running". `grep` finds no busy path and shows `sock.listen(1)`.
-The visual closer passes: the GUI stays painted and responsive throughout.
-
-**Cleanup**:
-```bash
-# Close both test sockets.
 ```
 ```
 mcp document_close { doc: "<handle>" }
@@ -534,7 +471,6 @@ mcp document_close { doc: "<handle>" }
 |----|----------|--------------------------------|----------------------------------|
 | AD-3 | TC-99-01 bearer token | `hosts/gui_external/entry.py:157` — bare `Mount("/mcp")`, no `middleware=` | Add authentication middleware to `build_app`; mint and check a per-session bearer token |
 | AD-3 | TC-99-02 Origin allowlist | `hosts/gui_external/entry.py:145-157` — no CORS, no header check anywhere in `src/` | Add `Origin` validation against a localhost allowlist before the mount handles the request |
-| AD-26 | TC-99-03 second-client refusal | `adapters/rpc_listener.py:217-234` sequential loop; `:145` `sock.listen(1)`; `-32000` used only at `:283` for `auth failed` | Track the in-flight connection and answer a second `rpc_hello` with `-32000` plus a busy detail |
 | AD-25 | TC-99-04 session workdir | No workdir in `src/`; writes scattered across `usecases/transaction.py:94`, `usecases/preview.py:318`, `usecases/fingerprint.py:73`, `usecases/screenshot.py:168`, `adapters/audit_log.py:24` | Create a session-scoped workdir at bridge start with `snap/ exports/ audit.log tmp/`, and route every write through it |
 | AD-25 | TC-99-05 snapshots in `snap/` | `usecases/transaction.py:94` `tempfile.mkdtemp(prefix=_SNAPSHOT_PREFIX)`; prefix at `:39` | Replace the `mkdtemp` with a path under the session workdir's `snap/` |
 | AD-25 | TC-99-06 per-session dated audit log | `adapters/audit_log.py:24` — CWD-relative `freecad-buddy-audit.jsonl` default; `:49-66` record carries no session field | Default the audit path to a dated file under the session workdir and add a session field to the record |

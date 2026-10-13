@@ -28,6 +28,7 @@ from freecad_buddy.adapters.rpc_client import RpcClient
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.adapters.rpc_listener import RpcListener
 from freecad_buddy.contracts import DEFAULT_DISPLAY_DECIMALS
+from freecad_buddy.contracts.rpc import RPC_BUSY_MESSAGE
 from freecad_buddy.hosts.headless.entry import WorkerClient, shut_down_worker
 from freecad_buddy.hosts.rpc_proxy import build_proxy_registry, call_budgets
 from freecad_buddy.hosts.tool_catalog import SCRIPT_EXEC_SPEC
@@ -496,6 +497,35 @@ def test_should_serve_the_next_call_when_the_abandoned_body_has_returned(gil_wor
 
     # Assert
     assert envelope["status"] == "OK"
+    assert _served(served) == ["slow_read", "slow_read returned", "read", "read returned"]
+
+
+def test_should_answer_busy_while_the_abandoned_body_runs_and_lift_the_quarantine_after_it_returns(
+    gil_worker,
+):
+    # Arrange
+    front, served = gil_worker
+    # Two busy answers (0.2 s grace each) and the probe's 0.1 s re-ask wait take at least 0.5 s
+    # before the refusal; a 1.5 s budget keeps that refusal short of the 2x escalation.
+    target = WorkerClient(front._client, front._process, {**BUDGETS, "slow_read": 1.5})
+    target.call("slow_read", {"doc": DOC, "seconds": 4.0})
+    second = RpcClient(endpoint=front._client._endpoint)
+
+    # Act
+    busy = second.call("read", {"doc": DOC})
+    # The front's own probe has had its busy answer by now, so this refusal follows from it.
+    quarantined = target.call("read", {"doc": DOC})
+    _wait_until_returned(target, served, "slow_read")
+    after_return = target.call("read", {"doc": DOC})
+    second.close()
+
+    # Assert
+    assert busy["status"] == "WORKER_CRASHED"
+    assert busy["detail"]["message"] == RPC_BUSY_MESSAGE
+    assert quarantined["status"] == "TIMEOUT"
+    assert quarantined["detail"]["data"] == {"quarantined": True}
+    assert "not dispatched" in quarantined["detail"]["message"]
+    assert after_return["status"] == "OK"
     assert _served(served) == ["slow_read", "slow_read returned", "read", "read returned"]
 
 

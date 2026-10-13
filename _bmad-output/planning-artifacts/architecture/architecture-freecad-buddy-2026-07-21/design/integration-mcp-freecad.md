@@ -2,7 +2,7 @@
 title: 'Integration Design — MCP <-> FreeCAD Bridge'
 status: final
 date: '2026-07-21'
-ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20, AD-27]
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20, AD-26, AD-27]
 sources:
   - _bmad-output/planning-artifacts/research/technical-mcp-embedding-freecad-gui-process-research-2026-07-20.md
   - _bmad-output/planning-artifacts/research/technical-offscreen-screenshot-freecadcmd-research-2026-07-20.md
@@ -18,7 +18,7 @@ How the external MCP server reaches FreeCAD in both run modes, per **AD-2** (top
 
 | Mode | Processes | FreeCAD call path |
 | --- | --- | --- |
-| **GUI** | External MCP process + FreeCAD GUI process (addon-hosted RPC listener) | RPC → listener accept thread → marshal → Qt main thread |
+| **GUI** | External MCP process + FreeCAD GUI process (addon-hosted RPC listener) | RPC → listener serving thread → marshal → Qt main thread |
 | **Headless H1** (canonical, AD-2) | Front MCP process (stdio) + worker child process (same interpreter, `import FreeCAD` as module, conda env) | RPC → worker listener, inline dispatch on the worker main thread |
 | **Headless H2** (fallback, not built) | H1 topology with `FreeCADCmd` as the worker interpreter | as H1 |
 
@@ -65,7 +65,7 @@ First frame on every connection MUST be `rpc_hello`; anything else → error `-3
 | Code | Meaning |
 | --- | --- |
 | -32700 / -32600 / -32601 / -32602 | parse / invalid request / method not found / invalid params |
-| -32000 | auth failed (bad/missing token) |
+| -32000 | auth failed (bad/missing token), or `bridge busy: another client session is active` (AD-26, §3.2) |
 | -32002 | handshake required (first frame not `rpc_hello`) |
 | -32003 | server shutting down |
 | -32004 | contract version unsupported |
@@ -75,14 +75,14 @@ First frame on every connection MUST be `rpc_hello`; anything else → error `-3
 | Budget | Default | Notes |
 | --- | --- | --- |
 | TCP connect | 2 s | client side |
-| `rpc_hello` | 5 s | |
+| `rpc_hello` | 5 s | client read budget; the listener closes a connection that sends no hello within it (§3.2) |
 | Call (read) timeout, client | method `timeout_s` + 5 s margin | |
 | Call (read) timeout, H1 front | method `timeout_s` | the bound; the worker's inline marshal never times out |
 | Marshal timeout, server | method `timeout_s` (default 30 s; mutation/recompute methods 120 s; render 60 s) | per-`RpcMethod` override |
 
 Marshal timeout returns an envelope `status:"TIMEOUT"` with `detail:{"marshal_timeout":true,"maybe_still_running":true}` — see §7.
 
-**H1 bound and quarantine (AD-27).** In H1 the worker's marshal is inline and never times out; the bound is the front's read timeout, set per call to the method `timeout_s`. After a timeout the front quarantines the session: every call is refused at once, without dispatch, with `TIMEOUT` and `detail.data.quarantined:true`. When the abandoned body has run its `timeout_s` again past the timeout (2× budget), refusals become `WORKER_CRASHED` with a message to restart the headless host. The quarantine lifts when the worker answers again; its serve loop is single-threaded, so an answer proves the body returned. The front never kills the worker on escalation, so no open document is lost.
+**H1 bound and quarantine (AD-27).** In H1 the worker's marshal is inline and never times out; the bound is the front's read timeout, set per call to the method `timeout_s`. After a timeout the front quarantines the session: every call is refused without dispatch, within 0.1 s (the probe's re-ask wait, below), with `TIMEOUT` and `detail.data.quarantined:true`. When the abandoned body has run its `timeout_s` again past the timeout (2× budget), refusals become `WORKER_CRASHED` with a message to restart the headless host. The quarantine lifts when the worker accepts a hello from the front's probe connection. The worker accepts a hello only after the old session's serving loop has returned, and that loop is single-threaded, so acceptance proves the body returned. A busy refusal (§3.2) means not yet. A busy answer is only as recent as the probe that got it, so on the next call the front opens a new probe and waits 0.1 s for its answer; an idle worker accepts a hello in well under 1 ms. The front never kills the worker on escalation, so no open document is lost.
 
 ### 2.5 Method registry (`adapters/rpc_dispatch.py`)
 
@@ -169,13 +169,22 @@ class RpcListener:
     def __init__(self, registry: MethodRegistry, marshal: Marshal,
                  token: str, host: str = "127.0.0.1", port: int = 0): ...
     def start_threaded(self) -> tuple[str, int]:
-        """GUI mode: accept loop on a daemon thread; returns (host, bound_port)."""
-    def serve_forever_inline(self) -> None:
-        """Headless worker: blocking single-threaded serve loop on the calling (main) thread."""
+        """GUI mode: accept thread and serving loop, each on a daemon thread;
+        returns (host, bound_port)."""
+    def serve_forever_inline(self) -> tuple[str, int]:
+        """Headless worker: accept thread on a daemon thread, serving loop on the calling (main)
+        thread until stop(); returns (host, bound_port)."""
     def stop(self) -> None: ...
 ```
 
-Per connection: enforce handshake → read NDJSON frames → for each request, `marshal.call(lambda: registry.dispatch(name, params), timeout_s)` → write response frame. One request in flight at a time (§2.1).
+Two threads serve one client session at a time (AD-26):
+
+- **Accept thread** (daemon, always at `accept()` between handshakes). It runs the handshake of every connection with a 5 s hello deadline, the client's `rpc_hello` budget (§2.4). A connection that sends no hello in time is closed and logged once at WARNING. The token check and the version check run first, so an unauthenticated caller learns nothing about the session. Then an authenticated hello while no session is active becomes the session: the accept thread answers it and hands the connection to the serving loop. An authenticated hello while a session is active waits up to 0.2 s for that session to end, then gets `-32000` with the message `bridge busy: another client session is active` and is closed. The wait admits a client that reconnects right after it closed its own session, before the serving loop has read the end of the old connection.
+- **Serving loop** (the thread that blocks on the Qt marshal in GUI mode; the worker main thread in headless mode). It serves the session: read NDJSON frames → for each request, `marshal.call(lambda: registry.dispatch(name, params), timeout_s)` → write response frame. One request in flight at a time (§2.1). The session is active from its hello reply until its connection closes. There is no idle timeout for an authenticated session.
+
+`stop()` closes the listening socket, which ends the accept thread, and wakes an idle serving loop. A serving loop with a session returns when that session's connection closes.
+
+The external client (`adapters/rpc_client.py`) reports the busy refusal as `WORKER_CRASHED` whose message is the busy message, and does not retry.
 
 ### 3.3 Main-thread marshal (`adapters/marshal.py` + host pump)
 
@@ -226,7 +235,7 @@ class QtMainThreadExecutor(QtCore.QObject):     # constructed ON the main thread
 sequenceDiagram
     participant C as MCP client
     participant F as MCP server (external proc)
-    participant L as RPC listener (accept thread)
+    participant L as RPC listener (serving thread)
     participant Q as Qt main thread (FreeCAD GUI)
     C->>F: tools/call feature_pad
     F->>L: NDJSON {method:"feature_pad", params:{doc,...}}  (token session)
@@ -370,9 +379,11 @@ CI render leg: `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE
 | Stale connection file | `pid` liveness check fails | Skip file; report as listener-down. Listener deletes own file on clean stop. |
 | Auth token mismatch | `rpc_hello` compare fails | JSON-RPC `-32000`, connection closed, attempt logged to stderr. |
 | Contract version mismatch | handshake check | `-32004` + supported list; external server refuses session, surfaces upgrade instruction. |
-| FreeCAD busy (long recompute / modal dialog / prior call running) | serialized dispatch: new frames queue behind in-flight call | Call waits its turn; if total wait exceeds method `timeout_s` → `TIMEOUT` envelope. No preemption. |
+| FreeCAD busy (long recompute / modal dialog / prior call running) | serialized dispatch: the session's next frame queues behind its in-flight call | Call waits its turn; if total wait exceeds method `timeout_s` → `TIMEOUT` envelope. No preemption. |
+| Second client while a session is active (AD-26) | accept thread: authenticated `rpc_hello` while a session is active | After a 0.2 s wait for the session to end: `-32000` `bridge busy: another client session is active` in under 1 s, connection closed, session undisturbed. The client returns `WORKER_CRASHED` with that message and does not retry. A wrong token still gets `auth failed`. |
+| Connection sends no `rpc_hello` | accept thread: 5 s hello deadline | Connection closed, logged once at WARNING. Other clients wait at most that deadline for their own handshake. |
 | Worker process exits (H1) | front's RPC connection drops or the worker process has ended | Envelope `WORKER_CRASHED`; the front does not restart the worker; the operator restarts the headless host. |
-| Call while a timed-out body runs (H1) | front holds an abandoned call | Refused at once without dispatch: `TIMEOUT`, `quarantined:true` (AD-27, §2.4). Lifts when the worker answers again. |
+| Call while a timed-out body runs (H1) | front holds an abandoned call | Refused without dispatch within 0.1 s (the probe's re-ask wait): `TIMEOUT`, `quarantined:true` (AD-27, §2.4). Lifts when the worker accepts a hello from the front's probe. |
 | Abandoned body past 2× budget (H1) | front quarantine clock | Refusals become `WORKER_CRASHED` with a message to restart the headless host; the worker is not killed. |
 | Marshal timeout | `Event.wait(timeout_s)` expires | Envelope `TIMEOUT`, `maybe_still_running:true`; session marked **document-suspect** — next mutation on that document is refused until a `query_*` fingerprint check (AD-6) confirms state. Never blind-retry a mutation. |
 | Use-case exception | dispatch boundary | Mapped to AD-17 closed set + traceback detail; AD-5 transaction protocol has already aborted + verified rollback before the envelope is built. |

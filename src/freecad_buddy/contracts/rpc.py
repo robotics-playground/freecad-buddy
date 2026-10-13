@@ -18,6 +18,10 @@ RPC_ERROR_WORKER_CRASHED = -32000  # listener/marshal crash or dropped connectio
 RPC_ERROR_NO_HANDSHAKE = -32002  # first frame was not rpc_hello
 RPC_ERROR_VERSION_MISMATCH = -32004  # contract_version mismatch
 
+# The RPC_ERROR_WORKER_CRASHED message for an authenticated hello while another session is
+# active (AD-26); the client matches it to name the busy condition.
+RPC_BUSY_MESSAGE = "bridge busy: another client session is active"
+
 # Channel error code to closed-status mapping. Callers embed {status, detail} in
 # `error.data` so one decoder serves both paths.
 CHANNEL_ERROR_STATUS: dict[int, str] = {
