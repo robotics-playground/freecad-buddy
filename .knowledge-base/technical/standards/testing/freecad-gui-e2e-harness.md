@@ -47,8 +47,32 @@ cua-driver status                                                               
 Get-Item "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy" | Select-Object LinkType, Target
 ```
 
-**Done when:** 0 FreeCAD processes, no `:8765` listener, daemon running, and the install mode is
-known (see [Install modes](#install-modes)). Record `git status` to compare at the end.
+Start the `cua-driver` daemon from the agent shell, not from an elevated shell or a scheduled
+task. FreeCAD inherits the daemon's integrity level. When FreeCAD runs at a higher level than the
+agent shell, the shell cannot read its command line, stop it, or open its process handle, and
+`Stop-Process` and `kill_app` are refused. Check both sides:
+
+```powershell
+whoami /groups | Select-String "Mandatory Label"                     # Medium Mandatory Level
+[System.Diagnostics.Process]::GetProcessById(P).get_Handle()         # after launch: returns a number, no "Access is denied"
+```
+
+Call `get_Handle()`, not the `.Handle` property: PowerShell turns an exception in a property
+getter into `$null`, so the property form prints nothing instead of "Access is denied".
+
+When `get_Handle()` fails, FreeCAD runs above the shell's level. Recover:
+
+1. Exit FreeCAD: `invoke_menu ["File","Exit"]`.
+2. Stop the daemon: `cua-driver stop`.
+3. Start it from the agent shell as a background process: `cua-driver serve`. Do not use the
+   `cua-driver autostart` scheduled task; it can start the daemon at a higher level.
+4. Confirm it runs: `cua-driver status` reports the daemon and its pid.
+5. Relaunch FreeCAD (see [Launch](#2-launch)), then run `get_Handle()` again. It must return a
+   number.
+
+**Done when:** 0 FreeCAD processes, no `:8765` listener, daemon running from the agent shell, the
+shell is at Medium integrity, and the install mode is known (see [Install modes](#install-modes)).
+Record `git status` to compare at the end.
 
 ### 2. Launch
 
@@ -100,7 +124,9 @@ cat _automation/uat/launch.json | cua-driver launch_app
 Wait until `:8765` is listening, then read the new `addon.log` lines. The launch helper does both.
 
 **Done when:** `addon.log` shows `freecad-buddy RPC listener started` and
-`spawned MCP proxy (pid N)`, `:8765` is `LISTENING`, and pid and `window_id` are recorded. Take
+`spawned MCP proxy (pid N)`, `:8765` is `LISTENING`, pid and `window_id` are recorded, and
+`[System.Diagnostics.Process]::GetProcessById(P).get_Handle()` succeeds from the agent shell (FreeCAD
+runs at the shell's integrity level). Take
 `window_id` from `cua-driver list_windows` after the bridge is up: the id that `launch_app`
 returns can belong to the splash screen.
 
@@ -114,15 +140,33 @@ echo '{"pid":P,"window_id":W,"include_screenshot":false}' | cua-driver get_windo
 echo '{"pid":P,"element_token":"s00000003:78"}' | cua-driver click
 ```
 
-Confirmed on FreeCAD 1.1.1:
+Confirmed on FreeCAD 1.1.4, background delivery:
 
 | Action | Result |
 |--------|--------|
-| UIA click on toolbar `Button "New Document"` | works |
+| UIA click on a toolbar button by `element_token` (`New Document`, `Fit All`) | works; returns `route: "accessibility"` |
+| `invoke_menu ["View","Fit All"]` | refused with `menu_path_unavailable`: Fit All is under `View > Standard Views`; use the toolbar button |
+| `invoke_menu ["View","Visibility","Show All Objects"]` | works; shows every object of the active document and marks it modified (`*`) |
+| `right_click` / `double_click` by `element_token` | delivered through `global_input`, not background delivery: they move the real pointer |
+| `press_key` / `hotkey` to the 3D view | dropped |
+| `invoke_menu ["Edit","Recompute"]` | works while the active document must recompute |
+| `invoke_menu ["Windows","<n> <label> : 1"]` | works; makes that document active. `1 Start` is the first entry |
+| UIA or pixel click on a document root row in the tree | does not select the row or change the active document; use the `Windows` menu entry |
+| `invoke_menu ["File","Close"]` | works; closes the active document. On a modified document (`*` in the title) it opens a modal save prompt: close that document with `document_close` instead |
+| Pixel `click` with `count: 2` on a Start page Recent Files entry | works (`route: "synthetic_events"`); opens the file with no dialog |
 | `invoke_menu ["File","Exit"]` | works; clean shutdown |
-| `invoke_menu ["File","New"]` | refused at segment 1 (label differs on this build) |
-| `hotkey ["ctrl","n"]`, background delivery | dropped |
-| UIA click on `Edit > Preferences` (FreeCAD 1.1.4) | opens the modal dialog, but the click call blocks and the UIA provider stays busy until the dialog closes; later background clicks return `background_unavailable` (`uia_status: busy`); `zoom` still captures pixels. Open a modal dialog only when foreground input is authorized |
+
+Never open a modal dialog through `invoke_menu` (Open, Save As, Preferences, Help > About). The
+call blocks until the dialog closes, and the UIA provider stays busy: later background clicks
+return `background_unavailable` (`uia_status: busy`); only `zoom` still captures pixels. Use a
+non-modal route instead:
+
+- Open a file: double-click its Start page Recent Files entry (confirmed on 1.1.4). Starting
+  FreeCAD with the path as an argument (`launch_app` `additional_arguments`) is not yet confirmed
+  on 1.1.4.
+- Read the version: the main window title from `list_windows`, compared with
+  `query_capabilities.freecad_version`.
+- Change a preference: `script_exec` with `FreeCAD.ParamGet(...)`, then restore the value.
 
 `invoke_menu` fires the command as soon as it resolves the path. Send only a path whose effect you
 want.
@@ -187,9 +231,13 @@ uv run python _automation/uat/close_all.py
 echo '{"pid":P,"window_id":W,"path":["File","Exit"]}' | cua-driver invoke_menu
 ```
 
+When a test case needs an unclean kill, stop FreeCAD from the agent shell with
+`Stop-Process -Id P -Force`. It works only when FreeCAD runs at the shell's integrity level (see
+[Preflight](#1-preflight)).
+
 **Done when:** 0 FreeCAD processes, no `:8765` `LISTENING` line (`TIME_WAIT` client lines are
-normal), and `git status` matches preflight. A proxy you started by hand outlives FreeCAD; stop it
-with `Stop-Process -Id <pid>`.
+normal), and `git status` matches preflight. A proxy you started by hand exits about 2 s after the
+FreeCAD it pinned is gone; if it is still listed, stop it with `Stop-Process -Id <pid>`.
 
 ## Install modes
 

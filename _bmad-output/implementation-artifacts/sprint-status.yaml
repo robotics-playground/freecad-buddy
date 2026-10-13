@@ -165,7 +165,7 @@ development_status:
   10-5-step-export-schema: done
   10-6a-two-process-headless-host: review
   10-6-session-transport-and-bounded-execution: review
-  10-7-uat-suite-and-harness-maintenance: backlog
+  10-7-uat-suite-and-harness-maintenance: review
   10-7b-scripted-uat-runner-and-freecad-probe: backlog
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional

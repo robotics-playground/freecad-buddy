@@ -1,7 +1,8 @@
 # tests/uat — Manual UAT Suite
 
-Agent-driven acceptance tests for the shipped freecad-buddy surface: **45 tools** plus the gated
-`debug_exec`, across Epics 1-3 and Epic 8.
+Agent-driven acceptance tests for the shipped freecad-buddy surface: the **45 typed tools** plus
+`script_exec`, which is on by default, across Epics 1-3 and Epic 8. A run reads the tool count from
+`tools/list` and the FreeCAD version from `query_capabilities.freecad_version`.
 
 ## Layout
 
@@ -36,9 +37,11 @@ change how a scenario is executed:
 - **A fit runs immediately before every visual `Then`** — an object outside the frame produces a
   screenshot that cannot be distinguished from a real defect. Default is
   `mcp view_fit_viewport`; where that tool is itself under test, unavailable, or returns anything
-  but `OK`, fit through the GUI instead — on FreeCAD 1.1.1 that is the **Fit All** toolbar button
-  clicked by `element_token`, because `invoke_menu(["View","Fit All"])` is refused on this build
-  (`menu_path_unavailable`). See `test-plan.md` §3 rule 5.
+  but `OK`, fit through the GUI instead — on FreeCAD 1.1.x that is the **Fit All** toolbar button
+  clicked by `element_token`, because `invoke_menu(["View","Fit All"])` is refused
+  (`menu_path_unavailable`). Golden and fault models open with every object hidden: run
+  `invoke_menu(["View","Visibility","Show All Objects"])` before their fit. See `test-plan.md` §3
+  rule 5.
 
 `testcases/TC-14-viewport-framing-and-auto-fit.md` is the reference example of the format.
 

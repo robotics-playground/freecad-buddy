@@ -51,7 +51,7 @@ green gate.
 | AD | Decision | Shipped behaviour |
 | --- | --- | --- |
 | AD-3 | The MCP endpoint is authenticated | `:8765` has no auth. `gui_external/entry.py` is a bare Starlette `Mount("/mcp")` — no middleware, no bearer token, no `Origin` check, no CORS. The loopback bind is the only control. A source search for `Bearer`, `Authorization`, or `Origin` hits only FreeCAD's own `App::Origin`. |
-| AD-25 | Each session gets a working directory (`snap/ exports/ audit.log tmp/`) swept at start | No session workdir. Snapshots go to `tempfile.mkdtemp` with prefix `FCB_TMP_snap_`; the audit log path is cwd-relative (`adapters/audit_log.py:23`). There is no start-of-session sweep. |
+| AD-25 | Each session gets a working directory (`snap/ exports/ audit.log tmp/`) swept at start | Partly met. Each host has its own `FCB_TMP_session_<pid>_<token>` temp folder under the workdir, and the start sweep runs (both tested in TC-11). The gap: no `snap/ exports/` layout; the workdir is one shared folder, not session-named; the headless workdir default is cwd-relative; the audit log is one undated shared file outside the workdir with no session field (`adapters/audit_log.py:24-26`). |
 
-See `test-plan.md` §7 Gate 2 for how to read a TC-99 result. A TC-99 case that starts passing is a
+See `test-plan.md` §9 Gate 2 for how to read a TC-99 result. A TC-99 case that starts passing is a
 signal to promote it into the green gate, not a regression.

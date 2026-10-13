@@ -2,11 +2,15 @@
 
 ## 1. Overview
 
-This suite validates the **shipped** tool surface of the FreeCAD MCP bridge: **45 tools** returned by
-`tool_specs()`, plus `debug_exec` which is gated behind the **Allow debug_exec** preference or
-`FREECAD_BUDDY_ALLOW_EXEC=1`. It covers the
-work of Epics 1-3 (Phases 0-2) across all three hosts: the GUI addon path, the H1 headless
-single-process host, and the H2 external HTTP proxy on `http://127.0.0.1:8765/mcp`.
+This suite validates the **shipped** tool surface of the FreeCAD MCP bridge: the **45 typed tools**
+returned by `tool_specs()`, plus `script_exec`. `script_exec` is on by default. It is off when
+`FREECAD_BUDDY_SCRIPT_EXEC=0` is set or the **Allow script_exec** preference is cleared, and when
+`FREECAD_BUDDY_UNATTENDED=1` is set without `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. A run reads
+the tool count from `tools/list` (46 by default) and the FreeCAD version from
+`query_capabilities.freecad_version`; no test case writes either as a literal. It covers the
+work of Epics 1-3 (Phases 0-2) across all three hosts: the GUI addon path, the H1 headless host
+(a front process and a FreeCAD worker), and the H2 external HTTP proxy on
+`http://127.0.0.1:8765/mcp`.
 
 The suite is driven by an agent operating the real application. MCP calls go through the connected
 `mcp__freecad-buddy__*` tools; **every FreeCAD GUI action goes through `cua-driver`** against the
@@ -106,13 +110,16 @@ Every test case file has this shape, and nothing else:
      the scenario is proving a framing defect, the proxy is deliberately down, or the fit returns
      anything but `OK` — fit through the GUI instead. This path touches none of the code under test.
 
-     **On FreeCAD 1.1.1 the GUI fit is a toolbar click, not a menu call.**
+     **On FreeCAD 1.1.x the GUI fit is a toolbar click, not a menu call.**
      `invoke_menu(["View","Fit All"])` and `["View","Fit all"]` are both **refused** with
-     `menu_path_unavailable` at segment 1; of that submenu only `["View","Zoom"]` resolves
-     (verified 2026-09-12, recorded in TC-06, TC-12, TC-13). Use the **Fit All** toolbar button
+     `menu_path_unavailable`: Fit All is under `View > Standard Views`. Use the **Fit All** toolbar button
      resolved by `element_token` from a fresh `get_window_state` snapshot, which returns
      `route: "accessibility"` and demonstrably reframes the view. Element tokens are per-snapshot
      and keyed on `(pid, window_id)`, so take the snapshot immediately before the click.
+   - **Show All before a fit of a golden or fault model.** Golden and fault `.FCStd` files have no
+     `GuiDocument.xml` and open with every object hidden, so `view_fit_viewport` returns
+     `SPEC_FAILED view_fit.nothing_to_frame`. Run
+     `invoke_menu(["View","Visibility","Show All Objects"])` first; it resolves in the background.
    - A scenario that asserts the window is **unchanged** takes its `before.png` after the same fit,
      so the two captures are comparable.
 6. **GUI interaction is `cua-driver` only.** Clicking, typing, menu invocation, window geometry, and
@@ -166,8 +173,11 @@ PASS-with-note.
 ### In-Scope
 - All 45 shipped tools: `document_*` (7), `query_*` (8), `verify_*` (6), `export_*` (3),
   `sketch_*` (8), `feature_*` (11), `preview_dry_run` (1), `view_fit_viewport` (1)
-- `debug_exec` behind its operator flag, including the disabled-by-default refusal
-- Invariants AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-17, AD-20, AD-24, AD-27, AD-28
+- `script_exec` on by default, and its off postures (`FREECAD_BUDDY_SCRIPT_EXEC=0`,
+  `FREECAD_BUDDY_UNATTENDED=1`) with the refusal they give
+- Invariants AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-17, AD-20, AD-24, AD-26, AD-27, AD-28
+- The implemented part of AD-25: one `FCB_TMP_session_<pid>_<token>` temp folder per host under
+  the workdir, and the session-start sweep (TC-11)
 - The GUI addon path: auto-started RPC listener plus auto-spawned MCP HTTP proxy
 - H1 headless host (`serve --transport stdio --mode inline`)
 - H2 HTTP proxy host (`serve --transport http --mode rpc`) on `127.0.0.1:8765`
@@ -177,7 +187,7 @@ PASS-with-note.
 ### Out-of-Scope
 - Epics 4-7 work: designer loop, repair loop, `verify_visual`, TechDraw judging, Phase-4 service.
   Every deferred item and its reason is listed in `APPENDIX-A-deferred-coverage.md`.
-- The known AD conformance gaps (AD-3, AD-25). They are recorded in TC-99 as
+- The known AD conformance gaps (AD-3, and the remaining part of AD-25). They are recorded in TC-99 as
   expected-fail scenarios and are **not** part of the green gate.
 - The two internal RPC-only tools `export_self_read_stl` and `export_self_read_3mf`. They are
   filtered out of `tools/list` by design; their absence is asserted in TC-01, nothing else.
@@ -202,7 +212,8 @@ document.
 ## 6. Test Environment
 
 ### Prerequisites
-- FreeCAD 1.1.1 installed; `$FREECAD_EXE` points at its launcher
+- FreeCAD 1.1.x installed; `$FREECAD_EXE` points at its launcher. The build under test is the
+  live version, read from `query_capabilities.freecad_version` at the start of the run
 - Addon linked at `%APPDATA%\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy` (a symlink to the repo
   `src/freecad_buddy`). Note `%APPDATA%\FreeCAD\Mod\` is legacy and empty.
 - micromamba `fcb` env at `$FCB_ENV` (FreeCAD + `mcp` in one interpreter) for the H1 legs
@@ -257,7 +268,9 @@ only **Round numbers to FreeCAD display precision** applies at once.
 | `FREECAD_EXE` | FreeCAD launcher, passed to `cua-driver call launch_app` | `C:/Program Files/FreeCAD 1.1/bin/freecad.exe` |
 | `FCB_ENV` | micromamba env holding FreeCAD **and** `mcp` in one interpreter, for the H1 legs | `$USERPROFILE/micromamba/envs/fcb` |
 | `FCB_PYTHON` | that env's interpreter | `$FCB_ENV/python.exe` |
-| `FREECAD_BUDDY_ALLOW_EXEC` | enable `debug_exec`; must be exactly `"1"`. Overrides the **Allow debug_exec** preference (default off) | `1` |
+| `FREECAD_BUDDY_SCRIPT_EXEC` | `script_exec` switch: unset or `"1"` = on; any other value (use `"0"`) = off. Overrides the **Allow script_exec** preference (`ScriptExec`, default on) | `0` |
+| `FREECAD_BUDDY_UNATTENDED` | marks an unattended run; exactly `"1"` turns `script_exec` off unless `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. Any other value is off | `1` |
+| `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` | operator opt-in that keeps `script_exec` on in an unattended run; must be exactly `"1"` | `1` |
 | `FREECAD_BUDDY_AUTO_APPROVE` | auto-approve posture: `"1"` = on, a mutation without `confirm` applies; any other value (use `"0"`) = confirm gate on. Overrides the **Auto-approve mutations** preference (default on). A sent `confirm` is checked in both postures | `0` |
 | `FREECAD_BUDDY_AUDIT_LOG` | audit log path. Overrides the **Audit log file** preference. GUI default `%APPDATA%\FreeCAD\v1-1\freecad-buddy\audit.jsonl`; the headless default is cwd-relative `freecad-buddy-audit.jsonl` | `$RUN_DIR/evidence/audit.jsonl` |
 | `FREECAD_BUDDY_WORKDIR` | session workdir. GUI default `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`; the headless default is cwd-relative `freecad-buddy-workdir` | `$RUN_DIR/workdir` |
@@ -337,9 +350,12 @@ behaviour that deviates from it:
 - **AD-3** — `:8765` has no authentication. `gui_external/entry.py` is a bare Starlette
   `Mount("/mcp")` with no middleware, no bearer check, no `Origin` check, no CORS. The loopback
   bind is the only control.
-- **AD-25** — no per-session working directory. Snapshots use `tempfile.mkdtemp`; the audit log
-  path is cwd-relative (`adapters/audit_log.py:23`). There is no `snap/ exports/ audit.log tmp/`
-  layout and no start-of-session sweep.
+- **AD-25** (remaining part) — the per-host session temp folder and the start sweep are
+  implemented and tested in TC-11. The gap: there is no `snap/ exports/ audit.log tmp/` layout; a
+  snapshot is `<Name>.FCStd` in its own `mkdtemp` folder, not `<Name>.<txid>.FCStd`; the workdir
+  is one shared folder, not session-named; the headless workdir default is cwd-relative
+  (`usecases/documents.py:43`); the audit log is one undated shared file outside the workdir with
+  no session field (`adapters/audit_log.py:24-26`).
 
 Reading the result:
 - A TC-99 scenario that **fails** is the recorded, accepted state. It does not block the release.
@@ -362,11 +378,12 @@ Reading the result:
   the human's window exists whether or not the offscreen render does.
 - **Module caching.** A running FreeCAD caches imported modules. A render-code change needs a
   FreeCAD restart in GUI mode before it takes effect.
-- **H2 diverges from inline.** The H2 proxy path `gui_external/entry.py` has its own `_call_tool`.
-  It does **not** carry the suspect-document logic, the non-string `doc` guard, or the audit
-  writes that the inline host in `adapters/mcp_server.py` has. Any `Then` that asserts
-  `doc handle must be a string`, `the document is now suspect: ...`, or an audit-log line must
-  state which host it ran under. A pass on one host is not a pass on the other.
+- **H2 and H1 refuse the same way.** The GUI RPC listener behind the H2 proxy carries the
+  non-string `doc` guard and the document-suspect logic (`adapters/rpc_listener.py:417-424`) and
+  writes the audit pairs (`:426-449`). The MCP input schema types `doc` as a string on both hosts,
+  so a non-string `doc` usually gets the schema refusal first. A `Then` on an audit line still
+  names its host: on H1 the front writes the adapter pairs and the worker writes the bracket
+  records.
 - **cua element tokens do not persist.** `element_token` values are keyed on `(pid, window_id)` and
   are per-snapshot. `replay_trajectory` cannot re-resolve them across sessions, so a recorded
   trajectory is regression evidence only, never a re-runnable scenario step.

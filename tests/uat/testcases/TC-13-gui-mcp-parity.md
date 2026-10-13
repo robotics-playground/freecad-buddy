@@ -32,12 +32,14 @@ the thing judged against it. Never the reverse. Where the two disagree, the wind
 disagreement is written to `$RUN_DIR/bugs.md` as a finding against the bridge.
 
 ## Preconditions
-- [ ] FreeCAD 1.1.1 GUI is open (verify: `Get-Process -Name freecad | Select-Object Id,MainWindowTitle` lists one process with title `FreeCAD 1.1.1`)
+- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD GUI is open (verify: `Get-Process -Name freecad | Select-Object Id,MainWindowTitle` lists one process whose title ends `FreeCAD <live version>`)
 - [ ] The MCP proxy serves `:8765` — the addon auto-spawns it on FreeCAD start (verify: `netstat -ano | Select-String ":8765" | Select-String "LISTENING"` returns a row). No manual `serve` command.
 - [ ] `cua-driver` is reachable and in the interactive session (verify: `cua-driver status` reports the daemon and NOT Session 0)
-- [ ] The FreeCAD `(pid, window_id)` pair is RE-RESOLVED for this run (verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns the window whose `title` is `FreeCAD 1.1.1`). Both values change between FreeCAD restarts. Never carry a `pid` or `window_id` from a previous run or a previous test file.
+- [ ] The FreeCAD `(pid, window_id)` pair is RE-RESOLVED for this run (verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns the window whose `title` ends `FreeCAD <live version>`). Both values change between FreeCAD restarts. Never carry a `pid` or `window_id` from a previous run or a previous test file.
 - [ ] The render ladder is usable (verify: `mcp query_capabilities {}` returns `render` = `gui_constructed`)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
+- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`. Rule 5 names the scenarios where the hidden state is the subject.
 
 ### Rule 1 — every MCP `path` argument is ABSOLUTE
 
@@ -61,7 +63,7 @@ So, in every scenario below:
 
 ### Rule 3 — `effect: "unverifiable"` is not a verdict
 
-Both directions of the asymmetry are confirmed on this build. A tree-targeted `press_key` with
+Both directions of the asymmetry are confirmed on FreeCAD 1.1.x. A tree-targeted `press_key` with
 `space` returned `effect:"unverifiable"` with `escalation:{reason:"delivery_failed",
 target:"foreground"}` and DID land — `query_tree_summary` flipped the `Box` line to start `v `. A
 viewport-targeted `press_key` (camera key `0`) returned `effect:"unverifiable"` and did NOT land —
@@ -78,9 +80,17 @@ Confirmed present in the UIA tree with `route: accessibility`: `Fit All` (label 
 **These buttons exist only while a document is open.** With no document open they are absent from
 the tree. That is a precondition of the scenarios that use them, not a defect.
 
-Confirmed UNRELIABLE or refused on this build, recorded so no scenario wastes a run on them:
-- `invoke_menu(["View","Fit all"])`, `["View","Fit All"]`, and `["View","Standard views"]` are all
-  REFUSED with `menu_path_unavailable` naming segment 1. Only `["View","Zoom"]` resolves.
+Confirmed UNRELIABLE or refused on FreeCAD 1.1.x, recorded so no scenario wastes a run on them:
+- `invoke_menu(["View","Fit All"])` and `["View","Standard views"]` are REFUSED with
+  `menu_path_unavailable` naming segment 1. `Fit All` is not a direct child of `View`: it sits
+  under the `Standard Views` submenu (capital V, `Workbench.cpp:707-709`). `["View","Zoom",…]`,
+  `["View","Visibility","Show All Objects"]` and `["View","Standard Views","Axonometric",…]`
+  resolved in run `2026-10-03-04`. A submenu leaf can still be refused while another popup is
+  open; re-snapshot, try once more, then use the toolbar button.
+- Never open a modal dialog through `invoke_menu` or a toolbar button by `element_token`
+  (`Open…`, Edit > Preferences): the UIA call blocks until the dialog closes and the UIA provider
+  stays busy (`freecad-gui-e2e-harness.md` §3). Open a file in the GUI through the Start page
+  **Recent Files** entry, or by launching FreeCAD with the file path as its argument.
 - Qt renders an open menu as a popup that is NOT a separate top-level window. `list_windows` still
   reports only the main window and the popup's items never enter the main window's UIA tree, so
   submenu children cannot be enumerated from a snapshot.
@@ -90,11 +100,17 @@ Confirmed UNRELIABLE or refused on this build, recorded so no scenario wastes a 
 
 ### Rule 5 — golden models ship hidden, and mutated fixtures close WITHOUT saving
 
-Every golden model ships with `Visibility=false`. A default `query_screenshot` therefore returns
+Every golden model ships with `Visibility=false`: the files carry no `GuiDocument.xml`. A default
+`query_screenshot` therefore returns
 `{"render":{"available":true,"empty_scene":true},"scene":{"rendered_objects":[]}}` with no
-`resource_link`, which is correct behavior. Every render scenario in this file passes
-`view.include`. Every scenario that mutates a golden model closes it with `document_close` and
-never calls `document_save`, so the committed fixture keeps its on-disk state.
+`resource_link`, which is correct behavior, and `view_fit_viewport` returns `SPEC_FAILED
+view_fit.nothing_to_frame`. So run **Show All** (Preconditions) before any fit or render of a
+golden document. Where the hidden state is the subject — the hidden leg of TC-13-03, TC-13-09 and
+the start state of TC-13-14 — do not run Show All before that leg: accept the
+`view_fit.nothing_to_frame` refusal and frame with the GUI `Fit All` toolbar button. Every render
+scenario in this file passes `view.include`. Every scenario that mutates a golden model closes it
+with `document_close` and never calls `document_save`, so the committed fixture keeps its on-disk
+state.
 
 ### Shared viewport-capture recipe
 
@@ -134,7 +150,7 @@ From the returned elements, keep only those whose `role` is `TreeItem` and recor
 **And** node counts agree — verify: the count of shape-bearing nodes in the MCP read equals the count of object rows in the snapshot, after excluding the document root row  
 **And** no MCP-only node — verify: every `name` reported by the MCP read has a `TreeItem` row with a matching `label` in the snapshot  
 **And** no GUI-only node — verify: every object `TreeItem` row in the snapshot appears in the MCP output; a row with no MCP node is a parity defect, not a filter  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the GUI Model panel is the referent for the node set — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and write down the rows you can see in the Model panel. Confirm the `TreeItem` labels match those rows one for one, and that the MCP node set matches the rows you read. Do not pass on the element list alone. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -176,7 +192,7 @@ rows.
 **And** the type is reported — verify: the MCP `type` is a non-empty FreeCAD type string, and the object it names is the one the tree row selects  
 **And** selection did not mutate anything — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` both before and after the selection  
 **And** face naming agrees on hover — verify: hovering a face makes the status bar read `Preselected: <doc>.BoxHole.<FaceN>`, and the object segment of that string equals the MCP `name`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the window states the identity, and the MCP report is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-02-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-02-selected.png` and `$RUN_DIR/evidence/tc-13-02-after.png`. Read off the images which row is highlighted, what the status bar says, and what the property panel `Label` row reads. Confirm the highlighted row is `BoxHole`, the status bar shows the internal name, and the `Label` row shows the same label — then check the MCP `name` and `label` against what you read. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -226,8 +242,9 @@ mcp query_screenshot {doc:<handle>}
 **And** visible agrees on both sides — verify: the second `query_tree_summary` tree text is `v [FEATURE] Box`, AND `$RUN_DIR/evidence/tc-13-03-visible.png` shows the box drawn in the viewport  
 **And** the default render follows the live flag — verify: the second `query_screenshot` returns `scene.rendered_objects` equal to `["Box"]` with a non-null `resource_link`  
 **And** an explicit include overrides the flag in EITHER state — verify: `mcp query_screenshot {doc:<handle>, view:{include:["Box"]}}` returns `rendered_objects: ["Box"]` and a PNG while the `Box` line starts `-`  
+**And** the include render did not write the live flag — verify: after that render the `Box` line still starts `-`, the window still draws no box, and the title bar has no `*` modified marker. The render reads `Visibility` and restores it (Story 10.4 D2)  
 **And** the toggle changed no geometry — verify: `mcp query_mass_properties {doc:<handle>, object:"Box"}` returns `volume` `6000.0` in both states  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the pixels followed the flag in both directions — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-03-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-03-hidden.png` and `$RUN_DIR/evidence/tc-13-03-after.png` and say what each viewport contains. The hidden capture shows no solid, the after capture shows one box. A numeric flag flip with no pixel change is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -256,7 +273,7 @@ mcp verify_shape {doc:<handle>, object:"BoxHole"}
 ```bash
 mcp query_screenshot {doc:<handle>, view:{camera:"iso", include:["BoxHole"]}}
 ```
-**And** the object is made visible in the GUI using the TC-13-03 toggle route, the `Fit All` toolbar button is pressed, and the live viewport captured  
+**And** the object is made visible in the GUI with Show All, the `Fit All` toolbar button is pressed, and the live viewport captured  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
 '{"pid":<PID>,"element_token":"<Fit All Button token from this snapshot>"}' | & cua-driver call click
@@ -271,11 +288,11 @@ mcp query_screenshot {doc:<handle>, view:{camera:"iso", include:["BoxHole"]}}
 **And** `com` is `null` and stays `null` — verify: the same read returns `com` null for `BoxHole`; a scenario asserting a number here is wrong  
 **And** *(visual)* the proportion is confirmed — verify: read both PNGs. The object reads as a flat square plate, 40 by 40 by 10 mm, that is four times wider than it is tall. A cubic silhouette contradicts the `bbox` assertion and is a defect  
 **And** *(visual)* the through hole is visible — verify: both PNGs show one circular hole passing through the plate, consistent with the genus-1 topology the counts assert. A solid plate with no hole means the numbers and the pixels disagree  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the window is the referent and the MCP render is judged against it — verify: fit FIRST, then take both captures so they share a camera: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-04-after.png"}' | & cua-driver call get_window_state`, and the `query_screenshot` render already written to `$RUN_DIR/evidence/tc-13-04-mcp.png`. `Read` `$RUN_DIR/evidence/tc-13-04-after.png` first and describe the solid you see; then `Read` `$RUN_DIR/evidence/tc-13-04-mcp.png` and confirm the silhouette, hole position, and camera match; any extra or missing body is a defect, not a tolerance. Where they disagree the window wins, and the disagreement is recorded as a finding against the bridge in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
-Restore `BoxHole` to hidden, confirm with `query_tree_summary`, then:
+Close without saving; the hidden flag on disk is unchanged:
 ```bash
 mcp document_close {doc:<handle>}
 ```
@@ -313,7 +330,7 @@ example `[(0.00 0.00 1.00); 0.00°; (0.0...`.
 **And** the position agrees — verify: the MCP position equals the position triple in the `Placement` row; the GUI row truncates, so read the full value by expanding the `Placement` row in the panel  
 **And** units are typed on the wire — verify: every length in the MCP read is a `{value, unit}` object with `unit` `mm`, and every angle uses `deg`. A bare number is a contract defect  
 **And** placement is consistent with the bounding box — verify: the origin reported by the MCP read agrees with the `bbox` from `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}`, which spans 0 to 40 mm in x and y  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the property panel is the referent for the placement — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-05-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-05-props.png` and `$RUN_DIR/evidence/tc-13-05-after.png` and read the `Placement` and `Label` row values straight off the images. Confirm those are the rows the assertions above used, then check the MCP numbers against the values you read. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -329,7 +346,7 @@ Do not save.
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** `box40-hole-r5` is open and `BoxHole` has been made visible — verify: the tree lines of `mcp query_tree_summary {doc:<handle>}` has a `BoxHole` line starting `v `  
+**Given** `box40-hole-r5` is open and `BoxHole` has been made visible with Show All — verify: the tree lines of `mcp query_tree_summary {doc:<handle>}` has a `BoxHole` line starting `v `  
 **And** the geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` and the 40 x 40 x 10 mm `bbox`  
 
 **When** a shared camera is set through the toolbar, not a keystroke: re-snapshot, press `Standard Views`, re-snapshot, then select the isometric entry by its token from the NEW snapshot  
@@ -338,11 +355,12 @@ Do not save.
 '{"pid":<PID>,"element_token":"<Standard Views Button token from this snapshot>"}' | & cua-driver call click
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-06-menu.png"}' | & cua-driver call get_window_state
 ```
-`invoke_menu(["View","Standard views"])` is REFUSED on this build with `menu_path_unavailable`
-at segment 1, and a viewport `press_key` does not land. If the isometric entry does not appear
-in the snapshot, the Qt popup is not a top-level window and cannot be enumerated; in that case
-record the camera FreeCAD is actually showing and compare against the matching MCP camera
-instead of forcing iso.
+The submenu label is `Standard Views` (capital V); `invoke_menu(["View","Standard views"])` is
+refused with `menu_path_unavailable`, and a viewport `press_key` does not land.
+`invoke_menu(["View","Standard Views","Axonometric","Isometric"])` is the menu route. If the
+isometric entry does not appear in the snapshot and the menu route is refused, the Qt popup is not
+a top-level window and cannot be enumerated; in that case record the camera FreeCAD is actually
+showing and compare against the matching MCP camera instead of forcing iso.
 **And** the object is framed with the `Fit All` toolbar button  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
@@ -358,17 +376,17 @@ mcp query_screenshot {doc:<handle>, view:{camera:"iso", include:["BoxHole"]}}
 ```
 
 **Then** the MCP render names the object — verify: the render returns `scene.rendered_objects` containing `BoxHole` and a non-null `render.resource_link`  
-**And** the render did not touch the document — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns the same volume after the render as before it, and `mcp verify_recompute {doc:<handle>}` reports no touched object  
+**And** the render did not touch the document — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns the same volume after the render as before it, and `mcp verify_recompute {doc:<handle>}` returns `OK` with `subject.failing_objects` empty  
 **And** *(visual)* the silhouette is the same — verify: read both PNGs. The plate outline and the through hole appear in the same relative position in each  
 **And** *(visual)* the camera is the same — verify: the number of visible faces and the up direction agree between the two images. An axis flip is a defect, recorded exactly  
 **And** *(visual)* the proportions match the geometry — verify: both images read as a flat 40 x 40 x 10 mm plate, consistent with the `bbox` in the Given, not as a cube  
 **And** *(visual)* there is no extra or missing geometry — verify: nothing visible in `$RUN_DIR/evidence/tc-13-06-viewport.png` is absent from `$RUN_DIR/evidence/tc-13-06-mcp.png`, and no `PartDesign::Body`, `Sketcher::SketchObject`, or `App::Origin` child leaked into the render  
-**And** *(visual)* shading is not black-sided — verify: faces angled away from the camera render as shaded grey in `$RUN_DIR/evidence/tc-13-06-mcp.png`, matching the tone of the same faces in `$RUN_DIR/evidence/tc-13-06-viewport.png`. Pure black means the camera-aligned headlight was lost  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* every visible face of the render is inside the AD-34 tone band — verify: in `$RUN_DIR/evidence/tc-13-06-mcp.png` no face is black or white, and each face is separable from the background (AD-34: mean interior tone at least 24/255 from the background on one channel, and within `[20, 235]` on every channel). The render's face shading is NOT compared with the viewport: the MCP render is a constructed scene whose lighting rig is set by the tone band, not by viewport match (sprint-change-proposal-2026-10-04 decision 4; `integration-mcp-freecad.md` lighting rig, headlight intensity 0.80). A different tone order between the two images is not a defect  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the fitted window is the referent and the render is judged against it — verify: fit FIRST, then take both captures so they share a camera: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-06-after.png"}' | & cua-driver call get_window_state`, and the `query_screenshot` render at `$RUN_DIR/evidence/tc-13-06-mcp.png`. `Read` `$RUN_DIR/evidence/tc-13-06-after.png` first and describe what is on screen; then `Read` `$RUN_DIR/evidence/tc-13-06-mcp.png` and confirm the same plate with the same hole at a comparable framing and orientation. Where they disagree the window wins, and the disagreement is recorded as a finding against the bridge in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
-Restore `BoxHole` to hidden, confirm with `query_tree_summary`, then:
+Close without saving; the hidden flag on disk is unchanged:
 ```bash
 mcp document_close {doc:<handle>}
 ```
@@ -381,44 +399,49 @@ Do not save.
 **Priority**: High
 **Design Ref**: `mcp-tools-design.md` §3.2 (query_object), `verification-design.md` §6.3 (failing-object reporting)
 
-**Given** a fixture whose object carries an error or a failing recompute is open. Use a case from `benchmarks/g0/fault-injection/`, for example `non-watertight-open-shell` — verify: `mcp document_open {path:"$PROJECT_ROOT/benchmarks/g0/fault-injection/non-watertight-open-shell/fixture.FCStd"}` returns a handle  
-**And** the reference checks from the case are to hand — verify: the `assertions.checks` block in that case's `case.yaml` is read and will be passed to `verify_shape`  
+No fault-injection fixture carries a FreeCAD error state: their defects are geometric, on valid
+static `Part::Feature` objects. So the broken object is built here. `script_exec` writes an invalid
+pad length and recomputes, which leaves the pad in an error state that both FreeCAD and the bridge
+must report. `script_exec` opens no transaction, so the document is closed without saving.
+
+**Given** a scratch document with a padded body is open, built over MCP — verify: `mcp document_create {label:"TC13Err"}`, `feature_body_create`, `sketch_create` on XY, `sketch_add_geometry` with a fully constrained 30 x 20 mm rectangle, and `feature_pad` with `length:{value:5, unit:"mm"}` each return `OK`  
+**And** the clean control is recorded first — verify: `mcp query_object {doc:<handle>, object:"Pad"}` returns a null `error`, `mcp verify_recompute {doc:<handle>}` returns `OK` with `subject.failing_objects` empty, and a tree snapshot shows no marker on the `Pad` row  
+**And** the pad is broken through `script_exec` — verify: the call below returns `OK` and its `value_repr` names an error state (`Invalid` or `Error`)  
+```bash
+mcp script_exec {doc:<handle>, code:"doc.getObject('Pad').Length = 0\ndoc.recompute()\nresult = doc.getObject('Pad').State"}
+```
 
 **When** the MCP error surface is read  
 ```bash
-mcp query_object {doc:<handle>, object:"<Object>"}
+mcp query_object {doc:<handle>, object:"Pad"}
 mcp verify_recompute {doc:<handle>}
-mcp verify_shape {doc:<handle>, object:"<Object>", checks:<checks from case.yaml>}
+mcp query_tree_summary {doc:<handle>, depth:2}
 ```
-**And** the GUI Model tree is snapshotted and the tree error marker on the object row looked for  
+**And** the GUI Model tree is snapshotted and the tree error marker on the object row looked for. Expand `Body` first: a collapsed parent hides its children (see TC-13-10).  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-07-tree.png"}' | & cua-driver call get_window_state
 ```
 **And** the object row is selected and the window re-snapshotted to read the status bar  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Object TreeItem token from this snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"element_token":"<Pad TreeItem token from this snapshot>"}' | & cua-driver call click
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-07-status.png"}' | & cua-driver call get_window_state
 ```
 
-**Then** MCP reports the fault — verify: `query_object` returns a non-null `error` for the object, OR `verify_recompute` names it among the failing objects  
-**And** the graded verdict uses the reference checks — verify: `verify_shape` was called WITH the `assertions.checks` from `case.yaml` and returns `SPEC_FAILED`. Called without them a wrong-but-valid shape returns `OK` and the scenario would detect nothing  
-**And** the GUI marks the same object — verify: read `$RUN_DIR/evidence/tc-13-07-tree.png` and confirm the object row carries the FreeCAD error or touched marker  
-**And** the status bar does not claim validity — verify: `$RUN_DIR/evidence/tc-13-07-status.png` does NOT read `Valid, Internal name: <Object>` for the broken object. A `Valid` status bar alongside a non-null MCP `error` is a parity defect and is recorded as such  
+**Then** MCP reports the fault — verify: `query_object` returns a non-null `error` for `Pad`, AND `verify_recompute` returns `RECOMPUTE_ERROR` with `Pad` in `subject.failing_objects`  
+**And** the tree text marks it — verify: the `query_tree_summary` `Pad` line ends with a `!<status>` marker  
+**And** the GUI marks the same object — verify: read `$RUN_DIR/evidence/tc-13-07-tree.png` and confirm the `Pad` row carries the FreeCAD error marker  
+**And** the status bar does not claim validity — verify: `$RUN_DIR/evidence/tc-13-07-status.png` does NOT read `Valid, Internal name: Pad`. A `Valid` status bar alongside a non-null MCP `error` is a parity defect and is recorded as such  
 **And** both sides name the SAME object — verify: the object named by the MCP reads is the object whose row carries the marker in the tree snapshot; a mismatch is the finding  
-**And** the clean control separates detection from rejection — verify: repeat the MCP reads and the tree snapshot against `benchmarks/g0/fault-injection/clean-control/fixture.FCStd`; MCP returns no error and the GUI tree shows no marker. Without this, a verifier that fails everything scores the same as a correct one  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
-**And** *(visual)* the window is the referent for the fault — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-07-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and name, from the image alone, which row carries the FreeCAD error or touched marker and what the status bar for that row reads. Confirm the marked row is the object MCP named and that the status bar does not read `Valid,`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** the clean control separates detection from rejection — verify: the reads in the Given, taken before the break, show no MCP error and no GUI marker. Without this, a verifier that fails everything scores the same as a correct one  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the window is the referent for the fault — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-07-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and name, from the image alone, which row carries the FreeCAD error marker and what the status bar for that row reads. Confirm the marked row is the object MCP named and that the status bar does not read `Valid,`. FreeCAD keeps the last valid shape on a failed recompute, so the 3D view may still draw the 5 mm plate; the marker, not the shape, is the evidence here. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
 mcp document_close {doc:<handle>}
 ```
-Do not save.
-
-**Conditional skip**: skip when no broken fixture can be opened in the live GUI. Record the skip
-with the `document_open` result that failed and the `benchmarks/g0/fault-injection/` case that was
-attempted. Do not substitute a healthy document and report a pass.
+Do not save. `TC13Err` is a scratch document, and `document_undo` does not revert a `script_exec` change.
 
 ---
 
@@ -454,7 +477,8 @@ mcp query_tree_summary {doc:<newHandle>}
 **And** `document_list` includes it — verify: `document_list` returns an entry whose handle equals the created handle and whose label is `TC13Parity`  
 **And** the new document is empty on both sides — verify: `query_tree_summary` returns no shape-bearing node, and the new GUI tree root has no child object rows  
 **And** no other document was disturbed — verify: every handle recorded in the Given still returns `OK` from `mcp query_tree_summary`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<goldenHandle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** the fit refuses a document the viewport is not showing — verify: `mcp view_fit_viewport { doc: "<goldenHandle>" }` returns `INVALID_INPUT` with a message that starts `the live viewport is showing 'TC13Parity', not the targeted '<golden Name>'` (AD-29: the new document's view is the active one; `view_fit.py:357`). The camera did not move  
+**And** *(visual)* the model is framed — verify: `TC13Parity` is empty, so frame the active view through the GUI with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the MCP-created document reached the human's screen — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-08-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-08-before.png` and `$RUN_DIR/evidence/tc-13-08-after.png` and confirm `TC13Parity` is visible in the Model panel and the tab bar in the after image and absent in the before image. `document_create` returning `OK` is the claim; the new tab and tree root in the picture are the evidence. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -497,7 +521,7 @@ mcp query_mass_properties {doc:<handle>, object:"Box"}
 **And** the GUI gained the object row — verify: the post-open `TreeItem` set contains a row labelled `Box`, matching the node in `query_tree_summary`  
 **And** the geometry agrees immediately — verify: `query_mass_properties` returns `volume` `6000.0`, `bbox` 0 to 10 by 0 to 20 by 0 to 30 mm, `com` `(5, 10, 15)`, faces `6`, edges `12`, vertices `8`, solids `1`  
 **And** the shipped visibility flag survived the open — verify: the `query_tree_summary` `Box` line starts `- `, and the GUI tree eye icon is struck through in `$RUN_DIR/evidence/tc-13-09-after-open.png`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** the fit is honest about the hidden object — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `SPEC_FAILED` with `detail.code` `view_fit.nothing_to_frame`, because the hidden state is the subject here (Rule 5). Do not run Show All. Frame through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot, which touches none of the code under test  
 **And** *(visual)* the MCP-opened document reached the human's screen — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-09-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and confirm the tab bar and Model panel show the opened document. The viewport is EXPECTED to be empty, because the fixture ships hidden. `document_open` returning a handle is the claim; the document visible in the tab bar is the evidence. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -513,7 +537,7 @@ Do not save.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_pad`), `verification-design.md` §1 (mutation protocol, AD-5)
 
-**Given** a scratch document with a Body and a padded-ready profile is open — verify: `mcp document_create {label:"TC13Pad"}` returns a handle; `mcp feature_body_create {doc:<handle>, name:"Body", confirm:{preview_id:"<token>"}}` returns `OK`; a sketch exists on the XY plane with a closed profile  
+**Given** a scratch document with a Body and a padded-ready profile is open — verify: `mcp document_create {label:"TC13Pad"}` returns a handle; `mcp feature_body_create {doc:<handle>, name:"Body", confirm:{preview_id:"<token>"}}` returns `OK`; a sketch on the XY plane holds a fully constrained, closed 30 x 20 mm rectangle (`sketch_create`, then `sketch_add_geometry` with its constraints in the same call)  
 **And** the tree row set before the pad is recorded — verify: a snapshot's `TreeItem` labels are written down  
 
 **When** the GUI is snapshotted before the mutation  
@@ -522,7 +546,7 @@ Do not save.
 ```
 **And** a preview token is taken, then the pad is issued through MCP  
 ```bash
-mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_pad", args:{doc:<handle>, body:"Body", profile:"<Sketch>", name:"Pad", length:{value:5, unit:"mm"}}}}
+mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_pad", args:{body:"Body", profile:"<Sketch>", name:"Pad", length:{value:5, unit:"mm"}}}}
 mcp feature_pad {doc:<handle>, body:"Body", profile:"<Sketch>", name:"Pad", length:{value:5, unit:"mm"}, confirm:{preview_id:"<token>"}}
 ```
 **And** the window is re-snapshotted, then the `Fit All` toolbar button pressed so the viewport frames the new solid  
@@ -554,14 +578,15 @@ mcp query_mass_properties {doc:<handle>, object:"Pad"}
 **And** the solid matches the pad length — verify: `query_mass_properties` returns a `bbox` whose z extent is 5 mm, matching the `length` sent, and the viewport solid reads as that thickness  
 **And** the `Fit All` button exists because a document is open — verify: the button was found in the post-pad snapshot with label exactly `Fit All`. If it is absent, the document is not open and that is the precondition failing, not a defect  
 **And** units were typed — verify: `length` was sent as `{value:5, unit:"mm"}`; a bare number is a schema reject, since the length unit enum admits only `mm`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the MCP mutation reached the human's viewport — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-10-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-10-before.png` and `$RUN_DIR/evidence/tc-13-10-after.png` and say what each viewport contains. A solid is drawn where the before capture showed only the sketch. `feature_pad` returning `OK` is the claim; the pad visible in the viewport is the evidence. Do not pass on the tree row alone. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
 mcp document_close {doc:<handle>}
 ```
-Do not save. `TC13Pad` is a scratch document built by the test.
+Run the close only when TC-13-11 does not run next: TC-13-11 and TC-13-12 reuse `TC13Pad`. Do not
+save. `TC13Pad` is a scratch document built by the test.
 
 ---
 
@@ -570,8 +595,11 @@ Do not save. `TC13Pad` is a scratch document built by the test.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §3.7 (`feature_set_parameters`), `verification-design.md` §1 (mutation protocol)
 
-**Given** `box-10-20-30` is open — verify: `mcp query_mass_properties {doc:<handle>, object:"Box"}` returns `volume` `6000.0`  
-**And** `Box` is selected in the GUI so the property panel shows its `Base` group — verify: a snapshot lists a `Placement` row and a `Label` row  
+The golden `Box` is a static `Part::Feature` with no `Length` property, so the subject is the
+parametric `Pad` of `TC13Pad`.
+
+**Given** `TC13Pad` from TC-13-10 is open with its 5 mm `Pad`, or is rebuilt with the TC-13-10 Given and pad call — verify: `mcp query_mass_properties {doc:<handle>, object:"Pad"}` returns `volume` `3000.0` (30 x 20 x 5)  
+**And** `Pad` is selected in the GUI so the property panel shows its `Length` row — verify: a snapshot lists a `Length` row reading `5.00 mm`. A UIA click on the `Pad` tree row may only activate the document; a background window-targeted click on the solid in the viewport selects it  
 
 **When** the property panel is snapshotted before the change  
 ```bash
@@ -579,33 +607,34 @@ Do not save. `TC13Pad` is a scratch document built by the test.
 ```
 **And** the driving parameter is changed through MCP  
 ```bash
-mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_set_parameters", args:{doc:<handle>, feature:"Box", parameters:{Length:{value:25, unit:"mm"}}}}}
-mcp feature_set_parameters {doc:<handle>, feature:"Box", parameters:{Length:{value:25, unit:"mm"}}, confirm:{preview_id:"<token>"}}
+mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_set_parameters", args:{feature:"Pad", parameters:{Length:{value:12, unit:"mm"}}}}}
+mcp feature_set_parameters {doc:<handle>, feature:"Pad", parameters:{Length:{value:12, unit:"mm"}}, confirm:{preview_id:"<token>"}}
 ```
-**And** the property panel is re-snapshotted  
+**And** `Pad` is selected again (the mutation clears the selection), and the property panel is re-snapshotted  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-11-after-change.png"}' | & cua-driver call get_window_state
 ```
 **And** the MCP side is read  
 ```bash
-mcp query_mass_properties {doc:<handle>, object:"Box"}
+mcp query_mass_properties {doc:<handle>, object:"Pad"}
 mcp verify_recompute {doc:<handle>}
 ```
 
 **Then** the mutation succeeded — verify: `feature_set_parameters` returns `OK` with `rolled_back` false  
-**And** the GUI property panel shows the new value — verify: the `Length` row in the post-change snapshot reads `25`, where the before snapshot read `10`  
-**And** MCP geometry follows the change — verify: `query_mass_properties` returns `volume` `15000.0` (25 x 20 x 30), not `6000.0`, and a `bbox` x extent of 25 mm  
+**And** the GUI property panel shows the new value — verify: the `Length` row in the post-change snapshot reads `12.00 mm`, where the before snapshot read `5.00 mm`  
+**And** MCP geometry follows the change — verify: `query_mass_properties` returns `volume` `7200.0` (30 x 20 x 12), not `3000.0`, and a `bbox` z extent of 12 mm  
 **And** the two sides agree on the driving value — verify: the number in the GUI `Length` row equals the value in the MCP `parameters` argument that was accepted  
-**And** the confirm gate was honored — verify: repeating `feature_set_parameters` WITHOUT `confirm` returns the refusal `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
-**And** the recompute state agrees — verify: `verify_recompute` reports the same object set as touched or clean as the GUI tree markers show in `$RUN_DIR/evidence/tc-13-11-after-change.png`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
-**And** *(visual)* the MCP parameter change reached the human's screen — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-11-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-11-before.png` and `$RUN_DIR/evidence/tc-13-11-after.png` and read the `Length` row value off each image. Confirm it changed from `10` to `25`. `feature_set_parameters` returning `OK` is the claim; the changed row in the picture is the evidence. An unchanged panel with a successful MCP call is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** the confirm gate was honored — verify: this Then needs the confirm gate on. With the default posture (auto-approve on) record the posture and mark the Then not applicable. With FreeCAD launched with `FREECAD_BUDDY_AUTO_APPROVE=0`, repeating `feature_set_parameters` WITHOUT `confirm` returns the refusal `this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id`  
+**And** the recompute state agrees — verify: `verify_recompute` returns `OK` with `subject.failing_objects` empty, and the GUI tree in `$RUN_DIR/evidence/tc-13-11-after-change.png` shows no error or touched marker  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the MCP parameter change reached the human's screen — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-11-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-11-before.png` and `$RUN_DIR/evidence/tc-13-11-after-change.png` and read the `Length` row value off each image. Confirm it changed from `5.00 mm` to `12.00 mm`, and that the after image shows a visibly taller block. `feature_set_parameters` returning `OK` is the claim; the changed row in the picture is the evidence. An unchanged panel with a successful MCP call is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
+Keep `TC13Pad` open for TC-13-12. When TC-13-12 does not run next:
 ```bash
 mcp document_close {doc:<handle>}
 ```
-Do not save. `box-10-20-30` is a committed golden model and its `Length` must stay 10 mm on disk.
+Do not save. `TC13Pad` is a scratch document built by the test.
 
 ---
 
@@ -614,8 +643,8 @@ Do not save. `box-10-20-30` is a committed golden model and its `Length` must st
 **Priority**: Critical
 **Design Ref**: `verification-design.md` §1 (undo is refused, never silently no-op), `mcp-tools-design.md` §1.1 (document handles)
 
-**Given** a document carrying one MCP mutation is open — reuse the TC-13-11 state — verify: `mcp query_mass_properties {doc:<handle>, object:"Box"}` returns `volume` `15000.0` after the `Length` change  
-**And** the GUI shows that mutated state — verify: a snapshot's `Length` property row reads `25`  
+**Given** a document carrying one MCP mutation is open — reuse the TC-13-11 state — verify: `mcp query_mass_properties {doc:<handle>, object:"Pad"}` returns `volume` `7200.0` after the `Length` change  
+**And** the GUI shows that mutated state — verify: a snapshot's `Length` property row reads `12.00 mm` with `Pad` selected  
 
 **When** the GUI is snapshotted in its mutated state and the viewport captured  
 ```bash
@@ -626,24 +655,24 @@ Do not save. `box-10-20-30` is a committed golden model and its `Length` must st
 ```bash
 mcp document_undo {doc:<handle>}
 ```
-**And** the window is re-snapshotted and the viewport captured again  
+**And** `Pad` is selected again, then the window is re-snapshotted and the viewport captured again  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-12-after-undo.png"}' | & cua-driver call get_window_state
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-12-reverted.png"}' | & cua-driver call get_window_state
 ```
 **And** the MCP side is read  
 ```bash
-mcp query_mass_properties {doc:<handle>, object:"Box"}
-mcp query_tree_summary {doc:<handle>}
+mcp query_mass_properties {doc:<handle>, object:"Pad"}
+mcp query_tree_summary {doc:<handle>, depth:2}
 ```
 
-**Then** the undo succeeded — verify: `document_undo` returns `OK`, not a silent no-op  
-**And** MCP geometry reverted — verify: `query_mass_properties` returns `volume` `6000.0` and the original `bbox` 0 to 10 by 0 to 20 by 0 to 30 mm  
-**And** the GUI property panel reverted — verify: the `Length` row in the post-undo snapshot reads `10` again, where the pre-undo snapshot read `25`  
-**And** the tree survived — verify: `query_tree_summary` names `Box` with the same node set as before the mutation, and the GUI `TreeItem` set matches it  
-**And** both sides agree the document is clean — verify: `mcp verify_recompute {doc:<handle>}` reports no touched object, and the GUI tree in `$RUN_DIR/evidence/tc-13-12-after-undo.png` shows no touched marker  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
-**And** *(visual)* the undo reached the human's viewport — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-12-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-12-mutated.png` and `$RUN_DIR/evidence/tc-13-12-after.png` and compare the width of the solid in each. The solid is visibly narrower after the undo. `document_undo` returning `OK` is the claim; the narrower solid in the picture is the evidence. A reverted number with an unchanged viewport is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**Then** the undo succeeded — verify: `document_undo` returns `OK` with a text that names `buddy: set parameters on Pad`, not a silent no-op  
+**And** MCP geometry reverted — verify: `query_mass_properties` returns `volume` `3000.0` and a `bbox` z extent of 0 to 5 mm  
+**And** the GUI property panel reverted — verify: the `Length` row in the post-undo snapshot reads `5.00 mm` again, where the pre-undo snapshot read `12.00 mm`  
+**And** the tree survived — verify: `query_tree_summary` names `Body`, `Pad` and `Sketch` with the same node set as before the mutation, and the GUI `TreeItem` set matches it  
+**And** both sides agree the document is clean — verify: `mcp verify_recompute {doc:<handle>}` returns `OK` with `subject.failing_objects` empty, and the GUI tree in `$RUN_DIR/evidence/tc-13-12-after-undo.png` shows no touched or error marker  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the undo reached the human's viewport — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-12-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-12-mutated.png` and `$RUN_DIR/evidence/tc-13-12-after.png` and compare the height of the solid in each. The solid is visibly thinner after the undo (5 mm, not 12 mm). `document_undo` returning `OK` is the claim; the thinner solid in the picture is the evidence. A reverted number with an unchanged viewport is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -681,11 +710,11 @@ mcp query_tree_summary {doc:<handleB>}
 
 **Then** the close succeeded — verify: `document_close` returns `OK`  
 **And** the GUI tree root is gone — verify: the document A row is present in the before `TreeItem` set and ABSENT from the post-close set  
-**And** the GUI tab is gone — verify: `'{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"<document A label>"},"exists":false}}]}' | & cua-driver call verify_state` returns `satisfied`. A result of `unknown` is inconclusive, never a pass; re-snapshot and judge `$RUN_DIR/evidence/tc-13-13-after-close.png` directly instead  
+**And** the GUI tab is gone — verify: `Read` `$RUN_DIR/evidence/tc-13-13-after-close.png` and confirm the tab bar has no tab for document A. `verify_state` with `exists:false` is refused by the driver (snapshots are not exhaustive), so the PNG is the judgement  
 **And** `document_list` agrees with the GUI — verify: `document_list` returns one entry, and its handle is `<handleB>`  
 **And** the stale handle refuses cleanly — verify: `query_tree_summary {doc:<handleA>}` returns `INVALID_INPUT`, not `WORKER_CRASHED` and not `OK` with empty data  
 **And** document B is untouched on both sides — verify: `query_tree_summary {doc:<handleB>}` returns `OK`, and its tree root is still present in `$RUN_DIR/evidence/tc-13-13-after-close.png`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handleB>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handleB>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the MCP close reached the human's screen — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-13-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-13-before.png` and `$RUN_DIR/evidence/tc-13-13-after.png` and list the tabs and tree roots you can see in each. Document A is in the tab bar and Model panel in the before image and absent in the after image, and document B's tree root is still shown. `document_close` returning `OK` is the claim; the missing tab in the picture is the evidence. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -733,7 +762,7 @@ and read MCP again. Record every attempt.
 **And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"Box"}` returns `volume` `6000.0` before and after; visibility is a view flag  
 **And** the label was NOT edited — verify: the post-toggle `Box` line carries no quoted `"<Label>"`, so the Label still equals the Name `Box` and holds no space. If the label changed, the keystroke hit the rename editor and the toggle did not happen; undo with `Ctrl+Z` and re-run the `space` action from a fresh snapshot  
 **And** MCP read the live flag, not a cache — verify: the post-toggle result differs from the pre-toggle result with no MCP mutation call between them  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the GUI toggle is the ground truth and the MCP flag is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-14-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state, from the image alone, whether the box is drawn in the viewport. The GUI action and this window are the ground truth; only after reading the image, check that the `v`/`-` marker on the MCP `Box` line agrees with what you saw. A window showing the box while the MCP line still starts `-` is a finding against the bridge, recorded in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -750,7 +779,7 @@ Do not save. The fixture ships with `Visibility=false`.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §1.1 (label handling), `data-contracts-design.md` §9 (UTF-8 on the wire)
 
-**Given** `box40-hole-r5` is open — verify: `mcp query_tree_summary {doc:<handle>}` reports `label` `BoxHole`  
+**Given** `box40-hole-r5` is open — verify: `mcp query_tree_summary {doc:<handle>}` has the line `- [FEATURE] BoxHole` with no quoted label, so the Label equals the Name (`tree_text.py:65`)  
 **And** the token-shift hazard in Prerequisites Rule 2 has been read  
 
 **When** the label is recorded on both sides  
@@ -788,18 +817,18 @@ mcp query_tree_summary {doc:<handle>}
 mcp query_tree_summary {doc:<handle>}
 ```
 
-**Then** MCP sees the new label — verify: the first post-rename `query_tree_summary` reports `label` `BoxHoleRenamed`  
+**Then** MCP sees the new label — verify: the first post-rename `query_tree_summary` has the line `- [FEATURE] BoxHole "BoxHoleRenamed"`  
 **And** the internal name did NOT change — verify: `mcp query_object {doc:<handle>, object:"BoxHole"}` still resolves and returns `name` `BoxHole`. A rename changes the Label, never the internal name, and the GUI status bar still reads `Valid, Internal name: BoxHole`  
 **And** the GUI shows the new label — verify: a fresh snapshot's `TreeItem` set contains a row labelled `BoxHoleRenamed` and no row labelled `BoxHole`  
-**And** `Ctrl+Z` reverts on both sides — verify: the second post-rename `query_tree_summary` reports `label` `BoxHole` again, and a fresh snapshot's `TreeItem` row reads `BoxHole`  
-**And** MCP catches an ACCIDENTAL rename too — verify: this is the real incident this scenario is built from. On 2026-09-12 a `space` keystroke aimed at a tree row landed in the inline rename editor at the adjacent token, and `query_tree_summary` immediately reported `label: " "`. Reproduce it deliberately: send `space` to the rename editor token, read `query_tree_summary`, confirm `label` is `" "`, then `Ctrl+Z` with `delivery_mode:"foreground"` and confirm the label is restored  
+**And** `Ctrl+Z` reverts on both sides — verify: the second post-rename `query_tree_summary` has the line `- [FEATURE] BoxHole` again, with no quoted label, and a fresh snapshot's `TreeItem` row reads `BoxHole`  
+**And** MCP catches an ACCIDENTAL rename too — verify: this is the real incident this scenario is built from. On 2026-09-12 a `space` keystroke aimed at a tree row landed in the inline rename editor at the adjacent token, and `query_tree_summary` immediately reported `label: " "`. Reproduce it deliberately: send `space` to the rename editor token, read `query_tree_summary`, confirm the line is `- [FEATURE] BoxHole ""` (a whitespace-only Label prints as an empty quoted string, `tree_text.py:65-68`), then `Ctrl+Z` with `delivery_mode:"foreground"` and confirm the quoted label is gone  
 **And** a value readback from the editor is NOT proof — verify: the pass comes from `query_tree_summary` after the `enter` commit, not from the editor echoing its own value. An editor that shows the new text while MCP still reports the old label is the parity defect this assertion exists to catch  
 **And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` throughout  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the GUI rename is the ground truth and the MCP read is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-15-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-15-before.png`, `$RUN_DIR/evidence/tc-13-15-editing.png`, and `$RUN_DIR/evidence/tc-13-15-after.png`. The editing image shows the inline editor open on the row. Read the tree row label off the after image; only then check that `query_tree_summary` reports that same label. A rename claimed without the editor ever opening is not proven, and a window label that MCP does not match is a finding against the bridge, recorded in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
-Confirm the label is `BoxHole` again with `mcp query_tree_summary {doc:<handle>}`, then:
+Confirm the `BoxHole` line carries no quoted label with `mcp query_tree_summary {doc:<handle>}`, then:
 ```bash
 mcp document_close {doc:<handle>}
 ```
@@ -812,25 +841,24 @@ Do not save. A saved rename would corrupt the committed golden model.
 **Priority**: Critical
 **Design Ref**: `mcp-tools-design.md` §1.1 (document_list adoption), `data-contracts-design.md` §9 (AD-20)
 
+The `Open…` toolbar button and File > Open raise a modal file dialog, and a modal dialog is never
+opened through `invoke_menu` or a UIA click (Rule 4). The GUI open therefore uses the non-modal
+Start page route: a **Recent Files** entry on the `Start` tab, which stays available while other
+documents are open.
+
 **Given** `cylinder-r5-h20` is NOT open — verify: `mcp document_list {}` returns no entry for it  
-**And** at least one document is already open, so the `Open…` toolbar button exists in the UIA tree — verify: a snapshot lists a Button labelled `Open…`. With no document open the toolbar buttons are absent, which is a precondition, not a defect  
+**And** at least one other document is already open over MCP, so an existing handle can be checked afterwards — verify: `mcp document_list {}` returns at least one entry; record every handle  
+**And** `cylinder-r5-h20.FCStd` is listed under **Recent Files** on the `Start` tab — verify: a snapshot of the `Start` tab shows its entry; record the entry's pixel position. If it is not listed, put it there once before the run: quit FreeCAD with `invoke_menu ["File","Exit"]`, launch it with the file path as its argument (`launch_app` with `additional_arguments`), close that document with File > Close, then reopen the other document of the Given over MCP  
 
 **When** the MCP document set is recorded before  
 ```bash
 mcp document_list {}
 ```
-**And** the `Open…` toolbar button is pressed: re-snapshot first and match on `role == "Button"` AND `label == "Open…"`  
+**And** the `Start` tab is activated and the `cylinder-r5-h20` entry is double-clicked. A UIA click on the entry token may do nothing; a background window-targeted double-click at its pixel position opens it.  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Open… Button token from this snapshot>"}' | & cua-driver call click
-```
-**And** the file dialog is driven: enumerate it with `list_windows`, snapshot it, set the filename field to the ABSOLUTE path, then press its Open button by `element_token`  
-```bash
+'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-16-start.png"}' | & cua-driver call get_window_state
+'{"pid":<PID>,"window_id":<WID>,"x":<entry x>,"y":<entry y>,"count":2}' | & cua-driver call click
 '{"pid":<PID>}' | & cua-driver call list_windows
-'{"pid":<PID>,"window_id":<dialogWID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-16-dialog.png"}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<filename Edit token from this snapshot>","value":"$PROJECT_ROOT\\benchmarks\\g0\\golden-models\\cylinder-r5-h20.FCStd"}' | & cua-driver call set_value
-'{"pid":<PID>,"window_id":<dialogWID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Open Button token from THIS snapshot>"}' | & cua-driver call click
 ```
 **And** the MCP side is read  
 ```bash
@@ -839,14 +867,14 @@ mcp query_tree_summary {doc:<newHandle>}
 mcp query_mass_properties {doc:<newHandle>, object:"<Object>"}
 ```
 
-**Then** the GUI opened it — verify: a fresh snapshot's `TreeItem` set contains a row for the `cylinder-r5-h20` document that the before state did not have. Read `$RUN_DIR/evidence/tc-13-16-dialog.png` to confirm the dialog was the one driven  
-**And** MCP adopted it — verify: the post-open `document_list` returns one more entry than the before read, naming `cylinder-r5-h20`  
+**Then** the GUI opened it — verify: a fresh snapshot's `TreeItem` set contains a row for the `cylinder-r5-h20` document that the before state did not have. Read `$RUN_DIR/evidence/tc-13-16-start.png` to confirm the entry that was driven, and confirm from `list_windows` that no dialog window opened  
+**And** MCP adopted it — verify: the post-open `document_list` returns one more entry than the before read, with `label` `cylinder-r5-h20` and `transient` `false`  
 **And** the new entry carries a usable handle — verify: `query_tree_summary` on that handle returns `OK` and names the object  
 **And** the geometry agrees with the reference — verify: `query_mass_properties` returns `volume` `1570.7963` within `rel: 0.001`, and a `bbox` of 10 x 10 x 20 mm  
 **And** the adopted handle behaves like an MCP-opened one — verify: `mcp query_screenshot {doc:<newHandle>, view:{include:["<Object>"]}}` returns a PNG with `rendered_objects` naming the object; read the PNG and confirm a cylinder, not a box  
 **And** no existing handle broke — verify: every handle from the before read still returns `OK` from `mcp query_tree_summary`  
-**And** the toolbar route was used, not a menu — verify: the run evidence records the `Open…` Button `element_token` and `route: accessibility`. `invoke_menu` menu paths for this build are refused beyond the confirmed labels  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<newHandle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** the Start page route was used, not a modal dialog — verify: the run evidence records the entry position, the click route, and a `list_windows` result with only the main window  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<newHandle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** *(visual)* the GUI-opened document is the ground truth and the MCP adoption is judged against it — verify: fit FIRST, then capture, so the window and the render share a camera: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-16-after.png"}' | & cua-driver call get_window_state`. `Read` the PNG and name, from the image alone, which document the tab bar and Model panel show. Confirm it is `cylinder-r5-h20`; only then check that `document_list` adopted that same document, and compare the window against the `query_screenshot` render of the same handle. Where they disagree the window wins, and the disagreement is recorded as a finding against the bridge in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
@@ -857,53 +885,62 @@ Do not save.
 
 ---
 
-### TC-13-17: A GUI-side recompute agrees with verify_recompute
+### TC-13-17: A GUI-side recompute agrees with the bridge
 
 **Priority**: High
 **Design Ref**: `verification-design.md` §6.3 (recompute grading), `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
 
-**Given** a document with at least one object that can be left touched is open — verify: `mcp document_list {}` returns a handle and `mcp verify_recompute {doc:<handle>}` returns `OK`  
-**And** the document has a pending recompute. Use the TC-13-11 route to change a driving parameter without recomputing — verify: `mcp verify_recompute {doc:<handle>}` names at least one touched object  
+A typed mutation and a GUI property edit both recompute at once, so neither leaves a pending
+recompute. The **Touched route** does: `script_exec` sets a property and does not recompute
+(`script_exec.py:19-67`). `verify_recompute` recomputes before it reads (`verify.py:435-437`), so
+it can never see a Touched object and is not used as the dirty probe here. The MCP-side dirty
+probe is `query_screenshot`, which reads object state without a recompute
+(`screenshot.py:164-170`). `script_exec` opens no transaction: `document_undo` does not revert it,
+so the document is closed without saving.
 
-**When** the touched set is recorded from MCP and the tree markers from the GUI  
+**Given** `TC13Pad` is open with its 5 mm `Pad`, built with the TC-13-10 Given and pad call — verify: `mcp query_mass_properties {doc:<handle>, object:"Pad"}` returns `volume` `3000.0`  
+**And** the document has a pending recompute, set through the Touched route — verify: the call below returns `OK` with `value_repr` `['Touched']`  
 ```bash
-mcp verify_recompute {doc:<handle>}
+mcp script_exec {doc:<handle>, code:"doc.getObject('Pad').Length = 12\nresult = doc.getObject('Pad').State"}
+```
+
+**When** the dirty state is recorded from MCP and the tree markers from the GUI  
+```bash
+mcp query_screenshot {doc:<handle>, view:{include:["Pad"]}}
 ```
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-17-touched.png"}' | & cua-driver call get_window_state
 ```
-**And** the recompute is triggered from the GUI: re-snapshot, select the document root row on `role == "TreeItem"`, then use the `Tree View Actions` toolbar button to reach the refresh command  
+**And** the recompute is triggered from the GUI: Edit > Recompute (`Std_Refresh`, menu text `Recompute`, `CommandDoc.cpp:1608`). It is enabled only while the active document must recompute (`CommandDoc.cpp:1659-1662`). If the menu leaf is refused, click the `Recompute` toolbar button by `element_token` from a fresh snapshot.  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<document root TreeItem token from this snapshot>"}' | & cua-driver call click
-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Tree View Actions Button token from THIS snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"path":["Edit","Recompute"]}' | & cua-driver call invoke_menu
 ```
-If the popup entry cannot be enumerated — Qt popups are not top-level windows — fall back to
-`mcp document_recompute {doc:<handle>}` and record that the GUI route was unavailable. That is a
-route limitation, recorded, not a product defect.
+If neither GUI route lands, fall back to `mcp document_recompute {doc:<handle>}` and record that the
+GUI route was unavailable. That is a route limitation, recorded, not a product defect.
 **And** both sides are re-read  
 ```bash
-mcp verify_recompute {doc:<handle>}
+mcp document_recompute {doc:<handle>}
+mcp query_screenshot {doc:<handle>, view:{include:["Pad"]}}
+mcp query_mass_properties {doc:<handle>, object:"Pad"}
 ```
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-17-clean.png"}' | & cua-driver call get_window_state
 ```
 
-**Then** both sides agree the document was dirty — verify: the first `verify_recompute` names touched objects, AND `$RUN_DIR/evidence/tc-13-17-touched.png` shows the touched marker on the same rows  
-**And** both sides agree it is clean after — verify: the second `verify_recompute` reports no touched object, AND `$RUN_DIR/evidence/tc-13-17-clean.png` shows no touched marker  
-**And** the failing set is identical — verify: any object MCP names as failing is an object the GUI tree marks with an error, and no object is marked on one side only  
-**And** the geometry settled — verify: `mcp query_mass_properties {doc:<handle>, object:"<Object>"}` returns the value implied by the changed parameter, not the pre-change value  
-**And** the route actually used is recorded — verify: the run evidence states whether the GUI button route or the `document_recompute` fallback produced the recompute  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
-**And** *(visual)* the tree markers are the ground truth and the MCP verdict is judged against them — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-17-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-17-touched.png` and `$RUN_DIR/evidence/tc-13-17-after.png` and say which rows carry the touched marker in each. The touched marker is present before and absent after; only then check that `verify_recompute` agrees with what you saw. A cleared MCP touched set with unchanged tree markers is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**Then** both sides agree the document was dirty — verify: the first `query_screenshot` has `render.dirty_document: true` and its text contains `Document dirty (pending/broken recompute)`, AND `$RUN_DIR/evidence/tc-13-17-touched.png` shows the 3D view still drawing the 5 mm pad, and the snapshot taken before the recompute lists `Button "Recompute"` with `enabled: true`. The `Pad` row carries the touched marker only when the `Body` row is expanded; a UIA click on a tree row does not expand or select it on FreeCAD 1.1.4, so the marker is read only when the row is already expanded  
+**And** both sides agree it is clean after — verify: `document_recompute` returns `OK` with `touched: 0` and `errors: []` after the GUI recompute (with the fallback, the first `document_recompute` reports `touched` greater than 0, and a second call reports `0`), the second `query_screenshot` has `render.dirty_document: false`, AND `$RUN_DIR/evidence/tc-13-17-clean.png` shows the taller 12 mm pad  
+**And** no object is marked on one side only — verify: any object the GUI tree marks with an error is named in `document_recompute` `errors`, and the reverse  
+**And** the geometry settled — verify: `mcp query_mass_properties {doc:<handle>, object:"Pad"}` returns `volume` `7200.0`, the value implied by the changed parameter, not `3000.0`  
+**And** the route actually used is recorded — verify: the run evidence states whether the Edit > Recompute menu, the `Recompute` toolbar button, or the `document_recompute` fallback produced the recompute  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+**And** *(visual)* the tree markers are the ground truth and the MCP verdict is judged against them — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-17-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-17-touched.png` and `$RUN_DIR/evidence/tc-13-17-after.png` and say what each shows: the 5 mm pad before, the taller 12 mm pad after, and, where the `Body` row is expanded, the touched marker on the `Pad` row before and not after; only then check that the `dirty_document` flags agree with what you saw. A cleared MCP dirty flag over an unchanged 5 mm pad is a parity defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
-mcp document_undo {doc:<handle>}
 mcp document_close {doc:<handle>}
 ```
-Do not save.
+Do not save. `document_undo` does not revert a `script_exec` change.
 
 ---
 
@@ -913,7 +950,7 @@ Do not save.
 **Design Ref**: `mcp-tools-design.md` §1.1 (handle resolution), `data-contracts-design.md` §9 (closed status set)
 
 **Given** two documents are open — verify: `mcp document_list {}` returns two entries; both handles return `OK` from `mcp query_tree_summary`  
-**And** neither document has unsaved changes, so no save prompt appears — verify: `mcp verify_recompute {doc:<handleA>}` reports no touched object  
+**And** neither document has unsaved changes, so no save prompt appears — verify: the window title from `list_windows` and the document tabs show no `*` modified marker  
 
 **When** both handles and the GUI state are recorded  
 ```bash
@@ -922,32 +959,34 @@ mcp document_list {}
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-18-before.png"}' | & cua-driver call get_window_state
 ```
-**And** document A is closed from the GUI: re-snapshot, select its root row matched on `role == "TreeItem"` and its label, then use `Ctrl+W` delivered to that row  
+**And** document A is closed from the GUI. To make document A the active document, activate it through its numbered `Windows` menu entry. The entries read `<n> <label> : 1`, with `1 Start` first; take `<n>` from the order of the document tabs. A UIA or pixel click on the root tree row does not change the active document on FreeCAD 1.1.4. Confirm from the `list_windows` title that document A is active, then invoke `File > Close`, which closes the active document; no keystroke is needed.  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<document A root TreeItem token from this snapshot>"}' | & cua-driver call click
-'{"pid":<PID>,"keys":["ctrl","w"],"delivery_mode":"foreground"}' | & cua-driver call hotkey
+'{"pid":<PID>,"window_id":<WID>,"path":["Windows","<n> <document A label> : 1"]}' | & cua-driver call invoke_menu
+'{"pid":<PID>}' | & cua-driver call list_windows
+'{"pid":<PID>,"window_id":<WID>,"path":["File","Close"]}' | & cua-driver call invoke_menu
 ```
-If a save prompt appears, enumerate it with `list_windows`, snapshot it, and click its discard
-button by `element_token`. Never accept a save on a golden model.
+The Given guarantees no save prompt: `File > Close` on a modified document opens a modal prompt,
+and the `invoke_menu` call then blocks until it closes. Never accept a save on a golden model.
 **And** the GUI state is confirmed and the MCP side read  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-18-after-close.png"}' | & cua-driver call get_window_state
 ```
 ```bash
-mcp document_list {}
 mcp query_tree_summary {doc:<handleA>}
 mcp query_mass_properties {doc:<handleA>, object:"<Object>"}
 mcp document_close {doc:<handleA>}
+mcp document_list {}
 ```
+Issue the stale calls before `document_list`: they must refuse on their own, not because a list
+call pruned the handle first.
 
-**Then** the GUI closed it — verify: `'{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"<document A label>"},"exists":false}}]}' | & cua-driver call verify_state` returns `satisfied`. `unknown` is inconclusive, not a pass — judge `$RUN_DIR/evidence/tc-13-18-after-close.png` directly instead  
+**Then** the GUI closed it — verify: `Read` `$RUN_DIR/evidence/tc-13-18-after-close.png` and confirm the tab bar and Model panel show no document A. `verify_state` with `exists:false` is refused by the driver (snapshots are not exhaustive), so the PNG is the judgement  
 **And** `document_list` dropped it — verify: the post-close `document_list` returns one entry, and its handle is `<handleB>`  
 **And** every stale read refuses with INVALID_INPUT — verify: `query_tree_summary` and `query_mass_properties` on `<handleA>` both return `INVALID_INPUT`, not `WORKER_CRASHED` and not `OK` with empty data  
 **And** the stale close is also a clean refusal — verify: `document_close {doc:<handleA>}` returns `INVALID_INPUT`, not a crash  
 **And** FreeCAD and the bridge survived — verify: `Get-Process -Name freecad` reports the same pid, and `mcp query_capabilities {}` returns `OK`  
 **And** document B is unharmed on both sides — verify: `mcp query_tree_summary {doc:<handleB>}` returns `OK`, and its tree root is still visible in `$RUN_DIR/evidence/tc-13-18-after-close.png`  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handleB>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.1 with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on this build with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
+**And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handleB>" }` returns `OK`; if it does not, or if the scenario is grading GUI-side ground truth, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. Rule 4 records `invoke_menu(["View","Fit All"])` as REFUSED on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1; when it is refused, fall back to the `Fit All` toolbar button by `element_token`, which is also GUI-side and touches none of the code under test  
 **And** *(visual)* the GUI close is the ground truth and the MCP document set is judged against it — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-18-after.png"}' | & cua-driver call get_window_state`, then `Read` `$RUN_DIR/evidence/tc-13-18-before.png` and `$RUN_DIR/evidence/tc-13-18-after.png` and list the tabs and tree roots you can see in each. Document A's tab and tree root are present before and absent after, and document B is still shown; only then check that the `document_list` entry for document A disappeared to match. A window without document A while MCP still lists it is a finding against the bridge, recorded in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:

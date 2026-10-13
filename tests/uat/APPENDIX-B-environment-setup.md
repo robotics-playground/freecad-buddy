@@ -63,15 +63,16 @@ The headless host needs FreeCAD and `mcp` importable from the **same** interpret
       PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" \
         "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"
       ```
-      Expect `H1 ok 1.1.0`.
+      Expect `H1 ok <version>`. Record that version as the H1 version.
 
       **A bare `"$FCB/python.exe" -c "import FreeCAD"` always fails with `ModuleNotFoundError`.**
       `FreeCAD.pyd` lives in `Library/bin`, not on the default `sys.path`. This is not a broken
       env — `scripts/automation/run_mcp_e2e.py` applies the same patch in `_fcb_env` before it
       spawns the H1 server. Do not "fix" the env in response to the bare-import failure.
 
-      Note the H1 leg is FreeCAD **1.1.0**, while the GUI is **1.1.1**. Record which host produced
-      a result whenever a version-sensitive value (fingerprint, element map) is compared.
+      The H1 leg and the GUI can run different FreeCAD builds. Record both versions live (the H1
+      line above, and `query_capabilities.freecad_version` on the GUI), and record which host
+      produced a result whenever a version-sensitive value (fingerprint, element map) is compared.
 - [ ] Repo `uv` env is present (verify: `uv run python -c "import sys; print(sys.version)"` reports
       Python 3.12.12)
 
@@ -127,17 +128,21 @@ test, confirm that `/healthz` reports `"freecad_pid"` equal to the FreeCAD pid u
 
 ## Step 6 — Confirm the tool surface
 
-- [ ] `tools/list` returns **exactly 45** names (verify: call `tools/list` through the connected
-      MCP client and count)
+- [ ] `tools/list` returns the live count: 46 names on the default posture, 45 typed tools plus
+      `script_exec` (verify: call `tools/list` through the connected MCP client and count; record
+      the count for the run)
 - [ ] `export_self_read_stl` and `export_self_read_3mf` are **ABSENT**. They are internal RPC-only
       and are filtered out of `tools/list`.
-- [ ] `debug_exec` is **ABSENT** from the default surface. It appears only when
-      the **Allow debug_exec** preference is on or `FREECAD_BUDDY_ALLOW_EXEC=1` is set (the
-      variable wins over the preference). With both off, calling it returns
-      `debug_exec is disabled (set FREECAD_BUDDY_ALLOW_EXEC=1 to enable)`.
+- [ ] `script_exec` is **PRESENT** on the default surface. It is absent when
+      `FREECAD_BUDDY_SCRIPT_EXEC=0` is set or the **Allow script_exec** preference is cleared (the
+      variable wins over the preference), and when `FREECAD_BUDDY_UNATTENDED=1` is set without
+      `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. Under an off posture the count is 45, a call through
+      the proxy returns `unknown method: script_exec`, and a direct call on the inline host returns
+      `script_exec is off: FREECAD_BUDDY_SCRIPT_EXEC or the ScriptExec preference turned it off, or FREECAD_BUDDY_UNATTENDED=1 is set without FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`.
 
 Expected counts by family: `document_` 7, `query_` 8, `verify_` 6, `export_` 3, `sketch_` 8,
-`feature_` 11, `preview_dry_run` 1, `view_fit_viewport` 1. Total 45.
+`feature_` 11, `preview_dry_run` 1, `view_fit_viewport` 1, `script_exec` 1. Total 46 (45 under an
+off posture).
 
 **A short count is stop-the-line.** Do not begin testing against a partial surface — the failures
 it produces are setup artifacts, not findings.
@@ -193,11 +198,11 @@ A fingerprint or a TNP result is only interpretable against the build that produ
 `query_capabilities` (empty-object schema, no properties) and record all of these into the run
 evidence:
 
-- [ ] FreeCAD version (expect `1.1.1`)
+- [ ] FreeCAD version: `freecad_version`, the live version every test case compares with
 - [ ] `element_map` — the topological naming scheme in use
 - [ ] serializer tag
 - [ ] render ladder — which render backend was selected; `none` means every visual checkpoint skips
-- [ ] `exec_enabled` — must be `false` for the green gate unless a case explicitly sets the flag
+- [ ] `exec_enabled` — `true` on the default posture; `false` only when a case sets an off posture
 - [ ] package version
 - [ ] contract version (the RPC listener supports exactly `["1"]`)
 
