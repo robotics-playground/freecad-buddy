@@ -1685,3 +1685,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6a-two-process-headless-host.md`
   summary: No test drives the headless CLI, kills the real worker, and checks that the next call returns the "restart the headless host" message.
   evidence: `test_should_return_the_restart_message_without_rpc_when_the_worker_has_exited` uses a fake `_ExitedProcess`; passing a bare `RpcClient` in `hosts/headless/entry.py` `run()` would fail no test. Story 10.6 tests drive the same front-to-worker path (review finding 12).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-6-headless-bounded-execution.md`
+  summary: The `script_exec` `ThreadExecutor` bound in `build_inline_handlers` has no production host since the headless worker passes no marshal; its docstring still names the headless inline host, and `test_mcp_surface.py` tests that path as "the real catalog".
+  evidence: `hosts/headless/worker.py` `run()` passes `None`, as `gui_addon/bootstrap.py:144` does. Kept because sprint-change-proposal-2026-10-13 §2 keeps `test_mcp_surface.py` and `test_confirm_contract.py` unchanged; remove the path and point those tests at `marshal=None` in a later story (review finding 6).

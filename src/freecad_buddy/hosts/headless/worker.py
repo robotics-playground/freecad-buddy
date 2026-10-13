@@ -48,9 +48,10 @@ def verify_freecad_importable() -> None:
 
 
 def build_registry(
-    registry: DocumentRegistry, caps: Capabilities, marshal: Marshal
+    registry: DocumentRegistry, caps: Capabilities, marshal: Marshal | None
 ) -> MethodRegistry:
-    """Register the tool surface, each handler marshaled onto the FreeCAD thread.
+    """Register the tool surface, each handler marshaled by ``marshal`` or, when it is ``None``,
+    left for the listener that serves the registry to marshal.
 
     ``viewport_port=None`` is stated, not defaulted by omission: this host has no live 3D view, so
     the framing capability is unavailable here even though the offscreen render probe may report
@@ -109,8 +110,11 @@ def run() -> int:
         shim.warm_capability_probes()
     except Exception:  # noqa: BLE001 - warm-up is best-effort; degrade to lazy probing
         logger.warning("capability-probe warm-up failed; probing lazily", exc_info=True)
+    # The listener's marshal is the only one, as in GUI mode: every body, script_exec included,
+    # runs on this thread, so a body that overruns its budget holds the serve loop until it returns
+    # and the front can prove that it returned (AD-27).
     marshal = Marshal(InlineExecutor())
-    methods = build_registry(DocumentRegistry(), caps, marshal)
+    methods = build_registry(DocumentRegistry(), caps, None)
     audit = AuditSink(default_audit_path().resolve())
     confirm.set_approval_sink(audit)
     view_fit.set_audit_sink(audit)
