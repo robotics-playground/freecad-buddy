@@ -1,7 +1,7 @@
 ---
 title: 'Headless host: bounded execution and AD-27 quarantine'
 type: 'bugfix'
-created: '2026-10-05'
+created: '2026-10-13'
 status: 'draft'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -23,6 +23,11 @@ context:
   - when the abandoned body has run its own `timeout_s` again past its timeout (2× budget in total), refusals change from `TIMEOUT` to `WORKER_CRASHED` with a message that tells the operator to restart the headless host (AD-27 escalation); if the body returns later, the quarantine still lifts;
   - when the stdio server ends while a body still runs, the host waits at most 5 s for the pump, then logs once and exits with code 1, so the process never hangs after its client is gone.
 - D2 — A timed-out mutation that completes later keeps its commit, as today (TC-10-10). The document stays suspect until a read confirms it. The AD-27 "aborted with rollback proved" clause is deferred work, for both hosts.
+- D3 (human, 2026-10-13) — The bound must hold for any body, including a pure-C++ body that holds the Python GIL. FreeCAD App code never releases the GIL, so a thread in the FreeCAD process cannot enforce it. H1 therefore splits into two processes: a front MCP stdio process and a FreeCAD worker process over the RPC wire. This supersedes the single-process thread model in **Approach** and reverses AD-2 "headless = single process".
+- D4 (human, 2026-10-13) — D3 goes through `bmad-correct-course` first: a sprint change proposal amends AD-2 and integration design §1, §4.1 and §4.2. This spec is re-planned against the amended design.
+- D5 (human, 2026-10-13) — Escalation stays as D1 states: past 2× budget the front returns `WORKER_CRASHED` and tells the operator to restart the host. The front never kills the worker, so no open document is lost.
+- D6 (human, 2026-10-13) — The worker runs in the same interpreter as the front (`sys.executable`) and imports FreeCAD as a module, so offscreen render keeps working. It is not `FreeCADCmd`.
+- D7 (human, 2026-10-13) — D3 may change the shared RPC code (`rpc_listener.py`, `rpc_client.py`, `gui_external/entry.py`) to reuse it for H1, if GUI behaviour stays the same and the existing GUI tests prove it. This replaces the first **Never** rule below for those modules only.
 
 ## Boundaries & Constraints
 
@@ -52,55 +57,8 @@ context:
 
 </frozen-after-approval>
 
-## Code Map
+## Implementation Notes
 
-- `src/freecad_buddy/adapters/marshal.py:26-87` -- `InlineExecutor`, `ThreadExecutor`, `MarshalTimeout`, `Marshal.call`. Add the main-thread queue executor here (stdlib only) and the in-flight tracking of abandoned bodies.
-- `src/freecad_buddy/hosts/headless/entry.py:74-108` -- `run()`: today `Marshal(InlineExecutor())` and `asyncio.run(serve_stdio(server))` on the main thread. Restructure: run the warm-up on the main thread, start the server thread, then pump on the main thread.
-- `src/freecad_buddy/hosts/tool_catalog.py:1441-1512` -- `build_inline_handlers`: `wrap` (outer marshal) and `bound_off_main_thread` (inner `ThreadExecutor` for `script_exec` only). The inner bound becomes redundant.
-- `src/freecad_buddy/adapters/rpc_dispatch.py:122-140` -- `dispatch` maps `MarshalTimeout` to `TIMEOUT` with `marshal_timeout`/`maybe_still_running`. Add the quarantine mapping (`quarantined:true`, no `marshal_timeout`).
-- `src/freecad_buddy/adapters/rpc_listener.py:336-343` -- GUI listener's own `marshal.call` and `except MarshalTimeout` suspect marking. Do not change; the reason the refusal lives in `wrap`.
-- `src/freecad_buddy/adapters/mcp_server.py:123-148,174-228` -- `_is_marshal_timeout`, `_with_suspect_message`, the suspect set. Reuse as is: a refusal without `marshal_timeout` must pass through untouched.
-- `src/freecad_buddy/usecases/documents.py:331-380` -- `DocumentRegistry._lock` (the F-33 lock). Do not change.
-- `src/freecad_buddy/adapters/render_probe.py:181-188,191-215` -- `OffscreenRenderPort` creates a `QGuiApplication` on first use. It must stay on the main thread, which is why the pump stays on the main thread.
-- Callers of `Marshal(InlineExecutor())`: `tests/external/test_mcp_surface.py:109,430,435,844`, `test_confirm_contract.py:37,243-272`, `test_assistant_readonly_profile.py:132`. Keep `InlineExecutor` for these unit tests.
-- `tests/external/test_mcp_surface.py:509-541` -- `ThreadExecutor` tests. Remove them with `ThreadExecutor` if it becomes unused.
-- Design: `integration-mcp-freecad.md` §2.4, §3.3, §4.1, §7 (marshal-timeout and busy rows).
+## Spec Change Log
 
-## Tasks & Acceptance
-
-**Execution:**
-- [ ] `src/freecad_buddy/adapters/marshal.py` -- add `MainThreadQueueExecutor` (`submit` enqueues; `pump(stop)` runs jobs on the calling thread until `stop` is set). `Marshal` records, for a call it abandoned, the completion event, the budget and the time of the timeout, and exposes `abandoned_body()` returning `None` once the body has returned, else whether it has run past 2× its budget; `Marshal.call` itself does not refuse. Add `SessionQuarantined(escalated: bool)` (not a `MarshalTimeout` subclass). Remove `ThreadExecutor` if it has no caller left. -- one source of bounded execution.
-- [ ] `src/freecad_buddy/adapters/rpc_dispatch.py` -- map `SessionQuarantined` to `TIMEOUT` (or `WORKER_CRASHED` when `escalated`) with `quarantined:true`, `maybe_still_running:true` and a message saying the call was not dispatched (escalated: restart the headless host). -- the suspect set must not fire on a refusal.
-- [ ] `src/freecad_buddy/hosts/tool_catalog.py` -- drop `bound_off_main_thread`. Every handler goes through the one `wrap`, which raises `SessionQuarantined` before `marshal.call` while `marshal.abandoned_body()` is not `None`. -- `script_exec` is now bounded like every tool; only H1 passes a `marshal`, so the GUI path is untouched.
-- [ ] `src/freecad_buddy/hosts/headless/entry.py` -- warm-up on the main thread, then start `serve_stdio` on a daemon thread that sets `stop` when it ends, then `executor.pump(stop)`. When `stop` is set while a job runs, a watchdog waits 5 s for the pump, then logs once at ERROR and calls `os._exit(1)` (D1). -- FreeCAD and Qt stay on the main thread; the process never outlives its client.
-- [ ] `tests/external/test_marshal_quarantine.py` (new) -- with the queue executor and a pumping thread: under budget returns; overrun raises `MarshalTimeout`; next call raises `SessionQuarantined(escalated=False)` in < 1 s without running; past 2× budget it is `escalated=True`; after the body ends, calls run again. A pump test: `stop` set while a job blocks makes the watchdog call an injected exit hook. `tests/external/test_mcp_surface.py` -- a dispatch-level test that a refusal envelope carries `quarantined:true`, and through `build_server` a refusal on a mutating tool marks no suspect.
-- [ ] `tests/infc/` -- an H1 stack test under FreeCAD: a `verify_recompute` whose recompute overruns a reduced budget returns `TIMEOUT`, the next call is refused, and calls serve again after the body ends. A real FreeCAD body on the pumped main thread.
-- [ ] `integration-mcp-freecad.md` -- §4.1 thread model; §2.4/§7 quarantine semantics; §3.3 executor list. -- design must match code.
-
-**Acceptance Criteria:**
-- Given the H1 host and any tool, when the body overruns the registry `timeout_s`, then the envelope is `TIMEOUT` within `timeout_s` + 1 s (TC-10-11).
-- Given a `script_exec` that timed out, when the next call arrives while the body runs, then it is refused in under 1 s and never waits on the registry lock (F-33).
-- Given an abandoned body that never returns, when calls keep arriving, then each returns at once, and after 2× its budget they return `WORKER_CRASHED` (D1).
-- Given the H1 host started over stdio, when a client sends `initialize`, `tools/list` and `query_capabilities`, then each returns as before (thread change is invisible).
-
-## Design Notes
-
-Thread layout, mirroring GUI mode (`integration-mcp-freecad.md` §3.3):
-
-```
-main thread:   warm-up -> executor.pump(stop)        # all FreeCAD + Qt work
-server thread: asyncio.run(serve_stdio(server))      # MCP stdio; Marshal.call waits bounded
-               finally: stop.set()
-```
-
-`Marshal` is the only object that knows a body was abandoned, so it tracks the state; the refusal is raised by the H1 `wrap` (`build_inline_handlers` with a `marshal`). The refusal is not raised inside `Marshal.call`: the GUI listener (`rpc_listener.py:338-343`) also calls `Marshal.call` and catches `MarshalTimeout` to mark the document suspect, so a refusal there would mark a document for a call that never ran. `SessionQuarantined` is not a `MarshalTimeout` subclass for the same reason. The GUI host keeps its queued-behind behaviour.
-
-## Verification
-
-**Commands:**
-- `uv run pytest tests/external -q` -- expected: all pass.
-- fcb env `python tests/infc/run_tests.py` -- expected: all pass, including the H1 overrun test.
-- `uv run ruff check src tests && uv run python scripts/check_imports.py` -- expected: clean.
-
-**Manual checks:**
-- Run H1 over stdio with a 130 s recompute document: `TIMEOUT` at ~120 s, the next call is refused at once, and a call after the body returns gets `OK`.
+## Review Triage Log

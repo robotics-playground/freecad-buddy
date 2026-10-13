@@ -35,7 +35,7 @@ restriction (AD-4), and the envelope contract (AD-17) are enforced.
 | --- | --- | --- |
 | **Agent** | The driving AI (Claude Code, opencode, any MCP client). Holds the plan, the repair decision, the visual verdict, the stop condition | — |
 | **Skills** | `skills/` — knowledge + Track W workflow + read-only helper scripts the agent's own shell runs | Call a model; mutate a document; decide the next action |
-| **MCP surface** | The protocol boundary, collapsed for readability: Proxy → Listener → Marshal in GUI mode, one in-process hop when headless. **Every** agent call crosses it | Be bypassed — there is no other way into `usecases/` |
+| **MCP surface** | The protocol boundary, collapsed for readability: Proxy → Listener → Marshal in GUI mode, Front → Listener when headless. **Every** agent call crosses it | Be bypassed — there is no other way into `usecases/` |
 | **Proxy** | The external MCP protocol server (`adapters/mcp_server.py`), auto-spawned by the addon | Import FreeCAD |
 | **Listener** | The in-FreeCAD RPC listener (`adapters/rpc_listener.py`), stdlib only | Touch FreeCAD off the main thread |
 | **Marshal** | `adapters/marshal.py` — hops every call onto the Qt main thread | Import Qt (the pump lives in `hosts/gui_addon/pump.py`) |
@@ -123,8 +123,8 @@ sequenceDiagram
   Note over Agent: the agent decides what this means<br/>and what to call next — nothing here does
 ```
 
-Headless (`FreeCADCmd`) is the same diagram with Proxy, Listener and Marshal collapsed: one
-process, `InlineExecutor`, use cases called inline. Same `usecases/` code on every path.
+Headless is the same diagram: the front is the Proxy, the worker hosts the Listener, and the
+Marshal is inline on the worker main thread. Same `usecases/` code on every path.
 
 ---
 

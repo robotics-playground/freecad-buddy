@@ -88,7 +88,8 @@ freecad-buddy/
 │           ├── gui_external/
 │           │   └── entry.py          # external GUI host
 │           └── headless/
-│               └── entry.py          # headless entry (FreeCADCmd / import FreeCAD)
+│               ├── entry.py          # headless front: MCP stdio, spawns the worker
+│               └── worker.py         # headless FreeCAD worker: RPC listener, stdlib + FreeCAD only
 ├── addon/
 │   └── package.xml                   # Addon Manager metadata (§2.2)
 ├── skills/                           # one dir per skill (AD-15); 18 target (12 Track A/B + 3 Track W + 3 Phase-5)
