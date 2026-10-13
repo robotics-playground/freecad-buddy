@@ -1,0 +1,5 @@
+# Control: the clean scene, nothing planted.
+import fault_scene
+
+fault_scene.open_clean_scene()
+fault_scene.mark_planted()

@@ -1749,3 +1749,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7-uat-suite-and-harness-maintenance.md`
   summary: Committed UAT test cases and the GUI harness standard depend on gitignored `_automation/uat/` scripts (`launch_env.sh`, `close_all.py`, `fcb.py`, `launch.json`) with machine-specific paths, so another operator or the 10.7b runner cannot reproduce them from the repository.
   evidence: `.gitignore:32`; harness Tools table; TC-11-17 launch step. Natural owner is Story 10.7b, which builds the scripted runner (review finding 11).
+
+- source_spec: none
+  summary: Story 10.7b part R — executable scenario file format, scripted UAT runner (no LLM call) with launch-configuration grouping under a dedicated `-u` UAT profile and non-elevated FreeCAD, scripted pixel check against window captures, and escalation-ladder reporting (epics.md Story 10.7b AC4-AC7).
+  evidence: Split from Story 10.7b at bmad-build scope check (2026-10-13): independently shippable, and it builds on part P (probe and offline reader), which ships first.
+
+- source_spec: none
+  summary: Story 10.7b part S — update `tests/uat/test-plan.md` §9 to the sampling rule (agent reads the capture for every FAIL, every probe/MCP disagreement, the first scenario of each test case and a random 20 % sample; the rest are graded by the scripted pixel check) (epics.md Story 10.7b AC8).
+  evidence: Split from Story 10.7b at bmad-build scope check (2026-10-13): a doc change that is meaningful only once the part R pixel check exists.
+
+- source_spec: none
+  summary: Story 10.7b part V — replay every deterministic Then of UAT run 2026-10-03-04 through the scripted runner and explain every verdict difference (epics.md Story 10.7b AC9).
+  evidence: Split from Story 10.7b at bmad-build scope check (2026-10-13): needs parts P and R plus encoded scenarios; it is the acceptance proof for the runner.

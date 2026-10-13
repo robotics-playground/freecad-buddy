@@ -1,0 +1,7 @@
+# Fault: a second document is open and active.
+import fault_scene
+import FreeCAD
+
+fault_scene.open_clean_scene()
+FreeCAD.newDocument("Other")
+fault_scene.mark_planted()

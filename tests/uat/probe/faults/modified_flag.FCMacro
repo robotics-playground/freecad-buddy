@@ -1,0 +1,7 @@
+# Fault: the document is marked modified, with no change to its objects.
+import fault_scene
+import FreeCADGui
+
+doc = fault_scene.open_clean_scene()
+FreeCADGui.getDocument(doc.Name).Modified = True
+fault_scene.mark_planted()

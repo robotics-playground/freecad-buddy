@@ -281,8 +281,11 @@ Never run a recursive delete on a folder that holds the junction. Some tools fol
 | External (pytest) | `uv run pytest tests/external` |
 | In-FreeCAD | `<fcb-env>\python.exe tests/run_tests.py`, with `PYTHONPATH` and `PATH` set as in [the `fcb` env](freecad-automation-verification.md#the-fcb-conda-env-h1-capable-interpreter) |
 
-`freecadcmd.exe <script>.py` prints nothing and writes no output file from a script. Use the
-`fcb` env interpreter for scripted in-FreeCAD checks.
+`freecadcmd.exe <script>.py` imports the script as a module: `__name__` is the file stem, so an
+`if __name__ == "__main__":` block never runs. It also hides stdout. Module-level code does run
+and can write files, and arguments after `--pass` reach `sys.argv`. Example:
+`tests/uat/probe/read_fcstd.py` writes its result to a JSON file. Use the `fcb` env interpreter
+for scripted in-FreeCAD checks that need stdout or a `__main__` block.
 
 The in-FreeCAD suite writes `FCB_TMP_shot_*.png` to `./freecad-buddy-workdir/`. Delete that
 folder after the run.
