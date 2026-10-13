@@ -35,7 +35,7 @@ This document provides the complete epic and story breakdown for freecad-buddy, 
 - **FR3** — A client can capture view-controlled screenshots — include/exclude objects, per-object transparency/color, focus-on-element camera framing, highlight, camera presets — via constructed-scene render that never mutates the document or user viewport.
 - **FR4** — A client can export STEP, STL, and 3MF; every export completes only through its paired re-import verify tool with independent oracles. *(AD-9)*
 - **FR5** — A client can verify geometry deterministically: shape validity/watertightness/volume/bbox/counts, sketch DoF + `FullyConstrained` pass signal, recompute-clean sweep, document fingerprint compute/compare, TNP reference audit. *(AD-6/7/8)*
-- **FR6** — The same tool implementations serve three hosts: FreeCAD GUI (addon + RPC listener + main-thread marshal + auto-spawned external MCP proxy so opening FreeCAD is the only startup step), single-process headless, and FreeCADCmd-hosted RPC fallback. *(AD-2)*
+- **FR6** — The same tool implementations serve three hosts: FreeCAD GUI (addon + RPC listener + main-thread marshal + auto-spawned external MCP proxy so opening FreeCAD is the only startup step), headless (front MCP process + FreeCAD worker process), with a `FreeCADCmd` worker as the fallback. *(AD-2)*
 
 #### Assistant — CAP-2
 
@@ -1215,7 +1215,7 @@ The bridge does what the design says when a real agent drives it through the rea
 
 **Why now:** UAT run `2026-10-03-04` (HEAD `bece7ac`, FreeCAD 1.1.4) was the first to execute all of TC-01..TC-14. Gate 1 is red: 34 of 251 scenarios fail, 29 of them on product defects F-01..F-33 (`tests/uat/run/2026-10-03-04/report.md`, "Findings"). Most are the spine already being right and the code not matching it. The user requires Gate 1 green before Story 4.3.
 
-**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); Epic 11 Stories 11.1-11.4 -> 10.7 (the test cases are written once, against the new envelope); Epic 12 Story 12.1 -> 10.6 (both edit the exec wiring in `hosts/tool_catalog.py`); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
+**Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); Epic 11 Stories 11.1-11.4 -> 10.7 (the test cases are written once, against the new envelope); Epic 12 Story 12.1 -> 10.6 (both edit the exec wiring in `hosts/tool_catalog.py`); 10.6a -> 10.6 (10.6 bounds calls in the front that 10.6a builds); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
 
 **Acceptance for the epic:** Story 10.8 — a full UAT run with Gate 1 green.
 
@@ -1331,13 +1331,36 @@ The bridge does what the design says when a real agent drives it through the rea
    **When** the file is written
    **Then** its `FILE_SCHEMA` names AP242, and the paired verify checks it (F-18; TC-07-05, TC-09-08)
 
+### Story 10.6a: Two-Process Headless Host
+
+> **As** an operator, **I want** the headless host to run FreeCAD in a worker process, so that the host can bound any call (AD-2, AD-27; sprint-change-proposal-2026-10-13).
+
+**Acceptance Criteria:**
+
+1. **Given** `freecad-buddy serve --transport stdio --mode inline`
+   **When** it starts
+   **Then** it spawns one worker with the same interpreter; the front has not imported `FreeCAD` and the worker has not imported `mcp` (AD-12)
+2. **Given** an MCP client
+   **When** it runs `initialize`, `tools/list` and the existing H1 suites (`tests/external`, `scripts/automation/run_mcp_e2e.py`)
+   **Then** the envelopes and the audit records are the same as on the single-process host
+3. **Given** the front ends (stdin EOF)
+   **When** the worker is idle
+   **Then** both exit with code 0; **when** the worker is still busy after 5 s, **then** the front ends it, logs once at ERROR and exits with code 1
+4. **Given** the worker exits
+   **When** the next call arrives
+   **Then** it returns `WORKER_CRASHED` with a message to restart the host; the front does not restart it
+5. **Given** a FreeCAD GUI bridge on the same machine
+   **When** the headless host runs
+   **Then** the worker writes no discovery file and the RPC hop requires the session token (AD-3)
+6. The `headless` and `render` CI legs pass, and the GUI tests pass unchanged
+
 ### Story 10.6: Session, Transport and Bounded Execution
 
 > **As** an operator, **I want** the bridge to bound every call, own its port and log what happens, as AD-26 and AD-27 state.
 
 **Acceptance Criteria:**
 
-1. **Given** any tool in the headless host
+1. **Given** any tool in the headless host, including a body that holds the GIL in C++
    **When** it runs past its registry `timeout_s`
    **Then** it returns `TIMEOUT` and the session is quarantined per AD-27 (TC-10-11, `design/integration-mcp-freecad.md` §2.4)
 2. **Given** a `script_exec` that timed out

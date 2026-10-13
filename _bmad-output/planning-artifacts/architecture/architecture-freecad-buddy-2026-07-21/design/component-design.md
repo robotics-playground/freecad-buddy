@@ -92,7 +92,7 @@ def make_temp_doc(source: DocHandle) -> DocHandle:  # reserved prefix, transient
 | Component | Phase | Responsibility |
 | --- | --- | --- |
 | `gui_addon/InitGui.py` + `bootstrap.py` | P0 | GUI addon: waits for `FreeCAD.GuiUp`, defers via `QTimer.singleShot`, generates per-session RPC token, starts `rpc_listener`, then **auto-spawns the external MCP protocol server** as a child process (`serve --mode rpc --transport http`, `:8765`) so opening FreeCAD is the only step to reach the bridge. The addon never *imports* `mcp` — it only spawns the process in the project venv interpreter, auto-discovered from the addon's own install path (no env vars; AD-2, AD-3, AD-12). Qt/`FreeCADGui` legal here (AD-1). `InitGui.py` also registers the FreeCAD Buddy preference page (`preferences.py`, `RoundToDisplay`) |
-| `headless.py` | P0 | Headless entry: single process where FreeCAD is importable (conda env); runs `mcp_server` on stdio, use-cases called inline through the marshal's degrade path (AD-2). Also the `FreeCADCmd run_tests.py` CI entry |
+| `headless.py` | P0 | Headless front: runs `mcp_server` on stdio and spawns the FreeCAD worker (`worker.py`: RPC listener, inline dispatch) (AD-2). Also the `FreeCADCmd run_tests.py` CI entry |
 
 ## 5. Interaction flows
 

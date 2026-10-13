@@ -2,7 +2,7 @@
 title: 'Integration Design — MCP <-> FreeCAD Bridge'
 status: final
 date: '2026-07-21'
-ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20]
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20, AD-27]
 sources:
   - _bmad-output/planning-artifacts/research/technical-mcp-embedding-freecad-gui-process-research-2026-07-20.md
   - _bmad-output/planning-artifacts/research/technical-offscreen-screenshot-freecadcmd-research-2026-07-20.md
@@ -19,12 +19,12 @@ How the external MCP server reaches FreeCAD in both run modes, per **AD-2** (top
 | Mode | Processes | FreeCAD call path |
 | --- | --- | --- |
 | **GUI** | External MCP process + FreeCAD GUI process (addon-hosted RPC listener) | RPC → listener accept thread → marshal → Qt main thread |
-| **Headless H1** (canonical, AD-2) | Single process: MCP server + usecases + `import FreeCAD` as module (conda env) | Direct in-proc call, inline |
-| **Headless H2** (fallback host) | External MCP server + `FreeCADCmd run_server.py` (same listener, inline dispatch) | RPC → single-threaded serve loop, main thread |
+| **Headless H1** (canonical, AD-2) | Front MCP process (stdio) + worker child process (same interpreter, `import FreeCAD` as module, conda env) | RPC → worker listener, inline dispatch on the worker main thread |
+| **Headless H2** (fallback, not built) | H1 topology with `FreeCADCmd` as the worker interpreter | as H1 |
 
-H2 exists for environments where the MCP process's interpreter cannot `import FreeCAD` (AppImage, interpreter mismatch). It is the GUI topology minus Qt — no marshal needed because `FreeCADCmd` has no Qt loop and the serve loop *is* the main thread. It does not contradict AD-2's "headless = single process" intent (which prevents asyncio-in-Qt fragility and off-thread FreeCAD calls); H2 has neither. Same use-case implementations in all three (AD-2).
+H1 is the GUI topology minus Qt: the front plays the proxy, the worker plays FreeCAD. The process boundary is what makes a call budget real — FreeCAD never releases the GIL during a C++ operation, so no thread inside the FreeCAD process can time it out (AD-2). H2 is the same topology for an interpreter that cannot `import FreeCAD` (AppImage, interpreter mismatch): the worker runs under `FreeCADCmd`. Same use-case implementations in all modes (AD-2).
 
-Per **AD-12**, everything that runs inside the FreeCAD process — `contracts/rpc.py`, `adapters/rpc_listener.py`, `adapters/marshal.py`, `usecases/*`, `hosts/gui_addon/*`, `hosts/headless/run_server.py` — imports **stdlib + FreeCAD API only** (Qt via FreeCAD's bundled PySide, confined to `hosts/` per AD-1). `mcp`, trimesh, etc. exist only in the external uv-managed process.
+Per **AD-12**, everything that runs inside the FreeCAD process — `contracts/rpc.py`, `adapters/rpc_listener.py`, `adapters/marshal.py`, `usecases/*`, `hosts/gui_addon/*`, `hosts/headless/worker.py` — imports **stdlib + FreeCAD API only** (Qt via FreeCAD's bundled PySide, confined to `hosts/` per AD-1). `mcp`, trimesh, etc. exist only in the external uv-managed process.
 
 ## 2. RPC Wire Contract (`contracts/rpc.py`, per AD-2)
 
@@ -80,6 +80,8 @@ First frame on every connection MUST be `rpc_hello`; anything else → error `-3
 | Marshal timeout, server | method `timeout_s` (default 30 s; mutation/recompute methods 120 s; render 60 s) | per-`RpcMethod` override |
 
 Marshal timeout returns an envelope `status:"TIMEOUT"` with `detail:{"marshal_timeout":true,"maybe_still_running":true}` — see §7.
+
+**H1 bound and quarantine (AD-27).** In H1 the worker's marshal is inline and never times out; the bound is the front's read timeout, set per call to the method `timeout_s`. After a timeout the front quarantines the session: every call is refused at once, without dispatch, with `TIMEOUT` and `detail.data.quarantined:true`. When the abandoned body has run its `timeout_s` again past the timeout (2× budget), refusals become `WORKER_CRASHED` with a message to restart the headless host. The quarantine lifts when the worker answers again; its serve loop is single-threaded, so an answer proves the body returned. The front never kills the worker on escalation, so no open document is lost.
 
 ### 2.5 Method registry (`adapters/rpc_dispatch.py`)
 
@@ -168,7 +170,7 @@ class RpcListener:
     def start_threaded(self) -> tuple[str, int]:
         """GUI mode: accept loop on a daemon thread; returns (host, bound_port)."""
     def serve_forever_inline(self) -> None:
-        """Headless H2: blocking single-threaded serve loop on the calling (main) thread."""
+        """Headless worker: blocking single-threaded serve loop on the calling (main) thread."""
     def stop(self) -> None: ...
 ```
 
@@ -242,17 +244,21 @@ Three layers, strictly separated: (1) use-case/domain outcome → `ResultEnvelop
 
 ## 4. Headless Mode
 
-### 4.1 H1 — single process (canonical, AD-2)
+### 4.1 H1 — front process + FreeCAD worker (canonical, AD-2)
 
-The external process's interpreter is the conda-env Python matching the FreeCAD leg; `hosts/headless/entry.py` does path setup (`freecad` conda package; verify `import FreeCAD` — the feedstock `PYTHONPATH`/`.pth` wrinkle is a Phase 0 spike item) then wires `MethodRegistry` → MCP tools **directly**, no RPC, no listener, no token. `Marshal` is constructed with `InlineExecutor` so use cases are mode-agnostic. Transport to the MCP client: stdio (AD-3), stderr-only logging.
+Two processes, one interpreter: the conda-env Python matching the FreeCAD leg (`freecad` conda package; verify `import FreeCAD` — the feedstock `PYTHONPATH`/`.pth` wrinkle is a Phase 0 spike item). Transport to the MCP client: stdio (AD-3), stderr-only logging in both processes.
 
-### 4.2 H2 — `FreeCADCmd` hosting (`hosts/headless/run_server.py`)
+- **Front** (`hosts/headless/entry.py`): serves MCP over stdio and never imports FreeCAD. It spawns the worker with `sys.executable`, generates the session token and hands it to the worker directly, not through the discovery file, which belongs to GUI mode. It is the worker's only client (AD-26), and it forwards each tool call over RPC with the method `timeout_s` as its read timeout. It holds the quarantine and document-suspect state (§2.4), because only it observes a timeout. Mesh-verify oracle legs run here, as in the GUI proxy (AD-9).
+- **Worker** (`hosts/headless/worker.py`, stdlib + FreeCAD only, AD-12, although `mcp` is installed in the same interpreter): builds the registry → `Marshal(InlineExecutor())` → `RpcListener(...).serve_forever_inline()` — a blocking single-threaded loop on its main thread, so inline dispatch *is* main-thread execution and the offscreen render rig keeps its `QGuiApplication` on that thread. It writes the audit log, as the listener does in GUI mode. It writes no discovery file. Capability flags report `gui:false, qt_loop:false`.
+- **Lifecycle:** when the front ends (stdin EOF), it waits at most 5 s for the worker to exit, then ends it, logs once at ERROR and exits with code 1. When the worker exits on its own, every next call returns `WORKER_CRASHED` and the front does not restart it.
+
+### 4.2 H2 — `FreeCADCmd` worker (not built)
 
 ```
-FreeCADCmd run_server.py            # or: xvfb-run -a FreeCADCmd run_server.py (render leg)
+FreeCADCmd worker.py            # or: xvfb-run -a FreeCADCmd worker.py (render leg)
 ```
 
-`run_server.py` (stdlib + FreeCAD only, AD-12): build registry → `Marshal(InlineExecutor())` → `RpcListener(...).serve_forever_inline()` — a blocking single-threaded loop on the process main thread. No Qt loop exists in `FreeCADCmd` (research §4.1), so inline dispatch on the accept loop *is* main-thread execution; `MainThreadSignalConfig::isMainThread()` is trivially true. The external MCP process connects exactly as in GUI mode (connection file, token, handshake). Capability flags report `gui:false, qt_loop:false`.
+The H1 topology with `FreeCADCmd` as the worker interpreter, for an interpreter that cannot `import FreeCAD`. No Qt loop exists in `FreeCADCmd` (research §4.1), so `MainThreadSignalConfig::isMainThread()` is trivially true on the serve loop.
 
 ### 4.3 Capability flags (handshake `capabilities`, also `rpc_capabilities` method)
 
@@ -364,6 +370,9 @@ CI render leg: `xvfb-run -a -s "-screen 0 1024x768x24"` + `LIBGL_ALWAYS_SOFTWARE
 | Auth token mismatch | `rpc_hello` compare fails | JSON-RPC `-32000`, connection closed, attempt logged to stderr. |
 | Contract version mismatch | handshake check | `-32004` + supported list; external server refuses session, surfaces upgrade instruction. |
 | FreeCAD busy (long recompute / modal dialog / prior call running) | serialized dispatch: new frames queue behind in-flight call | Call waits its turn; if total wait exceeds method `timeout_s` → `TIMEOUT` envelope. No preemption. |
+| Worker process exits (H1) | front's RPC connection drops or the worker process has ended | Envelope `WORKER_CRASHED`; the front does not restart the worker; the operator restarts the headless host. |
+| Call while a timed-out body runs (H1) | front holds an abandoned call | Refused at once without dispatch: `TIMEOUT`, `quarantined:true` (AD-27, §2.4). Lifts when the worker answers again. |
+| Abandoned body past 2× budget (H1) | front quarantine clock | Refusals become `WORKER_CRASHED` with a message to restart the headless host; the worker is not killed. |
 | Marshal timeout | `Event.wait(timeout_s)` expires | Envelope `TIMEOUT`, `maybe_still_running:true`; session marked **document-suspect** — next mutation on that document is refused until a `query_*` fingerprint check (AD-6) confirms state. Never blind-retry a mutation. |
 | Use-case exception | dispatch boundary | Mapped to AD-17 closed set + traceback detail; AD-5 transaction protocol has already aborted + verified rollback before the envelope is built. |
 | `GuiUp` never true / addon start race | `_deferred_start` re-poll loop | Listener simply never starts before GUI is up; poll continues (bounded: give up + stderr warning after 60 s). |
