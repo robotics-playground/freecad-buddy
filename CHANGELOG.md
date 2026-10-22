@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/robotics-playground/freecad-buddy/compare/v0.1.0...v0.1.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* **skills:** close code-cad-conversion gaps found on the enclosure model ([c42c20a](https://github.com/robotics-playground/freecad-buddy/commit/c42c20ad276a5a8d18df195ee74382d1f523c6b1))
+
 ## [0.1.0](https://github.com/robotics-playground/freecad-buddy/compare/v0.0.1...v0.1.0) (2026-10-22)
 
 
