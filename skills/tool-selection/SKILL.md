@@ -7,8 +7,9 @@ description: >-
   features vs Part booleans. Trigger phrases: "pad or revolve", "which operation",
   "fillet or chamfer", "pattern or mirror", "loft or sweep", "how should I make
   this shape". Do NOT use for the parameters and failure modes of a chosen feature
-  (see freecad-partdesign) or the whole build sequence (see design-decomposition).
-version: 0.1.0
+  (see freecad-partdesign), the whole build sequence (see design-decomposition), or
+  converting an existing build123d / CadQuery model (see code-cad-conversion).
+version: 0.2.0
 freecad-versions: ['1.1']
 ---
 
@@ -60,6 +61,10 @@ at it — otherwise the chosen operation can't be built.
   part, because PartDesign keeps a single ordered feature tree that edits cleanly and
   carries the reference/TNP machinery; reach for Part booleans only when combining
   independent solids that aren't a single body's feature history.
+- When the task **converts an existing CSG code-CAD model** (build123d, CadQuery:
+  primitives plus `+=` / `-=`), build with Part primitives and booleans whose sizes
+  and placements are VarSet expressions (see code-cad-conversion), because that maps
+  the source one-to-one and each part can be proven equal to the source STEP.
 - When two operations both work, pick the one that leaves the **simpler, more
   editable tree**, because the tree is read and edited later — favor the choice a
   human can follow over the one that's momentarily convenient.
@@ -97,4 +102,4 @@ separate tabs would drift on an edit and clutter the tree.
 - **Part booleans for a parametric body.** Symptom: a tree that's hard to edit and
   loses reference tracking. Why: raw booleans bypass the PartDesign feature history.
   Fix: use PartDesign features on a Body; reserve booleans for combining independent
-  solids.
+  solids and for converting a CSG code-CAD source (see code-cad-conversion).

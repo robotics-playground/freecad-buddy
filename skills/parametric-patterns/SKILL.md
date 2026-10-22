@@ -7,9 +7,10 @@ description: >-
   parameter edits (references early, fillets last). Trigger phrases: "make it
   editable", "master sketch", "skeleton sketch", "driving dimensions", "spreadsheet
   parameters", "VarSet", "parameter table", "so a user can change it". Do NOT use
-  for deciding which values are parameters (see design-intent) or splitting sketches
-  (see sketch-strategy).
-version: 0.2.0
+  for deciding which values are parameters (see design-intent), splitting sketches
+  (see sketch-strategy), or converting a build123d / CadQuery model (see
+  code-cad-conversion).
+version: 0.3.0
 freecad-versions: ['1.1']
 ---
 
@@ -34,6 +35,12 @@ MCP client at it — otherwise the parametric model can't be built or verified.
   spreadsheet fallback — and reference them by expression from features and
   constraints, because a single source of truth means an edit happens once and
   propagates, instead of the same number living in five features that drift apart.
+- Write VarSet variables and expressions with **`script_exec`**: no typed tool adds
+  a property or calls `setExpression`. Run `addProperty` and `setExpression` inside
+  a transaction that aborts on error, then recompute and verify.
+- Never name a variable after a **unit symbol** (`W`, `T`, `A`, `V`, `N`, `C`, `K`,
+  `J`, `H`, `F`, `S`, `m`, `g`, `s`), because the expression parser reads it as the
+  unit and `setExpression` fails with `Failed to parse expression`.
 - Use a **master (skeleton) sketch** for the part's controlling geometry — key
   planes, axes, hole-circle radii, overall envelope — and attach features to it,
   because the skeleton carries the design intent and a change to it moves everything

@@ -33,6 +33,7 @@ skills/
   design-intent/               SKILL.md  references/
   parametric-patterns/         SKILL.md  references/
   verification-thinking/       SKILL.md  references/
+  code-cad-conversion/         SKILL.md  references/   # build123d / CadQuery to parametric FreeCAD
   # Track R — robot-description & sourcing (Phase 5, AD-22/AD-23)
   urdf-export/                 SKILL.md  references/
   sdf-export/                  SKILL.md  references/
@@ -121,7 +122,7 @@ One loader component (`adapters/skills_loader` per the spine's structural seed �
 
 ### 4.1 Production mode — metadata-first router
 
-**Resident always:** one `name` + `description` pair per catalogued skill (15 core (Track A+B+W), 18 with the Phase-5 group; Level 1). **Routed per task:** 2–5 SKILL.md bodies, ≤~10K total skill budget (AD-15). The routed subset is logged on every run (AD-15: "routed subset logged") — this is what lets production quality issues be traced to "skill absent" vs "skill wrong".
+**Resident always:** one `name` + `description` pair per catalogued skill (16 core (Track A+B+W), 19 with the Phase-5 group; Level 1). **Routed per task:** 2–5 SKILL.md bodies, ≤~10K total skill budget (AD-15). The routed subset is logged on every run (AD-15: "routed subset logged") — this is what lets production quality issues be traced to "skill absent" vs "skill wrong".
 
 Routing mechanism is per backend:
 
@@ -157,6 +158,7 @@ Initial rule table for the local-backend router. **Status: starter default** —
 | Reference/datum work ("datum", "attach", "reference", TNP flags) | `freecad-datums-references`, `freecad-fundamentals` |
 | Parametrize/edit-robustness ("parameter", "VarSet", "spreadsheet", "make it editable") | `parametric-patterns`, `design-intent` |
 | Post-build check ("verify", "measure", "does it match the spec") | `verification-thinking` |
+| Code-CAD conversion ("build123d", "CadQuery", "convert to FreeCAD", "port the model") | `code-cad-conversion`, `parametric-patterns`, `verification-thinking` |
 | Fallback (no rule fires) | `freecad-fundamentals`, `tool-selection` |
 
 Rules match on task text; multiple matches union their subsets, capped at 5 bodies (drop lowest-priority row's extras; row order above is priority order).
@@ -183,11 +185,11 @@ Planning figures from the research report (~100 tokens/description, ~2K tokens p
 
 | Regime | Resident | Skill tokens | Bound / status |
 | --- | --- | --- | --- |
-| Idle (Level 1 only) | 15 descriptions | ~1.2K | Always-on floor |
+| Idle (Level 1 only) | 16 descriptions | ~1.2K | Always-on floor |
 | **Production routed (default)** | 12 descriptions + 2–5 bodies | ~5–10K | **≤~10K hard budget (AD-15)**; keeps total working context inside the ~32–64K practical local window |
 | Ablation `--skills none` | nothing | 0 | Baseline leg |
 | Ablation typical subset | declared 1–3 bodies | ~2–6K | Per-skill delta runs |
-| Ablation `--skills all` | all bodies (15 core) | ~25K (cap-compliant) to ~40K (if bodies bloat) | Measurement only — never production (context-rot distractor cost); the §6 word cap is what keeps this at the ~25K end |
+| Ablation `--skills all` | all bodies (16 core) | ~25K (cap-compliant) to ~40K (if bodies bloat) | Measurement only — never production (context-rot distractor cost); the §6 word cap is what keeps this at the ~25K end |
 
 Budget guard: the shape check's 1,500-word cap is the enforcement mechanism for every row — a skill that outgrows it moves content to `references/`, not past the cap.
 
