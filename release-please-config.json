@@ -6,7 +6,6 @@
     ".": {
       "release-type": "python",
       "package-name": "freecad-buddy",
-      "release-as": "0.0.1",
       "extra-files": [
         {
           "type": "generic",
