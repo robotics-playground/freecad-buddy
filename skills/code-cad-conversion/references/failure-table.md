@@ -11,4 +11,10 @@
 | `TIMEOUT`, then the document is marked suspect | one `script_exec` call ran past the 30 s budget | split the build into stages; run `query_tree_summary` before the next mutating call |
 | Cylinder or cone `Invalid` at a parameter limit (`CSK_D == HOLE_D` gives a countersink cone of height 0) | a size expression reached 0 or below | the source has the same limit: record the valid range for the user; clamp with `max()` only when the source clamps too. A bool ternary on a radius stays valid (`Cone` with `Radius1 == Radius2` is a cylinder) |
 | Edits to a parameter change nothing | the value was set as a plain number, not with `setExpression` | every size and placement of a primitive takes an expression; check `obj.ExpressionEngine` |
+| A text switch has no effect: both choices give the same size | the expression compares a string (`Params.FASTEN == <<insert>>`), which is always false and raises no error | compare the enumeration index: `Params.FASTEN == 0` |
+| Equal at the defaults, one feature too many or too few after an edit | a fit decision (`if y + 1.5 < ...`) was fixed at generation time | make it a live ternary that parks the tool (`fits ? z : -1000`) |
+| A cut removes material from the whole part, not only from a sub-assembly | a nested source expression (`body += (post + lips) - slot`) was flattened into the body's add / cut sequence | build the nested expression as its own `Solid` and add its `done()` result |
+| `prm()` fails with a duplicate property on the second stage | the variable already exists from the first stage | reuse existing variables (kit `prm`); clear the document only in the first stage |
+| `AttributeError` on `.volume` of `a & b` in build123d | the intersection is a `ShapeList` | sum the solid volumes (kit `overlap_pct`) |
+| `query_screenshot` returns `INVALID_INPUT` `unknown object` | `view.include` was given Labels | give object Names, or leave `include` out |
 | Fillet lost after a parameter edit | `Part::Fillet` edge list is by index; the boolean re-numbered edges | fillet as the last step only; re-check its edges after each edit, or model the round as a primitive |
