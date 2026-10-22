@@ -114,6 +114,7 @@ Tools give an agent the *ability* to act; skills give it the *judgment* to act w
 | `design-intent` | Constraints and parameters as intent: dimension what the spec states, derive the rest; symmetric constraints over mirrored numbers; naming features so the tree reads like a build plan |
 | `parametric-patterns` | Master/skeleton sketch pattern, spreadsheet/VarSet-driven dimensions, feature ordering for robust edits (fillets last, references early) |
 | `verification-thinking` | What to measure after each step and why; sanity checks (volume orders of magnitude, symmetry, bounding box vs spec); treating a passing recompute as necessary but not sufficient |
+| `code-cad-conversion` | Converting a build123d / CadQuery model into a parametric FreeCAD document: one VarSet with the source names, Part primitives and booleans driven by expressions in source order, and proof of equality against the source STEP plus parameter-limit tests |
 
 **Track W — Workflow (the procedural knowledge that replaces a coded loop):**
 
