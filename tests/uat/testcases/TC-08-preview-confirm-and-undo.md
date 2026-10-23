@@ -266,11 +266,11 @@ mcp document_close { doc: <handle> }
 **Design Ref**: `mcp-tools-design.md` §4 (a token authorizes one mutation)
 
 **Given** a body with a fully-constrained 20x20 mm sketch  
-**And** a previewed, unspent token for `feature_body_create`, which can run twice under different names without changing the fingerprint in a way that blocks the replay  
+**And** a previewed, unspent token for `feature_body_create`, which can run twice under different names  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the pre-replay window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-07-before.png"}' | & cua-driver call get_window_state`  
 
-**When** an operation that commits without moving the document digest is previewed and applied — creating an empty body adds no shape, so the fingerprint is unchanged  
+**When** a body creation is previewed and applied  
 ```
 mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_body_create", args: { name: "Probe" } } }
 mcp feature_body_create { doc: <handle>, name: "Probe", confirm: { preview_id: "<token>" } }
@@ -281,9 +281,8 @@ mcp feature_body_create { doc: <handle>, name: "Probe", confirm: { preview_id: "
 ```
 
 **Then** the first apply was authorized — verify: the apply's mutation returns `status: "OK"`  
-**And** the fingerprint did not move — verify: the apply's `mutation.fingerprint_before.digest` equals `mutation.fingerprint_after.digest`, which is what makes the spent-check the only thing refusing the replay  
 **And** the replay is refused — verify: the replay returns the refusal `confirm.preview_id has already authorized a mutation; re-run preview_dry_run`  
-**And** the refusal is not a fingerprint complaint — verify: the message does NOT contain `the document has changed since the preview was taken`  
+**And** the refusal is not a fingerprint complaint — verify: the message does NOT contain `the document has changed since the preview was taken`. `verify_confirm` (`usecases/confirm.py`) checks the spent set before it compares the document fingerprint, so this Then fails if the spent check stops refusing and a later check refuses the replay instead  
 **And** the replay mutated nothing — verify: `mcp query_tree_summary { doc: <handle>, depth: 2 }`, read before the `Probe2` apply, lists exactly one `Probe` body, not two  
 **And** a fresh preview restores the ability to apply — verify: a new `preview_dry_run` for `feature_body_create { name: "Probe2" }` yields a token whose apply returns `status: "OK"`. A new name is needed: `Probe` now exists, so a second `Probe` would be renamed by FreeCAD and the preview would not describe the apply  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  

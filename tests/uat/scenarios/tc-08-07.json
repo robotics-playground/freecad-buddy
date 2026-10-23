@@ -440,11 +440,6 @@
       "equals": "OK"
     },
     {
-      "step": "apply",
-      "path": "structured_content.mutation.fingerprint_after.digest",
-      "equals": "$apply.structured_content.mutation.fingerprint_before.digest"
-    },
-    {
       "step": "replay",
       "path": "detail.message",
       "equals": "confirm.preview_id has already authorized a mutation; re-run preview_dry_run"

@@ -1794,6 +1794,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
   summary: Correct the TC-08-07 test case: its premise that an empty body leaves the document digest unchanged is stale since Story 10.3. The Critical scenario FAILs on every run until the test case is corrected, so the correction must land before the Story 10.8 goal 3 gate run.
   evidence: `usecases/fingerprint.py` records an object with a null `Shape` (an empty Body) as the hash of empty bytes plus zeroed mass properties (commit `a1ef9ab`, Story 10.3); goal 2 live run: `feature_body_create { name: "Probe" }` moved the digest `b083c60b…` to `5d575dcd…`, scenario `tc-08-07.json` FAIL.
+  resolution: resolved by spec-10-8-c-tc-08-07-stale-fingerprint-premise: premise and its Then removed from the test case and the scenario file; live TC-08-07 has no FAIL (ESCALATE on its visual agent_check only).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
   summary: The scenario schema has no not-equal check and no set-membership or inequality check, so TC-03-01, TC-03-04 and TC-14-04 stay agent-run.
