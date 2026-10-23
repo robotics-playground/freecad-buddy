@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/robotics-playground/freecad-buddy/compare/v0.1.1...v0.1.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **addon:** start the MCP proxy on macOS ([50e810e](https://github.com/robotics-playground/freecad-buddy/commit/50e810eeaecb6df3de4c2f202fbd11412c23cbfe))
+
 ## [0.1.1](https://github.com/robotics-playground/freecad-buddy/compare/v0.1.0...v0.1.1) (2026-10-22)
 
 
