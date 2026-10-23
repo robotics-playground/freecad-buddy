@@ -1,0 +1,255 @@
+{
+  "id": "TC-05-03",
+  "tc": "TC-05",
+  "title": "post_verify runs its four checks in order",
+  "launch": {
+    "FREECAD_BUDDY_AUTO_APPROVE": "0"
+  },
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "tc-05-03"
+      }
+    },
+    {
+      "name": "fixture",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import Part, Sketcher\nfrom FreeCAD import Vector as V\nbody = doc.addObject('PartDesign::Body', 'Body')\nxy = [f for f in body.Origin.OriginFeatures if f.Role == 'XY_Plane'][0]\nsk = body.newObject('Sketcher::SketchObject', 'Sketch')\nsk.AttachmentSupport = [(xy, '')]\nsk.MapMode = 'FlatFace'\npts = [V(0, 0, 0), V(20, 0, 0), V(20, 20, 0), V(0, 20, 0)]\nfor i in range(4):\n    sk.addGeometry(Part.LineSegment(pts[i], pts[(i + 1) % 4]))\nfor i in range(4):\n    sk.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\nfor i, kind in enumerate(['Horizontal', 'Vertical', 'Horizontal', 'Vertical']):\n    sk.addConstraint(Sketcher.Constraint(kind, i))\ndoc.recompute()\nresult = sk.solve()"
+      }
+    },
+    {
+      "name": "sketch_check",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "prev_pad",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 10,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_pad.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 2
+      }
+    },
+    {
+      "name": "plant_invalid",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "bad = doc.addObject('Part::Box', 'Bad')\nbad.Length = 0\ndoc.recompute()\nresult = bad.isValid()"
+      }
+    },
+    {
+      "name": "prev_pad_chain",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 10,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "pad_chain",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_pad_chain.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "remove_invalid",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "doc.removeObject('Bad')\ndoc.recompute()\nresult = doc.getObject('Bad') is None"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "fixture",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch_check",
+      "path": "structured_content.subject.fully_constrained",
+      "equals": false
+    },
+    {
+      "step": "sketch_check",
+      "path": "structured_content.subject.dof",
+      "equals": 4
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.recompute_clean",
+      "equals": true
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.is_valid",
+      "equals": true
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.fully_constrained",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "^verify_sketch failed on Sketch \\(dof=4\\)"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.tnp_audit.status",
+      "regex": "^(?!UNSUPPORTED$)"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.tnp_audit.counts",
+      "absent": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "SPEC_FAILED"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": true
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^(?![\\s\\S]*\\] Pad\\b)"
+    },
+    {
+      "step": "plant_invalid",
+      "path": "structured_content.value_repr",
+      "equals": "False"
+    },
+    {
+      "step": "pad_chain",
+      "path": "structured_content.mutation.post_verify.recompute_clean",
+      "equals": false
+    },
+    {
+      "step": "pad_chain",
+      "path": "structured_content.mutation.post_verify.is_valid",
+      "equals": false
+    },
+    {
+      "step": "pad_chain",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "^recompute left "
+    },
+    {
+      "step": "remove_invalid",
+      "path": "structured_content.value_repr",
+      "equals": "True"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "tc_05_03",
+    "documents": {
+      "tc_05_03": {
+        "objects": {
+          "Sketch": {
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  }
+}

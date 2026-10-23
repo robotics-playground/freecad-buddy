@@ -1,0 +1,556 @@
+{
+  "id": "TC-03-20",
+  "tc": "TC-03",
+  "title": "A moved external-geometry source is flagged and rolled back",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "rect",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "PlateWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "PlateDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "mass_given",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlatePad"
+      }
+    },
+    {
+      "name": "boss",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BossProfile",
+        "face": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Face6"
+        },
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "circle",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BossProfile",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              30,
+              20
+            ],
+            "radius": {
+              "value": 5,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 3,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 0,
+            "first_pos": 3,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Radius",
+            "first": 0,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            },
+            "name": "BossRadius"
+          }
+        ]
+      }
+    },
+    {
+      "name": "boss_verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BossProfile"
+      }
+    },
+    {
+      "name": "edge_oracle",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "e = doc.getObject('PlatePad').Shape.getElement('Edge3')\nresult = round(e.Length, 3)"
+      }
+    },
+    {
+      "name": "project",
+      "mcp": "sketch_add_external_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BossProfile",
+        "edge": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Edge3"
+        }
+      }
+    },
+    {
+      "name": "dependencies",
+      "mcp": "query_dependencies",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BossProfile"
+      }
+    },
+    {
+      "name": "move",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "PlatePad",
+        "parameters": {
+          "Length": {
+            "value": 30,
+            "unit": "mm"
+          }
+        }
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlatePad"
+      }
+    },
+    {
+      "name": "recompute",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "harmless",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BossProfile",
+        "constraint": "BossRadius",
+        "value": {
+          "value": 4,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "rect",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "rect",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass_given",
+      "path": "structured_content.volume.value",
+      "approx": 12000.0,
+      "tolerance": 12.0
+    },
+    {
+      "step": "boss",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "boss",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "circle",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "circle",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "boss_verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "boss_verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "edge_oracle",
+      "path": "structured_content.value_repr",
+      "equals": "60.0"
+    },
+    {
+      "step": "project",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "project",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "project",
+      "path": "structured_content.mutation.post_verify.tnp_audit.status",
+      "equals": "CLEAN"
+    },
+    {
+      "step": "dependencies",
+      "path": "structured_content.out_list",
+      "equals": [
+        "PlatePad"
+      ]
+    },
+    {
+      "step": "move",
+      "path": "status",
+      "equals": "SPEC_FAILED"
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": true
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.tnp_audit.status",
+      "equals": "FLAGGED"
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.tnp_audit.findings.0.verdict",
+      "equals": "REPOINTED"
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.tnp_audit.findings.0.owner",
+      "equals": "BossProfile"
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.tnp_audit.findings.0.prop",
+      "equals": "AttachmentSupport"
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "^TNP audit flagged "
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "BossProfile\\.AttachmentSupport REPOINTED"
+    },
+    {
+      "step": "move",
+      "path": "structured_content.mutation.post_verify.tnp_audit.element_map_version",
+      "regex": "\\S"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 12000.0,
+      "tolerance": 12.0
+    },
+    {
+      "step": "recompute",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "harmless",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "harmless",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "harmless",
+      "path": "structured_content.mutation.post_verify.tnp_audit.status",
+      "equals": "CLEAN"
+    },
+    {
+      "step": "harmless",
+      "path": "structured_content.mutation.post_verify.tnp_audit.findings",
+      "equals": []
+    },
+    {
+      "step": "harmless",
+      "path": "structured_content.mutation.post_verify.tnp_audit.element_map_version",
+      "regex": "\\S"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlatePad": {
+            "visibility": true,
+            "valid": true,
+            "volume": 12000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "BracketPlate.PlatePad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.BracketPlate.objects.PlatePad.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "agent_check": "The runner takes no before capture, and the projected external curve is drawn only in Sketcher edit mode: judge the capture as one whole thin plate (5 mm, not 30 mm), no torn, missing or black face, with the BossProfile circle on its top face; then open BossProfile in edit mode (test case Preconditions) and judge the circle at radius 4 and the external curve along a real plate edge, not hanging in space; no error dialog or red error marker."
+}

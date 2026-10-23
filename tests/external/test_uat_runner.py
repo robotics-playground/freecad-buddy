@@ -24,6 +24,7 @@ SCENARIO_DIR = REPO_ROOT / "tests" / "uat" / "scenarios"
 TESTCASE_DIR = REPO_ROOT / "tests" / "uat" / "testcases"
 sys.path.insert(0, str(RUNNER_DIR))
 import capture  # noqa: E402
+import compare  # noqa: E402
 import launch  # noqa: E402
 import mcp_client  # noqa: E402
 import pixel  # noqa: E402
@@ -142,6 +143,7 @@ class FakeSession:
 
     def menu(self, path):
         self.calls.append(("menu", path))
+        return 1
 
     def snapshot(self):
         return self.snapshot_value
@@ -643,6 +645,148 @@ def test_Should_raise_When_show_all_leaves_an_object_hidden(monkeypatch):
         act()
 
 
+SHOW_ALL = ["View", "Visibility", "Show All Objects"]
+REFUSED = capture.CuaError(
+    'invoke_menu refused: {"refusal": {"code": "menu_path_unavailable"}, "status": "refused"}'
+)
+
+
+def _menu_session(monkeypatch, answers, snapshots):
+    """A LiveSession whose ``invoke_menu`` raises or returns ``answers`` in turn."""
+    session = object.__new__(run.LiveSession)
+    session.pid, session.window_id = 1, 2
+    snapshots = iter(snapshots)
+    session.snapshot = lambda: next(snapshots)
+    delivered = []
+
+    def invoke(*args):
+        delivered.append(args)
+        answer = answers[len(delivered) - 1]
+        if answer is not None:
+            raise answer
+
+    monkeypatch.setattr(capture, "invoke_menu", invoke)
+    monkeypatch.setattr(run, "MENU_EFFECT_TIMEOUT_S", 0.0)
+    monkeypatch.setattr(run, "POLL_S", 0.0)
+    return session, delivered
+
+
+def _hidden_box():
+    hidden = _box_snapshot()
+    hidden["documents"][0]["objects"][0]["visibility"] = False
+    return hidden
+
+
+def test_Should_pass_with_2_attempts_When_show_all_is_refused_once(monkeypatch):
+    # Arrange
+    session, delivered = _menu_session(
+        monkeypatch, [REFUSED, None], [_hidden_box(), _box_snapshot()]
+    )
+
+    # Act
+    attempts = session.menu(SHOW_ALL)
+
+    # Assert
+    assert attempts == 2
+    assert len(delivered) == 2
+
+
+def test_Should_raise_naming_the_refusal_When_show_all_is_refused_3_times(monkeypatch):
+    # Arrange
+    session, delivered = _menu_session(monkeypatch, [REFUSED] * 3, [_hidden_box()] * 3)
+
+    # Act
+    act = lambda: session.menu(SHOW_ALL)  # noqa: E731
+
+    # Assert
+    with pytest.raises(run.MenuError, match="refused on 3 of 3 attempts.*menu_path_unavailable"):
+        act()
+    assert len(delivered) == 3
+
+
+def test_Should_not_deliver_again_When_the_probe_shows_a_refused_attempt_took_effect(monkeypatch):
+    # Arrange
+    session, delivered = _menu_session(monkeypatch, [REFUSED, None], [_box_snapshot()])
+
+    # Act
+    attempts = session.menu(SHOW_ALL)
+
+    # Assert
+    assert attempts == 1
+    assert len(delivered) == 1
+
+
+def test_Should_deliver_once_When_the_effect_shows_on_the_second_poll_after_a_refusal(
+    monkeypatch,
+):
+    # Arrange
+    session, delivered = _menu_session(
+        monkeypatch, [REFUSED, None], [_hidden_box(), _box_snapshot()]
+    )
+    monkeypatch.setattr(run, "POLL_S", 0.01)
+
+    # Act
+    attempts = session.menu(SHOW_ALL)
+
+    # Assert
+    assert attempts == 1
+    assert len(delivered) == 1
+
+
+@pytest.mark.parametrize(
+    ("path", "error"),
+    [
+        (SHOW_ALL, capture.CuaError("invoke_menu exited 1: daemon gone")),
+        (["Edit", "Recompute"], REFUSED),
+    ],
+    ids=["other cua error", "path with no probe effect"],
+)
+def test_Should_raise_after_one_delivery_When_the_refusal_is_not_a_retried_one(
+    monkeypatch, path, error
+):
+    # Arrange
+    session, delivered = _menu_session(monkeypatch, [error, None], [_hidden_box()])
+
+    # Act
+    act = lambda: session.menu(path)  # noqa: E731
+
+    # Assert
+    with pytest.raises(capture.CuaError):
+        act()
+    assert len(delivered) == 1
+
+
+def test_Should_record_the_attempt_count_When_a_menu_step_runs(tmp_path):
+    # Arrange
+    session = _session()
+    session.menu = lambda path: 2
+
+    # Act
+    record = run.run_scenario(_scenario(tmp_path), session, tmp_path)
+
+    # Assert
+    assert record["steps"][1] == {"menu": SHOW_ALL, "attempts": 2}
+    assert record["verdict"] == "PASS"
+
+
+def test_Should_escalate_naming_the_refusal_When_show_all_is_refused_3_times(tmp_path):
+    # Arrange
+    session = _session()
+
+    def refuse(path):
+        raise run.MenuError(f"menu {path} refused on 3 of 3 attempts: {REFUSED}")
+
+    session.menu = refuse
+
+    # Act
+    record = run.run_scenario(_scenario(tmp_path), session, tmp_path)
+
+    # Assert
+    assert record["verdict"] == "ESCALATE"
+    assert "menu_path_unavailable" in record["reasons"][0]
+    assert [call[0] for call in session.calls].count("document_open") == 1
+
+
 def test_Should_list_the_queue_with_reasons_When_the_summary_is_written():
     # Arrange
     results = [
@@ -1059,7 +1203,7 @@ def test_Should_reach_invoke_menu_only_through_the_allow_list_When_runner_files_
     )
 
 
-def test_Should_load_the_pilot_set_When_the_committed_scenarios_are_read():
+def test_Should_validate_every_file_When_the_committed_scenarios_are_read():
     # Arrange
     paths = sorted(SCENARIO_DIR.glob("*.json"))
 
@@ -1068,8 +1212,9 @@ def test_Should_load_the_pilot_set_When_the_committed_scenarios_are_read():
 
     # Assert
     assert len(items) == len(paths)
-    assert 10 <= len(items) <= 15
-    assert len({item["tc"] for item in items}) in (2, 3)
+    assert [Path(item["file"]).name for item in items] == [
+        f"{item['id'].lower()}.json" for item in items
+    ]
     assert {"FREECAD_BUDDY_SCRIPT_EXEC": "0"} in [item["launch"] for item in items]
     assert any(item["cross"] for item in items)
     assert any("pixel" in item for item in items)
@@ -1077,7 +1222,7 @@ def test_Should_load_the_pilot_set_When_the_committed_scenarios_are_read():
     assert any(check for item in items for check in item["expect"])
 
 
-def test_Should_name_a_heading_of_its_test_case_When_a_pilot_scenario_is_read():
+def test_Should_name_a_heading_of_its_test_case_When_a_committed_scenario_is_read():
     # Arrange
     items = scenario.load_all([SCENARIO_DIR])
 
@@ -1575,3 +1720,308 @@ def test_Should_raise_at_once_When_the_session_task_has_ended():
     with pytest.raises(ConnectionError, match="connection refused"):
         act()
     client._loop.close()
+
+
+def _replay_record(scenario_id, verdict, **extra):
+    record = {
+        "id": scenario_id,
+        "verdict": verdict,
+        "capture": "c.png",
+        "errors": [],
+        "disagreements": [],
+        "findings": [],
+        "agent_check": None,
+    }
+    return record | extra
+
+
+@pytest.mark.parametrize(
+    ("old", "record", "notes", "row", "kind"),
+    [
+        ("PASS", _replay_record("TC-02-02", "PASS"), {}, "same", "-"),
+        (
+            "FAIL",
+            _replay_record("TC-02-02", "PASS"),
+            {"TC-02-02": {"class": "product fixed (F-01, 10.1)"}},
+            "differs",
+            "product fixed (F-01, 10.1)",
+        ),
+        (
+            "PARTIAL",
+            _replay_record("TC-02-02", "ESCALATE", agent_check="Fit All framing"),
+            {},
+            "same",
+            "-",
+        ),
+        ("FAIL", _replay_record("TC-02-02", "FAIL"), {}, "same", "-"),
+        ("PASS", _replay_record("TC-02-02", "FAIL"), {}, "differs", "unexplained"),
+        (
+            "PASS",
+            _replay_record(
+                "TC-02-02", "ESCALATE", agent_check="Fit All", errors=["step 1 raised MenuError"]
+            ),
+            {},
+            "differs",
+            "unexplained",
+        ),
+        ("BLOCKED", _replay_record("TC-02-02", "PASS"), {}, "new", "-"),
+        (
+            "PASS",
+            _replay_record(
+                "TC-02-02", "ESCALATE", agent_check="Fit All", disagreements=[{"reason": "r"}]
+            ),
+            {},
+            "differs",
+            "unexplained",
+        ),
+        (
+            "PASS",
+            _replay_record("TC-02-02", "ESCALATE", agent_check="Fit All", findings=[{"r": 1}]),
+            {},
+            "differs",
+            "unexplained",
+        ),
+        (
+            "PASS",
+            _replay_record("TC-02-02", "ESCALATE", agent_check="Fit All", capture=None),
+            {},
+            "differs",
+            "unexplained",
+        ),
+    ],
+    ids=[
+        "same verdict",
+        "product fixed",
+        "visual only",
+        "fail stays fail",
+        "unexplained difference",
+        "escalate with an error is not visual only",
+        "blocked is not compared",
+        "escalate with a disagreement is not visual only",
+        "escalate with a finding is not visual only",
+        "escalate with no capture is not visual only",
+    ],
+)
+def test_Should_classify_the_row_When_a_replayed_scenario_is_compared(
+    old, record, notes, row, kind
+):
+    # Arrange
+    current = ["TC-02-02"]
+
+    # Act
+    table = compare.rows({"TC-02-02": old}, [record], current, notes)
+
+    # Assert
+    assert [(r["row"], r["class"]) for r in table] == [(row, kind)]
+
+
+@pytest.mark.parametrize(
+    ("old", "current", "notes", "row", "kind"),
+    [
+        (
+            {"TC-10-07": "PASS"},
+            ["TC-10-07"],
+            {"TC-10-07": {"coverage": "H1 host"}},
+            "not covered",
+            "H1 host",
+        ),
+        (
+            {"TC-04-08": "PASS"},
+            ["TC-04-08"],
+            {"TC-04-08": {"coverage": "not encoded"}},
+            "not encoded",
+            "not encoded",
+        ),
+        ({}, ["TC-11-19"], {"TC-11-19": {"coverage": "H1 host"}}, "new", "H1 host"),
+        ({"TC-05-19": "PASS"}, [], {}, "removed", "-"),
+        ({"TC-04-08": "PASS"}, ["TC-04-08"], {}, "not covered", "unexplained"),
+    ],
+    ids=["not covered", "not encoded", "new id", "old id missing", "no note"],
+)
+def test_Should_classify_the_row_When_a_scenario_was_not_replayed(old, current, notes, row, kind):
+    # Arrange
+    records = []
+
+    # Act
+    table = compare.rows(old, records, current, notes)
+
+    # Assert
+    assert [(r["row"], r["class"]) for r in table] == [(row, kind)]
+
+
+def test_Should_cite_the_edit_inventory_When_an_old_id_is_removed():
+    # Arrange
+    old = {"TC-05-19": "PASS"}
+
+    # Act
+    table = compare.rows(old, [], [], {})
+
+    # Assert
+    assert "spec-10-7-edit-inventory.md" in table[0]["explanation"]
+
+
+def test_Should_list_the_new_id_with_its_runner_verdict_When_it_was_replayed():
+    # Arrange
+    record = _replay_record("TC-11-17", "FAIL")
+
+    # Act
+    table = compare.rows({}, [record], ["TC-11-17"], {})
+
+    # Assert
+    assert [(r["row"], r["old"], r["runner"], r["class"]) for r in table] == [
+        ("new", None, "FAIL", "-")
+    ]
+
+
+@pytest.mark.parametrize(
+    "note",
+    [
+        {"coverage": "too hard"},
+        {"class": "product fixed"},
+        {"class": "unexplained"},
+        {"left_out": [{"then": "file saved", "reason": "too hard"}]},
+    ],
+    ids=[
+        "reason outside the set",
+        "class without finding",
+        "class unexplained",
+        "left-out reason outside the set",
+    ],
+)
+def test_Should_refuse_When_a_note_is_outside_the_closed_sets(note):
+    # Arrange
+    notes = {"TC-02-02": note}
+
+    # Act
+    act = lambda: compare.rows({"TC-02-02": "PASS"}, [], ["TC-02-02"], notes)  # noqa: E731
+
+    # Assert
+    with pytest.raises(compare.CompareError, match="TC-02-02"):
+        act()
+
+
+def test_Should_name_the_thens_left_out_When_a_scenario_encodes_part_of_its_test_case():
+    # Arrange
+    notes = {
+        "TC-02-01": {
+            "explanation": "pilot",
+            "left_out": [
+                {"then": "ls -l shows the saved file", "reason": "file check"},
+                {"then": "addon.log has no traceback", "reason": "log or audit read"},
+            ],
+        }
+    }
+
+    # Act
+    table = compare.rows(
+        {"TC-02-01": "PASS"}, [_replay_record("TC-02-01", "PASS")], ["TC-02-01"], notes
+    )
+
+    # Assert
+    assert table[0]["row"] == "same"
+    assert table[0]["explanation"] == (
+        "pilot Not checked: ls -l shows the saved file (file check); "
+        "addon.log has no traceback (log or audit read)."
+    )
+
+
+REPORT_HEAD = (
+    "| Scenario | Priority | Verdict | Evidence | Note |\n| --- | --- | --- | --- | --- |\n"
+)
+
+
+def _replay_dirs(tmp_path, report_rows, records, notes):
+    old = tmp_path / "old"
+    old.mkdir()
+    (old / "report.md").write_text("## TC-02\n\n" + REPORT_HEAD + report_rows, encoding="utf-8")
+    replay = tmp_path / "replay"
+    replay.mkdir()
+    (replay / "results.json").write_text(
+        json.dumps({"run": {"git_commit": "abc"}, "scenarios": records}), encoding="utf-8"
+    )
+    (replay / "replay-notes.json").write_text(json.dumps(notes), encoding="utf-8")
+    testcases = tmp_path / "testcases"
+    testcases.mkdir()
+    (testcases / "TC-02-x.md").write_text("### TC-02-01: a\n\n### TC-02-02: b\n", encoding="utf-8")
+    return [str(old), str(replay), "--testcases", str(testcases)]
+
+
+def test_Should_exit_2_naming_the_line_When_a_report_row_cannot_be_parsed(tmp_path, capsys):
+    # Arrange
+    rows = "| TC-02-01 | Critical | **PASS** | e | n |\n| TC-02-02 | Critical | PASS | e | n |\n"
+    argv = _replay_dirs(tmp_path, rows, [], {})
+
+    # Act
+    code = compare.main(argv)
+
+    # Assert
+    assert code == 2
+    assert "report.md:6" in capsys.readouterr().out
+    assert not (tmp_path / "replay" / "replay.md").exists()
+
+
+def test_Should_exit_2_naming_the_folder_When_the_testcases_folder_has_no_heading(tmp_path, capsys):
+    # Arrange
+    rows = "| TC-02-01 | Critical | **PASS** | e | n |\n"
+    argv = _replay_dirs(tmp_path, rows, [], {})
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    argv[-1] = str(empty)
+
+    # Act
+    code = compare.main(argv)
+
+    # Assert
+    assert code == 2
+    assert f"{empty}: no '### TC-xx-yy:' heading" in capsys.readouterr().out
+    assert not (tmp_path / "replay" / "replay.md").exists()
+
+
+@pytest.mark.parametrize(
+    ("notes", "expected_code", "unexplained"),
+    [
+        ({"TC-02-02": {"coverage": "GUI action", "explanation": "tree click"}}, 0, 0),
+        ({}, 1, 1),
+    ],
+    ids=["every row explained", "a row unexplained"],
+)
+def test_Should_write_one_row_per_id_When_the_report_and_results_are_read(
+    tmp_path, notes, expected_code, unexplained
+):
+    # Arrange
+    rows = "| TC-02-01 | Critical | **PARTIAL** | e | n |\n| TC-02-02 | High | **FAIL** | e | n |\n"
+    argv = _replay_dirs(tmp_path, rows, [_replay_record("TC-02-01", "PASS")], notes)
+
+    # Act
+    code = compare.main(argv)
+
+    # Assert
+    text = (tmp_path / "replay" / "replay.md").read_text("utf-8")
+    assert code == expected_code
+    assert (
+        "2 rows: 1 same, 0 differs, 1 not covered, 0 not encoded, 0 new, 0 removed. "
+        f"Unexplained: {unexplained}.\n"
+    ) in text
+    assert "| TC-02-01 | PARTIAL | PASS | same | - | - |" in text
+    assert re.search(r"^\| TC-02-02 \| FAIL \| - \| not covered \|", text, re.MULTILINE)
+
+
+def test_Should_prefer_the_results_json_When_a_test_case_has_one(tmp_path):
+    # Arrange
+    evidence = tmp_path / "evidence"
+    evidence.mkdir()
+    rows = [
+        {"id": "TC-04-00-preconditions", "verdict": "PASS"},
+        {"id": "TC-04-01", "verdict": "FAIL"},
+    ]
+    (evidence / "tc-04-results.json").write_text(json.dumps(rows), encoding="utf-8")
+    report_rows = (
+        "| TC-04-01 | Critical | **PASS** | e | n |\n| TC-02-01 | High | **PASS** | e | n |\n"
+    )
+    (tmp_path / "report.md").write_text(REPORT_HEAD + report_rows, encoding="utf-8")
+
+    # Act
+    verdicts = compare.old_verdicts(tmp_path)
+
+    # Assert
+    assert verdicts == {"TC-02-01": "PASS", "TC-04-01": "FAIL"}

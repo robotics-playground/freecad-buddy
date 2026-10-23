@@ -1,0 +1,606 @@
+{
+  "id": "TC-04-09",
+  "tc": "TC-04",
+  "title": "feature_fillet on named edges",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Plate"
+      }
+    },
+    {
+      "name": "plate_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "plate_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "plate_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "plate_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "plate_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlatePad"
+      }
+    },
+    {
+      "name": "fillet",
+      "mcp": "feature_fillet",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "base": "PlatePad",
+        "name": "CornerFillet",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "PlatePad",
+            "mapped_name": "Edge1"
+          },
+          {
+            "kind": "mapped_name",
+            "object": "PlatePad",
+            "mapped_name": "Edge2"
+          },
+          {
+            "kind": "mapped_name",
+            "object": "PlatePad",
+            "mapped_name": "Edge5"
+          },
+          {
+            "kind": "mapped_name",
+            "object": "PlatePad",
+            "mapped_name": "Edge8"
+          }
+        ],
+        "radius": {
+          "value": 2,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "CornerFillet"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "CornerFillet"
+      }
+    },
+    {
+      "name": "other_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "OtherBody"
+      }
+    },
+    {
+      "name": "other_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "OtherProfile",
+        "plane": "XY",
+        "body": "OtherBody"
+      }
+    },
+    {
+      "name": "other_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "OtherProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              80,
+              10
+            ],
+            "end": [
+              100,
+              10
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              100,
+              10
+            ],
+            "end": [
+              100,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              100,
+              30
+            ],
+            "end": [
+              80,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              80,
+              30
+            ],
+            "end": [
+              80,
+              10
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 80,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 10,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "other_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "OtherBody",
+        "profile": "OtherProfile",
+        "name": "OtherPad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "cross_body",
+      "mcp": "feature_fillet",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "base": "OtherPad",
+        "name": "CrossFillet",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "OtherPad",
+            "mapped_name": "Edge1"
+          }
+        ],
+        "radius": {
+          "value": 1,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "wrong_object",
+      "mcp": "feature_fillet",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "base": "CornerFillet",
+        "name": "MixFillet",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "OtherPad",
+            "mapped_name": "Edge1"
+          }
+        ],
+        "radius": {
+          "value": 1,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "repeated",
+      "mcp": "feature_fillet",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "base": "CornerFillet",
+        "name": "RepFillet",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "CornerFillet",
+            "mapped_name": "Edge1"
+          },
+          {
+            "kind": "mapped_name",
+            "object": "CornerFillet",
+            "mapped_name": "Edge1"
+          }
+        ],
+        "radius": {
+          "value": 1,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "plate_mass",
+      "path": "structured_content.volume.value",
+      "approx": 12000.0,
+      "tolerance": 12.0
+    },
+    {
+      "step": "fillet",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fillet",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 11982.8319,
+      "tolerance": 11.982832
+    },
+    {
+      "step": "fillet",
+      "path": "structured_content.feature_state.shape_summary.face_count",
+      "equals": 10
+    },
+    {
+      "step": "fillet",
+      "path": "structured_content.feature_state.shape_summary.solid_count",
+      "equals": 1
+    },
+    {
+      "step": "fillet",
+      "path": "structured_content.feature_state.shape_summary.is_valid",
+      "equals": true
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.area.value",
+      "approx": 5775.9646,
+      "tolerance": 5.775965
+    },
+    {
+      "step": "cross_body",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "cross_body",
+      "path": "detail.message",
+      "regex": "is not in Body"
+    },
+    {
+      "step": "wrong_object",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "wrong_object",
+      "path": "detail.message",
+      "regex": "not the dress-up base"
+    },
+    {
+      "step": "repeated",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "repeated",
+      "path": "detail.message",
+      "regex": "repeats Edge1"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 11.982832,
+    "active_document": "Plate",
+    "documents": {
+      "Plate": {
+        "objects": {
+          "CornerFillet": {
+            "visibility": true,
+            "valid": true,
+            "volume": 11982.831853
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.Plate.objects.CornerFillet.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "Plate.CornerFillet"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The capture also shows OtherBody, the refusal fixture of the 'base outside the Body' Then, as a separate 20 x 20 x 5 block at x = 80..100, y = 10..30. Judge the visual Then on the 60 x 40 x 5 plate only: all four vertical corners carry a visible 2 mm round and none is sharp."
+}

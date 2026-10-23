@@ -1,0 +1,193 @@
+{
+  "id": "TC-13-04",
+  "tc": "TC-13",
+  "title": "Geometry parity — mass properties agree with the drawn shape",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box40-hole-r5.FCStd"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "BoxHole"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "BoxHole"
+      }
+    },
+    {
+      "name": "render",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "iso",
+          "include": [
+            "BoxHole"
+          ]
+        }
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "capabilities",
+      "mcp": "query_capabilities",
+      "args": {}
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[FEATURE\\] BoxHole\\b"
+    },
+    {
+      "step": "capabilities",
+      "path": "structured_content.render",
+      "equals": "gui_constructed"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 15214.6,
+      "tolerance": 15.2146
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.area.value",
+      "approx": 4957.08,
+      "tolerance": 4.95708
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.bbox.xmin.value",
+      "approx": 0.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.bbox.xmax.value",
+      "approx": 40.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.bbox.ymin.value",
+      "approx": 0.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.bbox.ymax.value",
+      "approx": 40.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.bbox.zmin.value",
+      "approx": 0.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.bbox.zmax.value",
+      "approx": 10.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.counts.faces",
+      "equals": 7
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.counts.edges",
+      "equals": 15
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.counts.vertices",
+      "equals": 10
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.counts.solids",
+      "equals": 1
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.com",
+      "equals": null
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.04,
+    "active_document": "box40_hole_r5",
+    "documents": {
+      "box40_hole_r5": {
+        "objects": {
+          "BoxHole": {
+            "visibility": true,
+            "valid": true,
+            "volume": 15214.601837,
+            "bbox": [
+              0,
+              0,
+              0,
+              40,
+              40,
+              10
+            ]
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.box40_hole_r5.objects.BoxHole.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "agent_check": "Visual Thens of TC-13-04. The runner frames with view_fit_viewport, not the GUI Fit All toolbar button. Read the window capture first and describe the solid: a flat square plate 40 x 40 x 10 mm (about four times wider than tall, not a cube) with one circular hole through it. Then read the MCP render (step 'render', structured_content.render.resource_link) and confirm the same silhouette, hole position and camera, with no extra or missing body. Where they disagree the window wins and the difference is a finding against the bridge."
+}

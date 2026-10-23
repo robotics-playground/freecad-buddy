@@ -1,0 +1,1098 @@
+{
+  "id": "TC-03-06",
+  "tc": "TC-03",
+  "title": "All 16 constraint types",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "ConstraintBed",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed"
+      }
+    },
+    {
+      "name": "call1",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Distance",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call2",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              70,
+              5
+            ],
+            "end": [
+              70,
+              45
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 1,
+            "first_pos": 1,
+            "value": {
+              "value": 70,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call3",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              10,
+              20
+            ],
+            "end": [
+              70,
+              20
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Parallel",
+            "first": 2,
+            "second": 0
+          },
+          {
+            "type": "Equal",
+            "first": 2,
+            "second": 0
+          },
+          {
+            "type": "DistanceX",
+            "first": 2,
+            "first_pos": 1,
+            "value": {
+              "value": 10,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 2,
+            "first_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call4",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              30,
+              0
+            ],
+            "end": [
+              30,
+              15
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Perpendicular",
+            "first": 3,
+            "second": 0
+          },
+          {
+            "type": "PointOnObject",
+            "first": 3,
+            "first_pos": 1,
+            "second": 0
+          },
+          {
+            "type": "DistanceX",
+            "first": 3,
+            "first_pos": 1,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 3,
+            "first_pos": 1,
+            "second": 3,
+            "second_pos": 2,
+            "value": {
+              "value": 15,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call5",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              20,
+              40
+            ],
+            "radius": {
+              "value": 2.5,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "circle",
+            "center": [
+              25,
+              40
+            ],
+            "radius": {
+              "value": 2.5,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": 4,
+            "first_pos": 3,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 4,
+            "first_pos": 3,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Radius",
+            "first": 4,
+            "value": {
+              "value": 2.5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Tangent",
+            "first": 4,
+            "second": 5
+          },
+          {
+            "type": "Diameter",
+            "first": 5,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 5,
+            "first_pos": 3,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call6",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              50
+            ],
+            "end": [
+              47.43,
+              92.43
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Angle",
+            "first": 0,
+            "second": 6,
+            "value": {
+              "value": 45,
+              "unit": "deg"
+            }
+          },
+          {
+            "type": "Equal",
+            "first": 6,
+            "second": 0
+          },
+          {
+            "type": "DistanceX",
+            "first": 6,
+            "first_pos": 1,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 6,
+            "first_pos": 1,
+            "value": {
+              "value": 50,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call7",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              -10,
+              60
+            ]
+          },
+          {
+            "kind": "point",
+            "start": [
+              10,
+              60
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Symmetric",
+            "first": 7,
+            "first_pos": 1,
+            "second": 8,
+            "second_pos": 1,
+            "third": -2
+          },
+          {
+            "type": "DistanceX",
+            "first": 7,
+            "first_pos": 1,
+            "second": 8,
+            "second_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 7,
+            "first_pos": 1,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "call8",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              80,
+              60
+            ],
+            "radius": {
+              "value": 3,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Block",
+            "first": 9
+          }
+        ]
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed"
+      }
+    },
+    {
+      "name": "symmetry",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "constraints": [
+          {
+            "type": "Symmetry",
+            "first": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "no_first",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "constraints": [
+          {
+            "type": "Horizontal"
+          }
+        ]
+      }
+    },
+    {
+      "name": "bad_pos",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed",
+        "constraints": [
+          {
+            "type": "Horizontal",
+            "first": 0,
+            "first_pos": 4
+          }
+        ]
+      }
+    },
+    {
+      "name": "verify_after",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ConstraintBed"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.geometry",
+      "equals": []
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints",
+      "equals": []
+    },
+    {
+      "step": "call1",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call1",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call1",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "step": "call2",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call2",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call2",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "step": "call3",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call3",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call3",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    {
+      "step": "call4",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call4",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call4",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "step": "call5",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call5",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call5",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ]
+    },
+    {
+      "step": "call6",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call6",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call6",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        22,
+        23,
+        24,
+        25
+      ]
+    },
+    {
+      "step": "call7",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call7",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call7",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        26,
+        27,
+        28
+      ]
+    },
+    {
+      "step": "call8",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "call8",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "call8",
+      "path": "structured_content.constraint_ids",
+      "equals": [
+        29
+      ]
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.0.id",
+      "equals": 1
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.1.id",
+      "equals": 2
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.2.id",
+      "equals": 3
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.3.id",
+      "equals": 4
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.4.id",
+      "equals": 5
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.5.id",
+      "equals": 6
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.6.id",
+      "equals": 7
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.7.id",
+      "equals": 8
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.8.id",
+      "equals": 9
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.9.id",
+      "equals": 10
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.10.id",
+      "equals": 11
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.11.id",
+      "equals": 12
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.12.id",
+      "equals": 13
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.13.id",
+      "equals": 14
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.14.id",
+      "equals": 15
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.15.id",
+      "equals": 16
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.16.id",
+      "equals": 17
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.17.id",
+      "equals": 18
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.18.id",
+      "equals": 19
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.19.id",
+      "equals": 20
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.20.id",
+      "equals": 21
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.21.id",
+      "equals": 22
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.22.id",
+      "equals": 23
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.23.id",
+      "equals": 24
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.24.id",
+      "equals": 25
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.25.id",
+      "equals": 26
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.26.id",
+      "equals": 27
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.27.id",
+      "equals": 28
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.28.id",
+      "equals": 29
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.0.type",
+      "equals": "Coincident"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.1.type",
+      "equals": "Horizontal"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.2.type",
+      "equals": "Distance"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.3.type",
+      "equals": "Vertical"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.4.type",
+      "equals": "DistanceX"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.5.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.6.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.7.type",
+      "equals": "Parallel"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.8.type",
+      "equals": "Equal"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.9.type",
+      "equals": "DistanceX"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.10.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.11.type",
+      "equals": "Perpendicular"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.12.type",
+      "equals": "PointOnObject"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.13.type",
+      "equals": "DistanceX"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.14.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.15.type",
+      "equals": "DistanceX"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.16.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.17.type",
+      "equals": "Radius"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.18.type",
+      "equals": "Tangent"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.19.type",
+      "equals": "Diameter"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.20.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.21.type",
+      "equals": "Angle"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.22.type",
+      "equals": "Equal"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.23.type",
+      "equals": "DistanceX"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.24.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.25.type",
+      "equals": "Symmetric"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.26.type",
+      "equals": "DistanceX"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.27.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.28.type",
+      "equals": "Block"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.29",
+      "absent": true
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.17.value",
+      "equals": {
+        "value": 2.5,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.21.value.value",
+      "approx": 45.0,
+      "tolerance": 0.045
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.21.value.unit",
+      "equals": "deg"
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.constraint_count",
+      "equals": 29
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.redundant",
+      "equals": []
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.conflicting",
+      "equals": []
+    },
+    {
+      "step": "symmetry",
+      "path": "text",
+      "regex": "^Input validation error: 'Symmetry' is not one of "
+    },
+    {
+      "step": "symmetry",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "no_first",
+      "path": "text",
+      "regex": "^Input validation error: 'first' is a required property"
+    },
+    {
+      "step": "no_first",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "bad_pos",
+      "path": "text",
+      "regex": "^Input validation error: 4 is not one of \\[0, 1, 2, 3\\]"
+    },
+    {
+      "step": "bad_pos",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "verify_after",
+      "path": "structured_content.subject.constraint_count",
+      "equals": 29
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "ConstraintBed": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open ConstraintBed in edit mode (script_exec setEdit, test case Preconditions), capture the window and judge it: five lines, three circles and two points, all green, with constraint glyphs; a horizontal line from the origin, a vertical one, a parallel one, a short perpendicular one, one at 45 degrees; two equal circles that touch; two points mirrored about the V axis; labels including 60, 2.5, 5 and 45; count the glyph and label marks; nothing clipped, no orange or red geometry, no error dialog."
+}

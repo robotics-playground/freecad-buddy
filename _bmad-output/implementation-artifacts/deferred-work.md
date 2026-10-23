@@ -1761,6 +1761,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: none
   summary: Story 10.7b part V — replay every deterministic Then of UAT run 2026-10-03-04 through the scripted runner and explain every verdict difference (epics.md Story 10.7b AC9).
   evidence: Split from Story 10.7b at bmad-build scope check (2026-10-13): needs parts P and R plus encoded scenarios; it is the acceptance proof for the runner.
+  resolution: resolved by spec-10-7b-v-replay-run-2026-10-03-04, replay run `tests/uat/run/2026-10-23-01` (`replay.md`: 255 rows, 0 unexplained).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
   summary: The first `query_capabilities` in a GUI session leaves FreeCAD with no active document or 3D view for the probe, and `View > Visibility` is then refused; the capability probes open `FCB_TMP_varset_probe`, `FCB_TMP_partdesign_probe` and `FCB_TMP_type_probe` without `hidden=True` (conflicts with AD-31, no GUI change the user did not ask for).
@@ -1769,7 +1770,13 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
   summary: `cua-driver invoke_menu` intermittently refuses the allow-listed `View > Visibility > Show All Objects` step (`menu_path_unavailable`, "menu path segment 1 …") during an unattended scripted UAT run, so one pilot scenario per run lands in the escalation queue for a harness reason.
   evidence: Part R live runs 6 and verify-r2: TC-02-02 then TC-14-02 ESCALATE on that step; both PASS in earlier runs with unchanged files. Options for part V: a bounded retry of menu delivery only (a transport step, not a check), or a non-menu route to show the golden objects.
+  resolution: resolved by spec-10-7b-v-replay-run-2026-10-03-04 (D3): the runner delivers a refused Show All again, up to 3 attempts, confirmed through the probe; `results.json` records `attempts`. Replay run `tests/uat/run/2026-10-23-01` and its scratch run before it: one refusal (TC-02-04, `attempts: 2`), no Show All ESCALATE.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-s-uat-review-sampling-rule.md`
   summary: Measure the scripted pixel check's false-alarm rate on real FreeCAD 1.1.4 captures (navigation cube, corner axis, Tasks overlay), not only on the synthetic controls in `tests/uat/runner/pixel_faults.py`.
   evidence: `pixel_faults.py` has 4 planted faults and 2 synthetic controls (D4); no real capture is committed (part R D2). Natural owner is part V, which produces real captures from the 2026-10-03-04 replay (part S review finding 21).
+  resolution: resolved by spec-10-7b-v-replay-run-2026-10-03-04 (D4), replay run `tests/uat/run/2026-10-23-01`: agent read of all 45 real captures; of 32 pixel-checked scenarios the agent judged the visual Then met on 27, judged 2 in part (TC-03-07, TC-03-20) and could not judge 2 from the capture (TC-03-13, TC-12-07); 1 pixel false alarm (TC-11-17, the probe reported no active 3D view; the window shows the box framed); 0 misses.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-v-replay-run-2026-10-03-04.md`
+  summary: Story 10.8 must encode the 30 runner-expressible scenarios the part V replay left `not encoded`, and settle the 15 replay scenarios whose `agent_check` asks for a live action the replay did not take (GUI Fit All, Sketcher edit mode, a capture before the save or between steps, the MCP render kept).
+  evidence: `tests/uat/run/2026-10-23-01/replay.md` rows `not encoded`: TC-03-01, TC-03-02, TC-03-03, TC-03-04, TC-03-08, TC-03-10, TC-03-11, TC-03-12, TC-03-14, TC-03-16, TC-03-18, TC-03-21, TC-04-01, TC-04-08, TC-04-11, TC-04-12, TC-04-14, TC-04-18, TC-04-20, TC-08-04, TC-08-07, TC-08-09, TC-08-10, TC-08-11, TC-08-15, TC-08-16, TC-09-06, TC-14-04, TC-14-06, TC-14-08. Agent read in `report.md`: NOT JUDGED TC-02-01, TC-02-12, TC-02-13, TC-02-15, TC-02-16, TC-02-17, TC-03-05, TC-03-06, TC-03-13, TC-07-03, TC-12-07, TC-13-04, TC-13-06; PARTIAL TC-03-07, TC-03-20.

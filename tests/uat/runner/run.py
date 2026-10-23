@@ -12,9 +12,10 @@ then judge the
 
 Verdicts: ``PASS`` only when every check passes and a capture exists. ``FAIL`` when a check
 fails. ``ESCALATE`` when the probe and MCP disagree, a step or the probe raised, the capture is
-missing, or the scenario names an ``agent_check`` the script cannot judge. A disagreement is
-reported, never retried. Every non-``PASS`` scenario is in the escalation queue with its
-reasons, for the agent and its ``cua-driver`` ladder.
+missing, or the scenario names an ``agent_check`` the script cannot judge. A check failure or
+a disagreement is reported, never retried; only the delivery of the Show All menu step is
+retried when ``cua-driver`` refuses it (``MENU_ATTEMPTS``). Every non-``PASS`` scenario is in the
+escalation queue with its reasons, for the agent and its ``cua-driver`` ladder.
 
 After the run, ``mark_review`` draws the review set: the captures the agent reads
 (``tests/uat/test-plan.md`` §9). Its reasons are ``fail``, ``escalate``, ``no pixel check``,
@@ -55,6 +56,11 @@ DEFAULT_CROSS_TOLERANCE = 1e-6
 PASS, FAIL, ESCALATE = "PASS", "FAIL", "ESCALATE"
 SAMPLE_PERCENT = 20
 MENU_EFFECT_TIMEOUT_S = 5.0
+# cua-driver intermittently refuses a menu path that exists (menu_path_unavailable): in two of
+# the part R live runs one Show All step per run was refused while the same step passed in the
+# runs before. Delivery is retried, never a check.
+MENU_ATTEMPTS = 3
+MENU_UNAVAILABLE = "menu_path_unavailable"
 POLL_S = 0.25
 
 
@@ -94,16 +100,45 @@ class LiveSession:
         return self.client.call(tool, args)
 
     def menu(self, path):
-        capture.invoke_menu(self.pid, self.window_id, path)
+        """Deliver an allow-listed menu command; return the number of delivery attempts.
+
+        A path with a probe effect is delivered again when ``cua-driver`` refuses it as
+        ``menu_path_unavailable``, up to ``MENU_ATTEMPTS`` in total. After each refusal the probe
+        is read for up to ``4 * POLL_S``; the path is delivered again only when the effect is
+        still absent, so a refused delivery that took effect late is not sent twice.
+        """
         effect = MENU_EFFECTS.get(tuple(path))
-        deadline = time.monotonic() + MENU_EFFECT_TIMEOUT_S
-        while effect is not None and not effect(self.snapshot()):
-            if time.monotonic() > deadline:
-                raise MenuError(
-                    f"menu {list(path)} had no effect in {MENU_EFFECT_TIMEOUT_S:.0f} s; "
-                    "FreeCAD may not have had the foreground"
-                )
+        attempts = 0
+        while True:
+            attempts += 1
+            try:
+                capture.invoke_menu(self.pid, self.window_id, path)
+                break
+            except capture.CuaError as exc:
+                if effect is None or MENU_UNAVAILABLE not in str(exc):
+                    raise
+                if self._shows(effect, 4 * POLL_S):
+                    return attempts
+                if attempts == MENU_ATTEMPTS:
+                    raise MenuError(
+                        f"menu {list(path)} refused on {attempts} of {MENU_ATTEMPTS} "
+                        f"attempts: {exc}"
+                    ) from exc
+        if effect is not None and not self._shows(effect, MENU_EFFECT_TIMEOUT_S):
+            raise MenuError(
+                f"menu {list(path)} had no effect in {MENU_EFFECT_TIMEOUT_S:.0f} s; "
+                "FreeCAD may not have had the foreground"
+            )
+        return attempts
+
+    def _shows(self, effect, seconds):
+        """Poll the probe every ``POLL_S`` for up to ``seconds``; True once ``effect`` holds."""
+        deadline = time.monotonic() + seconds
+        while not effect(self.snapshot()):
+            if time.monotonic() >= deadline:
+                return False
             time.sleep(POLL_S)
+        return True
 
     def snapshot(self):
         return launch.get_snapshot(self.probe_record)
@@ -264,8 +299,8 @@ def verdict_of(record):
 def _run_steps(item, session, bindings, record):
     for step in item["steps"]:
         if "menu" in step:
-            session.menu(step["menu"])
-            record["steps"].append({"menu": step["menu"]})
+            attempts = session.menu(step["menu"])
+            record["steps"].append({"menu": step["menu"], "attempts": attempts})
             continue
         args = substitute(step.get("args", {}), bindings)
         result = session.call(step["mcp"], args)

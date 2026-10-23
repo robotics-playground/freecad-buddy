@@ -1,0 +1,157 @@
+{
+  "id": "TC-09-17",
+  "tc": "TC-09",
+  "title": "A broken recompute returns RECOMPUTE_ERROR, not a false OK",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0917Broken"
+      }
+    },
+    {
+      "name": "build",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import Part\nimport Sketcher\nbody = doc.addObject('PartDesign::Body', 'Body')\nsketch = body.newObject('Sketcher::SketchObject', 'Sketch')\nsketch.AttachmentSupport = [(doc.getObject('XY_Plane') or body.Origin.OriginFeatures[3], '')]\nsketch.MapMode = 'FlatFace'\npoints = [App.Vector(0, 0, 0), App.Vector(20, 0, 0), App.Vector(20, 20, 0), App.Vector(0, 20, 0)]\nfor i in range(4):\n    sketch.addGeometry(Part.LineSegment(points[i], points[(i + 1) % 4]))\nfor i in range(4):\n    sketch.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sketch\npad.Length = 10\ndoc.recompute()\nclean_volume = pad.Shape.Volume\nsketch.deleteAllGeometry()\ndoc.recompute()\nresult = [clean_volume, pad.State, pad.getStatusString()]"
+      }
+    },
+    {
+      "name": "grade",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "grade_again",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "clean_open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "name": "clean",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$clean_open.structured_content.doc"
+      }
+    },
+    {
+      "name": "clean_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$clean_open.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "build",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "grade",
+      "path": "status",
+      "equals": "RECOMPUTE_ERROR"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.verdict",
+      "equals": "$grade.status"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.0.id",
+      "equals": "recompute.object"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.0.passed",
+      "equals": false
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.0.detail.code",
+      "equals": "recompute.error"
+    },
+    {
+      "step": "grade",
+      "path": "text",
+      "regex": "^Recompute: [1-9]\\d* error\\(s\\): .*\\bPad\\b.*\\.$"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.0.detail.objects",
+      "equals": [
+        "Body"
+      ]
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.0.measured",
+      "equals": "Touched"
+    },
+    {
+      "step": "grade_again",
+      "path": "status",
+      "equals": "$grade.status"
+    },
+    {
+      "step": "grade_again",
+      "path": "structured_content.subject.failing_objects",
+      "equals": "$grade.structured_content.subject.failing_objects"
+    },
+    {
+      "step": "clean_open",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "clean",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "clean_close",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 4,
+    "documents": {
+      "TC0917Broken": {
+        "objects": {
+          "Pad": {
+            "visibility": true,
+            "volume": 4000
+          }
+        }
+      }
+    }
+  },
+  "pixel": {
+    "samples": [
+      "TC0917Broken.Pad"
+    ]
+  },
+  "agent_check": "Read the capture: the FreeCAD tree marks the failing object (Pad) with an error icon, and the 3D view still shows the last valid 20 x 20 x 10 block (FreeCAD keeps it on a failed recompute). If the fit step did not return OK (the test case expects the MCP fit may refuse a faulted document), the capture is unframed: click the GUI Fit All toolbar button, capture the window and judge that. A tree with no error marker on Pad is a finding."
+}

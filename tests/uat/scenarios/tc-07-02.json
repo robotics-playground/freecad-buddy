@@ -1,0 +1,200 @@
+{
+  "id": "TC-07-02",
+  "tc": "TC-07",
+  "title": "verify_shape with no checks is measurement-only",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "measure",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Cylinder"
+      }
+    },
+    {
+      "name": "graded",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Cylinder",
+        "checks": [
+          {
+            "fn": "expect_volume",
+            "expect": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "open",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[FEATURE\\] Cylinder$"
+    },
+    {
+      "step": "measure",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.0.id",
+      "equals": "shape.volume"
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.1.id",
+      "equals": "shape.bbox"
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.2.id",
+      "equals": "shape.solid_count"
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.3.id",
+      "equals": "shape.valid"
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.4.id",
+      "equals": "shape.watertight"
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.5",
+      "absent": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.0.expected",
+      "absent": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.1.expected",
+      "absent": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.2.expected",
+      "absent": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.3.expected",
+      "absent": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.4.expected",
+      "absent": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.0.passed",
+      "equals": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.1.passed",
+      "equals": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.2.passed",
+      "equals": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.3.passed",
+      "equals": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.4.passed",
+      "equals": true
+    },
+    {
+      "step": "measure",
+      "path": "structured_content.checks.0.measured",
+      "approx": 1570.7963,
+      "tolerance": 0.01
+    },
+    {
+      "step": "graded",
+      "path": "status",
+      "equals": "SPEC_FAILED"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "documents": {
+      "cylinder_r5_h20": {
+        "objects": {
+          "Cylinder": {
+            "visibility": true,
+            "valid": true,
+            "volume": 1570.7963
+          }
+        }
+      }
+    }
+  },
+  "cross": [
+    {
+      "mcp": "measure.structured_content.checks.0.measured",
+      "probe": "documents.cylinder_r5_h20.objects.Cylinder.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "cylinder_r5_h20.Cylinder"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

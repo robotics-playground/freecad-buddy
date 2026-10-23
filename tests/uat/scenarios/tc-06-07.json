@@ -1,0 +1,195 @@
+{
+  "id": "TC-06-07",
+  "tc": "TC-06",
+  "title": "camera custom requires exactly four numbers",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "custom",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "custom",
+          "custom_orientation": [
+            0.424708,
+            0.17592,
+            0.339851,
+            0.820473
+          ]
+        }
+      }
+    },
+    {
+      "name": "iso",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "iso"
+        }
+      }
+    },
+    {
+      "name": "missing",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "custom"
+        }
+      }
+    },
+    {
+      "name": "three",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "custom",
+          "custom_orientation": [
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "name": "five",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "custom",
+          "custom_orientation": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "name": "zero",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "custom",
+          "custom_orientation": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "name": "keep",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "code": "import shutil\nfor source, target in [(r'$custom.structured_content.render.resource_link', r'$RUN_DIR/tc-06-07-custom.png'), (r'$iso.structured_content.render.resource_link', r'$RUN_DIR/tc-06-07-iso.png')]:\n    shutil.copyfile(source, target)\nresult = 'kept'"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "custom",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "custom",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "missing",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "missing",
+      "path": "detail.message",
+      "equals": "camera 'custom' requires custom_orientation (a 4-float quaternion)"
+    },
+    {
+      "step": "three",
+      "path": "text",
+      "regex": "^Input validation error: "
+    },
+    {
+      "step": "five",
+      "path": "text",
+      "regex": "^Input validation error: "
+    },
+    {
+      "step": "zero",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "zero",
+      "path": "detail.message",
+      "regex": "^custom_orientation is degenerate \\(zero norm\\)"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 6,
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "Read the renders the keep step copied to the run folder: tc-06-07-custom.png must be visually the same view as tc-06-07-iso.png. Then say what the window capture shows (how many faces are visible, which way is up, which corner faces the viewer) and judge tc-06-07-custom.png against it: a three-quarter view of the same box. The window wins on any disagreement."
+}

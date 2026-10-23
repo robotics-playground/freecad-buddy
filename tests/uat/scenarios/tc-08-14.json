@@ -1,0 +1,658 @@
+{
+  "id": "TC-08-14",
+  "tc": "TC-08",
+  "title": "Tampered, malformed and foreign tokens produce distinct messages",
+  "launch": {
+    "FREECAD_BUDDY_AUTO_APPROVE": "0"
+  },
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0814"
+      }
+    },
+    {
+      "name": "body_preview",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_body_create",
+          "args": {
+            "name": "Body"
+          }
+        }
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Body",
+        "confirm": {
+          "preview_id": "$body_preview.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "sketch_preview",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_create",
+          "args": {
+            "name": "Sketch",
+            "body": "Body",
+            "plane": "XY"
+          }
+        }
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Sketch",
+        "body": "Body",
+        "plane": "XY",
+        "confirm": {
+          "preview_id": "$sketch_preview.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "profile_preview",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_add_geometry",
+          "args": {
+            "sketch": "Sketch",
+            "geometry": [
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  0
+                ],
+                "end": [
+                  20,
+                  0
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  0
+                ],
+                "end": [
+                  20,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  20
+                ],
+                "end": [
+                  0,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  20
+                ],
+                "end": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "constraints": [
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 2,
+                "second": 1,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 1,
+                "first_pos": 2,
+                "second": 2,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 2,
+                "first_pos": 2,
+                "second": 3,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 3,
+                "first_pos": 2,
+                "second": 0,
+                "second_pos": 1
+              },
+              {
+                "type": "Horizontal",
+                "first": 0
+              },
+              {
+                "type": "Horizontal",
+                "first": 2
+              },
+              {
+                "type": "Vertical",
+                "first": 1
+              },
+              {
+                "type": "Vertical",
+                "first": 3
+              },
+              {
+                "type": "DistanceX",
+                "first": 0,
+                "first_pos": 1,
+                "second": 0,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              },
+              {
+                "type": "DistanceY",
+                "first": 1,
+                "first_pos": 1,
+                "second": 1,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              },
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 1,
+                "second": -1,
+                "second_pos": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          }
+        ],
+        "confirm": {
+          "preview_id": "$profile_preview.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "pad_preview",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "tamper",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "t = '$pad_preview.structured_content.preview_id'\nbody, signature = t[len('fcb-preview:'):].rsplit('.', 1)\nprint('fcb-preview:' + body + '.' + ('C' if signature[0] == 'B' else 'B') + signature[1:], end='')"
+      }
+    },
+    {
+      "name": "truncate",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "t = '$pad_preview.structured_content.preview_id'\nbody, signature = t[len('fcb-preview:'):].rsplit('.', 1)\nprint('fcb-preview:' + body[:len(body) // 8 * 4] + '.' + signature, end='')"
+      }
+    },
+    {
+      "name": "no_prefix",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "not-a-token"
+        }
+      }
+    },
+    {
+      "name": "no_separator",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "fcb-preview:onlybody"
+        }
+      }
+    },
+    {
+      "name": "empty_body",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "fcb-preview:.sig"
+        }
+      }
+    },
+    {
+      "name": "empty_signature",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "fcb-preview:body."
+        }
+      }
+    },
+    {
+      "name": "bad_length",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "fcb-preview:a.a"
+        }
+      }
+    },
+    {
+      "name": "outside_alphabet",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "fcb-preview:!!!!.!!!!"
+        }
+      }
+    },
+    {
+      "name": "tampered",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$tamper.structured_content.stdout"
+        }
+      }
+    },
+    {
+      "name": "truncated",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$truncate.structured_content.stdout"
+        }
+      }
+    },
+    {
+      "name": "non_string",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": 12345
+        }
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "pad_preview",
+      "path": "structured_content.preview_id",
+      "regex": "^fcb-preview:"
+    },
+    {
+      "step": "tamper",
+      "path": "structured_content.stdout",
+      "regex": "^fcb-preview:[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+    },
+    {
+      "step": "truncate",
+      "path": "structured_content.stdout",
+      "regex": "^fcb-preview:[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+    },
+    {
+      "step": "no_prefix",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "no_prefix",
+      "path": "detail.message",
+      "equals": "confirm.preview_id is not a preview token"
+    },
+    {
+      "step": "no_separator",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "no_separator",
+      "path": "detail.message",
+      "equals": "confirm.preview_id is malformed"
+    },
+    {
+      "step": "empty_body",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "empty_body",
+      "path": "detail.message",
+      "equals": "confirm.preview_id is malformed"
+    },
+    {
+      "step": "empty_signature",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "empty_signature",
+      "path": "detail.message",
+      "equals": "confirm.preview_id is malformed"
+    },
+    {
+      "step": "bad_length",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "bad_length",
+      "path": "detail.message",
+      "equals": "confirm.preview_id is not decodable"
+    },
+    {
+      "step": "outside_alphabet",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "outside_alphabet",
+      "path": "detail.message",
+      "equals": "confirm.preview_id carries an invalid signature"
+    },
+    {
+      "step": "tampered",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "tampered",
+      "path": "detail.message",
+      "equals": "confirm.preview_id carries an invalid signature"
+    },
+    {
+      "step": "truncated",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "truncated",
+      "path": "detail.message",
+      "equals": "confirm.preview_id carries an invalid signature"
+    },
+    {
+      "step": "non_string",
+      "path": "text",
+      "regex": "Input validation error|confirm\\.preview_id is not a preview token"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^(?![\\s\\S]*\\] Pad\\b)"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "TC0814": {
+        "objects": {
+          "Sketch": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    }
+  },
+  "agent_check": "The final state is a sketch, so the pixel check cannot judge it, and the runner takes no before capture. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then judge the capture: a flat 20 x 20 mm sketch, no extruded solid, and no error dialog left open by any variant."
+}

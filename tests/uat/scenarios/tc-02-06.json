@@ -1,0 +1,253 @@
+{
+  "id": "TC-02-06",
+  "tc": "TC-02",
+  "title": "query_object returns properties and error state for a Pad",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "tc-02-06-pad"
+      }
+    },
+    {
+      "name": "build",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import Sketcher\nbody = doc.addObject('PartDesign::Body', 'Body')\nsketch = body.newObject('Sketcher::SketchObject', 'Sketch')\ncorners = [App.Vector(0, 0, 0), App.Vector(20, 0, 0), App.Vector(20, 10, 0), App.Vector(0, 10, 0)]\nfor i in range(4):\n    sketch.addGeometry(Part.LineSegment(corners[i], corners[(i + 1) % 4]))\nfor i in range(4):\n    sketch.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\nsketch.addConstraint(Sketcher.Constraint('Horizontal', 0))\nsketch.addConstraint(Sketcher.Constraint('Horizontal', 2))\nsketch.addConstraint(Sketcher.Constraint('Vertical', 1))\nsketch.addConstraint(Sketcher.Constraint('Vertical', 3))\nsketch.addConstraint(Sketcher.Constraint('DistanceX', 0, 20))\nsketch.addConstraint(Sketcher.Constraint('DistanceY', 1, 10))\nsketch.addConstraint(Sketcher.Constraint('Coincident', 0, 1, -1, 1))\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sketch\npad.Length = 5\ndoc.recompute()\nresult = round(pad.Shape.Volume, 3)"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "healthy",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "Pad"
+      }
+    },
+    {
+      "name": "typed_break",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "Pad",
+        "parameters": {
+          "Length": {
+            "value": 0,
+            "unit": "mm"
+          }
+        }
+      }
+    },
+    {
+      "name": "after_typed",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "Pad"
+      }
+    },
+    {
+      "name": "exec_break",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "doc.getObject('Pad').Length = 0"
+      }
+    },
+    {
+      "name": "recompute_broken",
+      "mcp": "document_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "broken",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "Pad"
+      }
+    },
+    {
+      "name": "unknown",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "NoSuchPad"
+      }
+    },
+    {
+      "name": "restore",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "doc.getObject('Pad').Length = '$healthy.structured_content.properties.Length'"
+      }
+    },
+    {
+      "name": "recompute_restored",
+      "mcp": "document_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "build",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "\\[PAD\\] Pad\\b"
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.name",
+      "equals": "Pad"
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.label",
+      "absent": false
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.type",
+      "equals": "PartDesign::Pad"
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.properties.Length",
+      "regex": "^\\d+(\\.\\d+)? mm$"
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.properties.Type",
+      "absent": false
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.properties.Profile",
+      "absent": false
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.properties.Reversed",
+      "absent": false
+    },
+    {
+      "step": "healthy",
+      "path": "structured_content.error",
+      "equals": null
+    },
+    {
+      "step": "typed_break",
+      "path": "status",
+      "regex": "^(?!OK$)"
+    },
+    {
+      "step": "after_typed",
+      "path": "structured_content.error",
+      "equals": null
+    },
+    {
+      "step": "after_typed",
+      "path": "structured_content.properties.Length",
+      "equals": "$healthy.structured_content.properties.Length"
+    },
+    {
+      "step": "exec_break",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "recompute_broken",
+      "path": "status",
+      "equals": "RECOMPUTE_ERROR"
+    },
+    {
+      "step": "recompute_broken",
+      "path": "structured_content.errors.Pad.name",
+      "equals": "Pad"
+    },
+    {
+      "step": "broken",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "broken",
+      "path": "structured_content.error",
+      "regex": "\\S"
+    },
+    {
+      "step": "unknown",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown",
+      "path": "detail.message",
+      "equals": "unknown object: NoSuchPad"
+    },
+    {
+      "step": "recompute_restored",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 1.0,
+    "active_document": "tc_02_06_pad",
+    "documents": {
+      "tc_02_06_pad": {
+        "objects": {
+          "Pad": {
+            "type": "PartDesign::Pad",
+            "visibility": true,
+            "valid": true,
+            "volume": 1000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "tc_02_06_pad.Pad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

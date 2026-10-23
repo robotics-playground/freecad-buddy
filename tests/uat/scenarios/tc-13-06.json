@@ -1,0 +1,163 @@
+{
+  "id": "TC-13-06",
+  "tc": "TC-13",
+  "title": "Render parity — the MCP render matches the live viewport",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box40-hole-r5.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "mass_before",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "BoxHole"
+      }
+    },
+    {
+      "name": "render",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "view": {
+          "camera": "iso",
+          "include": [
+            "BoxHole"
+          ]
+        }
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "BoxHole"
+      }
+    },
+    {
+      "name": "recompute",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^v \\[FEATURE\\] BoxHole\\b"
+    },
+    {
+      "step": "mass_before",
+      "path": "structured_content.volume.value",
+      "approx": 15214.6,
+      "tolerance": 15.2146
+    },
+    {
+      "step": "mass_before",
+      "path": "structured_content.bbox.xmax.value",
+      "approx": 40.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass_before",
+      "path": "structured_content.bbox.ymax.value",
+      "approx": 40.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "mass_before",
+      "path": "structured_content.bbox.zmax.value",
+      "approx": 10.0,
+      "tolerance": 0.01
+    },
+    {
+      "step": "render",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "render",
+      "path": "structured_content.scene.rendered_objects.0",
+      "equals": "BoxHole"
+    },
+    {
+      "step": "render",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "equals": "$mass_before.structured_content.volume.value"
+    },
+    {
+      "step": "recompute",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "recompute",
+      "path": "structured_content.subject.failing_objects",
+      "equals": []
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 15.214602,
+    "active_document": "box40_hole_r5",
+    "documents": {
+      "box40_hole_r5": {
+        "objects": {
+          "BoxHole": {
+            "visibility": true,
+            "valid": true,
+            "volume": 15214.601837
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.box40_hole_r5.objects.BoxHole.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "agent_check": "Visual Thens of TC-13-06. The runner cannot press the Standard Views or Fit All toolbar buttons, so the window keeps FreeCAD's default camera and is framed by view_fit_viewport; record that camera and compare against the matching MCP camera (the test case's own fallback). Read the window capture first and describe it, then read the MCP render (step 'render', structured_content.render.resource_link): same plate outline and through hole in the same relative position, same visible face count and up direction, a flat 40 x 40 x 10 plate in both, nothing in the window missing from the render and no Body, Sketch or Origin child in the render. AD-34 tone band: no render face is black or white, each face is separable from the background (mean interior tone at least 24/255 from it on one channel, every channel within [20, 235]). The tone order is NOT compared with the window."
+}

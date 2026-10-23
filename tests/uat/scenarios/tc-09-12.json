@@ -1,0 +1,225 @@
+{
+  "id": "TC-09-12",
+  "tc": "TC-09",
+  "title": "An unknown doc handle returns INVALID_INPUT",
+  "steps": [
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "unknown_tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "fcb-doc:does-not-exist"
+      }
+    },
+    {
+      "name": "unknown_recompute",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "fcb-doc:does-not-exist"
+      }
+    },
+    {
+      "name": "unknown_object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "fcb-doc:does-not-exist",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "unknown_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "fcb-doc:does-not-exist"
+      }
+    },
+    {
+      "name": "malformed",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "not-a-handle at all"
+      }
+    },
+    {
+      "name": "other_open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      }
+    },
+    {
+      "name": "other_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$other_open.structured_content.doc"
+      }
+    },
+    {
+      "name": "stale",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$other_open.structured_content.doc",
+        "object": "Cylinder"
+      }
+    },
+    {
+      "name": "stale_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$other_open.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "listed",
+      "path": "structured_content.documents",
+      "equals": []
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "unknown_tree",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "unknown_tree",
+      "path": "text",
+      "regex": "^INVALID_INPUT: .*fcb-doc:does-not-exist"
+    },
+    {
+      "step": "unknown_recompute",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_recompute",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_recompute",
+      "path": "detail.message",
+      "regex": "fcb-doc:does-not-exist"
+    },
+    {
+      "step": "unknown_object",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_object",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_object",
+      "path": "detail.message",
+      "regex": "fcb-doc:does-not-exist"
+    },
+    {
+      "step": "unknown_close",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_close",
+      "path": "detail.code",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_close",
+      "path": "detail.message",
+      "regex": "fcb-doc:does-not-exist"
+    },
+    {
+      "step": "malformed",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "other_open",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "other_close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "stale",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "stale_close",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 6,
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

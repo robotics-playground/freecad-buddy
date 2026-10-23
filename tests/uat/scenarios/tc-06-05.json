@@ -1,0 +1,228 @@
+{
+  "id": "TC-06-05",
+  "tc": "TC-06",
+  "title": "focus and highlight frame and accent the target",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "tc0605"
+      }
+    },
+    {
+      "name": "fixture",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "doc.addObject('Part::Box', 'BoxA')\nother = doc.addObject('Part::Box', 'BoxB')\nother.Length = 20\nother.Placement = FreeCAD.Placement(FreeCAD.Vector(10, 0, 0), FreeCAD.Rotation())\ndoc.recompute()\nresult = [o.Name for o in doc.Objects]"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BoxA"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "unfocused",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "camera": "iso"
+        }
+      }
+    },
+    {
+      "name": "focused",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "camera": "iso",
+          "focus": {
+            "object": "BoxA",
+            "element_type": "face",
+            "index": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "highlight",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "camera": "iso",
+          "highlight": {
+            "object": "BoxA"
+          }
+        }
+      }
+    },
+    {
+      "name": "out_of_range",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "focus": {
+            "object": "BoxA",
+            "element_type": "face",
+            "index": 9999
+          }
+        }
+      }
+    },
+    {
+      "name": "partial",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "focus": {
+            "object": "BoxA",
+            "element_type": "face"
+          }
+        }
+      }
+    },
+    {
+      "name": "mixed",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "focus": {
+            "object": "BoxA",
+            "mapped_name": "Face1",
+            "element_type": "face",
+            "index": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "keep",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import shutil\nfor source, target in [(r'$unfocused.structured_content.render.resource_link', r'$RUN_DIR/tc-06-05-unfocused.png'), (r'$focused.structured_content.render.resource_link', r'$RUN_DIR/tc-06-05-focused.png'), (r'$highlight.structured_content.render.resource_link', r'$RUN_DIR/tc-06-05-highlight.png')]:\n    shutil.copyfile(source, target)\nresult = 'kept'"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "mass",
+      "path": "structured_content.counts.faces",
+      "equals": 6
+    },
+    {
+      "step": "unfocused",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "focused",
+      "path": "structured_content.scene.focused_on",
+      "equals": {
+        "object": "BoxA",
+        "element_type": "face",
+        "index": 0
+      }
+    },
+    {
+      "step": "highlight",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "out_of_range",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "out_of_range",
+      "path": "structured_content.scene.focused_on",
+      "equals": {
+        "object": "BoxA"
+      }
+    },
+    {
+      "step": "partial",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "partial",
+      "path": "detail.message",
+      "equals": "sub-element selector requires both element_type and index"
+    },
+    {
+      "step": "mixed",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "mixed",
+      "path": "detail.message",
+      "equals": "selector cannot carry both mapped_name and element_type/index"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 1,
+    "active_document": "tc0605",
+    "documents": {
+      "tc0605": {
+        "objects": {
+          "BoxA": {
+            "visibility": true,
+            "valid": true,
+            "volume": 1000
+          },
+          "BoxB": {
+            "visibility": true,
+            "valid": true,
+            "volume": 2000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.tc0605.objects.BoxA.shape.volume",
+      "tolerance": 1
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "tc0605.BoxA"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "Read the renders the keep step copied to the run folder. tc-06-05-focused.png must fill more of the frame with BoxA than tc-06-05-unfocused.png. tc-06-05-highlight.png must draw BoxA in the accent orange while BoxB keeps its own colour. Then say what the window capture shows (shape, framing, the colour of every face: no face is accent orange) and judge tc-06-05-unfocused.png against it. The window wins on any disagreement."
+}

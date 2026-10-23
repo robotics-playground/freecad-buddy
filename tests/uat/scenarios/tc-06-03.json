@@ -1,0 +1,214 @@
+{
+  "id": "TC-06-03",
+  "tc": "TC-06",
+  "title": "include and exclude select the right objects",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "tc0603"
+      }
+    },
+    {
+      "name": "fixture",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "body = doc.addObject('PartDesign::Body', 'BodyA')\npad = doc.addObject('PartDesign::AdditiveBox', 'PadA')\nbody.addObject(pad)\npad.Length = 20\npad.Width = 20\npad.Height = 10\nbox = doc.addObject('Part::Box', 'BoxB')\nbox.Length = 20\nbox.Width = 10\nbox.Height = 15\nbox.Placement = FreeCAD.Placement(FreeCAD.Vector(20, 0, 0), FreeCAD.Rotation())\ndoc.recompute()\nresult = [o.Name for o in doc.Objects]"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 2
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "default",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "include_a",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "include": [
+            "PadA"
+          ]
+        }
+      }
+    },
+    {
+      "name": "exclude_a",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "exclude": [
+            "PadA"
+          ]
+        }
+      }
+    },
+    {
+      "name": "unknown",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "include": [
+            "NoSuchObject"
+          ]
+        }
+      }
+    },
+    {
+      "name": "include_body",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "include": [
+            "BodyA"
+          ]
+        }
+      }
+    },
+    {
+      "name": "keep",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import shutil\nfor source, target in [(r'$default.structured_content.render.resource_link', r'$RUN_DIR/tc-06-03-default.png'), (r'$include_a.structured_content.render.resource_link', r'$RUN_DIR/tc-06-03-include-a.png'), (r'$exclude_a.structured_content.render.resource_link', r'$RUN_DIR/tc-06-03-exclude-a.png'), (r'$include_body.structured_content.render.resource_link', r'$RUN_DIR/tc-06-03-include-body.png')]:\n    shutil.copyfile(source, target)\nresult = 'kept'"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)\\[BODY\\] BodyA\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)\\] PadA\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)\\] BoxB\\b"
+    },
+    {
+      "step": "default",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "default",
+      "path": "structured_content.scene.rendered_objects",
+      "equals": [
+        "PadA",
+        "BoxB"
+      ]
+    },
+    {
+      "step": "include_a",
+      "path": "structured_content.scene.rendered_objects",
+      "equals": [
+        "PadA"
+      ]
+    },
+    {
+      "step": "exclude_a",
+      "path": "structured_content.scene.rendered_objects",
+      "equals": [
+        "BoxB"
+      ]
+    },
+    {
+      "step": "unknown",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown",
+      "path": "detail.message",
+      "equals": "unknown object: NoSuchObject"
+    },
+    {
+      "step": "include_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "include_body",
+      "path": "structured_content.scene.rendered_objects",
+      "equals": [
+        "BodyA"
+      ]
+    },
+    {
+      "step": "include_body",
+      "path": "structured_content.render.empty_scene",
+      "equals": false
+    },
+    {
+      "step": "include_body",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 3,
+    "active_document": "tc0603",
+    "documents": {
+      "tc0603": {
+        "objects": {
+          "PadA": {
+            "visibility": true,
+            "valid": true,
+            "volume": 4000
+          },
+          "BoxB": {
+            "visibility": true,
+            "valid": true,
+            "volume": 3000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "tc0603.PadA"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "Read the renders the keep step copied to the run folder. tc-06-03-include-a.png must show one solid (PadA) and tc-06-03-exclude-a.png the rest (BoxB); neither may show a datum plane. tc-06-03-include-body.png must show the Tip solid of BodyA (the 20 x 20 x 10 PadA block), not a blank image. Then say what the window capture shows (count the solids; name any datum plane, origin marker or sketch line) and judge tc-06-03-default.png against it: the same two solids, no datum plane. The window wins on any disagreement."
+}

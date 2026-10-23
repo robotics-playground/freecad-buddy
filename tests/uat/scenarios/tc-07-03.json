@@ -1,0 +1,209 @@
+{
+  "id": "TC-07-03",
+  "tc": "TC-07",
+  "title": "verify_sketch PASS is equivalent to FullyConstrained, both directions",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "tc07_sketch"
+      }
+    },
+    {
+      "name": "build",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "sk = doc.addObject('Sketcher::SketchObject', 'Sketch'); sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(10, 0, 0))); doc.addObject('App::DocumentObjectGroup', 'Group'); doc.recompute()"
+      }
+    },
+    {
+      "name": "grade_under",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "constrain",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "value": {
+              "value": 10,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "grade_full",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "duplicate",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "constraints": [
+          {
+            "type": "Horizontal",
+            "first": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "grade_after",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "not_sketch",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Group"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "build",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "grade_under",
+      "path": "status",
+      "equals": "SPEC_FAILED"
+    },
+    {
+      "step": "grade_under",
+      "path": "structured_content.checks.0.id",
+      "equals": "sketch.fully_constrained"
+    },
+    {
+      "step": "grade_under",
+      "path": "structured_content.checks.0.passed",
+      "equals": false
+    },
+    {
+      "step": "grade_under",
+      "path": "structured_content.subject.dof",
+      "equals": 4
+    },
+    {
+      "step": "grade_under",
+      "path": "structured_content.checks.0.detail.message",
+      "regex": "^dof=\\d+, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0$"
+    },
+    {
+      "step": "constrain",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "grade_full",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "grade_full",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "grade_full",
+      "path": "structured_content.subject.fully_constrained",
+      "equals": true
+    },
+    {
+      "step": "duplicate",
+      "path": "status",
+      "equals": "RECOMPUTE_ERROR"
+    },
+    {
+      "step": "duplicate",
+      "path": "structured_content.mutation.post_verify.recompute_clean",
+      "equals": false
+    },
+    {
+      "step": "duplicate",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": true
+    },
+    {
+      "step": "grade_after",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "grade_after",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "not_sketch",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "not_sketch",
+      "path": "detail.message",
+      "equals": "object is not a sketch: Group"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "tc07_sketch": {
+        "objects": {
+          "Sketch": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    }
+  },
+  "agent_check": "The final state is a sketch, so the pixel check cannot judge it. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then judge the capture: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, drawn in FreeCAD's fully-constrained colour rather than the under-constrained white."
+}

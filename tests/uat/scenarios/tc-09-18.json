@@ -1,0 +1,162 @@
+{
+  "id": "TC-09-18",
+  "tc": "TC-09",
+  "title": "A broken reference surfaces the failing object and its status string",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0918Broken"
+      }
+    },
+    {
+      "name": "build",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import Part\nimport Sketcher\nbody = doc.addObject('PartDesign::Body', 'Body')\nsketch = body.newObject('Sketcher::SketchObject', 'Sketch')\nsketch.AttachmentSupport = [(doc.getObject('XY_Plane') or body.Origin.OriginFeatures[3], '')]\nsketch.MapMode = 'FlatFace'\npoints = [App.Vector(0, 0, 0), App.Vector(20, 0, 0), App.Vector(20, 20, 0), App.Vector(0, 20, 0)]\nfor i in range(4):\n    sketch.addGeometry(Part.LineSegment(points[i], points[(i + 1) % 4]))\nfor i in range(4):\n    sketch.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\npad = body.newObject('PartDesign::Pad', 'Pad')\npad.Profile = sketch\npad.Length = 10\ndoc.recompute()\nclean_volume = pad.Shape.Volume\nbody.removeObject(sketch)\ndoc.removeObject('Sketch')\ndoc.recompute()\nresult = [clean_volume, pad.State, pad.getStatusString(), pad.Profile]"
+      }
+    },
+    {
+      "name": "grade",
+      "mcp": "verify_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "deps",
+      "mcp": "query_dependencies",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "pad_deps",
+      "mcp": "query_dependencies",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "Pad"
+      }
+    },
+    {
+      "name": "freecad_status",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "print(doc.getObject('Pad').getStatusString(), end='')"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "build",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "grade",
+      "path": "status",
+      "equals": "RECOMPUTE_ERROR"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.subject.failing_objects",
+      "equals": [
+        "Body",
+        "Pad"
+      ]
+    },
+    {
+      "step": "freecad_status",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "freecad_status",
+      "path": "structured_content.stdout",
+      "regex": "\\S"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.1.id",
+      "equals": "recompute.object"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.1.measured",
+      "equals": "$freecad_status.structured_content.stdout"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.1.measured",
+      "regex": "\\S"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.1.detail.message",
+      "equals": "Pad: $freecad_status.structured_content.stdout"
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.1.detail.objects",
+      "equals": [
+        "Pad"
+      ]
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.0.detail.objects",
+      "equals": [
+        "Body"
+      ]
+    },
+    {
+      "step": "grade",
+      "path": "structured_content.checks.2",
+      "absent": true
+    },
+    {
+      "step": "deps",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad_deps",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad_deps",
+      "path": "structured_content.out_list",
+      "equals": []
+    }
+  ],
+  "probe": {
+    "tolerance": 4,
+    "documents": {
+      "TC0918Broken": {
+        "objects": {
+          "Pad": {
+            "visibility": true,
+            "volume": 4000
+          }
+        }
+      }
+    }
+  },
+  "pixel": {
+    "samples": [
+      "TC0918Broken.Pad"
+    ]
+  },
+  "agent_check": "Read the capture: the object named in subject.failing_objects (Pad) has an error icon in the tree and its Sketch is gone from the tree; the 3D view still shows the last valid 20 x 20 x 10 block (FreeCAD keeps it on a failed recompute). If the fit step did not return OK (the test case expects the MCP fit may refuse a faulted document), the capture is unframed: click the GUI Fit All toolbar button, capture the window and judge that. A tree with no error marker on Pad is a finding."
+}

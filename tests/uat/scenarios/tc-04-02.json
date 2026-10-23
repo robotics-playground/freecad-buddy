@@ -1,0 +1,377 @@
+{
+  "id": "TC-04-02",
+  "tc": "TC-04",
+  "title": "feature_pad Length with analytic volume",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Block"
+      }
+    },
+    {
+      "name": "block_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BlockBody"
+      }
+    },
+    {
+      "name": "tree_given",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 2
+      }
+    },
+    {
+      "name": "block_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BlockProfile",
+        "plane": "XY",
+        "body": "BlockBody"
+      }
+    },
+    {
+      "name": "block_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BlockProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              30
+            ],
+            "end": [
+              0,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              30
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sketch_check",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BlockProfile"
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "BlockBody",
+        "profile": "BlockProfile",
+        "name": "BlockPad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree_given",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[BODY\\] BlockBody\\b"
+    },
+    {
+      "step": "sketch_check",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch_check",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.solid_count",
+      "equals": 1
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.is_valid",
+      "equals": true
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.bbox.0",
+      "approx": 20.0,
+      "tolerance": 0.02
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.bbox.1",
+      "approx": 30.0,
+      "tolerance": 0.03
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.bbox.2",
+      "approx": 10.0,
+      "tolerance": 0.01
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.face_count",
+      "equals": 6
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.edge_count",
+      "equals": 12
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.shape_summary.vertex_count",
+      "equals": 8
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.body",
+      "equals": "BlockBody"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.feature_state.is_tip",
+      "equals": true
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.Type",
+      "equals": "Length"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.passed",
+      "equals": true
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.recompute_clean",
+      "equals": true
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.is_valid",
+      "equals": true
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.post_verify.tnp_audit.status",
+      "equals": "CLEAN"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "Block",
+    "documents": {
+      "Block": {
+        "objects": {
+          "BlockPad": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.Block.objects.BlockPad.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "Block.BlockPad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

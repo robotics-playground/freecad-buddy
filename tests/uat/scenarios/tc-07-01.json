@@ -1,0 +1,226 @@
+{
+  "id": "TC-07-01",
+  "tc": "TC-07",
+  "title": "verify_shape covers the whole closed assertion vocabulary",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box",
+        "checks": [
+          {
+            "fn": "expect_volume",
+            "expect": 6000.0,
+            "tol": {
+              "rel": 0.001
+            }
+          },
+          {
+            "fn": "expect_bbox",
+            "expect": [
+              10.0,
+              20.0,
+              30.0
+            ],
+            "tol": {
+              "abs": 0.05
+            }
+          },
+          {
+            "fn": "expect_solid_count",
+            "expect": 1
+          },
+          {
+            "fn": "expect_valid",
+            "expect": true
+          },
+          {
+            "fn": "expect_watertight",
+            "expect": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown_fn",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box",
+        "checks": [
+          {
+            "fn": "expect_genus",
+            "expect": 0
+          }
+        ]
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "open",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[FEATURE\\] Box$"
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "detail",
+      "equals": null
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.0.id",
+      "equals": "assert.expect_volume"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.1.id",
+      "equals": "assert.expect_bbox"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.2.id",
+      "equals": "shape.solid_count"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.3.id",
+      "equals": "shape.valid"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.4.id",
+      "equals": "shape.watertight"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.5",
+      "absent": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.0.passed",
+      "equals": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.1.passed",
+      "equals": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.2.passed",
+      "equals": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.3.passed",
+      "equals": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.4.passed",
+      "equals": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.checks.0.measured",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.verdict",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.verdict",
+      "equals": "$verify.status"
+    },
+    {
+      "step": "unknown_fn",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_fn",
+      "path": "detail.message",
+      "equals": "unknown assertion fn: 'expect_genus'"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "cross": [
+    {
+      "mcp": "verify.structured_content.checks.0.measured",
+      "probe": "documents.box_10_20_30.objects.Box.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "id": "TC-09-03",
+  "tc": "TC-09",
+  "title": "A missing schema-required field is a protocol rejection, not an envelope",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "no_path",
+      "mcp": "export_step",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "objects": [
+          "Box"
+        ]
+      }
+    },
+    {
+      "name": "no_doc",
+      "mcp": "verify_shape",
+      "args": {
+        "object": "Box"
+      }
+    },
+    {
+      "name": "no_export_id",
+      "mcp": "verify_export_stl",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "no_object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "contrast",
+      "mcp": "verify_export_stl",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "export_id": "fcb-export:bogus"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^OK: 1 objects"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[\\w+\\] Box$"
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "no_path",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "no_path",
+      "path": "text",
+      "regex": "^Input validation error: 'path' is a required property"
+    },
+    {
+      "step": "no_path",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "no_doc",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "no_doc",
+      "path": "text",
+      "regex": "^Input validation error: 'doc' is a required property"
+    },
+    {
+      "step": "no_doc",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "no_export_id",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "no_export_id",
+      "path": "text",
+      "regex": "^Input validation error: 'export_id' is a required property"
+    },
+    {
+      "step": "no_export_id",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "no_object",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "no_object",
+      "path": "text",
+      "regex": "^Input validation error: 'object' is a required property"
+    },
+    {
+      "step": "no_object",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "contrast",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 6,
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    }
+  },
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

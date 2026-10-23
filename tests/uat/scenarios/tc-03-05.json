@@ -1,0 +1,453 @@
+{
+  "id": "TC-03-05",
+  "tc": "TC-03",
+  "title": "All four geometry kinds",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "MixedProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              40,
+              0
+            ]
+          },
+          {
+            "kind": "circle",
+            "center": [
+              20,
+              20
+            ],
+            "radius": {
+              "value": 2.5,
+              "unit": "mm"
+            }
+          },
+          {
+            "kind": "arc_of_circle",
+            "center": [
+              50,
+              20
+            ],
+            "radius": {
+              "value": 8,
+              "unit": "mm"
+            },
+            "start_angle": {
+              "value": 0,
+              "unit": "deg"
+            },
+            "end_angle": {
+              "value": 90,
+              "unit": "deg"
+            }
+          },
+          {
+            "kind": "point",
+            "start": [
+              10,
+              30
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 1,
+            "first_pos": 3,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 3,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Radius",
+            "first": 1,
+            "value": {
+              "value": 2.5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 2,
+            "first_pos": 3,
+            "value": {
+              "value": 50,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 2,
+            "first_pos": 3,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "Radius",
+            "first": 2,
+            "value": {
+              "value": 8,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 2,
+            "first_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 2,
+            "first_pos": 2,
+            "value": {
+              "value": 50,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 3,
+            "first_pos": 1,
+            "value": {
+              "value": 10,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 3,
+            "first_pos": 1,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile"
+      }
+    },
+    {
+      "name": "ellipse",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile",
+        "geometry": [
+          {
+            "kind": "ellipse",
+            "center": [
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "too_long",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "too_short",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "bare_radius",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "MixedProfile",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              20,
+              20
+            ],
+            "radius": 2.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.geometry",
+      "equals": []
+    },
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "add",
+      "path": "structured_content.geo_ids",
+      "equals": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.0.index",
+      "equals": 0
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.1.index",
+      "equals": 1
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.2.index",
+      "equals": 2
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.3.index",
+      "equals": 3
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.0.type",
+      "equals": "LineSegment"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.1.type",
+      "equals": "Circle"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.2.type",
+      "equals": "ArcOfCircle"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.3.type",
+      "equals": "Point"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.4",
+      "absent": true
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.constraint_count",
+      "equals": 13
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.redundant",
+      "equals": []
+    },
+    {
+      "step": "ellipse",
+      "path": "text",
+      "regex": "^Input validation error: 'ellipse' is not one of "
+    },
+    {
+      "step": "ellipse",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "too_long",
+      "path": "text",
+      "regex": "^Input validation error: \\[0, 0, 0, 0\\] is too long"
+    },
+    {
+      "step": "too_long",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "too_short",
+      "path": "text",
+      "regex": "^Input validation error: \\[0\\] is too short"
+    },
+    {
+      "step": "too_short",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "bare_radius",
+      "path": "text",
+      "regex": "^Input validation error: 2\\.5 is not of type 'object'"
+    },
+    {
+      "step": "bare_radius",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "MixedProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open MixedProfile in edit mode (script_exec setEdit, test case Preconditions), capture the window and judge it: a horizontal line running right from the sketch origin, a small closed circle, an open quarter arc to the right and one isolated dot upper left, all four green; no ellipse or fifth shape, nothing clipped, no error dialog."
+}

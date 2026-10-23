@@ -1,0 +1,1340 @@
+{
+ "TC-01-01": {
+  "coverage": "log or audit read",
+  "explanation": "Thens grep addon.log for the listener and proxy spawn lines"
+ },
+ "TC-01-02": {
+  "coverage": "H1 host",
+  "explanation": "runs run_mcp_e2e.py on its own H1 stdio host"
+ },
+ "TC-01-03": {
+  "coverage": "raw RPC or second client",
+  "explanation": "tools/list from a second MCP client session"
+ },
+ "TC-01-04": {
+  "coverage": "raw RPC or second client",
+  "explanation": "direct rpc_hello on the discovery record with the proxy stopped"
+ },
+ "TC-01-05": {
+  "coverage": "file check",
+  "explanation": "Thens read a catalog dump written to disk"
+ },
+ "TC-01-06": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw rpc_hello with contract_version 99"
+ },
+ "TC-01-07": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw socket with a wrong or missing token; addon.log count"
+ },
+ "TC-01-08": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw first frame that is not rpc_hello"
+ },
+ "TC-01-09": {
+  "coverage": "raw RPC or second client",
+  "explanation": "rpc_hello with the discovery token; discovery file and netstat"
+ },
+ "TC-01-10": {
+  "coverage": "process kill or relaunch",
+  "explanation": "File > Exit (outside the menu allow-list) and process exit"
+ },
+ "TC-01-11": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw connect to a dead pid's port"
+ },
+ "TC-01-12": {
+  "coverage": "process kill or relaunch",
+  "explanation": "Stop-Process on the proxy, then a manual proxy restart"
+ },
+ "TC-01-13": {
+  "coverage": "process kill or relaunch",
+  "explanation": "launch with FREECAD_BUDDY_NO_AUTO_MCP and no proxy; CLI exit codes"
+ },
+ "TC-01-14": {
+  "coverage": "process kill or relaunch",
+  "explanation": "TerminateProcess on FreeCAD, then a relaunch"
+ },
+ "TC-01-15": {
+  "coverage": "raw RPC or second client",
+  "explanation": "curl /healthz, a foreign holder on :8765 and a relaunch; moved from TC-99-08 in 10.7"
+ },
+ "TC-02-01": {
+  "left_out": [
+   {
+    "then": "handle is not the FreeCAD Name (doc != name)",
+    "reason": "comparison op"
+   },
+   {
+    "then": "save-as writes a non-empty file (ls -l)",
+    "reason": "file check"
+   },
+   {
+    "then": "saved file still exists after the close (ls -l)",
+    "reason": "file check"
+   }
+  ]
+ },
+ "TC-02-02": {
+  "left_out": [
+   {
+    "then": "every property value is JSON-safe, no repr of a live FreeCAD pointer",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-02-03": {
+  "left_out": [
+   {
+    "then": "Given: the save-as target does not exist before the save",
+    "reason": "file check"
+   },
+   {
+    "then": "new file written, non-empty (ls -l)",
+    "reason": "file check"
+   },
+   {
+    "then": "golden file mtime and size unchanged",
+    "reason": "file check"
+   },
+   {
+    "then": "reopen yields a handle different from the first",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-02-04": {
+  "left_out": [
+   {
+    "then": "query on A returns Box while B is active after a sphere tree-item click",
+    "reason": "GUI action"
+   },
+   {
+    "then": "handle A and handle B are different strings",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-02-05": {
+  "coverage": "GUI action",
+  "explanation": "Pad hidden by a tree click and Space"
+ },
+ "TC-02-06": {
+  "left_out": [
+   {
+    "then": "Given: healthy state captured before the break (tc-02-06-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-02-07": {
+  "coverage": "comparison op",
+  "explanation": "key-set, membership and no-duplicate Thens"
+ },
+ "TC-02-08": {
+  "coverage": "comparison op",
+  "explanation": "global differs from local in at least one axis"
+ },
+ "TC-02-09": {
+  "coverage": "process kill or relaunch",
+  "explanation": "File > Exit, then a relaunch with the file argument"
+ },
+ "TC-02-10": {
+  "coverage": "GUI action",
+  "explanation": "tree click and Windows menu"
+ },
+ "TC-02-11": {
+  "coverage": "raw RPC or second client",
+  "explanation": "reads the advertised input schema from tools/list"
+ },
+ "TC-02-12": {
+  "left_out": [
+   {
+    "then": "Given: whole-document query_dependencies total_edges >= 2 (not encoded)",
+    "reason": "comparison op"
+   },
+   {
+    "then": "Given: model framed with GUI Fit All and a before capture",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-02-13": {
+  "class": "test case changed (10.7 edit)",
+  "explanation": "Old FAIL on F-02 (save-as renames the label to the file stem). The product kept that behaviour (Story 10.1 D2); 10.7 changed the Then: the label after reopen is the stem and the Unicode check moves before the save. All scripted checks pass; agent_check only.",
+  "left_out": [
+   {
+    "then": "Given: the save-as target does not exist",
+    "reason": "file check"
+   }
+  ]
+ },
+ "TC-02-14": {
+  "coverage": "timing bound",
+  "explanation": "returns within its 30 s budget"
+ },
+ "TC-02-15": {
+  "left_out": [
+   {
+    "then": "query_tree_summary refusal carries schema and detail.code (text only on the wire)",
+    "reason": "raw RPC or second client"
+   },
+   {
+    "then": "addon.log has no access violation, segfault or swig line",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "Given: baseline framed with GUI Fit All and a before capture",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-02-16": {
+  "left_out": [
+   {
+    "then": "no orphan MDI child in the window after the double close",
+    "reason": "GUI action"
+   },
+   {
+    "then": "addon log records no traceback for the second close",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "sphere-r10.FCStd size unchanged (ls -l)",
+    "reason": "file check"
+   },
+   {
+    "then": "reopen returns a handle different from the released one",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-02-17": {
+  "class": "test case changed (10.7 edit)",
+  "explanation": "Old disputed FAIL (non-FCStd and corrupt zip share one refusal text). 10.7 made the shared text the expected behaviour (SCP 2026-10-04 decision 2). The pilot's checks pass; agent_check only.",
+  "left_out": [
+   {
+    "then": "Given: not-fcstd.txt and corrupt.FCStd prepared with printf (README.md stands in for the first)",
+    "reason": "file check"
+   },
+   {
+    "then": "corrupt zip refused with 'document_open failed for ...corrupt.FCStd'",
+    "reason": "file check"
+   },
+   {
+    "then": "non-FCStd file and corrupt zip share one refusal tail",
+    "reason": "file check"
+   },
+   {
+    "then": "addon log records no unhandled traceback",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "Given: baseline framed with GUI Fit All and a before capture",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-02-18": {
+  "coverage": "file check",
+  "explanation": "sha256sum of the target and ls of the folder"
+ },
+ "TC-03-01": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-02": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-03": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads with a script_exec fixture; left to Story 10.8"
+ },
+ "TC-03-04": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-05": {
+  "class": "product fixed (F-04, 10.2)",
+  "explanation": "Old FAIL on F-04 (point read from center), F-05 (single-point DistanceX refused) and F-06 (redundancy result depended on order); Story 10.2 fixed all three, and 10.7 changed the arc constraints and type names. All scripted checks pass; agent_check only."
+ },
+ "TC-03-06": {
+  "class": "product fixed (F-05, 10.2)",
+  "explanation": "Old FAIL on F-05 and on test data (geo 5 outside the Given). Story 10.2 accepts the single-point form; 10.7 rewrote the Given into per-type groups. All 102 expect checks pass; agent_check only."
+ },
+ "TC-03-07": {
+  "left_out": [
+   {
+    "then": "Given: starting state captured (tc-03-07-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-03-08": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-09": {
+  "coverage": "file check",
+  "explanation": "lists FCB_TMP_snap_* folders in the session temp folder"
+ },
+ "TC-03-10": {
+  "coverage": "not encoded",
+  "explanation": "cascade counts are known values; left to Story 10.8"
+ },
+ "TC-03-11": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-12": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-13": {
+  "left_out": [
+   {
+    "then": "Given: pre-projection state captured (tc-03-13-before.png)",
+    "reason": "GUI action"
+   },
+   {
+    "then": "tnp_audit counts.PASS >= 1 (not encoded)",
+    "reason": "comparison op"
+   },
+   {
+    "then": "whole-document query_dependencies has edge BossProfile -> PlatePad (encoded as the object form, out_list equals [PlatePad])",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-03-14": {
+  "coverage": "not encoded",
+  "explanation": "all Thens are MCP reads; left to Story 10.8"
+ },
+ "TC-03-15": {
+  "coverage": "file check",
+  "explanation": "no snapshot is orphaned: folder listing"
+ },
+ "TC-03-16": {
+  "coverage": "not encoded",
+  "explanation": "prior count by $step reference; left to Story 10.8"
+ },
+ "TC-03-17": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing in Given and Then"
+ },
+ "TC-03-18": {
+  "coverage": "not encoded",
+  "explanation": "schema refusals; left to Story 10.8"
+ },
+ "TC-03-19": {
+  "coverage": "file check",
+  "explanation": "no snapshot left behind: folder listing"
+ },
+ "TC-03-20": {
+  "left_out": [
+   {
+    "then": "Given: whole-document query_dependencies has edge BossProfile -> PlatePad (encoded as the object form)",
+    "reason": "comparison op"
+   },
+   {
+    "then": "Given: intact state captured (tc-03-20-before.png)",
+    "reason": "GUI action"
+   },
+   {
+    "then": "some finding is REPOINTED, owner BossProfile, prop AttachmentSupport (checked at findings.0 only)",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-03-21": {
+  "coverage": "not encoded",
+  "explanation": "schema refusals and tree regex; left to Story 10.8"
+ },
+ "TC-04-01": {
+  "coverage": "not encoded",
+  "explanation": "envelope and tree-text reads; left to Story 10.8"
+ },
+ "TC-04-04": {
+  "coverage": "comparison op",
+  "explanation": "volume larger than 6000.0 and different from 6000.0"
+ },
+ "TC-04-05": {
+  "coverage": "comparison op",
+  "explanation": "face_count higher than the plate's 6"
+ },
+ "TC-04-06": {
+  "coverage": "comparison op",
+  "explanation": "out_list membership"
+ },
+ "TC-04-07": {
+  "coverage": "comparison op",
+  "explanation": "face_count higher than the plate's 6"
+ },
+ "TC-04-08": {
+  "coverage": "not encoded",
+  "explanation": "enum readbacks and refusal messages; left to Story 10.8"
+ },
+ "TC-04-09": {
+  "left_out": [
+   {
+    "then": "Given: topology oracle lists the four 5 mm Z-parallel edges as Edge1/2/5/8",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-04-10": {
+  "coverage": "comparison op",
+  "explanation": "face_count one higher than its base feature's"
+ },
+ "TC-04-11": {
+  "coverage": "not encoded",
+  "explanation": "analytic volumes fixed by the fixture; left to Story 10.8"
+ },
+ "TC-04-12": {
+  "coverage": "not encoded",
+  "explanation": "exact solid counts and bbox; left to Story 10.8"
+ },
+ "TC-04-13": {
+  "coverage": "comparison op",
+  "explanation": "out_list lists PlatePad"
+ },
+ "TC-04-14": {
+  "coverage": "not encoded",
+  "explanation": "needs an agent_check for the before/after capture; left to Story 10.8"
+ },
+ "TC-04-15": {
+  "coverage": "comparison op",
+  "explanation": "out_list lists BasePad"
+ },
+ "TC-04-16": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-04-17": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-04-18": {
+  "coverage": "not encoded",
+  "explanation": "tree text equals an earlier read; left to Story 10.8"
+ },
+ "TC-04-19": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-04-20": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-04-21": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-04-22": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-04-23": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-04-24": {
+  "coverage": "file check",
+  "explanation": "snapshot folder listing"
+ },
+ "TC-05-01": {
+  "coverage": "comparison op",
+  "explanation": "digests not equal; text carries a digest prefix of a step value"
+ },
+ "TC-05-02": {
+  "coverage": "file check",
+  "explanation": "snapshot and .FCBak listing of the session temp folder"
+ },
+ "TC-05-03": {
+  "class": "product fixed (F-09, 10.3)",
+  "explanation": "Old FAIL: a pad on an under-constrained sketch committed (F-09). Story 10.3 D3 grades the sketch a pad consumes; the pad now rolls back with SPEC_FAILED. Capture: the sketch outline only, no solid.",
+  "left_out": [
+   {
+    "then": "Given: pre-mutation window framed and captured (tc-05-03-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-05-04": {
+  "coverage": "comparison op",
+  "explanation": "touched contains / does not contain; set difference"
+ },
+ "TC-05-05": {
+  "coverage": "file check",
+  "explanation": "snapshot folder check after rollback"
+ },
+ "TC-05-06": {
+  "coverage": "file check",
+  "explanation": "snapshot folder check"
+ },
+ "TC-05-07": {
+  "coverage": "file check",
+  "explanation": "os.path.exists on the snapshot path"
+ },
+ "TC-05-08": {
+  "class": "product fixed (F-11, 10.3)",
+  "explanation": "Old FAIL: with UndoMode 0 the envelope claimed rolled_back_verified while the broken fillet stayed (F-11, with F-10). Story 10.3 D4/D5 prove the snapshot rollback; the fillet now reports rolled_back_via_snapshot. Capture: the 20 x 20 x 30 pad, whole.",
+  "left_out": [
+   {
+    "then": "Given: pre-mutation window framed and captured (tc-05-08-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-05-09": {
+  "coverage": "file check",
+  "explanation": "snapshot folder check"
+ },
+ "TC-05-10": {
+  "coverage": "file check",
+  "explanation": "snapshot folder check"
+ },
+ "TC-05-11": {
+  "coverage": "file check",
+  "explanation": "os.path.exists on the snapshot path"
+ },
+ "TC-05-12": {
+  "coverage": "file check",
+  "explanation": "snapshot folder check"
+ },
+ "TC-05-13": {
+  "coverage": "comparison op",
+  "explanation": "two handles and two digests differ"
+ },
+ "TC-05-14": {
+  "class": "product fixed (F-12, 10.1)",
+  "explanation": "Old FAIL: an incomparable expect_fingerprint ran the undo and returned matches_pre_op false (F-12). Story 10.1 validates the record before the undo; both refusals now match the test case. Capture: the pad, unchanged.",
+  "left_out": [
+   {
+    "then": "Given: a second FreeCAD build with the other serializer",
+    "reason": "process kill or relaunch"
+   },
+   {
+    "then": "Given: pre-attempt window framed and captured (tc-05-14-before.png)",
+    "reason": "GUI action"
+   },
+   {
+    "then": "CONDITIONAL two-build: a cross-build comparison raises",
+    "reason": "process kill or relaunch"
+   }
+  ]
+ },
+ "TC-05-15": {
+  "class": "test case changed (10.7 edit)",
+  "explanation": "Old FAIL: a Pad Length edit broke the fillet reference and the TNP audit reported CLEAN although it did not run (F-13, fixed by Story 10.3 D6). 10.7 changed the When from the Pad Length edit to a fillet radius edit (2 to 3 mm), so the F-13 path is not exercised here. Capture: the pad with the 3 mm fillet.",
+  "left_out": [
+   {
+    "then": "Given: query_dependencies shows Fillet depends on Pad",
+    "reason": "comparison op"
+   },
+   {
+    "then": "Given: pre-mutation window framed and captured (tc-05-15-before.png)",
+    "reason": "GUI action"
+   },
+   {
+    "then": "every tnp_audit finding is RE_BASELINED (encoded as the other counts absent)",
+    "reason": "comparison op"
+   },
+   {
+    "then": "tnp_audit counts.PASS >= 1 (encoded as present)",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-05-16": {
+  "coverage": "comparison op",
+  "explanation": "findings contains an entry with REPOINTED; layer is 1 or 2"
+ },
+ "TC-05-17": {
+  "coverage": "comparison op",
+  "explanation": "a BROKEN entry's owner is Fillet in an unordered list"
+ },
+ "TC-05-18": {
+  "coverage": "comparison op",
+  "explanation": "scan of every tnp block for CLEAN with a null element_map_version"
+ },
+ "TC-06-01": {
+  "coverage": "file check",
+  "explanation": "tone band read from the render PNG file; user.cfg read"
+ },
+ "TC-06-02": {
+  "coverage": "GUI action",
+  "explanation": "each camera set with the Standard Views toolbar"
+ },
+ "TC-06-03": {
+  "class": "product fixed (F-14, 10.4)",
+  "explanation": "Old FAIL: include of a Body rendered a blank PNG (F-14). Story 10.4 D1 renders the Body Tip. Agent read (D4) of the render copies: tc-06-03-include-a.png shows PadA only, tc-06-03-exclude-a.png BoxB only, tc-06-03-include-body.png the BodyA Tip solid (not blank), tc-06-03-default.png both solids; no datum in any. agent_check only."
+ },
+ "TC-06-04": {
+  "explanation": "Agent read (D4) of the render copies: tc-06-04-red.png BoxA red, BoxB grey; tc-06-04-red-t80.png BoxA red and translucent with BoxB seen through it; tc-06-04-t0.png shows BoxA and tc-06-04-t100.png hides it, so the two differ where BoxA is drawn.",
+  "left_out": [
+   {
+    "then": "Given: untouched viewport captured (tc-06-04-before.png)",
+    "reason": "GUI action"
+   },
+   {
+    "then": "viewport capture after the second call shows ObjectA in its own colour",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-06-05": {
+  "explanation": "Agent read (D4) of the render copies: tc-06-05-focused.png fills more of the frame with BoxA than tc-06-05-unfocused.png; tc-06-05-highlight.png draws BoxA orange, BoxB grey."
+ },
+ "TC-06-06": {
+  "coverage": "GUI action",
+  "explanation": "hides the object with a tree click and Space"
+ },
+ "TC-06-07": {
+  "explanation": "Agent read (D4) of the render copies: tc-06-07-custom.png shows the same view as tc-06-07-iso.png."
+ },
+ "TC-06-08": {
+  "coverage": "file check",
+  "explanation": "PNG size read from the file"
+ },
+ "TC-06-09": {
+  "coverage": "file check",
+  "explanation": "lists FCB_TMP_shot_*.png in the temp folders"
+ },
+ "TC-06-10": {
+  "coverage": "file check",
+  "explanation": "PNG on disk larger than zero bytes"
+ },
+ "TC-06-11": {
+  "coverage": "H1 host",
+  "explanation": "runs on the headless H1 host"
+ },
+ "TC-06-12": {
+  "coverage": "file check",
+  "explanation": "reads AntiAliasing from user.cfg"
+ },
+ "TC-07-01": {
+  "left_out": [
+   {
+    "then": "checks holds the named id set (encoded as a fixed index order)",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-07-02": {
+  "left_out": [
+   {
+    "then": "checks holds exactly the named ids (encoded as a fixed index order)",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-07-03": {
+  "class": "product fixed (F-17, 10.2)",
+  "explanation": "Old FAIL: verify_sketch reported dof 0 for an under-constrained sketch opened from file (F-17). Story 10.2 D4 solves before it reads DoF; the scenario reads dof 4. agent_check only.",
+  "left_out": [
+   {
+    "then": "failed check ids include sketch.fully_constrained (checked at checks.0 only)",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-07-04": {
+  "coverage": "comparison op",
+  "explanation": "element_map_version is an integer or null: a type check"
+ },
+ "TC-07-05": {
+  "coverage": "file check",
+  "explanation": "grep FILE_SCHEMA in the STEP file; stat bytes"
+ },
+ "TC-07-06": {
+  "coverage": "file check",
+  "explanation": "stat and trimesh facet count"
+ },
+ "TC-07-07": {
+  "coverage": "file check",
+  "explanation": "outside-witness re-import reads the file"
+ },
+ "TC-07-08": {
+  "coverage": "file check",
+  "explanation": "truncates the STL, then a trimesh read"
+ },
+ "TC-07-09": {
+  "coverage": "file check",
+  "explanation": "lib3mf and trimesh read the file"
+ },
+ "TC-07-10": {
+  "coverage": "file check",
+  "explanation": "ls of the floor file; trimesh"
+ },
+ "TC-07-11": {
+  "coverage": "file check",
+  "explanation": "ls checks for partial files"
+ },
+ "TC-07-12": {
+  "coverage": "file check",
+  "explanation": "ls checks that no compound STEP exists"
+ },
+ "TC-07-13": {
+  "coverage": "file check",
+  "explanation": "trimesh Euler number"
+ },
+ "TC-07-14": {
+  "coverage": "file check",
+  "explanation": "ls and stat on the Unicode path"
+ },
+ "TC-07-15": {
+  "coverage": "file check",
+  "explanation": "stat after each write"
+ },
+ "TC-07-16": {
+  "coverage": "file check",
+  "explanation": "ls, find -size 0, ls -d"
+ },
+ "TC-07-17": {
+  "coverage": "file check",
+  "explanation": "trimesh reads the stale STL"
+ },
+ "TC-07-18": {
+  "coverage": "file check",
+  "explanation": "stat sizes and trimesh"
+ },
+ "TC-07-19": {
+  "coverage": "file check",
+  "explanation": "re-import of own.step"
+ },
+ "TC-07-20": {
+  "coverage": "file check",
+  "explanation": "trimesh on the exported fault STLs"
+ },
+ "TC-07-21": {
+  "coverage": "file check",
+  "explanation": "truncates the STL file; re-import"
+ },
+ "TC-08-01": {
+  "coverage": "comparison op",
+  "explanation": "diff.touched / diff.new contains Pad: set membership"
+ },
+ "TC-08-02": {
+  "coverage": "file check",
+  "explanation": "TempDoc check is a folder listing"
+ },
+ "TC-08-03": {
+  "left_out": [
+   {
+    "then": "Given: framed fit and before capture before the pad",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-08-04": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-05": {
+  "coverage": "H1 host",
+  "explanation": "headless no-render-port step"
+ },
+ "TC-08-06": {
+  "coverage": "comparison op",
+  "explanation": "fingerprints differ from each other; restored_objects does not list Pad"
+ },
+ "TC-08-07": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-08": {
+  "left_out": [
+   {
+    "then": "Given: framed fit and before capture before the preview",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-08-09": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-10": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-11": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-12": {
+  "coverage": "timing bound",
+  "explanation": "waits 901 s for the token to expire"
+ },
+ "TC-08-13": {
+  "left_out": [
+   {
+    "then": "Given: framed fit and before capture before the preview",
+    "reason": "GUI action"
+   },
+   {
+    "then": "decline refused with 'elicitation_action must be accept' (the MCP schema refuses it first)",
+    "reason": "raw RPC or second client"
+   }
+  ]
+ },
+ "TC-08-14": {
+  "class": "test case changed (10.7 edit)",
+  "explanation": "Old disputed FAIL (3 distinct token messages, not 4). 10.7 asserts the shipped codec: fcb-preview:a.a gives 'is not decodable', four distinct messages (SCP 2026-10-04 decision 2). All scripted checks pass; agent_check only.",
+  "left_out": [
+   {
+    "then": "Given: framed fit and before capture before the variants",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-08-15": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-16": {
+  "coverage": "not encoded",
+  "explanation": "MCP reads; left to Story 10.8"
+ },
+ "TC-08-17": {
+  "coverage": "log or audit read",
+  "explanation": "audit approval line mode display_state"
+ },
+ "TC-08-18": {
+  "coverage": "H1 host",
+  "explanation": "four H1 flag postures"
+ },
+ "TC-08-19": {
+  "coverage": "file check",
+  "explanation": "TempDoc folder check"
+ },
+ "TC-08-20": {
+  "coverage": "file check",
+  "explanation": "TempDoc folder check"
+ },
+ "TC-08-21": {
+  "coverage": "GUI action",
+  "explanation": "a transaction left open by the GUI"
+ },
+ "TC-09-01": {
+  "coverage": "H1 host",
+  "explanation": "runs run_mcp_edge_cases.py on H1"
+ },
+ "TC-09-02": {
+  "coverage": "H1 host",
+  "explanation": "Thens read the H1 sweep report"
+ },
+ "TC-09-03": {
+  "left_out": [
+   {
+    "then": "Given: untouched window captured after the fit (tc-09-03-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-09-04": {
+  "coverage": "file check",
+  "explanation": "nothing was written: ls"
+ },
+ "TC-09-05": {
+  "coverage": "file check",
+  "explanation": "reads the tool surface JSON written from tools/list"
+ },
+ "TC-09-06": {
+  "coverage": "not encoded",
+  "explanation": "refusals and envelope reads; left to Story 10.8"
+ },
+ "TC-09-07": {
+  "coverage": "log or audit read",
+  "explanation": "no ValidationError traceback in stderr or addon log"
+ },
+ "TC-09-08": {
+  "coverage": "file check",
+  "explanation": "grep -c AP242 on the written file"
+ },
+ "TC-09-09": {
+  "coverage": "log or audit read",
+  "explanation": "no handshake or frame-size error in the addon log"
+ },
+ "TC-09-10": {
+  "coverage": "log or audit read",
+  "explanation": "grep RecursionError in stderr and the addon log"
+ },
+ "TC-09-11": {
+  "coverage": "H1 host",
+  "explanation": "reads the H1 edge report"
+ },
+ "TC-09-12": {
+  "left_out": [
+   {
+    "then": "Given: untouched window captured after the fit (tc-09-12-before.png)",
+    "reason": "GUI action"
+   },
+   {
+    "then": "query_tree_summary unknown handle: status and detail.code (text prefix only on the wire)",
+    "reason": "raw RPC or second client"
+   }
+  ]
+ },
+ "TC-09-13": {
+  "coverage": "file check",
+  "explanation": "failed export wrote nothing: ls"
+ },
+ "TC-09-14": {
+  "coverage": "log or audit read",
+  "explanation": "addon log carries one INFO line per refusal"
+ },
+ "TC-09-15": {
+  "coverage": "H1 host",
+  "explanation": "same call on H1 and on H2"
+ },
+ "TC-09-16": {
+  "coverage": "H1 host",
+  "explanation": "reads the H1 edge report"
+ },
+ "TC-09-17": {
+  "left_out": [
+   {
+    "then": "at least one check recompute.object with passed false (checked at checks.0 only)",
+    "reason": "comparison op"
+   },
+   {
+    "then": "_RECOMPUTE_ERROR_STATES at verify.py:22 includes Touched (encoded as measured equals Touched)",
+    "reason": "file check"
+   }
+  ]
+ },
+ "TC-09-18": {
+  "left_out": [
+   {
+    "then": "Pad's recompute.object check picked by index checks.1",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-09-19": {
+  "coverage": "H1 host",
+  "explanation": "starts an H1 server with an unwritable audit path"
+ },
+ "TC-09-20": {
+  "coverage": "H1 host",
+  "explanation": "H1 audit file"
+ },
+ "TC-09-21": {
+  "coverage": "H1 host",
+  "explanation": "edge sweep stderr"
+ },
+ "TC-09-22": {
+  "coverage": "H1 host",
+  "explanation": "both sweeps and their stderr"
+ },
+ "TC-09-23": {
+  "coverage": "file check",
+  "explanation": "lists the session temp folder; tools/list count"
+ },
+ "TC-10-01": {
+  "coverage": "H1 host",
+  "explanation": "run_mcp_e2e.py on H1 plus a span-timing client"
+ },
+ "TC-10-02": {
+  "coverage": "H1 host",
+  "explanation": "H1 latency sweep"
+ },
+ "TC-10-03": {
+  "coverage": "raw RPC or second client",
+  "explanation": "clients B and C on raw listener sockets"
+ },
+ "TC-10-04": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw clients A, B and C with the proxy stopped"
+ },
+ "TC-10-05": {
+  "coverage": "H1 host",
+  "explanation": "100 s preview_dry_run on an H1 session"
+ },
+ "TC-10-06": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw listener sessions A and B"
+ },
+ "TC-10-07": {
+  "coverage": "H1 host",
+  "explanation": "H1 script_exec timeout and quarantine"
+ },
+ "TC-10-08": {
+  "coverage": "H1 host",
+  "explanation": "same H1 session"
+ },
+ "TC-10-09": {
+  "coverage": "H1 host",
+  "explanation": "same H1 session"
+ },
+ "TC-10-10": {
+  "coverage": "H1 host",
+  "explanation": "same H1 session; audit Thens"
+ },
+ "TC-10-11": {
+  "coverage": "H1 host",
+  "explanation": "H1 verify_recompute read timeout"
+ },
+ "TC-10-12": {
+  "coverage": "raw RPC or second client",
+  "explanation": "tools/list and /healthz after a FreeCAD kill"
+ },
+ "TC-10-13": {
+  "coverage": "raw RPC or second client",
+  "explanation": "raw socket closed mid-frame"
+ },
+ "TC-10-14": {
+  "coverage": "raw RPC or second client",
+  "explanation": "17 MiB stream and a non-UTF-8 frame on raw sockets"
+ },
+ "TC-11-01": {
+  "left_out": [
+   {
+    "then": "H1 tools/list length is the typed count + 1",
+    "reason": "H1 host"
+   },
+   {
+    "then": "script_exec listed on H1, and the proxy tools/list matches",
+    "reason": "H1 host"
+   },
+   {
+    "then": "H1 stderr has the SECURITY script_exec ENABLED warning",
+    "reason": "H1 host"
+   },
+   {
+    "then": "GUI addon.log has the same SECURITY warning",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "exec_enabled true on H1 query_capabilities",
+    "reason": "H1 host"
+   },
+   {
+    "then": "script_exec on an H1 document returns value_repr '0' (the scenario runs it on the GUI box: '1')",
+    "reason": "H1 host"
+   },
+   {
+    "then": "H1 audit has two exec lines, the second verify_verdict OK",
+    "reason": "H1 host"
+   },
+   {
+    "then": "grep of src/ for ALLOW_EXEC, AllowExec, debug_exec finds nothing",
+    "reason": "file check"
+   },
+   {
+    "then": "Given: addon.log operator settings line has FREECAD_BUDDY_SCRIPT_EXEC='1'",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "Given: framed baseline captured (tc-11-01-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-11-02": {
+  "coverage": "H1 host",
+  "explanation": "six H1 starts"
+ },
+ "TC-11-03": {
+  "coverage": "H1 host",
+  "explanation": "H1 plus an audit read"
+ },
+ "TC-11-04": {
+  "coverage": "H1 host",
+  "explanation": "H1 surface and preview"
+ },
+ "TC-11-05": {
+  "coverage": "raw RPC or second client",
+  "explanation": "LAN connect and raw rpc_hello"
+ },
+ "TC-11-06": {
+  "coverage": "raw RPC or second client",
+  "explanation": "curl to the LAN address"
+ },
+ "TC-11-07": {
+  "coverage": "raw RPC or second client",
+  "explanation": "wrong-token handshake; discovery file"
+ },
+ "TC-11-08": {
+  "coverage": "H1 host",
+  "explanation": "auto-approve audit on H1"
+ },
+ "TC-11-09": {
+  "coverage": "raw RPC or second client",
+  "explanation": "old-token handshake after a relaunch"
+ },
+ "TC-11-10": {
+  "coverage": "H1 host",
+  "explanation": "runs on H1 and H2; temp-folder listing"
+ },
+ "TC-11-11": {
+  "coverage": "H1 host",
+  "explanation": "workdir counts on H1"
+ },
+ "TC-11-12": {
+  "coverage": "H1 host",
+  "explanation": "H1 fault patches"
+ },
+ "TC-11-13": {
+  "coverage": "file check",
+  "explanation": "helpers in a separate interpreter; file existence"
+ },
+ "TC-11-14": {
+  "coverage": "H1 host",
+  "explanation": "folder mtimes on H1 and H2"
+ },
+ "TC-11-15": {
+  "coverage": "H1 host",
+  "explanation": "two H1 batches and the audit file"
+ },
+ "TC-11-16": {
+  "coverage": "raw RPC or second client",
+  "explanation": "rpc_hello; log greps"
+ },
+ "TC-11-17": {
+  "explanation": "New in 10.7. FAIL on the pixel finding 'view: expected a 3D view, observed null': the first query_capabilities of a launch leaves the probe with no active 3D view (open product finding in deferred-work.md, shim.py opens its probe documents without hidden=True). Agent read: the window shows the box whole and framed, no dialog.",
+  "left_out": [
+   {
+    "then": "H1 refuses with INVALID_INPUT and the exact 'script_exec is off: ...' message",
+    "reason": "H1 host"
+   },
+   {
+    "then": "H1 audit has two exec lines, the second verify_verdict INVALID_INPUT",
+    "reason": "H1 host"
+   },
+   {
+    "then": "H1 query_tree_summary has no Leak line",
+    "reason": "H1 host"
+   },
+   {
+    "then": "GUI audit log line count unchanged",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "Given: addon.log has FREECAD_BUDDY_SCRIPT_EXEC='0' and no SECURITY ENABLED line",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "Given: GUI audit.jsonl line count recorded",
+    "reason": "log or audit read"
+   },
+   {
+    "then": "Given: framed baseline captured (tc-11-17-before.png)",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-11-18": {
+  "coverage": "H1 host",
+  "explanation": "H1 workdir session folder; added in 10.7 from parts of TC-99-04/05"
+ },
+ "TC-11-19": {
+  "coverage": "H1 host",
+  "explanation": "start sweep needs a relaunch and addon.log; moved from TC-99-07 in 10.7"
+ },
+ "TC-12-01": {
+  "coverage": "GUI action",
+  "explanation": "model built through menus and clicks"
+ },
+ "TC-12-02": {
+  "coverage": "GUI action",
+  "explanation": "File > New Document"
+ },
+ "TC-12-03": {
+  "coverage": "process kill or relaunch",
+  "explanation": "quit and relaunch with a file argument"
+ },
+ "TC-12-04": {
+  "coverage": "GUI action",
+  "explanation": "tree-row selection click"
+ },
+ "TC-12-05": {
+  "coverage": "GUI action",
+  "explanation": "row click plus a visibility toggle"
+ },
+ "TC-12-06": {
+  "coverage": "GUI action",
+  "explanation": "Undo dropdown and Edit > Undo"
+ },
+ "TC-12-07": {
+  "left_out": [
+   {
+    "then": "Given: toolbar Recompute button reads disabled",
+    "reason": "GUI action"
+   },
+   {
+    "then": "GUI dirty state: Recompute enabled and the touched marker in the tree",
+    "reason": "GUI action"
+   }
+  ]
+ },
+ "TC-12-08": {
+  "coverage": "file check",
+  "explanation": "LastWriteTime and Test-Path"
+ },
+ "TC-12-09": {
+  "coverage": "GUI action",
+  "explanation": "modal dialog read through list_windows"
+ },
+ "TC-12-10": {
+  "coverage": "GUI action",
+  "explanation": "workbench combo clicks"
+ },
+ "TC-12-11": {
+  "coverage": "GUI action",
+  "explanation": "tree scroll"
+ },
+ "TC-12-12": {
+  "coverage": "GUI action",
+  "explanation": "Start-page card double-click"
+ },
+ "TC-12-13": {
+  "coverage": "GUI action",
+  "explanation": "Windows menu plus File > Close"
+ },
+ "TC-12-14": {
+  "coverage": "process kill or relaunch",
+  "explanation": "File > Exit and restart"
+ },
+ "TC-12-15": {
+  "coverage": "process kill or relaunch",
+  "explanation": "forced FreeCAD kill"
+ },
+ "TC-13-01": {
+  "coverage": "GUI action",
+  "explanation": "TreeItem set from the accessibility tree"
+ },
+ "TC-13-02": {
+  "coverage": "GUI action",
+  "explanation": "tree-row click, status bar, face hover"
+ },
+ "TC-13-03": {
+  "coverage": "GUI action",
+  "explanation": "Space keystroke toggles visibility"
+ },
+ "TC-13-05": {
+  "coverage": "GUI action",
+  "explanation": "row select to fill the property panel"
+ },
+ "TC-13-06": {
+  "class": "test case changed (10.7 edit)",
+  "explanation": "Old FAIL only on the shading clause (F-29). 10.7 replaced it with the AD-34 tone band; a different tone order is not a defect (SCP 2026-10-04 decision 4). All scripted checks pass; agent_check only.",
+  "left_out": [
+   {
+    "then": "scene.rendered_objects contains BoxHole (encoded as index 0 equals BoxHole)",
+    "reason": "comparison op"
+   }
+  ]
+ },
+ "TC-13-07": {
+  "coverage": "GUI action",
+  "explanation": "expand Body and select the Pad row"
+ },
+ "TC-13-08": {
+  "coverage": "GUI action",
+  "explanation": "TreeItem sets before and after"
+ },
+ "TC-13-09": {
+  "coverage": "GUI action",
+  "explanation": "TreeItem rows"
+ },
+ "TC-13-10": {
+  "coverage": "GUI action",
+  "explanation": "expand Body by a click; Fit All button"
+ },
+ "TC-13-11": {
+  "coverage": "GUI action",
+  "explanation": "property panel Length row"
+ },
+ "TC-13-12": {
+  "coverage": "GUI action",
+  "explanation": "property panel Length row"
+ },
+ "TC-13-13": {
+  "coverage": "GUI action",
+  "explanation": "TreeItem sets before and after"
+ },
+ "TC-13-14": {
+  "coverage": "GUI action",
+  "explanation": "Space keystroke"
+ },
+ "TC-13-15": {
+  "coverage": "GUI action",
+  "explanation": "F2 rename and Ctrl+Z"
+ },
+ "TC-13-16": {
+  "coverage": "GUI action",
+  "explanation": "double-click on the Start page"
+ },
+ "TC-13-17": {
+  "coverage": "GUI action",
+  "explanation": "Recompute button enabled state from the accessibility tree"
+ },
+ "TC-13-18": {
+  "coverage": "GUI action",
+  "explanation": "Windows menu and File > Close"
+ },
+ "TC-14-01": {
+  "coverage": "raw RPC or second client",
+  "explanation": "reads the schema with a second MCP client"
+ },
+ "TC-14-03": {
+  "coverage": "GUI action",
+  "explanation": "View > Zoom is outside the menu allow-list"
+ },
+ "TC-14-04": {
+  "coverage": "not encoded",
+  "explanation": "ratio bound as a regex on the framing line; left to Story 10.8"
+ },
+ "TC-14-05": {
+  "coverage": "file check",
+  "explanation": "cmp of the before and after PNGs"
+ },
+ "TC-14-06": {
+  "coverage": "not encoded",
+  "explanation": "ratio equality through framing.ratio; left to Story 10.8"
+ },
+ "TC-14-08": {
+  "coverage": "not encoded",
+  "explanation": "schema refusals by regex; left to Story 10.8"
+ },
+ "TC-14-09": {
+  "coverage": "H1 host",
+  "explanation": "headless host"
+ },
+ "TC-14-10": {
+  "coverage": "log or audit read",
+  "explanation": "reads the audit log tail"
+ },
+ "TC-14-11": {
+  "coverage": "GUI action",
+  "explanation": "camera zoomed through the GUI"
+ },
+ "TC-14-12": {
+  "coverage": "H1 host",
+  "explanation": "headless host"
+ },
+ "TC-14-13": {
+  "coverage": "GUI action",
+  "explanation": "window resize with set_window_frame"
+ },
+ "TC-14-14": {
+  "coverage": "H1 host",
+  "explanation": "headless host"
+ },
+ "TC-14-15": {
+  "coverage": "file check",
+  "explanation": "writes a file under src/ and greps it"
+ },
+ "TC-14-16": {
+  "left_out": [
+   {
+    "then": "Modified state unchanged across the fit, read from the window title",
+    "reason": "GUI action"
+   }
+  ]
+ }
+}

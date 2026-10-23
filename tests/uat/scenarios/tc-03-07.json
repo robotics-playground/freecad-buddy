@@ -1,0 +1,477 @@
+{
+  "id": "TC-03-07",
+  "tc": "TC-03",
+  "title": "sketch_set_datum drives a downstream Pad",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "TabBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "TabProfile",
+        "plane": "XY",
+        "body": "TabBody"
+      }
+    },
+    {
+      "name": "rect",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              10,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              10,
+              0
+            ],
+            "end": [
+              10,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              10,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 10,
+              "unit": "mm"
+            },
+            "name": "TabWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "TabDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "TabBody",
+        "profile": "TabProfile",
+        "name": "TabPad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "reference",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile",
+        "constraints": [
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "TabDepthRef",
+            "driving": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile"
+      }
+    },
+    {
+      "name": "mass_given",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "TabPad"
+      }
+    },
+    {
+      "name": "datum",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile",
+        "constraint": "TabWidth",
+        "value": {
+          "value": 25,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "recompute",
+      "mcp": "document_recompute",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "TabPad"
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "TabPad"
+      }
+    },
+    {
+      "name": "value_and_sense",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile",
+        "constraint": "TabWidth",
+        "value": {
+          "value": 25,
+          "unit": "mm"
+        },
+        "sense": "internal"
+      }
+    },
+    {
+      "name": "read_only",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "TabProfile",
+        "constraint": "TabDepthRef",
+        "value": {
+          "value": 30,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "rect",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "rect",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "reference",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "reference",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.TabWidth.value",
+      "equals": {
+        "value": 10,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.TabWidth.driving",
+      "equals": true
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.TabDepthRef.driving",
+      "equals": false
+    },
+    {
+      "step": "mass_given",
+      "path": "structured_content.volume.value",
+      "approx": 2000.0,
+      "tolerance": 2.0
+    },
+    {
+      "step": "datum",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "recompute",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 5000.0,
+      "tolerance": 5.0
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.TabWidth.value",
+      "equals": {
+        "value": 25,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "value_and_sense",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "value_and_sense",
+      "path": "detail.message",
+      "equals": "sketch_set_datum requires exactly one of 'value' and 'sense'"
+    },
+    {
+      "step": "read_only",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "read_only",
+      "path": "detail.message",
+      "regex": "is not driving; its datum is read-only"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "TabPad": {
+            "visibility": true,
+            "valid": true,
+            "volume": 5000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.BracketPlate.objects.TabPad.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "BracketPlate.TabPad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The runner takes no before capture and does not open Sketcher edit mode: judge the capture as a shaded slab about two-thirds as wide as it is long (25 x 40, not the narrow 10 x 40 tab), no hole, gap or broken face; then open TabProfile in edit mode (test case Preconditions) and judge one closed green rectangle under the solid with the TabWidth label reading 25; no error dialog."
+}

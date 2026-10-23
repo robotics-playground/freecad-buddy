@@ -1,0 +1,604 @@
+{
+  "id": "TC-05-15",
+  "tc": "TC-05",
+  "title": "TNP reports CLEAN on a healthy mutation",
+  "launch": {
+    "FREECAD_BUDDY_AUTO_APPROVE": "0"
+  },
+  "steps": [
+    {
+      "name": "caps",
+      "mcp": "query_capabilities",
+      "args": {}
+    },
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0515"
+      }
+    },
+    {
+      "name": "prev_body",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_body_create",
+          "args": {
+            "name": "Body"
+          }
+        }
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Body",
+        "confirm": {
+          "preview_id": "$prev_body.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_sketch",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_create",
+          "args": {
+            "name": "Sketch",
+            "plane": "XY",
+            "body": "Body"
+          }
+        }
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Sketch",
+        "plane": "XY",
+        "body": "Body",
+        "confirm": {
+          "preview_id": "$prev_sketch.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_geometry",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_add_geometry",
+          "args": {
+            "sketch": "Sketch",
+            "geometry": [
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  0
+                ],
+                "end": [
+                  20,
+                  0
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  0
+                ],
+                "end": [
+                  20,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  20
+                ],
+                "end": [
+                  0,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  20
+                ],
+                "end": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "constraints": [
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 2,
+                "second": 1,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 1,
+                "first_pos": 2,
+                "second": 2,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 2,
+                "first_pos": 2,
+                "second": 3,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 3,
+                "first_pos": 2,
+                "second": 0,
+                "second_pos": 1
+              },
+              {
+                "type": "Horizontal",
+                "first": 0
+              },
+              {
+                "type": "Horizontal",
+                "first": 2
+              },
+              {
+                "type": "Vertical",
+                "first": 1
+              },
+              {
+                "type": "Vertical",
+                "first": 3
+              },
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 1,
+                "second": -1,
+                "second_pos": 1
+              },
+              {
+                "type": "DistanceX",
+                "first": 0,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              },
+              {
+                "type": "DistanceY",
+                "first": 1,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ],
+        "confirm": {
+          "preview_id": "$prev_geometry.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_pad",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_pad.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_fillet",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_fillet",
+          "args": {
+            "body": "Body",
+            "base": "Pad",
+            "name": "Fillet",
+            "edges": [
+              {
+                "kind": "mapped_name",
+                "object": "Pad",
+                "mapped_name": "Edge1"
+              }
+            ],
+            "radius": {
+              "value": 2,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "fillet",
+      "mcp": "feature_fillet",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "base": "Pad",
+        "name": "Fillet",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "Pad",
+            "mapped_name": "Edge1"
+          }
+        ],
+        "radius": {
+          "value": 2,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_fillet.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "prev_radius",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_set_parameters",
+          "args": {
+            "feature": "Fillet",
+            "parameters": {
+              "Radius": {
+                "value": 3,
+                "unit": "mm"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "radius",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "Fillet",
+        "parameters": {
+          "Radius": {
+            "value": 3,
+            "unit": "mm"
+          }
+        },
+        "confirm": {
+          "preview_id": "$prev_radius.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "Fillet"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fillet",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "caps",
+      "path": "structured_content.element_map_available",
+      "equals": true
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "radius",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.status",
+      "equals": "CLEAN"
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.counts.BROKEN",
+      "absent": true
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.counts.REPOINTED",
+      "absent": true
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.counts.DROPPED",
+      "absent": true
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.counts.UNSUPPORTED",
+      "absent": true
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.element_map_version",
+      "regex": "^"
+    },
+    {
+      "step": "radius",
+      "path": "structured_content.mutation.post_verify.tnp_audit.counts.PASS",
+      "absent": false
+    },
+    {
+      "step": "mass",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "\\] Fillet\\b"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "TC0515",
+    "documents": {
+      "TC0515": {
+        "objects": {
+          "Fillet": {
+            "visibility": true,
+            "valid": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.TC0515.objects.Fillet.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "TC0515.Fillet"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

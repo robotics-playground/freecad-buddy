@@ -89,7 +89,12 @@ The full schema is the docstring of `scenario.py`. Example (shortened from `tc-0
 - `menu` accepts only `View > Visibility > Show All Objects` and `Edit > Recompute`. Both are
   non-modal. `invoke_menu` delivers through the foreground and does not confirm its effect, so
   the runner confirms Show All through the probe: every shape object of the active document
-  must read visible within 5 s, else the step raises.
+  must read visible within 5 s, else the step raises. `cua-driver` sometimes refuses Show All
+  with `menu_path_unavailable` although the path exists. After each refusal the runner reads
+  the probe every `run.POLL_S` (0.25 s) for up to 4 polls (1 s); it delivers Show All again only
+  when the shape objects still read hidden, up to `run.MENU_ATTEMPTS` (3) attempts in total. The
+  step record in `results.json` carries `attempts`. Three refusals make the scenario `ESCALATE`
+  naming the refusal.
 - `pixel.samples` reads the pixel at the projected centre of the object's bounding box. For a
   hollow or concave part (tube, ring, L-bracket, a part with a through-hole) that point can be
   background or another face behind the part. Such a scenario must not use a centre sample, and
@@ -113,10 +118,10 @@ The full schema is the docstring of `scenario.py`. Example (shortened from `tc-0
 | `FAIL` | a check fails |
 | `ESCALATE` | a probe/MCP disagreement, a step or the snapshot raised, no capture, or an `agent_check` |
 
-The runner never retries a step or a check. A check that raises (for example an unreadable
-golden PNG) is an `ESCALATE` of that scenario only; the group goes on. Every non-`PASS` scenario
-is in the escalation queue of `summary.md` with its reasons; group failures are listed under
-`Run errors`.
+The runner never retries a step or a check; the only repeat is the Show All delivery above. A
+check that raises (for example an unreadable golden PNG) is an `ESCALATE` of that scenario only;
+the group goes on. Every non-`PASS` scenario is in the escalation queue of `summary.md` with its
+reasons; group failures are listed under `Run errors`.
 
 ## Agent review set
 
@@ -185,6 +190,36 @@ exits 1 on a miss or a false alarm:
 uv run python tests/uat/runner/pixel_faults.py
 ```
 
+## Replay comparison
+
+`compare.py` compares a runner run with the verdicts of a past agent-run report, for example the
+replay of run 2026-10-03-04 (Story 10.7b AC9):
+
+```powershell
+uv run python tests/uat/runner/compare.py tests/uat/run/2026-10-03-04 <replay run dir>
+```
+
+- **Old verdicts** of TC-01..TC-14: `<old run>/evidence/tc-NN-results.json` when it exists, else
+  the per-test-case tables of `<old run>/report.md`. A scenario row of that table the parser
+  cannot read stops the compare with exit 2; the message names the line.
+- **Current ids:** the `### TC-xx-yy:` headings of `tests/uat/testcases/` (`--testcases` for
+  another folder).
+- **Verdict map:** old `PASS` and `PARTIAL` match runner `PASS`, or `ESCALATE` whose only reason
+  is an `agent_check`; old `FAIL` matches runner `FAIL`; old `BLOCKED` and `SKIP` are not
+  compared.
+- **Notes:** `<replay run dir>/replay-notes.json`, written by the agent, maps an id to
+  `coverage` (a not-covered reason, or `not encoded`) for an id the replay did not run, `class`
+  for a verdict difference, an `explanation`, and `left_out`: the deterministic Thens a scenario
+  file does not encode, each `{"then", "reason"}`, shown in the row as `Not checked: ...`, so a
+  `same` row never claims more than was checked. Reasons: `H1 host`, `raw RPC or second
+  client`, `process kill or relaunch`, `log or audit read`, `file check`, `GUI action`, `timing
+  bound`, `comparison op`. Classes: `product fixed (F-xx, <story>)`, `test case changed (10.7
+  edit)`, `runner limit`, `harness`. A value outside these sets stops the compare with exit 2.
+- **Output:** `<replay run dir>/replay.md`, one row per old or current id: `same`, `differs`,
+  `not covered`, `not encoded` (runner-expressible, not yet encoded), `new` (no old verdict, or
+  old `BLOCKED`/`SKIP`) or `removed` (old id with no current scenario). A difference or a
+  not-run id with no note is `unexplained`, and the compare exits 1; otherwise 0.
+
 ## Files
 
 | File | Role |
@@ -197,6 +232,7 @@ uv run python tests/uat/runner/pixel_faults.py
 | `png.py` | stdlib PNG decoder: 8-bit RGB or RGBA, every filter type |
 | `pixel.py` | capture placement, samples, extent, golden difference |
 | `pixel_faults.py` | planted-fault set for the pixel check: detected and false-alarm counts |
+| `compare.py` | replay comparison with a past run's verdicts: `replay.md` |
 
 The runner imports the standard library, `mcp` and the probe modules `expect` only; never
 `freecad_buddy`.

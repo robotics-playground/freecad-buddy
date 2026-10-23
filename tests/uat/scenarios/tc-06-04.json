@@ -1,0 +1,257 @@
+{
+  "id": "TC-06-04",
+  "tc": "TC-06",
+  "title": "styles transparency and color are honored",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "tc0604"
+      }
+    },
+    {
+      "name": "fixture",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "front = doc.addObject('Part::Box', 'BoxA')\nback = doc.addObject('Part::Box', 'BoxB')\nback.Length = 20\nback.Width = 10\nback.Height = 20\nback.Placement = FreeCAD.Placement(FreeCAD.Vector(-5, 10, -5), FreeCAD.Rotation())\ndoc.recompute()\nresult = [o.Name for o in doc.Objects]"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "red",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "camera": "front",
+          "styles": [
+            {
+              "object": "BoxA",
+              "color": [
+                1.0,
+                0.0,
+                0.0
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "red_t80",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "camera": "front",
+          "styles": [
+            {
+              "object": "BoxA",
+              "color": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "transparency": 80
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "t150",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "styles": [
+            {
+              "object": "BoxA",
+              "transparency": 150
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "color2",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "styles": [
+            {
+              "object": "BoxA",
+              "color": [
+                1.0,
+                0.0
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "t0",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "styles": [
+            {
+              "object": "BoxA",
+              "transparency": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "t100",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "styles": [
+            {
+              "object": "BoxA",
+              "transparency": 100
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "unknown",
+      "mcp": "query_screenshot",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "view": {
+          "styles": [
+            {
+              "object": "NoSuchObject",
+              "color": [
+                0,
+                0,
+                1
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "keep",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import shutil\nfor source, target in [(r'$red.structured_content.render.resource_link', r'$RUN_DIR/tc-06-04-red.png'), (r'$red_t80.structured_content.render.resource_link', r'$RUN_DIR/tc-06-04-red-t80.png'), (r'$t0.structured_content.render.resource_link', r'$RUN_DIR/tc-06-04-t0.png'), (r'$t100.structured_content.render.resource_link', r'$RUN_DIR/tc-06-04-t100.png')]:\n    shutil.copyfile(source, target)\nresult = 'kept'"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[BOX\\] BoxA$"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[BOX\\] BoxB$"
+    },
+    {
+      "step": "red",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "red_t80",
+      "path": "structured_content.render.resource_link",
+      "regex": "\\.png$"
+    },
+    {
+      "step": "t150",
+      "path": "text",
+      "regex": "^Input validation error: "
+    },
+    {
+      "step": "color2",
+      "path": "text",
+      "regex": "^Input validation error: "
+    },
+    {
+      "step": "t0",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "t100",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "unknown",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown",
+      "path": "detail.message",
+      "equals": "unknown object: NoSuchObject"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 1,
+    "active_document": "tc0604",
+    "documents": {
+      "tc0604": {
+        "objects": {
+          "BoxA": {
+            "visibility": true,
+            "valid": true,
+            "volume": 1000
+          },
+          "BoxB": {
+            "visibility": true,
+            "valid": true,
+            "volume": 4000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "tc0604.BoxA"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "Read the renders the keep step copied to the run folder. tc-06-04-red.png: BoxA (front, 10 mm cube) is red and BoxB (behind it, larger) keeps its own grey. tc-06-04-red-t80.png: BoxB is visible through the red BoxA, and it is not in tc-06-04-red.png. tc-06-04-t0.png and tc-06-04-t100.png must differ where BoxA is drawn, and in tc-06-04-t0.png BoxA keeps its own colour (not red). In the window capture BoxA must still carry its original colour, not red: the window and the red render must disagree on colour. The runner takes no before capture; judge the after capture alone. A red window is a finding."
+}

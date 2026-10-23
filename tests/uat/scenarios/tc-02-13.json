@@ -1,0 +1,129 @@
+{
+  "id": "TC-02-13",
+  "tc": "TC-02",
+  "title": "Unicode, spaces, and a long label round-trip",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width"
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "save",
+      "mcp": "document_save",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "path": "$RUN_DIR/tc-02-13-uat-unicode.FCStd"
+      }
+    },
+    {
+      "name": "close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "reopen",
+      "mcp": "document_open",
+      "args": {
+        "path": "$RUN_DIR/tc-02-13-uat-unicode.FCStd"
+      }
+    },
+    {
+      "name": "listed_reopened",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$reopen.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "create",
+      "path": "structured_content.doc",
+      "regex": "^fcb-doc:"
+    },
+    {
+      "step": "create",
+      "path": "structured_content.label",
+      "equals": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width"
+    },
+    {
+      "step": "create",
+      "path": "structured_content.name",
+      "regex": "^(?!\\d)\\w+$"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.0.label",
+      "equals": "測試 ドキュメント 🔧 with spaces and a deliberately long label for width"
+    },
+    {
+      "step": "listed",
+      "path": "text",
+      "equals": "1 open document(s): 測試 ドキュメント 🔧 with spaces and a deliberately long label for width."
+    },
+    {
+      "step": "save",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "save",
+      "path": "structured_content.label",
+      "equals": "tc-02-13-uat-unicode"
+    },
+    {
+      "step": "close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "reopen",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "listed_reopened",
+      "path": "structured_content.documents.0.label",
+      "equals": "tc-02-13-uat-unicode"
+    },
+    {
+      "step": "listed_reopened",
+      "path": "text",
+      "equals": "1 open document(s): tc-02-13-uat-unicode."
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^OK: 0 objects"
+    }
+  ],
+  "probe": {
+    "active_document": "tc_02_13_uat_unicode",
+    "documents": {
+      "tc_02_13_uat_unicode": {
+        "label": "tc-02-13-uat-unicode"
+      }
+    }
+  },
+  "agent_check": "The test case reads the Unicode label off a window capture taken before the save, which the runner does not take: create a document with the same label, capture the window and judge that both CJK runs and the wrench emoji are drawn as real glyphs in the model tree, the spaces kept and a long label shown in full or elided by the widget; then judge the final capture: the tree entry reads tc-02-13-uat-unicode and no dialog is open. The reopened document is empty, so there is no model to frame."
+}
