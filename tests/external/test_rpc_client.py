@@ -13,7 +13,11 @@ import socket
 import subprocess
 import sys
 import threading
+from pathlib import Path
 
+import pytest
+
+from freecad_buddy.adapters import rpc_client
 from freecad_buddy.adapters.marshal import Marshal
 from freecad_buddy.adapters.rpc_client import RpcClient, _channel_error_envelope, discover
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
@@ -103,6 +107,28 @@ def test_discover_skips_dead_pid(tmp_path):
     record = {"schema": 1, "pid": child.pid, "host": "127.0.0.1", "port": 1, "token": "t"}
     (disco / f"rpc-{child.pid}.json").write_text(json.dumps(record), encoding="utf-8")
     assert discover(appdata_dir=str(tmp_path)) is None
+
+
+@pytest.mark.parametrize(
+    ("platform", "data_home"),
+    [("darwin", Path("Library") / "Application Support"), ("linux", Path(".local") / "share")],
+)
+def test_should_find_the_versioned_freecad_dir_when_no_appdata_variable_is_set(
+    tmp_path, monkeypatch, platform, data_home
+):
+    # Arrange
+    versioned = tmp_path / data_home / "FreeCAD" / "v1-1"
+    (versioned / "freecad-buddy").mkdir(parents=True)
+    for name in ("FREECAD_BUDDY_RPC_DIR", "APPDATA", "XDG_DATA_HOME"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setattr(sys, "platform", platform)
+
+    # Act
+    found = rpc_client._appdata_dir()
+
+    # Assert
+    assert found == versioned
 
 
 def test_call_no_listener_is_worker_crashed(tmp_path):
