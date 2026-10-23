@@ -14,7 +14,11 @@ work of Epics 1-3 (Phases 0-2) across all three hosts: the GUI addon path, the H
 
 The suite is driven by an agent operating the real application. MCP calls go through the connected
 `mcp__freecad-buddy__*` tools; **every FreeCAD GUI action goes through `cua-driver`** against the
-live FreeCAD window. Two existing scripts are wrapped as evidence producers, not re-derived:
+live FreeCAD window. A scenario encoded as a scenario file (`tests/uat/scenarios/`) is executed by
+the scripted runner `tests/uat/runner/run.py` instead, with no LLM call. The runner checks the
+scripted `Then` lines against the UAT probe, which reads FreeCAD directly, and captures the window
+with `cua-driver`. The agent then works the runner's escalation queue and reads the captures of its
+review set (§9). Two existing scripts are wrapped as evidence producers, not re-derived:
 `scripts/automation/run_mcp_e2e.py` (`_automation/e2e_report.json`) and
 `scripts/automation/run_mcp_edge_cases.py` (`_automation/edge_report.json`).
 
@@ -99,7 +103,10 @@ Every test case file has this shape, and nothing else:
    agent `Read`s the PNG and judges the **pixels**, exactly as the user would: what shape is on
    screen, is it whole, is it clipped, is it the right thing. The judgement never cites an MCP
    field, a status, or a number as its evidence. **A `PASS` on a visual `Then` means the agent
-   looked at the image and saw it.** If the image was not read, the scenario is `FAIL`.
+   looked at the image and saw it.** If the image was not read, the scenario is `FAIL`. One
+   exception: a scenario the scripted runner executes from a scenario file, and that is outside
+   the runner's review set, is graded by the scripted pixel check on its stored capture. §9 says
+   which captures the agent reads.
 5. **Auto-fit precedes every visual `Then`.** A visual assertion is preceded by a fit, so the
    object is inside the frame. An object outside the frame produces a screenshot that proves
    nothing, and a "nothing visible" reading indistinguishable from a real defect. Where the
@@ -152,7 +159,7 @@ So the evidence hierarchy in this suite is fixed:
 
 | Rank | Artifact | Trust |
 | --- | --- | --- |
-| 1 | A `cua-driver` pixel capture of the real FreeCAD window, `Read` and judged by the agent | The test result. Independent of the code under test. |
+| 1 | A `cua-driver` pixel capture of the real FreeCAD window, `Read` and judged by the agent; for a runner scenario outside the §9 review set, the same capture graded by the scripted pixel check against probe geometry | The test result. Independent of the code under test: the capture is the window, and the probe reads FreeCAD directly and shares no code with the bridge. |
 | 2 | Filesystem, exit codes, audit lines, re-imported export files read by an outside tool | Corroborating. Produced outside the bridge's reporting path. |
 | 3 | MCP envelope fields, statuses, `framing` verdicts, `query_screenshot` renders | **Claims under test, never evidence.** |
 
@@ -162,11 +169,15 @@ MCP render and the window capture disagree, the window wins and the disagreement
 `$RUN_DIR/bugs.md`. Where the MCP fit tool is itself suspect, the fit is performed through the GUI
 menu instead, so the framing that sets up the capture owes nothing to the code under test.
 
+Some test case files repeat this table or its rank-1 text. For a scenario the runner executes, §9
+decides who reads its capture, over those per-test-case evidence tables.
+
 **Judge as the user, not as a program.** Read the image and say what is on the screen: is the part
 there, is it whole, is it clipped at an edge, is it the shape the scenario asked for, did a dialog
 appear. Do not reason from the envelope to what the picture must contain. A scenario whose visual
 `Then` was skipped, inferred, or satisfied by an MCP render alone is reported **FAIL**, never
-PASS-with-note.
+PASS-with-note. A runner scenario outside the §9 review set is not skipped: the scripted pixel
+check grades its capture.
 
 ## 4. Scope
 
@@ -338,9 +349,74 @@ This gate must be green for the suite to pass.
 | Quality | P0 (Critical) scenarios 100 % pass; P1 (High) scenarios ≥ 95 % |
 | Resilience | Every invalid input and every planted fault returns the correct closed status; zero unhandled tracebacks in stderr |
 | Contract | Exact message strings match the source verbatim; unknown keys are hard-rejected (`additionalProperties: false` on every input schema) |
-| **Visual (mandatory)** | Every scenario closes with a visual `Then`, preceded by a fit. The evidence is a `cua-driver` pixel capture of the real FreeCAD window, `Read` and judged by the agent as a human would judge it. The MCP bridge is under test, so no MCP field, status, or render may stand as the visual evidence (§3). A scenario whose visual `Then` was skipped, inferred from the envelope, or satisfied by an MCP render alone is reported **FAIL**, never PASS-with-note. |
+| **Visual (mandatory)** | Every scenario closes with a visual `Then`, preceded by a fit, and every scenario has a `cua-driver` pixel capture of the real FreeCAD window. A scenario with no scenario file: the agent `Read`s the capture and judges it as a human would. A scenario the scripted runner executes from a scenario file: the agent reads the captures of the review set below; the scripted pixel check grades every other capture. The MCP bridge is under test, so no MCP field, status, or render may stand as the visual evidence (§3). A scenario whose visual `Then` was skipped, inferred from the envelope, or satisfied by an MCP render alone is reported **FAIL**, never PASS-with-note. |
 
 A failure in TC-01 .. TC-14 is a **regression**. It blocks the release.
+
+#### Agent review of runner captures
+
+This rule applies only to scenarios the scripted runner executes from a scenario file
+(`tests/uat/scenarios/`). A scenario with no scenario file keeps the full agent read of §3 rule 4.
+Every runner scenario still has a capture, and a scripted `PASS` never stands without its capture.
+
+The runner draws the review set after the run and before the agent reads any capture. It writes
+the set to `summary.md` (`## Agent review`) and to `results.json` (`review` per scenario; `null`
+when the scenario is out). Each scenario in the set has one reason, checked in this order:
+
+| Reason | Scenarios |
+| --- | --- |
+| `fail` | every `FAIL` |
+| `escalate` | every `ESCALATE`: a probe/MCP disagreement, a step or probe error, a missing capture, a launch group that did not start, an `agent_check` |
+| `no pixel check` | every other scenario whose scenario file has no `pixel` block, or a `pixel` block with no `samples` |
+| `first of TC-xx` | the first `PASS` scenario of each test case, by id, that is not already in. A test case with no `PASS` has none |
+| `sample` | 20 % of the remaining scenarios, rounded up, drawn with the seed in `results.json` |
+
+The agent reads every capture in the review set. The scripted pixel check grades every other
+scenario against its stored capture.
+
+Rules:
+
+- **Every reviewed capture gets a complete visual comparison.** The sampling rule reduces how many
+  captures the agent reads, never how it reads them. For each capture in the review set the agent
+  applies §3 rule 4 to every visual `Then` of the scenario: it reads the image, states what is on
+  screen (part present, whole, not clipped, the right shape, no dialog), and compares that with
+  the scenario's expected visual and with the golden capture when one exists. A glance, or a
+  judgement that cites an MCP field, is not a review.
+- **One `report.md` line per reviewed scenario:** id, reason, what is on screen, verdict. The
+  reason is the runner's `review` reason, or `test case re-read` for a capture read under "The
+  window wins" below. Example:
+  `TC-02-04 (sample): one whole box inside the 3D view, no edge clipped, no dialog. PASS`.
+- **An `ESCALATE` is read the same as a `FAIL`.** That includes every `agent_check`.
+- **A reviewed scenario with no capture** follows the escalation ladder of Story 10.7b AC6: the
+  agent captures the window through `cua-driver` and reads that capture. A `not_run` scenario
+  (its launch group never started) has no state to capture: it is first run again by re-running
+  its launch group, then reviewed on the new capture. A scenario with no capture the agent has
+  read is never `PASS`.
+- **The window wins, both ways.**
+  - When the agent's reading of a reviewed capture contradicts a scripted `PASS`, the scenario is
+    `FAIL`, the pixel-check defect is a finding in `bugs.md`, and the agent reads every remaining
+    capture of that test case, each recorded with the reason `test case re-read`.
+  - When the agent's reading shows a visual `Then` met although the scripted pixel check reported
+    a pixel finding, the agent's verdict stands in `report.md` for that visual `Then`, and the
+    false alarm is a pixel-check finding in `bugs.md`. Every other finding of the scenario (an
+    `expect`, `probe` or `cross` check) still stands.
+- **The `report.md` verdict is final.** `results.json` and `summary.md` keep the scripted verdict
+  as the runner wrote it. Where the agent's verdict differs, `report.md` holds the verdict the
+  gate counts.
+- **Seed.** `results.json` records `run.sample_seed` and `run.sample_seed_source` (`drawn` or
+  `given`). A gate run (Story 10.8) uses a drawn seed: `run.py` without `--seed`. A gate run with
+  `sample_seed_source: given` does not count. `--seed` is for debugging and replay only. It draws
+  the same set again only for the same scenarios with the same verdicts. The gate `report.md`
+  records `run.sample_seed`, `run.sample_seed_source` and every runner run made for that gate
+  (its run folder), so a run repeated until a favourable draw leaves a trace.
+
+**What the pixel check sees.** It checks that the 3D view is there and not clipped, that the pixel
+at each sampled object's projected centre is not background, and the size of the part under the
+samples and whether it touches the view edge (`tests/uat/runner/README.md`, Pixel checks).
+`tests/uat/runner/pixel_faults.py` proves it detects an empty view, a part clipped at an edge, a
+part moved off its sample points and a part too small, with no false alarm on a flat or a
+gradient background (AD-13). **It does not see** a dialog, a wrong shape, a wrong colour, or
+anything outside the 3D view. Only the agent's reads catch those.
 
 ### Gate 2 — Conformance gate (TC-99 only)
 

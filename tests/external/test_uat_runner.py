@@ -27,6 +27,7 @@ import capture  # noqa: E402
 import launch  # noqa: E402
 import mcp_client  # noqa: E402
 import pixel  # noqa: E402
+import pixel_faults  # noqa: E402
 import png  # noqa: E402
 import run  # noqa: E402
 import scenario  # noqa: E402
@@ -652,6 +653,7 @@ def test_Should_list_the_queue_with_reasons_When_the_summary_is_written():
             "verdict": "PASS",
             "capture": "a.png",
             "reasons": [],
+            "review": None,
         },
         {
             "id": "TC-11-17",
@@ -660,19 +662,358 @@ def test_Should_list_the_queue_with_reasons_When_the_summary_is_written():
             "verdict": "FAIL",
             "capture": None,
             "reasons": ['expect exec.status: expected "INVALID_INPUT", observed "OK"'],
+            "review": "fail",
         },
     ]
 
     # Act
-    text = run.summary(results)
+    text = run.summary(results, _metadata(seed=7, source="given"))
 
     # Assert
     assert "2 scenarios: 1 PASS, 1 FAIL, 0 ESCALATE." in text
     assert "| TC-11-17 | u | FREECAD_BUDDY_SCRIPT_EXEC=0 | FAIL | - |" in text
     assert text.endswith(
         "## Escalation queue\n\n### TC-11-17: FAIL\n\n"
-        '- expect exec.status: expected "INVALID_INPUT", observed "OK"\n'
+        '- expect exec.status: expected "INVALID_INPUT", observed "OK"\n\n'
+        "## Agent review\n\n"
+        "Sample seed 7 (given). The agent reads these captures (tests/uat/test-plan.md §9); "
+        "the scripted pixel check grades the rest.\n\n"
+        "- TC-11-17 (fail): no capture\n"
     )
+
+
+def test_Should_separate_the_empty_queue_from_the_agent_review_When_every_scenario_passed():
+    # Arrange
+    results = [_record("PASS", review="first of TC-02")]
+
+    # Act
+    text = run.summary(results, _metadata(seed=3, source="drawn"))
+
+    # Assert
+    assert "Empty: every scenario passed.\n\n## Agent review\n\n" in text
+    assert text.endswith("- TC-02-02 (first of TC-02): a.png\n")
+
+
+def _metadata(seed=1, source="given", errors=()):
+    return {"errors": list(errors), "sample_seed": seed, "sample_seed_source": source}
+
+
+def _verdicts(*pairs):
+    """Result records from ``(id, verdict)`` pairs, in run order."""
+    return [
+        {"id": scenario_id, "tc": scenario_id[:5], "verdict": verdict, "capture": None}
+        for scenario_id, verdict in pairs
+    ]
+
+
+def _items(records, no_pixel=()):
+    """The scenarios behind ``records``; those named in ``no_pixel`` have no ``pixel`` block."""
+    return [
+        {"id": r["id"]} if r["id"] in no_pixel else {"id": r["id"], "pixel": {"samples": ["d.o"]}}
+        for r in records
+    ]
+
+
+def _reviews(records):
+    return {record["id"]: record["review"] for record in records}
+
+
+def test_Should_review_fails_escalations_firsts_and_a_sample_When_a_run_is_mixed():
+    # Arrange
+    records = _verdicts(
+        *[(f"TC-02-0{i}", "FAIL" if i == 3 else "PASS") for i in range(1, 8)],
+        *[(f"TC-14-0{i}", "ESCALATE" if i == 2 else "PASS") for i in range(1, 4)],
+    )
+    items = _items(records)
+
+    # Act
+    run.mark_review(records, items, 12345)
+
+    # Assert
+    reviews = _reviews(records)
+    fixed = {
+        "TC-02-01": "first of TC-02",
+        "TC-02-03": "fail",
+        "TC-14-01": "first of TC-14",
+        "TC-14-02": "escalate",
+    }
+    assert {key: reviews[key] for key in fixed} == fixed
+    rest = [value for key, value in reviews.items() if key not in fixed]
+    # 6 remaining PASS scenarios: 20 % is 1.2, rounded up to 2.
+    assert sorted(rest, key=str) == [None, None, None, None, "sample", "sample"]
+
+
+def test_Should_review_with_no_pixel_check_When_a_pass_scenario_has_no_pixel_block():
+    # Arrange
+    records = _verdicts(("TC-02-01", "PASS"), ("TC-02-02", "PASS"))
+    items = _items(records, no_pixel={"TC-02-02"})
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert _reviews(records)["TC-02-02"] == "no pixel check"
+
+
+def test_Should_review_with_no_pixel_check_When_the_pixel_block_has_no_samples():
+    # Arrange
+    records = _verdicts(("TC-02-01", "PASS"), ("TC-02-02", "PASS"))
+    items = _items(records)
+    items[1]["pixel"] = {}
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert _reviews(records)["TC-02-02"] == "no pixel check"
+
+
+def test_Should_name_the_first_pass_When_the_first_scenario_of_a_test_case_fails():
+    # Arrange
+    records = _verdicts(("TC-02-01", "FAIL"), ("TC-02-02", "PASS"), ("TC-02-03", "PASS"))
+    items = _items(records)
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert _reviews(records)["TC-02-01"] == "fail"
+    assert _reviews(records)["TC-02-02"] == "first of TC-02"
+
+
+def test_Should_name_the_next_pass_When_the_first_pass_is_already_in_for_no_pixel_check():
+    # Arrange
+    records = _verdicts(("TC-02-01", "PASS"), ("TC-02-02", "PASS"))
+    items = _items(records, no_pixel={"TC-02-01"})
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert _reviews(records) == {"TC-02-01": "no pixel check", "TC-02-02": "first of TC-02"}
+
+
+def test_Should_pick_the_first_pass_by_id_When_the_scenarios_arrive_out_of_order():
+    # Arrange
+    records = _verdicts(("TC-02-05", "PASS"), ("TC-02-02", "PASS"))
+    items = _items(records)
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert _reviews(records)["TC-02-02"] == "first of TC-02"
+
+
+def test_Should_name_no_first_When_a_test_case_has_no_pass():
+    # Arrange
+    records = _verdicts(("TC-02-01", "PASS"), ("TC-14-01", "FAIL"), ("TC-14-02", "ESCALATE"))
+    items = _items(records)
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert "first of TC-14" not in _reviews(records).values()
+    assert _reviews(records) == {
+        "TC-02-01": "first of TC-02",
+        "TC-14-01": "fail",
+        "TC-14-02": "escalate",
+    }
+
+
+def test_Should_leave_the_sample_empty_When_every_scenario_is_already_in():
+    # Arrange
+    records = _verdicts(
+        ("TC-02-01", "PASS"), ("TC-02-02", "FAIL"), ("TC-11-01", "ESCALATE"), ("TC-14-01", "PASS")
+    )
+    items = _items(records)
+
+    # Act
+    run.mark_review(records, items, 1)
+
+    # Assert
+    assert _reviews(records) == {
+        "TC-02-01": "first of TC-02",
+        "TC-02-02": "fail",
+        "TC-11-01": "escalate",
+        "TC-14-01": "first of TC-14",
+    }
+
+
+@pytest.mark.parametrize(
+    ("rest_size", "sample_size"),
+    [(1, 1), (5, 1), (6, 2), (10, 2), (15, 3), (16, 4)],
+)
+def test_Should_sample_20_percent_rounded_up_When_scenarios_remain(rest_size, sample_size):
+    # Arrange
+    records = _verdicts(*[(f"TC-02-{i:02d}", "PASS") for i in range(1, rest_size + 2)])
+    items = _items(records)
+
+    # Act
+    run.mark_review(records, items, 7)
+
+    # Assert
+    assert list(_reviews(records).values()).count("sample") == sample_size
+
+
+def test_Should_draw_the_same_sample_When_the_argument_order_changes():
+    # Arrange
+    pairs = [(f"TC-02-{i:02d}", "PASS") for i in range(1, 21)]
+    forward, backward = _verdicts(*pairs), _verdicts(*reversed(pairs))
+    run.mark_review(forward, _items(forward), 99)
+
+    # Act
+    run.mark_review(backward, _items(backward), 99)
+
+    # Assert
+    assert _reviews(backward) == _reviews(forward)
+
+
+def _sampled(records):
+    return {record["id"] for record in records if record["review"] == "sample"}
+
+
+def test_Should_draw_a_different_sample_When_the_seed_changes():
+    # Arrange
+    pairs = [(f"TC-02-{i:02d}", "PASS") for i in range(1, 21)]
+    first, second = _verdicts(*pairs), _verdicts(*pairs)
+
+    # Act
+    run.mark_review(first, _items(first), 1)
+    run.mark_review(second, _items(second), 2)
+
+    # Assert
+    assert _sampled(first) != _sampled(second)
+
+
+def _scenario_folder(folder, count):
+    """``count`` TC-02 scenario files with a ``pixel`` block in ``folder``."""
+    folder.mkdir()
+    for index in range(1, count + 1):
+        data = {
+            "id": f"TC-02-{index:02d}",
+            "tc": "TC-02",
+            "steps": [{"mcp": "document_list"}],
+            "pixel": {"samples": ["d.o"]},
+        }
+        (folder / f"tc-02-{index:02d}.json").write_text(json.dumps(data), "utf-8")
+    return folder
+
+
+def _all_pass(scenarios, run_dir):
+    """A fake ``run.run``: every scenario ``PASS`` with a capture, no group error."""
+    return [_record("PASS", id=item["id"], tc=item["tc"]) for item in scenarios], []
+
+
+def test_Should_draw_and_record_a_seed_that_redraws_the_set_When_no_seed_is_given(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    folder = _scenario_folder(tmp_path / "scenarios", 20)
+    monkeypatch.setattr(launch, "preflight", lambda: None)
+    monkeypatch.setattr(run, "run", _all_pass)
+    out = tmp_path / "out"
+
+    # Act
+    run.main([str(folder), "--out", str(out)])
+
+    # Assert
+    written = json.loads((out / "results.json").read_text("utf-8"))
+    seed = written["run"]["sample_seed"]
+    items = scenario.load_all([folder])
+    redrawn, _ = _all_pass(items, out)
+    run.mark_review(redrawn, items, seed)
+    assert written["run"]["sample_seed_source"] == "drawn"
+    assert 0 <= seed < 2**32
+    assert _reviews(written["scenarios"]) == _reviews(redrawn)
+    assert list(_reviews(redrawn).values()).count("sample") == 4
+    assert f"Sample seed {seed} (drawn)." in (out / "summary.md").read_text("utf-8")
+
+
+def test_Should_record_different_seeds_When_two_runs_draw_them(tmp_path, monkeypatch):
+    # Arrange
+    folder = _scenario_folder(tmp_path / "scenarios", 5)
+    monkeypatch.setattr(launch, "preflight", lambda: None)
+    monkeypatch.setattr(run, "run", _all_pass)
+    outs = [tmp_path / "first", tmp_path / "second"]
+
+    # Act
+    for out in outs:
+        run.main([str(folder), "--out", str(out)])
+
+    # Assert
+    first, second = (
+        json.loads((out / "results.json").read_text("utf-8"))["run"]["sample_seed"] for out in outs
+    )
+    assert first != second
+
+
+def test_Should_draw_the_same_set_and_record_the_seed_as_given_When_a_past_seed_is_replayed(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    folder = _scenario_folder(tmp_path / "scenarios", 20)
+    monkeypatch.setattr(launch, "preflight", lambda: None)
+    monkeypatch.setattr(run, "run", _all_pass)
+    run.main([str(folder), "--out", str(tmp_path / "past")])
+    past = json.loads((tmp_path / "past" / "results.json").read_text("utf-8"))
+    replay_out = tmp_path / "replay"
+
+    # Act
+    run.main([str(folder), "--out", str(replay_out), "--seed", str(past["run"]["sample_seed"])])
+
+    # Assert
+    replay = json.loads((replay_out / "results.json").read_text("utf-8"))
+    summary_text = (replay_out / "summary.md").read_text("utf-8")
+    assert replay["run"]["sample_seed"] == past["run"]["sample_seed"]
+    assert replay["run"]["sample_seed_source"] == "given"
+    assert _reviews(replay["scenarios"]) == _reviews(past["scenarios"])
+    sampled = [key for key, value in _reviews(replay["scenarios"]).items() if value == "sample"]
+    assert all(f"- {key} (sample): a.png" in summary_text for key in sampled)
+
+
+def test_Should_refuse_with_exit_2_naming_the_value_When_the_seed_is_not_an_integer(
+    tmp_path, capsys, no_launch
+):
+    # Arrange
+    argv = [str(SCENARIO_DIR / "tc-02-02.json"), "--out", str(tmp_path / "out"), "--seed", "abc"]
+
+    # Act
+    with pytest.raises(SystemExit) as exited:
+        run.main(argv)
+
+    # Assert
+    assert exited.value.code == 2
+    assert "'abc'" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()
+
+
+def test_Should_detect_every_fault_with_no_false_alarm_When_the_pixel_fault_set_runs(capsys):
+    # Arrange
+    expected_lines = ("detected 4/4", "false alarms 0/2")
+
+    # Act
+    code = pixel_faults.main()
+
+    # Assert
+    output = capsys.readouterr().out
+    assert code == 0
+    assert all(line in output for line in expected_lines)
+
+
+def test_Should_exit_1_naming_the_miss_When_the_pixel_check_misses_a_fault(capsys, monkeypatch):
+    # Arrange
+    monkeypatch.setattr(run, "check_pixel", lambda *args: (None, []))
+
+    # Act
+    code = pixel_faults.main()
+
+    # Assert
+    output = capsys.readouterr().out
+    assert code == 1
+    assert "MISSED      empty-view" in output
+    assert "detected 0/4" in output
 
 
 def _runner_sources():
@@ -941,11 +1282,13 @@ def test_Should_delete_a_stale_capture_When_the_new_capture_fails(tmp_path):
 def _record(verdict, **extra):
     return {
         "id": "TC-02-02",
+        "tc": "TC-02",
         "title": "t",
         "launch": {},
         "verdict": verdict,
         "capture": "a.png",
         "reasons": [],
+        "review": None,
     } | extra
 
 
@@ -970,7 +1313,9 @@ def test_Should_exit_with_the_documented_code_and_write_both_files_When_the_run_
     out = tmp_path / "out"
 
     # Act
-    code = run.main([str(SCENARIO_DIR / "tc-02-02.json"), "--out", str(out)])
+    code = run.main(
+        [str(SCENARIO_DIR / f"{r['id'].lower()}.json") for r in records] + ["--out", str(out)]
+    )
 
     # Assert
     written = json.loads((out / "results.json").read_text("utf-8"))
@@ -989,7 +1334,7 @@ def test_Should_escape_pipes_and_newlines_When_titles_and_reasons_hold_them():
     results = [_record("FAIL", title="a | b\nc", reasons=["x | y\nz"])]
 
     # Act
-    text = run.summary(results)
+    text = run.summary(results, _metadata())
 
     # Assert
     assert "| TC-02-02 | a \\| b c | default | FAIL | a.png |" in text

@@ -33,7 +33,8 @@ change how a scenario is executed:
   of the real FreeCAD window, `Read` and judged on what is actually on screen. The MCP bridge is
   the thing under test, so its statuses, envelope fields, and `query_screenshot` renders are claims
   being judged, never the evidence that judges them. Non-visual assertions stay as ordinary `Then`
-  lines in the same scenario.
+  lines in the same scenario. For a scenario the scripted runner executes, the agent reads only the
+  captures of the runner's review set; the scripted pixel check grades the rest (`test-plan.md` §9).
 - **A fit runs immediately before every visual `Then`** — an object outside the frame produces a
   screenshot that cannot be distinguished from a real defect. Default is
   `mcp view_fit_viewport`; where that tool is itself under test, unavailable, or returns anything
@@ -75,9 +76,18 @@ Never merge the two into a single number.
 7. **Record the build banner.** Step 7 of the appendix captures the FreeCAD version, element map,
    serializer tag, render ladder, `exec_enabled`, package version, and contract version. A
    fingerprint or TNP result is only interpretable against the build that produced it.
-8. **The agent judges the visual, always.** Never accept an automated verdict or an MCP render as
-   the visual evidence. The MCP render is produced by the code under test; a `cua-driver` capture of
-   the window is independent. Where the two disagree, record which is wrong as a finding.
+8. **The agent judges the visual of every scenario with no scenario file, and of every capture in
+   the runner's review set.** The review set has five reasons: `fail`, `escalate`,
+   `no pixel check`, `first of TC-xx` and a 20 % `sample` (`test-plan.md` §9). Each reviewed
+   capture gets a complete visual comparison, recorded as one line per scenario in `report.md`.
+   The scripted pixel check grades every other runner capture. When a reviewed capture contradicts
+   a scripted `PASS`, the scenario is `FAIL`, the pixel-check defect goes to `bugs.md`, and the
+   agent reads every remaining capture of that test case (reason `test case re-read`). When a
+   reviewed capture shows a visual `Then` met although the pixel check reported a finding, the
+   agent's verdict stands for that visual `Then`, other findings still stand, and the false alarm
+   goes to `bugs.md`. Never accept an MCP render as the visual
+   evidence. The MCP render is produced by the code under test; a `cua-driver` capture of the
+   window is independent. Where the two disagree, record which is wrong as a finding.
 9. **Run the watchdog between test cases.** A dead harness does not announce itself — a lapsed
    `cua-driver` session answers a plain-text refusal and the next capture silently writes nothing,
    so a run stalls rather than fails. One pass takes under a second:
@@ -99,7 +109,8 @@ Never merge the two into a single number.
 `run/<date>-<NN>/report.md` lists every scenario with its verdict and, for a failure, the exact
 command, the raw output, and the `file:line` or verbatim message string that was expected. Findings
 go to `bugs.md` in the same folder. The summary reports both gates separately and names any TC-99
-scenario that changed state.
+scenario that changed state. For runner scenarios, `report.md` also holds the review line of each
+reviewed capture, and its verdict is final over the runner's `results.json` (`test-plan.md` §9).
 
 Sweep-script evidence (`run_mcp_e2e.py`, `run_mcp_edge_cases.py`) is copied into
 `$RUN_DIR/evidence/` rather than left in `_automation/`, so the run folder is self-contained.

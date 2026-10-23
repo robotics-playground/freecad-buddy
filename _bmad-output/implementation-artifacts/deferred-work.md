@@ -1769,3 +1769,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
   summary: `cua-driver invoke_menu` intermittently refuses the allow-listed `View > Visibility > Show All Objects` step (`menu_path_unavailable`, "menu path segment 1 …") during an unattended scripted UAT run, so one pilot scenario per run lands in the escalation queue for a harness reason.
   evidence: Part R live runs 6 and verify-r2: TC-02-02 then TC-14-02 ESCALATE on that step; both PASS in earlier runs with unchanged files. Options for part V: a bounded retry of menu delivery only (a transport step, not a check), or a non-menu route to show the golden objects.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-s-uat-review-sampling-rule.md`
+  summary: Measure the scripted pixel check's false-alarm rate on real FreeCAD 1.1.4 captures (navigation cube, corner axis, Tasks overlay), not only on the synthetic controls in `tests/uat/runner/pixel_faults.py`.
+  evidence: `pixel_faults.py` has 4 planted faults and 2 synthetic controls (D4); no real capture is committed (part R D2). Natural owner is part V, which produces real captures from the 2026-10-03-04 replay (part S review finding 21).

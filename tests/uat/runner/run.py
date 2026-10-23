@@ -1,6 +1,6 @@
 """Scripted UAT runner: run scenario files against a FreeCAD it starts, with no LLM call.
 
-    uv run python tests/uat/runner/run.py <scenario files or folders...> --out <run dir>
+    uv run python tests/uat/runner/run.py <scenario files or folders...> --out <run dir> [--seed N]
 
 Every scenario is validated before anything starts; an invalid one stops the run with exit 2.
 Preflight refuses (exit 2) when ``FREECAD_EXE`` or the ``cua-driver`` daemon is missing, another
@@ -16,6 +16,11 @@ missing, or the scenario names an ``agent_check`` the script cannot judge. A dis
 reported, never retried. Every non-``PASS`` scenario is in the escalation queue with its
 reasons, for the agent and its ``cua-driver`` ladder.
 
+After the run, ``mark_review`` draws the review set: the captures the agent reads
+(``tests/uat/test-plan.md`` §9). Its reasons are ``fail``, ``escalate``, ``no pixel check``,
+``first of TC-xx`` and ``sample``. The scripted pixel check grades every other capture. The sample
+seed is drawn unless ``--seed`` gives it; ``results.json`` records the seed and its source.
+
 Writes ``<run dir>/results.json`` (``run`` metadata and ``scenarios``), ``<run dir>/summary.md``
 and ``<run dir>/captures/<id>.png``. Exit codes: 0 every scenario ran and none is ``FAIL``; 1 a
 scenario is ``FAIL``; 2 the run was refused before any launch; 3 a launch group failed to launch
@@ -25,8 +30,11 @@ or to tear down (its scenarios not run, or ``:8765`` left held). 3 wins over 1.
 import argparse
 import contextlib
 import datetime
+import hashlib
 import json
+import math
 import re
+import secrets
 import subprocess
 import sys
 import time
@@ -45,6 +53,7 @@ import expect  # tests/uat/probe; ``scenario`` puts that folder on sys.path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CROSS_TOLERANCE = 1e-6
 PASS, FAIL, ESCALATE = "PASS", "FAIL", "ESCALATE"
+SAMPLE_PERCENT = 20
 MENU_EFFECT_TIMEOUT_S = 5.0
 POLL_S = 0.25
 
@@ -410,7 +419,43 @@ def group_errors(groups):
     ]
 
 
-def summary(results, errors=()):
+def _sample_rank(seed, scenario_id):
+    return hashlib.sha256(f"{seed}:{scenario_id}".encode()).hexdigest()
+
+
+def mark_review(results, items, seed):
+    """Set each record's ``review``: why the agent reads its capture, or ``None``.
+
+    ``items`` are the scenarios the records came from. ``first of TC-xx`` is the first ``PASS`` of
+    each test case by id that is not already in. The sample is ``SAMPLE_PERCENT`` of the
+    records still out, rounded up: the first ones ranked by SHA-256 of ``"<seed>:<id>"``, so one
+    seed draws the same set on any Python version and in any argument order.
+    """
+    # A pixel block with no samples passes validation but makes check_pixel measure nothing.
+    has_pixel = {item["id"]: bool(item.get("pixel", {}).get("samples")) for item in items}
+    for record in results:
+        if record["verdict"] == FAIL:
+            record["review"] = "fail"
+        elif record["verdict"] == ESCALATE:
+            record["review"] = "escalate"
+        elif not has_pixel[record["id"]]:
+            record["review"] = "no pixel check"
+        else:
+            record["review"] = None
+    first_pass = {}
+    for record in sorted(results, key=lambda r: r["id"]):
+        if record["verdict"] == PASS and record["review"] is None:
+            first_pass.setdefault(record["tc"], record)
+    for tc, record in first_pass.items():
+        record["review"] = f"first of {tc}"
+    rest = sorted(
+        (r for r in results if r["review"] is None), key=lambda r: _sample_rank(seed, r["id"])
+    )
+    for record in rest[: math.ceil(len(rest) * SAMPLE_PERCENT / 100)]:
+        record["review"] = "sample"
+
+
+def summary(results, metadata):
     counts = {v: sum(r["verdict"] == v for r in results) for v in (PASS, FAIL, ESCALATE)}
     lines = [
         "# Scripted UAT run",
@@ -424,16 +469,29 @@ def summary(results, errors=()):
     for r in results:
         cells = [r["id"], r["title"], _launch_text(r["launch"]), r["verdict"], r["capture"] or "-"]
         lines.append("| " + " | ".join(_cell(cell) for cell in cells) + " |")
-    if errors:
-        lines += ["", "## Run errors", ""] + [f"- {_cell(error)}" for error in errors]
+    if metadata["errors"]:
+        lines += ["", "## Run errors", ""] + [f"- {_cell(error)}" for error in metadata["errors"]]
     lines += ["", "## Escalation queue", ""]
     queue = [r for r in results if r["verdict"] != PASS]
     if not queue:
-        lines.append("Empty: every scenario passed.")
+        lines += ["Empty: every scenario passed.", ""]
     for r in queue:
         lines += [f"### {r['id']}: {r['verdict']}", ""]
         lines += [f"- {_cell(reason)}" for reason in r["reasons"]]
         lines.append("")
+    lines += [
+        "## Agent review",
+        "",
+        f"Sample seed {metadata['sample_seed']} ({metadata['sample_seed_source']}). The agent "
+        "reads these captures (tests/uat/test-plan.md §9); the scripted pixel check grades the "
+        "rest.",
+        "",
+    ]
+    lines += [
+        f"- {_cell(r['id'])} ({r['review']}): {_cell(r['capture'] or 'no capture')}"
+        for r in results
+        if r["review"]
+    ]
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -441,6 +499,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("scenarios", nargs="+", help="scenario files or folders of *.json")
     parser.add_argument("--out", required=True, type=Path, help="run folder for the results")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        help="seed of the review sample, for debugging and replay only; a gate run omits it",
+    )
     args = parser.parse_args(argv)
     try:
         scenarios = scenario_file.load_all(args.scenarios)
@@ -456,13 +519,21 @@ def main(argv=None):
     run_dir.mkdir(parents=True, exist_ok=True)
     started = _now()
     results, groups = run(scenarios, run_dir)
+    if args.seed is None:
+        seed, seed_source = secrets.randbelow(2**32), "drawn"
+    else:
+        seed, seed_source = args.seed, "given"
+    mark_review(results, scenarios, seed)
     errors = group_errors(groups)
-    metadata = run_metadata(groups, errors, started, _now())
+    metadata = run_metadata(groups, errors, started, _now()) | {
+        "sample_seed": seed,
+        "sample_seed_source": seed_source,
+    }
     (run_dir / "results.json").write_text(
         json.dumps({"run": metadata, "scenarios": results}, indent=1, ensure_ascii=False),
         encoding="utf-8",
     )
-    text = summary(results, errors)
+    text = summary(results, metadata)
     (run_dir / "summary.md").write_text(text, encoding="utf-8")
     # Only ASCII lines: MCP messages in the reasons may not encode on a cp1252 console.
     print(text.splitlines()[2])

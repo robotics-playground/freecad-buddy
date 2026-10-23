@@ -2,8 +2,9 @@
 
 Runs UAT scenario files with no LLM call. It starts its own FreeCAD, calls tools over the `:8765`
 MCP proxy, and checks the results against the UAT probe (`tests/uat/probe/`), which reads
-FreeCAD directly. The agent gets only the escalation queue: failed checks, probe/MCP
-disagreements, missing captures and the Thens a script cannot judge.
+FreeCAD directly. The agent gets the escalation queue (failed checks, probe/MCP disagreements,
+missing captures and the Thens a script cannot judge) and the review set: the captures it reads
+(`tests/uat/test-plan.md` §9). The scripted pixel check grades every other capture.
 
 The test-case markdown in `tests/uat/testcases/` stays the human source. A scenario file encodes
 the scripted Thens of one `TC-xx-yy` scenario.
@@ -11,10 +12,13 @@ the scripted Thens of one `TC-xx-yy` scenario.
 ## Run
 
 ```powershell
-uv run python tests/uat/runner/run.py tests/uat/scenarios --out <run dir>
+uv run python tests/uat/runner/run.py tests/uat/scenarios --out <run dir> [--seed <n>]
 ```
 
-Arguments are scenario files or folders of `*.json`.
+Arguments are scenario files or folders of `*.json`. `--seed` sets the seed of the review sample,
+for debugging and replay only; a gate run omits it and the runner draws a seed. A past seed draws
+the same review set again only for the same scenarios with the same verdicts. A value that is not
+an integer stops the run with exit 2 before any launch.
 
 | Exit code | Meaning |
 |-----------|---------|
@@ -114,15 +118,36 @@ golden PNG) is an `ESCALATE` of that scenario only; the group goes on. Every non
 is in the escalation queue of `summary.md` with its reasons; group failures are listed under
 `Run errors`.
 
+## Agent review set
+
+After the run, `run.mark_review` draws the review set: the captures the agent reads, each with a
+complete visual comparison (`tests/uat/test-plan.md` §9). `summary.md` lists it under
+`## Agent review` with the sample seed and its source, one line per scenario with its reason and
+capture. Each scenario in the set has one reason, checked in this order:
+
+| Reason | Scenarios |
+|--------|-----------|
+| `fail` | every `FAIL` |
+| `escalate` | every `ESCALATE` |
+| `no pixel check` | every other scenario whose file has no `pixel` block or no `pixel.samples` |
+| `first of TC-xx` | the first `PASS` of each test case by id that is not already in |
+| `sample` | `run.SAMPLE_PERCENT` (20 %) of the remaining scenarios, rounded up |
+
+The sample ranks the remaining scenarios by SHA-256 of `"<seed>:<id>"` and takes the first ones,
+so one seed draws the same set on any Python version and in any argument order. The scripted
+pixel check grades every scenario outside the set on its capture.
+
 `results.json` is `{"run": ..., "scenarios": [...]}`:
 
 - `run`: `git_commit`, `git_dirty`, `freecad_exe`, `freecad_version` (from the probe),
   `addon` (`path` of `Mod/FreeCADBuddy`, `exists`, `linked` when its `freecad_buddy` package
   is a junction or symlink, and its `target`), `started`, `ended`, `groups` (per group: `launch`,
-  `scenarios`, `freecad_pid`, `freecad_version`, `addon`, `error`) and `errors`.
+  `scenarios`, `freecad_pid`, `freecad_version`, `addon`, `error`), `errors`, `sample_seed`
+  and `sample_seed_source` (`drawn`, or `given` by `--seed`).
 - `scenarios`: per scenario, each step's args and result, the probe snapshot, the findings
-  (`field`, `expected`, `observed`), the pixel measurement, the golden comparison, the verdict
-  and its reasons. A scenario of a group that failed to launch has `not_run: true`.
+  (`field`, `expected`, `observed`), the pixel measurement, the golden comparison, the verdict,
+  its reasons and `review` (the review reason, or `null` when the scenario is out of the set).
+  A scenario of a group that failed to launch has `not_run: true`.
 
 ## Pixel checks
 
@@ -147,18 +172,31 @@ capture). One monitor only.
 - **Golden:** when `<scenario file stem>.golden.png` exists beside the scenario, the fraction of
   view pixels that differ is reported in `results.json`. It is not a check. A missing golden is
   skipped.
+- **Not seen:** a dialog, a wrong shape, a wrong colour, or anything outside the 3D view. Only the
+  agent's reads of the review set catch those.
+
+`pixel_faults.py` proves the pixel check's sensitivity (AD-13). It builds synthetic captures in
+memory and runs `run.check_pixel` unchanged on each: an empty view, a part clipped at an edge, a
+part moved off its sample point and a part too small must each give their finding; a flat and a
+gradient background control must give none. It prints the detected and false-alarm counts and
+exits 1 on a miss or a false alarm:
+
+```powershell
+uv run python tests/uat/runner/pixel_faults.py
+```
 
 ## Files
 
 | File | Role |
 |------|------|
-| `run.py` | CLI, scenario execution, verdicts, `results.json` and `summary.md` |
+| `run.py` | CLI, scenario execution, verdicts, review set, `results.json` and `summary.md` |
 | `scenario.py` | schema, validation, `$name` references, JSON paths |
 | `launch.py` | preflight, launch groups, readiness, teardown, probe snapshot |
 | `mcp_client.py` | synchronous MCP client for `http://127.0.0.1:8765/mcp` |
 | `capture.py` | `cua-driver`: main window, fixed frame, capture, allow-listed menu |
 | `png.py` | stdlib PNG decoder: 8-bit RGB or RGBA, every filter type |
 | `pixel.py` | capture placement, samples, extent, golden difference |
+| `pixel_faults.py` | planted-fault set for the pixel check: detected and false-alarm counts |
 
 The runner imports the standard library, `mcp` and the probe modules `expect` only; never
 `freecad_buddy`.
