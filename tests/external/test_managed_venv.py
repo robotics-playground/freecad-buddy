@@ -259,3 +259,21 @@ def test_Should_return_false_When_the_child_exits_non_zero(tmp_path):
 
     # Assert
     assert finished is False
+
+
+def test_Should_start_a_venv_interpreter_When_FreeCAD_set_its_own_python_home(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    freecad_resources = tmp_path / "FreeCAD.app" / "Contents" / "Resources"
+    freecad_resources.mkdir(parents=True)
+    monkeypatch.setenv("PYTHONHOME", str(freecad_resources))
+    monkeypatch.setenv("PYTHONPATH", str(freecad_resources))
+    command = [sys.executable, "-c", "pass"]
+
+    # Act
+    with open(tmp_path / "run.log", "w", encoding="utf-8") as logfile:
+        finished = managed_venv._run(command, logfile, threading.Event())
+
+    # Assert
+    assert finished is True
