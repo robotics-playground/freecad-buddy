@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import socket
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -48,7 +49,12 @@ def _appdata_dir() -> Path:
     if override:
         return Path(override)
     base = os.environ.get("APPDATA") or os.environ.get("XDG_DATA_HOME")
-    base_path = Path(base) if base else Path.home() / ".local" / "share"
+    if base:
+        base_path = Path(base)
+    elif sys.platform == "darwin":
+        base_path = Path.home() / "Library" / "Application Support"
+    else:
+        base_path = Path.home() / ".local" / "share"
     freecad_root = base_path / "FreeCAD"
     if freecad_root.is_dir():
         # Newest versioned dir (e.g. v1-1) whose freecad-buddy/ discovery folder exists.

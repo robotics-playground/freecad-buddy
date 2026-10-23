@@ -40,10 +40,10 @@ def no_window_kwargs(logfile) -> dict:
     POSIX, ``start_new_session`` detaches it.
 
     The child gets FreeCAD's environment without ``PYTHONHOME`` and ``PYTHONPATH``. The Linux
-    AppImage launcher sets ``PYTHONHOME`` to FreeCAD's bundled Python, and an external interpreter
-    that inherits it looks for its standard library there and fails to start. ``PYTHONPATH`` is
-    dropped for the same reason: any value in FreeCAD's environment was meant for FreeCAD's
-    interpreter, not the venv's.
+    AppImage launcher and the macOS FreeCAD bundle set them to FreeCAD's bundled Python; an external
+    interpreter that inherits them looks there for its standard library and fails to start (on macOS
+    with ``No module named 'encodings'``). Any value in FreeCAD's environment was meant for
+    FreeCAD's interpreter, not the venv's.
     """
     env = {name: value for name, value in os.environ.items() if name not in _FREECAD_PYTHON_VARS}
     kwargs: dict = {"stdin": subprocess.DEVNULL, "stdout": logfile, "stderr": logfile, "env": env}
@@ -147,7 +147,8 @@ def provision(
             "MCP proxy venv provisioning skipped: lock %s is held by another FreeCAD instance or "
             "left by one that was killed. It expires at %s. If no other FreeCAD is running, "
             "delete it and restart FreeCAD.",
-            lock, expiry,
+            lock,
+            expiry,
         )
         return False
     try:
@@ -163,7 +164,8 @@ def provision(
                     if not cancel.is_set():
                         logger.error(
                             "MCP proxy venv provisioning failed at `%s`; see %s",
-                            " ".join(command[1:3]), log_path,
+                            " ".join(command[1:3]),
+                            log_path,
                         )
                     return False
         (venv_dir / _MARKER).write_text(_sha256(wheel), encoding="utf-8")
