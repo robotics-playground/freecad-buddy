@@ -1,0 +1,148 @@
+{
+  "id": "TC-03-02",
+  "tc": "TC-03",
+  "title": "sketch_create inside a Body",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlateBody"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "orphan",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Orphan",
+        "plane": "XY",
+        "body": "NoSuchBody"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "structured_content.doc",
+      "regex": "^fcb-doc:"
+    },
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[BODY\\] PlateBody\\b[^\\n]*\\n(?:[|` ][^\\n]*\\n)*?[|`]-- [v-] \\[SKETCH\\] PlateProfile\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)\\A(?![\\s\\S]*^[v-] \\[SKETCH\\] PlateProfile\\b)"
+    },
+    {
+      "step": "object",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.Tip",
+      "equals": null
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "orphan",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "orphan",
+      "path": "structured_content.mutation.snapshot_path",
+      "absent": true
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlateProfile": {
+            "type": "Sketcher::SketchObject"
+          }
+        }
+      }
+    }
+  },
+  "agent_check": "If the fit step did not return OK (a document whose sketches carry no edge has no shape-bearing object to frame), frame with the GUI Fit All toolbar button first. The visual Then needs Sketcher edit mode, which the runner does not open: open PlateProfile in edit mode (script_exec setEdit, test case Preconditions), capture the window and judge it: one sketch axis cross seen from the top (XY plane), no shaded solid anywhere, no second sketch, no error dialog; the model tree shows PlateProfile indented under PlateBody."
+}

@@ -234,5 +234,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: query on A returns Box while B is active after a sphere tree-item click (GUI action); handle A and handle B are different strings (comparison op)."
 }

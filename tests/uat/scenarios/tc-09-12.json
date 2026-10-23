@@ -221,5 +221,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: status and detail.code (text prefix only on the wire) (raw RPC or second client)."
 }

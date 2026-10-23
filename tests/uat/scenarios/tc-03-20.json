@@ -552,5 +552,5 @@
       "tolerance": 0.01
     }
   ],
-  "agent_check": "The runner takes no before capture, and the projected external curve is drawn only in Sketcher edit mode: judge the capture as one whole thin plate (5 mm, not 30 mm), no torn, missing or black face, with the BossProfile circle on its top face; then open BossProfile in edit mode (test case Preconditions) and judge the circle at radius 4 and the external curve along a real plate edge, not hanging in space; no error dialog or red error marker."
+  "agent_check": "The runner takes no before capture, and the projected external curve is drawn only in Sketcher edit mode: judge the capture as one whole thin plate (5 mm, not 30 mm), no torn, missing or black face, with the BossProfile circle on its top face; then open BossProfile in edit mode (test case Preconditions) and judge the circle at radius 4 and the external curve along a real plate edge, not hanging in space; no error dialog or red error marker. The script does not check these Thens; check each one in the gate run: Given: whole-document query_dependencies has edge BossProfile -> PlatePad (encoded as the object form) (comparison op); Given: intact state captured (tc-03-20-before.png) (GUI action); some finding is REPOINTED, owner BossProfile, prop AttachmentSupport (checked at findings.0 only) (comparison op)."
 }

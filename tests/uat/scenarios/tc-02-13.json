@@ -125,5 +125,5 @@
       }
     }
   },
-  "agent_check": "The test case reads the Unicode label off a window capture taken before the save, which the runner does not take: create a document with the same label, capture the window and judge that both CJK runs and the wrench emoji are drawn as real glyphs in the model tree, the spaces kept and a long label shown in full or elided by the widget; then judge the final capture: the tree entry reads tc-02-13-uat-unicode and no dialog is open. The reopened document is empty, so there is no model to frame."
+  "agent_check": "The test case reads the Unicode label off a window capture taken before the save, which the runner does not take: create a document with the same label, capture the window and judge that both CJK runs and the wrench emoji are drawn as real glyphs in the model tree, the spaces kept and a long label shown in full or elided by the widget; then judge the final capture: the tree entry reads tc-02-13-uat-unicode and no dialog is open. The reopened document is empty, so there is no model to frame. The script does not check these Thens; check each one in the gate run: Given: the save-as target does not exist (file check)."
 }

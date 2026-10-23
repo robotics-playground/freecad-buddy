@@ -1,0 +1,497 @@
+{
+  "id": "TC-03-11",
+  "tc": "TC-03",
+  "title": "sketch_remove_constraint by id and by name",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "PlateWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "PlateDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "references",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "driving": false
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "SpareWidth",
+            "driving": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "verify_given",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "by_id",
+      "mcp": "sketch_remove_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          12
+        ]
+      }
+    },
+    {
+      "name": "info_id",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "verify_id",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "by_name",
+      "mcp": "sketch_remove_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          "SpareWidth"
+        ]
+      }
+    },
+    {
+      "name": "info_name",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "verify_name",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "zero",
+      "mcp": "sketch_remove_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "unknown",
+      "mcp": "sketch_remove_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          "NoSuchConstraint"
+        ]
+      }
+    },
+    {
+      "name": "wrong_type",
+      "mcp": "sketch_remove_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          {
+            "id": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "references",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "references",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.11.id",
+      "equals": 12
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.11.type",
+      "equals": "DistanceY"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.11.driving",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.12.id",
+      "equals": 13
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.12.name",
+      "equals": "SpareWidth"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.12.driving",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.13",
+      "absent": true
+    },
+    {
+      "step": "verify_given",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify_given",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "by_id",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "by_id",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "info_id",
+      "path": "structured_content.constraints.SpareWidth.id",
+      "equals": 12
+    },
+    {
+      "step": "info_id",
+      "path": "structured_content.constraints.11.id",
+      "equals": 12
+    },
+    {
+      "step": "info_id",
+      "path": "structured_content.constraints.12",
+      "absent": true
+    },
+    {
+      "step": "verify_id",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify_id",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "by_name",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "by_name",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "info_name",
+      "path": "structured_content.constraints.10.id",
+      "equals": 11
+    },
+    {
+      "step": "info_name",
+      "path": "structured_content.constraints.11",
+      "absent": true
+    },
+    {
+      "step": "info_name",
+      "path": "structured_content.constraints.SpareWidth",
+      "absent": true
+    },
+    {
+      "step": "verify_name",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify_name",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "zero",
+      "path": "text",
+      "regex": "^Input validation error: 0 is less than the minimum of 1"
+    },
+    {
+      "step": "zero",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "unknown",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown",
+      "path": "detail.message",
+      "equals": "no constraint named 'NoSuchConstraint' in the sketch"
+    },
+    {
+      "step": "wrong_type",
+      "path": "text",
+      "regex": "^Input validation error: \\{'id': 3\\} is not valid under any of the given schemas"
+    },
+    {
+      "step": "wrong_type",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlateProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The visual Then needs Sketcher edit mode and a before capture, which the runner does not take: open PlateProfile in edit mode (test case Preconditions) before the first removal and after the second, capture both and judge the rectangle still closed in the fully-constrained colour, not shifted, the two reference labels (SpareWidth among them, in the reference colour) drawn before and gone after, the driving labels 60 and 40 still drawn, no error dialog."
+}

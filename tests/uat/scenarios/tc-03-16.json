@@ -1,0 +1,309 @@
+{
+  "id": "TC-03-16",
+  "tc": "TC-03",
+  "title": "Conflicting constraints name the offending ids",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "PlateWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "PlateDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "conflict",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 45,
+              "unit": "mm"
+            },
+            "name": "ConflictWidth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "given",
+      "path": "structured_content.subject.conflicting",
+      "equals": []
+    },
+    {
+      "step": "conflict",
+      "path": "status",
+      "equals": "RECOMPUTE_ERROR"
+    },
+    {
+      "step": "conflict",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": true
+    },
+    {
+      "step": "conflict",
+      "path": "structured_content.mutation.post_verify.recompute_clean",
+      "equals": false
+    },
+    {
+      "step": "conflict",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "^recompute left 1 object\\(s\\) invalid: PlateProfile:"
+    },
+    {
+      "step": "conflict",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "conflicting constraints:\\s*10\\s*,\\s*12\\b"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.ConflictWidth",
+      "absent": true
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.constraint_count",
+      "equals": "$given.structured_content.subject.constraint_count"
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.conflicting",
+      "equals": []
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlateProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true,
+            "valid": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The visual Then needs Sketcher edit mode and a before capture, which the runner does not take: open PlateProfile in edit mode (test case Preconditions) before the conflicting call and after it, capture both and judge one closed rectangle at the original width and depth (not shrunk toward 45), edges in the fully-constrained green and not conflict red, exactly one width label reading 60, no error dialog left open."
+}

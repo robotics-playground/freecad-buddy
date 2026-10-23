@@ -473,5 +473,5 @@
       "inside": true
     }
   },
-  "agent_check": "The runner takes no before capture and does not open Sketcher edit mode: judge the capture as a shaded slab about two-thirds as wide as it is long (25 x 40, not the narrow 10 x 40 tab), no hole, gap or broken face; then open TabProfile in edit mode (test case Preconditions) and judge one closed green rectangle under the solid with the TabWidth label reading 25; no error dialog."
+  "agent_check": "The runner takes no before capture and does not open Sketcher edit mode: judge the capture as a shaded slab about two-thirds as wide as it is long (25 x 40, not the narrow 10 x 40 tab), no hole, gap or broken face; then open TabProfile in edit mode (test case Preconditions) and judge one closed green rectangle under the solid with the TabWidth label reading 25; no error dialog. The script does not check these Thens; check each one in the gate run: Given: starting state captured (tc-03-07-before.png) (GUI action)."
 }

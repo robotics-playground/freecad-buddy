@@ -1,0 +1,458 @@
+{
+  "id": "TC-03-03",
+  "tc": "TC-03",
+  "title": "sketch_create on a planar face",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "PlateWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "PlateDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "mass_given",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlatePad"
+      }
+    },
+    {
+      "name": "face_oracle",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "f = doc.getObject('PlatePad').Shape.Faces[5]\nresult = [type(f.Surface).__name__, round(f.BoundBox.ZMin, 3), round(f.BoundBox.ZMax, 3)]"
+      }
+    },
+    {
+      "name": "boss",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BossProfile",
+        "face": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Face6"
+        },
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "placement",
+      "mcp": "query_placement",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BossProfile"
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BossProfile"
+      }
+    },
+    {
+      "name": "both",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Both",
+        "plane": "XY",
+        "face": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Face6"
+        }
+      }
+    },
+    {
+      "name": "cylinder",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      }
+    },
+    {
+      "name": "cylinder_oracle",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$cylinder.structured_content.doc",
+        "code": "result = type(doc.getObject('Cylinder').Shape.Faces[0].Surface).__name__"
+      }
+    },
+    {
+      "name": "curved",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$cylinder.structured_content.doc",
+        "name": "OnCurve",
+        "face": {
+          "kind": "mapped_name",
+          "object": "Cylinder",
+          "mapped_name": "Face1"
+        }
+      }
+    },
+    {
+      "name": "cylinder_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$cylinder.structured_content.doc"
+      }
+    },
+    {
+      "name": "geometric",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Geometric",
+        "face": {
+          "kind": "geometric",
+          "object": "PlatePad"
+        },
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass_given",
+      "path": "structured_content.volume.value",
+      "approx": 12000.0,
+      "tolerance": 12.0
+    },
+    {
+      "step": "face_oracle",
+      "path": "structured_content.value_repr",
+      "equals": "['Plane', 5.0, 5.0]"
+    },
+    {
+      "step": "boss",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "boss",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "placement",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "placement",
+      "path": "structured_content.global.position.z",
+      "equals": {
+        "value": 5,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.fully_constrained",
+      "equals": true
+    },
+    {
+      "step": "both",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "both",
+      "path": "detail.message",
+      "equals": "sketch_create requires exactly one of 'plane' and 'face'"
+    },
+    {
+      "step": "cylinder_oracle",
+      "path": "structured_content.value_repr",
+      "equals": "'Cylinder'"
+    },
+    {
+      "step": "curved",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "curved",
+      "path": "detail.message",
+      "regex": "is not a planar face"
+    },
+    {
+      "step": "cylinder_close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometric",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "geometric",
+      "path": "detail.message",
+      "regex": "selector kind must be 'mapped_name'"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlatePad": {
+            "visibility": true,
+            "valid": true,
+            "volume": 12000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass_given.structured_content.volume.value",
+      "probe": "documents.BracketPlate.objects.PlatePad.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "BracketPlate.PlatePad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open BossProfile in edit mode (script_exec setEdit, test case Preconditions), capture the window and judge it: a shaded wide thin plate with the sketch axis cross on its top surface, raised above the plate's bottom by the plate thickness, not sunk inside or floating below; no second sketch, no error dialog."
+}

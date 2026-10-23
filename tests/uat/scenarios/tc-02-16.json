@@ -132,5 +132,5 @@
       "tolerance": 0.01
     }
   ],
-  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then."
+  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: no orphan MDI child in the window after the double close (GUI action); addon log records no traceback for the second close (log or audit read); sphere-r10.FCStd size unchanged (ls -l) (file check); reopen returns a handle different from the released one (comparison op)."
 }

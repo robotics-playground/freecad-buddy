@@ -1,0 +1,474 @@
+{
+  "id": "TC-04-14",
+  "tc": "TC-04",
+  "title": "feature_set_parameters edits a Pad length",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Block"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BlockBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BlockProfile",
+        "plane": "XY",
+        "body": "BlockBody"
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BlockProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              30
+            ],
+            "end": [
+              0,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              30
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "BlockBody",
+        "profile": "BlockProfile",
+        "name": "BlockPad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "mass_given",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "edit",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "BlockPad",
+        "parameters": {
+          "Length": {
+            "value": 25,
+            "unit": "mm"
+          }
+        }
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "several",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "BlockPad",
+        "parameters": {
+          "Length": {
+            "value": 12,
+            "unit": "mm"
+          },
+          "Reversed": true
+        }
+      }
+    },
+    {
+      "name": "object_several",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "BlockPad"
+      }
+    },
+    {
+      "name": "boolean",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "BlockPad",
+        "parameters": {
+          "Midplane": true
+        }
+      }
+    },
+    {
+      "name": "enum",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "BlockPad",
+        "parameters": {
+          "Type": "Length"
+        }
+      }
+    },
+    {
+      "name": "empty",
+      "mcp": "feature_set_parameters",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "feature": "BlockPad",
+        "parameters": {}
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass_given",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "edit",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "edit",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 15000.0,
+      "tolerance": 15.0
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.Length",
+      "equals": "25.0 mm"
+    },
+    {
+      "step": "edit",
+      "path": "structured_content.mutation.post_verify.passed",
+      "equals": true
+    },
+    {
+      "step": "edit",
+      "path": "structured_content.mutation.post_verify.is_valid",
+      "equals": true
+    },
+    {
+      "step": "edit",
+      "path": "structured_content.mutation.post_verify.recompute_clean",
+      "equals": true
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "shape",
+      "path": "structured_content.checks.1.id",
+      "equals": "shape.bbox"
+    },
+    {
+      "step": "shape",
+      "path": "structured_content.checks.1.measured.0",
+      "approx": 20.0,
+      "tolerance": 0.02
+    },
+    {
+      "step": "shape",
+      "path": "structured_content.checks.1.measured.1",
+      "approx": 30.0,
+      "tolerance": 0.03
+    },
+    {
+      "step": "shape",
+      "path": "structured_content.checks.1.measured.2",
+      "approx": 25.0,
+      "tolerance": 0.025
+    },
+    {
+      "step": "several",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "object_several",
+      "path": "structured_content.properties.Length",
+      "equals": "12.0 mm"
+    },
+    {
+      "step": "object_several",
+      "path": "structured_content.properties.Reversed",
+      "equals": true
+    },
+    {
+      "step": "boolean",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "enum",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "empty",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "empty",
+      "path": "detail.message",
+      "equals": "feature_set_parameters requires a non-empty 'parameters' object"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "Block",
+    "documents": {
+      "Block": {
+        "objects": {
+          "BlockPad": {
+            "visibility": true,
+            "valid": true,
+            "volume": 7200
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "Block.BlockPad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The runner takes no capture before the edit or right after it, and its capture follows the later parameter Thens (Length 12, Reversed, Midplane), so it shows a 20 x 30 x 12 block on the sketch midplane: capture the 10 mm block after the first fit and the 25 mm block right after the edit, and judge the same 20 x 30 footprint grown visibly taller, no second solid."
+}

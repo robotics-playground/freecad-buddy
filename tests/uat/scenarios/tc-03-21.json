@@ -1,0 +1,419 @@
+{
+  "id": "TC-03-21",
+  "tc": "TC-03",
+  "title": "Unknown key anywhere is a hard reject",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "PlateWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "PlateDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "tree_given",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 2
+      }
+    },
+    {
+      "name": "info_given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "top",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "ExtraKey",
+        "plane": "XY",
+        "visible": true
+      }
+    },
+    {
+      "name": "nested_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              5,
+              5
+            ],
+            "color": "red"
+          }
+        ]
+      }
+    },
+    {
+      "name": "nested_constraint",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "constraints": [
+          {
+            "type": "Horizontal",
+            "first": 0,
+            "weight": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "selector",
+      "mcp": "sketch_add_external_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "edge": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Edge1",
+          "hint": "top"
+        }
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 2
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree_given",
+      "path": "text",
+      "regex": "^OK: 1 objects, 1 shown\\.\\n"
+    },
+    {
+      "step": "tree_given",
+      "path": "text",
+      "regex": "(?m)^v \\[SKETCH\\] PlateProfile$"
+    },
+    {
+      "step": "top",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('visible' was unexpected\\)"
+    },
+    {
+      "step": "top",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "nested_geometry",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('color' was unexpected\\)"
+    },
+    {
+      "step": "nested_geometry",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "nested_constraint",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('weight' was unexpected\\)"
+    },
+    {
+      "step": "nested_constraint",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "selector",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('hint' was unexpected\\)"
+    },
+    {
+      "step": "selector",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "top",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "nested_geometry",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "nested_constraint",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "selector",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "top",
+      "path": "structured_content",
+      "absent": true
+    },
+    {
+      "step": "nested_geometry",
+      "path": "structured_content",
+      "absent": true
+    },
+    {
+      "step": "nested_constraint",
+      "path": "structured_content",
+      "absent": true
+    },
+    {
+      "step": "selector",
+      "path": "structured_content",
+      "absent": true
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "^OK: 1 objects, 1 shown\\.\\n"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^v \\[SKETCH\\] PlateProfile$"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "\\A(?![\\s\\S]*ExtraKey)"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry",
+      "equals": "$info_given.structured_content.geometry"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints",
+      "equals": "$info_given.structured_content.constraints"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlateProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The runner takes no before capture: capture the window before the four rejected calls (after the first fit) and compare it with the runner's capture; judge the same PlateProfile geometry and nothing else, no second sketch axis cross, no isolated dot, no extra horizontal glyph, no projected external curve, the two images indistinguishable apart from framing, no error dialog or disconnected-server notice."
+}

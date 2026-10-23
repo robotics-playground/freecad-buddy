@@ -654,5 +654,5 @@
       }
     }
   },
-  "agent_check": "The final state is a sketch, so the pixel check cannot judge it, and the runner takes no before capture. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then judge the capture: a flat 20 x 20 mm sketch, no extruded solid, and no error dialog left open by any variant."
+  "agent_check": "The final state is a sketch, so the pixel check cannot judge it, and the runner takes no before capture. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then judge the capture: a flat 20 x 20 mm sketch, no extruded solid, and no error dialog left open by any variant. The script does not check these Thens; check each one in the gate run: Given: framed fit and before capture before the variants (GUI action)."
 }

@@ -1,0 +1,1079 @@
+{
+  "id": "TC-04-11",
+  "tc": "TC-04",
+  "title": "feature_pattern linear and polar",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Patterns"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              40,
+              0
+            ],
+            "end": [
+              100,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              100,
+              0
+            ],
+            "end": [
+              100,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              100,
+              40
+            ],
+            "end": [
+              40,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              40,
+              40
+            ],
+            "end": [
+              40,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 0,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "hole_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "HoleProfile",
+        "face": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Face6"
+        },
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "hole_point",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "HoleProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              50,
+              20
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 50,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "hole",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "HoleProfile",
+        "name": "ClearanceHole",
+        "diameter": {
+          "value": 5.5,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll"
+      }
+    },
+    {
+      "name": "hole_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "ClearanceHole"
+      }
+    },
+    {
+      "name": "disc_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "DiscBody"
+      }
+    },
+    {
+      "name": "disc_profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "DiscProfile",
+        "plane": "XY",
+        "body": "DiscBody"
+      }
+    },
+    {
+      "name": "disc_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "DiscProfile",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              0,
+              0
+            ],
+            "radius": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 3,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Radius",
+            "first": 0,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "disc_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "DiscBody",
+        "profile": "DiscProfile",
+        "name": "DiscPad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "disc_hole_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "DiscHoleProfile",
+        "face": {
+          "kind": "mapped_name",
+          "object": "DiscPad",
+          "mapped_name": "Face3"
+        },
+        "body": "DiscBody"
+      }
+    },
+    {
+      "name": "disc_hole_point",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "DiscHoleProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              20,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "PointOnObject",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1
+          }
+        ]
+      }
+    },
+    {
+      "name": "disc_hole",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "DiscBody",
+        "profile": "DiscHoleProfile",
+        "name": "DiscHole",
+        "diameter": {
+          "value": 5.5,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll"
+      }
+    },
+    {
+      "name": "disc_shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "DiscHole"
+      }
+    },
+    {
+      "name": "row",
+      "mcp": "feature_pattern",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "name": "HoleRow",
+        "kind": "linear",
+        "originals": [
+          "ClearanceHole"
+        ],
+        "direction": {
+          "kind": "mapped_name",
+          "object": "PlateProfile",
+          "mapped_name": "H_Axis"
+        },
+        "length": {
+          "value": 40,
+          "unit": "mm"
+        },
+        "occurrences": 2
+      }
+    },
+    {
+      "name": "row_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "HoleRow"
+      }
+    },
+    {
+      "name": "ring",
+      "mcp": "feature_pattern",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "DiscBody",
+        "name": "HoleRing",
+        "kind": "polar",
+        "originals": [
+          "DiscHole"
+        ],
+        "axis": {
+          "kind": "mapped_name",
+          "object": "DiscProfile",
+          "mapped_name": "N_Axis"
+        },
+        "angle": {
+          "value": 360,
+          "unit": "deg"
+        },
+        "occurrences": 6
+      }
+    },
+    {
+      "name": "ring_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "HoleRing"
+      }
+    },
+    {
+      "name": "row_shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "HoleRow"
+      }
+    },
+    {
+      "name": "ring_shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "HoleRing"
+      }
+    },
+    {
+      "name": "mirror_kind",
+      "mcp": "feature_pattern",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "name": "MirrorKind",
+        "kind": "mirror",
+        "direction": {
+          "kind": "mapped_name",
+          "object": "PlateProfile",
+          "mapped_name": "H_Axis"
+        },
+        "length": {
+          "value": 40,
+          "unit": "mm"
+        },
+        "occurrences": 2
+      }
+    },
+    {
+      "name": "side",
+      "mcp": "document_create",
+      "args": {
+        "label": "PatternTipDefault"
+      }
+    },
+    {
+      "name": "side_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "side_profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "side_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              40,
+              0
+            ],
+            "end": [
+              100,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              100,
+              0
+            ],
+            "end": [
+              100,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              100,
+              40
+            ],
+            "end": [
+              40,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              40,
+              40
+            ],
+            "end": [
+              40,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 0,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "side_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "side_hole_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "name": "HoleProfile",
+        "face": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Face6"
+        },
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "side_hole_point",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "sketch": "HoleProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              50,
+              20
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 50,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "side_hole",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "HoleProfile",
+        "name": "ClearanceHole",
+        "diameter": {
+          "value": 5.5,
+          "unit": "mm"
+        },
+        "depth_type": "ThroughAll"
+      }
+    },
+    {
+      "name": "tip_row",
+      "mcp": "feature_pattern",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "body": "PlateBody",
+        "name": "TipRow",
+        "kind": "linear",
+        "direction": {
+          "kind": "mapped_name",
+          "object": "PlateProfile",
+          "mapped_name": "H_Axis"
+        },
+        "length": {
+          "value": 40,
+          "unit": "mm"
+        },
+        "occurrences": 2
+      }
+    },
+    {
+      "name": "tip_object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "object": "TipRow"
+      }
+    },
+    {
+      "name": "tip_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "object": "TipRow"
+      }
+    },
+    {
+      "name": "side_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$side.structured_content.doc"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "hole",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "hole",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "hole_mass",
+      "path": "structured_content.volume.value",
+      "approx": 11881.2085,
+      "tolerance": 11.881209
+    },
+    {
+      "step": "disc_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "disc_body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "disc_profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "disc_profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "disc_geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "disc_geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "disc_pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "disc_pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "disc_hole",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "disc_hole",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "disc_shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "row",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "row",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "row_mass",
+      "path": "structured_content.volume.value",
+      "approx": 11762.4171,
+      "tolerance": 11.762417
+    },
+    {
+      "step": "row",
+      "path": "structured_content.feature_state.shape_summary.bbox.0",
+      "approx": 60.0,
+      "tolerance": 0.06
+    },
+    {
+      "step": "row",
+      "path": "structured_content.feature_state.shape_summary.bbox.1",
+      "approx": 40.0,
+      "tolerance": 0.04
+    },
+    {
+      "step": "row",
+      "path": "structured_content.feature_state.shape_summary.bbox.2",
+      "approx": 5.0,
+      "tolerance": 0.005
+    },
+    {
+      "step": "ring",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "ring",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "ring_mass",
+      "path": "structured_content.volume.value",
+      "approx": 13424.4181,
+      "tolerance": 13.424418
+    },
+    {
+      "step": "row_shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "ring_shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "mirror_kind",
+      "path": "text",
+      "regex": "^Input validation error: 'mirror' is not one of \\['linear', 'polar'\\]"
+    },
+    {
+      "step": "mirror_kind",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "side_hole",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "side_hole",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "tip_row",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tip_object",
+      "path": "structured_content.properties.Originals",
+      "equals": [
+        "<PartDesign::Hole>"
+      ]
+    },
+    {
+      "step": "tip_mass",
+      "path": "structured_content.volume.value",
+      "approx": 11762.4171,
+      "tolerance": 11.762417
+    },
+    {
+      "step": "side_close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 13.5,
+    "active_document": "Patterns",
+    "documents": {
+      "Patterns": {
+        "objects": {
+          "HoleRow": {
+            "visibility": true,
+            "valid": true,
+            "volume": 11762.4171
+          },
+          "HoleRing": {
+            "visibility": true,
+            "valid": true,
+            "volume": 13424.4181
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "row_mass.structured_content.volume.value",
+      "probe": "documents.Patterns.objects.HoleRow.shape.volume",
+      "tolerance": 0.01
+    },
+    {
+      "mcp": "ring_mass.structured_content.volume.value",
+      "probe": "documents.Patterns.objects.HoleRing.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "Patterns.HoleRow",
+      "Patterns.HoleRing"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The scripted pixel check does not count holes: count them on the capture, exactly two on the plate 40 mm apart along its long axis and exactly six evenly spaced on the disc; three on the plate, or five or seven on the disc, is a defect."
+}

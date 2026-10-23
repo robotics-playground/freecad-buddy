@@ -529,5 +529,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: a second FreeCAD build with the other serializer (process kill or relaunch; not applicable on a single-build run; record N/A); Given: pre-attempt window framed and captured (tc-05-14-before.png) (GUI action); CONDITIONAL two-build: a cross-build comparison raises (process kill or relaunch; not applicable on a single-build run; record N/A)."
 }

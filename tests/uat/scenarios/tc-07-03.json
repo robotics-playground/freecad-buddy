@@ -205,5 +205,5 @@
       }
     }
   },
-  "agent_check": "The final state is a sketch, so the pixel check cannot judge it. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then judge the capture: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, drawn in FreeCAD's fully-constrained colour rather than the under-constrained white."
+  "agent_check": "The final state is a sketch, so the pixel check cannot judge it. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then judge the capture: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, drawn in FreeCAD's fully-constrained colour rather than the under-constrained white. The script does not check these Thens; check each one in the gate run: failed check ids include sketch.fully_constrained (checked at checks.0 only) (comparison op)."
 }

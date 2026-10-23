@@ -1,0 +1,646 @@
+{
+  "id": "TC-08-11",
+  "tc": "TC-08",
+  "title": "A token is bound to the document state it measured",
+  "launch": {
+    "FREECAD_BUDDY_AUTO_APPROVE": "0"
+  },
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0811"
+      }
+    },
+    {
+      "name": "prev_body",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_body_create",
+          "args": {
+            "name": "Body"
+          }
+        }
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Body",
+        "confirm": {
+          "preview_id": "$prev_body.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_sketch",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_create",
+          "args": {
+            "name": "Sketch",
+            "body": "Body",
+            "plane": "XY"
+          }
+        }
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Sketch",
+        "body": "Body",
+        "plane": "XY",
+        "confirm": {
+          "preview_id": "$prev_sketch.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_geometry",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_add_geometry",
+          "args": {
+            "sketch": "Sketch",
+            "geometry": [
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  0
+                ],
+                "end": [
+                  20,
+                  0
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  0
+                ],
+                "end": [
+                  20,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  20
+                ],
+                "end": [
+                  0,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  20
+                ],
+                "end": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "constraints": [
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 2,
+                "second": 1,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 1,
+                "first_pos": 2,
+                "second": 2,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 2,
+                "first_pos": 2,
+                "second": 3,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 3,
+                "first_pos": 2,
+                "second": 0,
+                "second_pos": 1
+              },
+              {
+                "type": "Horizontal",
+                "first": 0
+              },
+              {
+                "type": "Horizontal",
+                "first": 2
+              },
+              {
+                "type": "Vertical",
+                "first": 1
+              },
+              {
+                "type": "Vertical",
+                "first": 3
+              },
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 1,
+                "second": -1,
+                "second_pos": 1
+              },
+              {
+                "type": "DistanceX",
+                "first": 0,
+                "first_pos": 1,
+                "second": 0,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                },
+                "name": "Width"
+              },
+              {
+                "type": "DistanceY",
+                "first": 1,
+                "first_pos": 1,
+                "second": 1,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            },
+            "name": "Width"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ],
+        "confirm": {
+          "preview_id": "$prev_geometry.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "prev_stale",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "prev_datum",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_set_datum",
+          "args": {
+            "sketch": "Sketch",
+            "constraint": "Width",
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "datum",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "constraint": "Width",
+        "value": {
+          "value": 40,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_datum.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "stale",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_stale.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "prev_planted",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "plant",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import freecad_buddy.usecases.fingerprint as f\nf._saved = getattr(f, \"_saved\", f.fingerprint)\ndef _boom(document):\n    raise RuntimeError('planted: state unreadable')\nf.fingerprint = _boom"
+      }
+    },
+    {
+      "name": "planted",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_planted.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "restore",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "import freecad_buddy.usecases.fingerprint as f\nf.fingerprint = f._saved\ndel f._saved"
+      }
+    },
+    {
+      "name": "tree_planted",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "prev_recover",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "recover",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_recover.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "stale",
+      "path": "detail.message",
+      "equals": "the document has changed since the preview was taken; re-run preview_dry_run"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.Width.value",
+      "equals": {
+        "value": 40,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "\\A(?![\\s\\S]*\\[\\w+\\] Pad\\b)"
+    },
+    {
+      "step": "stale",
+      "path": "detail.message",
+      "regex": "\\A(?![\\s\\S]*has already authorized a mutation)"
+    },
+    {
+      "step": "plant",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "planted",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "planted",
+      "path": "detail.message",
+      "equals": "cannot read the state of $create.structured_content.doc to authorize the mutation: planted: state unreadable"
+    },
+    {
+      "step": "restore",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "tree_planted",
+      "path": "text",
+      "regex": "\\A(?![\\s\\S]*\\[\\w+\\] Pad\\b)"
+    },
+    {
+      "step": "recover",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "TC0811",
+    "documents": {
+      "TC0811": {
+        "objects": {
+          "Pad": {
+            "visibility": true,
+            "valid": true,
+            "volume": 24000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "TC0811.Pad"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The runner takes no before capture and no capture right after the refused stale-token call: capture before the datum change and right after the stale call, and state the sketch's proportions and whether a solid is present in each; the after image must show the rectangle visibly wider (40 x 20, the confirmed datum change) and no extruded solid (the runner's capture follows the recovery apply, a 40 x 20 x 30 pad)."
+}

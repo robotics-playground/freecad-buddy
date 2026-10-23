@@ -602,5 +602,5 @@
       "inside": true
     }
   },
-  "agent_check": "The capture also shows OtherBody, the refusal fixture of the 'base outside the Body' Then, as a separate 20 x 20 x 5 block at x = 80..100, y = 10..30. Judge the visual Then on the 60 x 40 x 5 plate only: all four vertical corners carry a visible 2 mm round and none is sharp."
+  "agent_check": "The capture also shows OtherBody, the refusal fixture of the 'base outside the Body' Then, as a separate 20 x 20 x 5 block at x = 80..100, y = 10..30. Judge the visual Then on the 60 x 40 x 5 plate only: all four vertical corners carry a visible 2 mm round and none is sharp. The script does not check these Thens; check each one in the gate run: Given: topology oracle lists the four 5 mm Z-parallel edges as Edge1/2/5/8 (comparison op)."
 }

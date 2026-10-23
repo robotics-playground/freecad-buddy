@@ -1,0 +1,414 @@
+{
+  "id": "TC-04-20",
+  "tc": "TC-04",
+  "title": "Omitted radius and size take FreeCAD's 1 mm default",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Plate"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "mass_given",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlatePad"
+      }
+    },
+    {
+      "name": "pad_edge",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "e = doc.getObject('PlatePad').Shape.Edges[0]\nresult = [round(e.Length, 3)] + [round(v, 3) + 0.0 for v in (e.BoundBox.XMin, e.BoundBox.YMin, e.BoundBox.ZMin, e.BoundBox.XMax, e.BoundBox.YMax, e.BoundBox.ZMax)]"
+      }
+    },
+    {
+      "name": "fillet",
+      "mcp": "feature_fillet",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "base": "PlatePad",
+        "name": "DefaultFillet",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "PlatePad",
+            "mapped_name": "Edge1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fillet_object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "DefaultFillet"
+      }
+    },
+    {
+      "name": "fillet_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "DefaultFillet"
+      }
+    },
+    {
+      "name": "fillet_edge",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "e = doc.getObject('DefaultFillet').Shape.Edges[2]\nresult = [round(e.Length, 3)] + [round(v, 3) + 0.0 for v in (e.BoundBox.XMin, e.BoundBox.YMin, e.BoundBox.ZMin, e.BoundBox.XMax, e.BoundBox.YMax, e.BoundBox.ZMax)]"
+      }
+    },
+    {
+      "name": "chamfer",
+      "mcp": "feature_chamfer",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "base": "DefaultFillet",
+        "name": "DefaultChamfer",
+        "edges": [
+          {
+            "kind": "mapped_name",
+            "object": "DefaultFillet",
+            "mapped_name": "Edge3"
+          }
+        ]
+      }
+    },
+    {
+      "name": "chamfer_object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "DefaultChamfer"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "DefaultChamfer"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass_given",
+      "path": "structured_content.volume.value",
+      "approx": 12000.0,
+      "tolerance": 12.0
+    },
+    {
+      "step": "pad_edge",
+      "path": "structured_content.value_repr",
+      "equals": "[5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0]"
+    },
+    {
+      "step": "fillet_edge",
+      "path": "structured_content.value_repr",
+      "equals": "[5.0, 60.0, 0.0, 0.0, 60.0, 0.0, 5.0]"
+    },
+    {
+      "step": "fillet",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fillet",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "fillet_object",
+      "path": "structured_content.properties.Radius",
+      "equals": "1.0 mm"
+    },
+    {
+      "step": "fillet_mass",
+      "path": "structured_content.volume.value",
+      "approx": 11998.927,
+      "tolerance": 11.998927
+    },
+    {
+      "step": "chamfer",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "chamfer",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "chamfer_object",
+      "path": "structured_content.properties.Size",
+      "equals": "1.0 mm"
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "shape",
+      "path": "structured_content.checks.2.id",
+      "equals": "shape.solid_count"
+    },
+    {
+      "step": "shape",
+      "path": "structured_content.checks.2.measured",
+      "equals": 1
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.05,
+    "active_document": "Plate",
+    "documents": {
+      "Plate": {
+        "objects": {
+          "DefaultChamfer": {
+            "visibility": true,
+            "valid": true,
+            "volume": 11996.427
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "Plate.DefaultChamfer"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The scripted pixel check does not see edge dress-ups: judge the capture as the 60 x 40 plate with one small rounded corner and one small flat bevel, both about 1 mm, on different edges."
+}

@@ -1,0 +1,537 @@
+{
+  "id": "TC-03-10",
+  "tc": "TC-03",
+  "title": "sketch_remove_geometry cascades its constraints",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            },
+            "name": "PlateWidth"
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "PlateDepth"
+          }
+        ]
+      }
+    },
+    {
+      "name": "verify_given",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "info_given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "remove",
+      "mcp": "sketch_remove_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geo_ids": [
+          3
+        ]
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile"
+      }
+    },
+    {
+      "name": "side",
+      "mcp": "document_create",
+      "args": {
+        "label": "Cascade"
+      }
+    },
+    {
+      "name": "side_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "name": "CascadeProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "side_add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "sketch": "CascadeProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              40,
+              0
+            ]
+          },
+          {
+            "kind": "point",
+            "start": [
+              10,
+              30
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": 1,
+            "first_pos": 1,
+            "value": {
+              "value": 10,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "side_before",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "sketch": "CascadeProfile"
+      }
+    },
+    {
+      "name": "side_remove",
+      "mcp": "sketch_remove_geometry",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "sketch": "CascadeProfile",
+        "geo_ids": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "side_after",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$side.structured_content.doc",
+        "sketch": "CascadeProfile"
+      }
+    },
+    {
+      "name": "side_close",
+      "mcp": "document_close",
+      "args": {
+        "doc": "$side.structured_content.doc"
+      }
+    },
+    {
+      "name": "outside",
+      "mcp": "sketch_remove_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geo_ids": [
+          7
+        ]
+      }
+    },
+    {
+      "name": "empty",
+      "mcp": "sketch_remove_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geo_ids": []
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "verify_given",
+      "path": "structured_content.subject.geometry_count",
+      "equals": 4
+    },
+    {
+      "step": "verify_given",
+      "path": "structured_content.subject.constraint_count",
+      "equals": 11
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.0.id",
+      "equals": 1
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.1.id",
+      "equals": 2
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.2.id",
+      "equals": 3
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.3.id",
+      "equals": 4
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.4.id",
+      "equals": 5
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.5.id",
+      "equals": 6
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.6.id",
+      "equals": 7
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.7.id",
+      "equals": 8
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.8.id",
+      "equals": 9
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.9.id",
+      "equals": 10
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.10.id",
+      "equals": 11
+    },
+    {
+      "step": "info_given",
+      "path": "structured_content.constraints.11",
+      "absent": true
+    },
+    {
+      "step": "remove",
+      "path": "status",
+      "equals": "SPEC_FAILED"
+    },
+    {
+      "step": "remove",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": true
+    },
+    {
+      "step": "remove",
+      "path": "structured_content.mutation.post_verify.explanation",
+      "regex": "verify_sketch failed on PlateProfile \\(dof="
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.3.index",
+      "equals": 3
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.4",
+      "absent": true
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.10.id",
+      "equals": 11
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.11",
+      "absent": true
+    },
+    {
+      "step": "side_add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "side_add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "side_before",
+      "path": "structured_content.subject.constraint_count",
+      "equals": 5
+    },
+    {
+      "step": "side_remove",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "side_after",
+      "path": "structured_content.subject.constraint_count",
+      "equals": 3
+    },
+    {
+      "step": "side_close",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "outside",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "outside",
+      "path": "detail.message",
+      "regex": "is outside the sketch \\(0\\.\\.3\\)"
+    },
+    {
+      "step": "outside",
+      "path": "structured_content.mutation.snapshot_path",
+      "absent": true
+    },
+    {
+      "step": "empty",
+      "path": "text",
+      "regex": "^Input validation error: \\[\\] should be non-empty"
+    },
+    {
+      "step": "empty",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "PlateProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The runner takes no before capture and does not open Sketcher edit mode: capture the intact rectangle before the removal and, after it, open PlateProfile in edit mode (test case Preconditions) and capture again; judge four edges joined at four corners, no open side where the fourth edge was removed, the fully-constrained green, the dimension labels still drawn, the after image matching the before image edge for edge, no error dialog."
+}

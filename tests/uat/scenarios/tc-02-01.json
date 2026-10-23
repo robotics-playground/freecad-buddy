@@ -118,5 +118,6 @@
   "probe": {
     "active_document": null,
     "documents": {}
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: handle is not the FreeCAD Name (doc != name) (comparison op); save-as writes a non-empty file (ls -l) (file check); saved file still exists after the close (ls -l) (file check)."
 }

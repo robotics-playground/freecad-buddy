@@ -1785,7 +1785,20 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: none
   summary: Story 10.8 goal 2 — encode the 30 runner-expressible scenarios that the part V replay left `not encoded` (list in the Story 10.8 hand-off entry above).
   evidence: Split from Story 10.8 at bmad-build scope check (2026-10-23): test-asset work that ships on its own; must land before the gate run so those scenarios run scripted, not agent-driven.
+  resolution: resolved by spec-10-8-b-encode-remaining-runner-scenarios: 27 scenario files; TC-03-01 (rotation "distinct from"), TC-03-04 ("carries a passed check", a set check) and TC-14-04 (ratio `>= 0.85`, an inequality) not encoded (`comparison op`); the 35 partial files hand their `left_out` Thens to the agent through `agent_check` (D1). Live validation on FreeCAD 1.1.4 (scratch runs, not committed) of the files kept: 2 PASS, 1 FAIL (TC-08-07: stale test-case premise, an empty Body moves the fingerprint by design since Story 10.3, `usecases/fingerprint.py:402-405`), 24 ESCALATE (`agent_check` only), no run error.
 
 - source_spec: none
   summary: Story 10.8 goal 3 — full gate run TC-01..TC-14, TC-99 and the G3 live replay on FreeCAD 1.1.4 through the 10.7b runner with agent review per test-plan §9, settling the 15 open part V agent checks; report committed under `tests/uat/run/` (epics.md Story 10.8 AC1).
   evidence: Split from Story 10.8 at bmad-build scope check (2026-10-23): depends on goal 1 (query_capabilities no-active-view fix, Critical TC-11-17) and goal 2; several hours of agent-driven GUI work, best in a fresh session with the desktop free.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
+  summary: Correct the TC-08-07 test case: its premise that an empty body leaves the document digest unchanged is stale since Story 10.3. The Critical scenario FAILs on every run until the test case is corrected, so the correction must land before the Story 10.8 goal 3 gate run.
+  evidence: `usecases/fingerprint.py` records an object with a null `Shape` (an empty Body) as the hash of empty bytes plus zeroed mass properties (commit `a1ef9ab`, Story 10.3); goal 2 live run: `feature_body_create { name: "Probe" }` moved the digest `b083c60b…` to `5d575dcd…`, scenario `tc-08-07.json` FAIL.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
+  summary: The scenario schema has no not-equal check and no set-membership or inequality check, so TC-03-01, TC-03-04 and TC-14-04 stay agent-run.
+  evidence: `tests/uat/runner/scenario.py` expect ops are `equals`, `approx`, `regex`, `absent`; TC-03-01 "rotation distinct from PlateProfileXY", TC-03-04 "carries a passed check with id=sketch.fully_constrained", TC-14-04 "ratio >= 0.85" (spec Implementation Notes).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
+  summary: For the Story 10.8 goal 3 gate run, an `agent_check` that names a before-capture or between-step Given needs the agent to re-run that scenario's steps by MCP up to the named step and capture there, since the runner hands over only after the last step.
+  evidence: The runner captures once, after the last step (`tests/uat/runner/README.md`, Per scenario); 36 committed scenario files name such a capture in `agent_check` (part V and D1 files, and goal 2 files such as TC-03-08, TC-04-14, TC-08-09, TC-09-06, TC-14-08).

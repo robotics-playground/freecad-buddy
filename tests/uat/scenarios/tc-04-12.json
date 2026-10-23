@@ -1,0 +1,1003 @@
+{
+  "id": "TC-04-12",
+  "tc": "TC-04",
+  "title": "feature_mirror across datum, base plane and face",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Mirrors"
+      }
+    },
+    {
+      "name": "half_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "HalfBody"
+      }
+    },
+    {
+      "name": "half_profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "HalfProfile",
+        "plane": "XY",
+        "body": "HalfBody"
+      }
+    },
+    {
+      "name": "half_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "HalfProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              0
+            ],
+            "end": [
+              25,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              25,
+              0
+            ],
+            "end": [
+              25,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              25,
+              30
+            ],
+            "end": [
+              5,
+              30
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              30
+            ],
+            "end": [
+              5,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 0,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "half_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "HalfBody",
+        "profile": "HalfProfile",
+        "name": "HalfPad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "half_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "HalfPad"
+      }
+    },
+    {
+      "name": "datum_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "DatumBody"
+      }
+    },
+    {
+      "name": "datum_profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "DatumProfile",
+        "plane": "XY",
+        "body": "DatumBody"
+      }
+    },
+    {
+      "name": "datum_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "DatumProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              50
+            ],
+            "end": [
+              25,
+              50
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              25,
+              50
+            ],
+            "end": [
+              25,
+              80
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              25,
+              80
+            ],
+            "end": [
+              5,
+              80
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              80
+            ],
+            "end": [
+              5,
+              50
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 50,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "datum_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "DatumBody",
+        "profile": "DatumProfile",
+        "name": "DatumPad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "datum",
+      "mcp": "feature_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "DatumBody",
+        "name": "MirrorPlane",
+        "kind": "plane",
+        "attachment": {
+          "kind": "mapped_name",
+          "object": "YZ_Plane001"
+        },
+        "offset": {
+          "value": 30,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "datum_place",
+      "mcp": "query_placement",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "MirrorPlane"
+      }
+    },
+    {
+      "name": "face_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "FaceBody"
+      }
+    },
+    {
+      "name": "face_profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "FaceProfile",
+        "plane": "XY",
+        "body": "FaceBody"
+      }
+    },
+    {
+      "name": "face_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "FaceProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              150
+            ],
+            "end": [
+              25,
+              150
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              25,
+              150
+            ],
+            "end": [
+              25,
+              180
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              25,
+              180
+            ],
+            "end": [
+              5,
+              180
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              5,
+              180
+            ],
+            "end": [
+              5,
+              150
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 5,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 150,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "face_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "FaceBody",
+        "profile": "FaceProfile",
+        "name": "FacePad",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "face_oracle",
+      "mcp": "script_exec",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "code": "result = type(doc.getObject('FacePad').Shape.Faces[0].Surface).__name__"
+      }
+    },
+    {
+      "name": "plane_mirror",
+      "mcp": "feature_mirror",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "HalfBody",
+        "name": "PlaneMirror",
+        "mirror_plane": {
+          "kind": "mapped_name",
+          "object": "YZ_Plane"
+        },
+        "originals": [
+          "HalfPad"
+        ]
+      }
+    },
+    {
+      "name": "datum_mirror",
+      "mcp": "feature_mirror",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "DatumBody",
+        "name": "DatumMirror",
+        "mirror_plane": {
+          "kind": "mapped_name",
+          "object": "MirrorPlane"
+        },
+        "originals": [
+          "DatumPad"
+        ]
+      }
+    },
+    {
+      "name": "face_mirror",
+      "mcp": "feature_mirror",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "FaceBody",
+        "name": "FaceMirror",
+        "mirror_plane": {
+          "kind": "mapped_name",
+          "object": "FacePad",
+          "mapped_name": "Face1"
+        },
+        "originals": [
+          "FacePad"
+        ]
+      }
+    },
+    {
+      "name": "plane_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlaneMirror"
+      }
+    },
+    {
+      "name": "plane_shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlaneMirror"
+      }
+    },
+    {
+      "name": "datum_shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "DatumMirror"
+      }
+    },
+    {
+      "name": "face_shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "FaceMirror"
+      }
+    },
+    {
+      "name": "unknown_plane",
+      "mcp": "feature_mirror",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "HalfBody",
+        "name": "NoPlaneMirror",
+        "mirror_plane": {
+          "kind": "mapped_name",
+          "object": "NoSuchPlane"
+        },
+        "originals": [
+          "HalfPad"
+        ]
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "half_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "half_body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "half_profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "half_profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "half_geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "half_geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "half_pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "half_pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "half_mass",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "half_mass",
+      "path": "structured_content.bbox.xmin.value",
+      "approx": 5.0,
+      "tolerance": 0.001
+    },
+    {
+      "step": "half_mass",
+      "path": "structured_content.bbox.xmax.value",
+      "approx": 25.0,
+      "tolerance": 0.025
+    },
+    {
+      "step": "datum_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum_body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "datum_profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum_profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "datum_geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum_geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "datum_pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum_pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[BODY\\] DatumBody\\b[^\\n]*\\n(?:[|` ][^\\n]*\\n)*?[|` ]   [|`]-- [v-] \\[PLANE\\] YZ_Plane001\\b"
+    },
+    {
+      "step": "datum",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "datum_place",
+      "path": "structured_content.global.position.x",
+      "equals": {
+        "value": 30,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "face_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "face_body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "face_profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "face_profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "face_geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "face_geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "face_pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "face_pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "face_oracle",
+      "path": "structured_content.value_repr",
+      "equals": "'Plane'"
+    },
+    {
+      "step": "plane_mirror",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "plane_mirror",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "datum_mirror",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum_mirror",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "face_mirror",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "face_mirror",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "plane_mass",
+      "path": "structured_content.volume.value",
+      "approx": 12000.0,
+      "tolerance": 12.0
+    },
+    {
+      "step": "plane_mirror",
+      "path": "structured_content.feature_state.shape_summary.bbox.0",
+      "approx": 50.0,
+      "tolerance": 0.05
+    },
+    {
+      "step": "plane_mirror",
+      "path": "structured_content.feature_state.shape_summary.bbox.1",
+      "approx": 30.0,
+      "tolerance": 0.03
+    },
+    {
+      "step": "plane_mirror",
+      "path": "structured_content.feature_state.shape_summary.bbox.2",
+      "approx": 10.0,
+      "tolerance": 0.01
+    },
+    {
+      "step": "plane_shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "datum_shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "face_shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "plane_mirror",
+      "path": "structured_content.feature_state.shape_summary.solid_count",
+      "equals": 2
+    },
+    {
+      "step": "datum_mirror",
+      "path": "structured_content.feature_state.shape_summary.solid_count",
+      "equals": 2
+    },
+    {
+      "step": "face_mirror",
+      "path": "structured_content.feature_state.shape_summary.solid_count",
+      "equals": 1
+    },
+    {
+      "step": "unknown_plane",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "unknown_plane",
+      "path": "detail.message",
+      "regex": "unknown object in mirror_plane"
+    },
+    {
+      "step": "unknown_plane",
+      "path": "structured_content.mutation.snapshot_path",
+      "absent": true
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 12,
+    "active_document": "Mirrors",
+    "documents": {
+      "Mirrors": {
+        "objects": {
+          "PlaneMirror": {
+            "visibility": true,
+            "valid": true,
+            "volume": 12000
+          },
+          "DatumMirror": {
+            "visibility": true,
+            "valid": true,
+            "volume": 12000
+          },
+          "FaceMirror": {
+            "visibility": true,
+            "valid": true,
+            "volume": 12000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "plane_mass.structured_content.volume.value",
+      "probe": "documents.Mirrors.objects.PlaneMirror.shape.volume",
+      "tolerance": 0.01
+    }
+  ]
+}

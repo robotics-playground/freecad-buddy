@@ -1,0 +1,337 @@
+{
+  "id": "TC-03-18",
+  "tc": "TC-03",
+  "title": "Wrong unit on a datum is a schema reject",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BracketProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              40,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              14.142,
+              14.142
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Distance",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            },
+            "name": "HoleSpacing"
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Angle",
+            "first": 0,
+            "second": 1,
+            "value": {
+              "value": 45,
+              "unit": "deg"
+            },
+            "name": "RibAngle"
+          },
+          {
+            "type": "Distance",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            },
+            "name": "RibLength"
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "deg_length",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "constraint": "HoleSpacing",
+        "value": {
+          "value": 10,
+          "unit": "deg"
+        }
+      }
+    },
+    {
+      "name": "bare",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              20,
+              20
+            ],
+            "radius": 2.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "no_value",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "constraint": "HoleSpacing",
+        "value": {
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "deg_radius",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "geometry": [
+          {
+            "kind": "circle",
+            "center": [
+              20,
+              20
+            ],
+            "radius": {
+              "value": 2.5,
+              "unit": "deg"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "extra_key",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "constraint": "HoleSpacing",
+        "value": {
+          "value": 10,
+          "unit": "mm",
+          "tolerance": 0.1
+        }
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile"
+      }
+    },
+    {
+      "name": "angle",
+      "mcp": "sketch_set_datum",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BracketProfile",
+        "constraint": "RibAngle",
+        "value": {
+          "value": 30,
+          "unit": "deg"
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.HoleSpacing.value.unit",
+      "equals": "mm"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.constraints.RibAngle.value.unit",
+      "equals": "deg"
+    },
+    {
+      "step": "deg_length",
+      "path": "status",
+      "regex": "^(?!OK$)"
+    },
+    {
+      "step": "deg_length",
+      "path": "detail.message",
+      "regex": "must be one of \\['mm'\\]"
+    },
+    {
+      "step": "deg_radius",
+      "path": "text",
+      "regex": "^Input validation error: 'deg' is not one of \\['mm'\\]"
+    },
+    {
+      "step": "deg_radius",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "bare",
+      "path": "text",
+      "regex": "^Input validation error: 2\\.5 is not of type 'object'"
+    },
+    {
+      "step": "bare",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "no_value",
+      "path": "text",
+      "regex": "^Input validation error: 'value' is a required property"
+    },
+    {
+      "step": "no_value",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "extra_key",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('tolerance' was unexpected\\)"
+    },
+    {
+      "step": "extra_key",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.HoleSpacing.value",
+      "equals": {
+        "value": 40,
+        "unit": "mm"
+      }
+    },
+    {
+      "step": "angle",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "BracketProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The runner takes no before capture and does not open Sketcher edit mode, which draws the dimension labels: capture the profile before the four refused calls and, after the RibAngle edit, open BracketProfile in edit mode (test case Preconditions) and capture again; judge no new circle in the profile, the HoleSpacing label still 40 over an unchanged distance, the RibAngle label 30 with the rib swung closer to the base line as the only difference, nothing collapsed or exploded, no error dialog."
+}

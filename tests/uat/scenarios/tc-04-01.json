@@ -1,0 +1,278 @@
+{
+  "id": "TC-04-01",
+  "tc": "TC-04",
+  "title": "feature_body_create empty and adopting a base",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Bracket"
+      }
+    },
+    {
+      "name": "box",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "box_mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$box.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "empty",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "PlateBody"
+      }
+    },
+    {
+      "name": "tree",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "adopt",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$box.structured_content.doc",
+        "name": "AdoptBody",
+        "base_feature": "Box"
+      }
+    },
+    {
+      "name": "mass",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$box.structured_content.doc",
+        "object": "AdoptBody"
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$box.structured_content.doc",
+        "object": "AdoptBody"
+      }
+    },
+    {
+      "name": "double",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$box.structured_content.doc",
+        "name": "AdoptAgain",
+        "base_feature": "Box"
+      }
+    },
+    {
+      "name": "loose",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "LooseSketch",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "shapeless",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "SketchBody",
+        "base_feature": "LooseSketch"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$box.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "create",
+      "path": "structured_content.doc",
+      "regex": "^fcb-doc:"
+    },
+    {
+      "step": "box",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "box_mass",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "empty",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "empty",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "object",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.Tip",
+      "equals": null
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[v-] \\[BODY\\] PlateBody\\b[^\\n]*\\n(?:[|` ][^\\n]*\\n)*?[|`]-- [v-] \\[ORIGIN\\] Origin\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[|` ]   [|`]-- [v-] \\[AXIS\\] X_Axis\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[|` ]   [|`]-- [v-] \\[AXIS\\] Y_Axis\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[|` ]   [|`]-- [v-] \\[AXIS\\] Z_Axis\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[|` ]   [|`]-- [v-] \\[PLANE\\] XY_Plane\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[|` ]   [|`]-- [v-] \\[PLANE\\] XZ_Plane\\b"
+    },
+    {
+      "step": "tree",
+      "path": "text",
+      "regex": "(?m)^[|` ]   [|`]-- [v-] \\[PLANE\\] YZ_Plane\\b"
+    },
+    {
+      "step": "adopt",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "adopt",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "mass",
+      "path": "structured_content.volume.value",
+      "approx": 6000.0,
+      "tolerance": 6.0
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "double",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "double",
+      "path": "detail.message",
+      "regex": "is already adopted by a Body"
+    },
+    {
+      "step": "loose",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "shapeless",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "shapeless",
+      "path": "detail.message",
+      "regex": "carries no shape to adopt"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 6,
+    "active_document": "box_10_20_30",
+    "documents": {
+      "Bracket": {},
+      "box_10_20_30": {
+        "objects": {
+          "AdoptBody": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "mass.structured_content.volume.value",
+      "probe": "documents.box_10_20_30.objects.AdoptBody.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "box_10_20_30.AdoptBody"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  }
+}

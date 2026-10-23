@@ -222,5 +222,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: checks holds the named id set (encoded as a fixed index order) (comparison op)."
 }

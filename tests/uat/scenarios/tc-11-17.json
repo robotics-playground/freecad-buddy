@@ -100,5 +100,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: H1 refuses with INVALID_INPUT and the exact 'script_exec is off: ...' message (H1 host); H1 audit has two exec lines, the second verify_verdict INVALID_INPUT (H1 host); H1 query_tree_summary has no Leak line (H1 host); GUI audit log line count unchanged (log or audit read); Given: addon.log has FREECAD_BUDDY_SCRIPT_EXEC='0' and no SECURITY ENABLED line (log or audit read); Given: GUI audit.jsonl line count recorded (log or audit read); Given: framed baseline captured (tc-11-17-before.png) (GUI action)."
 }

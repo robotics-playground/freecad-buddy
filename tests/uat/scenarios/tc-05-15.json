@@ -600,5 +600,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: query_dependencies shows Fillet depends on Pad (comparison op); Given: pre-mutation window framed and captured (tc-05-15-before.png) (GUI action); every tnp_audit finding is RE_BASELINED (encoded as the other counts absent) (comparison op); tnp_audit counts.PASS >= 1 (encoded as present) (comparison op)."
 }

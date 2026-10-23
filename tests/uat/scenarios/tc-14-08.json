@@ -1,0 +1,137 @@
+{
+  "id": "TC-14-08",
+  "tc": "TC-14",
+  "title": "An unknown key is hard-rejected",
+  "steps": [
+    {
+      "name": "open",
+      "mcp": "document_open",
+      "args": {
+        "path": "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      }
+    },
+    {
+      "menu": [
+        "View",
+        "Visibility",
+        "Show All Objects"
+      ]
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc"
+      }
+    },
+    {
+      "name": "ratio_before",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    },
+    {
+      "name": "factor",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "factor": 0.5
+      }
+    },
+    {
+      "name": "confirm",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "confirm": true
+      }
+    },
+    {
+      "name": "ratio_after",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$open.structured_content.doc",
+        "object": "Box"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "open",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "factor",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('factor' was unexpected\\)"
+    },
+    {
+      "step": "factor",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "confirm",
+      "path": "text",
+      "regex": "^Input validation error: Additional properties are not allowed \\('confirm' was unexpected\\)"
+    },
+    {
+      "step": "confirm",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "ratio_before",
+      "path": "framing.fits",
+      "equals": true
+    },
+    {
+      "step": "ratio_after",
+      "path": "framing.ratio",
+      "equals": "$ratio_before.framing.ratio"
+    }
+  ],
+  "probe": {
+    "tolerance": 6,
+    "active_document": "box_10_20_30",
+    "documents": {
+      "box_10_20_30": {
+        "objects": {
+          "Box": {
+            "visibility": true,
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "ratio_after.structured_content.volume.value",
+      "probe": "documents.box_10_20_30.objects.Box.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "box_10_20_30.Box"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The runner takes no capture after the Given fit: capture the box right after the first fit and compare it with the runner's capture; the model at the same size, position and orientation, no dialog raised by either reject."
+}

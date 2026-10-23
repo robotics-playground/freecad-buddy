@@ -1,0 +1,855 @@
+{
+  "id": "TC-08-10",
+  "tc": "TC-08",
+  "title": "A token is bound to the document it was minted on",
+  "launch": {
+    "FREECAD_BUDDY_AUTO_APPROVE": "0"
+  },
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0810A"
+      }
+    },
+    {
+      "name": "prev_body",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_body_create",
+          "args": {
+            "name": "Body"
+          }
+        }
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Body",
+        "confirm": {
+          "preview_id": "$prev_body.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_sketch",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_create",
+          "args": {
+            "name": "Sketch",
+            "body": "Body",
+            "plane": "XY"
+          }
+        }
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Sketch",
+        "body": "Body",
+        "plane": "XY",
+        "confirm": {
+          "preview_id": "$prev_sketch.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_geometry",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "sketch_add_geometry",
+          "args": {
+            "sketch": "Sketch",
+            "geometry": [
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  0
+                ],
+                "end": [
+                  20,
+                  0
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  0
+                ],
+                "end": [
+                  20,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  20
+                ],
+                "end": [
+                  0,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  20
+                ],
+                "end": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "constraints": [
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 2,
+                "second": 1,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 1,
+                "first_pos": 2,
+                "second": 2,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 2,
+                "first_pos": 2,
+                "second": 3,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 3,
+                "first_pos": 2,
+                "second": 0,
+                "second_pos": 1
+              },
+              {
+                "type": "Horizontal",
+                "first": 0
+              },
+              {
+                "type": "Horizontal",
+                "first": 2
+              },
+              {
+                "type": "Vertical",
+                "first": 1
+              },
+              {
+                "type": "Vertical",
+                "first": 3
+              },
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 1,
+                "second": -1,
+                "second_pos": 1
+              },
+              {
+                "type": "DistanceX",
+                "first": 0,
+                "first_pos": 1,
+                "second": 0,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              },
+              {
+                "type": "DistanceY",
+                "first": 1,
+                "first_pos": 1,
+                "second": 1,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ],
+        "confirm": {
+          "preview_id": "$prev_geometry.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "b",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0810B"
+      }
+    },
+    {
+      "name": "prev_b_body",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "operation": {
+          "tool": "feature_body_create",
+          "args": {
+            "name": "Body"
+          }
+        }
+      }
+    },
+    {
+      "name": "b_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "name": "Body",
+        "confirm": {
+          "preview_id": "$prev_b_body.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_b_sketch",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "operation": {
+          "tool": "sketch_create",
+          "args": {
+            "name": "Sketch",
+            "body": "Body",
+            "plane": "XY"
+          }
+        }
+      }
+    },
+    {
+      "name": "b_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "name": "Sketch",
+        "body": "Body",
+        "plane": "XY",
+        "confirm": {
+          "preview_id": "$prev_b_sketch.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "prev_b_geometry",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "operation": {
+          "tool": "sketch_add_geometry",
+          "args": {
+            "sketch": "Sketch",
+            "geometry": [
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  0
+                ],
+                "end": [
+                  20,
+                  0
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  0
+                ],
+                "end": [
+                  20,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  20,
+                  20
+                ],
+                "end": [
+                  0,
+                  20
+                ]
+              },
+              {
+                "kind": "line_segment",
+                "start": [
+                  0,
+                  20
+                ],
+                "end": [
+                  0,
+                  0
+                ]
+              }
+            ],
+            "constraints": [
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 2,
+                "second": 1,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 1,
+                "first_pos": 2,
+                "second": 2,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 2,
+                "first_pos": 2,
+                "second": 3,
+                "second_pos": 1
+              },
+              {
+                "type": "Coincident",
+                "first": 3,
+                "first_pos": 2,
+                "second": 0,
+                "second_pos": 1
+              },
+              {
+                "type": "Horizontal",
+                "first": 0
+              },
+              {
+                "type": "Horizontal",
+                "first": 2
+              },
+              {
+                "type": "Vertical",
+                "first": 1
+              },
+              {
+                "type": "Vertical",
+                "first": 3
+              },
+              {
+                "type": "Coincident",
+                "first": 0,
+                "first_pos": 1,
+                "second": -1,
+                "second_pos": 1
+              },
+              {
+                "type": "DistanceX",
+                "first": 0,
+                "first_pos": 1,
+                "second": 0,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              },
+              {
+                "type": "DistanceY",
+                "first": 1,
+                "first_pos": 1,
+                "second": 1,
+                "second_pos": 2,
+                "value": {
+                  "value": 20,
+                  "unit": "mm"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "b_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ],
+        "confirm": {
+          "preview_id": "$prev_b_geometry.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$b.structured_content.doc"
+      }
+    },
+    {
+      "name": "prev_pad",
+      "mcp": "preview_dry_run",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "operation": {
+          "tool": "feature_pad",
+          "args": {
+            "body": "Body",
+            "profile": "Sketch",
+            "name": "Pad",
+            "length": {
+              "value": 30,
+              "unit": "mm"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "other_doc",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_pad.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "tree_b",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "tree_a",
+      "mcp": "query_tree_summary",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "depth": 3
+      }
+    },
+    {
+      "name": "own_doc",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "Sketch",
+        "name": "Pad",
+        "length": {
+          "value": 30,
+          "unit": "mm"
+        },
+        "confirm": {
+          "preview_id": "$prev_pad.structured_content.preview_id"
+        }
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$b.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.TC0810A.doc",
+      "equals": "$create.structured_content.doc"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.TC0810B.doc",
+      "equals": "$b.structured_content.doc"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.2",
+      "absent": true
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "other_doc",
+      "path": "detail.message",
+      "equals": "confirm.preview_id was issued for a different document"
+    },
+    {
+      "step": "tree_b",
+      "path": "text",
+      "regex": "\\A(?![\\s\\S]*\\[\\w+\\] Pad\\b)"
+    },
+    {
+      "step": "tree_a",
+      "path": "text",
+      "regex": "\\A(?![\\s\\S]*\\[\\w+\\] Pad\\b)"
+    },
+    {
+      "step": "other_doc",
+      "path": "detail.message",
+      "regex": "\\A(?![\\s\\S]*was issued for different arguments)"
+    },
+    {
+      "step": "own_doc",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 12,
+    "active_document": "TC0810B",
+    "documents": {
+      "TC0810A": {
+        "objects": {
+          "Pad": {
+            "valid": true,
+            "volume": 12000
+          }
+        }
+      },
+      "TC0810B": {
+        "objects": {
+          "Sketch": {
+            "type": "Sketcher::SketchObject"
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The runner takes no before capture and no capture right after the refused call: capture TC0810B framed before the refused apply and right after it, and state what is on screen and which document's title the window carries in each; the two must be identical by eye, TC0810B still a flat sketch with no pad, TC0810A not activated into the viewport (the runner's capture follows the authorized apply on TC0810A and must still show TC0810B)."
+}

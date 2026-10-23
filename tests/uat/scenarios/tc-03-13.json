@@ -458,5 +458,5 @@
       "tolerance": 0.01
     }
   ],
-  "agent_check": "External geometry is drawn only in Sketcher edit mode, which the runner does not open, and the runner takes no before capture: open BossProfile in edit mode (test case Preconditions), capture the window and judge one projected curve in the external-geometry colour lying along a 60 mm boundary edge of the shaded plate, on the plate and not offset; the solid unchanged; no error dialog."
+  "agent_check": "External geometry is drawn only in Sketcher edit mode, which the runner does not open, and the runner takes no before capture: open BossProfile in edit mode (test case Preconditions), capture the window and judge one projected curve in the external-geometry colour lying along a 60 mm boundary edge of the shaded plate, on the plate and not offset; the solid unchanged; no error dialog. The script does not check these Thens; check each one in the gate run: Given: pre-projection state captured (tc-03-13-before.png) (GUI action); tnp_audit counts.PASS >= 1 (not encoded) (comparison op); whole-document query_dependencies has edge BossProfile -> PlatePad (encoded as the object form, out_list equals [PlatePad]) (comparison op)."
 }

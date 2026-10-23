@@ -144,5 +144,6 @@
       "min_fraction": 0.5,
       "inside": true
     }
-  }
+  },
+  "agent_check": "The script does not check these Thens; check each one in the gate run: every property value is JSON-safe, no repr of a live FreeCAD pointer (comparison op)."
 }

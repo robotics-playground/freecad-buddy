@@ -1,0 +1,361 @@
+{
+  "id": "TC-09-06",
+  "tc": "TC-09",
+  "title": "Empty arrays are rejected where `minItems` applies",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "TC0906"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Body"
+      }
+    },
+    {
+      "name": "sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Sketch",
+        "plane": "XY",
+        "body": "Body"
+      }
+    },
+    {
+      "name": "add",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "fit_before",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "empty",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": []
+      }
+    },
+    {
+      "name": "short",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0
+            ],
+            "end": [
+              10,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "long",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "end": [
+              10,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "export",
+      "mcp": "export_step",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "path": "$RUN_DIR/evidence/tc-09-06-e.step",
+        "objects": []
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "Sketch"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "add",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "add",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.geometry.3.index",
+      "equals": 3
+    },
+    {
+      "step": "given",
+      "path": "structured_content.geometry.4",
+      "absent": true
+    },
+    {
+      "step": "fit_before",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "empty",
+      "path": "text",
+      "regex": "^Input validation error: \\[\\] should be non-empty"
+    },
+    {
+      "step": "empty",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "short",
+      "path": "text",
+      "regex": "^Input validation error: \\[0\\] is too short"
+    },
+    {
+      "step": "short",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "long",
+      "path": "text",
+      "regex": "^Input validation error: \\[0, 0, 0, 0\\] is too long"
+    },
+    {
+      "step": "long",
+      "path": "is_error",
+      "equals": true
+    },
+    {
+      "step": "short",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "long",
+      "path": "status",
+      "absent": true
+    },
+    {
+      "step": "export",
+      "path": "schema",
+      "equals": "fcb.result-envelope/1"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.3.index",
+      "equals": 3
+    },
+    {
+      "step": "info",
+      "path": "structured_content.geometry.4",
+      "absent": true
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "TC0906",
+    "documents": {
+      "TC0906": {
+        "objects": {
+          "Sketch": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The runner takes no before capture: capture the framed sketch before the refused calls and compare it with the runner's capture; the same sketch, no new line segment, the two images identical by eye, no error dialog or modal."
+}

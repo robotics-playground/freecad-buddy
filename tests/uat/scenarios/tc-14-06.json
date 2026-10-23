@@ -1,0 +1,565 @@
+{
+  "id": "TC-14-06",
+  "tc": "TC-14",
+  "title": "A handle naming a document the viewport is not showing is refused, naming both",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "DocA"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "Body"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "BarProfile",
+        "plane": "XY",
+        "body": "Body"
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "BarProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              30,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              30,
+              0
+            ],
+            "end": [
+              30,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              30,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 30,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "Body",
+        "profile": "BarProfile",
+        "name": "Bar",
+        "length": {
+          "value": 10,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "fit_a",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "b",
+      "mcp": "document_create",
+      "args": {
+        "label": "DocB"
+      }
+    },
+    {
+      "name": "b_body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "name": "Body"
+      }
+    },
+    {
+      "name": "b_profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "name": "BarProfile",
+        "plane": "XY",
+        "body": "Body"
+      }
+    },
+    {
+      "name": "b_geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "sketch": "BarProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              0
+            ],
+            "end": [
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              20,
+              20
+            ],
+            "end": [
+              0,
+              20
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              20
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "b_pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "body": "Body",
+        "profile": "BarProfile",
+        "name": "Bar",
+        "length": {
+          "value": 40,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "listed",
+      "mcp": "document_list",
+      "args": {}
+    },
+    {
+      "name": "fit_b",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$b.structured_content.doc"
+      }
+    },
+    {
+      "name": "ratio_before",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "object": "Bar"
+      }
+    },
+    {
+      "name": "refused",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    },
+    {
+      "name": "ratio_after",
+      "mcp": "query_mass_properties",
+      "args": {
+        "doc": "$b.structured_content.doc",
+        "object": "Bar"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "fit_a",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "b_profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "b_geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "b_pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "b_pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.DocA.doc",
+      "equals": "$create.structured_content.doc"
+    },
+    {
+      "step": "listed",
+      "path": "structured_content.documents.DocB.doc",
+      "equals": "$b.structured_content.doc"
+    },
+    {
+      "step": "fit_b",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "refused",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "refused",
+      "path": "detail.message",
+      "equals": "the live viewport is showing 'DocB', not the targeted 'DocA'; call view_fit_viewport with the handle for 'DocB', or open a 3D view for 'DocA'"
+    },
+    {
+      "step": "refused",
+      "path": "detail.message",
+      "regex": "DocA"
+    },
+    {
+      "step": "refused",
+      "path": "detail.message",
+      "regex": "DocB"
+    },
+    {
+      "step": "refused",
+      "path": "detail.message",
+      "regex": "\\A(?![\\s\\S]*no live 3D view)"
+    },
+    {
+      "step": "ratio_before",
+      "path": "framing.fits",
+      "equals": true
+    },
+    {
+      "step": "ratio_after",
+      "path": "framing.ratio",
+      "equals": "$ratio_before.framing.ratio"
+    }
+  ],
+  "probe": {
+    "tolerance": 16,
+    "active_document": "DocB",
+    "documents": {
+      "DocA": {
+        "objects": {
+          "Bar": {
+            "valid": true,
+            "volume": 6000
+          }
+        }
+      },
+      "DocB": {
+        "objects": {
+          "Bar": {
+            "visibility": true,
+            "valid": true,
+            "volume": 16000
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "cross": [
+    {
+      "mcp": "ratio_after.structured_content.volume.value",
+      "probe": "documents.DocB.objects.Bar.shape.volume",
+      "tolerance": 0.01
+    }
+  ],
+  "pixel": {
+    "samples": [
+      "DocB.Bar"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The window title bar and the document tabs are outside the 3D view the pixel check reads: judge on the capture that DocB's name is in the title bar, its tab is active (DocA was not brought forward), and DocB's model sits at the size and place of the fit before the refusal."
+}

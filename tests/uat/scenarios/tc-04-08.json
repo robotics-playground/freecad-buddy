@@ -1,0 +1,486 @@
+{
+  "id": "TC-04-08",
+  "tc": "TC-04",
+  "title": "feature_hole thread_type before cut_type",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "Plate"
+      }
+    },
+    {
+      "name": "body",
+      "mcp": "feature_body_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateBody"
+      }
+    },
+    {
+      "name": "profile",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "PlateProfile",
+        "plane": "XY",
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "geometry",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "PlateProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1,
+            "second_pos": 1
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "pad",
+      "mcp": "feature_pad",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "PlateProfile",
+        "name": "PlatePad",
+        "length": {
+          "value": 5,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "thread_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "ThreadProfile",
+        "face": {
+          "kind": "mapped_name",
+          "object": "PlatePad",
+          "mapped_name": "Face6"
+        },
+        "body": "PlateBody"
+      }
+    },
+    {
+      "name": "thread_point",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ThreadProfile",
+        "geometry": [
+          {
+            "kind": "point",
+            "start": [
+              20,
+              20
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "DistanceX",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "ThreadProfile"
+      }
+    },
+    {
+      "name": "hole",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "ThreadProfile",
+        "name": "ThreadedHole",
+        "thread_type": "ISOMetricProfile",
+        "cut_type": "Counterbore",
+        "depth": {
+          "value": 4,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "object",
+      "mcp": "query_object",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "ThreadedHole"
+      }
+    },
+    {
+      "name": "with_diameter",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "ThreadProfile",
+        "name": "DiameterHole",
+        "thread_type": "ISOMetricProfile",
+        "diameter": {
+          "value": 5,
+          "unit": "mm"
+        },
+        "depth": {
+          "value": 4,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "foreign_cut",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "ThreadProfile",
+        "name": "ForeignCutHole",
+        "thread_type": "UNC",
+        "cut_type": "ISO 4762",
+        "depth": {
+          "value": 4,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "fake_thread",
+      "mcp": "feature_hole",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "body": "PlateBody",
+        "profile": "ThreadProfile",
+        "name": "FakeThreadHole",
+        "thread_type": "ISOMetricFake",
+        "depth": {
+          "value": 4,
+          "unit": "mm"
+        }
+      }
+    },
+    {
+      "name": "shape",
+      "mcp": "verify_shape",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "object": "ThreadedHole"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "body",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "body",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "profile",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "profile",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "geometry",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "geometry",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "pad",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "pad",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "thread_sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "thread_sketch",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "thread_point",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "thread_point",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "given",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "hole",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "hole",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.ThreadType",
+      "equals": "ISOMetricProfile"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.HoleCutType",
+      "equals": "Counterbore"
+    },
+    {
+      "step": "object",
+      "path": "structured_content.properties.Threaded",
+      "equals": true
+    },
+    {
+      "step": "with_diameter",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "with_diameter",
+      "path": "detail.message",
+      "regex": "^'diameter' cannot be combined with thread_type="
+    },
+    {
+      "step": "foreign_cut",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "foreign_cut",
+      "path": "detail.message",
+      "regex": "is not one of"
+    },
+    {
+      "step": "fake_thread",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "fake_thread",
+      "path": "structured_content.mutation.snapshot_path",
+      "absent": true
+    },
+    {
+      "step": "shape",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "tolerance": 0.01,
+    "active_document": "Plate",
+    "documents": {
+      "Plate": {
+        "objects": {
+          "ThreadedHole": {
+            "visibility": true,
+            "valid": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "pixel": {
+    "samples": [
+      "Plate.ThreadedHole"
+    ],
+    "extent": {
+      "min_fraction": 0.5,
+      "inside": true
+    }
+  },
+  "agent_check": "The scripted pixel check does not see the hole's shape: judge the capture as a plate with one counterbored hole, two concentric circular diameters at the hole (a wide shallow step narrowing to the threaded bore), not a single plain bore."
+}

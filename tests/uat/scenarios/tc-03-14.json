@@ -1,0 +1,374 @@
+{
+  "id": "TC-03-14",
+  "tc": "TC-03",
+  "title": "Axis references -1 and -2 resolve as operands",
+  "steps": [
+    {
+      "name": "create",
+      "mcp": "document_create",
+      "args": {
+        "label": "BracketPlate"
+      }
+    },
+    {
+      "name": "axis_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "AxisProfile",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "first_sketch",
+      "mcp": "sketch_create",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "name": "AxisFirst",
+        "plane": "XY"
+      }
+    },
+    {
+      "name": "given",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisProfile"
+      }
+    },
+    {
+      "name": "axes",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisProfile",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              60,
+              0
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              0
+            ],
+            "end": [
+              60,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              60,
+              40
+            ],
+            "end": [
+              0,
+              40
+            ]
+          },
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              40
+            ],
+            "end": [
+              0,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": 0,
+            "first_pos": 2,
+            "second": 1,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 1,
+            "first_pos": 2,
+            "second": 2,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 2,
+            "first_pos": 2,
+            "second": 3,
+            "second_pos": 1
+          },
+          {
+            "type": "Coincident",
+            "first": 3,
+            "first_pos": 2,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Horizontal",
+            "first": 2
+          },
+          {
+            "type": "Vertical",
+            "first": 1
+          },
+          {
+            "type": "Vertical",
+            "first": 3
+          },
+          {
+            "type": "DistanceX",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 60,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "DistanceY",
+            "first": 1,
+            "first_pos": 1,
+            "second": 1,
+            "second_pos": 2,
+            "value": {
+              "value": 40,
+              "unit": "mm"
+            }
+          },
+          {
+            "type": "PointOnObject",
+            "first": 0,
+            "first_pos": 1,
+            "second": -1
+          },
+          {
+            "type": "PointOnObject",
+            "first": 3,
+            "first_pos": 1,
+            "second": -2
+          }
+        ]
+      }
+    },
+    {
+      "name": "axis_first",
+      "mcp": "sketch_add_geometry",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisFirst",
+        "geometry": [
+          {
+            "kind": "line_segment",
+            "start": [
+              0,
+              0
+            ],
+            "end": [
+              20,
+              0
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "type": "Coincident",
+            "first": -1,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 1
+          },
+          {
+            "type": "Horizontal",
+            "first": 0
+          },
+          {
+            "type": "Distance",
+            "first": 0,
+            "first_pos": 1,
+            "second": 0,
+            "second_pos": 2,
+            "value": {
+              "value": 20,
+              "unit": "mm"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "undefined",
+      "mcp": "sketch_add_constraint",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisProfile",
+        "constraints": [
+          {
+            "type": "PointOnObject",
+            "first": 1,
+            "first_pos": 2,
+            "second": -9
+          }
+        ]
+      }
+    },
+    {
+      "name": "verify",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisProfile"
+      }
+    },
+    {
+      "name": "info",
+      "mcp": "query_sketch_info",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisProfile"
+      }
+    },
+    {
+      "name": "verify_first",
+      "mcp": "verify_sketch",
+      "args": {
+        "doc": "$create.structured_content.doc",
+        "sketch": "AxisFirst"
+      }
+    },
+    {
+      "name": "fit",
+      "mcp": "view_fit_viewport",
+      "args": {
+        "doc": "$create.structured_content.doc"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "step": "axis_sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "first_sketch",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "given",
+      "path": "structured_content.geometry",
+      "equals": []
+    },
+    {
+      "step": "axes",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "axes",
+      "path": "structured_content.mutation.rolled_back",
+      "equals": false
+    },
+    {
+      "step": "verify",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "verify",
+      "path": "structured_content.subject.redundant",
+      "equals": []
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.10.id",
+      "equals": 11
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.10.type",
+      "equals": "PointOnObject"
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.11.id",
+      "equals": 12
+    },
+    {
+      "step": "info",
+      "path": "structured_content.constraints.11.type",
+      "equals": "PointOnObject"
+    },
+    {
+      "step": "axis_first",
+      "path": "status",
+      "equals": "OK"
+    },
+    {
+      "step": "verify_first",
+      "path": "structured_content.subject.dof",
+      "equals": 0
+    },
+    {
+      "step": "undefined",
+      "path": "status",
+      "equals": "INVALID_INPUT"
+    },
+    {
+      "step": "undefined",
+      "path": "detail.message",
+      "regex": "-9"
+    },
+    {
+      "step": "fit",
+      "path": "status",
+      "equals": "OK"
+    }
+  ],
+  "probe": {
+    "active_document": "BracketPlate",
+    "documents": {
+      "BracketPlate": {
+        "objects": {
+          "AxisProfile": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          },
+          "AxisFirst": {
+            "type": "Sketcher::SketchObject",
+            "visibility": true
+          }
+        }
+      }
+    },
+    "view": {
+      "clipped": false
+    }
+  },
+  "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open AxisProfile in edit mode (test case Preconditions), capture the window and judge one closed green rectangle whose bottom edge lies on the horizontal axis and whose left edge lies on the vertical axis, point-on-object markers at the two pinned corners, not collapsed or inverted, no orange or red geometry, no error dialog."
+}
