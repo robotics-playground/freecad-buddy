@@ -9,6 +9,8 @@ probe that cannot run returns a conservative default rather than raising.
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from functools import lru_cache
 from typing import Callable, Literal, TypeVar
 
@@ -71,6 +73,24 @@ def serializer_tag() -> Literal["exportBinary", "exportBrep"]:
     return "exportBinary" if export_binary_available() else "exportBrep"
 
 
+@contextmanager
+def _scratch_document(name: str) -> Iterator[object]:
+    """Open a throwaway probe document and close it on every path.
+
+    ``temp=True`` is what keeps the caller's state: FreeCAD makes every new document active and
+    puts the previous one back only for a temporary document, and closing the active document
+    leaves none active, so a GUI session would lose its active 3D view. ``hidden=True`` opens no
+    view. Raises whatever ``FreeCAD.newDocument`` raises.
+    """
+    import FreeCAD
+
+    doc = FreeCAD.newDocument(name, hidden=True, temp=True)
+    try:
+        yield doc
+    finally:
+        FreeCAD.closeDocument(doc.Name)
+
+
 @lru_cache(maxsize=1)
 def varset_backend() -> Literal["varset", "spreadsheet"]:
     """Driving-dimension backend: ``varset`` when ``App::VarSet`` is usable, else ``spreadsheet``.
@@ -78,20 +98,11 @@ def varset_backend() -> Literal["varset", "spreadsheet"]:
     Attempts to add an ``App::VarSet`` on a throwaway document and confirms it materializes.
     """
     try:
-        import FreeCAD
-    except ImportError:
+        with _scratch_document("FCB_TMP_varset_probe") as doc:
+            obj = doc.addObject("App::VarSet", "FCB_TMP_probe")
+            return "varset" if obj is not None else "spreadsheet"
+    except Exception:  # noqa: BLE001 - FreeCAD missing, or any failure: the backend is unavailable
         return "spreadsheet"
-    try:
-        doc = FreeCAD.newDocument("FCB_TMP_varset_probe")
-    except Exception:  # noqa: BLE001 - cannot open a probe document; assume unavailable
-        return "spreadsheet"
-    try:
-        obj = doc.addObject("App::VarSet", "FCB_TMP_probe")
-        return "varset" if obj is not None else "spreadsheet"
-    except Exception:  # noqa: BLE001 - any failure means the backend is unavailable
-        return "spreadsheet"
-    finally:
-        FreeCAD.closeDocument(doc.Name)
 
 
 @lru_cache(maxsize=1)
@@ -193,42 +204,30 @@ def partdesign_available() -> bool:
     a build without either cannot run any feature mutation.
     """
     try:
-        import FreeCAD
-    except ImportError:
+        with _scratch_document("FCB_TMP_partdesign_probe") as doc:
+            body = doc.addObject("PartDesign::Body", "FCB_TMP_body")
+            pad = doc.addObject("PartDesign::Pad", "FCB_TMP_pad")
+            return body is not None and pad is not None
+    except Exception:  # noqa: BLE001 - FreeCAD missing, or any failure: the workbench is unavailable
         return False
-    try:
-        doc = FreeCAD.newDocument("FCB_TMP_partdesign_probe")
-    except Exception:  # noqa: BLE001 - cannot open a probe document; assume unavailable
-        return False
-    try:
-        body = doc.addObject("PartDesign::Body", "FCB_TMP_body")
-        pad = doc.addObject("PartDesign::Pad", "FCB_TMP_pad")
-        return body is not None and pad is not None
-    except Exception:  # noqa: BLE001 - any failure means the workbench is unavailable
-        return False
-    finally:
-        FreeCAD.closeDocument(doc.Name)
 
 
 def probe_object(type_id: str, read: Callable[[object], T]) -> T:
     """Create ``type_id`` on a scratch document, run ``read`` against it, and return the result.
 
     The scratch document is closed on every path, including when ``read`` raises. No document the
-    caller owns is written.
+    caller owns is written, and the caller's active document stays active throughout.
 
     :param type_id: the FreeCAD type id to instantiate, such as ``"PartDesign::Pad"``.
     :param read: receives the probe object and returns whatever the caller needs from it.
     :raises RuntimeError: FreeCAD is unavailable, or the scratch document cannot be opened.
     """
     try:
-        import FreeCAD
+        import FreeCAD  # noqa: F401 - availability check before the scratch document opens
     except ImportError as exc:
         raise RuntimeError("FreeCAD is unavailable; cannot probe object properties") from exc
-    doc = FreeCAD.newDocument("FCB_TMP_type_probe")
-    try:
+    with _scratch_document("FCB_TMP_type_probe") as doc:
         return read(doc.addObject(type_id, "FCB_TMP_probe"))
-    finally:
-        FreeCAD.closeDocument(doc.Name)
 
 
 def enum_values(obj: object, prop: str) -> list[str]:
@@ -306,10 +305,7 @@ def implemented_map_modes(type_id: str) -> frozenset[str] | None:
     before its own references are resolved.
     """
     try:
-        import FreeCAD
-
-        doc = FreeCAD.newDocument("fcb_mapmode_probe", hidden=True)
-        try:
+        with _scratch_document("fcb_mapmode_probe") as doc:
             box = doc.addObject("Part::Box", "ProbeBox")
             doc.recompute()
             obj = doc.addObject(type_id, "Probe")
@@ -320,8 +316,6 @@ def implemented_map_modes(type_id: str) -> frozenset[str] | None:
                 doc.recompute()
                 if not str(obj.getStatusString()).endswith(_NOT_IMPLEMENTED_SUFFIX):
                     implemented.add(mode)
-        finally:
-            FreeCAD.closeDocument(doc.Name)
     except Exception:  # noqa: BLE001 - a probe that cannot run leaves the mode unchecked
         return None
     return frozenset(implemented)
@@ -339,18 +333,13 @@ def property_enums() -> dict[str, dict[str, list[str]]]:
     reports an empty mapping.
     """
     try:
-        import FreeCAD
-
-        document = FreeCAD.newDocument("fcb_enum_probe", hidden=True)
-        try:
+        with _scratch_document("fcb_enum_probe") as document:
             found: dict[str, dict[str, list[str]]] = {}
             for index, (type_id, prop) in enumerate(_ENUM_PROPERTIES):
                 obj = document.addObject(type_id, f"Probe{index}")
                 values = enum_values(obj, prop)
                 if values:
                     found.setdefault(type_id, {})[prop] = values
-        finally:
-            FreeCAD.closeDocument(document.Name)
     except Exception:  # noqa: BLE001 - a probe that cannot run reports nothing
         return {}
     return found

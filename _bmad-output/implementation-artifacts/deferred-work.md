@@ -1766,6 +1766,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
   summary: The first `query_capabilities` in a GUI session leaves FreeCAD with no active document or 3D view for the probe, and `View > Visibility` is then refused; the capability probes open `FCB_TMP_varset_probe`, `FCB_TMP_partdesign_probe` and `FCB_TMP_type_probe` without `hidden=True` (conflicts with AD-31, no GUI change the user did not ask for).
   evidence: `src/freecad_buddy/usecases/shim.py:85,200,227` (the map-mode and enum probes at `:311`, `:344` pass `hidden=True`). Scripted UAT pilot: TC-11-17 FAIL `pixel view: expected "a 3D view", observed null`, while its capture shows the box (part R review finding 15). Settle with a regression test that the active document and view are unchanged after the banner.
+  resolution: resolved by spec-10-8-a-probe-documents-keep-active-view: every probe document opens with `hidden=True, temp=True` through `shim._scratch_document`; in-FreeCAD regression test; live TC-11-17 PASS with the probe view present.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-r-scripted-uat-runner.md`
   summary: `cua-driver invoke_menu` intermittently refuses the allow-listed `View > Visibility > Show All Objects` step (`menu_path_unavailable`, "menu path segment 1 …") during an unattended scripted UAT run, so one pilot scenario per run lands in the escalation queue for a harness reason.
@@ -1780,3 +1781,11 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-7b-v-replay-run-2026-10-03-04.md`
   summary: Story 10.8 must encode the 30 runner-expressible scenarios the part V replay left `not encoded`, and settle the 15 replay scenarios whose `agent_check` asks for a live action the replay did not take (GUI Fit All, Sketcher edit mode, a capture before the save or between steps, the MCP render kept).
   evidence: `tests/uat/run/2026-10-23-01/replay.md` rows `not encoded`: TC-03-01, TC-03-02, TC-03-03, TC-03-04, TC-03-08, TC-03-10, TC-03-11, TC-03-12, TC-03-14, TC-03-16, TC-03-18, TC-03-21, TC-04-01, TC-04-08, TC-04-11, TC-04-12, TC-04-14, TC-04-18, TC-04-20, TC-08-04, TC-08-07, TC-08-09, TC-08-10, TC-08-11, TC-08-15, TC-08-16, TC-09-06, TC-14-04, TC-14-06, TC-14-08. Agent read in `report.md`: NOT JUDGED TC-02-01, TC-02-12, TC-02-13, TC-02-15, TC-02-16, TC-02-17, TC-03-05, TC-03-06, TC-03-13, TC-07-03, TC-12-07, TC-13-04, TC-13-06; PARTIAL TC-03-07, TC-03-20.
+
+- source_spec: none
+  summary: Story 10.8 goal 2 — encode the 30 runner-expressible scenarios that the part V replay left `not encoded` (list in the Story 10.8 hand-off entry above).
+  evidence: Split from Story 10.8 at bmad-build scope check (2026-10-23): test-asset work that ships on its own; must land before the gate run so those scenarios run scripted, not agent-driven.
+
+- source_spec: none
+  summary: Story 10.8 goal 3 — full gate run TC-01..TC-14, TC-99 and the G3 live replay on FreeCAD 1.1.4 through the 10.7b runner with agent review per test-plan §9, settling the 15 open part V agent checks; report committed under `tests/uat/run/` (epics.md Story 10.8 AC1).
+  evidence: Split from Story 10.8 at bmad-build scope check (2026-10-23): depends on goal 1 (query_capabilities no-active-view fix, Critical TC-11-17) and goal 2; several hours of agent-driven GUI work, best in a fresh session with the desktop free.

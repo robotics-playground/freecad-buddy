@@ -421,6 +421,43 @@ class CapabilityProbeTest(unittest.TestCase):
         shim.warm_capability_probes()
         self.assertNotIn("FCB_TMP_varset_probe", App.listDocuments())
 
+    def test_should_keep_the_active_document_when_a_scratch_probe_runs(self):
+        # Arrange
+        # A non-temporary new document becomes active, and closing it leaves none active. Each
+        # probe also asserts its success value, so a probe that fails quietly and opens nothing
+        # cannot pass.
+        probes = {
+            "varset_backend": (shim.varset_backend, shim.varset_backend, "varset"),
+            "partdesign_available": (shim.partdesign_available, shim.partdesign_available, True),
+            "probe_object": (
+                lambda: shim.probe_object("PartDesign::Pad", lambda probe: probe.TypeId),
+                None,
+                "PartDesign::Pad",
+            ),
+            "implemented_map_modes": (
+                lambda: shim.implemented_map_modes("PartDesign::Plane") is not None,
+                shim.implemented_map_modes,
+                True,
+            ),
+            "property_enums": (lambda: bool(shim.property_enums()), shim.property_enums, True),
+        }
+        user_document = App.newDocument("UserDocument")
+        self.addCleanup(App.closeDocument, user_document.Name)
+        for name, (probe, cache, expected) in probes.items():
+            with self.subTest(probe=name):
+                if cache is not None:
+                    cache.cache_clear()
+                App.setActiveDocument(user_document.Name)
+                documents_before = set(App.listDocuments())
+
+                # Act
+                result = probe()
+
+                # Assert
+                self.assertEqual(result, expected)
+                self.assertEqual(App.ActiveDocument.Name, user_document.Name)
+                self.assertEqual(set(App.listDocuments()), documents_before)
+
 
 class DisplayDecimalsTest(unittest.TestCase):
     """The ``Decimals`` unit preference, read on every call; the user's own value is restored."""
