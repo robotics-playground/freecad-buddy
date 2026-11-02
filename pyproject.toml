@@ -1,6 +1,6 @@
 [project]
 name = "freecad-buddy"
-version = "0.1.1"
+version = "0.1.2"
 description = "Verify-first MCP bridge that lets AI agents build and check FreeCAD models"
 readme = "README.md"
 license = "MIT"
