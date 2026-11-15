@@ -1,0 +1,9 @@
+#!/bin/bash
+# The stdio cua-driver MCP server, inside the desktop session. The host's .mcp.json runs it as
+#   docker exec -i -u cua fcb-desktop fcb-cua-mcp
+# cua-driver serves MCP over stdio only, so `docker exec -i` is the transport and no port opens.
+set -euo pipefail
+eval "$(fcb-session-env)"
+# /usr/local/bin/cua-driver is the pinned release binary; /opt/venv/bin/cua-driver is the base
+# image's older Python wrapper, which also fails as user cua.
+exec /usr/local/bin/cua-driver mcp "$@"

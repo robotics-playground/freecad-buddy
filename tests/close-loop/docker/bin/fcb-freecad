@@ -1,0 +1,45 @@
+#!/bin/bash
+# Run FreeCAD 1.1.4 inside the container desktop.
+#   fcb-freecad start     launch the GUI in the XFCE session; the addon then starts the MCP proxy
+#   fcb-freecad stop      close the GUI (window close first, kill after 20 s)
+#   fcb-freecad status    print the FreeCAD pids and the proxy's /healthz answer
+#   fcb-freecad userdir   print FreeCAD's user data directory (the parent of Mod/)
+set -euo pipefail
+APPDIR=/opt/freecad
+GUI_PATTERN="$APPDIR/usr/bin/freecad"
+
+gui_pids() { pgrep -u cua -f "^$GUI_PATTERN( |$)" || true; }
+
+case "${1:-}" in
+start)
+    if [ -n "$(gui_pids)" ]; then
+        echo "fcb-freecad: FreeCAD already running: $(gui_pids | tr '\n' ' ')" >&2
+        exit 1
+    fi
+    eval "$(fcb-session-env)"
+    setsid "$APPDIR/AppRun" >/tmp/freecad.log 2>&1 </dev/null &
+    echo "fcb-freecad: started; log /tmp/freecad.log"
+    ;;
+stop)
+    eval "$(fcb-session-env)"
+    wmctrl -c "FreeCAD" || true
+    for _ in $(seq 1 20); do
+        [ -z "$(gui_pids)" ] && { echo "fcb-freecad: stopped"; exit 0; }
+        sleep 1
+    done
+    echo "fcb-freecad: window close timed out; killing $(gui_pids | tr '\n' ' ')" >&2
+    gui_pids | xargs -r kill -KILL
+    ;;
+status)
+    echo "freecad pids: $(gui_pids | tr '\n' ' ')"
+    echo "healthz: $(curl -fsS --max-time 2 http://127.0.0.1:8765/healthz || echo unreachable)"
+    ;;
+userdir)
+    "$APPDIR/AppRun" freecadcmd -c "import FreeCAD; print('USERDIR=' + FreeCAD.getUserAppDataDir())" \
+        | sed -n 's/^USERDIR=//p' | sed 's:/*$::'
+    ;;
+*)
+    echo "usage: fcb-freecad start|stop|status|userdir" >&2
+    exit 64
+    ;;
+esac

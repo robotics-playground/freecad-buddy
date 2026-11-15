@@ -1,0 +1,25 @@
+# Linux desktop container for close-loop FreeCAD checks. From the repo root:
+#   uv run python scripts/build_addon.py --release
+#   docker compose -f tests/close-loop/docker/compose.yaml up -d --build
+# Every port binds the host loopback only. The VNC server has no password, so 5901 and the
+# cua-spacesd port 3211 stay unpublished; noVNC on 6901 is the only human view.
+name: fcb-close-loop
+services:
+  desktop:
+    build:
+      context: .
+      additional_contexts:
+        addon: ../../../dist/addon
+    image: fcb-desktop:local
+    container_name: fcb-desktop
+    shm_size: 2gb
+    environment:
+      VNC_RESOLUTION: 1600x1000
+    ports:
+      - "127.0.0.1:6901:6901"
+      - "127.0.0.1:18765:18765"
+    # UAT tool calls name fixtures and run folders by path, and container FreeCAD sees only its own
+    # file system: the repo is read-only at /repo, UAT run folders are writable at the same place.
+    volumes:
+      - "../../..:/repo:ro"
+      - "../../uat/run:/repo/tests/uat/run"
