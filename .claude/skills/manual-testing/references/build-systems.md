@@ -2,7 +2,7 @@
 
 Before executing any test suite (unit, integration, or manual), rebuild the application from source so the tests hit the latest code. Stale images, stale bytecode, and stale binaries are the most common cause of confusing test results: the test hits a version of the code that doesn't match what's in the working tree, and you spend an hour debugging a bug that was already fixed — or conversely, a test passes against old code that no longer reflects reality.
 
-This reference covers the common build systems. Detect which one applies to the project, then run the matching rebuild command **before** starting services or executing tests.
+This reference covers the common build systems. Detect which one applies to the project, then run the matching rebuild command **before** starting services or executing tests. Show the command to the user once per session first: installs may download packages from registries. Prefer lockfile-pinned installs.
 
 ## Table of Contents
 
@@ -73,7 +73,7 @@ docker compose ps
 
 **When `--force-recreate` matters.** Without it, `docker compose up -d` keeps running containers whose image was just rebuilt underneath them. The stale container continues serving the old code. Always pair rebuild with `--force-recreate` for the services you rebuilt.
 
-**Shared volumes.** If your containers mount named volumes (e.g., for a vault directory), rebuilding images does not wipe the volume. That's usually correct — but if a test expects a clean slate, either add cleanup commands or use `docker compose down -v` at the start of the run.
+**Shared volumes.** If your containers mount named volumes (e.g., for a data directory), rebuilding images does not wipe the volume. That's usually correct — but if a test expects a clean slate, either add cleanup commands or use `docker compose down -v` at the start of the run.
 
 ## Plain Docker (no compose)
 
