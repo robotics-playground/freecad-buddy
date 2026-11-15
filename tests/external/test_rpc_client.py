@@ -359,3 +359,24 @@ def test_should_not_connect_to_a_newer_record_with_the_pinned_pid_and_another_to
     # Assert
     assert envelope["structured_content"]["handle"] == "A"
     assert served == ["A", "A"]
+
+
+def test_Should_find_the_versioned_freecad_dir_When_no_appdata_variable_is_set(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    # Linux default: neither APPDATA nor XDG_DATA_HOME is set, and FreeCAD 1.1 writes the
+    # discovery record under ~/.local/share/FreeCAD/v1-1/freecad-buddy/.
+    from freecad_buddy.adapters import rpc_client
+
+    for name in ("FREECAD_BUDDY_RPC_DIR", "APPDATA", "XDG_DATA_HOME"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(rpc_client.Path, "home", lambda: tmp_path)
+    versioned = tmp_path / ".local" / "share" / "FreeCAD" / "v1-1"
+    (versioned / "freecad-buddy").mkdir(parents=True)
+
+    # Act
+    found = rpc_client._appdata_dir()
+
+    # Assert
+    assert found == versioned

@@ -259,3 +259,34 @@ def test_Should_return_false_When_the_child_exits_non_zero(tmp_path):
 
     # Assert
     assert finished is False
+
+
+def test_Should_start_an_external_interpreter_When_freecad_set_pythonhome(tmp_path, monkeypatch):
+    # Arrange
+    # The Linux AppImage AppRun exports PYTHONHOME for FreeCAD's bundled Python; an external
+    # interpreter that inherits it cannot import its own standard library.
+    monkeypatch.setenv("PYTHONHOME", str(tmp_path / "freecad-bundled-python"))
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path / "freecad-bundled-python" / "lib"))
+    command = [sys.executable, "-c", "pass"]
+
+    # Act
+    with open(tmp_path / "run.log", "w", encoding="utf-8") as logfile:
+        finished = managed_venv._run(command, logfile, threading.Event())
+
+    # Assert
+    assert finished is True, (tmp_path / "run.log").read_text(encoding="utf-8")
+
+
+def test_Should_keep_operator_settings_When_building_the_child_environment(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("PYTHONHOME", "/opt/freecad/usr")
+    monkeypatch.setenv("PYTHONPATH", "/opt/freecad/usr/lib")
+    monkeypatch.setenv("FREECAD_BUDDY_AUTO_APPROVE", "1")
+
+    # Act
+    env = managed_venv.no_window_kwargs(None)["env"]
+
+    # Assert
+    assert "PYTHONHOME" not in env
+    assert "PYTHONPATH" not in env
+    assert env["FREECAD_BUDDY_AUTO_APPROVE"] == "1"

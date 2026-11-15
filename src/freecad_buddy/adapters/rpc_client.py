@@ -42,14 +42,13 @@ def _appdata_dir() -> Path:
     # is the versioned ...\FreeCAD\v1-1\ dir — not the bare %APPDATA%. The external client cannot
     # import FreeCAD to resolve that, so FREECAD_BUDDY_RPC_DIR overrides the base directory that
     # holds the "freecad-buddy/" discovery folder; otherwise the known FreeCAD-versioned appdata
-    # layout is probed before the bare %APPDATA% fallback.
+    # layout is probed before the bare base fallback. The base is %APPDATA% on Windows, else
+    # $XDG_DATA_HOME, else ~/.local/share, where Linux FreeCAD keeps ...FreeCAD/v1-1/.
     override = os.environ.get("FREECAD_BUDDY_RPC_DIR")
     if override:
         return Path(override)
     base = os.environ.get("APPDATA") or os.environ.get("XDG_DATA_HOME")
-    if not base:
-        return Path.home() / ".local" / "share"
-    base_path = Path(base)
+    base_path = Path(base) if base else Path.home() / ".local" / "share"
     freecad_root = base_path / "FreeCAD"
     if freecad_root.is_dir():
         # Newest versioned dir (e.g. v1-1) whose freecad-buddy/ discovery folder exists.

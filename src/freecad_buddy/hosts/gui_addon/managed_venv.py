@@ -28,6 +28,7 @@ _LOCK = "venv.lock"
 # run, so an older lock is one a crashed FreeCAD left behind.
 LOCK_STALE_S = 600.0
 _POLL_S = 0.5
+_FREECAD_PYTHON_VARS = frozenset({"PYTHONHOME", "PYTHONPATH"})
 
 
 def no_window_kwargs(logfile) -> dict:
@@ -37,8 +38,15 @@ def no_window_kwargs(logfile) -> dict:
     ``DETACHED_PROCESS`` gives the child its own process group so it is not tied to FreeCAD's
     console. The child's stdout/stderr go to ``logfile`` (its own diagnostics), not a window. On
     POSIX, ``start_new_session`` detaches it.
+
+    The child gets FreeCAD's environment without ``PYTHONHOME`` and ``PYTHONPATH``. The Linux
+    AppImage launcher sets ``PYTHONHOME`` to FreeCAD's bundled Python, and an external interpreter
+    that inherits it looks for its standard library there and fails to start. ``PYTHONPATH`` is
+    dropped for the same reason: any value in FreeCAD's environment was meant for FreeCAD's
+    interpreter, not the venv's.
     """
-    kwargs: dict = {"stdin": subprocess.DEVNULL, "stdout": logfile, "stderr": logfile}
+    env = {name: value for name, value in os.environ.items() if name not in _FREECAD_PYTHON_VARS}
+    kwargs: dict = {"stdin": subprocess.DEVNULL, "stdout": logfile, "stderr": logfile, "env": env}
     if os.name == "nt":
         # 0x08000000 CREATE_NO_WINDOW | 0x00000008 DETACHED_PROCESS
         kwargs["creationflags"] = 0x08000000 | 0x00000008
