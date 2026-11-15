@@ -5,6 +5,42 @@ that does not verify is a blocker: fix it, do not proceed.
 
 Commands are written for PowerShell 7 on Windows unless marked otherwise.
 
+**UAT runs FreeCAD in the `fcb-desktop` container, never on the host.** For a UAT run, do Steps
+C1–C4 below instead of Steps 1, 2, 4 and 5. Steps 1, 2, 4 and 5 are the Windows host procedure, for
+development on the host. Step 3 (H1 legs) stays on the host. Steps 6, 6a and 7 apply unchanged
+through MCP server `freecad-buddy-docker`. Container reference: `tests/close-loop/README.md`.
+
+---
+
+## Step C1 — Container image with the code under test
+
+- [ ] Release addon tree built (verify: `uv run python scripts/build_addon.py --release` prints
+      `addon zip written to`, and `dist/addon/wheels/` holds one `.whl`)
+- [ ] Container up (verify: `docker compose -f tests/close-loop/docker/compose.yaml up -d --build`,
+      then `docker ps --filter name=fcb-desktop` lists it)
+- [ ] Repo and run folder mounted (verify: `docker exec -u cua fcb-desktop ls /repo/benchmarks/g0/golden-models`
+      lists the golden models)
+
+## Step C2 — cua-driver in the container
+
+- [ ] Every doctor line is `[ok  ]` (verify:
+      `docker exec -u cua fcb-desktop bash -c 'eval "$(fcb-session-env)"; /usr/local/bin/cua-driver doctor'`)
+- [ ] Daemon running (verify: `docker exec fcb-desktop supervisorctl status fcb-cua-serve` shows
+      `RUNNING`)
+
+## Step C3 — Launch FreeCAD
+
+- [ ] No FreeCAD before the launch (verify: `docker exec -u cua fcb-desktop fcb-freecad status`
+      shows an empty pid list)
+- [ ] Launched by the helper (verify: `docker exec -u cua fcb-desktop fcb-freecad start`)
+
+## Step C4 — Confirm proxy auto-spawn
+
+- [ ] Proxy pinned to that FreeCAD (verify: `curl -fsS http://127.0.0.1:18765/healthz` shows a
+      number in `freecad_pid` equal to the pid from `fcb-freecad status`)
+- [ ] `addon.log` has `spawned MCP proxy` (verify:
+      `docker exec -u cua fcb-desktop grep "spawned MCP proxy" /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/addon.log`)
+
 ---
 
 ## Step 1 — cua-driver daemon
@@ -212,7 +248,11 @@ Store this banner at the top of the run report. If FreeCAD is restarted mid-run,
 
 ## cua-driver usage rules
 
-These apply to every GUI step in TC-06 and TC-12.
+These apply to every GUI step in TC-06 and TC-12. They were measured on the Windows host through
+UIA. In the container, FreeCAD shows only its top-level window to `cua-driver`, so the rules that
+need an element (`element_token`, `invoke_menu`) give way to the pixel route on the window
+screenshot and to keys. In the container, pass JSON as a positional argument; the stdin form and
+the Windows quoting notes do not apply.
 
 ### CLI stdin form
 

@@ -11,6 +11,28 @@ the GUI path.
 
 Reference run with every artifact: `tests/uat/run/2026-10-03-01/` (report, evidence, scripts).
 
+## UAT environment: the `fcb-desktop` container
+
+UAT always runs FreeCAD in the Linux container `fcb-desktop`, never on the host. Setup, endpoints
+and helpers: [tests/close-loop/README.md](../../../../tests/close-loop/README.md). The steps map to
+the container as follows:
+
+| Step | In the container |
+|------|------------------|
+| 1. Preflight | `docker exec -u cua fcb-desktop fcb-freecad status` shows no FreeCAD pid. After a change under `src/`: `uv run python scripts/build_addon.py --release`, then `docker compose -f tests/close-loop/docker/compose.yaml up -d --build`. The image installs `dist/addon/` (release install mode); the dev junction does not apply. |
+| 2. Launch | `docker exec -u cua fcb-desktop fcb-freecad start`. Done when `curl -fsS http://127.0.0.1:18765/healthz` shows a number in `freecad_pid`. To start with an operator variable: `docker exec -u cua -e NAME=value fcb-desktop fcb-freecad start`. |
+| 3. Drive the GUI | `cua-driver` in the container, through MCP server `cua-driver-docker` or `docker exec -u cua fcb-desktop bash -c 'eval "$(fcb-session-env)"; /usr/local/bin/cua-driver call <tool> "<json>"'`. FreeCAD shows only its top-level window to `cua-driver` (the AppImage Qt has no AT-SPI bridge), so use the pixel route (window-screenshot coordinates) and keys (`hotkey`, `press_key`, menu by Alt keys). A step that needs an element action and has no pixel or key route is `NOT RUN`, with the reason. |
+| 4. Change and measure | MCP server `freecad-buddy-docker` at `http://127.0.0.1:18765/mcp`. |
+| 5. Visual check | `get_window_state` with `screenshot_out_file`, then `docker cp fcb-desktop:<file> <run evidence dir>`, then `Read` it. Compare only with captures from the same image: the container renders with Mesa software OpenGL and Linux fonts. |
+| 6. Prove the code ran | `addon.log` is `/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/addon.log` in the container. The installed addon is `/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/`. |
+| 7. Shut down | Close the documents over MCP, then `docker exec -u cua fcb-desktop fcb-freecad stop`. Done when it prints `stopped` (not a kill) and `fcb-freecad status` shows no pid. |
+
+The container has its own FreeCAD profile, so a run cannot change the developer `user.cfg`. To
+start from a clean profile, recreate the container (`up -d --force-recreate`).
+
+The sections below, from Tools to Pitfalls, describe the Windows host path. Use them to develop on
+the host, not for UAT.
+
 ## Tools
 
 | Tool | Path | Role |

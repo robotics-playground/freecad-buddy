@@ -63,9 +63,15 @@ Never merge the two into a single number.
 2. **Main agent does infrastructure setup.** Work through `APPENDIX-B-environment-setup.md` end to
    end before any scenario runs. A short tool count at step 6 is a stop-the-line condition — do not
    start testing on a partial surface.
-3. **Shut FreeCAD down first, and verify it.** No FreeCAD process may be running when setup starts,
-   and no document may be open once it is launched. Launch it through `cua-driver launch_app` so
-   the addon auto-spawns the proxy on `:8765`. Starting the proxy by hand invalidates TC-01-01.
+3. **Run FreeCAD in the `fcb-desktop` container, never on the host.** Setup:
+   `tests/close-loop/README.md`. Stop FreeCAD first and verify it: `fcb-freecad status` in the
+   container shows no FreeCAD pid, and no document may be open once it is launched. Launch it with
+   `docker exec -u cua fcb-desktop fcb-freecad start` so the addon auto-spawns the proxy; the host
+   reaches it at `http://127.0.0.1:18765/mcp`. Starting the proxy by hand invalidates TC-01-01.
+   Tool arguments use container paths (`test-plan.md` §6). A step written as `invoke_menu` or
+   `element_index` runs through the pixel or keyboard route, because the container FreeCAD shows no
+   widgets to `cua-driver`; a step with no such route is `NOT RUN`. Runner scenarios are `NOT RUN`
+   until story `10-9-uat-runner-in-container` ports the runner.
 4. **One subagent per TC file.** A subagent receives exactly one `testcases/TC-NN-*.md` and
    executes it.
 5. **Strictly sequential.** One subagent at a time. The tests share a single FreeCAD process, one
@@ -103,6 +109,12 @@ Never merge the two into a single number.
    directory created after that timestamp a stop-the-line condition: a surviving `FCB_TMP_snap_*`
    means a mutation bracket did not close, which voids the snapshot assertions of every scenario
    after it.
+
+   The watchdog still checks the Windows host session; story `10-9-uat-runner-in-container` ports
+   it. Until then, run the same checks against the container between test cases:
+   `docker exec -u cua fcb-desktop fcb-freecad status` (FreeCAD pid and `/healthz` with a
+   `freecad_pid`), one MCP call such as `document_list` over `freecad-buddy-docker` (proves the
+   `initialize` handshake), and `cua-driver-docker` `list_windows` (the FreeCAD window is listed).
 
 ## Reporting
 

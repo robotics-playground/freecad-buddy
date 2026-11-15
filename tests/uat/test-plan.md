@@ -223,17 +223,23 @@ document.
 ## 6. Test Environment
 
 ### Prerequisites
-- FreeCAD 1.1.x installed; `$FREECAD_EXE` points at its launcher. The build under test is the
-  live version, read from `query_capabilities.freecad_version` at the start of the run
-- Addon linked at `%APPDATA%\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy` (a symlink to the repo
-  `src/freecad_buddy`). Note `%APPDATA%\FreeCAD\Mod\` is legacy and empty.
+- **The GUI legs run in the `fcb-desktop` container, never on the host**
+  (`tests/close-loop/README.md`). It runs FreeCAD 1.1.4 (Linux AppImage) with the release addon
+  built from the code under test (`dist/addon/`). The build under test is the live version, read
+  from `query_capabilities.freecad_version` at the start of the run
+- MCP server `freecad-buddy-docker` (`http://127.0.0.1:18765/mcp`, relayed to the container proxy
+  on `:8765`) and GUI server `cua-driver-docker` (`cua-driver` 0.28.1 in the container)
+- The container sees the repo read-only at `/repo` and `tests/uat/run/` writable at
+  `/repo/tests/uat/run/`
 - micromamba `fcb` env at `$FCB_ENV` (FreeCAD + `mcp` in one interpreter) for the H1 legs
 - Repo `uv` env (`$PROJECT_ROOT/.venv`, Python 3.12.12) for the client and the sweep scripts
-- `cua-driver` daemon running in an interactive session (Session ID ≥ 1)
 - Golden models under `$PROJECT_ROOT/benchmarks/g0/golden-models/*.FCStd`
 - Fault fixtures under `$PROJECT_ROOT/benchmarks/g0/fault-injection/` and
   `$PROJECT_ROOT/benchmarks/g0/export-fault-injection/`
-- No FreeCAD process running before the run starts, and no document open once it is launched
+- No FreeCAD process running in the container before the run starts, and no document open once
+  it is launched
+- Runner scenarios (`tests/uat/runner/`) are `NOT RUN` until story `10-9-uat-runner-in-container`
+  ports the runner from the Windows host to the container. They never run on the host
 
 Full step-by-step setup with per-step verify commands is in `APPENDIX-B-environment-setup.md`.
 
@@ -242,11 +248,16 @@ Full step-by-step setup with per-step verify commands is in `APPENDIX-B-environm
 # H1-capable interpreter check
 "$FCB_PYTHON" -c "import FreeCAD, mcp; print('H1 ok')"
 
-# cua-driver daemon check (SessionId must be >= 1)
-cua-driver status
+# Container up with the code under test, FreeCAD started by its helper
+uv run python scripts/build_addon.py --release
+docker compose -f tests/close-loop/docker/compose.yaml up -d --build
+docker exec -u cua fcb-desktop fcb-freecad start
 
-# Proxy must be LISTENING with no manual serve command
-netstat -ano | findstr :8765
+# Proxy auto-spawned and pinned to that FreeCAD (freecad_pid is a number), no manual serve command
+curl -fsS http://127.0.0.1:18765/healthz
+
+# cua-driver in the container: every line [ok  ]
+docker exec -u cua fcb-desktop bash -c 'eval "$(fcb-session-env)"; /usr/local/bin/cua-driver doctor'
 ```
 
 ### Environment Variables
@@ -264,7 +275,19 @@ mkdir -p "$RUN_DIR/evidence"
 ```
 
 `RUN_DIR` is **absolute**, because MCP `path` arguments must be absolute (a relative path resolves
-against FreeCAD's own working directory, `C:\Program Files\FreeCAD 1.1\bin`, and the call fails).
+against FreeCAD's own working directory, and the call fails).
+
+**Paths in tool arguments are container paths.** FreeCAD runs in the container, so in every MCP
+tool argument and every `cua-driver` call `$PROJECT_ROOT` is `/repo` and `$RUN_DIR` is
+`/repo/tests/uat/run/<run>`. Host-side commands (Bash, `Read`, the H1 legs) keep the host values.
+Under `/repo` only `tests/uat/run/` is writable; an export or save elsewhere fails. Copy a
+`cua-driver` screenshot out with `docker cp fcb-desktop:<file> <host path>` when it was not
+written under the run folder.
+
+To start FreeCAD with a `FREECAD_BUDDY_*` variable, pass it to the helper:
+`docker exec -u cua -e NAME=value fcb-desktop fcb-freecad start`. In the container, the GUI
+defaults below that name `%APPDATA%\FreeCAD\v1-1\` are under `/home/cua/.local/share/FreeCAD/v1-1/`.
+`FREECAD_EXE` serves only the Windows-host runner.
 
 The GUI host reads its operator settings once, at bridge start, from Edit > Preferences >
 **FreeCAD Buddy**. A `FREECAD_BUDDY_*` variable that is set in the environment FreeCAD inherits wins

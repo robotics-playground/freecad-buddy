@@ -9,6 +9,12 @@ missing captures and the Thens a script cannot judge) and the review set: the ca
 The test-case markdown in `tests/uat/testcases/` stays the human source. A scenario file encodes
 the scripted Thens of one `TC-xx-yy` scenario.
 
+**Not usable for UAT yet.** UAT runs FreeCAD in the `fcb-desktop` container
+(`tests/close-loop/README.md`), but this runner still launches the Windows host FreeCAD
+(`FREECAD_EXE`), uses `tasklist`, `%APPDATA%` and the host `cua-driver` daemon. Until story
+`10-9-uat-runner-in-container` ports it, runner scenarios in a UAT run are `NOT RUN`. Do not run
+them on the host instead.
+
 ## Run
 
 ```powershell

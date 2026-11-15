@@ -65,7 +65,9 @@
 #   only when epic-10 is done. Ordering: 10-1..10-6 are parallel-eligible except 10-2 -> 10-3
 #   (both edit post-verify in usecases/transaction.py and usecases/verify.py); 10-7 runs alongside;
 #   10-7 -> 10-7b (the runner encodes the corrected test cases); 10-8 (full UAT re-run, Gate 1
-#   green, using the 10-7b runner) is last and closes the epic.
+#   green, using the 10-7b runner) is last and closes the epic. UAT runs in the fcb-desktop
+#   container (tests/close-loop/), so 10-9 (port the runner, probe and watchdog from the Windows
+#   host to the container) lands before 10-8 can use the runner.
 # - Epic 11 (sprint-change-proposal-2026-10-06) cuts agent calls, result size and bridge time.
 #   11-1 -> 11-2 and 11-1 -> 11-4; 11-3 is parallel-eligible; 11-4 merges after 11-2; 11-1..11-4 finish before
 #   10-7 starts; 11-5 runs alongside; 11-6 is last.
@@ -76,7 +78,7 @@
 #   FreeCAD worker process (AD-2). 10-6a -> 10-6 (10-6 bounds calls in the front that 10-6a builds).
 
 generated: 2026-07-21
-last_updated: 2026-10-23
+last_updated: 2026-11-15
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -167,6 +169,7 @@ development_status:
   10-6-session-transport-and-bounded-execution: done
   10-7-uat-suite-and-harness-maintenance: done
   10-7b-scripted-uat-runner-and-freecad-probe: review
+  10-9-uat-runner-in-container: backlog
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional
   epic-11: done

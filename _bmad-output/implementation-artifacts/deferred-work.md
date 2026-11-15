@@ -1803,3 +1803,19 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
   summary: For the Story 10.8 goal 3 gate run, an `agent_check` that names a before-capture or between-step Given needs the agent to re-run that scenario's steps by MCP up to the named step and capture there, since the runner hands over only after the last step.
   evidence: The runner captures once, after the last step (`tests/uat/runner/README.md`, Per scenario); 36 committed scenario files name such a capture in `agent_check` (part V and D1 files, and goal 2 files such as TC-03-08, TC-04-14, TC-08-09, TC-09-06, TC-14-08).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-linux-appimage-proxy-env.md`
+  summary: The proxy child drops `PYTHONHOME` and `PYTHONPATH` on every launch route, including the verbatim `FREECAD_BUDDY_MCP_CMD` / `McpCommand` override, and neither CLAUDE.md section 16 nor the `McpCommand` preference text says so.
+  evidence: `managed_venv.no_window_kwargs` builds the env for `bootstrap._spawn_mcp_proxy`, which every route uses; an override command that relies on either variable loses it silently.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-linux-appimage-proxy-env.md`
+  summary: `rpc_client._appdata_dir` sorts FreeCAD `v*` folders as strings, so it would pick `v1-9` before `v1-10`; since the Linux fix, Linux uses this sort too.
+  evidence: `src/freecad_buddy/adapters/rpc_client.py` `sorted(..., reverse=True)` over folder names; no FreeCAD `v1-10` exists yet, so no current failure.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-linux-appimage-proxy-env.md`
+  summary: `tests/close-loop/` (Docker harness plus a host script that needs a running container) is a third test location that the project structure design and CLAUDE.md section 12 do not list, and nothing states that pytest and CI do not run it.
+  evidence: `project-structure.md:111` "tests/ — two worlds that never mix"; CLAUDE.md section 12 lists only `infc/` and `external/`.
+
+- source_spec: none
+  summary: Story 10-9-uat-runner-in-container — port the scripted UAT runner (`tests/uat/runner/`), the UAT probe and `scripts/automation/uat_watchdog.py` from the Windows host to the `fcb-desktop` container, and rewrite test-case steps written as `invoke_menu`/`element_index` to the pixel or keyboard route.
+  evidence: UAT now runs only in the container (CLAUDE.md section 9), but `tests/uat/runner/launch.py:27` launches `C:\Program Files\FreeCAD 1.1\bin\freecad.exe` and uses `tasklist`, `%APPDATA%` and the host `cua-driver` daemon; 16 test-case files use element actions that the container FreeCAD (AppImage Qt without AT-SPI bridge) cannot serve. Until it lands, runner scenarios are NOT RUN.

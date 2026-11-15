@@ -192,10 +192,30 @@ Code is written for the standards, never compressed:
 - `skill(name="manual-testing")`
 - `skill(name="cua-driver")`
 - Directory: `tests/uat`
+- **UAT environment: the `fcb-desktop` container, never the host.** Every UAT gate, re-run, GUI
+  smoke test and native validation drives FreeCAD 1.1.4 inside the Linux container described in
+  [tests/close-loop/README.md](tests/close-loop/README.md). Do not launch the host FreeCAD for UAT.
+  - Start: `uv run python scripts/build_addon.py --release`, then
+    `docker compose -f tests/close-loop/docker/compose.yaml up -d --build`, then
+    `docker exec -u cua fcb-desktop fcb-freecad start`. Wait until
+    `http://127.0.0.1:18765/healthz` shows a number in `freecad_pid`.
+  - Tools: MCP server `freecad-buddy-docker` (`http://127.0.0.1:18765/mcp`) and GUI server
+    `cua-driver-docker` (stdio through `docker exec`). The host servers `freecad-buddy` and
+    `cua-computer-use` are not for UAT.
+  - After any change under `src/`, run the build and compose commands again. The image installs
+    `dist/addon/`, not the source tree.
+  - The container FreeCAD shows no widgets to `cua-driver`: its AppImage Qt has no AT-SPI bridge.
+    Run a step written as `invoke_menu` or `element_index` through the pixel or keyboard route. A
+    step that cannot run that way is `NOT RUN`, with the reason. No host fallback.
+  - Container screenshots use Linux software rendering. Compare them only with captures from the
+    same image, never with Windows-host captures.
+  - The scripted runner (`tests/uat/runner/`) still launches the Windows host FreeCAD. Until story
+    `10-9-uat-runner-in-container` ports it, its scenarios are `NOT RUN`. Do not run them on the
+    host.
 - GUI end-to-end harness — launch, install modes, MCP over HTTP, canary, visual check, shutdown: [freecad-gui-e2e-harness](.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md). Read it before you launch FreeCAD for any test.
 - Native FreeCAD validation — prove a built part with FreeCAD's own Check Geometry, an in-FreeCAD kernel macro and Fit all screenshots, driven with `cua-driver`; includes a subagent brief and troubleshooting: [freecad-native-validation](.knowledge-base/technical/standards/testing/freecad-native-validation.md). Use it whenever a result must not rest on MCP output alone.
 - FreeCAD GUI operations:
-  - Shutdown all FreeCAD instances before starting the tests. Verify that no FreeCAD processes are running.
+  - Before a run, stop FreeCAD in the container with `docker exec -u cua fcb-desktop fcb-freecad stop`. Verify that `fcb-freecad status` shows no FreeCAD pid.
   - Ensure no documents are open in the FreeCAD GUI before running UAT tests.
   - Use absolute paths for any file operations to avoid issues with FreeCAD's working directory.
   - Agent always needs to do the visual check, never trust automated verification alone or the MCP results.
@@ -271,7 +291,7 @@ Single installable package, four Clean Architecture rings (AD-1). Imports cross 
 - `src/freecad_buddy/hosts/` — entry points; Qt/`FreeCADGui` legal here. `gui_addon/` (`InitGui` `bootstrap` `pump` `preferences`), `gui_external/`, `headless/`, `main.py`, `tool_catalog.py`.
 - `contracts/` ← `usecases/` ← `adapters/` ← `hosts/`; `adapters/__init__.py` + `hosts/__init__.py` stay EMPTY.
 - `benchmarks/` — gate runner + data. `runner.py`, `harness/`, `g0/` (golden-models, fault-injection, cases), `heldout/` (SEALED — never open outside `gate run --exit`), `_registry/` (validators + provenance).
-- `tests/` — two worlds, never mixed. `infc/` runs under `FreeCADCmd` with stdlib `unittest` (via `run_tests.py`); `external/` runs under pytest in uv env.
+- `tests/` — two worlds, never mixed. `infc/` runs under `FreeCADCmd` with stdlib `unittest` (via `run_tests.py`); `external/` runs under pytest in uv env. `uat/` holds the manual UAT suite; `close-loop/` holds the `fcb-desktop` container (`docker/`) that UAT runs in, and a journey script. Neither runs under pytest or CI.
 - `scripts/` — durable repo commands: `check_imports` `check_skill_shape`/`check_status_vocab`/`check_provenance` `gen_schemas` `build_addon`, `automation/`.
 - `skills/` — one dir per skill (AD-15): `SKILL.md` (4 sections, ≤1,500 words) + `references/`. Agent-agnostic knowledge, never imported by code.
 - `addon/` — `package.xml` addon metadata; `dist/` — built addon output (`build_addon.py`).
@@ -426,6 +446,10 @@ design, and code. Read one only when you need the evidence behind a design decis
 ## 16. Running the MCP Bridge (GUI mode)
 
 **Opening FreeCAD is the only step — the addon starts everything.**
+
+This section describes the bridge on a host install. For UAT the same addon runs inside the
+`fcb-desktop` container, and the host reaches its proxy at `http://127.0.0.1:18765/mcp` through a
+relay (section 9).
 
 - On FreeCAD GUI start the addon (`gui_addon/bootstrap.start_bridge`) starts the in-FreeCAD **RPC listener** (stdlib, ephemeral localhost port) AND auto-spawns the **external MCP HTTP proxy** on `http://127.0.0.1:8765/mcp` as a child process. Both are torn down on FreeCAD quit.
 - **Do NOT run `freecad-buddy serve --mode rpc` by hand** to talk to the live GUI, and do not hand-roll RPC sockets — just open FreeCAD, then use the connected `mcp__freecad-buddy__*` tools. The proxy is spawned for you.

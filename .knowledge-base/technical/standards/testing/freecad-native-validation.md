@@ -10,6 +10,12 @@ running FreeCAD window.
 
 Reference run with every artifact: `tests/uat/run/2026-10-03-02/` (report, evidence, scripts).
 
+For UAT, run this procedure in the `fcb-desktop` container (see the UAT environment section of
+[freecad-gui-e2e-harness](freecad-gui-e2e-harness.md)). The `cua-driver` basics and menu paths
+below were measured on the Windows host through UIA. In the container FreeCAD shows only its
+top-level window to `cua-driver`, so reach the same commands with keys or pixel clicks on the
+window screenshot. A layer that has no such route is `NOT RUN`, with the reason.
+
 ## Evidence layers
 
 Use all three. Each layer catches what the others cannot.
