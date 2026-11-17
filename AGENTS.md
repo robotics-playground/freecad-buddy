@@ -214,6 +214,7 @@ Code is written for the standards, never compressed:
     host.
 - GUI end-to-end harness — launch, install modes, MCP over HTTP, canary, visual check, shutdown: [freecad-gui-e2e-harness](.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md). Read it before you launch FreeCAD for any test.
 - Native FreeCAD validation — prove a built part with FreeCAD's own Check Geometry, an in-FreeCAD kernel macro and Fit all screenshots, driven with `cua-driver`; includes a subagent brief and troubleshooting: [freecad-native-validation](.knowledge-base/technical/standards/testing/freecad-native-validation.md). Use it whenever a result must not rest on MCP output alone.
+- UAT run practices — lead and phase-agent roles, phase plan, phase-agent brief, profile and `addon.log` hygiene, foreground `cua-driver` rules, grading with cause classes, fixes between runs, records and end checklist: [uat-run-practices](.knowledge-base/technical/standards/testing/uat-run-practices.md). Read it before you plan or run a UAT gate or a re-run.
 - FreeCAD GUI operations:
   - Before a run, stop FreeCAD in the container with `docker exec -u cua fcb-desktop fcb-freecad stop`. Verify that `fcb-freecad status` shows no FreeCAD pid.
   - Ensure no documents are open in the FreeCAD GUI before running UAT tests.
