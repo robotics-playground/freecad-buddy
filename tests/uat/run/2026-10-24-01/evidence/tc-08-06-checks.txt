@@ -1,0 +1,20 @@
+TC-08-06 (R2, launch r2-L1-tc08 pid 29140 AUTO_APPROVE=0)
+Given: tc-08-06 Body + fully constrained 20x20 Sketch; document_undo (undoes the sketch geometry) OK undone 'buddy: add geometry to Sketch' (undo available);
+       geometry re-applied (preview+confirm), verify_sketch dof 0 fully_constrained true; view_fit_viewport OK fits 0.95; tc-08-06-before.png.
+When: feature_pad Pad 30 (preview+confirm) -> fingerprint_before {digest b083c60b...dff67, serializer exportBinary};
+      document_undo expect_fingerprint "<digest string>"; pad re-applied (preview+confirm); document_undo expect_fingerprint {digest, serializer}.
+PASS string form: matches_pre_op true.
+PASS object form: matches_pre_op true.
+PASS fingerprint_before c4fe8532...ff14 and fingerprint_after b083c60b...ff67: both 64-hex, different.
+PASS undone 'buddy: feature_pad Pad'.
+PASS text "Undid 'buddy: feature_pad Pad' on tc_08_06: restored the pre-op state (c4fe85329675 -> b083c60b7c85)."
+PASS no expectation (third pad, then document_undo without expect_fingerprint): matches_pre_op null, text contains
+     "no pre-op digest supplied to compare against".
+PASS restored_objects [Body, Origin, X_Axis, Y_Axis, Z_Axis, XY_Plane, XZ_Plane, YZ_Plane, Origin001, Sketch]: Body, Sketch, Origin members; no Pad.
+PASS expect_fingerprint 42 -> isError "Input validation error: 42 is not of type 'string', 'object'" (schema refusal); query_tree_summary
+     before/after the refused call lists the same 10 objects (only the framing cache line differs), so no undo ran.
+PASS fit OK fits 0.95.
+PASS visual: before and after show the flat 20x20 rectangle in iso, no extruded solid; tree tc-08-06 > Body. r2_diff 484 px, box
+     (215,69)-(247,101) = the Redo toolbar button, grey before, green after (tc-08-06-toolbar-before.png / -after.png): the redo stack the
+     undos filled, a direct and expected effect of an undo, not model state. Viewport and tree identical. Live check 3086 px.
+Verdict: PASS (same reading as 2026-10-23-02).

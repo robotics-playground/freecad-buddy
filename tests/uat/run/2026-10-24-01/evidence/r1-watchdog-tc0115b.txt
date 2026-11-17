@@ -1,0 +1,3 @@
+FAIL mcp-proxy: MCP proxy on :8765 did not answer initialize (HTTP Error 501: Unsupported method ('POST'))
+ok   cua-session: cua session 'uat' REVIVED (was dead)
+ok   freecad-window: FreeCAD pid 34076 window ok ('Unnamed - FreeCAD 1.1.4')

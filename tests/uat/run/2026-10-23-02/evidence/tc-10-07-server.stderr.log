@@ -1,0 +1,17 @@
+2026-10-23 23:21:36,912 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-23 23:21:37,062 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-10-07-audit.jsonl
+2026-10-23 23:21:37,062 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-23 23:21:37,062 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-23 23:21:37,062 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-23 23:22:53,141 INFO freecad_buddy.rpc_listener: refused a second client: a session is active
+2026-10-23 23:23:28,125 INFO freecad_buddy.rpc_listener: refused a second client: a session is active
+2026-10-23 23:23:37,890 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10053] An established connection was aborted by the software in your host machine)
+2026-10-23 23:25:27,873 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchObject
+2026-10-23 23:27:14,174 INFO freecad_buddy.rpc_listener: refused a second client: a session is active
+2026-10-23 23:27:23,939 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10053] An established connection was aborted by the software in your host machine)
+2026-10-23 23:27:57,770 INFO freecad_buddy.rpc_listener: refused a second client: a session is active
+2026-10-23 23:28:07,512 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10053] An established connection was aborted by the software in your host machine)
+2026-10-23 23:35:45,566 INFO freecad_buddy.rpc_listener: refused a second client: a session is active
+2026-10-23 23:35:55,365 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10053] An established connection was aborted by the software in your host machine)
+2026-10-23 23:36:05,435 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-10-23 23:36:05,435 INFO freecad_buddy.rpc_listener: client closed the connection

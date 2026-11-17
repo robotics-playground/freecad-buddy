@@ -1,0 +1,15 @@
+TC-12-15 (P10, pid 33684, display frozen) -- non-visual PASS, visual BLOCKED -> verdict BLOCKED
+Given: scratch document TC1215scratch (document_list 1 handle); :8765 LISTENING proxy 31980 (tc-12-15-pre-state.txt).
+When: p10_tc15.py: document_open ArchDetail.FCStd started 10:41:19.600, Stop-Process -Id 33684 -Force at 10:41:21.105 (rc 0).
+Then crash surfaced: WORKER_CRASHED "listener connection dropped" (rpc unreachable), not OK PASS. Then no hang: 1.75 s PASS.
+Then FreeCAD gone PASS. Then no half-open bridge: no LISTENING row PASS. Then following call fails fast: ConnectError, 2.6 s
+  including the Python start PASS.
+Then no orphan proxy: 31980 gone within about 2 s (one "alive" sample, then "gone"); mcp-proxy.log line 3
+  "10:41:21,330 WARNING ... FreeCAD pid 33684 has exited; the MCP proxy exits and frees port 8765" PASS.
+Then restart: pid 35252, :8765 LISTENING 24900, rpc-35252.json, query_capabilities OK PASS.
+Then own proxy: /healthz freecad_pid 35252, LISTENING pid 24900 != 31980 PASS.
+Then sweep: addon log "session-start sweep removed 0 leftover temp artifact(s)"; workdir/tmp (listed in-process) holds only
+  FCB_TMP_session_35252_5a93cc2f, no FCB_TMP_session_33684_* PASS.
+Visual: list_windows after the kill -> no window PASS; tc-12-15-before.png and tc-12-15-after.png are the frozen frame -> BLOCKED.
+  No Document Recovery prompt is expected: each launch uses a new temporary profile.
+Cleanup deviation: the stale rpc-33684.json is left in %APPDATA% (the run forbids deleting files outside the run folder).

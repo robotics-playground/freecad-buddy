@@ -1,0 +1,23 @@
+DOC fcb-doc:ubPgTUh_-9JGgaso_-KRdQ
+CHECK given step: ["OK", "fcb-export:YhNa_jMttvHQae1tHNemrQ"]
+CHECK given stl: ["OK", "fcb-export:kGwK2cLXk1W_R1l1btTC5g"]
+CHECK given 3mf: ["OK", "fcb-export:XQBqY7EodKLNP285N82DBw"]
+CHECK sizes before: {"step": 6888, "stl": 684, "3mf": 1112}
+CHECK step<-stl: ["INVALID_INPUT", "export_id fcb-export:kGwK2cLXk1W_R1l1btTC5g is not a step export", true, false, {}]
+CHECK step<-3mf: ["INVALID_INPUT", "export_id fcb-export:XQBqY7EodKLNP285N82DBw is not a step export", true, false, {}]
+CHECK stl<-step: ["INVALID_INPUT", "export_id fcb-export:YhNa_jMttvHQae1tHNemrQ is not a stl export", true, false, {}]
+CHECK stl<-3mf: ["INVALID_INPUT", "export_id fcb-export:XQBqY7EodKLNP285N82DBw is not a stl export", true, false, {}]
+CHECK 3mf<-step: ["INVALID_INPUT", "export_id fcb-export:YhNa_jMttvHQae1tHNemrQ is not a 3mf export", true, false, {}]
+CHECK 3mf<-stl: ["INVALID_INPUT", "export_id fcb-export:kGwK2cLXk1W_R1l1btTC5g is not a 3mf export", true, false, {}]
+CHECK own: [["step", "OK"], ["stl", "OK"], ["3mf", "OK"]]
+CHECK sizes after == before: [{"step": 6888, "stl": 684, "3mf": 1112}, true]
+CHECK reimport volume: ["OK", {"value": 6000.0, "unit": "mm^3"}]
+H_RT fcb-doc:hpbfafb6QPyI_Y22XmNz_g
+tc-07-18-x.3mf 1112
+tc-07-18-x.step 6888
+tc-07-18-x.stl 684
+True 6000.0
+(stat sizes after; trimesh outside read of the STL: True 6000.0)
+Given: rm stale; document_open box-10-20-30 OK, OBJ=Box; three exports OK, sizes step 6888 / stl 684 / 3mf 1112.
+Crossed calls: structured_content {} (no checks key) in all six.
+Visual: view_fit_viewport(H_RT) OK. tc-07-18-after.png: tab tc-07-18_rt, one whole box about 1:2:3, all visible faces present, none damaged.

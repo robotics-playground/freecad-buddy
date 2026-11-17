@@ -1,0 +1,23 @@
+TC-04-23 checks (launch tc-04-a pid 29440; doc Loose fcb-doc:mFFzNTStTHu9V5gUHxkUKw; tc-04-23-mcp.jsonl)
+Given: LooseBody; sketch_add_geometry built LooseProfile, a 20 x 30 rectangle at (5,5) pinned by DistanceX "PosX" and
+  DistanceY "PosY" (verify_sketch OK, dof 0, 12 constraints). script_exec deleted PosX and PosY: value_repr "2";
+  verify_sketch then SPEC_FAILED, subject.dof 2, 10 constraints. <session tmp> lists no FCB_TMP_snap_* entry.
+  Before: view_fit_viewport OK, tc-04-23-before.png.
+PASS no commit: feature_pad LoosePad 10 mm -> status SPEC_FAILED (detail.code mutation.spec_failed).
+PASS rollback: mutation.rolled_back true, post_verify.passed false.
+PASS cause: post_verify.explanation "verify_sketch failed on LooseProfile (dof=2): sketch.fully_constrained".
+PASS shape check before sketch check: post_verify recompute_clean true, is_valid true, fully_constrained false.
+PASS no partial solid: query_tree_summary depth 3 lists LooseBody, Origin and LooseProfile only, no LoosePad.
+PASS no Tip: query_object LooseBody Tip null.
+TC-DEFECT fingerprint Then: fingerprint_before.digest 47c3a2dd4f25... != fingerprint_after.digest 8bd9a0cce301...;
+  rollback_proven "rolled_back_verified", no snapshot_path. The literal Then (digests equal, or rolled_back_via_snapshot)
+  is not met. Same cause as TC-04-16: usecases/transaction.py:345-370 proves rolled_back_verified by digest equality OR
+  mass-property equality, and reports the fresh post-recompute record as fingerprint_after. Independent evidence: tree,
+  Tip null, pixel-identical capture.
+PASS snapshot deleted: session folder lists no FCB_TMP_snap_* entry after the call.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-23-before.png and tc-04-23-after.png: only the thin black outline of the flat 20 x 30 rectangle in
+  isometric view, no shaded face, no vertical sides at the three visible corners, no dialog. p0_diff.py: 0 of 1535072
+  pixels differ. The Tasks panel covers the right corner (limit c); a 10 mm pad would also draw vertical side edges at
+  the three visible corners, and there are none.
+Cleanup: document_close.

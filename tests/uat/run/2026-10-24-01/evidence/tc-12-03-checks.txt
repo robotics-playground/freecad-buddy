@@ -1,0 +1,14 @@
+TC-12-03 (R3). Launch tc-12-03 pid 36884 (r3_launch.ps1 -OpenFile box-10-20-30.FCStd, temporary profile). Given: no document open (document_list [] on the previous FreeCAD pid 36132); golden file Test-Path True.
+When route: previous FreeCAD (pid 36132) was ended through its File menu: invoke_menu ["File","Exit"] was refused menu_path_unavailable "segment 1 was not found" (the File popup opens and paints Exit, but its UIA items list only "Open Recent"); I clicked the painted "Exit" item with a pixel click on the popup window (tc-12-03-filemenu.png). FreeCAD exited, :8765 free. Launch with the file argument used r3_launch.ps1 (Start-Process with -u/-s temporary profile and -M probe module), not cua-driver launch_app, because the profile options and the audit log variable must reach FreeCAD.
+Display check: tc-12-03-after-live.png differs from tc-12-03-after.png (1674 px in the property panel tab): live. Pointer: after capture at 2480,700 (outside window x154-2406,y65-1354); positions in tc-12-03-after-pointer.txt.
+
+Then 1 GUI opened it: verify_state TreeItem label_contains "box-10-20-30" -> satisfied (tc-12-03-verify.txt). PASS
+Then 2 bridge sees it: document_list 1 entry, label "box-10-20-30", name box_10_20_30. PASS
+Then 3 object present: query_tree_summary "- [FEATURE] Box". PASS
+Then 4 geometry exact: query_mass_properties Box volume 6000.0 mm^3, bbox 10 x 20 x 30. PASS
+Then 5 valid single closed solid: verify_shape OK (valid, watertight, solid_count 1). PASS
+Then 6 file identified: label = file stem box-10-20-30, transient false. PASS
+Then 7 (visual) framed: Show All via invoke_menu ["View","Visibility","Show All Objects"] resolved; view_fit_viewport OK fitted true; GUI Fit All toolbar button clicked. PASS
+Then 8 (visual) tc-12-03-after.png read: title "* box-10-20-30 - FreeCAD 1.1.4"; model tree: document box-10-20-30 with child row Box (eye icon); 3D view: one whole rectangular block in iso view, no edge clipped (top vertex near the top border, not cut). No dialog open (windows list: main window plus one View-menu popup window left open by invoke_menu, 330x849 at 266,129; a menu popup, not a dialog; the menu bar item "View" is drawn highlighted in the capture). Closed with escape afterwards. PASS (note: leftover menu popup, harness behaviour R0-F3).
+Notification badge: none shown in the status bar in the after capture (no badge number).
+Cleanup: document_close OK, document_list [].

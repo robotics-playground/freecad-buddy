@@ -1,0 +1,22 @@
+TC-06-02 (launch P5 tc-06-b, pid 23332, temp profile pre-seeded AntiAliasing=4)
+Given: doc tc-06-02, Body + fully constrained L profile on XY (40 x 30, notch 15 x 12 at +X+Y) padded 10 -> LPad bbox 40/30/10 (three different).
+  Note: first build (unconstrained L) was refused SPEC_FAILED 'verify_sketch failed on LProfile (dof=12)' and the pad RECOMPUTE_ERROR; doc closed, rebuilt constrained.
+When: 7 renders tc-06-02-<camera>.png, all status OK with resource_link; rendered_objects ['LPad'].
+      GUI views: 'Standard Views' toolbar button (main action Isometric) by element_token. Its drop-down arrow does not open under
+      cua-driver (pixel click routes to UIA Invoke; click action show_menu opens nothing), so Front/Top/Right/Left/Rear/Bottom
+      were set with FreeCAD's NaviCube (pixel clicks, p5_navi.py, tc-06-02-gui.jsonl), then GUI Fit All, then capture
+      tc-06-02-<camera>-viewport.png. Route deviation: harness limit. Iso: Standard Views + view_fit_viewport OK.
+PASS  all 7 cameras OK + link.
+PASS  each render matches window (NaviCube label confirms view):
+      front: 4:1 rectangle, vertex dot at 0.625 width in both; top: L, notch upper-right in both;
+      right: 3:1 rectangle, divider at 0.60 in both; left: 3:1 rectangle, vertex dot at 0.40 in both, no divider;
+      back: 4:1, divider at 0.373 (window) / 0.375 (render); bottom: L, notch lower-right in both; iso: L-block, notch back-right.
+PASS  opposite pairs differ: front plain vs back divider; top notch upper-right vs bottom lower-right; right divider 0.60 vs left none.
+PASS  iso three-quarter: top, front, right faces visible in both.
+PASS  no axis flip: Z up in all side views of both; top/bottom notch positions agree pairwise.
+PASS  'oblique' refused: "Input validation error: 'oblique' is not one of ['iso', 'front', 'top', 'right', 'left', 'back', 'bottom', 'custom']".
+PASS  fit first: view_fit_viewport OK ratio 0.95.
+PASS  visual: tc-06-02-after.png window: one L-block, three faces visible (top, front-left long face, right faces), Z up,
+      front-right corner nearest the viewer, notch at back-right (Tasks box overlaps part of the notch). tc-06-02-iso.png render: same block,
+      same faces, same corner, notch back-right. Shading differs: excluded.
+Verdict: PASS (route note).

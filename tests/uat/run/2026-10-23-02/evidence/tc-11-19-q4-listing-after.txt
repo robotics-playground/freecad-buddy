@@ -1,0 +1,7 @@
+## Q4 listing after the sweep-only H1 start (00:44:23)
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp:
+total 0
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:44 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  9 23:28 ../
+H1 stderr: session-start sweep removed 1 leftover temp artifact(s)
+The Given 'tmp/ holds no FCB_TMP_ entry from an earlier run' was met by the product's own H1 start sweep, not by a manual delete.

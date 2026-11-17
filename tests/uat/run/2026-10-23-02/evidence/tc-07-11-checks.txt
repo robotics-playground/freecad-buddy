@@ -1,0 +1,12 @@
+DOC fcb-doc:ldPdKQeUlwylEpHn-u7VVQ
+CHECK multi: [["export_step", "INVALID_INPUT", "export supports a single object; got multiple"], ["export_stl", "INVALID_INPUT", "export supports a single object; got multiple"], ["export_3mf", "INVALID_INPUT", "export supports a single object; got multiple"]]
+CHECK message equal: [true, true, true]
+CHECK multi files exist: [false, false, false]
+CHECK unknown: ["INVALID_INPUT", "unknown object: NoSuchObject", false]
+CHECK empty: ["INVALID_INPUT", "document has no objects to export", false]
+ls: cannot access 'tc-07-11-multi.*': No such file or directory
+(ls tc-07-11-multi.* -> no such files)
+Given: rm stale; document_open box-10-20-30 OK, OBJ=Box; Show All; view_fit_viewport OK; tc-07-11-before.png captured.
+Note: the empty document (tc07_11_empty) was created for the "empty document" Then and closed by MCP right after its refusal, before the after-capture, so the window shows only <H> as in the before state.
+Visual: Show All + view_fit_viewport(H) OK. tc-07-11-before.png: one whole box, tree box-10-20-30 > Box, tabs Start + box-10-20-30, top face shown green (FreeCAD preselection highlight under the resting pointer; status bar "Preselected: box_10_20_30.Box.Face6").
+tc-07-11-after.png: the same single whole box, same framing, same tree (Box only), same tabs, no error dialog; the top face is grey (no preselection). Only difference = the hover preselection colour, not caused by the refusals. Top-level windows before and after: only the main window (windows.txt).

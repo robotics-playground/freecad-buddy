@@ -1,0 +1,12 @@
+== [when pad] feature_pad {"body": "LooseBody", "profile": "LooseProfile", "name": "LoosePad", "length": {"value": 10, "unit": "mm"}}
+   status=SPEC_FAILED message=verify_sketch failed on LooseProfile (dof=2): sketch.fully_constrained
+   {"rolled_back": true, "rollback": null, "snapshot_path": null, "fingerprint_equal": false, "post_verify": {"recompute_clean": true, "is_valid": true, "fully_constrained": false, "passed": false, "explanation": "verify_sketch failed on LooseProfile (dof=2): sketch.fully_constrained"}, "tnp": "CLEAN", "feature_state": {"schema": "fcb.feature-state/1", "feature": "LoosePad", "readable": false}, "other": {"feature": "LoosePad"}}
+== [then tree] query_tree_summary {"depth": 3}
+   status=None message=None
+   {"text": "OK: 10 objects, 10 shown.\nframing: fits, ratio 0.95, computed\nv [BODY] LooseBody\n|-- - [ORIGIN] Origin\n|   |-- v [AXIS] X_Axis \"X-axis\"\n|   |-- v [AXIS] Y_Axis \"Y-axis\"\n|   |-- v [AXIS] Z_Axis \"Z-axis\"\n|   |-- v [PLANE] XY_Plane \"XY-plane\"\n|   |-- v [PLANE] XZ_Plane \"XZ-plane\"\n|   |-- v [PLANE] YZ_Plane \"YZ-plane\"\n|   `-- v [POINT] Origin001\n`-- v [SKETCH] LooseProfile", "is_error": false}
+== [then body tip] query_object {"object": "LooseBody"}
+   status=OK message=None
+   {"name": "LooseBody", "label": "LooseBody", "type": "PartDesign::Body", "properties": {"AllowCompound": true, "BaseFeature": null, "ExpressionEngine": [], "Group": ["<Sketcher::SketchObject>"], "Label": "LooseBody", "Label2": "", "Origin": "<GeoFeature object>", "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]", "Shape": "<Shape object at 000001D69CB3FD00>", "ShapeMaterial": "<Material at 000001D69D41C040>", "Tip": null, "Visibility": true, "_ElementMapVersion": "15.70200.5", "_GroupTouched": false}, "error": null}
+== [then snaps] script_exec {"code": "import os, glob; root = os.path.join(os.environ.get('FREECAD_BUDDY_WORKDIR') or os.path.join(FreeCAD.getUserAppDataDir(), 'freecad-buddy', 'workdir'), 'tmp'); result = sorted(os.path.relpath(p, root) for p in glob.glob(os.path.join(root, 'FCB_TMP_ses
+   status=OK message=None
+   {"doc": "fcb-doc:pxpWHrMacRDAlcc2zWL-UQ", "stdout": "", "value_repr": "[]", "fingerprint_after": null}

@@ -1,0 +1,6 @@
+{"host": "127.0.0.1", "port": 62561, "record": "rpc-29952.json", "sent": "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"query_capabilities\",\"params\":{}}"}
+{"read": 1, "line": "{\"jsonrpc\": \"2.0\", \"id\": 3, \"error\": {\"code\": -32002, \"message\": \"handshake required\"}}\n", "elapsed": 0.0}
+{"read": 2, "line": "", "elapsed": 0.0}
+{"host": "127.0.0.1", "port": 62561, "record": "rpc-29952.json", "sent": "not json"}
+{"read": 1, "line": "{\"jsonrpc\": \"2.0\", \"id\": null, \"error\": {\"code\": -32002, \"message\": \"handshake required\"}}\n", "elapsed": 0.0}
+{"read": 2, "line": "", "elapsed": 0.0}

@@ -1,0 +1,23 @@
+TC-04-21 checks (launch tc-04-a pid 29440; doc ReadOnly fcb-doc:-jxeqLFSkKbmgHTcvQC0Jg; tc-04-21-mcp.jsonl)
+Given: BlockBody/BlockProfile 20 x 30, BlockPad 10 mm, volume 6000.0. <session tmp> lists no FCB_TMP_snap_* entry.
+  Before: view_fit_viewport OK, tc-04-21-before.png.
+PASS unknown: {Thickness: 3 mm} -> INVALID_INPUT "BlockPad has no property named 'Thickness'".
+PASS cannot write: {Shape: 1} -> INVALID_INPUT "BlockPad.Shape is a Part::PropertyPartShape, which feature_set_parameters
+  cannot write" (source now features.py:1767; the Then cites :1764, line drift). Second doc ReadOnlyShaft (ShaftRev as
+  TC-04-06, closed after): {Base: 1 mm} on ShaftRev -> INVALID_INPUT "ShaftRev.Base is read-only".
+PASS wrong unit: {Length: 25 deg} -> INVALID_INPUT "Length value unit must be one of ['mm'], got 'deg'".
+TC-DEFECT unsupported type: {Length: [25]} -> INVALID_INPUT, pre-transaction, but the message is
+  "BlockPad.Length is a App::PropertyLength and takes a {value, unit} quantity or a number, got [25]", not the quoted
+  "Length value must be a quantity, number, boolean or enum string". The quoted string is not in src/freecad_buddy (grep: no
+  match); features.py:1782-1789 builds the per-family message. The Then's quote is stale; the refusal it asserts happens.
+PASS pre-transaction: none of the four results has structured_content (no mutation.snapshot_path).
+PASS no snapshot: session folder lists no FCB_TMP_snap_* entry after the four steps.
+PASS unchanged: BlockPad volume 6000.0.
+PASS batch refused whole: {Length: 12 mm, Thickness: 3} -> INVALID_INPUT "BlockPad has no property named 'Thickness'";
+  query_object Length "10.0 mm".
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-21-before.png and tc-04-21-after.png: one whole box, 20 x 30 footprint and 10 mm height, same proportions,
+  no dialog. p0_diff.py: 20 of 1535072 pixels differ, all at the Tasks panel corner (1565-1567, 405-424); the solid is
+  pixel-identical. The Tasks panel covers about 30 px of the box's far right corner in both captures (limit c); the
+  edges on each side of it meet where expected.
+Cleanup: document_close.

@@ -1,0 +1,4 @@
+{"client": "W", "connect": "connected", "elapsed": 0.0, "record": "rpc-17944.json", "port": 49942}
+{"client": "W", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"wrong-xxxxxxxxxxxxxxxx\", \"contract_version\": \"1\"}}", "bytes": 123, "newline": true, "elapsed": 0.0}
+{"client": "W", "recv": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+{"client": "W", "recv": "<zero bytes: closed by peer>", "partial": "", "elapsed": 0.0}

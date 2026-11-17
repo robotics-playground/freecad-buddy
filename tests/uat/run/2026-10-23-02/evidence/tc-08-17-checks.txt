@@ -1,0 +1,22 @@
+TC-08-17 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0: tc-08-a-addon.log has no 'SECURITY: mutation auto-approve ENABLED' line;
+          operator settings FREECAD_BUDDY_AUTO_APPROVE='0' (env))
+Given: doc tc-08-17: Body, Sketch, Pad, Fillet (2 mm on Pad Edge1), all by preview+confirm; query_tree_summary depth 4 lists all four.
+       view_fit_viewport OK; tc-08-17-before.png.
+When: each of the 19 gated tools called with confirm omitted (args in p5_tc08.py GATED; feature_set_parameters writes Length).
+      My first feature_pattern call lacked 'direction' (schema: linear needs direction) and got "Input validation error: 'direction'
+      is a required property" - my input was not otherwise valid. Re-issued with originals ['Fillet'], direction X_Axis Edge1,
+      length 40, occurrences 2: gate message. (Correction of my own invalid input, not a product retry.)
+PASS  all 19 refused (INVALID_INPUT), none OK.
+PASS  identical message on all 19: "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id".
+PASS  confirm null: "Input validation error: None is not of type 'object'".
+PASS  nothing mutated: tree depth 4 object lines identical before/after (only the framing cache line differs); no Pad2/Pattern2/... node.
+PASS  set boundary: document_save -> evidence/tc-08-17-save.FCStd OK (18,106 bytes); export_stl Pad -> evidence/tc-08-17-export.stl OK (684 bytes); no confirm.
+PASS  count 19: tools/list (46 tools) has 'confirm' in exactly 19 input schemas (tc-08-17-tools-schema.json): the 8 sketch_* and 11 feature_* named.
+PASS  sample works when previewed: feature_body_create Probe, sketch_create Sketch2 XZ, feature_set_parameters Fillet Radius 1.5: preview OK, apply OK.
+PASS  display-state carve-out: feature_set_parameters Pad Visibility false, no confirm -> OK, mutation.changed []; audit approval
+      mode 'display_state' (tc-08-a-audit.jsonl); restored Visibility true -> OK, changed [].
+PASS  fit: view_fit_viewport OK.
+PASS  visual: before and after (captured after the 19 refusals, before the samples) both show the same filleted pad (rounded left
+      vertical edge), Body in the tree, no dialog; p0_diff 0 pixels differ.
+Kept (not deleted): tc-08-17-save.FCStd, tc-08-17-export.stl are run evidence inside the run folder.
+Verdict: PASS.

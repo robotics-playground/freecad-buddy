@@ -1,0 +1,3 @@
+20:26:21 {"x":56,"y":1313}
+20:26:31 {"x":1812,"y":523}
+WARNING pointer inside the window after capture

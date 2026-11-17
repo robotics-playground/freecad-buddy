@@ -1,0 +1,15 @@
+TC-10-11 checks (P8) - same H1 session; FreeCAD 11736 for the GUI
+Given document_create H fcb-doc:xiV30aqX... OK; script_exec Slow (code as written, 130 s execute) OK in 0.02 s; query_tree_summary H OK "Slow"
+Given GUI <G>: Show All; view_fit_viewport OK; tc-10-11-before.png read: one whole iso box
+When verify_recompute H; script_exec AcceptedAfterRead at once (0.0 s after); wait to t0+140 s; the same script_exec again; query_tree_summary H
+Then first call TIMEOUT after 120.005 s (120-121) -> PASS
+Then message contains "no mutation was attempted, so the document is not marked suspect" -> PASS
+Then message contains "the body may still be running and " -> PASS
+Then message does not contain "the document is now suspect" -> PASS
+Then detail.data.marshal_timeout true -> PASS
+Then second call TIMEOUT, data {"quarantined": true}, message "not dispatched: the session is quarantined while a timed-out verify_recompute call still runs ...", no document-suspect -> PASS
+Then third call OK; query_tree_summary H "Slow, AcceptedAfterRead" (AcceptedAfterRead once) -> PASS
+Then (visual) Show All; view_fit_viewport on <G> OK -> PASS
+Then (visual) tc-10-11-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal, <G> drawn whole and framed, not blank, not half-painted. The right face is green: FreeCAD preselection highlight (harness limit i) left by the physical pointer, which moved over the 3D view 23:36:42-23:37:41 ((754,602), (966,456), (1278,568), (1265,811) ...) after the H1 session ended at 23:36:05; 115200 px differ from before, all inside the box's right face (bbox 882,298-1140,888). A supplementary capture at 23:38:48 shows the same. -> PASS, human intervention noted
+Cleanup H1 document_close H OK; H1 session ended (stdin closed, 23:36:05); GUI document_close <G> OK
+Verdict: PASS (the visual change is a preselection highlight from a human pointer pass, not a model or window change)

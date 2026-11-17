@@ -1,0 +1,19 @@
+TC-10-14 checks (P8) - FreeCAD 11736 (launch tc-10-a); listener 127.0.0.1:49721
+Given listener accepting (TC-10-13 connect, same FreeCAD; proxy restarted since)
+Given (before the proxy stop) GUI document_open box OK fcb-doc:Sv4L6xAK...
+Given ws_before: (Get-Process -Id 11736).WorkingSet64 -> 239783936 at 23:50:10 (tc-10-14-given-ws.txt); p8_rpc.py read it again right before the stream: 234422272
+Given Show All; view_fit_viewport OK; tc-10-14-before.png read: one whole iso box, no dialog
+Given proxy stopped: Stop-Process 30828 (hand-started proxy of TC-10-13, launcher 34740); netstat :49721 ESTABLISHED -> nothing -> PASS
+When A: rpc_hello OK, then {"x":"A... 17 MiB with no newline; ws read again; C2: raw bytes ff fe fd ... c3 28 + newline; C3: hello + document_list (p8_rpc.py s14, tc-10-14-rpc.jsonl); M: hello + script_exec "result = len(doc.Objects)" on the box (s14m)
+Then A next recv -> ConnectionResetError 10054 -> PASS (the Then allows the reset)
+Then grep "WARNING.*frame read failed; closing connection: frame exceeds 16 MiB cap" addon.log (whole file, as written) -> one line, 23:50:54,106; no traceback -> PASS
+Then C2 next recv -> zero bytes (log: "frame read failed; closing connection: 'utf-8' codec can't decode byte 0xff in position 0") -> PASS
+Then C3 connect and handshake succeed (contract_version "1") -> PASS
+Then C3 document_list OK -> PASS
+Then ws_after 251326464: ws_after - ws_before = 11542528 (Given value) / 16904192 (value read right before the stream) < 104857600 -> PASS
+Then mutating script_exec on the open box over a fresh session -> OK, not refused with document-suspect -> PASS
+Then (visual) Show All; mcp view_fit_viewport -> httpx.ConnectError (proxy stopped), so the Fit All toolbar button by element_token (route accessibility) -> PASS
+Then (visual) tc-10-14-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal, one whole iso box framed, no stall or partial repaint -> PASS
+Cleanup proxy restarted by hand with the operator-settings values (launcher 30832); /healthz freecad_pid 11736; query_capabilities OK; GUI document_close OK
+Verdict: PASS
+Human: pointer inside the window at 23:50:38 (1021,779) and 23:52:03 (760,636), after the captures.

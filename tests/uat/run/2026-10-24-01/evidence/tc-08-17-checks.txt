@@ -1,0 +1,23 @@
+TC-08-17 (R2, launch r2-L1-tc08 pid 29140; r2-L1-tc08-addon.log has no "SECURITY: mutation auto-approve ENABLED"; operator settings FREECAD_BUDDY_AUTO_APPROVE='0' (env))
+Given: tc-08-17 Body + Sketch + Pad 30 + Fillet r2 on Pad Edge1 (preview+confirm); query_tree_summary depth 4 lists Body, Sketch, Pad, Fillet (tip);
+       view_fit_viewport OK fits 0.95; tc-08-17-before.png.
+When: the 19 gated tools called with valid arguments and no confirm key (feature_pattern with originals [Fillet], direction X_Axis Edge1,
+      length 40, occurrences 2; feature_set_parameters writes Pad Length 35, not Visibility).
+PASS 19 of 19 refused (INVALID_INPUT), none OK.
+PASS all 19 messages exactly "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id".
+PASS confirm null on feature_pad -> isError "Input validation error: None is not of type 'object'" (schema refusal).
+PASS query_tree_summary depth 4 after the 19 calls: same node lines as before (only the framing cache line differs).
+PASS document_save path evidence/tc-08-17-save.FCStd OK and export_stl Pad evidence/tc-08-17-export.stl OK without confirm (files 18137 / 684 bytes).
+PASS exactly 19 of 46 tools carry confirm in tools/list (tc-08-17-tools-schema.json): 8 sketch_* + 11 feature_*.
+PASS samples previewed + applied OK: feature_body_create Probe, sketch_create Sketch2 (XZ), feature_set_parameters Fillet Radius 1.5.
+PASS display-state carve-out: feature_set_parameters Pad Visibility false without confirm -> OK, mutation.changed []; audit approval line
+     mode "display_state" tool feature_set_parameters (r2-L1-tc08-audit.jsonl); restore Visibility true -> OK, changed [].
+PASS fit OK fits 0.95.
+PASS visual: after capture taken right after the 19 refusals, before the samples. Before and after: same filleted 20x20x30 pad in iso
+     (rounded left vertical edge, sketch outline at the bottom-left), tree tc-08-17 > Body, no dialog, badge blank. r2_diff 0 px.
+     Display live: tc-08-17-post-samples.png (after the samples) differs by 19227 px (title tc-08-17-save, Probe body row).
+Observation (no verdict effect): the Then's "restore with { Visibility: true }" does not restore the start state. Pad was hidden before
+     (a non-tip PartDesign feature); after Visibility true the sharp Pad is drawn over the Fillet (tc-08-17-post-samples.png shows a sharp box).
+     The step should restore the value read before, false. Test-case wording item, TC-08:680.
+Kept as evidence (cleanup rm not run): tc-08-17-save.FCStd, tc-08-17-export.stl.
+Verdict: PASS

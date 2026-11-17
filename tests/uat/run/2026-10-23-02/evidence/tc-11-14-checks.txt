@@ -1,0 +1,10 @@
+TC-11-14 checks (H1 sweep tc-11-14-h1.jsonl; user document folder evidence/tc-11-14-userdocs, a copy of the golden box plus notes.txt)
+listing1 vs listing2 (files only):
+  identical names, sizes, mtimes
+FCB_TMP_ entries in listing2: 0
+listing2 -> listing3 new names:
+box-copy.20261024-001919.FCBak
+tc11-export.stl
+mtime changes (listing2 -> listing3, read from the listings): box-copy.FCStd 00:19:19.902241100 -> 00:20:24.148329400; notes.txt unchanged 00:19:19.902241100
+audit log in folder: 0
+0 of 1535072 pixels differ; bbox None

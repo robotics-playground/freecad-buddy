@@ -1,0 +1,204 @@
+2026-10-24 00:08:28,327 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-24 00:08:28,495 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence	c-11-11-h1-audit.jsonl
+2026-10-24 00:08:28,495 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 00:08:28,495 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-24 00:08:28,496 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-24 00:08:28,526 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,539 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,564 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in body: Body
+2026-10-24 00:08:28,564 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,565 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,575 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Sketch
+2026-10-24 00:08:28,576 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,576 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,583 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in body: Body
+2026-10-24 00:08:28,585 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:28,585 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:30,603 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\rpc_dispatch.py", line 143, in _invoke
+    return method.handler(**params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\hosts\tool_catalog.py", line 1017, in <lambda>
+    return lambda **p: preview.preview_dry_run(doc_registry, op_table, render_port, **p)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\preview.py", line 468, in preview_dry_run
+    path = _tempdoc_path()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\preview.py", line 325, in _tempdoc_path
+    directory = tempfile.mkdtemp(prefix=_TEMPDOC_PREFIX, dir=temp_dir())
+                                                             ^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\documents.py", line 72, in temp_dir
+    path.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\FreeCAD 1.1\bin\Lib\pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+OSError: [WinError 123] The filename, directory name, or volume label syntax is incorrect: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-workdir\\tmp\\FCB_TMP_session_20080_ccf3b0fb'
+2026-10-24 00:08:30,622 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:30,709 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\rpc_dispatch.py", line 143, in _invoke
+    return method.handler(**params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\hosts\tool_catalog.py", line 1017, in <lambda>
+    return lambda **p: preview.preview_dry_run(doc_registry, op_table, render_port, **p)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\preview.py", line 468, in preview_dry_run
+    path = _tempdoc_path()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\preview.py", line 325, in _tempdoc_path
+    directory = tempfile.mkdtemp(prefix=_TEMPDOC_PREFIX, dir=temp_dir())
+                                                             ^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\documents.py", line 72, in temp_dir
+    path.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\FreeCAD 1.1\bin\Lib\pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+OSError: [WinError 123] The filename, directory name, or volume label syntax is incorrect: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-workdir\\tmp\\FCB_TMP_session_20080_ccf3b0fb'
+2026-10-24 00:08:30,712 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:30,785 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\rpc_dispatch.py", line 143, in _invoke
+    return method.handler(**params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\hosts\tool_catalog.py", line 1017, in <lambda>
+    return lambda **p: preview.preview_dry_run(doc_registry, op_table, render_port, **p)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\preview.py", line 468, in preview_dry_run
+    path = _tempdoc_path()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\preview.py", line 325, in _tempdoc_path
+    directory = tempfile.mkdtemp(prefix=_TEMPDOC_PREFIX, dir=temp_dir())
+                                                             ^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\documents.py", line 72, in temp_dir
+    path.mkdir(parents=True, exist_ok=True)
+  File "C:\Program Files\FreeCAD 1.1\bin\Lib\pathlib.py", line 1116, in mkdir
+    os.mkdir(self, mode)
+OSError: [WinError 123] The filename, directory name, or volume label syntax is incorrect: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-workdir\\tmp\\FCB_TMP_session_20080_ccf3b0fb'
+2026-10-24 00:08:30,788 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 22] Invalid argument: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\tc-11-11-h1-audit.jsonl'
+2026-10-24 00:08:30,859 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-10-24 00:08:30,860 INFO freecad_buddy.rpc_listener: client closed the connection

@@ -1,0 +1,14 @@
+DOC fcb-doc:l8Bcn9qXXTQL0NW-oefE5g
+CHECK open documents: [["fcb-doc:l8Bcn9qXXTQL0NW-oefE5g", "box_10_20_30", "box-10-20-30"]]
+CHECK bogus [tool, status, message, exception]: [["verify_export_step", "INVALID_INPUT", "unknown or stale export_id: fcb-export:bogus", "ValidationError"], ["verify_export_stl", "INVALID_INPUT", "unknown or stale export_id: fcb-export:bogus", "ValidationError"], ["verify_export_3mf", "INVALID_INPUT", "unknown or stale export_id: fcb-export:bogus", "ValidationError"]]
+CHECK message equal: [true, true, true]
+CHECK export: ["OK", "fcb-export:DDofUuWuGoZ-VFwBCEqK8Q"]
+CHECK reopened: ["fcb-doc:z3bozdoNvzVJN9vHWW6Srw", true, "INVALID_INPUT", "export_id fcb-export:DDofUuWuGoZ-VFwBCEqK8Q does not belong to document fcb-doc:z3bozdoNvzVJN9vHWW6Srw"]
+CHECK reopened message shape: [true, true]
+CHECK empty: ["INVALID_INPUT", "missing required 'export_id'", null]
+CHECK query_capabilities: "OK"
+H2 fcb-doc:z3bozdoNvzVJN9vHWW6Srw
+True 6000.0
+(trimesh outside read of tc-07-17-stale.stl: is_watertight True, volume 6000.0)
+Given: document_list names the handle; box-10-20-30 open as H, OBJ=Box; Show All; view_fit_viewport OK; tc-07-17-before.png.
+Visual: Show All on H2, view_fit_viewport(H2) OK. tc-07-17-before.png and tc-07-17-after.png: the same single whole box, same framing, tree box-10-20-30 > Box, tabs Start + box-10-20-30, no error dialog, view not empty. Both show the "View" menu-bar item highlighted (menu-bar focus left by the Show All Escape) and status badge "1" (earlier notification); same in both. Top-level windows: main window only in both.

@@ -1,0 +1,10 @@
+TC-12-03 (P10, quit 29312 by File > Exit 10:39:28, relaunch 33684 with the file argument; display frozen) -- verdict BLOCKED (visual)
+Given: document_list 0; benchmarks/g0/golden-models/box-10-20-30.FCStd exists PASS.
+When: File > Exit (invoke_menu, worked) ; relaunch via p10_launch.ps1 -OpenFile (Start-Process with temporary -u profile, the run's
+  launch rule) instead of cua-driver launch_app.
+Then GUI opened: verify_state {role TreeItem, label_contains box-10-20-30, exists} -> satisfied PASS.
+Then bridge: one entry label box-10-20-30 PASS. Then Box named: "- [FEATURE] Box" PASS. Then volume 6000.0 PASS.
+Then valid: verify_shape OK, verdict OK, solid_count 1, valid true, watertight true PASS.
+Then identified: label box-10-20-30, transient false PASS.
+Fit: Show All (invoke_menu OK) + view_fit_viewport OK. Visual tc-12-03-after.png: frozen black/white frame -> BLOCKED (display frozen).
+Cleanup: document_close (as part of the TC-12-15 Given).

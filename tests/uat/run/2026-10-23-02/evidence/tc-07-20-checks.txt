@@ -1,0 +1,20 @@
+[{'fn': 'expect_volume', 'expect': 6000, 'tol': {'rel': 0.001}}]
+[{'fn': 'expect_watertight', 'expect': True}, {'fn': 'expect_solid_count', 'expect': 1}]
+[{'fn': 'expect_volume', 'expect': 6000, 'tol': {'rel': 0.001}}, {'fn': 'expect_bbox', 'expect': [10, 20, 30], 'tol': {'rel': 0.001}}, {'fn': 'expect_solid_count', 'expect': 1}]
+TREE FIRST LINE: OK: 1 objects, 1 shown.
+TREE FIRST LINE: OK: 1 objects, 1 shown.
+CHECK objects: ["WrongVolume", "OpenShell"]
+CHECK wrong-volume: ["SPEC_FAILED", {"id": "assert.expect_volume", "measured": 7200.0, "expected": 6000, "tolerance": {"rel": 0.001}, "passed": false, "detail": {"message": "|7200.0 - 6000.0| = 1200.0 <= 6 mm^3"}}, {"code": "SPEC_FAILED", "message": "assert.expect_volume", "objects": ["WrongVolume"]}]
+CHECK open-shell: ["SPEC_FAILED", {"id": "shape.watertight", "measured": false, "expected": true, "tolerance": null, "passed": false, "detail": {"message": "watertight False vs True"}}, {"id": "shape.solid_count", "measured": 0, "expected": 1, "tolerance": null, "passed": false, "detail": {"message": "solids 0 vs 1"}}, {"code": "SPEC_FAILED", "message": "shape.watertight; shape.solid_count", "objects": ["OpenShell"]}]
+CHECK bare: ["OK", [["shape.volume", 7200.0, true], ["shape.bbox", [12.0, 20.0, 30.0], true], ["shape.solid_count", 1, true], ["shape.valid", true, true], ["shape.watertight", true, true]]]
+TREE FIRST LINE: OK: 1 objects, 1 shown.
+CHECK clean-control: ["CleanControl", "OK", [["assert.expect_volume", true], ["assert.expect_bbox", true], ["shape.solid_count", true]]]
+CHECK exports: [["OK", null], ["OK", null]]
+H fcb-doc:5owPSF9VXHBYaeungOeJCQ H2 fcb-doc:9Tubl69OnhGM-j9Y-4Hk6Q
+7200.0
+False
+(trimesh outside reads: wrong-volume STL volume 7200.0; open-shell STL is_watertight False)
+Fixtures: wrong-volume OBJ=WrongVolume, open-shell OBJ2=OpenShell, clean-control CleanControl (opened for its Then, graded OK with its case.yaml checks, closed).
+Finding (no Then reads it): the failing assert.expect_volume detail.message reads "|7200.0 - 6000.0| = 1200.0 <= 6 mm^3" -- the "<=" is false for a failed check.
+tc-07-20-pre-showall.png: active tab = the open-shell fixture, OpenShell hidden (grey eye), empty view, before Show All.
+Visual: Show All (active doc = open-shell fixture), view_fit_viewport(H2) OK. tc-07-20-open-shell.png: one thin flat dark-grey strip (a single planar sheet seen at an angle), open, no enclosed body; its upper-right corner reaches the NaviCube area but its outline is complete. Status badge "1" (earlier notification).

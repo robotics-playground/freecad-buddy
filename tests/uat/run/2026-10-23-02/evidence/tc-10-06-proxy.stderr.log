@@ -1,0 +1,2 @@
+2026-10-23 23:47:22,201 INFO freecad_buddy.hosts.gui_external: pinned to FreeCAD pid 11736
+2026-10-23 23:47:22,222 INFO freecad_buddy.hosts.gui_external: freecad-buddy GUI-external MCP server on http://127.0.0.1:8765/mcp

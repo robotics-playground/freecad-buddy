@@ -1,0 +1,23 @@
+TC-01-04 checks (P1) - launch tc-01-socket, FreeCAD 27956, proxy spawn pid 27356
+Given proxy alive; shell FREECAD_BUDDY_SCRIPT_EXEC unset; operator settings line has FREECAD_BUDDY_SCRIPT_EXEC='1' (preference) -> PASS
+Given raw rpc_hello with the proxy stopped -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+When query_capabilities -> tc-01-04-capabilities.json; list_windows title " box-10-20-30 - FreeCAD 1.1.4"
+Then freecad_version '1.1.4' = window title "FreeCAD 1.1.4" = rpc-27956.json "freecad_version": "1.1.4" -> PASS
+Then keys exactly the 9 named -> PASS
+Then element_map_available True (bool) -> PASS
+Then serializer 'exportBinary' -> PASS
+Then render 'gui_constructed' -> PASS
+Then exec_enabled True -> PASS; same value in the raw rpc_hello reply -> NOT RUN
+Then sketcher_available True, partdesign_available True -> PASS
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-01-04-after.png read -> PASS
+--- socket step, approved by the lead after the first report; launch tc-01-socket2, FreeCAD 29952
+Proxy stopped: Stop-Process 29156 (child of the addon-spawned 28140); :8765 free, 28140 gone.
+When raw rpc_hello {token, contract_version "1"} on rpc-29952.json (tc-01-04-rpc.jsonl):
+  reply {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}
+Then raw hello result.capabilities.exec_enabled true = query_capabilities exec_enabled true -> PASS
+Then rpc_hello freecad_version 1.1.4 = live version -> PASS
+Proxy restarted by hand: .venv\Scripts\python.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http with FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=<evidence>\tc-01-socket2-audit.jsonl; launcher 30272, LISTENING 23332; /healthz freecad_pid 29952
+After restart: query_capabilities OK, exec_enabled True; tools/list 46 -> Cleanup PASS
+Then (visual) view_fit_viewport OK through the restarted proxy; tc-01-04-after2.png read: one whole iso box, no dialog -> PASS
+Verdict now: PASS

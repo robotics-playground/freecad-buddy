@@ -1,0 +1,9 @@
+tracked-diff-sha256 9b30351f8ba8ab8fc5c0f764daa1d8ac58143c3c8996b39a7b6dd02155b00e9c
+== tests/external/test_run_mcp_e2e.py
+236b6971e3b57d2ee911ac74ec9ae32bd505a63fc0f41065a421e24e3de8c6b7 *tests/external/test_run_mcp_e2e.py
+== tests/infc/notification_console.py
+77cbf7160d2c88453e59ad38693d0012fc9e6d973e0135faf5e701524c648138 *tests/infc/notification_console.py
+== tests/infc/test_framing.py
+ed456d515d0c2fa9b9e5467586b348ac9effdb48176db23609d63412c644017a *tests/infc/test_framing.py
+== tests/infc/test_shim.py
+962af2d89efcb2126cc8a8639745f295e62f0f31933edf71331dc9dad37eebd9 *tests/infc/test_shim.py

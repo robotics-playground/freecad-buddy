@@ -1,0 +1,39 @@
+== [oracle object count] script_exec {"code": "result = len(doc.Objects)"}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:uqA8RjK3EuHbMRz8gSxQNw", "stdout": "", "value_repr": "1", "fingerprint_after": null}, "text": "doc: fcb-doc:uqA8RjK3EuHbMRz8gSxQNw\nfingerprint_after: None\nstdout: \nvalue_repr: 1", "framing": {"fits": true, "ratio": 0.95, "checked": "computed", "stale_reason": null}}
+CHECK actual object count (oracle): null
+== [when depth 0] query_tree_summary {"depth": 0}
+   isError=True {"text": "Input validation error: 0 is less than the minimum of 1", "is_error": true}
+== [when depth -1] query_tree_summary {"depth": -1}
+   isError=True {"text": "Input validation error: -1 is less than the minimum of 1", "is_error": true}
+== [when depth 2147483647] query_tree_summary {"depth": 2147483647}
+   isError=False {"text": "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.95, cached, served from cache; unverified key component(s): geometry\nv [FEATURE] BoxHole", "is_error": false}
+== [when depth 1] query_tree_summary {"depth": 1}
+   isError=False {"text": "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.95, cached, served from cache; unverified key component(s): geometry\nv [FEATURE] BoxHole", "is_error": false}
+CHECK depth 0 / -1 rejections: [true, true]
+CHECK depth 0 / -1 texts: ["Input validation error: 0 is less than the minimum of 1", "Input validation error: -1 is less than the minimum of 1"]
+CHECK depth max first line: "OK: 1 objects, 1 shown."
+CHECK depth max shown vs actual: [["OK", 1, 1], null]
+CHECK depth 1 first line: "OK: 1 objects, 1 shown."
+CHECK depth 1 shown vs tree lines: [["OK", 1, 1], 1]
+CHECK depth 1 connector lines: []
+== [when max_edges 0] query_dependencies {"max_edges": 0}
+   isError=True {"text": "Input validation error: 0 is less than the minimum of 1", "is_error": true}
+== [when max_edges -1] query_dependencies {"max_edges": -1}
+   isError=True {"text": "Input validation error: -1 is less than the minimum of 1", "is_error": true}
+== [when max_edges 1] query_dependencies {"max_edges": 1}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"edges": [], "total_edges": 0, "returned_edges": 0, "truncated": false}, "text": "0 dependency edge(s).", "framing": {"fits": true, "ratio": 0.95, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometry"}}
+CHECK max_edges 0 / -1 rejections: [true, true]
+CHECK max_edges 0 / -1 texts: ["Input validation error: 0 is less than the minimum of 1", "Input validation error: -1 is less than the minimum of 1"]
+CHECK max_edges 1: ["OK", {"edges": [], "total_edges": 0, "returned_edges": 0, "truncated": false}]
+== [when occurrences 0] feature_pattern {"body": "Body", "name": "TC0907Pattern", "kind": "linear", "direction": {"kind": "mapped_name", "object": "BoxHole", "mapped_name": "Edge1"}, "length": {"value": 20, "unit": "mm"}, "occurrences": 0}
+   isError=True {"text": "Input validation error: 0 is less than the minimum of 2", "is_error": true}
+== [when occurrences 1] feature_pattern {"body": "Body", "name": "TC0907Pattern", "kind": "linear", "direction": {"kind": "mapped_name", "object": "BoxHole", "mapped_name": "Edge1"}, "length": {"value": 20, "unit": "mm"}, "occurrences": 1}
+   isError=True {"text": "Input validation error: 1 is less than the minimum of 2", "is_error": true}
+CHECK occurrences 0 / 1 rejections: [true, true]
+CHECK occurrences 0 / 1 texts: ["Input validation error: 0 is less than the minimum of 2", "Input validation error: 1 is less than the minimum of 2"]
+== [oracle object count] script_exec {"code": "result = len(doc.Objects)"}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:uqA8RjK3EuHbMRz8gSxQNw", "stdout": "", "value_repr": "1", "fingerprint_after": null}, "text": "doc: fcb-doc:uqA8RjK3EuHbMRz8gSxQNw\nfingerprint_after: None\nstdout: \nvalue_repr: 1", "framing": {"fits": true, "ratio": 0.95, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometry"}}
+CHECK object count after (oracle): null
+CHECK addon log since offset: ValidationError / Traceback lines: []
+CHECK tc-09-01-edge.stderr.log ValidationError traceback lines: []
+NOTE: oracle object count printed null by the helper (wrong key); the logged script_exec value_repr is 1 before and after (tc-09-07-mcp.jsonl)

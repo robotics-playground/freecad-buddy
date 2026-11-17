@@ -1,0 +1,12 @@
+TC-12-11 (P10, pid 29744, display frozen) -- verdict FAIL (GUI scroll Then not met), visual BLOCKED
+Given: document_create TC1211 + script_exec Body with 26 Sketch/Pad pairs (tc-12-11-build.py): 61 objects; depth 3 "61 shown".
+Then default depth: depth 1 "OK: 61 objects, 1 shown." one line "v [BODY] Body (+27)" PASS.
+Then deeper: depth 3 "61 shown" > 1, 61 tree lines <= 200, not truncated PASS.
+Then filters: types PAD and name_pattern Pad* both "27 shown, 26 matches" < 61, pads shown under Body PASS.
+Then max_nodes: "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)" PASS.
+Then budget: every call < 0.05 s PASS.
+When scroll: Body expanded first (UIA action "expand" did not land; pixel click on the arrow did), tc-12-11-tree snapshot 15 TreeItems
+  TC1211..Pad011; scroll {element_token Tree, down, 10} -> route global_input, mode unknown; tc-12-11-tree2 snapshot: same 15 rows
+  (y 232..547) -> Then "GUI tree scrolls" NOT met. Cause: harness (scroll by token falls back to global_input) or environment
+  (display frozen); not separable.
+Then responsive: get_window_state 170 elements, not degraded PASS. Fit view_fit_viewport OK. Visual PNGs black -> BLOCKED.

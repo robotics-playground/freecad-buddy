@@ -1,0 +1,18 @@
+TC-09-22 (R2, GUI launch r2-L2 pid 29004; sweeps' H1 from FCB_ENV, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc0922, PYTHONUTF8=1)
+Given: ls of both sweep scripts OK (tc-09-22-given-ls.txt; the Given no longer lists the report file - W5 fix); document_open box-10-20-30;
+       Show All; fit OK fits 0.95; tc-09-22-before.png.
+When: run_mcp_e2e.py (29/29 checks passed, exit 0) -> tc-09-22-e2e_report.json, tc-09-22-server.stderr.log;
+      run_mcp_edge_cases.py (14/14, exit 0) -> tc-09-01-edge_report.json, tc-09-01-edge.stderr.log as the When writes them
+      (the TC-09-01 copies were kept first as tc-09-01-edge_report-from-tc0901-run.json / tc-09-01-edge.stderr-from-tc0901-run.log).
+PASS crash-signature scan on both logs: no match (grep exit 1).
+PASS access violation absent in tc-09-22-server.stderr.log.
+PASS swig absent.
+PASS segfault and fatal absent in both.
+PASS traceback count 0 in both logs.
+PASS nothing raised past the boundary: no traceback at all (rpc_dispatch.py:156 the single boundary).
+PASS both reports all_passed True.
+PASS fit OK fits 0.95.
+PASS visual: before and after the same whole box-10-20-30 in iso, framed, no crash dialog, error modal or fault popup; badge blank; r2_diff 0 px.
+     Live check 3086 px.
+Not run: cleanup rm of evidence/tc-09-22-* export files (none were written: the sweeps write under _automation/).
+Verdict: PASS

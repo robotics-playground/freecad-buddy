@@ -1,0 +1,18 @@
+TC-08-02 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0)
+Given: doc tc-08-02; Body, 20x20 Sketch, Pad 30 (preview+confirm); Pad volume 12000.0; TempDoc check '[]'; view_fit_viewport OK; tc-08-02-before.png.
+When: query_mass_properties Pad + document_list; preview_dry_run feature_set_parameters Pad Length 80; re-read both.
+PASS  preview reported: diff.deltas.volume after 32000.0 (before 12000.0, delta 20000.0).
+PASS  live volume 12000.0, whole mass record identical (JSON equal).
+PASS  bbox and com equal.
+PASS  document_list: same single handle fcb-doc:TvS7..., no FCB_TMP_prev_ name.
+PASS  TempDoc check '[]'.
+PASS  envelope OK, no SPEC_FAILED 'preview changed the live document'.
+PASS  failing path: preview of feature_fillet radius 500 -> status OK, diff.validity status RECOMPUTE_ERROR
+      ('Fillet: BRep_API: command not done'); TempDoc check after it '[]'.
+PASS  fit: view_fit_viewport OK.
+FAIL  visual: both captures show the same 20 x 20 x 30 pad (1 : 1 : 1.5, same camera, no taller solid). The images are not identical
+      by eye: p0_diff 711 pixels differ, bbox (1197,950)-(1230,971) = the status-bar notification button, blank before, '1' after
+      (tc-08-02-statusbar-before.png / -after.png). Opened, it lists one error: 'Fillet: BRep_API: command not done (2 times)'
+      (tc-08-02-notification-popup.png). The failing preview's recompute on its throwaway copy posts an error notification into
+      the human's GUI, about a Fillet that is not in the user's document. Cause: product defect (preview side effect on the GUI).
+Verdict: FAIL (visual Then: notification badge from the failing preview; the model itself is unchanged).

@@ -1,0 +1,21 @@
+TC-11-12 checks (H1 tc-11-12-h1.jsonl, workdir evidence/tc-11-12-workdir)
+  SH FCB_TMP_snap_ count: 0 | tc-11-12-workdir/tmp: | FCB_TMP_session_32184_25875124 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124:
+7 feature_fillet Fillet OK | text: Mutation committed; fingerprint fa119003d422. | snapshot_path key present: False | rolled_back False | rollback_proven None | snapshot_path None | explanation None
+  SH FCB_TMP_snap_ count: 0 | tc-11-12-workdir/tmp: | FCB_TMP_session_32184_25875124 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124:
+9 feature_fillet FilletBig RECOMPUTE_ERROR | text: Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: FilletBig: BRep_API: command not done | snapshot_path key present: False | rolled_back True | rollback_proven rolled_back_verified | snapshot_path None | explanation recompute left 1 object(s) invalid: FilletBig: BRep_API: command not done
+  SH FCB_TMP_snap_ count: 0 | tc-11-12-workdir/tmp: | FCB_TMP_session_32184_25875124 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124:
+11 script_exec OK None 'patched run_mutation'
+12 feature_body_create BodyC SPEC_FAILED | text: Mutation rolled back (None): RuntimeError: tc-11-12 forced commit failure | snapshot_path key present: False | rolled_back True | rollback_proven None | snapshot_path None | explanation RuntimeError: tc-11-12 forced commit failure
+13 script_exec OK None True
+  SH FCB_TMP_snap_ count: 0 | tc-11-12-workdir/tmp: | FCB_TMP_session_32184_25875124 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124:
+15 script_exec OK None 'patched _prove_rollback'
+16 feature_fillet FilletBig2 SPEC_FAILED | text: Mutation failed and its rollback could not be proven: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-12-workdir\tmp\FCB_TMP_session_32184_25875124\FCB_TMP_snap_ltz_sul3\tc11_12.FCStd. | snapshot_path key present: True | rolled_back False | rollback_proven None | snapshot_path D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-12-workdir\tmp\FCB_TMP_session_32184_25875124\FCB_TMP_snap_ltz_sul3\tc11_12.FCStd | explanation recompute left 1 object(s) invalid: FilletBig2: BRep_API: command not done; tc-11-12 forced
+17 script_exec OK None True
+  SH FCB_TMP_snap_ count: 1 | tc-11-12-workdir/tmp: | FCB_TMP_session_32184_25875124 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124: | FCB_TMP_snap_ltz_sul3 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124/FCB_TMP_snap_ltz_sul3: | tc11_12.FCStd
+19 script_exec OK None 'patched fingerprint'
+20 feature_body_create BodyU SPEC_FAILED | text: Mutation failed and its rollback could not be proven: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-12-workdir\tmp\FCB_TMP_session_32184_25875124\FCB_TMP_snap_rkdnklfg\tc11_12.FCStd. | snapshot_path key present: True | rolled_back False | rollback_proven None | snapshot_path D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-12-workdir\tmp\FCB_TMP_session_32184_25875124\FCB_TMP_snap_rkdnklfg\tc11_12.FCStd | explanation RuntimeError: tc-11-12 forced unhashable
+21 script_exec OK None True
+  SH FCB_TMP_snap_ count: 2 | tc-11-12-workdir/tmp: | FCB_TMP_session_32184_25875124 |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124: | FCB_TMP_snap_ltz_sul3 | FCB_TMP_snap_rkdnklfg |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124/FCB_TMP_snap_ltz_sul3: | tc11_12.FCStd |  | tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124/FCB_TMP_snap_rkdnklfg: | tc11_12.FCStd
+23 script_exec OK None 32184
+after H1 exit: tc-11-12-workdir/tmp: FCB_TMP_session_32184_25875124/  tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124: FCB_TMP_snap_ltz_sul3/ FCB_TMP_snap_rkdnklfg/  tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124/FCB_TMP_snap_ltz_sul3: tc11_12.FCStd  tc-11-12-workdir/tmp/FCB_TMP_session_32184_25875124/FCB_TMP_snap_rkdnklfg: tc11_12.FCStd 
+0 of 1535072 pixels differ; bbox None

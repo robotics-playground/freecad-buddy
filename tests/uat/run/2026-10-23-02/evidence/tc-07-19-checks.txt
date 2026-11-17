@@ -1,0 +1,13 @@
+TREE FIRST LINE: OK: 1 objects, 1 shown.
+TREE FIRST LINE: OK: 1 objects, 1 shown.
+CHECK list: ["fcb-doc:z7LvlxLxgLxK1wAvHxf5fw", "fcb-doc:23T_cSwZoN3ox6-WFR5Wzg", "fcb-doc:z7LvlxLxgLxK1wAvHxf5fw", "fcb-doc:23T_cSwZoN3ox6-WFR5Wzg"]
+CHECK crossed: ["INVALID_INPUT", "export_id fcb-export:pQiHSWf-O1oksOYz3xrMhw does not belong to document fcb-doc:23T_cSwZoN3ox6-WFR5Wzg", true, false, false, {}]
+CHECK correct pairing: "OK"
+CHECK symmetric: ["INVALID_INPUT", "export_id fcb-export:bDbfjECg8bHQJc1YHWfs-w does not belong to document fcb-doc:z7LvlxLxgLxK1wAvHxf5fw", true]
+CHECK recompute: ["OK", "OK"]
+CHECK reimport volume: ["OK", {"value": 6000.0, "unit": "mm^3"}]
+H_RT fcb-doc:oH9dweKzrd6KbQLsgmHI8Q
+HA fcb-doc:z7LvlxLxgLxK1wAvHxf5fw HB fcb-doc:23T_cSwZoN3ox6-WFR5Wzg
+Given: both goldens present; box-10-20-30 open as HA (OBJ_A=Box), sphere-r10 open as HB; document_list lists both.
+Crossed envelope structured_content {} (no checks, no subject). Re-import of tc-07-19-own.step: 6000.0 (box, not 4188.79).
+Visual: view_fit_viewport(H_RT) OK. tc-07-19-after.png: tab tc-07-19_rt, one rectangular body with flat faces and sharp straight edges; not round.

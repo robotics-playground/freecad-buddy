@@ -1,0 +1,10 @@
+2026-10-23T22:56:03.578+07:00 CHECK tools/list count / script_exec listed: [46, true]
+2026-10-23T22:56:04.236+07:00 CHECK H1 process tree: [[33700, 11736, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [21508, 33700, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [23344, 15888, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [32780, 23344, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [20636, 32780, "nv\\Scripts\\python.exe -m freecad_buddy.hosts.headless.worker"], [25472, 20636, "D 1.1\\bin\\python.exe\" -m freecad_buddy.hosts.headless.worker"], [17884, 15888, "ssId,ParentProcessId,CommandLine | ConvertTo-Json -Compress\""]]
+2026-10-23T22:56:04.236+07:00 CHECK worker pid: 25472
+2026-10-23T22:57:44.366+07:00 CHECK preview status / duration_s: ["OK", 100.13]
+2026-10-23T22:57:44.385+07:00 CHECK document_list status: "OK"
+2026-10-23T22:57:44.385+07:00 CHECK document_list entries: [["fcb-doc:YDQuHqmIaPt25jXfGjz8dA", "TC1005Slow", "TC1005Slow"]]
+2026-10-23T22:57:44.385+07:00 CHECK FCB_TMP_prev_ names in document_list: []
+2026-10-23T22:57:44.386+07:00 CHECK session temp folders for the worker pid: ["D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_25472_ace35783"]
+2026-10-23T22:57:44.386+07:00 CHECK FCB_TMP_prev_* entries in them: []
+2026-10-23T22:57:44.386+07:00 CHECK all entries in them: []

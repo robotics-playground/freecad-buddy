@@ -1,0 +1,9 @@
+TC-02-07 checks (R1, pid 11420)
+Given doc tc-02-07-plate (fcb-doc:BgQuRtRrBYBTRaCzb-LrZA) Body > Sketch + Pad 60x40x10; depth 3 names Body, Pad, Sketch -> PASS
+PASS per-object keys exactly object, in_list, out_list: {"object":"Pad","in_list":["Body"],"out_list":["Sketch"]}
+PASS names are Names (Body, Sketch as on the tree lines "[BODY] Body", "[SKETCH] Sketch")
+PASS out_list contains Sketch (Sketcher::SketchObject); in_list contains Body (PartDesign::Body); no duplicates
+PASS whole-document keys exactly edges, total_edges, returned_edges, truncated; 11 edges each exactly {from,to}; total 11 = returned 11; truncated false
+PASS views agree: edges contains {from: Pad, to: Sketch}
+PASS fit: view_fit_viewport OK fitted fits 0.95
+PASS visual tc-02-07-after.png: grey 60x40x10 plate iso, whole, no edge cut by the view border; tree tc-02-07-plate > Body > (Origin, Pad > Sketch) after expanding Body and Pad with background pixel clicks on their arrows; no dialog. Display live (capture shows the expansions). Tasks panel overlays part of the back top edge (as TC-02-05).

@@ -1,0 +1,44 @@
+H1 interpreter for UAT re-run 2026-10-24-01 (phase R0, built 2026-10-24 14:27 +07)
+
+FCB_ENV = C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\rerun\fcbenv\fcb
+
+  bash:        export FCB_ENV="C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\rerun\fcbenv\fcb"
+  PowerShell:  $env:FCB_ENV = "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\rerun\fcbenv\fcb"
+  Also set FREECAD_USER_HOME to a temp dir before any sweep or H1 call (the H1 worker imports
+  FreeCAD in-process; without it FreeCAD reads the developer profile).
+
+How it was built (machine has no micromamba fcb env):
+
+  rerun/fcbenv               uv 0.9.8: uv venv --system-site-packages --python "C:\Program Files\FreeCAD 1.1\bin\python.exe"
+                             (CPython 3.11.14, include-system-site-packages = true)
+                             uv pip install --no-cache <repo working tree> pyyaml
+                             -> freecad-buddy 0.1.1 NON-editable (direct_url.json dir_info {} - no "editable")
+                             uv pip uninstall numpy  (pip numpy 2.4.6 removed; FreeCAD numpy 1.26.4 is used,
+                             because pip numpy deadlocks the stdio front - see fix/w3/h1-env-shim.txt)
+  rerun/fcbenv/fcb/python.exe  copy of fcbenv/Scripts/python.exe (venv launcher; sys.prefix = rerun\fcbenv)
+  rerun/fcbenv/fcb/Library/*   junctions to C:\Program Files\FreeCAD 1.1\{bin,data,doc,Ext,lib,Mod}
+
+Snapshot identity:
+  commit 3025e7c + uncommitted diff; `git diff | sha256sum` = 9b30351f8ba8ab8fc5c0f764daa1d8ac58143c3c8996b39a7b6dd02155b00e9c
+  = tracked-diff-sha256 in tests/uat/run/2026-10-24-01/evidence/baseline-untracked.txt (match)
+  `diff -r --exclude=__pycache__ src/freecad_buddy fcbenv/Lib/site-packages/freecad_buddy` -> no difference
+  `uv pip show freecad-buddy`: Name freecad-buddy, Version 0.1.1, Location rerun\fcbenv\Lib\site-packages,
+  Requires lib3mf, mcp, trimesh
+
+Versions in the env (after `import FreeCAD`, FREECAD_USER_HOME = temp):
+  FreeCAD 1.1.4; Python 3.11.14; mcp 1.30.0; pyyaml 6.0.3; trimesh 4.12.2; lib3mf 2.5.0
+  numpy 1.26.4 from C:\Program Files\FreeCAD 1.1\bin\Lib\site-packages\numpy
+  pivy imports: C:\Program Files\FreeCAD 1.1\bin\Lib\site-packages\pivy\__init__.py (pivy.coin ok)
+  freecad_buddy resolves to rerun\fcbenv\Lib\site-packages\freecad_buddy (not an addon copy)
+
+Precondition (APPENDIX-B Step 3, bash, FCB=<env>\fcb):
+  PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" \
+    "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"
+  -> H1 ok 1.1.4   (exit 0)
+
+Sweeps (FCB_ENV as above, FREECAD_USER_HOME = rerun\fchome-sweep, PYTHONUTF8=1):
+  uv run python scripts/automation/run_mcp_e2e.py         14:28:09-14:28:16  exit 0  "29/29 checks passed"
+     query_capabilities freecad=1.1.4 render=offscreen; tools/list 46 tools
+  uv run python scripts/automation/run_mcp_edge_cases.py  14:28:21-14:28:24  exit 0  "14/14 edge checks passed"
+  Evidence: tests/uat/run/2026-10-24-01/evidence/r0-h1-e2e-stdout.txt, r0-h1-e2e_report.json,
+            r0-h1-e2e-server.stderr.log, r0-h1-edge-stdout.txt, r0-h1-edge_report.json, r0-h1-edge.stderr.log

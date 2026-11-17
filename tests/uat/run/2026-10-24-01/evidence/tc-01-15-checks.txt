@@ -1,0 +1,19 @@
+TC-01-15 checks (R1)
+Part 1, FreeCAD pid 35728 (launch tc-01-15, temp -u/-s profile, default posture)
+Given :8765 LISTENING pid 31568 (proxy); token read from rpc-35728.json (43 chars, not written to evidence) -> PASS
+Given box-10-20-30 open fcb-doc:cYW8g9jn0SYiu72HLKOhWQ; Show All; view_fit_viewport OK fitted; tc-01-15-before.png
+When curl -s -i http://127.0.0.1:8765/healthz -> tc-01-15-healthz.txt
+Then "HTTP/1.1 200 OK", content-type application/json -> PASS
+Then {"service":"freecad-buddy-mcp-proxy","freecad_pid":35728,...} pid equals recorded -> PASS
+Then session_id "da5931a5ae15e1e0" non-empty; grep -c token in response = 0; body has no path, no env value -> PASS
+Then (visual) tc-01-15-probed.png vs -before.png: same grey box, whole, same size and position, tree box-10-20-30 > Box, no dialog. Live check on probed: 3086 px differ in property tab -> PASS
+When document_close OK; File > Exit (18:26:11); :8765 free.
+When `uv run python -m http.server 8765 --bind 127.0.0.1` (cwd scratchpad/rerun/r1-httpd); netstat: LISTENING pid 28020 (tc-01-15-holder-netstat.txt). addon.log NOT moved aside (RULES: byte offset only).
+When FreeCAD launched (pid 34076, launch tc-01-15-held), addon.log read 16 s after ready (tc-01-15-held-addon-15s.log), again at end (tc-01-15-held-addon.log)
+Then ERROR count 1: "MCP proxy not started: port 8765 is still held by another program, or by an MCP proxy from an older freecad-buddy build after 10.0 s. ..." -> PASS
+Then no "spawned MCP proxy" line; :8765 LISTENING only pid 28020 -> PASS
+Then "freecad-buddy RPC listener started on 127.0.0.1:56985"; rpc-34076.json exists -> PASS
+When New Document via invoke_menu File > New Document; File popup closed with Escape.
+Then (visual) Fit All toolbar by element_token -> route "accessibility" (tc-01-15-fitall.txt) -> PASS
+Then (visual) tc-01-15-after.png: FreeCAD main window, menu bar, tree with "Unnamed", empty 3D view with navigation cube, title "Unnamed - FreeCAD 1.1.4" (no "Not Responding"), no port-conflict dialog, no addon-failure popup. Live check 3086 px -> PASS
+Cleanup: Stop-Process 28020; :8765 free; File > Exit (18:28:07). Watchdog before exit: mcp-proxy FAIL (holder answers 501, expected in this state), others ok.

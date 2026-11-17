@@ -1,0 +1,9 @@
+TC-12-05 (P10, pid 29744, display frozen) -- verdict BLOCKED (When step could not be completed)
+Given: document_create TC1205 + script_exec two Part::Box ObjectA, ObjectB (x=30); tree "v [BOX] ObjectA", "v [BOX] ObjectB".
+Pre volumes: A 1000.0, B 1000.0. view_fit_viewport OK. tc-12-05-before.png: black frame (display frozen).
+When: click TreeItem ObjectB by token -> selected False. invoke_menu View > Visibility > "Toggle Visibility" (and "Toggle visibility")
+  -> refused menu_path_unavailable "menu path segment 2 was not found" (Std_ToggleVisibility menu text "Toggle &Visibility",
+  CommandView.cpp:907; in V&isibility submenu, Workbench.cpp:731). Deviation tried: tree context menu (p2_gui ctxmenu) -> "no context
+  menu item 'Toggle Visibility'" (right_click route global_input, mode unknown, display frozen).
+Post-toggle tree unchanged ("v" for both); no toggle happened, so the post-toggle Thens could not be executed.
+All visual Thens: BLOCKED (display frozen). Cleanup: document_close.

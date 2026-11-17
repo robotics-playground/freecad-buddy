@@ -1,0 +1,10 @@
+proxy pid 6320 (LISTENING row of tc-12-14-pre-netstat.txt); FreeCAD pid 29620
+
+
+ProcessId       : 6320
+ParentProcessId : 33544
+CommandLine     : "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m 
+                  freecad_buddy.hosts.main serve --mode rpc --transport http
+
+
+

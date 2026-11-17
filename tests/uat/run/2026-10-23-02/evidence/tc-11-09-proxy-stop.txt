@@ -1,0 +1,10 @@
+stopping proxy pid 23324 (parent 28380); launch command: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+:8765 rows:
+
+listener port 49934 rows:
+  TCP    127.0.0.1[7m:49934 [0m       0.0.0.0:0              LISTENING       35504
+  TCP    127.0.0.1[7m:49934 [0m       127.0.0.1:54678        FIN_WAIT_2      35504
+  TCP    127.0.0.1[7m:49934 [0m       127.0.0.1:54679        FIN_WAIT_2      35504
+  TCP    127.0.0.1:54678        127.0.0.1[7m:49934 [0m       CLOSE_WAIT      27752
+  TCP    127.0.0.1:54679        127.0.0.1[7m:49934 [0m       CLOSE_WAIT      27752
+

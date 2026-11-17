@@ -1,0 +1,14 @@
+TC-10-06 checks (P8) - FreeCAD 11736 (launch tc-10-a); listener 127.0.0.1:49721
+Given GUI has a document open: box-10-20-30 fcb-doc:AYzt4U3G... (document_open OK); Show All; view_fit_viewport OK; tc-10-06-before.png read: one whole iso box, no dialog
+Given proxy stopped: Stop-Process 29348 (the hand-started proxy of TC-10-04; launcher 31100 ended with it); netstat :49721 ESTABLISHED -> nothing -> PASS
+When A hello, document_open cylinder-r5-h20.FCStd -> handle fcb-doc:qLEdcgeN...; A closes; B hello; B query_object with A's handle; B document_list; B document_close with A's handle; B document_list (p8_rpc.py s06, tc-10-06-rpc.jsonl). My client also sent one query_tree_summary on B to name the object; its text did not parse, so the object name "Cylinder" was used.
+Then A's document_open handle non-empty "fcb-doc:qLEdcgeN1n0oLeVgQJLVzA" -> PASS
+Then B query_object status OK, name/label "Cylinder" -> PASS
+Then schema "fcb.result-envelope/1" -> PASS
+Then B document_list contains A's handle (with the GUI box) -> PASS
+Then B document_close OK; following document_list OK without A's handle (only fcb-doc:AYzt4U3G...) -> PASS
+Then (visual) Show All; mcp view_fit_viewport -> httpx.ConnectError (proxy stopped), so Fit All toolbar button by element_token (route accessibility) -> PASS
+Then (visual) tc-10-06-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal; tabs Start and box-10-20-30 only (the cylinder is closed); one whole iso box framed -> PASS
+Cleanup proxy restarted by hand with the operator-settings values (launcher 21064); /healthz freecad_pid 11736; query_capabilities OK; GUI document_close OK
+Verdict: PASS
+Human: pointer inside the window at 23:45:51 (1006,873) and 23:47:13 (1384,599), after the captures.

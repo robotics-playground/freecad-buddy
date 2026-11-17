@@ -1,0 +1,19 @@
+restarted: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http (launcher pid 21064) with FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-10-a-audit.jsonl FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir
+healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":11736,"session_id":"3d89a0d3f6b026e5"}
+proxy process 21064 parent 8520: "D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+proxy process 29312 parent 21064: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+:8765 rows:
+
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       29312
+  TCP    127.0.0.1:54400        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61905        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61906        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61907        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61908        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61909        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:61910        127.0.0.1:8765         TIME_WAIT       0
+listener port 49721 rows:
+  TCP    127.0.0.1:49721        0.0.0.0:0              LISTENING       11736
+  TCP    127.0.0.1:55367        127.0.0.1:49721        TIME_WAIT       0
+  TCP    127.0.0.1:62776        127.0.0.1:49721        TIME_WAIT       0
+

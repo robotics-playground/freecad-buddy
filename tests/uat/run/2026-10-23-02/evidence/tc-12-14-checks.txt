@@ -1,0 +1,14 @@
+TC-12-14 (P10, pid 29744 -> restart 29312; display frozen again since about 10:04) -- verdict FAIL
+Given: freecad 29744, :8765 LISTENING (proxy 30520), document_list 0, rpc-29744.json present (tc-12-14-pre-state.txt).
+Before capture tc-12-14-before.png: stale frozen frame (still paints two closed documents) -> not usable.
+When quit: invoke_menu File > Exit -> refused "menu path segment 1 was not found"; fallback hotkey alt+f4 (background, route
+  synthetic_events) -> FreeCAD stayed up 40 s. Both routes the When names failed -> FAIL (harness: invoke_menu leaf resolution broke
+  in this instance after about 09:45; File > Exit worked in the next instance at 10:39). Deviation: title-bar Close button by
+  element_token -> FreeCAD exited at about 10:38:0x.
+Then exited: Get-Process freecad empty PASS. Then :8765 no LISTENING PASS. Then proxy 30520 gone PASS. Then rpc-29744.json deleted PASS.
+Then client call: query_capabilities -> httpx.ConnectError "All connection attempts failed", returned at once PASS.
+Then addon log clean shutdown: tc-12-c-addon.log ends with "rpc_listener: client reset the connection ([WinError 10054] ...)"; no
+  teardown line, no unhandled exception. The Then asks for "the teardown" -> not met. bootstrap.py:510-531 stop_bridge logs nothing
+  at INFO, so cause: test-case defect (or a missing product log line; owner to decide).
+Then restart: pid 29312, rpc-29312.json written, :8765 LISTENING 24572, /healthz freecad_pid 29312, query_capabilities OK PASS.
+Visual: list_windows after quit -> no window PASS; tc-12-14-after.png: black left strip and white client (frozen display) -> BLOCKED.

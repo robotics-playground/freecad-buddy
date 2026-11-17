@@ -1,0 +1,7 @@
+2026-10-24 19:27:22,434 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-24 19:27:22,687 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-24-01\evidence\tc-08-18-true-audit.jsonl
+2026-10-24 19:27:22,687 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 19:27:22,687 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-24 19:27:22,758 INFO freecad_buddy.dispatch: INVALID_INPUT: this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+2026-10-24 19:27:22,758 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-10-24 19:27:22,758 INFO freecad_buddy.rpc_listener: client closed the connection

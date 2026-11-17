@@ -1,0 +1,1 @@
+"D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http

@@ -1,0 +1,24 @@
+## sweep check order
+['tools/list', 'query_capabilities', 'query_mass_properties:box-10-20-30', 'verify_shape:box-10-20-30', 'verify_export_step:box-10-20-30', 'verify_export_stl:box-10-20-30', 'query_screenshot:box-10-20-30', 'query_mass_properties:cylinder-r5-h20', 'verify_shape:cylinder-r5-h20', 'verify_export_step:cylinder-r5-h20', 'verify_export_stl:cylinder-r5-h20', 'query_screenshot:cylinder-r5-h20', 'query_mass_properties:sphere-r10', 'verify_shape:sphere-r10', 'verify_export_step:sphere-r10', 'verify_export_stl:sphere-r10', 'query_screenshot:sphere-r10', 'query_mass_properties:box40-hole-r5', 'verify_shape:box40-hole-r5', 'verify_export_step:box40-hole-r5', 'verify_export_stl:box40-hole-r5', 'query_screenshot:box40-hole-r5', 'query_mass_properties:two-box-compound', 'verify_shape:two-box-compound', 'verify_export_step:two-box-compound', 'verify_export_stl:two-box-compound', 'query_screenshot:two-box-compound', 'document_save', 'document_open(reopen)']
+## all_passed
+True
+## marshal count
+0
+## reentrant/deadlock
+grep exit 1
+## rep.record order in run_mcp_e2e.py
+100:    def record(self, tool: str, ok: bool, detail: str = "", status: str = "") -> None:
+120:    rep.record("tools/list", len(names) >= 20, f"{len(names)} tools", "OK")
+125:    rep.record(
+136:            rep.record(f"open:{name}", False, "fixture missing", "MISSING")
+140:            rep.record(f"open:{name}", False, str(_payload(opened)), _status(opened))
+147:            rep.record(f"tree_summary:{name}", False, _text(tree), _status(tree))
+152:            rep.record(f"tree_summary:{name}", False, "no top-level line in the tree", "NO_ROOT")
+161:        rep.record(
+170:        rep.record(f"verify_shape:{name}", _status(vs) == "OK", "", _status(vs))
+182:            rep.record(f"verify_export_step:{name}", _status(ve) == "OK", "", _status(ve))
+197:            rep.record(
+213:        rep.record(
+234:        rep.record("document_save", _status(sv) == "OK", "", _status(sv))
+236:        rep.record("document_open(reopen)", _status(do) == "OK", "", _status(do))
+242:        rep.record("document_create", False, str(_payload(dc)), _status(dc))

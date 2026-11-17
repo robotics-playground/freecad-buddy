@@ -1,0 +1,19 @@
+CHECK statuses: ["OK", "OK"]
+CHECK verified: [false, false]
+CHECK export_ids: ["fcb-export:cUGHQGWtJGpg1dAw7Es3HQ", "fcb-export:pTVjXPEJ8mGlHWCd-GF1Gg", true, true, true]
+CHECK bytes vs stat 242: [6886, 6886]
+CHECK bytes vs stat 214: [6854, 6854]
+CHECK grep 242: [1, 0]
+CHECK grep 214: [1]
+CHECK FILE_SCHEMA lines: ["FILE_SCHEMA((", "FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));"]
+CHECK verify 242: ["OK", {"id": "export_step.schema", "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF", "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF", "tolerance": null, "passed": true, "detail": {"message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"}}]
+CHECK verify 214: ["OK", {"id": "export_step.schema", "measured": "AUTOMOTIVE_DESIGN", "expected": "AUTOMOTIVE_DESIGN", "tolerance": null, "passed": true, "detail": {"message": "FILE_SCHEMA AUTOMOTIVE_DESIGN vs AUTOMOTIVE_DESIGN for AP214"}}]
+CHECK AP203: [{"text": "Input validation error: 'AP203' is not one of ['AP214', 'AP242']", "is_error": true}, null]
+CHECK text 242: ["STEP export written -> D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-05-ap242.step.", "STEP export written -> D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-05-ap242.step."]
+CHECK text equal: true
+CHECK reimport volume: ["OK", {"value": 6000.0, "unit": "mm^3"}]
+H_RT fcb-doc:AoI1S20xQj3Y-GryBDbvgg
+CHECK reimport within 0.1% of 6000: [6000.0, true]
+Given: rm stale targets; document_open box-10-20-30 OK -> fcb-doc:LSp1fuSFgtm-..., OBJ=Box (tree "- [FEATURE] Box")
+Visual: view_fit_viewport(H_RT) OK fitted true. tc-07-05-after.png: tab tc-07-05_rt active, one closed grey box, tall edge longest, the two base edges short and about twice as long, ratio near 1:2:3, all visible faces present, no fragments. Tree tc-07-05_rt > Reimport.
+Cleanup deviation: STEP files kept in evidence/ as artefacts (not deleted).

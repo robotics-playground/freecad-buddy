@@ -1,0 +1,7 @@
+run a: count 45 script_exec False exec_enabled=False SECURITY_script_exec_lines=0
+run b: count 45 script_exec False exec_enabled=False SECURITY_script_exec_lines=0
+run c: count 45 script_exec False exec_enabled=False SECURITY_script_exec_lines=0
+run d: count 46 script_exec True exec_enabled=True SECURITY_script_exec_lines=1
+run e: count 45 script_exec False exec_enabled=False SECURITY_script_exec_lines=0
+run f: count 46 script_exec True exec_enabled=True SECURITY_script_exec_lines=1
+0 of 1535072 pixels differ; bbox None

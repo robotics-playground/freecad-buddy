@@ -1,0 +1,2 @@
+6226520	FreeCAD	{'height': 550, 'width': 1000, 'x': 201, 'y': 405}
+2035894	* tc-02-plate - FreeCAD 1.1.4	{'height': 1000, 'width': 1600, 'x': 0, 'y': 0}

@@ -1,0 +1,138 @@
+{
+ "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+ "app_name": "freecad.exe",
+ "element_count": 6,
+ "elements": [
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 0,
+   "element_index": 0,
+   "element_token": "s0000013e:0",
+   "enabled": true,
+   "frame": {
+    "h": 152,
+    "w": 246,
+    "x": 158,
+    "y": 108
+   },
+   "label": "FreeCAD",
+   "role": "Window"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 1,
+   "element_token": "s0000013e:1",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 243,
+    "x": 160,
+    "y": 110
+   },
+   "label": "buddy: feature_fillet Fillet",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 2,
+   "element_token": "s0000013e:2",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 243,
+    "x": 160,
+    "y": 140
+   },
+   "label": "buddy: feature_pad Pad",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 3,
+   "element_token": "s0000013e:3",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 243,
+    "x": 160,
+    "y": 170
+   },
+   "label": "buddy: add geometry to Sketch",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 4,
+   "element_token": "s0000013e:4",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 243,
+    "x": 160,
+    "y": 200
+   },
+   "label": "buddy: create sketch Sketch",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 5,
+   "element_token": "s0000013e:5",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 243,
+    "x": 160,
+    "y": 230
+   },
+   "label": "buddy: create body Body",
+   "parent_index": 0,
+   "role": "MenuItem"
+  }
+ ],
+ "elements_complete": false,
+ "pid": 29744,
+ "returned_element_count": 6,
+ "screenshot_file_path": "\\\\?\\D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-12-06-popup.png",
+ "screenshot_height": 151,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 244,
+ "snapshot_id": "s0000013e",
+ "total_element_count": 6,
+ "tree_markdown": "- [0] Window \"FreeCAD\" [id=Gui::GUISingleApplication.Gui::Dialog::UndoDialog actions=[invoke,set_value]]\n  - [1] MenuItem \"buddy: feature_fillet Fillet\" [id=Gui::GUISingleApplication.Gui::Dialog::UndoDialog.QAction actions=[invoke,set_value]]\n  - [2] MenuItem \"buddy: feature_pad Pad\" [id=Gui::GUISingleApplication.Gui::Dialog::UndoDialog.QAction actions=[invoke,set_value]]\n  - [3] MenuItem \"buddy: add geometry to Sketch\" [id=Gui::GUISingleApplication.Gui::Dialog::UndoDialog.QAction actions=[invoke,set_value]]\n  - [4] MenuItem \"buddy: create sketch Sketch\" [id=Gui::GUISingleApplication.Gui::Dialog::UndoDialog.QAction actions=[invoke,set_value]]\n  - [5] MenuItem \"buddy: create body Body\" [id=Gui::GUISingleApplication.Gui::Dialog::UndoDialog.QAction actions=[invoke,set_value]]\n",
+ "window_bounds": {
+  "height": 153,
+  "width": 246,
+  "x": 159,
+  "y": 109
+ },
+ "window_id": 3477426,
+ "window_title": "FreeCAD"
+}

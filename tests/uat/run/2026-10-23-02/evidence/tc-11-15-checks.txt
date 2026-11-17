@@ -1,0 +1,18 @@
+## after batch 2 (one H1 session, tc-11-15-h1.jsonl)
+batch1 N=8 lines; after batch 2: 17 lines
+first N lines byte-identical to batch-1 copy: yes
+sha256 of first N lines: 61c88ae18c5e7ed1fafd87cfd1230f59a541ac949b02f35060c66bf6cd226ed8; batch1: 61c88ae18c5e7ed1fafd87cfd1230f59a541ac949b02f35060c66bf6cd226ed8
+## grep -n 'open(self._path, "a"' src/freecad_buddy/adapters/audit_log.py
+48:            with open(self._path, "a", encoding="utf-8") as handle:
+## grep -rn "FREECAD_BUDDY_AUDIT_LOG\|audit.jsonl" src/freecad_buddy/usecases/ src/freecad_buddy/contracts/ | grep -v operator_settings.py
+src/freecad_buddy/usecases/documents.py:49:    Follows the ``FREECAD_BUDDY_AUDIT_LOG`` precedent: an operator overrides the location by
+Binary file src/freecad_buddy/usecases/__pycache__/documents.cpython-311.pyc matches
+Binary file src/freecad_buddy/usecases/__pycache__/documents.cpython-312.pyc matches
+Binary file src/freecad_buddy/usecases/__pycache__/documents.cpython-314.pyc matches
+Binary file src/freecad_buddy/usecases/__pycache__/operator_settings.cpython-311.pyc matches
+Binary file src/freecad_buddy/usecases/__pycache__/operator_settings.cpython-312.pyc matches
+## grep -rniE "rotate|truncate|\"w\"|'w'" src/freecad_buddy/adapters/audit_log.py
+9:this sink never truncates, rotates, or reads it.
+## concurrent
+concurrent run: lines before 17, after 51; lines that do not parse as JSON: 0; file ends with newline: True
+6186 of 1535072 pixels differ; bbox (1, 954, 465, 972)

@@ -1,0 +1,3 @@
+    | httpx.ConnectError: All connection attempts failed
+    +------------------------------------
+exit=0

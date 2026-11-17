@@ -1,0 +1,27 @@
+TC-04-10 checks (launch tc-04-a pid 29440; doc ChamferPlate fcb-doc:oW-3Vx6VDtlq5wgv10KqVw; tc-04-10-mcp.jsonl)
+Given: PlatePad volume 12000.0. ChamferType enum (getEnumerationsOfProperty on EqualChamfer, and query_object
+  ChamferType "Equal distance"): ['Equal distance', 'Two distances', 'Distance and Angle']. Topology oracle: PlatePad Edge1
+  = vertical 5 mm edge at (0,0); EqualChamfer Edge3 = vertical edge at (60,0); TwoSizeChamfer Edge17 = vertical edge at
+  (60,40), Edge5 = 2.236 mm bevel edge. All three equal the 1.1.4 names in the test case.
+PASS commit: EqualChamfer, TwoSizeChamfer, AngleChamfer each status OK, rolled_back false.
+PASS equal wedge: EqualChamfer volume 11994.38 (expected 11994.4).
+PASS one face each: face_count PlatePad 6 -> EqualChamfer 7 -> TwoSizeChamfer 8 -> AngleChamfer 9.
+PASS live enum: chamfer_type "Bevel" -> INVALID_INPUT "chamfer_type 'Bevel' is not one of ['Equal distance', 'Two distances', 'Distance and Angle']".
+PASS angle bound: angle 200 deg -> INVALID_INPUT "angle must be in (0.0, 180.0) degrees, got 200.0".
+PASS zero size: size 0 -> INVALID_INPUT "size must be positive, got 0.0".
+PASS valid: verify_shape AngleChamfer OK, solid_count 1.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-10-after.png (fit, isometric view): one whole plate, no dialog; flat strips at the front (60,0) and right
+  (60,40) vertical corners, and a cut corner at the left (0,0) vertical corner. In isometric view the (0,0) bevel is seen
+  edge-on (its normal (-1,-1,0) is perpendicular to the view direction), so camera-only views were added
+  (p0_cam.py / p3_cam.py, scene unchanged):
+  tc-04-10-zoom-two.png: (60,0) corner, one wide flat planar face between the front and right faces, straight edges.
+  tc-04-10-zoom-angle.png: (60,40) corner, one narrow flat planar face, straight edges.
+  tc-04-10-zoom-equal2.png (view direction (1,1,-1)): (0,0) corner, one flat planar parallelogram face, straight edges.
+  tc-04-10-top.png (top view, 14 px/mm): three corners cut by straight diagonal lines, no arcs; legs: (0,0) about 20 x 20 px
+  (1.5 x 1.5 mm, symmetric), (60,0) about 28 px along X x 14 px along Y (2 x 1 mm), (60,40) about 15 px along X x 26 px
+  along Y (asymmetric, about 1.15 x 2 mm); corner (0,40) sharp. The three bevels differ in width and shape. Flat bevels, not rounds.
+Observation: thin lines meet at each original corner point outside the bevels (white triangles in the top view).
+  script_exec visibility oracle: PlateProfile (Sketcher::SketchObject) Visibility True after feature_pad; PlatePad,
+  EqualChamfer, TwoSizeChamfer False, AngleChamfer True. The consumed profile sketch stays shown. Reported as a finding.
+Cleanup: document_close.

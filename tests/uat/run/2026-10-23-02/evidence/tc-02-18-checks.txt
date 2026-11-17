@@ -1,0 +1,13 @@
+TC-02-18 checks (cylinder-r5-h20 opened as fcb-doc:4qWZ49NapOoGRqgOo4Sinw; Given and hashes in tc-02-18-given.txt)
+Given: Windows has no chmod 444; the copy was made read-only with the file IsReadOnly attribute (Set-ItemProperty IsReadOnly $true).
+PASS read-only save: INVALID_INPUT "save target is not writable: .../tc-02-18-readonly.FCStd" (closed set, not OK).
+PASS read-only file byte-identical: sha256 94969AC4...3136 before and after.
+PASS missing dir: INVALID_INPUT "save folder does not exist: ...\tc-02-18-no-such-dir"; folder not created.
+PASS directory as path: INVALID_INPUT "save path is a directory, not a file: .../evidence"; evidence still a directory.
+PASS golden untouched: cylinder-r5-h20.FCStd sha256 0CE46355...8617 before and after.
+PASS handle usable: query_tree_summary "OK: 1 objects, 1 shown." "- [FEATURE] Cylinder".
+PASS writable save: OK, saved true, label tc-02-18-writable, file 3725 bytes.
+PASS nothing crashed: query_capabilities OK; addon.log bytes after offset 6286 (p2-L1-addon.log) hold no Traceback.
+PASS fit: Show All, view_fit_viewport OK.
+PASS visual tc-02-18-after.png: one whole grey cylinder, no edge clipped; tree tc-02-18-writable > Cylinder; title
+  "* tc-02-18-writable - FreeCAD 1.1.4"; no error dialog.

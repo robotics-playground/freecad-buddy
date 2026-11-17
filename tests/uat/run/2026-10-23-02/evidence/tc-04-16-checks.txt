@@ -1,0 +1,24 @@
+TC-04-16 checks (launch tc-04-a pid 29440; doc BigFillet fcb-doc:a3mo621Hy6571rlGdElpGw; tc-04-16-mcp.jsonl)
+Given: PlatePad volume 12000.0; oracle PlatePad Edge3 = 60 mm bottom edge (0,0,0)-(60,0,0), as in the test case.
+  <session tmp> = C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_29440_7e8e8e42,
+  listed in-process (script_exec): no FCB_TMP_snap_* entry. Before: view_fit_viewport OK, tc-04-16-before.png.
+PASS no commit: feature_fillet TooBigFillet Edge3 radius 20 -> status RECOMPUTE_ERROR.
+PASS rolled back: mutation.rolled_back true, rollback_proven "rolled_back_verified", no snapshot_path.
+PASS explained: post_verify.explanation "recompute left 1 object(s) invalid: TooBigFillet: BRep_API: command not done"
+  (names the feature and the engine status string).
+PASS no partial solid: query_tree_summary depth 3 lists PlatePad (tip) and PlateProfile only, no TooBigFillet.
+PASS plate unchanged: PlatePad volume 12000.0.
+TC-DEFECT fingerprint Then: fingerprint_before.digest 348a4644...fb6a != fingerprint_after.digest e912fbaf...e899, and
+  rollback_proven is "rolled_back_verified", not "rolled_back_via_snapshot". The literal Then is not met. The source
+  documents this case as a proven rollback: usecases/transaction.py:345-370 (_prove_rollback): "Digest equality or, failing it,
+  mass-property equality over the same object names proves rolled_back_verified: the recompute after an abort writes new
+  B-rep bytes for the shapes it rebuilds". fingerprint_after is that fresh record (:360-361). The Then omits the mass-property
+  route. Independent evidence that the state is restored: tree, volume 12000.0, verify_recompute OK, pixel-identical capture.
+PASS snapshot deleted: after the call the session folder again lists no FCB_TMP_snap_* entry.
+PASS recompute: verify_recompute OK, failing_objects [].
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-16-before.png and tc-04-16-after.png both show one whole 60 x 40 x 5 plate in the same isometric view,
+  sharp straight edges and square corners everywhere, the front bottom 60 mm edge (Edge3) a sharp line, no rounded edge,
+  no partial fillet face, no dialog. p0_diff.py: 193 of 1535072 pixels differ, all in the status-bar counter
+  (586 -> 587, cells x 1200-1240, y 920-1000) and 20 px at the Tasks panel corner (1560,400); the plate area is identical.
+Cleanup: document_close.

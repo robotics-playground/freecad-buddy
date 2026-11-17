@@ -1,0 +1,22 @@
+## Given listing
+keep-a.txt
+keep-b.txt
+## snapshot helper on keep-a.txt
+exit=0
+keep-b.txt
+## preview helper on keep-b.txt
+exit=0
+## listing
+total 2773
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:13 ./
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:13 ../
+-rw-r--r-- 1 thuan 197609 2 Oct 24 00:13 keep-b.txt
+## reserved-prefix directory
+total 2774
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:13 ./
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:13 ../
+-rw-r--r-- 1 thuan 197609 2 Oct 24 00:13 Doc.FCStd
+-rw-r--r-- 1 thuan 197609 2 Oct 24 00:13 Doc.FCStd.FCBak
+exit=0
+ls: cannot access 'C:\Users\thuan\AppData\Local\Temp/FCB_TMP_snap_tc1113': No such file or directory
+0 of 1535072 pixels differ; bbox None

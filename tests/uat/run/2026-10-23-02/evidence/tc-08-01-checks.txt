@@ -1,0 +1,18 @@
+TC-08-01 (launch P5 tc-08-a, pid 30488, FREECAD_BUDDY_AUTO_APPROVE=0; addon.log has no 'mutation auto-approve ENABLED' line)
+Given: doc tc-08-01; Body + 20x20 Sketch on XY via preview+confirm; verify_sketch OK, subject.fully_constrained true, dof 0.
+       view_fit_viewport OK; tc-08-01-before.png.
+When: preview_dry_run feature_pad Pad 30 mm.
+FAIL  envelope: status OK, detail null, but diff.schema "fcb.geometry-diff/2", not "fcb.geometry-diff/1"
+      (TC-08 file:63). Code: src/freecad_buddy/contracts/diff.py:77 schema: Literal["fcb.geometry-diff/2"]. Cause: test-case defect.
+PASS  volume before 0.0 after 12000.0 delta 12000.0 units mm^3.
+PASS  units: area mm^2, bbox mm, com mm.
+PASS  counts: solids 0 -> 1 delta 1; faces delta 6.
+PASS  names: touched ['Body','Pad'] contains Pad; new ['Pad']; deleted [].
+PASS  validity: is_valid true, recompute_clean true, status OK, explanation null.
+PASS  tnp_precheck: status CLEAN, element_map_version 15.70200.5.
+PASS  token: preview_id starts 'fcb-preview:'; expires_at 2026-10-23T14:37:03.627899+00:00 (ISO-8601 UTC).
+PASS  fit: view_fit_viewport OK.
+PASS  visual: before and after both show the flat 20 x 20 mm square sketch (rhombus outline in iso), no extruded solid; identical by eye;
+      p0_diff: 0 pixels differ.
+Verdict: FAIL (one Then, test-case defect).
+NOTE: doc fcb-doc:26A0... created by mistake under tag tc-08-01 after TC-08-01 finished, closed unused

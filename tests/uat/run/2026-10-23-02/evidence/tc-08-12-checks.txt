@@ -1,0 +1,20 @@
+TC-08-12 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0)
+Given: doc tc-08-12, Body + 20x20 Sketch; view_fit_viewport OK; tc-08-12-before.png (21:25 local).
+When: preview feature_body_create Probe (call time 14:25:05.260 UTC); apply with the token (OK); same token 1 s later; then, after
+      the deadline (14:40:27 UTC), the same token again. The token was kept in the session scratchpad (not in the run folder) and deleted after use.
+      While waiting, TC-08-05/06/17/18/19/21 ran in their own documents; tc-08-12 stayed open in the tree.
+PASS  TTL: expires_at 14:40:05.368675 UTC minus call time = 900.108 s.
+PASS  expired: INVALID_INPUT "confirm.preview_id has expired; re-run preview_dry_run".
+PASS  expiry wins over spent: the post-deadline message is the expiry one, although the token was spent.
+PASS  both checks live: 1 s after the apply the same token -> "confirm.preview_id has already authorized a mutation; re-run preview_dry_run".
+PASS  fresh token works: preview + apply feature_body_create Probe3 -> OK.
+PASS  expired call mutated nothing: tree depth 2 read before the Probe3 apply lists exactly one 'Probe' body.
+PASS  fit: view_fit_viewport OK before the post-deadline call.
+FAIL  visual: tc-08-12-after.png (captured right after the post-deadline call): tree Body + one Probe (legitimate), same flat square
+      sketch, no duplicated body, no dialog. But the images are not identical apart from Probe: p0_diff 2,495 px, bbox (17,270)-(1537,969):
+      status-bar notification badge '0' -> '2', and the Tasks panel title bar shows one more button. The two notifications
+      (tc-08-12-notifications.png) are 'Box: Length of box too small' (TC-08-21's planted broken Box) and an AttributeError traceback from a
+      failed script_exec of mine in TC-08-21 ('App.Document' object has no attribute 'getAvailableUndoNames'). Neither came from the
+      expired call. Cause: harness limit (execution order: other scenarios ran in the same GUI during the 900 s wait).
+Observation: a failing script_exec posts its full Python traceback as an error in the human's GUI notification area.
+Verdict: FAIL (visual Then; cause: the run's execution order, not the product).

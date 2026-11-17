@@ -1,0 +1,12 @@
+TC-12-02 (P10, FreeCAD pid 30140) -- verdict PASS
+Given/When-1: one document_list call returned documents [] (it serves as the Given verify and the When-1 record).
+When: invoke_menu File > New Document -> route accessibility.
+Then GUI created: verify_state label_contains "Unnamed" -> satisfied (tc-12-02-verify.txt).
+Then one document: the document_list after the create returned 1 entry; the first returned 0.
+Then handle: doc "fcb-doc:8fb07OuZ...", matches ^fcb-doc:.
+Then handle works: query_tree_summary -> "OK: 0 objects, 0 shown."
+Then label: entry label "Unnamed"; title " Unnamed - FreeCAD 1.1.4" (tc-12-02-title.txt); tree row "Unnamed".
+Then transient: false.
+Then fit: view_fit_viewport -> SPEC_FAILED view_fit.nothing_to_frame (empty document); GUI Fit All toolbar button by element_token.
+Then visual (tc-12-02-after.png, read): title "Unnamed - FreeCAD 1.1.4", tree has one root "Unnamed" with no child, 3D view empty with NaviCube, Tasks "Start Part / New Body".
+Cleanup: document_close OK; document_list [].

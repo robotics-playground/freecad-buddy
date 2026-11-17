@@ -1,0 +1,16 @@
+2026-10-23T23:25:27.992+07:00 CHECK 10 F handle / tree: ["fcb-doc:tyOEeF3HJwmMQN-fupPB4Q", "OK: 1 objects, 1 shown.\nv [FEATURE] Box"]
+2026-10-23T23:26:43.927+07:00 CHECK 10 preview #1 structured keys: ["diff", "expires_at", "preview_id"]
+2026-10-23T23:26:43.927+07:00 CHECK 10 fingerprint_before #1: null
+2026-10-23T23:27:13.944+07:00 CHECK 10 overrun envelope: {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+2026-10-23T23:27:27.346+07:00 CHECK worker CPU poll: [43.2, "114.40625"]
+2026-10-23T23:27:27.346+07:00 CHECK 10 worker idle: [true, 43.4]
+2026-10-23T23:27:27.362+07:00 CHECK 10 clearing read text: "OK: 2 objects, 2 shown.\nv [FEATURE] Box\nv [BOX] LateBox"
+2026-10-23T23:27:27.362+07:00 CHECK 10 LateBox occurrences in the tree: 1
+2026-10-23T23:27:27.475+07:00 CHECK 10 fingerprint_before #2: null
+2026-10-23T23:27:27.476+07:00 CHECK 10 digests differ: false
+2026-10-23T23:27:27.503+07:00 CHECK 10 save status: "OK"
+2026-10-23T23:27:27.515+07:00 CHECK 10 script_exec audit lines on F before the manual retry: [["before", "90c1ce0dbfcf4790", null], ["after", "90c1ce0dbfcf4790", "TIMEOUT"]]
+2026-10-23T23:27:57.525+07:00 CHECK 10 manual retry envelope: {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+2026-10-23T23:28:10.946+07:00 CHECK worker CPU poll: [43.2, "151.65625"]
+2026-10-23T23:28:10.946+07:00 CHECK 10 worker idle after retry: [true, 43.4]
+2026-10-23T23:28:10.963+07:00 CHECK 10 tree after retry: "OK: 3 objects, 3 shown.\nv [FEATURE] Box\nv [BOX] LateBox\nv [BOX] LateBox001"

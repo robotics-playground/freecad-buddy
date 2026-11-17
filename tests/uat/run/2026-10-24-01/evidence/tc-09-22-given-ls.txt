@@ -1,0 +1,2 @@
+../../../../../scripts/automation/run_mcp_e2e.py
+../../../../../scripts/automation/run_mcp_edge_cases.py

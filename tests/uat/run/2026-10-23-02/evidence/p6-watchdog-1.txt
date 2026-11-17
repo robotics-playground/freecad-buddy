@@ -1,0 +1,5 @@
+FAIL freecad-window: FreeCAD pid 6744 has no enumerable window (process gone?)
+ok   cua-session: cua session 'uat' REVIVED (was dead)
+ok   temp-hygiene: temp: 0 snapshot dir(s) total, 0 render file(s)
+snap dirs: []
+workdir/tmp FCB_TMP_snap_* newer than 21:46:23: 0 (workdir tmp empty)

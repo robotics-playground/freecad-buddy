@@ -1,0 +1,9 @@
+When as written (token redacted):
+127.0.0.1 64336 <token>
+exit=0
+file glob[0] picks:
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy\rpc-10224.json
+Then 1 as written against the When's host/port (rpc-10224.json, 127.0.0.1:64336):
+raised ConnectionRefusedError(10061, 'No connection could be made because the target machine actively refused it', None, 10061, None) 2.054
+pid 10224 running:
+False

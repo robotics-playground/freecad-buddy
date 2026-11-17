@@ -1,0 +1,22 @@
+TC-11-14 (R2; H1 via r2_tc11.py 14 -> r2_h1sh.py, FCB_ENV rerun env, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc1114,
+          FREECAD_BUDDY_WORKDIR=evidence/tc-11-14-workdir, audit evidence/tc-11-14-h1-audit.jsonl; GUI launch r2-L2 pid 29004)
+User document folder: evidence/tc-11-14-userdocs with box-copy.FCStd (copy of golden box-10-20-30, 19:56:57.8638558).
+Given: GUI document_open box-10-20-30, Show All, fit OK fits 0.95, tc-11-14-before.png.
+When: listing1; H1 document_open box-copy.FCStd + query_capabilities, query_tree_summary, query_object, query_mass_properties,
+      query_dependencies, query_sketch_info, query_placement, query_screenshot, verify_shape, verify_sketch, verify_recompute,
+      verify_export_step/stl/3mf (not-issued id), preview_dry_run, document_close; listing2; document_open, export_stl path
+      userdocs/tc11-export.stl, document_save; listing3 (tc-11-14-listing{1,2,3}.txt, tc-11-14-h1.jsonl).
+PASS listing2 names = listing1 names (box-copy.FCStd only).
+PASS listing2 mtimes = listing1 (box-copy.FCStd 19:56:57.8638558 in both).
+PASS no FCB_TMP_prev_ in listing2.
+PASS no FCB_TMP_snap_ in listing2.
+PASS listing3 adds tc11-export.stl and box-copy.20261024-195657.FCBak only.
+PASS document_save: of the listing2 files only box-copy.FCStd mtime changed (19:57:33.43); the .FCBak mtime 19:56:57.8638558 equals the
+     listing1 time of the .FCStd (renamed previous file).
+PASS no freecad-buddy-audit.jsonl in the folder.
+PASS fit OK fits 0.95.
+PASS visual: before and after the same single whole box, framed; no new object, no dialog; r2_diff 0 px. Live check 3086 px.
+Host note: the folder legs ran on H1 only, as in 2026-10-23-02; an H2 leg would open box-copy in the GUI and change the window the
+     visual Then compares, so it was not run.
+Kept as evidence (cleanup rm not run): tc-11-14-userdocs/tc11-export.stl and the .FCBak.
+Verdict: PASS

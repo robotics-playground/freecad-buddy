@@ -1,0 +1,15 @@
+{"client": "A", "connect": "connected", "elapsed": 0.015, "record": "rpc-11736.json", "port": 49721}
+{"client": "A", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.015}
+{"client": "A", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.015, "since_last_send_s": 0.0}
+CHECK A hello: {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}
+{"client": "A", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 2, \"method\": \"document_list\", \"params\": {}}", "bytes": 68, "newline": false, "elapsed": 0.015}
+{"client": "A", "closed_by_client": true, "elapsed": 0.015}
+{"client": "B", "connect": "connected", "elapsed": 0.0, "record": "rpc-11736.json", "port": 49721}
+CHECK B connect: "succeeded"
+{"client": "B", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.0}
+{"client": "B", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+CHECK B hello: {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}
+{"client": "B", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 2, \"method\": \"document_list\", \"params\": {}}", "bytes": 69, "newline": true, "elapsed": 0.0}
+{"client": "B", "recv": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:wRWiYwtv_WiuQemqwlIRSA", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30.", "display_decimals": 2}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+CHECK B document_list: {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:wRWiYwtv_WiuQemqwlIRSA", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30.", "display_decimals": 2}}
+{"client": "B", "closed_by_client": true, "elapsed": 0.0}

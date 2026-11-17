@@ -1,0 +1,13 @@
+TC-01-08 checks (P1) - FreeCAD 27956
+Given rpc-27956.json exists -> PASS
+Given document_open box OK (fcb-doc:hPL9ZVNDCL050Km5aZEQZw); view_fit_viewport OK; tc-01-08-before.png read (one whole box, no dialog)
+When raw socket frame(s) to the RPC listener -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+Every Then depends on that When -> NOT RUN
+--- superseded by the run below (lead approved the socket steps)
+FreeCAD 29952, proxy up. tc-01-08-before.png after Show All + view_fit_viewport OK.
+When first frame {"jsonrpc":"2.0","id":3,"method":"query_capabilities","params":{}} -> frame1 {"jsonrpc": "2.0", "id": 3, "error": {"code": -32002, "message": "handshake required"}}, frame2 ""
+When first frame "not json" -> {"jsonrpc": "2.0", "id": null, "error": {"code": -32002, "message": "handshake required"}}, then ""   (tc-01-08-rpc.jsonl)
+Then -32002 / "handshake required", id 3 -> PASS; socket closed -> PASS; no result / structured_content -> PASS
+Then addon.log "first frame was not rpc_hello; closing" at 19:32:31,667 -> PASS (the malformed case logs "first frame was not valid JSON; closing" at 19:32:31,746)
+Then malformed JSON case -32002, id null -> PASS; query_capabilities OK -> PASS
+Then (visual) view_fit_viewport OK; before/after captures read: same whole box, no dialog -> PASS

@@ -1,0 +1,1 @@
+FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default)

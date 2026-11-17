@@ -1,0 +1,7 @@
+s000002de:0 Window 'FreeCAD' True
+s000002de:1 MenuItem 'buddy: feature_fillet Fillet' True
+s000002de:2 MenuItem 'buddy: feature_pad Pad' True
+s000002de:3 MenuItem 'buddy: add geometry to Sketch' True
+s000002de:4 MenuItem 'buddy: create sketch Sketch' True
+s000002de:5 MenuItem 'buddy: create body Body' True
+pid=11744 window_id=9046522

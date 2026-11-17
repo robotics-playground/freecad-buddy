@@ -1,0 +1,68 @@
+== [when depth3] query_tree_summary {"depth": 3}
+   isError=False content=['text'] {"text": "OK: 61 objects, 61 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, ratio 2.41, cached, served from cache; unverified key component(s): geometry\nv [BODY] Body\n|-- - [ORIGIN] Origin\n|   |-- v [AXIS] X_Axis \"X-axis\"\n|   |-- v [AXIS] Y_Axis \"Y-axis\"\n|   |-- v [AXIS] Z_Axis \"Z-axis\"\n|   |-- v [PLANE] XY_Plane \"XY-plane\"\n|   |-- v [PLANE] XZ_Plane \"XZ-plane\"\n|   |-- v [PLANE] YZ_Plane \"YZ-plane\"\n|   `-- v [POINT] Origin001\n|-- - [PAD] Pad000\n|   `-- v [SKETCH] Sketch000\n|-- - [PAD] Pad001\n|   `-- v [SKETCH] Sketch001\n|-- - [PAD] Pad002\n|   `-- v [SKETCH] Sketch002\n|-- - [PAD] Pad003\n|   `-- v [SKETCH] Sketch003\n|-- - [PAD] Pad004\n|   `-- v [SKETCH] Sketch004\n|-- - [PAD] Pad005\n|   `-- v [SKETCH] Sketch005\n|-- - [PAD] Pad006\n|   `-- v [SKETCH] Sketch006\n|-- - [PAD] Pad007\n|   `-- v [SKETCH] Sketch007\n|-- - [PAD] Pad008\n|   `-- v [SKETCH] Sketch008\n|-- - [PAD] Pad009\n|   `-- v [SKETCH] Sketch009\n|-- - [PAD] Pad010\n|   `-- v [SKETCH] Sketch010\n|-- - [PAD] Pad011\n|   `-- v [SKETCH] Sketch011\n|-- - [PAD] Pad012\n|   `-- v [SKETCH] Sketch012\n|-- - [PAD] Pad013\n|   `-- v [SKETCH] Sketch013\n|-- - [PAD] Pad014\n|   `-- v [SKETCH] Sketch014\n|-- - [PAD] Pad015\n|   `-- v [SKETCH] Sketch015\n|-- - [PAD] Pad016\n|   `-- v [SKETCH] Sketch016\n|-- - [PAD] Pad017\n|   `-- v [SKETCH] Sketch017\n|-- - [PAD] Pad018\n|   `-- v [SKETCH] Sketch018\n|-- - [PAD] Pad019\n|   `-- v [SKETCH] Sketch019\n|-- - [PAD] Pad020\n|   `-- v [SKETCH] Sketch020\n|-- - [PAD] Pad021\n|   `-- v [SKETCH] Sketch021\n|-- - [PAD] Pad022\n|   `-- v [SKETCH] Sketch022\n|-- - [PAD] Pad023\n|   `-- v [SKETCH] Sketch023\n|-- - [PAD] Pad024\n|   `-- v [SKETCH] Sketch024\n`-- v [PAD] Pad025 *tip\n    `-- v [SKETCH] Sketch025", "is_error": false}
+   elapsed_s=0.031
+OK: 61 objects, 61 shown.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+framing: does not fit, ratio 2.41, cached, served from cache; unverified key component(s): geometry
+v [BODY] Body
+|-- - [ORIGIN] Origin
+|   |-- v [AXIS] X_Axis "X-axis"
+|   |-- v [AXIS] Y_Axis "Y-axis"
+|   |-- v [AXIS] Z_Axis "Z-axis"
+|   |-- v [PLANE] XY_Plane "XY-plane"
+|   |-- v [PLANE] XZ_Plane "XZ-plane"
+|   |-- v [PLANE] YZ_Plane "YZ-plane"
+|   `-- v [POINT] Origin001
+|-- - [PAD] Pad000
+|   `-- v [SKETCH] Sketch000
+|-- - [PAD] Pad001
+|   `-- v [SKETCH] Sketch001
+|-- - [PAD] Pad002
+|   `-- v [SKETCH] Sketch002
+|-- - [PAD] Pad003
+|   `-- v [SKETCH] Sketch003
+|-- - [PAD] Pad004
+|   `-- v [SKETCH] Sketch004
+|-- - [PAD] Pad005
+|   `-- v [SKETCH] Sketch005
+|-- - [PAD] Pad006
+|   `-- v [SKETCH] Sketch006
+|-- - [PAD] Pad007
+|   `-- v [SKETCH] Sketch007
+|-- - [PAD] Pad008
+|   `-- v [SKETCH] Sketch008
+|-- - [PAD] Pad009
+|   `-- v [SKETCH] Sketch009
+|-- - [PAD] Pad010
+|   `-- v [SKETCH] Sketch010
+|-- - [PAD] Pad011
+|   `-- v [SKETCH] Sketch011
+|-- - [PAD] Pad012
+|   `-- v [SKETCH] Sketch012
+|-- - [PAD] Pad013
+|   `-- v [SKETCH] Sketch013
+|-- - [PAD] Pad014
+|   `-- v [SKETCH] Sketch014
+|-- - [PAD] Pad015
+|   `-- v [SKETCH] Sketch015
+|-- - [PAD] Pad016
+|   `-- v [SKETCH] Sketch016
+|-- - [PAD] Pad017
+|   `-- v [SKETCH] Sketch017
+|-- - [PAD] Pad018
+|   `-- v [SKETCH] Sketch018
+|-- - [PAD] Pad019
+|   `-- v [SKETCH] Sketch019
+|-- - [PAD] Pad020
+|   `-- v [SKETCH] Sketch020
+|-- - [PAD] Pad021
+|   `-- v [SKETCH] Sketch021
+|-- - [PAD] Pad022
+|   `-- v [SKETCH] Sketch022
+|-- - [PAD] Pad023
+|   `-- v [SKETCH] Sketch023
+|-- - [PAD] Pad024
+|   `-- v [SKETCH] Sketch024
+`-- v [PAD] Pad025 *tip
+    `-- v [SKETCH] Sketch025

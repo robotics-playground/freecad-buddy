@@ -1,0 +1,2 @@
+6034772	FreeCAD	{'height': 550, 'width': 1000, 'x': 226, 'y': 405}
+333648	* DatumPlate - FreeCAD 1.1.4	{'height': 1000, 'width': 1600, 'x': 0, 'y': 0}

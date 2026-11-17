@@ -1,0 +1,63 @@
+
+
+ProcessId   : 33608
+CommandLine : D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve 
+              --mode rpc --transport http
+
+ProcessId   : 2852
+CommandLine : "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m 
+              freecad_buddy.hosts.main serve --mode rpc --transport http
+
+ProcessId   : 8696
+CommandLine : "C:\Program Files\Git\bin\bash.exe" -c "source 
+              /c/Users/thuan/.claude/shell-snapshots/snapshot-bash-1792721350281-do36nq.sh 2>/dev/null || true && 
+              export TEMP='C:\Users\thuan\AppData\Local\Temp' TMP='C:\Users\thuan\AppData\Local\Temp' && shopt -u 
+              extglob 2>/dev/null || true && { \builtin unalias -- 'unsetenv'; \builtin unset -f -- 'unsetenv'; } 
+              >/dev/null 2>&1 || true && eval 'cd 
+              /d/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-24-01/evidence; uv run python 
+              ../../../../../scripts/automation/uat_watchdog.py --pid 29004 --window 5900842 > 
+              r2-watchdog-L2-start.txt 2>&1; cat r2-watchdog-L2-start.txt; powershell -NoProfile -c \"Get-CimInstance 
+              Win32_Process | Where-Object { \$_.CommandLine -like '\"'\"'*freecad_buddy.hosts.main*'\"'\"' } | Select 
+              ProcessId,CommandLine | Format-List | Out-String\" | tee tc-09-01-given-processes.txt; uv run python 
+              r2_open.py tc-09-01 
+              \"D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd\" | grep -oE 
+              \"DOC.*\"' < /dev/null && pwd -P >| /c/Users/thuan/AppData/Local/Temp/claude-000a-cwd"
+
+ProcessId   : 33804
+CommandLine : "C:\Program Files\Git\bin\..\usr\bin\bash.exe" -c "source 
+              /c/Users/thuan/.claude/shell-snapshots/snapshot-bash-1792721350281-do36nq.sh 2>/dev/null || true && 
+              export TEMP='C:\Users\thuan\AppData\Local\Temp' TMP='C:\Users\thuan\AppData\Local\Temp' && shopt -u 
+              extglob 2>/dev/null || true && { \builtin unalias -- 'unsetenv'; \builtin unset -f -- 'unsetenv'; } 
+              >/dev/null 2>&1 || true && eval 'cd 
+              /d/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-24-01/evidence; uv run python 
+              ../../../../../scripts/automation/uat_watchdog.py --pid 29004 --window 5900842 > 
+              r2-watchdog-L2-start.txt 2>&1; cat r2-watchdog-L2-start.txt; powershell -NoProfile -c \"Get-CimInstance 
+              Win32_Process | Where-Object { \$_.CommandLine -like '\"'\"'*freecad_buddy.hosts.main*'\"'\"' } | Select 
+              ProcessId,CommandLine | Format-List | Out-String\" | tee tc-09-01-given-processes.txt; uv run python 
+              r2_open.py tc-09-01 
+              \"D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd\" | grep -oE 
+              \"DOC.*\"' < /dev/null && pwd -P >| /c/Users/thuan/AppData/Local/Temp/claude-000a-cwd"
+
+ProcessId   : 21436
+CommandLine : "C:\Program Files\Git\bin\..\usr\bin\bash.exe" -c "source 
+              /c/Users/thuan/.claude/shell-snapshots/snapshot-bash-1792721350281-do36nq.sh 2>/dev/null || true && 
+              export TEMP='C:\Users\thuan\AppData\Local\Temp' TMP='C:\Users\thuan\AppData\Local\Temp' && shopt -u 
+              extglob 2>/dev/null || true && { \builtin unalias -- 'unsetenv'; \builtin unset -f -- 'unsetenv'; } 
+              >/dev/null 2>&1 || true && eval 'cd 
+              /d/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-24-01/evidence; uv run python 
+              ../../../../../scripts/automation/uat_watchdog.py --pid 29004 --window 5900842 > 
+              r2-watchdog-L2-start.txt 2>&1; cat r2-watchdog-L2-start.txt; powershell -NoProfile -c \"Get-CimInstance 
+              Win32_Process | Where-Object { \$_.CommandLine -like '\"'\"'*freecad_buddy.hosts.main*'\"'\"' } | Select 
+              ProcessId,CommandLine | Format-List | Out-String\" | tee tc-09-01-given-processes.txt; uv run python 
+              r2_open.py tc-09-01 
+              \"D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd\" | grep -oE 
+              \"DOC.*\"' < /dev/null && pwd -P >| /c/Users/thuan/AppData/Local/Temp/claude-000a-cwd"
+
+ProcessId   : 19644
+CommandLine : C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -c "Get-CimInstance Win32_Process | 
+              Where-Object { $_.CommandLine -like '*freecad_buddy.hosts.main*' } | Select ProcessId,CommandLine | 
+              Format-List | Out-String"
+
+
+
+

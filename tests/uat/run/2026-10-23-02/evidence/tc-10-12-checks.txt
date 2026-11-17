@@ -1,0 +1,19 @@
+TC-10-12 checks (P8) - FreeCAD 16284 (launch tc-10-12, addon-spawned proxy 7052), killed; restarted FreeCAD 30808 (launch tc-10-12r)
+Given addon loaded; the lead's phase brief allows the kill this test case asks for (Stop-Process -Force)
+Given no unsaved user work: document_list -> [] before the golden open -> PASS (tc-10-12-given-unsaved.txt)
+Given GUI document_open box OK fcb-doc:1kgjq5zn...; Show All; view_fit_viewport OK; tc-10-12-before.png read: one whole iso box, no dialog
+Given watchdog on 16284 before the kill -> exit 0 (p8-watchdog-2.txt); mcp-proxy.log copied (tc-10-12-mcp-proxy-before-kill.log)
+When script_exec "time.sleep(25)" (inside its 30 s budget) through http://127.0.0.1:8765/mcp at 23:54:01.079; at 23:54:06.297 Stop-Process -Id 16284 -Force from the agent shell (same integrity level); the in-flight call read under a 180 s deadline (p8_kill.py, tc-10-12-kill.jsonl)
+Then a response arrived after 5.312 s, inside 180 s -> PASS
+Then status WORKER_CRASHED, detail.message "listener connection dropped", data {"rpc": "unreachable"} -> PASS
+Then the client process exited cleanly after reading it (exit 0) -> PASS
+Then :8765 at +0.34 s after the envelope: LISTENING 7052; at +1.12 s: no LISTENING row (within 5 s); tools/list at +1.12 s -> ConnectError "All connection attempts failed" (a connection error, no body) -> PASS
+Then mcp-proxy.log before the restart: grep -i "crash\|connection" -> "23:54:06,327 WARNING freecad_buddy.rpc_client: listener connection dropped during script_exec: [WinError 10054] ..."; grep -c "the MCP proxy exits and frees port 8765" -> 1 (23:54:06,294) -> PASS (tc-10-12-after-kill-checks.txt, tc-10-12-mcp-proxy-after-kill.log)
+Then rpc-16284.json still parses as JSON (keys contract_version, freecad_version, host, pid, port, schema, started, token) -> PASS
+Then after the restart (FreeCAD 30808; no Document Recovery dialog appeared, so no Cancel was needed) tools/list against :8765 -> 46 tools, script_exec listed -> PASS
+Then /healthz -> {"service":"freecad-buddy-mcp-proxy","freecad_pid":30808,...} = the restarted FreeCAD pid -> PASS
+Then (visual) golden box reopened fcb-doc:czpm2mct...; Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-10-12-after.png read: restarted window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no crash-recovery or restore modal (one top-level window, tc-10-12-after-windows.txt), the same box drawn whole and framed; 0 px differ from tc-10-12-before.png -> PASS
+Cleanup GUI document_close OK. Deviation: the Cleanup's "rm -f rpc-16284.json" was not done; the phase rules forbid deleting files outside the run folder. rpc-16284.json is left in %APPDATA%\FreeCAD\v1-1\freecad-buddy\.
+Verdict: PASS
+Note: mcp-proxy.log writes "the MCP proxy exits and frees port 8765" at 23:54:06,294, 33 ms before the in-flight envelope was logged (06,327); the port was still LISTENING 0.34 s after the envelope and free at 1.12 s.

@@ -1,0 +1,19 @@
+TC-08-02 (R2, launch r2-L1-tc08, pid 29140, AUTO_APPROVE=0)
+Given: tc-08-02 Body + 20x20 Sketch + Pad 30 (preview+confirm); query_mass_properties Pad volume 12000.0 mm^3; TempDoc check '[]';
+       view_fit_viewport OK fits 0.95; tc-08-02-before.png (+ status-bar crop tc-08-02-statusbar-before.png, x 1150-1600, y 945-980).
+When: query_mass_properties Pad + document_list; preview_dry_run feature_set_parameters Pad Length 80; re-read both.
+PASS preview reported diff.deltas.volume after 32000.0 (before 12000.0, delta 20000.0).
+PASS live volume 12000.0 re-read; whole structured mass record JSON-identical to the first read.
+PASS bbox and com equal.
+PASS document_list before [fcb-doc:0kTg...] = after [fcb-doc:0kTg... name tc_08_02]; no FCB_TMP_prev_ name.
+PASS TempDoc check '[]'.
+PASS envelope OK (no SPEC_FAILED 'preview changed the live document').
+PASS failing path: preview feature_fillet Edge1 radius 500 -> status OK, detail null, diff.validity RECOMPUTE_ERROR
+     "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"; TempDoc check after it '[]'. Returned 19:03:21.
+PASS fit: view_fit_viewport OK fits 0.95 (19:03:35).
+PASS visual (capture 19:03:3x, more than 5 s after the failing preview returned): before and after show the same 20 x 20 x 30 pad in iso,
+     height about 1.5 x width, same camera, no taller solid, tree tc-08-02 > Body, Tasks Start Part overlay in both.
+     Status-bar notification area blank in both (tc-08-02-statusbar-before.png / -after.png). r2_diff whole window: 0 differing pixels;
+     status-bar box: 0. The 2026-10-23-02 badge '1' (B-03) does not appear: W2b fix (preview.py notifications muted) holds.
+     Live check: tab click changed 3086 px.
+Verdict: PASS

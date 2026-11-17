@@ -1,0 +1,4 @@
+3737048	FreeCAD	{'height': 73, 'width': 1000, 'x': 991, 'y': 1236}
+3540670	FreeCAD	{'height': 183, 'width': 179, 'x': 749, 'y': 313}
+5769748	FreeCAD	{'height': 525, 'width': 223, 'x': 530, 'y': 129}
+1967756	* Unnamed - FreeCAD 1.1.4	{'height': 1289, 'width': 2252, 'x': 154, 'y': 65}

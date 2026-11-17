@@ -1,0 +1,14 @@
+TC-01-06 checks (P1) - FreeCAD 27956
+Given rpc-27956.json exists -> PASS
+Given document_open box OK (fcb-doc:hPL9ZVNDCL050Km5aZEQZw); view_fit_viewport OK; tc-01-06-before.png read (one whole box, no dialog)
+When raw socket frame(s) to the RPC listener -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+Every Then depends on that When -> NOT RUN
+--- superseded by the run below (lead approved the socket steps)
+FreeCAD 29952 (launch tc-01-socket2), proxy up. document_open box fcb-doc:4bf5rCRI5XY..., Show All, view_fit_viewport OK, tc-01-06-before.png
+When rpc_hello {token, contract_version "99"} (tc-01-06-rpc.jsonl):
+  read1 {"jsonrpc": "2.0", "id": 1, "error": {"code": -32004, "message": "contract version unsupported", "data": {"supported": ["1"]}}}
+  read2 "" (elapsed 0.02)
+Then error, no result -> PASS; code -32004 -> PASS; message exact -> PASS; data {"supported": ["1"]} -> PASS
+Then no capabilities, no freecad_version -> PASS; second readline "" -> PASS
+Then query_capabilities OK after -> PASS
+Then (visual) view_fit_viewport OK; tc-01-06-before.png and tc-01-06-after.png read: same whole box, same size and place, no dialog -> PASS

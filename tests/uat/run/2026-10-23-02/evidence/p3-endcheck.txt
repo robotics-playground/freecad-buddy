@@ -1,0 +1,8 @@
+freecad procs: 0
+8765 listening: none
+user.cfg sha256: CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B
+snap dirs under workdir\tmp: 0
+cua-driver daemon 5516: cua-driver
+git status:
+?? _bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md
+?? tests/uat/run/2026-10-23-02/

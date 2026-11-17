@@ -1,0 +1,17 @@
+T1 prefix:
+True True True
+T2 diff head:
+(diff exit 0)
+T3 byte counts:
+ 585 tc-09-20-snap_1.jsonl
+1170 tc-09-20-snap_2.jsonl
+1859 tc-09-20-snap_3.jsonl
+3614 total
+T4 json:
+ok
+T5 schema:
+{'fcb.audit-record/1'}
+T6 lines / verify_verdict:
+6 [('document_create', False, False), ('document_create', True, True), ('document_create', False, False), ('document_create', True, True), ('document_close', False, False), ('document_close', True, True)]
+T7 grep:
+48:            with open(self._path, "a", encoding="utf-8") as handle:

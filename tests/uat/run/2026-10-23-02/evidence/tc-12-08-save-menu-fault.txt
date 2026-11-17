@@ -1,0 +1,6 @@
+  "refusal": {
+    "code": "menu_path_unavailable",
+    "message": "menu path segment 1 was not found"
+  },
+  "status": "refused"
+}

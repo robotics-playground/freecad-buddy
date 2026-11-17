@@ -1,0 +1,15 @@
+TC-02-10 checks (A box-10-20-30 fcb-doc:yx3qxnojtT7r2qvFZNVgOw, B two-box-compound fcb-doc:v63m_hF9gvn9HxEmSrzHfA)
+PASS Given: document_list "2 open document(s): box-10-20-30, two-box-compound."
+PASS first A read: "- [FEATURE] Box".
+GUI changes (cua-driver): invoke_menu Windows > "2 box-10-20-30 : 1" (title became "box-10-20-30 - FreeCAD 1.1.4"),
+  click TreeItem two-box-compound (accessibility), invoke_menu Windows > "3 two-box-compound : 1" (menu entries read from
+  the UIA snapshot: '2 box-10-20-30 : 1', '3 two-box-compound : 1'); Windows popup closed with Escape.
+PASS selection moved to B: main window title " two-box-compound - FreeCAD 1.1.4" (get_window_state / list_windows).
+PASS handle string unchanged; re-read of A returns the same text "- [FEATURE] Box"; the two results are equal as JSON
+  objects (query_tree_summary has no structuredContent; compared the whole result).
+PASS B addressable: "- [FEATURE] TwoBoxCompound".
+PASS mass: volume 2000.0 mm^3, counts.solids 2, com null.
+PASS fit: Show All (invoke_menu View > Visibility > Show All Objects), view_fit_viewport B OK.
+PASS visual tc-02-10-after.png: two separate grey cubes, both whole, no edge cut by the viewport border; title
+  "* two-box-compound - FreeCAD 1.1.4"; tree lists box-10-20-30 and two-box-compound (TwoBoxCompound); MDI tabs Start,
+  box-10-20-30 : 1, two-box-compound : 1*; no dialog. The floating Tasks panel hides the back top corner of the right cube.

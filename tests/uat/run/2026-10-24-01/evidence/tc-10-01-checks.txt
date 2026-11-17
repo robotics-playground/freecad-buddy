@@ -1,0 +1,16 @@
+TC-10-01 (R2, GUI launch r2-L2 pid 29004; H1 from FCB_ENV, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc1001, PYTHONUTF8=1)
+Given: no *.lock in evidence (0); document_open box-10-20-30 OK; Show All; fit OK fits 0.95; tc-10-01-before.png.
+When: run_mcp_e2e.py -> "29/29 checks passed", exit 0 (tc-10-01-e2e-stdout.txt); report and stderr copied.
+      r2_h1chain.py six: one H1 session opens box-10-20-30 and sends query_tree_summary, query_object, query_mass_properties,
+      query_placement, verify_shape, document_list back to back -> tc-10-01-six-spans.json (entry/exit time per call).
+PASS spans: no span starts before the previous one ended; all six status OK.
+PASS order: span tool sequence equals the sent sequence; the sweep report check order (tools/list, query_capabilities, then per golden
+     model query_mass_properties, verify_shape, verify_export_step, verify_export_stl, query_screenshot; document_save,
+     document_open(reopen)) matches the request sequence in scripts/automation/run_mcp_e2e.py (rep.record order, lines 120-242).
+PASS grep -c "marshal" tc-10-01-server.stderr.log = 0: no nested-call warning.
+PASS all_passed True (the 2026-10-23-02 NO_STATUS failures are gone: W3 fix).
+PASS grep reentrant|deadlock|already in marshal: nothing.
+PASS fit OK fits 0.95 (no hang).
+PASS visual: window paints, title "* box-10-20-30 - FreeCAD 1.1.4" with no Not Responding, no modal, one whole box drawn and framed,
+     same as before; r2_diff 0 px. Live check 3086 px.
+Verdict: PASS

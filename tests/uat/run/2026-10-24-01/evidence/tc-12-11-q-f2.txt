@@ -1,0 +1,34 @@
+== [filter-name] query_tree_summary {"filters": {"name_pattern": "Pad*"}}
+   isError=False content=['text'] {"text": "OK: 61 objects, 27 shown, 26 matches.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, ratio 2.41, cached, served from cache; unverified key component(s): geometry\nv [BODY] Body (+1 more)\n|-- - [PAD] Pad000 (+1)\n|-- - [PAD] Pad001 (+1)\n|-- - [PAD] Pad002 (+1)\n|-- - [PAD] Pad003 (+1)\n|-- - [PAD] Pad004 (+1)\n|-- - [PAD] Pad005 (+1)\n|-- - [PAD] Pad006 (+1)\n|-- - [PAD] Pad007 (+1)\n|-- - [PAD] Pad008 (+1)\n|-- - [PAD] Pad009 (+1)\n|-- - [PAD] Pad010 (+1)\n|-- - [PAD] Pad011 (+1)\n|-- - [PAD] Pad012 (+1)\n|-- - [PAD] Pad013 (+1)\n|-- - [PAD] Pad014 (+1)\n|-- - [PAD] Pad015 (+1)\n|-- - [PAD] Pad016 (+1)\n|-- - [PAD] Pad017 (+1)\n|-- - [PAD] Pad018 (+1)\n|-- - [PAD] Pad019 (+1)\n|-- - [PAD] Pad020 (+1)\n|-- - [PAD] Pad021 (+1)\n|-- - [PAD] Pad022 (+1)\n|-- - [PAD] Pad023 (+1)\n|-- - [PAD] Pad024 (+1)\n`-- v [PAD] Pad025 (+1) *tip", "is_error": false}
+   elapsed_s=0.031
+OK: 61 objects, 27 shown, 26 matches.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+framing: does not fit, ratio 2.41, cached, served from cache; unverified key component(s): geometry
+v [BODY] Body (+1 more)
+|-- - [PAD] Pad000 (+1)
+|-- - [PAD] Pad001 (+1)
+|-- - [PAD] Pad002 (+1)
+|-- - [PAD] Pad003 (+1)
+|-- - [PAD] Pad004 (+1)
+|-- - [PAD] Pad005 (+1)
+|-- - [PAD] Pad006 (+1)
+|-- - [PAD] Pad007 (+1)
+|-- - [PAD] Pad008 (+1)
+|-- - [PAD] Pad009 (+1)
+|-- - [PAD] Pad010 (+1)
+|-- - [PAD] Pad011 (+1)
+|-- - [PAD] Pad012 (+1)
+|-- - [PAD] Pad013 (+1)
+|-- - [PAD] Pad014 (+1)
+|-- - [PAD] Pad015 (+1)
+|-- - [PAD] Pad016 (+1)
+|-- - [PAD] Pad017 (+1)
+|-- - [PAD] Pad018 (+1)
+|-- - [PAD] Pad019 (+1)
+|-- - [PAD] Pad020 (+1)
+|-- - [PAD] Pad021 (+1)
+|-- - [PAD] Pad022 (+1)
+|-- - [PAD] Pad023 (+1)
+|-- - [PAD] Pad024 (+1)
+`-- v [PAD] Pad025 (+1) *tip

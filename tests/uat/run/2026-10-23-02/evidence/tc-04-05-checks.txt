@@ -1,0 +1,19 @@
+TC-04-05 checks (launch tc-04-a pid 29440; doc PocketPlate fcb-doc:xea6srJWa_SZcFvjDrRDIA; tc-04-05-mcp.jsonl)
+Given: PlatePad volume 12000.0; oracle faces: Face6 = plane z 5. SlotProfile and ThroughProfile on PlatePad Face6, verify_sketch
+  OK dof 0 both; oracle bbox SlotProfile [10,10,5,20,20,5], ThroughProfile [40,15,5,50,25,5].
+PASS slot commit: feature_pocket SlotPocket length 2 mm status OK, rolled_back false.
+PASS slot volume: SlotPocket 11800.0.
+PASS through commit: ThroughPocket up_to ThroughAll, no length, status OK, rolled_back false.
+PASS through volume: ThroughPocket 11300.0.
+PASS hole not dent: shape_summary face_count 15 (> 6), solid_count 1.
+PASS valid: verify_shape ThroughPocket OK.
+PASS live enum: query_object ThroughPocket Type "ThroughAll"; feature_pad up_to ThroughAll -> INVALID_INPUT
+  "up_to 'ThroughAll' is not one of ['Length', 'UpToLast', 'UpToFirst', 'UpToFace', '?TwoLengths', 'UpToShape']".
+PASS no length needed: step 2 sent no length and was not refused.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-05-after.png (windows: main only). One flat 60 x 40 plate, isometric, whole, no dialog. Near the origin
+  corner (traced at (10,10) -> pixel (633,467)) a square recess with a grey floor and shaded inner walls: blind. At
+  (40,15) -> pixel (1000,617) a square opening whose centre shows the white background: through. The floating Tasks
+  panel (known limit c) hides about 200 px of the plate's back edge near the right corner; both pockets are fully visible.
+Note: query_mass_properties of SlotPocket/ThroughPocket returns com null (Shape is a Compound). Not a Then of this scenario.
+Cleanup: document_close.

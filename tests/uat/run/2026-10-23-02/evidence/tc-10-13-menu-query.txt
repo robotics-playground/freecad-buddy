@@ -1,0 +1,6 @@
+23:48:24
+s000000e5:50 MenuItem 'Edit' True {'h': 26, 'w': 46, 'x': 58, 'y': 37} ['invoke', 'expand', 'set_value']
+s000000e5:64 ToolBar 'Gui::GUISingleApplication.Gui::MainWindow.Edit' True {'h': 48, 'w': 203, 'x': 145, 'y': 63} ['invoke', 'set_value']
+s000000e5:65 CheckBox 'Gui::GUISingleApplication.Gui::MainWindow.Edit.qt_toolbar_ext_button' True {'h': 41, 'w': 15, 'x': 310, 'y': 67} ['invoke', 'toggle', 'set_value']
+s000000e5:66 Group 'Gui::GUISingleApplication.Gui::MainWindow.Edit.QToolBarSeparator' True {'h': 41, 'w': 13, 'x': 273, 'y': 67} ['invoke', 'set_value']
+s000000e5:124 Tree 'Gui::GUISingleApplication.Gui::MainWindow.Model.Model.QSplitter.Gui::PropertyView.propertyTab.qt_tabwidget_stackedwidget.propertyEditorData' True {'h': 350, 'w': 322, 'x': 2, 'y': 577} ['set_value']

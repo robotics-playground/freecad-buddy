@@ -1,0 +1,15 @@
+TC-08-05 (GUI launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0; H1 p0_h1.py tag tc-08-05, 21:25:35-21:25:37 +07:00)
+Given: doc tc-08-05, Body + Sketch + Pad 30 (preview+confirm); query_screenshot iso OK with resource_link; view_fit_viewport OK; tc-08-05-before.png.
+When: preview Length 40 render 'off'; preview render 'auto'; H1 (flag-unset host, built its own Body/Sketch/Pad 30) preview Length 40 default render.
+PASS  off: diff.render {"available": false, "reason": "off"}.
+PASS  headless reason not 'off': H1 diff.render {"available": false, "reason": "offscreen probe render failed: No module named 'pivy'"}
+      (form seen: no usable render port on this H1 interpreter; neither 'no render port' nor available true, but not 'off').
+PASS  never collapsed: 'off' appears only on the render:'off' call (auto -> reason null; H1 -> pivy reason).
+PASS  neither is an error: render:'off' status OK; H1 preview status OK (volume 12000 -> 16000).
+PASS  available render: GUI render:'auto' diff.render.available true.
+PASS  enum closed: render 'sometimes' -> "Input validation error: 'sometimes' is not one of ['auto', 'off']".
+PASS  fit: view_fit_viewport OK.
+PASS  visual: before and after both show the 20 x 20 x 30 pad (1 : 1 : 1.5) in iso, unchanged by the three previews; p0_diff 0 pixels differ.
+      (tc-08-12 is also open in the tree and as a tab, the same in both.)
+Note: p0_h1.py logs raw results; preview_id values in tc-08-05-h1.jsonl cut to 16 characters with p5_redact.py.
+Verdict: PASS.

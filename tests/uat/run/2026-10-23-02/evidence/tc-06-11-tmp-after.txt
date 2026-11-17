@@ -1,0 +1,4 @@
+system temp FCB_TMP_shot_*.png: 0
+H1 workdir shots: 0
+D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\freecad-buddy-workdir\tmp
+D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\freecad-buddy-workdir\tmp\FCB_TMP_session_24224_ba0deb88

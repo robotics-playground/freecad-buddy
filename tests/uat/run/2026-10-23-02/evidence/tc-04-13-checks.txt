@@ -1,0 +1,31 @@
+TC-04-13 checks (launch tc-04-a pid 29440; doc DatumPlate fcb-doc:G7MAvOL7eN04lXJi2JasDQ; tc-04-13-mcp.jsonl)
+Given: PlatePad volume 12000.0. Oracle: Face6 plane z 5 (top); Edge1 straight 5 mm vertical edge at (0,0); Vertex1 (0,0,0).
+PASS commit, all four kinds: RaisedPlane (plane), EdgeAxis (axis, TwoPointLine), CornerPoint (point, Vertex), FaceCS (cs)
+  each status OK, rolled_back false.
+PASS offset: query_placement RaisedPlane local and global position.z 15.0 mm.
+PASS MapMode "FlatFace" (map_mode omitted).
+PASS AttachmentSupport [["<PartDesign::Pad>", ["Face6"]]]; query_dependencies out_list ["PlatePad"].
+PASS not a solid: query_mass_properties RaisedPlane solid false, volume null.
+PASS tree: query_tree_summary depth 3 lists [DPLANE] RaisedPlane, [DLINE] EdgeAxis, [DPOINT] CornerPoint,
+  [COORDINATESYSTEM] FaceCS under v [BODY] PlateBody.
+PASS kind curve: schema refusal "Input validation error: 'curve' is not one of ['plane', 'axis', 'point', 'cs']".
+PASS bad map_mode: kind point, map_mode TwoPointLine -> INVALID_INPUT "map_mode 'TwoPointLine' is not implemented for kind
+  'point'; point accepts [...]"; no structured_content, no snapshot_path.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-13-after.png (fit, isometric view): the whole 60 x 40 x 5 plate, unchanged box shape, seen through a large
+  translucent yellow datum plane that lies above it; a thin yellow vertical axis line along the plate's (0,0) vertical edge,
+  running above and below the plate; a short red coordinate-system axis at the (0,0) top-face corner; no dialog in the main window.
+  Camera-only views (p3_cam.py, scene unchanged):
+  tc-04-13-front.png (front view, 15.6 px/mm): plate is a 931 x 79 px rectangle (60 x 5 mm); the datum plane is a yellow
+  horizontal line 155 px (about 10 mm) above the plate top face; the yellow vertical axis line passes through the x = 0 edge;
+  a dark blue short vertical line rises from the top-face corner (coordinate-system Z axis).
+  tc-04-13-front-corner.png: at (0,0,0) a small yellow point marker on the plate corner (CornerPoint), blue CS axis above
+  the top-face corner, yellow axis line through the corner. tc-04-13-corner*.png: the plate corner under the translucent
+  plane with the red CS X axis on the top edge. The plate solid has no added material.
+Harness note: tc-04-13-after-windows.txt lists an untitled top-level window "FreeCAD" 1000 x 550 at (226,405) at capture
+  time; it was gone 10 s later (not captured). The same transient window is in tc-02-05-hidden-windows.txt and
+  tc-02-08-after-windows.txt. The main-window capture shows no dialog.
+Observation: the mutation envelope feature_state.shape_summary of RaisedPlane reports volume 4e+101, area 8e+100 and bbox
+  [2e+100, 2e+100, 0.0] (FaceCS: volume 1.33e+101); body "" and is_tip false for all four datums although the tree lists
+  them under PlateBody. Not a Then of this scenario; reported as a finding.
+Cleanup: document_close.

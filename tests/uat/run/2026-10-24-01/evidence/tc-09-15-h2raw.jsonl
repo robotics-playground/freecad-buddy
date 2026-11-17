@@ -1,0 +1,1 @@
+{"mcp": "verify_recompute", "args": {"doc": {"handle": "fcb-doc:x"}}, "is_error": true, "structured_content_is_null": true, "text": ["Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'"], "tools_list_after_count": 46}

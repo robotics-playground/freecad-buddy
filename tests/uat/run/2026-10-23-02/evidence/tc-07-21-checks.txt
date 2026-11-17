@@ -1,0 +1,17 @@
+DOC fcb-doc:vHpPfZRL8LW6Mw2cGhej6w
+CHECK write step: ["OK", false, "STEP export written -> D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-21-pair.step.", true, false, "fcb.result-envelope/1", null, ["bytes", "export_id", "path", "verified"]]
+CHECK write stl: ["OK", false, "STL export written -> D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-21-pair.stl.", true, false, "fcb.result-envelope/1", null, ["bytes", "export_id", "facets", "path", "verified"]]
+CHECK write 3mf: ["OK", false, "3MF export written -> D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-21-pair.3mf.", true, false, "fcb.result-envelope/1", null, ["bytes", "export_id", "facets", "path", "verified"]]
+CHECK verify step: ["OK", "fcb.result-envelope/1", "fcb.validation-report/1", "OK", true, 4]
+CHECK verify stl: ["OK", "fcb.result-envelope/1", "fcb.validation-report/1", "OK", true, 12]
+CHECK verify 3mf: ["OK", "fcb.result-envelope/1", "fcb.validation-report/1", "OK", true, 12]
+CHECK truncated size: 0
+CHECK truncated verify: ["SPEC_FAILED", "trimesh_stl.readable; stl2.facets; stl2.manifold_edge_pairing; self_read.facet_count; self_read.vertex_count"]
+CHECK write result unchanged: true
+CHECK statuses / closed: [["OK", "OK", "OK", "OK", "OK", "OK", "SPEC_FAILED"], true]
+CHECK reimport volume: ["OK", {"value": 6000.0, "unit": "mm^3"}]
+H_RT fcb-doc:SCZUaNcKa8wi-6VaRmkbhA
+Given: rm stale; document_open box-10-20-30 OK, OBJ=Box.
+Write envelopes: top-level schema fcb.result-envelope/1, payload keys bytes/export_id/path/verified(/facets), no schema key, no checks. Verify envelopes: structured_content.schema fcb.validation-report/1, verdict OK, all checks passed (4, 12, 12).
+Truncation to 0 bytes is on the run-folder file. Status set across calls: OK x6, SPEC_FAILED x1, all in the closed set.
+Visual: view_fit_viewport(H_RT) OK. tc-07-21-after.png: tab tc-07-21_rt, one closed box about 1:2:3, not empty, right shape.

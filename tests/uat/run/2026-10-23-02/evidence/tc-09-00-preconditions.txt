@@ -1,0 +1,28 @@
+# P7 TC-09 file preconditions 2026-10-23T22:13:28+07:00
+## FreeCAD exe
+C:/Program Files/FreeCAD 1.1/bin/freecad.exe*
+## H1 interpreter (FCB_PYTHON) import check
+import FreeCAD, mcp ok ['1', '1', '4']
+## fault fixture
+benchmarks/g0/fault-injection/wrong-volume/fixture.FCStd
+## golden models
+benchmarks/g0/golden-models/box-10-20-30.FCStd
+benchmarks/g0/golden-models/box40-hole-r5.FCStd
+benchmarks/g0/golden-models/cylinder-r5-h20.FCStd
+benchmarks/g0/golden-models/sphere-r10.FCStd
+benchmarks/g0/golden-models/two-box-compound.FCStd
+5
+## netstat :8765
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       26488
+  TCP    127.0.0.1:62335        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:62336        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:62337        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:62338        127.0.0.1:8765         TIME_WAIT       0
+  TCP    127.0.0.1:62339        127.0.0.1:8765         TIME_WAIT       0
+## evidence writable
+tests/uat/run/2026-10-23-02/evidence/
+elements 114
+[('Group', 'Gui::GUISingleApplication.Gui::MainWindow.QOpenGLWidget', None)]
+[]
+s000000e2:92 Button 'Fit All' True {'h': 41, 'w': 41, 'x': 577, 'y': 67} ['invoke', 'set_value']
+pid=11300 window_id=989150

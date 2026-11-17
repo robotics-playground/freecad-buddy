@@ -1,0 +1,14 @@
+TC-10-05 checks (P8) - FreeCAD 11736 (launch tc-10-a); H1 session 22:56:02-22:57:44, worker pid 25472
+Given H1 document_create TC1005Slow OK; script_exec adds Part::FeaturePython "Slow" (p8_slow.Slow, recompute sleeps 100 s; module so the preview copy can restore the proxy), not recomputed -> OK
+Given GUI box-10-20-30 as <G> fcb-doc:YE0n_7ps...; Show All; view_fit_viewport OK; tc-10-05-before.png read: one whole iso box, no dialog
+When preview_dry_run {feature_body_create PreviewBody} on the H1 doc, nothing else on the session while it ran; then document_list on the same session (tc-10-05-h1.jsonl)
+Then one terminal envelope: status OK (closed set) -> PASS
+Then duration 100.13 s > 60 s and status not TIMEOUT -> PASS
+Then document_list on the same session -> OK -> PASS
+Then grep -iE "timed out|connection reset" tc-10-05-server.stderr.log -> nothing (exit 1) -> PASS
+Then document_list shows no FCB_TMP_prev_ handle (only TC1005Slow); session temp folder evidence\freecad-buddy-workdir\tmp\FCB_TMP_session_25472_ace35783 exists and is empty -> PASS
+Then (visual) Show All; view_fit_viewport on <G> over the GUI proxy OK -> PASS
+Then (visual) tc-10-05-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no progress modal, <G> drawn whole and framed; 0 pixels differ from before -> PASS
+Cleanup H1 document_close OK; GUI document_close <G> OK
+Verdict: PASS
+Possible human intervention: pointer moved from (2559,1137) to (2464,490) between 22:55:55 and 22:57:59 (outside the window).

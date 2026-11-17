@@ -1,0 +1,1 @@
+2426264	* Unnamed - FreeCAD 1.1.4	{'height': 1289, 'width': 2252, 'x': 154, 'y': 65}

@@ -1,0 +1,13 @@
+TC-04-16 checks (R1, pid 5432, auto-approve on: tc-02-09-addon.log has the SECURITY auto-approve line)
+Given doc BigFillet fcb-doc:GiwVCrC7lst07dAAFZ5G9g; PlateBody/PlateProfile/PlatePad 60x40x5 volume 12000.0 -> PASS; edge oracle Edge3 = 60 mm bottom edge (0,0,0)-(60,0,0); snapshots before [] ; view_fit_viewport OK; tc-04-16-before.png
+When feature_fillet TooBigFillet r20 on PlatePad Edge3
+PASS non-OK: RECOMPUTE_ERROR "recompute left 1 object(s) invalid: TooBigFillet: BRep_API: command not done"
+PASS mutation.rolled_back true
+PASS explanation names TooBigFillet and the engine string "BRep_API: command not done"
+PASS tree depth 3 names no TooBigFillet
+PASS PlatePad volume 12000.0
+PASS rollback_proven "rolled_back_verified", changed [] (digests differ: equal mass properties path, AD-5; as the rewritten Then allows)
+PASS snapshots after [] = before
+PASS verify_recompute OK verdict OK, no failing object
+PASS (visual) view_fit_viewport OK
+PASS (visual) before vs after: same sharp-edged 60x40x5 plate iso, no rounded edge, no fillet face; 3D view pixel-identical (r1_diff.py 0 px in (330,210)-(1568,905)). Whole window differs only at (1197-1231, 950-972): the status-bar notification icon now shows "1" after the failed live-document fillet (the W2b control case: a failing live apply posts one notification; not a Then of this scenario).

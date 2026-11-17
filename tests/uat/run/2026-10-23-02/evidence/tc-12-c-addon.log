@@ -1,0 +1,17 @@
+2026-10-24 09:05:41,816 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-12-c-audit.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+2026-10-24 09:05:41,816 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-24 09:05:41,816 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-24 09:05:41,816 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 09:05:41,983 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:59173
+2026-10-24 09:05:42,297 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: C:\Users\thuan\.local\bin\uv.EXE
+2026-10-24 09:05:42,302 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 22864) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-24 09:12:50,759 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:6NZNNVZbFiOaE39B5vflcg
+2026-10-24 09:12:51,301 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:6NZNNVZbFiOaE39B5vflcg
+2026-10-24 09:12:51,877 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:6NZNNVZbFiOaE39B5vflcg
+2026-10-24 09:12:52,449 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:6NZNNVZbFiOaE39B5vflcg
+2026-10-24 09:15:23,453 INFO freecad_buddy.dispatch: INVALID_INPUT: the live viewport is showing 'sphere_r10', not the targeted 'box_10_20_30'; call view_fit_viewport with the handle for 'sphere_r10', or open a 3D view for 'box_10_20_30'
+2026-10-24 09:45:55,213 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Cube001
+2026-10-24 10:01:07,322 INFO freecad_buddy.dispatch: INVALID_INPUT: the live viewport is showing 'sphere_r10', not the targeted 'box_10_20_30'; call view_fit_viewport with the handle for 'sphere_r10', or open a 3D view for 'box_10_20_30'
+2026-10-24 10:02:00,457 INFO freecad_buddy.dispatch: INVALID_INPUT: the live viewport is showing 'sphere_r10', not the targeted 'box_10_20_30'; call view_fit_viewport with the handle for 'sphere_r10', or open a 3D view for 'box_10_20_30'
+2026-10-24 10:37:58,392 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10054] An existing connection was forcibly closed by the remote host)
+

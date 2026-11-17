@@ -1,0 +1,15 @@
+TC-08-01 (R2, launch r2-L1-tc08, pid 29140, FREECAD_BUDDY_AUTO_APPROVE=0; no SECURITY auto-approve line in r2-L1-tc08-addon.log)
+Given: tc-08-01 Body + 20x20 Sketch (preview+confirm); verify_sketch OK dof 0 fully_constrained true; view_fit_viewport OK fits 0.95; tc-08-01-before.png.
+When: preview_dry_run feature_pad Pad 30 mm.
+PASS status OK, detail null, diff.schema "fcb.geometry-diff/2" (TC-08:63, contracts/diff.py:77).
+PASS volume before 0.0 after 12000.0 delta 12000.0 units mm^3.
+PASS area units mm^2, bbox units mm, com units mm.
+PASS counts solids 0->1 delta 1; faces delta 6.
+PASS touched [Body, Pad] contains Pad; new [Pad]; deleted [].
+PASS validity is_valid true, recompute_clean true, status OK, explanation null.
+PASS tnp_precheck status CLEAN, element_map_version 15.70200.5.
+PASS preview_id starts "fcb-preview:"; expires_at 2026-10-24T12:16:55.666993+00:00 (ISO-8601 UTC).
+PASS fit view_fit_viewport OK fits 0.95.
+PASS visual: before and after both show the flat 20x20 rectangle in iso (diamond outline, 4 vertices), no extruded solid; tree tc-08-01 > Body;
+     Tasks "Start Part" overlay in both; status-bar notification area blank in both. r2_diff: 0 differing pixels. Live check: tab click changed 3086 px.
+Verdict: PASS

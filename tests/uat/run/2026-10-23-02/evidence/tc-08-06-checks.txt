@@ -1,0 +1,20 @@
+TC-08-06 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0)
+Given: doc tc-08-06, Body + 20x20 Sketch. 'Undo available' verify: document_undo -> status OK, undone 'buddy: add geometry to Sketch'
+       (not refused 'undo is unavailable'). That undo removed the sketch geometry, so it was re-applied (preview+confirm) and
+       verify_sketch -> dof 0, fully_constrained true. view_fit_viewport OK; tc-08-06-before.png (flat square sketch).
+When: pad 30 (preview+confirm) -> fingerprint_before {digest b083c60b..., serializer exportBinary}; undo with the string;
+      pad again; undo with the object; (for the no-expectation Then) pad a third time, undo with no expect_fingerprint.
+PASS  string form: matches_pre_op true.
+PASS  object form: matches_pre_op true.
+PASS  fingerprints: fingerprint_before c4fe8532... (64 hex), fingerprint_after b083c60b... (64 hex), different.
+PASS  undone: 'buddy: feature_pad Pad' (the bridge's 'buddy: ' transaction for the feature_pad call on Pad).
+PASS  text: "Undid 'buddy: feature_pad Pad' on tc_08_06: restored the pre-op state (c4fe85329675 -> b083c60b7c85)."
+PASS  no expectation: matches_pre_op null; text "... no pre-op digest supplied to compare against (...)".
+PASS  restored_objects: Body, Origin, X_Axis, Y_Axis, Z_Axis, XY_Plane, XZ_Plane, YZ_Plane, Origin001, Sketch; no Pad.
+PASS  wrong type: expect_fingerprint 42 -> "Input validation error: 42 is not of type 'string', 'object'"; tree object lines
+      unchanged before/after (only the framing cache line differs), so no undo ran.
+PASS  fit: view_fit_viewport OK.
+PASS  visual: before and after both show the flat 20 x 20 square sketch, no extruded solid. p0_diff 484 pixels differ, bbox
+      (215,69)-(246,100) = the Redo toolbar button, grey before, green (enabled) after: the expected trace of the undo itself
+      (tc-08-06-toolbar-before.png / -after.png). The model area is identical.
+Verdict: PASS.

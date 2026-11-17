@@ -1,0 +1,15 @@
+CHECK statuses: ["OK", "OK"]
+CHECK facets stl/3mf: [976, 976, true]
+CHECK verified: [false, false]
+CHECK sizes: [48884, 9898]
+CHECK verify statuses: ["OK", "OK"]
+CHECK self_read.facet_count stl: {"id": "self_read.facet_count", "measured": 976, "expected": 976, "passed": true, "detail": {"message": "facets 976 vs 976"}}
+CHECK self_read.facet_count 3mf: {"id": "self_read.facet_count", "measured": 976, "expected": 976, "passed": true, "detail": {"message": "facets 976 vs 976"}}
+CHECK angular 0: ["INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=0.1, angular=0.0", null]
+CHECK reimport volume: ["INVALID_INPUT", null]
+H_RT fcb-doc:ANuAfZZDncgTVvmzslQF6w
+976 976
+(last line above: trimesh outside read STL faces, 3MF faces -> 976 976 equal)
+Given: rm stale; document_open sphere-r10 OK -> fcb-doc:bR1tuOOJe53h..., OBJ=Sphere
+Finding (no Then reads it): file-level re-import recipe says read the re-imported volume with query_mass_properties; for the STL re-import (Mesh::Feature) it returns INVALID_INPUT "object has no queryable shape: Reimport".
+Visual: view_fit_viewport(H_RT) OK. tc-07-06-after.png: tab tc-07-06_rt, one closed round body with visible flat triangular facets, round outline on all sides, no hole, no missing cap, no flat side. Tree Reimport (mesh icon).

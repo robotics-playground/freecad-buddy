@@ -1,0 +1,98 @@
+H1 START 2026-10-23T23:21:35.370+07:00 tag=tc-10-07 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-10-07-audit.jsonl stderr=tc-10-07-server.stderr.log
+CHECK tools/list count / script_exec listed: [46, true]
+CHECK tools/list includes script_exec: true
+== [given open D] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\box-10-20-30.FCStd"} t=0.001..0.036 dur=0.035 status=OK msg=None
+== [given open E] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\cylinder-r5-h20.FCStd"} t=0.036..0.049 dur=0.013 status=OK msg=None
+== [given tree E] query_tree_summary {} t=0.049..0.053 dur=0.004 status=OK msg=1 objects, 1 shown.
+CHECK handles D E / E object: ["fcb-doc:MmXcPTu8axfX4zWOm5mYUg", "fcb-doc:X5NrzXV4dWzTmP1KQodKaQ", "Cylinder"]
+CHECK H1 process tree: [[33700, 11736, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [21508, 33700, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [27440, 22496, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [32212, 27440, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [34160, 32212, "nv\\Scripts\\python.exe -m freecad_buddy.hosts.headless.worker"], [29652, 34160, "D 1.1\\bin\\python.exe\" -m freecad_buddy.hosts.headless.worker"], [26472, 22496, "ssId,ParentProcessId,CommandLine | ConvertTo-Json -Compress\""]]
+CHECK worker pid: 29652
+WAIT 07 2026-10-23T23:21:37.600+07:00
+GO 07 2026-10-23T23:22:22.892+07:00
+== [when 07 overrun] script_exec {"code": "import time, Part\nend = time.monotonic() + 75\nwhile time.monotonic() < end:\n    Part.makeBox(10, 10, 10).fuse(Part.makeSphere(6))\nresult = 'done'"} t=45.792..75.815 dur=30.023 status=TIMEOUT msg=the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds
+CHECK 07 envelope: {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+CHECK 07 elapsed_s: 30.023
+== [when 07 tree E #1] query_tree_summary {} t=76.023..76.031 dur=0.008 status=TIMEOUT msg=not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns
+CHECK 07 q1 seconds after envelope / duration / text: [0.208, 0.008, "TIMEOUT: not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns"]
+== [informational probe (structured) 07 #1] query_object {"object": "Cylinder"} t=76.031..76.035 dur=0.004 status=TIMEOUT msg=not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns
+CHECK 07 informational structured probe #1 detail: {"code": "TIMEOUT", "message": "not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns", "data": {"quarantined": true}}
+CHECK 07 worker CPU reads (s after t0, value): [[30.02, "31.625"], [33.04, "35.0625"]]
+== [when 07 tree E #2 (~65 s)] query_tree_summary {} t=110.796..110.907 dur=0.111 status=WORKER_CRASHED msg=not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents
+CHECK 07 q2 t / text: [65.0, "WORKER_CRASHED: not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents"]
+== [informational probe (structured) 07 #2] query_object {"object": "Cylinder"} t=110.908..110.911 dur=0.003 status=WORKER_CRASHED msg=not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents
+CHECK 07 informational structured probe #2 detail: {"code": "WORKER_CRASHED", "message": "not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents", "data": {"quarantined": true}}
+CHECK 07 Get-Process worker after escalation: "Id          : 29652\r\nProcessName : python\r\nCPU         : 66.578125"
+== [when 07 tree E #3 (~85 s)] query_tree_summary {} t=130.796..130.806 dur=0.01 status=OK msg=1 objects, 1 shown.
+CHECK 07 q3 t / text: [85.0, "OK: 1 objects, 1 shown.\nv [FEATURE] Cylinder"]
+CHECK 07 audit lines with verify_verdict TIMEOUT: [["script_exec", "TIMEOUT"]]
+WAIT 08 2026-10-23T23:23:47.914+07:00
+GO 08 2026-10-23T23:24:36.345+07:00
+== [when 08 mutation on D] script_exec {"code": "open(r'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-10-08-D.marker', 'w').write('x'); result = 'ran'"} t=179.245..179.249 dur=0.005 status=INVALID_INPUT msg=document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating
+CHECK 08 D envelope: {"schema": "fcb.result-envelope/1", "status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating", "data": {}}, "structured_content": {}, "text": ""}
+CHECK 08 D marker exists: false
+CHECK 08 stderr bytes gained during the D call: ""
+CHECK 08 audit INVALID_INPUT lines: [["script_exec", "INVALID_INPUT", "fcb-doc:MmXcPTu8axfX4zWOm5mYUg"]]
+== [when 08 mutation on E] script_exec {"code": "open(r'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-10-08-E.marker', 'w').write('x'); result = 'ran'"} t=179.256..179.282 dur=0.026 status=OK msg=None
+CHECK 08 E status / marker exists: ["OK", true]
+== [given 09 tree E] query_tree_summary {} t=179.284..179.291 dur=0.008 status=OK msg=1 objects, 1 shown.
+CHECK 09 given tree E text: "OK: 1 objects, 1 shown.\nv [FEATURE] Cylinder"
+WAIT 09 2026-10-23T23:24:36.393+07:00
+GO 09 2026-10-23T23:25:27.868+07:00
+== [when 09 failing read] query_object {"object": "NoSuchObject"} t=230.766..230.774 dur=0.007 status=INVALID_INPUT msg=unknown object: NoSuchObject
+== [when 09 mutation after failing read] script_exec {"code": "open(r'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-10-09-D.marker', 'w').write('x'); result = 'ran'"} t=230.775..230.779 dur=0.004 status=INVALID_INPUT msg=document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating
+== [when 09 passing read] query_tree_summary {} t=230.779..230.785 dur=0.007 status=OK msg=1 objects, 1 shown.
+== [when 09 mutation after passing read] script_exec {"code": "b = doc.addObject('Part::Box', 'QuarantineCleared'); b.Length = b.Width = b.Height = 5; b.Placement.Base.x = 15; doc.recompute(); result = 'ran'"} t=230.786..230.806 dur=0.02 status=OK msg=None
+CHECK 09 c1 status / message: ["INVALID_INPUT", "unknown object: NoSuchObject"]
+CHECK 09 c2 status / message / marker exists: ["INVALID_INPUT", "document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating", false]
+CHECK 09 c3 status / text: ["OK", "OK: 1 objects, 1 shown.\nv [FEATURE] Box"]
+CHECK 09 c4 status / message: ["OK", null, {"doc": "fcb-doc:MmXcPTu8axfX4zWOm5mYUg", "stdout": "", "value_repr": "'ran'", "fingerprint_after": null}]
+== [then 09 tree D] query_tree_summary {} t=230.807..230.813 dur=0.007 status=OK msg=2 objects, 2 shown.
+CHECK 09 D tree: "OK: 2 objects, 2 shown.\nv [FEATURE] Box\nv [BOX] QuarantineCleared"
+== [then 09 save D] document_save {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-10-09-D.FCStd"} t=230.814..230.854 dur=0.04 status=OK msg=None
+CHECK 09 save status: ["OK", null]
+== [given 10 open F] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\box-10-20-30.FCStd"} t=230.855..230.883 dur=0.028 status=OK msg=None
+== [given 10 tree F] query_tree_summary {} t=230.883..230.89 dur=0.007 status=OK msg=1 objects, 1 shown.
+CHECK 10 F handle / tree: ["fcb-doc:tyOEeF3HJwmMQN-fupPB4Q", "OK: 1 objects, 1 shown.\nv [FEATURE] Box"]
+WAIT 10 2026-10-23T23:25:27.992+07:00
+GO 10 2026-10-23T23:26:43.771+07:00
+== [when 10 fingerprint before] preview_dry_run {"operation": {"tool": "feature_body_create", "args": {"name": "FpProbe"}}} t=306.67..306.826 dur=0.156 status=OK msg=None
+CHECK 10 preview #1 structured keys: ["diff", "expires_at", "preview_id"]
+CHECK 10 fingerprint_before #1: null
+== [when 10 overrun] script_exec {"code": "import time, Part\nend = time.monotonic() + 40\nwhile time.monotonic() < end:\n    Part.makeBox(10, 10, 10).fuse(Part.makeSphere(6))\nb = doc.addObject('Part::Box',..."} t=306.826..336.842 dur=30.016 status=TIMEOUT msg=the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds
+CHECK 10 overrun envelope: {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+CHECK worker CPU poll: [43.2, "114.40625"]
+CHECK 10 worker idle: [true, 43.4]
+== [when 10 clearing read] query_tree_summary {} t=350.244..350.26 dur=0.016 status=OK msg=2 objects, 2 shown.
+CHECK 10 clearing read text: "OK: 2 objects, 2 shown.\nv [FEATURE] Box\nv [BOX] LateBox"
+CHECK 10 LateBox occurrences in the tree: 1
+== [when 10 fingerprint after] preview_dry_run {"operation": {"tool": "feature_body_create", "args": {"name": "FpProbe"}}} t=350.26..350.374 dur=0.114 status=OK msg=None
+CHECK 10 fingerprint_before #2: null
+CHECK 10 digests differ: false
+== [then 10 save F] document_save {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-10-10-F.FCStd"} t=350.374..350.402 dur=0.027 status=OK msg=None
+CHECK 10 save status: "OK"
+CHECK 10 script_exec audit lines on F before the manual retry: [["before", "90c1ce0dbfcf4790", null], ["after", "90c1ce0dbfcf4790", "TIMEOUT"]]
+== [then 10 manual retry] script_exec {"code": "import time, Part\nend = time.monotonic() + 40\nwhile time.monotonic() < end:\n    Part.makeBox(10, 10, 10).fuse(Part.makeSphere(6))\nb = doc.addObject('Part::Box',..."} t=350.414..380.423 dur=30.009 status=TIMEOUT msg=the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds
+CHECK 10 manual retry envelope: {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+CHECK worker CPU poll: [43.2, "151.65625"]
+CHECK 10 worker idle after retry: [true, 43.4]
+== [then 10 read after the retry body] query_tree_summary {} t=393.844..393.862 dur=0.018 status=OK msg=3 objects, 3 shown.
+CHECK 10 tree after retry: "OK: 3 objects, 3 shown.\nv [FEATURE] Box\nv [BOX] LateBox\nv [BOX] LateBox001"
+WAIT 10b 2026-10-23T23:28:10.963+07:00
+GO 10b 2026-10-23T23:32:10.467+07:00
+== [given 11 create H] document_create {"label": "TC1011Slow"} t=633.375..633.399 dur=0.024 status=OK msg=None
+== [given 11 slow object] script_exec {"code": "import time, Part\nclass Slow:\n    def __init__(self, obj):\n        obj.Proxy = self\n    def execute(self, obj):\n        time.sleep(130)\n        obj.Shape = Part..."} t=633.399..633.42 dur=0.02 status=OK msg=None
+CHECK 11 build status: ["OK", 0.02]
+== [given 11 tree H] query_tree_summary {} t=633.42..633.427 dur=0.007 status=OK msg=1 objects, 1 shown.
+CHECK 11 given tree H: "OK: 1 objects, 1 shown.\nv [FEATUREPYTHON] Slow"
+WAIT 11 2026-10-23T23:32:10.529+07:00
+GO 11 2026-10-23T23:33:45.361+07:00
+== [when 11 overrunning read] verify_recompute {} t=728.259..848.264 dur=120.005 status=TIMEOUT msg=the headless worker did not answer verify_recompute within its 120 s budget; the body may still be running and no mutation was attempted, so the document is not marked suspect
+CHECK 11 verify_recompute envelope / duration: [{"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer verify_recompute within its 120 s budget; the body may still be running and no mutation was attempted, so the document is not marked suspect", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}, 120.005]
+== [when 11 mutation at once] script_exec {"code": "b = doc.addObject('Part::Box', 'AcceptedAfterRead'); b.Placement.Base.x = 15; result = 'ran'"} t=848.264..848.268 dur=0.004 status=TIMEOUT msg=not dispatched: the session is quarantined while a timed-out verify_recompute call still runs in the headless worker; call again after it returns
+CHECK 11 m1 envelope / s after the read returned: [{"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "not dispatched: the session is quarantined while a timed-out verify_recompute call still runs in the headless worker; call again after it returns", "data": {"quarantined": true}}, "structured_content": {}, "text": ""}, 0.0]
+== [when 11 mutation after the body (~140 s)] script_exec {"code": "b = doc.addObject('Part::Box', 'AcceptedAfterRead'); b.Placement.Base.x = 15; result = 'ran'"} t=868.272..868.306 dur=0.034 status=OK msg=None
+CHECK 11 m2 envelope: {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:xiV30aqXFG_1QT91Mh7j0A", "stdout": "", "value_repr": "'ran'", "fingerprint_after": null}, "text": "doc: fcb-doc:xiV30aqXFG_1QT91Mh7j0A\nfingerprint_after: None\nstdout: \nvalue_repr: 'ran'"}
+== [then 11 tree H] query_tree_summary {} t=868.306..868.313 dur=0.007 status=OK msg=2 objects, 2 shown.
+CHECK 11 tree H / AcceptedAfterRead count: ["OK: 2 objects, 2 shown.\nv [FEATUREPYTHON] Slow\nv [BOX] AcceptedAfterRead", 1]
+== [cleanup 11 close H] document_close {} t=868.313..868.332 dur=0.019 status=OK msg=None
+H1 END 2026-10-23T23:36:05.611+07:00 (client stdin closed, host exited)

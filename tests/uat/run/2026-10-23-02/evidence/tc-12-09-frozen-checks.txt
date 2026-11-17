@@ -1,0 +1,9 @@
+TC-12-09 (P10, pid 29744, display frozen) -- non-visual Thens PASS, visual BLOCKED -> verdict BLOCKED
+Given: document_create TC1209; list_windows: only " TC1209 - FreeCAD 1.1.4".
+Then dialog up: list_windows after script_exec: second window "Preferences" (593654) (tc-12-09-windows-dialog.json) PASS.
+Then not waited: script_exec status OK, value_repr "'scheduled'" PASS.
+Then concurrent: query_tree_summary during the dialog: OK in 0.140 s PASS. Then client told: OK returned, no disconnect PASS.
+Then dismissal: Cancel button (token from tc-12-09-dialog-tree.json) clicked; list_windows -> only main window; route Cancel PASS.
+Then listener: query_capabilities OK PASS. Then intact: tree "OK: 0 objects" before and after PASS. Then proxy: :8765 LISTENING PASS.
+Visual: tc-12-09-dialog.png shows the "Preferences" title bar but a blank white client (no Cancel painted); tc-12-09-after.png black
+  -> BLOCKED (display frozen). Cleanup: document_close.

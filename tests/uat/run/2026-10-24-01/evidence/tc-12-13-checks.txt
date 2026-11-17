@@ -1,0 +1,15 @@
+TC-12-13 (R3). Launch tc-12-13 pid 35792 (fresh, temporary profile). Given: box-10-20-30 (A, fcb-doc:dhPq2cM3a5WBFV6LHP2x3A) and cylinder-r5-h20 (B, fcb-doc:bkO8gtc3Ic0lWf-XIf9rOA) opened with document_open; document_list 2 entries (tc-12-13-list-pre.txt); query_tree_summary on both OK ("OK: 1 objects, 1 shown").
+When: document A activated with invoke_menu ["Windows","2 box-10-20-30 : 1"] (title " box-10-20-30 - FreeCAD 1.1.4": no "*"; tc-12-13-active-title.txt), then invoke_menu ["File","Close"] resolved this time (in TC-12-03 and TC-12-08 the File leaf was refused: that happened right after a File popup had been opened; here no earlier File hop). After the close the title read cylinder-r5-h20. Menu popup left open by invoke_menu was closed with Escape. The three stale reads and the stale close were issued before any document_list.
+
+Then 1 GUI closed it: fresh snapshot TreeItem set: ['cylinder-r5-h20', 'Cylinder'] (tc-12-13-after-snap-tree.json), no row box-10-20-30; tc-12-13-after.png shows only the cylinder document. PASS
+Then 2 stale reads INVALID_INPUT: query_tree_summary (text-only tool: "INVALID_INPUT: unknown or stale document handle: fcb-doc:dhPq..."), query_mass_properties (status INVALID_INPUT, same message), query_screenshot (INVALID_INPUT). Not WORKER_CRASHED, not OK. PASS
+Then 3 stale close clean: document_close stale handle -> INVALID_INPUT "unknown or stale document handle". PASS
+Then 4 no crash or hang: Get-Process freecad still pid 35792 (title cylinder-r5-h20); stale call elapsed times in tc-12-13-mcp.jsonl are below 0.1 s each. PASS
+Then 5 list no longer names A: final document_list one entry, handle fcb-doc:bkO8gtc3Ic0lWf-XIf9rOA = <handleB>. PASS
+Then 6 B works: query_mass_properties Cylinder OK volume 1570.8 (original). PASS
+Then 7 listener intact: query_capabilities OK. PASS
+Then 8 (visual) framed: Show All (invoke_menu resolved), view_fit_viewport OK fitted true, GUI Fit All clicked. PASS
+Then 9 (visual) tc-12-13-after.png: Model tree paints only "cylinder-r5-h20" with child Cylinder (eye icon); no row for box-10-20-30; no save prompt or error popup (windows list main only); 3D view: one whole cylinder in iso view, framed. The View menu bar item is drawn highlighted (hover leftover from Show All, no popup window). Tabs: Start, cylinder-r5-h20 : 1*. Pointer 2479,699 (tc-12-13-after-pointer.txt). PASS
+Display check: tc-12-13-after-live.png differs (property tab): live.
+Notification badge: none visible.
+Cleanup: document_close B OK. tc-12-13-tree.png kept (rename tc-12-13-tree-pre.png copy).

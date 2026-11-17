@@ -1,0 +1,15 @@
+TC-01-11 checks (P1) - FreeCAD 27956
+Given 60 rpc-*.json files, 1 freecad.exe running -> PASS
+Given document_open box OK; view_fit_viewport OK; tc-01-11-before.png read (one whole box, no dialog)
+Dead pid candidate: rpc-28980.json (FreeCAD killed in TC-01-14); tasklist | grep 28980 -> nothing -> PASS
+When attach (socket connect + rpc_hello with the stale token) -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+Then refused/fast/not self-healing/unrelated-port Thens -> NOT RUN
+--- superseded by the run below (lead approved the socket steps)
+FreeCAD 29952, proxy up. 60 rpc-*.json files, 1 freecad.exe. tc-01-11-before.png after Show All + view_fit_viewport OK.
+Dead pid 28980: tasklist -> nothing -> PASS
+When attach on rpc-28980.json (connect timeout 5 s, then rpc_hello with its token) (tc-01-11-rpc.jsonl):
+  "refused: ConnectionRefusedError [WinError 10061] ...", elapsed 2.05; no reply line
+Then refused, never reply -> PASS; elapsed 2.05 < 5 -> PASS; rpc-28980.json still exists -> PASS
+Then query_capabilities OK -> PASS; unrelated-port Then: connect did not succeed, not applicable
+Then (visual) view_fit_viewport OK; before/after captures read: same whole box, no dialog -> PASS
+Cleanup: stale files left.

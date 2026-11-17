@@ -1,0 +1,11 @@
+## freeze 2 diagnostics 2026-10-24T10:05:48.4617806+07:00
+Virtual Desktop Monitor Status=Error Driver=13.50.53.699
+NVIDIA GeForce RTX 4070 Ti Status=OK Driver=32.0.16.1088
+System log since 09:55:
+Application log errors since 09:55:
+09:58:00 1000 Application Error Faulting application name: backgroundTaskHost.exe, version: 10.0.26100.9549, time stamp: 0xfd690d08
+Processes started since 09:50:
+10:05:48 15920 cmd
+10:05:48 31552 conhost
+10:05:48 17932 pwsh
+freecad Responding: True

@@ -1,0 +1,12 @@
+agent call fault: first document_open used a wrong repo root (tests\benchmarks...), INVALID_INPUT file does not exist; script path fixed (parents[4]); not a scenario retry
+21:48 main window found minimized (not by the agent); restored with cua-driver bring_to_front, frame reset 1600x1000
+TC-07-04 (launch P6 tc-07-a, pid 6744). Given: ls box40-hole-r5.FCStd present; document_open OK -> fcb-doc:g3WmlF1_..., tree "- [FEATURE] BoxHole" (OBJ=BoxHole)
+When verify_recompute: status OK, detail null
+Then checks = [{id recompute.clean, measured 0, expected 0, passed true}] (single entry) PASS
+Then subject.failing_objects = [] PASS
+Then text = "Recompute clean: no errors." PASS
+Then volume before/after 15214.6 / 15214.6 mm^3 (same) PASS
+Then banner {freecad_version 1.1.4, element_map_version 15} PASS
+Visual: Show All (invoke_menu, foreground delivery reported), view_fit_viewport OK (fitted true)
+tc-07-04-after.png: iso view, one grey box with one round opening on the top face, bore wall shaded; tree BoxHole with eye icon, no red/yellow error marker. Tasks panel at right, does not cover the box.
+tc-07-04-after-top.png (supplementary, camera only via p3_cam top view): square with a round hole showing the white background through it -> the hole passes through.

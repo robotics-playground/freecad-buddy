@@ -1,0 +1,22 @@
+{
+ "start": "2026-10-24T10:41:19.600+07:00",
+ "kill_at": "2026-10-24T10:41:21.105+07:00",
+ "kill_rc": 0,
+ "kill_err": "",
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "WORKER_CRASHED",
+  "detail": {
+   "code": "WORKER_CRASHED",
+   "message": "listener connection dropped",
+   "data": {
+    "rpc": "unreachable"
+   }
+  },
+  "structured_content": {},
+  "text": ""
+ },
+ "elapsed_s": 1.75,
+ "end": "2026-10-24T10:41:21.356+07:00",
+ "joined": true
+}

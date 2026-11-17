@@ -1,0 +1,1 @@
+3540980	 tc-12-08-bracket - FreeCAD 1.1.4	{'height': 1000, 'width': 1600, 'x': 0, 'y': 0}

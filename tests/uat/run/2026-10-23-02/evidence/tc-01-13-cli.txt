@@ -1,0 +1,4 @@
+--mode rpc requires --transport http.
+exit=2
+transport 'http' is not available yet; use --transport stdio.
+exit=2

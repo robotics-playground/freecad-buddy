@@ -1,0 +1,1 @@
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-29620.json': No such file or directory

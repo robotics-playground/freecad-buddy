@@ -1,0 +1,5 @@
+render tc-13-06-render.png 1920 x 1920 background (255, 255, 255)
+top face: mean (90, 92, 93), max channel distance from background 165 (>= 24: True), every channel in [20, 235]: True
+left (front) face: mean (189, 194, 200), max channel distance from background 66 (>= 24: True), every channel in [20, 235]: True
+right face: mean (99, 101, 103), max channel distance from background 156 (>= 24: True), every channel in [20, 235]: True
+hole wall: mean (190, 196, 202), max channel distance from background 65 (>= 24: True), every channel in [20, 235]: True

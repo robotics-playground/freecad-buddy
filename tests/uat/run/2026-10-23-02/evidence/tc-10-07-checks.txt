@@ -1,0 +1,21 @@
+TC-10-07 checks (P8) - FreeCAD 11736 (launch tc-10-a) for <G>; H1 session 23:21:35-23:36:05 (p8_h1.py chain, tc-10-07-chain-run.txt), audit tc-10-07-audit.jsonl, stderr tc-10-07-server.stderr.log
+Given H1 started with FREECAD_BUDDY_AUDIT_LOG=evidence\tc-10-07-audit.jsonl, stderr captured -> OK
+Given tools/list 46, includes script_exec -> PASS
+Given D = box fcb-doc:MmXcPTu8..., E = cylinder fcb-doc:X5NrzXV4... (object Cylinder), both document_open OK
+Given worker pid 29652: the leaf process whose command line ends "-m freecad_buddy.hosts.headless.worker" (launcher 34160 -> 29652; front 27440 -> 32212). The uv venv python.exe is a launcher, so the worker command line is on two processes; the leaf runs FreeCAD.
+Given GUI <G> box fcb-doc:SbCg6czH...; Show All; view_fit_viewport OK; tc-10-07-before.png read: one whole iso box, no dialog
+When script_exec on D (75 s body, code as written) at t0=23:22:22.9
+Then status TIMEOUT, elapsed 30.023 s (30-31) -> PASS
+Then detail.data.marshal_timeout true -> PASS
+Then detail.data.maybe_still_running true -> PASS
+Then detail.message "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds" contains both strings -> PASS
+Then worker CPU (powershell (Get-Process -Id 29652).CPU) at t0+30.02 s 31.625, at t0+33.04 s 35.0625: grew -> PASS
+Then first query_tree_summary on E, 0.208 s after the envelope, duration 0.008 s, text "TIMEOUT: not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns". Status, time and message prefix match. "detail.data.quarantined true, no marshal_timeout key" cannot be read: query_tree_summary has no output schema and sends one text block with no structuredContent (adapters/mcp_server.py:111-115, _plain_text :127-138) -> FAIL. Cause: test-case defect (the Then reads detail.data from a text-only tool). Informational: a structured query_object on E right after carried detail.data {"quarantined": true} and no marshal_timeout.
+Then second query_tree_summary at t0+65.0 s: "WORKER_CRASHED: not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents". Status and both strings match; detail.data.quarantined not readable for the same reason -> FAIL (test-case defect). Informational query_object: data {"quarantined": true}.
+Then Get-Process -Id 29652 after the escalation -> found (CPU 66.58) -> PASS
+Then third query_tree_summary at t0+85.0 s -> "OK: 1 objects, 1 shown." -> PASS
+Then grep '"verify_verdict": "TIMEOUT"' tc-10-07-audit.jsonl -> 1 line, tool script_exec -> PASS
+Then (visual) no fit on D by either route -> PASS (none done)
+Then (visual) tc-10-07-after.png read (no fit): window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal, <G> whole; 0 pixels differ from before -> PASS
+Verdict: FAIL (2 Thens read detail.data.quarantined from query_tree_summary, which carries no structured envelope; test-case defect). Product behaviour matches the design (hosts/headless/entry.py:67-83).
+Human: pointer inside the window at 23:21:58 (186,330), then outside; at 23:24:07 (1270,0) inside after the after-capture. Not caused by me.

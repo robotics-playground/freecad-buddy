@@ -1,0 +1,12 @@
+TC-04-21 checks (R1, pid 5432)
+Given doc ReadOnly fcb-doc:TlRda_scZ1AoMyrj9LxrZw; BlockBody/BlockProfile 20x30/BlockPad 10 mm volume 6000.0 -> PASS; snapshots []; view_fit_viewport OK; tc-04-21-before.png
+PASS step 1: INVALID_INPUT "BlockPad has no property named 'Thickness'"
+PASS step 2: INVALID_INPUT "BlockPad.Shape is a Part::PropertyPartShape, which feature_set_parameters cannot write"; second doc ReadOnlyShaft ShaftRev: "ShaftRev.Base is read-only" (doc closed after)
+PASS step 3: INVALID_INPUT "Length value unit must be one of ['mm'], got 'deg'"
+PASS step 4: INVALID_INPUT "BlockPad.Length is a App::PropertyLength and takes a {value, unit} quantity or a number, got [25]" (verbatim as the rewritten Then)
+PASS pre-transaction: no envelope carries mutation.snapshot_path (no mutation block at all)
+PASS snapshots after: []
+PASS BlockPad volume 6000.0
+PASS batch {Length 12 mm, Thickness 3}: INVALID_INPUT "BlockPad has no property named 'Thickness'"; query_object Length "10.0 mm"
+PASS (visual) view_fit_viewport OK fitted
+PASS (visual) before vs after: same 20x30x10 block iso at the same height, 3D view pixel-identical (0 px). No dialog. Live check: -after-live.png differs in the property tab (display live). Status bar notification "1" is left over from TC-04-16 in this FreeCAD session (present in both captures).

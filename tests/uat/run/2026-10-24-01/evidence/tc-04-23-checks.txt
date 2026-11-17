@@ -1,0 +1,13 @@
+TC-04-23 checks (R1, pid 5432)
+Given doc Loose fcb-doc:pxpWHrMacRDAlcc2zWL-UQ; LooseProfile 20x30 at (5,5) with PosX/PosY: verify_sketch dof 0; script_exec delete PosX/PosY -> value_repr "2"; verify_sketch SPEC_FAILED subject.dof 2 -> PASS. Snapshots []. view_fit_viewport OK; tc-04-23-before.png
+When feature_pad LoosePad 10 mm
+PASS SPEC_FAILED (not OK)
+PASS rolled_back true, post_verify.passed false
+PASS explanation "verify_sketch failed on LooseProfile (dof=2): sketch.fully_constrained"
+PASS recompute_clean true, is_valid true, fully_constrained false
+PASS tree depth 3 names no LoosePad
+PASS query_object LooseBody: Tip None
+PASS rollback_proven "rolled_back_verified", changed [] (rewritten Then)
+PASS snapshots after []
+PASS (visual) view_fit_viewport OK
+PASS (visual) before vs after: only the loose 20x30 rectangle outline, no padded solid; 3D view pixel-identical (0 px). The rectangle's right corner sits under the floating Tasks panel in both (R1-F3 note). Live check: property tab change seen (display live).

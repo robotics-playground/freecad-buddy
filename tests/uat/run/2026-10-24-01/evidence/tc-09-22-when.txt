@@ -1,0 +1,7 @@
+## crash signatures
+grep exit 1
+## traceback counts
+tc-09-22-server.stderr.log:0
+tc-09-01-edge.stderr.log:0
+## all_passed
+True True

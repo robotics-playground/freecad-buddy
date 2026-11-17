@@ -1,0 +1,2 @@
+2026-10-23 22:22:44,325 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown assertion fn: {'a': {'a': {'a': {'a': {'a': {'a': {'a': {'a': {'a': {'a': 'leaf'}}}}}}}}}}
+2026-10-23 22:22:44,350 INFO freecad_buddy.dispatch: INVALID_INPUT: expect_volume.tol.rel must be a non-negative number

@@ -1,0 +1,13 @@
+TC-08-20 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0)
+Given: doc B 'tc-08-20-B' (empty) created first, then doc A 'tc-08-20-A' with Body + 20x20 Sketch (preview+confirm); document_list -> two handles.
+       A is active; view_fit_viewport A OK; tc-08-20-before.png.
+PASS  args.doc = A refused: INVALID_INPUT "operation.args must not carry 'doc'; the preview supplies it".
+PASS  args.doc = B refused with the same message (no mismatch message).
+PASS  TempDoc check on A: '[]'.
+PASS  no Pad: tree A = Body, Origin members, Sketch; tree B = 'OK: 0 objects'.
+PASS  without args.doc: status OK.
+PASS  token applied on B: INVALID_INPUT "confirm.preview_id was issued for a different document"; tree B still 0 objects.
+PASS  fit: view_fit_viewport A OK.
+PASS  visual: before and after both: title '* tc-08-20-A - FreeCAD 1.1.4', A tab active, the flat square sketch, no pad, B not activated;
+      p0_diff 0 pixels differ.
+Verdict: PASS.

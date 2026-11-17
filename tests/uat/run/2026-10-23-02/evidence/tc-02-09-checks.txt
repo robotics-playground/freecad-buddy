@@ -1,0 +1,16 @@
+TC-02-09 checks
+Given: document_list "0 open document(s)." (L1 pid 23152); box40-hole-r5.FCStd exists.
+When: File > Exit by cua-driver invoke_menu on pid 23152 (process ended 19:56:10, :8765 free). Relaunch with the file
+  path as the last FreeCAD argument via p2_launch.ps1 -OpenFile (Start-Process, the run's temporary -u profile and
+  audit-log variable) instead of cua-driver launch_app: launch_app cannot set the per-launch environment and profile.
+  The GUI itself opened the file; no MCP call opened it. New pid 29208, window 6362520.
+PASS verify_state TreeItem label_contains box40-hole-r5: status "satisfied", stable (tc-02-09-verify.txt).
+PASS title from list_windows: " box40-hole-r5 - FreeCAD 1.1.4".
+PASS document_list: "1 open document(s): box40-hole-r5."; doc fcb-doc:t31K7MtOFCN1bu6mWqBI5w matches ^fcb-doc:; transient false.
+PASS adopted handle usable: "- [FEATURE] BoxHole".
+PASS volume 15214.6 mm^3 (expected 15214.6018, within 0.1 %).
+PASS second document_list: same doc string, one entry.
+PASS fit: Show All, view_fit_viewport OK.
+PASS visual tc-02-09-after.png: one grey block with a round hole through its top face (inner wall shaded), whole, no edge
+  cut by the viewport border; tree box40-hole-r5 > BoxHole; title "* box40-hole-r5 - FreeCAD 1.1.4"; no dialog. The
+  floating Tasks panel covers part of the back right edge of the block.

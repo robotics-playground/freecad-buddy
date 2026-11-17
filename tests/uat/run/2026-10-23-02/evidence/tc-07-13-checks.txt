@@ -1,0 +1,12 @@
+H1 fcb-doc:KYYTpAS3mMxik7QeSwJwyQ H2 fcb-doc:mWrr01MqOZyzvoIYGGAGqA
+CHECK genus grade: ["OK", {"id": "assert.expect_volume", "measured": 15214.6, "expected": 15214.6, "tolerance": {"rel": 0.001}, "passed": true, "detail": {"message": "|15214.6 - 15214.6| = 3.66e-05 <= 15.2146 mm^3"}}, [["assert.expect_volume", true], ["shape.solid_count", true], ["shape.watertight", true]]]
+CHECK genus stl verify: ["OK", {"id": "trimesh_stl.euler", "measured": 0, "passed": true}]
+CHECK compound grade: ["OK", {"id": "shape.solid_count", "measured": 2, "expected": 2, "tolerance": null, "passed": true, "detail": {"message": "solids 2 vs 2"}}, {"id": "assert.expect_volume", "measured": 2000.0, "expected": 2000.0, "tolerance": {"rel": 0.001}, "passed": true, "detail": {"message": "|2000.0 - 2000.0| = 0.0 <= 2 mm^3"}}]
+CHECK compound mass: ["OK", true, null, ["area", "bbox", "com", "counts", "name", "solid", "volume"]]
+CHECK compound watertight: ["SPEC_FAILED", {"id": "shape.watertight", "measured": false, "expected": true, "tolerance": null, "passed": false, "detail": {"message": "watertight False vs True"}}]
+0 True
+H_RT fcb-doc:LpBujiZul4tZ-5lp8i8VRA
+(trimesh outside read: euler_number 0, is_watertight True)
+Given: both fixtures present (ls); box40-hole-r5 open as H1, OBJ1=BoxHole; two-box-compound open as H2, OBJ2=TwoBoxCompound.
+Visual: view_fit_viewport(H_RT) OK. tc-07-13-after.png (iso): mesh box with one round faceted opening on the top face, bore wall visible.
+tc-07-13-after-top.png (supplementary, camera only, top): square with one round hole showing the white background -> the opening passes all the way through.

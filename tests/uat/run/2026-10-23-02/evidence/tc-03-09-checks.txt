@@ -1,0 +1,14 @@
+TC-03-09 checks (doc tc-03-09-loose fcb-doc:Z0-PS5Y9SKlMm3hInGopNA; session tmp workdir\tmp\FCB_TMP_session_29208_35e2cd2f)
+PASS Given: verify_sketch LooseProfile dof 0, geometry_count 0; tree "v [SKETCH] LooseProfile".
+PASS Given capture: GUI Fit All, edit mode, tc-03-09-before.png.
+PASS no commit: status SPEC_FAILED.
+PASS rollback: mutation.rolled_back true, rollback_proven "rolled_back_verified", post_verify.passed false.
+PASS cause: explanation "verify_sketch failed on LooseProfile (dof=4): sketch.fully_constrained".
+PASS geometry gone: query_sketch_info geometry [].
+PASS prior state: fingerprint_before.digest == fingerprint_after.digest (7ee7b0f4...7f8c).
+PASS no snapshot left: session tmp empty before and after (tc-03-09-snapdirs-*.txt).
+PASS sketch gradeable: verify_sketch OK, dof 0.
+INFO fit: view_fit_viewport SPEC_FAILED "no visible object to frame..." (empty sketch); GUI Fit All used, as allowed.
+PASS visual: tc-03-09-before.png and tc-03-09-after.png (both in edit mode) read: red and green sketch axes crossing at the
+  origin point, nothing else; the red axis right of the origin (where the 0..60 line would lie) stays red with no
+  white or amber segment; task panel "Empty sketch"; no dialog. p0_diff: 0 of 1535072 pixels differ.

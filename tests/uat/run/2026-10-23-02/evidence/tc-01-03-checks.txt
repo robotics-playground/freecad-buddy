@@ -1,0 +1,12 @@
+TC-01-03 checks (P1)
+Given query_capabilities OK; document_open box OK (fcb-doc:KUA026Qf-u094IxmXmm4MA)
+When list_tools over http://127.0.0.1:8765/mcp -> printed 46 (tc-01-03-list-output.txt, tc-01-03-tools_list.json)
+Then count 46 on the default posture -> PASS
+Then grep export_self_read_(stl|3mf) -> nothing (rc=1) -> PASS
+Then grep script_exec -> one line -> PASS
+Then family counts {'document_': 7, 'query_': 8, 'verify_': 6, 'export_': 3, 'sketch_': 8, 'feature_': 11, 'preview_': 1, 'view_': 1, 'script_': 1} -> PASS
+Then 13 read-only names present -> True -> PASS
+Then additionalProperties False on all 46 input schemas (set of values ['False'], no exception) -> PASS
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-01-03-after.png read; tc-01-03-after-windows.txt lists only the main window -> PASS
+Cleanup: document_close. tc-01-03-tools_list.json kept as evidence (the Cleanup rm is not run on an evidence file).

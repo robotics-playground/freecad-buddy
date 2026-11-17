@@ -1,0 +1,119 @@
+{
+ "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+ "app_name": "freecad.exe",
+ "element_count": 5,
+ "elements": [
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 0,
+   "element_index": 0,
+   "element_token": "s000002ce:0",
+   "enabled": true,
+   "frame": {
+    "h": 245,
+    "w": 247,
+    "x": 592,
+    "y": 552
+   },
+   "label": "Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View.&View.V&isibility.V&isibility",
+   "role": "Menu"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 1,
+   "element_token": "s000002ce:1",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 245,
+    "x": 593,
+    "y": 643
+   },
+   "label": "Select Visible Objects",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 2,
+   "element_token": "s000002ce:2",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 245,
+    "x": 593,
+    "y": 675
+   },
+   "label": "Toggle All Objects",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 3,
+   "element_token": "s000002ce:3",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 245,
+    "x": 593,
+    "y": 705
+   },
+   "label": "Show All Objects",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 4,
+   "element_token": "s000002ce:4",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 245,
+    "x": 593,
+    "y": 735
+   },
+   "label": "Hide All Objects",
+   "parent_index": 0,
+   "role": "MenuItem"
+  }
+ ],
+ "elements_complete": false,
+ "pid": 11324,
+ "returned_element_count": 5,
+ "screenshot_file_path": "\\\\?\\D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\evidence\\tc-12-04-windowsmenu.png",
+ "screenshot_height": 243,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 246,
+ "snapshot_id": "s000002ce",
+ "total_element_count": 5,
+ "tree_markdown": "- [0] Menu [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View.&View.V&isibility.V&isibility actions=[invoke,set_value]]\n  - MenuItem \"Toggle Visibility\"\n  - MenuItem \"Show Selection\"\n  - MenuItem \"Hide Selection\"\n  - [1] MenuItem \"Select Visible Objects\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View.&View.V&isibility.V&isibility.Std_SelectVisibleObjects actions=[invoke,set_value]]\n  - [2] MenuItem \"Toggle All Objects\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View.&View.V&isibility.V&isibility.Std_ToggleObjects actions=[invoke,set_value]]\n  - [3] MenuItem \"Show All Objects\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View.&View.V&isibility.V&isibility.Std_ShowObjects actions=[invoke,set_value]]\n  - [4] MenuItem \"Hide All Objects\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&View.&View.V&isibility.V&isibility.Std_HideObjects actions=[invoke,set_value]]\n  - MenuItem \"Toggle Selectability\"\n",
+ "window_bounds": {
+  "height": 245,
+  "width": 248,
+  "x": 593,
+  "y": 553
+ },
+ "window_id": 7080490,
+ "window_title": "FreeCAD"
+}

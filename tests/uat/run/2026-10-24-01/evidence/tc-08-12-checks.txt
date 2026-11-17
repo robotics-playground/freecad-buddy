@@ -1,0 +1,18 @@
+TC-08-12 (R2, launch r2-L1-tc08 pid 29140 AUTO_APPROVE=0)
+Given: tc-08-12 Body + fully constrained 20x20 Sketch; view_fit_viewport OK fits 0.95; tc-08-12-before.png (19:08:3x).
+When: preview_dry_run feature_body_create Probe at 12:08:36.540 UTC; apply with the token (spends it) OK; same token 1 s later.
+      Isolated wait 19:08:47 -> 19:23:45 (tc-08-12-wait.txt): no other call, scenario, H1 run or GUI action in this or any FreeCAD.
+      Same spent token presented at 12:23:45.754 UTC = 909.2 s after mint (> 901 s).
+PASS TTL: expires_at 12:23:36.667633Z minus call time 12:08:36.540050Z = 900.13 s.
+PASS expired: INVALID_INPUT "confirm.preview_id has expired; re-run preview_dry_run".
+PASS expiry wins over spent: the post-deadline message is the expiry message, not the already-authorized one.
+PASS both checks live: 1 s after the apply the same token -> INVALID_INPUT "confirm.preview_id has already authorized a mutation; re-run preview_dry_run".
+PASS fresh preview + apply of feature_body_create Probe3 within the TTL -> OK.
+PASS query_tree_summary depth 2 read before the Probe3 apply: "v [BODY] Body ... v [BODY] Probe" - exactly one Probe.
+PASS fit OK fits 0.95 (right after the expired call).
+PASS visual: after capture 19:23:57, 12 s after the expired call. Before: tree tc-08-12 > Body; after: tc-08-12 > Body, Probe. Viewport the same flat
+     20x20 rectangle; no duplicated body, no dialog, status-bar badge blank in both. r2_diff 1194 px, box (17,270)-(125,294) = the Probe row only.
+     The 2026-10-23-02 badge/Tasks-button change (TC-08-21 run during the wait, agent fault) is absent. Pointer outside the window (1853,681).
+     Live check 3086 px.
+Token file scratchpad\rerun\r2-tc-08-12-token.json removed by part 2. Logs carry preview_id cut to 16 characters.
+Verdict: PASS

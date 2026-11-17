@@ -1,0 +1,20 @@
+Spawning headless H1 server + running the edge/corner/error sweep...
+
+  [FAIL] unknown_doc_handle         NO_STATUS 
+  [PASS] unknown_object_name        INVALID_INPUT 
+  [PASS] retired_max_nodes_rejected SCHEMA_ERROR additionalProperties: False rejects the retired parameter
+  [FAIL] depth_one_returns_roots_only NO_STATUS shown=None roots=0
+  [PASS] export_missing_path_schema SCHEMA_ERROR schema-required rejection
+  [FAIL] export_multi_object        NO_STATUS 
+  [PASS] stale_export_id            INVALID_INPUT 
+  [FAIL] screenshot_read_only       OK volume None -> None
+  [PASS] double_close_stale         INVALID_INPUT 
+  [PASS] open_bad_path              INVALID_INPUT 
+  [FAIL] compound_com_null          NO_STATUS com=None
+  [FAIL] fault_shape:wrong-volume   NO_STATUS status=NO_STATUS
+  [FAIL] fault_shape:non-watertight-open-shell NO_STATUS status=NO_STATUS
+
+6/13 edge checks passed
+report: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p7-sweep-tc-09-01\edge_report.json
+exit code of _run(): 1
+exit=1

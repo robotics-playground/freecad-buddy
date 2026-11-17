@@ -1,0 +1,17 @@
+TC-02-08 checks (R1, pid 11420)
+Given doc tc-02-08-plate (fcb-doc:V8PFm8yLdrAEV4hGNTV8wA) Body > Sketch 60x40 + Pad 10. script_exec Body.Placement = ((30,20,10), Rot(Z,30)) OK; query_placement Body shows (30,20,10) 30 deg -> PASS
+Given feature_datum DatumPlane plane on Pad Face6 (top, oracle bbox z 10..10), offset 5 mm -> OK, tnp CLEAN (18:33:51.7-18:33:52.4)
+Then keys exactly object/local/global (Body, Pad, DatumPlane) -> PASS
+Then positions {value, unit:"mm"} x/y/z -> PASS
+Then axis bare {x,y,z} floats, no unit -> PASS
+Then angle {value, unit:"deg"} -> PASS (Body 30 deg)
+Then contained global != local: Pad local (0,0,0) global (30,20,10); DatumPlane local (0,0,15) global (30,20,25) -> PASS
+Then Body global == local field for field -> PASS
+Then composition: Body placement applied to Pad local (0,0,0) = (30,20,10) = Pad global; Datum (0,0,15) -> (30,20,25) -> PASS
+Then no placement: NoPlacementSheet (Spreadsheet::Sheet made by script_exec) -> INVALID_INPUT "object has no placement: NoPlacementSheet" -> PASS
+Then (visual) view_fit_viewport OK fitted, framing fits 0.95 computed -> PASS
+Then (visual) tc-02-08-after.png (18:34:36): the rotated 60x40x10 plate on the yellow datum plane, inside the view rectangle: no plate edge is cut by a view border (the 2026-10-23-02 defect, plate cut by top and right borders, is gone). The back-right top corner of the plate (about x 1300, y 435) and the ends of the two edges that meet there are covered by the floating Tasks panel ("Start Part / New Body", x 1140-1560, y 437-515): tc-02-08-after-corner-crop.png. The datum plane runs past the left and top borders (it is not the solid). No dialog.
+  Origin axes cross: not shown by default. tc-02-08-after-axiscross.png (View > Toggle Axis Cross on): no cross in the MCP-fitted frame (origin outside it). tc-02-08-after-guifit.png (GUI Fit All toolbar, route accessibility, with the cross): the plate sits clearly away from the X/Y/Z axis cross at the origin; the same back-right corner is again under the Tasks panel, so the occlusion comes from FreeCAD's floating Tasks panel layout, not from the bridge fit. Axis cross turned off again.
+  Grade: PASS with finding R1-F3 (the fit, MCP and native, frames against the whole 3D view including the area under the floating Tasks panel; a plate corner is hidden from the human; lead log W1b open item 1). Lead may override to FAIL if "whole" means fully visible to the human.
+Watch item (W7): notification badge after feature_datum: tc-02-08-statusbar-series.png rows = pre-datum (18:33:48), +13 s (18:34:05), +44 s after the fit (18:34:36), +2 min (18:36:08): the notification icon has no number in every row (W2 control picture shows "1" next to the same icon when there is one) -> blank, W7 fix holds.
+Note: before the fit, framing on the Body placement read said "unavailable: every projected corner was an implausible magnitude" (camera left at Top 7.36 x 4.14 mm view by the sketch tools); the fit corrected it.

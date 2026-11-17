@@ -1,0 +1,12 @@
+TC-02-09 checks (R1)
+Given (pid 11420) document_list "0 open document(s)." -> PASS; box40-hole-r5.FCStd exists -> PASS
+When File > Exit (18:37:32), relaunch with the file path as FreeCAD argument via r1_launch.ps1 -OpenFile (Start-Process with -u/-s temp profile; launch_app cannot set a profile). New pid 5432, window 2233716.
+Then verify_state TreeItem label_contains box40-hole-r5 -> "satisfied", stable, 2 samples (tc-02-09-verify.txt); title " box40-hole-r5 - FreeCAD 1.1.4" -> PASS
+Then document_list "1 open document(s): box40-hole-r5." -> PASS
+Then doc "fcb-doc:T9hgnNj26UuPPMpNEp34TA" matches ^fcb-doc: -> PASS
+Then transient false -> PASS
+Then query_tree_summary on the adopted handle: "OK: 1 objects, 1 shown." first tree line "- [FEATURE] BoxHole" -> PASS
+Then query_mass_properties BoxHole volume 15214.6 (0.0001 % from 15214.6018) -> PASS
+Then second document_list: same doc string, one entry -> PASS
+Then (visual) Show All (invoke_menu), view_fit_viewport OK fitted fits 0.95 -> PASS
+Then (visual) tc-02-09-after.png: grey 40x40x10 block, iso, round hole through the top face (the bore wall visible inside), whole within the view, no edge cut by a border; tree box40-hole-r5 > BoxHole; title "* box40-hole-r5 - FreeCAD 1.1.4" (the * comes from Show All); no dialog. The block's right corner touches the bottom edge of the floating Tasks panel (R1-F3 note). Display live: capture shows the Show All and fit results. -> PASS

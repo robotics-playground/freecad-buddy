@@ -1,0 +1,6 @@
+2026-10-23T22:53:07.616+07:00 CHECK tools/list count / script_exec listed: [46, true]
+2026-10-23T22:53:08.153+07:00 CHECK sampled read-only calls / median: [40, 0.009]
+2026-10-23T22:53:08.153+07:00 CHECK statuses not OK: []
+2026-10-23T22:53:08.153+07:00 CHECK query_screenshot entries: [{"tool": "query_screenshot", "duration_s": 0.042, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.014, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.014, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.014, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.015, "status": "OK"}]
+2026-10-23T22:53:08.153+07:00 CHECK calls at or over their tool_catalog timeout: []
+2026-10-23T22:53:08.153+07:00 CHECK max duration per tool: {"document_close": 0.01, "document_list": 0.009, "document_open": 0.04, "query_mass_properties": 0.01, "query_object": 0.009, "query_placement": 0.009, "query_screenshot": 0.042, "query_tree_summary": 0.004, "verify_recompute": 0.009, "verify_shape": 0.012}

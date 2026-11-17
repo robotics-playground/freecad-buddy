@@ -1,0 +1,15 @@
+TC-08-05 (R2, GUI launch r2-L1-tc08 pid 29140 AUTO_APPROVE=0; H1 leg r2_h1.py tc-08-05, FCB_ENV rerun env, FREECAD_USER_HOME temp)
+Given: tc-08-05 Body + Sketch + Pad 30 (preview+confirm); query_screenshot iso OK with resource_link
+       ...\workdir\tmp\FCB_TMP_session_29140_3c3950b7\FCB_TMP_shot_53syqnrn.png; view_fit_viewport OK fits 0.95; tc-08-05-before.png.
+When: GUI preview_dry_run Pad Length 40 render "off"; render "auto"; render "sometimes".
+      H1 (tc-08-05-h1.jsonl): document_create tc0805h1, Body, Sketch 20x20, Pad 30 (auto-approve, flag unset), preview_dry_run Length 40 render "auto".
+PASS render off -> status OK, diff.render {"available": false, "reason": "off"}.
+PASS headless -> status OK, diff.render {"available": true, "reason": null}: H1 has an offscreen render port (pivy imports in the rerun env); reason not "off". Headless form seen: available true.
+PASS never collapsed: "off" appears only on the render "off" call (GUI auto reason null; H1 auto reason null).
+PASS neither case an error: render-off call OK, headless call OK.
+PASS GUI render auto -> diff.render.available true.
+PASS render "sometimes" -> isError true "Input validation error: 'sometimes' is not one of ['auto', 'off']" (schema refusal).
+PASS fit OK fits 0.95.
+PASS visual: before and after show the same 20 x 20 x 30 pad in iso (height about 1.5 x width), tree tc-08-05 > Body, badge area blank;
+     r2_diff 0 differing pixels. Live check 3086 px.
+Verdict: PASS

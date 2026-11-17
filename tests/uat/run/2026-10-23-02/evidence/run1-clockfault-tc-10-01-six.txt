@@ -1,0 +1,15 @@
+H1 START 2026-10-23T22:51:07.040+07:00 tag=tc-10-01 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-10-01-h1-audit.jsonl stderr=tc-10-01-h1.stderr.log
+CHECK tools/list count / script_exec listed: [46, true]
+== [given open] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\box-10-20-30.FCStd"} t=0.015..0.031 dur=0.016 status=OK msg=None
+== [given tree] query_tree_summary {} t=0.031..0.031 dur=0.0 status=OK msg=1 objects, 1 shown.
+== [when six reads] query_tree_summary {} t=0.031..0.031 dur=0.0 status=OK msg=1 objects, 1 shown.
+== [when six reads] query_object {"object": "Box"} t=0.031..0.046 dur=0.015 status=OK msg=None
+== [when six reads] query_mass_properties {"object": "Box"} t=0.046..0.046 dur=0.0 status=OK msg=None
+== [when six reads] query_placement {"object": "Box"} t=0.046..0.062 dur=0.016 status=OK msg=None
+== [when six reads] verify_shape {"object": "Box"} t=0.062..0.078 dur=0.016 status=OK msg=None
+== [when six reads] document_list {} t=0.078..0.078 dur=0.0 status=OK msg=None
+CHECK spans overlapping the previous span: [2, 4, 5]
+CHECK statuses: ["OK", "OK", "OK", "OK", "OK", "OK"]
+CHECK tool order equals sent order: true
+== [cleanup close] document_close {} t=0.078..0.093 dur=0.015 status=OK msg=None
+H1 END 2026-10-23T22:51:08.343+07:00 (client stdin closed, host exited)

@@ -1,0 +1,7 @@
+all_passed True
+total 14
+True 0
+[{'tool': 'retired_max_nodes_rejected', 'ok': True, 'status': 'SCHEMA_ERROR', 'detail': 'additionalProperties: False rejects the retired parameter'}]
+[('fault_shape:wrong-volume', True), ('fault_shape:non-watertight-open-shell', True)]
+['INVALID_INPUT', 'OK', 'SCHEMA_ERROR', 'SPEC_FAILED']
+INFO INVALID_INPUT count: 7  Traceback count: 0

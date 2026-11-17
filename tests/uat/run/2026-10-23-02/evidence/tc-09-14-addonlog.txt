@@ -1,0 +1,4 @@
+2026-10-23 22:25:16,092 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchSketch
+2026-10-23 22:25:16,114 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchSketch
+2026-10-23 22:25:16,129 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Body
+2026-10-23 22:25:16,148 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in feature: NoSuchFeature

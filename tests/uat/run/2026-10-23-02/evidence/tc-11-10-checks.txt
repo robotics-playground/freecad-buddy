@@ -1,0 +1,8 @@
+TC-11-10 checks
+GUI (proxy, tc-11-10-mcp.jsonl): baseline document_list ['box_10_20_30'] (no FCB_TMP_); preview_dry_run feature_body_create PreviewBody -> OK;
+export_step -> evidence/tc-11-10-box.step OK; verify_export_step OK; final document_list ['box_10_20_30'] = baseline.
+box fingerprint (script_exec, fresh): d1011f78ac75... before the When (after Show All + fit) and d1011f78ac75... after: equal.
+(The Given-time value 554070c862f8... was taken before Show All; Show All changes object visibility.)
+GUI session temp folder (in-process): C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_17944_5578405b -> [] (no FCB_TMP_prev_ entry)
+H1 leg (tc-11-10-h1.jsonl, workdir evidence/tc-11-10-workdir): document_list ['tc11_10'] before and after preview + export_step + verify_export_step; session folder FCB_TMP_session_35004_be1f7079 empty.
+0 of 1535072 pixels differ; bbox None

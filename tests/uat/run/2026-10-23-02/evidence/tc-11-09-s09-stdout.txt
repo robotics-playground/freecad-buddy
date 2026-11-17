@@ -1,0 +1,19 @@
+CHECK old record pid / masked token: [17944, "slhy...(len 43)"]
+CHECK new record pid / masked token: [35504, "A4lW...(len 43)"]
+CHECK tokens differ: true
+CHECK old rpc file exists: false
+{"client": "OLD", "connect": "connected", "elapsed": 0.0, "record": "rpc-35504.json", "port": 49934}
+{"client": "OLD", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<old token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.0}
+{"client": "OLD", "recv": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+CHECK OLD-token frame: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+{"client": "OLD", "recv": "<zero bytes: closed by peer>", "partial": "", "elapsed": 0.0}
+CHECK next recv after refusal: "None"
+{"client": "OLDV", "connect": "connected", "elapsed": 0.0, "record": "rpc-35504.json", "port": 49934}
+{"client": "OLDV", "sent": "rpc_hello old token, version 999", "bytes": 146, "newline": true, "elapsed": 0.0}
+{"client": "OLDV", "recv": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+CHECK OLD-token + unsupported version frame: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+{"client": "NEW", "connect": "connected", "elapsed": 0.015, "record": "rpc-35504.json", "port": 49934}
+{"client": "NEW", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<new token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.015}
+{"client": "NEW", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.015, "since_last_send_s": 0.0}
+CHECK NEW-token hello: {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}
+{"client": "NEW", "closed_by_client": true, "elapsed": 0.015}

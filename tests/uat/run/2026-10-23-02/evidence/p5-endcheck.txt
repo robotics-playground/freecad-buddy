@@ -1,0 +1,12 @@
+freecad: 0
+listen8765: 0
+user.cfg: CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B
+cua: pid: 5516
+
+   Id Path                                                                                     
+   -- ----                                                                                     
+15584 C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.13.9-windows-x86_64-none\python.exe   
+22608 C:\Users\thuan\AppData\Local\uv\cache\archive-v0\CkK9mEzhHSl4xglOlND51\Scripts\python.exe
+
+
+

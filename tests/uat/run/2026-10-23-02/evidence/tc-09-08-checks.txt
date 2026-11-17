@@ -1,0 +1,25 @@
+== [when checks absent] verify_shape {"object": "Box"}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"subject": {"object": "Box"}, "checks": [{"id": "shape.volume", "measured": 6000.0, "passed": true}, {"id": "shape.bbox", "measured": [10.0, 20.0, 30.0], "passed": true}, {"id": "shape.solid_count", "measured": 1, "passed": true}, {"id": "shape.valid", "measured": true, "passed": true}, {"id": "shape.watertight", "measured": true, "passed": true}], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15, "anchor_frame": {"kind": "global", "ref": null, "entity": null, "origin": [0.0, 0.0, 0.0], "axes": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "units": "mm"}}, "verdict": "OK"}, "text": "Box: shape checks passed (OK).", "framing": {"fits": true, "ratio": 0.95, "checked": "computed", "stale_reason": null}}
+== [when checks null] verify_shape {"object": "Box", "checks": null}
+   isError=True {"text": "Input validation error: None is not of type 'array'", "is_error": true}
+== [when checks []] verify_shape {"object": "Box", "checks": []}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"subject": {"object": "Box"}, "checks": [{"id": "shape.volume", "measured": 6000.0, "passed": true}, {"id": "shape.bbox", "measured": [10.0, 20.0, 30.0], "passed": true}, {"id": "shape.solid_count", "measured": 1, "passed": true}, {"id": "shape.valid", "measured": true, "passed": true}, {"id": "shape.watertight", "measured": true, "passed": true}], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15, "anchor_frame": {"kind": "global", "ref": null, "entity": null, "origin": [0.0, 0.0, 0.0], "axes": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], "units": "mm"}}, "verdict": "OK"}, "text": "Box: shape checks passed (OK).", "framing": {"fits": true, "ratio": 0.95, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometry"}}
+CHECK checks absent: ["OK", [["shape.volume", false], ["shape.bbox", false], ["shape.solid_count", false], ["shape.valid", false], ["shape.watertight", false]]]
+CHECK checks null rejection: [true, "Input validation error: None is not of type 'array'"]
+CHECK checks [] : ["OK", [["shape.volume", false], ["shape.bbox", false], ["shape.solid_count", false], ["shape.valid", false], ["shape.watertight", false]]]
+CHECK same fact ids: true
+== [when depth absent] query_tree_summary {}
+   isError=False {"text": "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.95, cached, served from cache; unverified key component(s): geometry\nv [FEATURE] Box", "is_error": false}
+== [when depth null] query_tree_summary {"depth": null}
+   isError=True {"text": "Input validation error: None is not of type 'integer'", "is_error": true}
+CHECK depth absent first line / top-level lines / all tree lines: ["OK: 1 objects, 1 shown.", 1, 1]
+CHECK depth null rejection: [true, "Input validation error: None is not of type 'integer'"]
+== [when ap absent] export_step {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-08-n.step"}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"export_id": "fcb-export:5IxBnx-wUkCNS7qbb6TsCw", "path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-08-n.step", "bytes": 6886, "verified": false}, "text": "STEP export written -> D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-08-n.step.", "framing": {"fits": true, "ratio": 0.95, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometry"}}
+== [when ap null] export_step {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-08-n2.step", "ap": null}
+   isError=True {"text": "Input validation error: None is not one of ['AP214', 'AP242']", "is_error": true}
+CHECK ap absent status: "OK"
+CHECK grep -c AP242 tc-09-08-n.step: 1
+CHECK FILE_SCHEMA line: ["FILE_SCHEMA(("]
+CHECK ap null rejection: [true, "Input validation error: None is not one of ['AP214', 'AP242']"]
+CHECK tc-09-08-n2.step exists: false

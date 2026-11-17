@@ -1,0 +1,5 @@
+2026-10-23T20:49:01.5422970+07:00	C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_24108_d01ffc25
+2026-10-23T20:48:22.8853813+07:00	C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_24108_d01ffc25\FCB_TMP_snap_pv656jfb
+2026-10-23T20:49:01.5502992+07:00	C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_24108_d01ffc25\FCB_TMP_snap_tvtdo67h
+2026-10-23T20:48:22.9132631+07:00	C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_24108_d01ffc25\FCB_TMP_snap_pv656jfb\tc_05_07.FCStd
+2026-10-23T20:49:01.5492993+07:00	C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_24108_d01ffc25\FCB_TMP_snap_tvtdo67h\tc_05_11.FCStd

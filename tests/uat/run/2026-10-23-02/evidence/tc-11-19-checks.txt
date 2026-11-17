@@ -1,0 +1,37 @@
+## new addon.log lines (tc-11-c-addon.log)
+operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-11-c-audit.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+session-start sweep removed 2 leftover temp artifact(s)
+## tmp listing after start (00:44:52)
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp:
+FCB_TMP_session_17840_cafebabe/
+keep-me.txt
+not-reserved/
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_17840_cafebabe:
+keep.txt
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/not-reserved:
+keep.txt
+## checks
+gone:   FCB_TMP_session_999996_deadbeef
+gone:   FCB_TMP_snap_orphan
+exists: FCB_TMP_session_17840_cafebabe/keep.txt
+exists: not-reserved/keep.txt
+exists: keep-me.txt
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_snap_tc1119/
+OS temp entry still listed
+## H1
+session-start sweep removed 1 leftover temp artifact(s)
+tc-11-19-workdir/tmp after: []
+## grep -n "session-start sweep" bootstrap.py worker.py
+src/freecad_buddy/hosts/gui_addon/bootstrap.py:139:    logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
+src/freecad_buddy/hosts/headless/worker.py:107:    logger.info("session-start sweep removed %s leftover temp artifact(s)", sweep_temp_dir())
+Explorer window (D:\Work\Personal\Sources\into-the-multiverse-asmoday, not opened by the agent) covered FreeCAD C from about 00:45:15 (first unpainted capture; desktop capture 00:45:59) - human intervention. Restored by agent cua-driver bring_to_front at 08:02:22 after the user left (lead's instruction).
+19919 of 1535072 pixels differ; bbox (0, 34, 1567, 63)
+## cleanup (08:03:24): sleeper pid 17840 ended by itself (time.sleep(900) elapsed), no taskkill needed
+removed 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_17840_cafebabe/keep.txt'
+rmdir: removing directory, 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_17840_cafebabe'
+removed 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/not-reserved/keep.txt'
+rmdir: removing directory, 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/not-reserved'
+removed 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/keep-me.txt'
+rmdir: removing directory, 'C:\Users\thuan\AppData\Local\Temp/FCB_TMP_snap_tc1119'

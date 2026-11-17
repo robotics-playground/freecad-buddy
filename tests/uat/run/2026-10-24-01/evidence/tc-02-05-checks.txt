@@ -1,0 +1,19 @@
+TC-02-05 checks (R1, FreeCAD pid 11420, launch r1-L4, default posture)
+Given doc tc-02-05-plate (fcb-doc:YWR7G2Ugt2Nuz4VlYW1-wg): Body > Sketch (60x40 rect, fully constrained) + Pad 10 mm, volume 24000; focus Body shows "v [BODY] Body" with child lines -> PASS. view_fit_viewport OK; tc-02-05-before.png.
+Note: query_tree_summary sends text only (mcp-tools-design.md:60); "shown"/"matches" read from the header "OK: N objects, S shown[, M matches]". The Then wording "structured_content.shown"/"structured_content.matches" names a field the tool does not send (finding R1-F2).
+PASS depth 1: "OK: 11 objects, 1 shown." one line "v [BODY] Body (+2)", no connector, shown 1 = 1 line.
+PASS depth 3: shown 11 > 1; |-- / `-- connectors under Body.
+PASS focus Body depth 2: line 1 "path: Body", line 2 "v [BODY] Body", only Body descendants.
+PASS unknown focus: isError, "INVALID_INPUT: unknown object: NoSuchObject".
+PASS expand [Pad]: "v [BODY] Body (+1 more)", one child "`-- v [PAD] Pad *tip", then "    `-- v [SKETCH] Sketch".
+PASS types PAD == types PartDesign::Pad: identical text "2 shown, 1 matches", Pad under Body, 1 Pad in doc.
+PASS name_pattern ^Pad: only revealed line Pad.
+PASS AND-stack: "1 shown, 0 matches", tree line "v [BODY] Body (+2)" equal to depth 1 (header adds ", 0 matches"; framing line cached vs computed).
+PASS v/- marker: before hide "`-- v [PAD] Pad (+1) *tip"; after hide "`-- - [PAD] Pad (+1) *tip"; after restore "`-- v [PAD] Pad (+1) *tip".
+  Route (tc-02-05-hide-route.txt): as written, background UIA click on Pad TreeItem + press_key space -> space effect unverifiable, escalation {delivery_failed, foreground}; marker stayed "v" (no hide). Escalated to delivery_mode foreground for the tree click and Space (lead decision W6: foreground for tree-row select, pointer moved out after; done by r1_fg.py). Hide and restore both worked. Body was expanded first with a background pixel click on its arrow (21,261).
+  tc-02-05-hidden.png: only the sketch rectangle outline drawn, Pad row eye icon struck, Pad row selected.
+PASS visible_only: isError, "Input validation error: Additional properties are not allowed ('visible_only' was unexpected)".
+PASS unknown_filter: isError, "Input validation error: Additional properties are not allowed ('unknown_filter' was unexpected)".
+PASS fit: view_fit_viewport OK fitted, fits 0.95.
+PASS visual: before vs after: same grey 60x40x10 plate iso, corners about (470,446) (852,226) (1425,557) (1043,887), whole, no edge cut by the view border, no dialog. 3D view area (330,210)-(1568,905) pixel-identical (r1_diff.py: 0 px). After differs only in the tree (Body expanded) and the status bar text. tc-02-05-after-selected.png = same before the deselect click (Pad selection highlight). Display live: the after capture shows the deselect click result.
+Note: the floating Tasks panel ("Start Part / New Body") covers a part of the plate's back top edge in before and after (W1b open item: the fit measures the whole 3D view including the area under the Tasks panel).

@@ -1,0 +1,6 @@
+60
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-11736.json
+netstat listener port 49721:
+  TCP    127.0.0.1:49721        0.0.0.0:0              LISTENING       11736
+  TCP    127.0.0.1:49721        127.0.0.1:61358        ESTABLISHED     11736
+  TCP    127.0.0.1:61358        127.0.0.1:49721        ESTABLISHED     21508

@@ -1,0 +1,7 @@
+2026-10-23T23:24:36.393+07:00 CHECK 09 given tree E text: "OK: 1 objects, 1 shown.\nv [FEATURE] Cylinder"
+2026-10-23T23:25:27.907+07:00 CHECK 09 c1 status / message: ["INVALID_INPUT", "unknown object: NoSuchObject"]
+2026-10-23T23:25:27.907+07:00 CHECK 09 c2 status / message / marker exists: ["INVALID_INPUT", "document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating", false]
+2026-10-23T23:25:27.907+07:00 CHECK 09 c3 status / text: ["OK", "OK: 1 objects, 1 shown.\nv [FEATURE] Box"]
+2026-10-23T23:25:27.907+07:00 CHECK 09 c4 status / message: ["OK", null, {"doc": "fcb-doc:MmXcPTu8axfX4zWOm5mYUg", "stdout": "", "value_repr": "'ran'", "fingerprint_after": null}]
+2026-10-23T23:25:27.915+07:00 CHECK 09 D tree: "OK: 2 objects, 2 shown.\nv [FEATURE] Box\nv [BOX] QuarantineCleared"
+2026-10-23T23:25:27.955+07:00 CHECK 09 save status: ["OK", null]

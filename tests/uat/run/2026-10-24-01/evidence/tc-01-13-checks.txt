@@ -1,0 +1,14 @@
+TC-01-13 checks (R1)
+Run 1 (18:22:06, pid 12936) = AGENT EXECUTION FAULT, not graded: r1_launch.ps1 bound "FREECAD_BUDDY_NO_AUTO_MCP=no" to its positional -OpenFile parameter, so the variable was not set (addon.log "FREECAD_BUDDY_NO_AUTO_MCP='' (unset)", "spawned MCP proxy (pid 27172)"). Evidence kept: tc-01-13-run1-fault-addon.log, tc-01-13-run1-fault.png. FreeCAD closed with File > Exit; script fixed (PositionalBinding=$false); scenario re-run from its Given.
+Run 2 (18:22:51, pid 37468, temporary -u/-s profile, FREECAD_BUDDY_NO_AUTO_MCP=no):
+Given no freecad.exe, :8765 free -> PASS. Addon log not rotated (RULES: read by byte offset): tc-01-13-addon.log = bytes after offset.
+Then listener started: "freecad-buddy RPC listener started on 127.0.0.1:62832"; rpc-37468.json exists -> PASS
+Then proxy not spawned: netstat :8765 LISTENING none -> PASS
+Then log verbatim "FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy" -> PASS (operator settings line shows FREECAD_BUDDY_NO_AUTO_MCP='no' (env))
+Then truthiness: value 'no' -> PASS
+Then CLI 1: stderr "--mode rpc requires --transport http." exit=2 -> PASS
+Then CLI 2: stderr "transport 'http' is not available yet; use --transport stdio." exit=2 -> PASS
+Then no port bound after CLI: netstat :8765 none -> PASS
+When New Document: invoke_menu File > New Document -> title " Unnamed - FreeCAD 1.1.4"; File menu popup window 5247196 left open, closed with Escape.
+Then (visual) Fit All toolbar by element_token s000001f8:68 -> route "accessibility" (tc-01-13-fitall.txt) -> PASS
+Then (visual) tc-01-13-after.png read: FreeCAD main window, menu bar, Model tree with "Unnamed", empty 3D view with navigation cube and axis cross, tab "Unnamed : 1", Tasks panel "Start Part / New Body", no dialog, no splash, no crash. Live check: -live.png differs in property tab area (3086 px) -> PASS

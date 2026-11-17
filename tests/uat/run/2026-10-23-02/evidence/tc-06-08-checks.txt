@@ -1,0 +1,13 @@
+TC-06-08 (launch P5 tc-06-b, pid 23332)
+Given: doc tc-06-08 (PlateBody/PlateProfile/PlatePad 60x40x5); document_list returns the handle; PIL via 'uv run --with pillow'.
+Fit first: view_fit_viewport OK.
+PASS  default 1920x1920: tc-06-08-default.png (1920, 1920).
+PASS  explicit 640x480: tc-06-08-640x480.png (640, 480).
+PASS  above cap refused: "Input validation error: 4096 is greater than the maximum of 1920" (isError true, no image, no clamp).
+PASS  exactly 1920 accepted: OK, tc-06-08-1920.png (1920, 1920).
+PASS  zero refused: INVALID_INPUT "image dimension must be positive: 0".
+PASS  width only 800: OK, tc-06-08-w800.png (800, 1920).
+PASS  visual: tc-06-08-after.png window: one flat wide plate, iso, long face front-left, short face right, Z up.
+      tc-06-08-default.png: the same plate, same proportion and orientation; only resolution differs.
+Observation: the 800 x 1920 render draws the plate at about 41 % of the width, centred, with large empty bands above and below.
+Verdict: PASS.

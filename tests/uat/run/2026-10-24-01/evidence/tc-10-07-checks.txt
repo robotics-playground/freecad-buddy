@@ -1,0 +1,24 @@
+TC-10-07 (R2; H1 via r2_h1chain.py c07 from FCB_ENV, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc1007, audit tc-10-07-audit.jsonl,
+          stderr tc-10-07-server.stderr.log; GUI launch r2-L2 pid 29004)
+Given: H1 tools/list 46 incl. script_exec; D box-10-20-30 fcb-doc:P8gb..., E cylinder-r5-h20 fcb-doc:sSLZ... (object Cylinder), both OK;
+       worker pid 29172 (leaf "...bin\python.exe -m freecad_buddy.hosts.headless.worker", parent 19588 venv launcher);
+       GUI: document_open box-10-20-30 as G, Show All, fit OK fits 0.95, tc-10-07-before.png. Then the overrun was released.
+When/Then (tc-10-07-h1.jsonl, tc-10-07-h1-checks.txt, tc-10-07-chain-stdout.txt):
+PASS script_exec 75 s body on D: status TIMEOUT, elapsed 30.017 s (30-31 s).
+PASS detail.data.marshal_timeout true.
+PASS detail.data.maybe_still_running true.
+PASS message "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is
+     now suspect: do not blind-retry, run a query_* read first to confirm the document still responds".
+PASS not preempted: worker CPU 54.89 s at +30.02 s, 61.08 s at +33.02 s (grew).
+PASS query_object E Cylinder 0.197 s after the envelope: returned in 0.002 s, status TIMEOUT, detail.data {"quarantined": true} (no
+     marshal_timeout key), message "not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; ...".
+PASS query_object at +64.99 s: WORKER_CRASHED, data quarantined true, message contains "has run past twice its 30 s budget" and
+     "restart the headless host".
+PASS Get-Process 29172 after the escalation still finds the worker (CPU 118.73 s).
+PASS query_object at +84.99 s: status OK.
+PASS audit: one line tool script_exec verify_verdict TIMEOUT.
+PASS no fit on D (as written); the before image was framed in the Given.
+PASS visual: tc-10-07-after.png (taken after the +85 s probe): window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding,
+     no modal, G drawn whole; r2_diff vs before 0 px. Live check 3086 px.
+The Thens now read detail.data from query_object (structured), not query_tree_summary (W5 fix); the 2026-10-23-02 test-case defect is gone.
+Verdict: PASS

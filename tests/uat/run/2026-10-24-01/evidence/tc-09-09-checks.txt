@@ -1,0 +1,19 @@
+TC-09-09 (R2, GUI launch r2-L2 pid 29004)
+Given: document_create TC0909Scratch OK; document_open box-10-20-30 as H OK (H in front); Show All; view_fit_viewport H OK fits 0.95;
+       tc-09-09-before.png. addon.log byte offset 590197 recorded before the When.
+When: document_create label 4096 x 'a'; document_open evidence/tc-09-09-<8192 x 'b'>.FCStd; query_object H object 65536 x 'c'.
+PASS label 4096: status OK (real envelope).
+PASS not truncated: document_list label lengths [13, 12, 4096].
+PASS long path: INVALID_INPUT "document_open failed for 'D:/.../evidence/tc-09-09-bbbb..." (message 16618 characters, names the path).
+PASS long object name: INVALID_INPUT "unknown object: ccc..." (65552 characters).
+PASS detail.data.traceback length 4000 (= _TRACEBACK_LIMIT, rpc_dispatch.py:25).
+PASS query_capabilities OK after the long-name query.
+PASS addon.log after the offset (tc-09-09-addonlog.txt, 3 lines): two INFO INVALID_INPUT lines; no "handshake required", no frame-size error.
+PASS H brought to the front: the Windows menu entry text was not in a UIA snapshot (the menu does not open by UIA click); the entry
+     "3 box-10-20-30 : 1*" (Start, TC0909Scratch, box-10-20-30, long doc order) was resolved by invoke_menu ["Windows", "3 box-10-20-30 : 1*"]
+     -> route accessibility; list_windows title "* box-10-20-30 - FreeCAD 1.1.4".
+PASS Show All, view_fit_viewport H OK fits 0.95.
+PASS visual: after shows the same whole box at the same size and place as before (3D view region differs only on the tab-bar top line);
+     tree before: TC0909Scratch, box-10-20-30 > Box; after: TC0909Scratch, box-10-20-30 > Box, aaaa...aaaa (the one long-label document)
+     and its tab in the tab bar; no tc-09-09-bbb document; no dialog. Whole-window diff 50925 px = tree row + tab bar. Live check run.
+Verdict: PASS

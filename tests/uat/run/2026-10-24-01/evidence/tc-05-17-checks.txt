@@ -1,0 +1,11 @@
+TC-05-17 checks (R1, pid 24908, auto-approve off)
+Given doc tc-05-17 fcb-doc:rw9G51eBHgs_lyCsUQUYTQ: Body > Sketch 20x20 > Pad 30 > Fillet r2 on Pad Edge1 (Fillet volume 11974.25); element_map_available true; view_fit_viewport OK; tc-05-17-before.png
+When preview_dry_run sketch_remove_geometry Sketch geo_ids [0] -> OK; apply with the preview_id
+PASS status RECOMPUTE_ERROR ("recompute left 1 object(s) invalid: Pad: Wire is not closed."), post_verify.recompute_clean false
+PASS tnp_audit.status FLAGGED
+PASS a finding verdict BROKEN, layer 0
+PASS BROKEN owner "Pad", prop "Profile", detail "Pad is invalid after the mutation: Wire is not closed." (starts "Pad is invalid after the mutation: ") - the W4/W8 rewritten Then
+PASS mutation.rolled_back true (rollback_proven rolled_back_verified)
+PASS query_mass_properties Fillet OK (volume 11974.25, unchanged)
+PASS (visual) view_fit_viewport OK fitted
+PASS (visual) before vs after: same whole 20x20x30 prism with the rounded vertical edge at the left; 3D view pixel-identical (0 px); no open face, no shrunk body, no dialog. Tree after expanding Body (tc-05-17-after-tree-crop.png): Origin, Pad (hidden, greyed as normal under the tip), Fillet with the green tip mark; no red/error icon. Status-bar notification count went 2 -> 3 (the failed live apply; W2b control behaviour).

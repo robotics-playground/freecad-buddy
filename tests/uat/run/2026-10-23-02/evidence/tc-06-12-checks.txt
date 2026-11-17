@@ -1,0 +1,17 @@
+TC-06-12 (launch P5 tc-06-b, pid 23332; temp profile pre-seeded View/AntiAliasing=4, the value the developer user.cfg holds)
+Given: query_capabilities render 'gui_constructed'. Select-String AntiAliasing $env:APPDATA/FreeCAD/v1-1/user.cfg ->
+       'user.cfg:677: <FCInt Name="AntiAliasing" Value="4"/>'. Live: script_exec GetInt('AntiAliasing') -> 4 (same value).
+Fixture: doc tc-06-12, PlatePad 60x40x5 (long straight silhouette edges). Fit first: view_fit_viewport OK.
+PASS  configured value recorded: 4 -> 8 samples (table: 4 -> 8).
+PASS  AA present when on: tc-06-12-mcp.png edge crop (300,610)-(360,650): 17 colours, intermediate greys (226,226,226), (140,140,140),
+      (58,58,59) between white background, black edge line and face (tc-06-12-zoom-mcp.png).
+n/a   AA absent when off: the recorded value maps to 8 samples; this conditional Then's condition does not hold.
+PASS  render and viewport agree: window native capture tc-06-12-viewport-native.png (max_image_dimension 0 for one capture, restored 1568),
+      edge crop (530,408)-(570,438): 14 colours, blended (tc-06-12-zoom-window.png). Same class: smoothed.
+PASS  read at render time: script_exec SetInt('AntiAliasing', 0) returned old value 4; re-render tc-06-12-mcp-aa0.png edge crop = 3 colours
+      (255,255,255)/(25,25,25)/(90,92,93), a hard stair (tc-06-12-zoom-mcp-aa0.png). Restored SetInt 4; GetInt -> 4.
+PASS  fit: view_fit_viewport OK.
+PASS  visual: tc-06-12-after.png window: one plate, the far-left diagonal silhouette edge (zoom tc-06-12-zoom-after.png) shows blended
+      intermediate pixels, no hard two-colour stair. tc-06-12-mcp.png: the same edge, blended. Same class.
+Cleanup: AntiAliasing restored to 4 (the old value).
+Verdict: PASS.

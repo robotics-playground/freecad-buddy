@@ -1,0 +1,1496 @@
+{
+ "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+ "app_name": "freecad.exe",
+ "element_count": 74,
+ "elements": [
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 0,
+   "element_index": 0,
+   "element_token": "s00000124:0",
+   "enabled": true,
+   "frame": {
+    "h": 1125,
+    "w": 1168,
+    "x": 225,
+    "y": 37
+   },
+   "label": "Preferences",
+   "role": "Window"
+  },
+  {
+   "actions": [
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 1,
+   "element_token": "s00000124:1",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 1149,
+    "x": 245,
+    "y": 3
+   },
+   "label": "Preferences",
+   "parent_index": 0,
+   "role": "TitleBar",
+   "value": "Preferences"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand"
+   ],
+   "depth": 3,
+   "element_index": 2,
+   "element_token": "s00000124:2",
+   "enabled": true,
+   "frame": {
+    "h": 28,
+    "w": 28,
+    "x": 225,
+    "y": 9
+   },
+   "label": "System",
+   "parent_index": 1,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 2,
+   "element_index": 3,
+   "element_token": "s00000124:3",
+   "enabled": true,
+   "frame": {
+    "h": 37,
+    "w": 44,
+    "x": 1351,
+    "y": 1
+   },
+   "label": "Close",
+   "parent_index": 1,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 4,
+   "element_token": "s00000124:4",
+   "enabled": true,
+   "frame": {
+    "h": 1125,
+    "w": 300,
+    "x": 225,
+    "y": 37
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar",
+   "parent_index": 0,
+   "role": "Custom"
+  },
+  {
+   "actions": [
+    "set_value"
+   ],
+   "depth": 2,
+   "element_index": 5,
+   "element_token": "s00000124:5",
+   "enabled": true,
+   "frame": {
+    "h": 1040,
+    "w": 300,
+    "x": 225,
+    "y": 52
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView",
+   "parent_index": 4,
+   "role": "Tree"
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 6,
+   "element_token": "s00000124:6",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 52
+   },
+   "label": "General",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 7,
+   "element_token": "s00000124:7",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 100
+   },
+   "label": "General",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": true
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 8,
+   "element_token": "s00000124:8",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 135
+   },
+   "label": "Document",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 9,
+   "element_token": "s00000124:9",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 170
+   },
+   "label": "Selection",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 10,
+   "element_token": "s00000124:10",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 205
+   },
+   "label": "Cache",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 11,
+   "element_token": "s00000124:11",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 240
+   },
+   "label": "Notification Area",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 12,
+   "element_token": "s00000124:12",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 275
+   },
+   "label": "Report View",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 13,
+   "element_token": "s00000124:13",
+   "enabled": true,
+   "frame": {
+    "h": 35,
+    "w": 270,
+    "x": 255,
+    "y": 310
+   },
+   "label": "Help",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 14,
+   "element_token": "s00000124:14",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 345
+   },
+   "label": "Display",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 15,
+   "element_token": "s00000124:15",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 392
+   },
+   "label": "Workbenches",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 16,
+   "element_token": "s00000124:16",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 440
+   },
+   "label": "Import-Export",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 17,
+   "element_token": "s00000124:17",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 487
+   },
+   "label": "Python",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 18,
+   "element_token": "s00000124:18",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 535
+   },
+   "label": "Addon Manager",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 19,
+   "element_token": "s00000124:19",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 582
+   },
+   "label": "Measure",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 20,
+   "element_token": "s00000124:20",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 630
+   },
+   "label": "Start",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 21,
+   "element_token": "s00000124:21",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 677
+   },
+   "label": "FreeCAD Buddy",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 22,
+   "element_token": "s00000124:22",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 725
+   },
+   "label": "Material",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 23,
+   "element_token": "s00000124:23",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 772
+   },
+   "label": "Part/Part Design",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "select",
+    "expand",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 24,
+   "element_token": "s00000124:24",
+   "enabled": true,
+   "frame": {
+    "h": 47,
+    "w": 285,
+    "x": 240,
+    "y": 820
+   },
+   "label": "Sketcher",
+   "parent_index": 5,
+   "role": "TreeItem",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 2,
+   "element_index": 25,
+   "element_token": "s00000124:25",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 260,
+    "x": 245,
+    "y": 1112
+   },
+   "label": "Reset",
+   "parent_index": 4,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 26,
+   "element_token": "s00000124:26",
+   "enabled": true,
+   "frame": {
+    "h": 1125,
+    "w": 868,
+    "x": 525,
+    "y": 37
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame",
+   "parent_index": 0,
+   "role": "Custom"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 2,
+   "element_index": 27,
+   "element_token": "s00000124:27",
+   "enabled": true,
+   "frame": {
+    "h": 40,
+    "w": 102,
+    "x": 545,
+    "y": 57
+   },
+   "label": "General",
+   "parent_index": 26,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value",
+    "text"
+   ],
+   "depth": 2,
+   "element_index": 28,
+   "element_token": "s00000124:28",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 250,
+    "x": 1123,
+    "y": 62
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.searchBox",
+   "parent_index": 26,
+   "role": "Edit"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 2,
+   "element_index": 29,
+   "element_token": "s00000124:29",
+   "enabled": true,
+   "frame": {
+    "h": 985,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea",
+   "parent_index": 26,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 30,
+   "element_token": "s00000124:30",
+   "enabled": true,
+   "frame": {
+    "h": 985,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport",
+   "parent_index": 29,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 4,
+   "element_index": 31,
+   "element_token": "s00000124:31",
+   "enabled": true,
+   "frame": {
+    "h": 985,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents",
+   "parent_index": 30,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 5,
+   "element_index": 32,
+   "element_token": "s00000124:32",
+   "enabled": true,
+   "frame": {
+    "h": 985,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack",
+   "parent_index": 31,
+   "role": "Custom"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 6,
+   "element_index": 33,
+   "element_token": "s00000124:33",
+   "enabled": true,
+   "frame": {
+    "h": 985,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget",
+   "parent_index": 32,
+   "role": "Custom"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 7,
+   "element_index": 34,
+   "element_token": "s00000124:34",
+   "enabled": true,
+   "frame": {
+    "h": 985,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral",
+   "parent_index": 33,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 8,
+   "element_index": 35,
+   "element_token": "s00000124:35",
+   "enabled": true,
+   "frame": {
+    "h": 193,
+    "w": 828,
+    "x": 545,
+    "y": 112
+   },
+   "label": "Language and Number Format",
+   "parent_index": 34,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 36,
+   "element_token": "s00000124:36",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 216,
+    "x": 560,
+    "y": 150
+   },
+   "label": "Language",
+   "parent_index": 35,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 37,
+   "element_token": "s00000124:37",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 343,
+    "x": 783,
+    "y": 150
+   },
+   "label": "Language and Number Format",
+   "parent_index": 35,
+   "role": "ComboBox",
+   "value": "English"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 38,
+   "element_token": "s00000124:38",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 216,
+    "x": 560,
+    "y": 187
+   },
+   "label": "Default unit system",
+   "parent_index": 35,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 39,
+   "element_token": "s00000124:39",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 343,
+    "x": 783,
+    "y": 187
+   },
+   "label": "Language and Number Format",
+   "parent_index": 35,
+   "role": "ComboBox",
+   "value": "Standard (mm, kg, s, \u00b0)"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 40,
+   "element_token": "s00000124:40",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 135,
+    "x": 1135,
+    "y": 187
+   },
+   "label": "Number of decimals",
+   "parent_index": 35,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value",
+    "set_value",
+    "text"
+   ],
+   "depth": 9,
+   "element_index": 41,
+   "element_token": "s00000124:41",
+   "enabled": true,
+   "frame": {
+    "h": 28,
+    "w": 81,
+    "x": 1277,
+    "y": 187
+   },
+   "label": "Language and Number Format",
+   "parent_index": 35,
+   "role": "Spinner",
+   "value": "2"
+  },
+  {
+   "actions": [
+    "invoke",
+    "toggle",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 42,
+   "element_token": "s00000124:42",
+   "enabled": true,
+   "frame": {
+    "h": 26,
+    "w": 311,
+    "x": 562,
+    "y": 225
+   },
+   "label": "Ignore project unit system and use default",
+   "parent_index": 35,
+   "role": "CheckBox",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 43,
+   "element_token": "s00000124:43",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 216,
+    "x": 560,
+    "y": 258
+   },
+   "label": "Number format",
+   "parent_index": 35,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 44,
+   "element_token": "s00000124:44",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 343,
+    "x": 783,
+    "y": 258
+   },
+   "label": "Language and Number Format",
+   "parent_index": 35,
+   "role": "ComboBox",
+   "value": "Operating system"
+  },
+  {
+   "actions": [
+    "invoke",
+    "toggle",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 45,
+   "element_token": "s00000124:45",
+   "enabled": true,
+   "frame": {
+    "h": 26,
+    "w": 221,
+    "x": 1137,
+    "y": 260
+   },
+   "label": "Substitute decimal separator",
+   "parent_index": 35,
+   "role": "CheckBox",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 8,
+   "element_index": 46,
+   "element_token": "s00000124:46",
+   "enabled": true,
+   "frame": {
+    "h": 290,
+    "w": 828,
+    "x": 545,
+    "y": 313
+   },
+   "label": "Application",
+   "parent_index": 34,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 47,
+   "element_token": "s00000124:47",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 396,
+    "x": 560,
+    "y": 351
+   },
+   "label": "Theme",
+   "parent_index": 46,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 48,
+   "element_token": "s00000124:48",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 395,
+    "x": 963,
+    "y": 351
+   },
+   "label": "Application",
+   "parent_index": 46,
+   "role": "ComboBox",
+   "value": "FreeCAD Light"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 49,
+   "element_token": "s00000124:49",
+   "enabled": true,
+   "frame": {
+    "h": 18,
+    "w": 798,
+    "x": 560,
+    "y": 388
+   },
+   "label": "Looking for more themes? You can obtain them using the Addon Manager.",
+   "parent_index": 46,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 50,
+   "element_token": "s00000124:50",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 396,
+    "x": 560,
+    "y": 415
+   },
+   "label": "Size of toolbar icons",
+   "parent_index": 46,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 51,
+   "element_token": "s00000124:51",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 395,
+    "x": 963,
+    "y": 415
+   },
+   "label": "Application",
+   "parent_index": 46,
+   "role": "ComboBox",
+   "value": "Medium (24px)"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 52,
+   "element_token": "s00000124:52",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 396,
+    "x": 560,
+    "y": 452
+   },
+   "label": "Tree View and Property View mode",
+   "parent_index": 46,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 53,
+   "element_token": "s00000124:53",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 395,
+    "x": 963,
+    "y": 452
+   },
+   "label": "Application",
+   "parent_index": 46,
+   "role": "ComboBox",
+   "value": "Combined"
+  },
+  {
+   "actions": [
+    "invoke"
+   ],
+   "depth": 9,
+   "element_index": 54,
+   "element_token": "s00000124:54",
+   "enabled": true,
+   "frame": {
+    "h": 28,
+    "w": 396,
+    "x": 560,
+    "y": 490
+   },
+   "label": "Size of recent file list",
+   "parent_index": 46,
+   "role": "Text"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value",
+    "set_value",
+    "text"
+   ],
+   "depth": 9,
+   "element_index": 55,
+   "element_token": "s00000124:55",
+   "enabled": true,
+   "frame": {
+    "h": 28,
+    "w": 395,
+    "x": 963,
+    "y": 490
+   },
+   "label": "Application",
+   "parent_index": 46,
+   "role": "Spinner",
+   "value": "4"
+  },
+  {
+   "actions": [
+    "invoke",
+    "toggle",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 56,
+   "element_token": "s00000124:56",
+   "enabled": true,
+   "frame": {
+    "h": 26,
+    "w": 192,
+    "x": 562,
+    "y": 526
+   },
+   "label": "Enable tiled background",
+   "parent_index": 46,
+   "role": "CheckBox",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "toggle",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 57,
+   "element_token": "s00000124:57",
+   "enabled": true,
+   "frame": {
+    "h": 26,
+    "w": 177,
+    "x": 966,
+    "y": 526
+   },
+   "label": "Enable cursor blinking",
+   "parent_index": 46,
+   "role": "CheckBox",
+   "selected": true
+  },
+  {
+   "actions": [
+    "invoke",
+    "toggle",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 58,
+   "element_token": "s00000124:58",
+   "enabled": true,
+   "frame": {
+    "h": 26,
+    "w": 241,
+    "x": 562,
+    "y": 560
+   },
+   "label": "Enable splash screen at start-up",
+   "parent_index": 46,
+   "role": "CheckBox",
+   "selected": true
+  },
+  {
+   "actions": [
+    "invoke",
+    "toggle",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 59,
+   "element_token": "s00000124:59",
+   "enabled": true,
+   "frame": {
+    "h": 26,
+    "w": 183,
+    "x": 966,
+    "y": 560
+   },
+   "label": "Activate overlay panels",
+   "parent_index": 46,
+   "role": "CheckBox",
+   "selected": true
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 8,
+   "element_index": 60,
+   "element_token": "s00000124:60",
+   "enabled": true,
+   "frame": {
+    "h": 486,
+    "w": 828,
+    "x": 545,
+    "y": 611
+   },
+   "label": "Preference Packs",
+   "parent_index": 34,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 61,
+   "element_token": "s00000124:61",
+   "enabled": true,
+   "frame": {
+    "h": 393,
+    "w": 798,
+    "x": 560,
+    "y": 648
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks",
+   "parent_index": 60,
+   "role": "Table"
+  },
+  {
+   "actions": [
+    "select",
+    "set_value"
+   ],
+   "depth": 10,
+   "element_index": 62,
+   "element_token": "s00000124:62",
+   "enabled": true,
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks",
+   "parent_index": 61,
+   "role": "Pane",
+   "selected": false
+  },
+  {
+   "actions": [
+    "select",
+    "set_value"
+   ],
+   "depth": 10,
+   "element_index": 63,
+   "element_token": "s00000124:63",
+   "enabled": true,
+   "frame": {
+    "h": 36,
+    "w": 378,
+    "x": 561,
+    "y": 650
+   },
+   "label": "Preference Pack Name",
+   "parent_index": 61,
+   "role": "Header",
+   "selected": false
+  },
+  {
+   "actions": [
+    "select",
+    "set_value"
+   ],
+   "depth": 10,
+   "element_index": 64,
+   "element_token": "s00000124:64",
+   "enabled": true,
+   "frame": {
+    "h": 36,
+    "w": 377,
+    "x": 940,
+    "y": 650
+   },
+   "label": "Tags",
+   "parent_index": 61,
+   "role": "Header",
+   "selected": false
+  },
+  {
+   "actions": [
+    "select",
+    "set_value"
+   ],
+   "depth": 10,
+   "element_index": 65,
+   "element_token": "s00000124:65",
+   "enabled": true,
+   "frame": {
+    "h": 36,
+    "w": 40,
+    "x": 1317,
+    "y": 650
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks",
+   "parent_index": 61,
+   "role": "Header",
+   "selected": false
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 66,
+   "element_token": "s00000124:66",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 172,
+    "x": 766,
+    "y": 1050
+   },
+   "label": "Import Configuration",
+   "parent_index": 60,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 67,
+   "element_token": "s00000124:67",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 132,
+    "x": 946,
+    "y": 1050
+   },
+   "label": "Save as New",
+   "parent_index": 60,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 9,
+   "element_index": 68,
+   "element_token": "s00000124:68",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 132,
+    "x": 1086,
+    "y": 1050
+   },
+   "label": "Manage",
+   "parent_index": 60,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 2,
+   "element_index": 69,
+   "element_token": "s00000124:69",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 828,
+    "x": 545,
+    "y": 1112
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.buttonBox",
+   "parent_index": 26,
+   "role": "Group"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 70,
+   "element_token": "s00000124:70",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 132,
+    "x": 961,
+    "y": 1112
+   },
+   "label": "OK",
+   "parent_index": 69,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 71,
+   "element_token": "s00000124:71",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 132,
+    "x": 1101,
+    "y": 1112
+   },
+   "label": "Cancel",
+   "parent_index": 69,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 3,
+   "element_index": 72,
+   "element_token": "s00000124:72",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 132,
+    "x": 1241,
+    "y": 1112
+   },
+   "label": "Apply",
+   "parent_index": 69,
+   "role": "Button"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 73,
+   "element_token": "s00000124:73",
+   "enabled": true,
+   "frame": {
+    "h": 15,
+    "w": 15,
+    "x": 1378,
+    "y": 1147
+   },
+   "label": "Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.QSizeGrip",
+   "parent_index": 0,
+   "role": "Thumb"
+  }
+ ],
+ "elements_complete": false,
+ "pid": 29744,
+ "returned_element_count": 74,
+ "screenshot_file_path": "\\\\?\\D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-12-09-dialog.png",
+ "screenshot_height": 1162,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 1169,
+ "snapshot_id": "s00000124",
+ "total_element_count": 74,
+ "tree_markdown": "- [0] Window \"Preferences\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences actions=[invoke,set_value]]\n  - [1] TitleBar [value=\"Preferences\" actions=[set_value]]\n    - MenuBar \"System\"\n      - [2] MenuItem \"System\" [actions=[invoke,expand]]\n    - [3] Button \"Close\" [actions=[invoke]]\n  - [4] Custom [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar actions=[invoke,set_value]]\n    - [5] Tree [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[set_value]]\n      - [6] TreeItem \"General\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [7] TreeItem \"General\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [8] TreeItem \"Document\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [9] TreeItem \"Selection\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [10] TreeItem \"Cache\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [11] TreeItem \"Notification Area\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [12] TreeItem \"Report View\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [13] TreeItem \"Help\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,set_value]]\n      - [14] TreeItem \"Display\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [15] TreeItem \"Workbenches\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [16] TreeItem \"Import-Export\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [17] TreeItem \"Python\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [18] TreeItem \"Addon Manager\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [19] TreeItem \"Measure\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [20] TreeItem \"Start\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [21] TreeItem \"FreeCAD Buddy\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [22] TreeItem \"Material\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [23] TreeItem \"Part/Part Design\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n      - [24] TreeItem \"Sketcher\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.groupsTreeView actions=[invoke,select,expand,set_value]]\n    - [25] Button \"Reset\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.sidebar.buttonReset actions=[invoke,set_value]]\n  - [26] Custom [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame actions=[invoke,set_value]]\n    - [27] Text \"General\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.headerLabel actions=[invoke]]\n    - [28] Edit [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.searchBox actions=[invoke,set_value,text]]\n    - [29] Group [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea actions=[invoke,set_value]]\n      - [30] Group [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport actions=[invoke,set_value]]\n        - [31] Group [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents actions=[invoke,set_value]]\n          - [32] Custom [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack actions=[invoke,set_value]]\n            - [33] Custom [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget actions=[invoke,set_value]]\n              - [34] Group [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral actions=[invoke,set_value]]\n                - [35] Group \"Language and Number Format\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7 actions=[invoke,set_value]]\n                  - [36] Text \"Language\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.TextLabel1_4 actions=[invoke]]\n                  - [37] ComboBox \"Language and Number Format\" [value=\"English\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.Languages actions=[invoke,expand,set_value]]\n                  - [38] Text \"Default unit system\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.unitSystemLabel actions=[invoke]]\n                  - [39] ComboBox \"Language and Number Format\" [value=\"Standard (mm, kg, s, \u00b0)\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.comboBox_UnitSystem actions=[invoke,expand,set_value]]\n                  - [40] Text \"Number of decimals\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.decimalsLabel actions=[invoke]]\n                  - [41] Spinner \"Language and Number Format\" [value=\"2\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.spinBoxDecimals actions=[invoke,set_value,set_value,text]]\n                  - [42] CheckBox \"Ignore project unit system and use default\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.checkBox_projectUnitSystemIgnore actions=[invoke,toggle,set_value]]\n                  - [43] Text \"Number format\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.TextLabel1_5 actions=[invoke]]\n                  - [44] ComboBox \"Language and Number Format\" [value=\"Operating system\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.UseLocaleFormatting actions=[invoke,expand,set_value]]\n                  - [45] CheckBox \"Substitute decimal separator\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox7.SubstituteDecimal actions=[invoke,toggle,set_value]]\n                - [46] Group \"Application\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3 actions=[invoke,set_value]]\n                  - [47] Text \"Theme\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.themesLabel actions=[invoke]]\n                  - [48] ComboBox \"Application\" [value=\"FreeCAD Light\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.themesCombobox actions=[invoke,expand,set_value]]\n                  - [49] Text \"Looking for more themes? You can obtain them using the Addon Manager.\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.moreThemesLabel actions=[invoke]]\n                  - [50] Text \"Size of toolbar icons\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.iconSizeLabel actions=[invoke]]\n                  - [51] ComboBox \"Application\" [value=\"Medium (24px)\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.toolbarIconSize actions=[invoke,expand,set_value]]\n                  - [52] Text \"Tree View and Property View mode\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.treeModeLabel actions=[invoke]]\n                  - [53] ComboBox \"Application\" [value=\"Combined\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.treeMode actions=[invoke,expand,set_value]]\n                  - [54] Text \"Size of recent file list\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.recentFileListLabel actions=[invoke]]\n                  - [55] Spinner \"Application\" [value=\"4\" id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.RecentFiles actions=[invoke,set_value,set_value,text]]\n                  - [56] CheckBox \"Enable tiled background\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.tiledBackground actions=[invoke,toggle,set_value]]\n                  - [57] CheckBox \"Enable cursor blinking\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.EnableCursorBlinking actions=[invoke,toggle,set_value]]\n                  - [58] CheckBox \"Enable splash screen at start-up\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.SplashScreen actions=[invoke,toggle,set_value]]\n                  - [59] CheckBox \"Activate overlay panels\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.GroupBox3.ActivateOverlay actions=[invoke,toggle,set_value]]\n                - [60] Group \"Preference Packs\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox actions=[invoke,set_value]]\n                  - [61] Table [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks actions=[set_value]]\n                    - [62] Pane [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks actions=[select,set_value]]\n                    - [63] Header \"Preference Pack Name\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks actions=[select,set_value]]\n                    - [64] Header \"Tags\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks actions=[select,set_value]]\n                    - [65] Header [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.PreferencePacks actions=[select,set_value]]\n                  - [66] Button \"Import Configuration\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.ImportConfig actions=[invoke,set_value]]\n                  - [67] Button \"Save as New\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.SaveNewPreferencePack actions=[invoke,set_value]]\n                  - [68] Button \"Manage\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.scrollArea.qt_scrollarea_viewport.scrollAreaWidgetContents.groupWidgetStack.QStackedWidget.Gui__Dialog__DlgSettingsGeneral.groupBox.ManagePreferencePacks actions=[invoke,set_value]]\n                  - Button \"Revert\"\n    - [69] Group [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.buttonBox actions=[invoke,set_value]]\n      - [70] Button \"OK\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.buttonBox.QPushButton actions=[invoke,set_value]]\n      - [71] Button \"Cancel\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.buttonBox.QPushButton actions=[invoke,set_value]]\n      - [72] Button \"Apply\" [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.verticalFrame.buttonBox.QPushButton actions=[invoke,set_value]]\n  - [73] Thumb [id=Gui::GUISingleApplication.Gui__Dialog__DlgPreferences.QSizeGrip actions=[invoke,set_value]]\n",
+ "window_bounds": {
+  "height": 1164,
+  "width": 1171,
+  "x": 224,
+  "y": 0
+ },
+ "window_id": 593654,
+ "window_title": "Preferences"
+}

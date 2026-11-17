@@ -1,0 +1,24 @@
+## ls -l rpc-*.json (for the running pid 17944)
+-rw-r--r-- 1 thuan 197609 219 Oct 24 00:00 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-17944.json
+rpc-*.json files in folder: 61 (stale files of earlier killed FreeCADs; only rpc-17944.json names a live pid)
+## attrib
+A                    C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\rpc-17944.json
+## icacls
+C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\rpc-17944.json NT AUTHORITY\SYSTEM:(I)(F)
+                                                                         BUILTIN\Administrators:(I)(F)
+                                                                         TAN-PC\thuan:(I)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+## record + wrong token
+CHECK record keys: ["contract_version", "freecad_version", "host", "pid", "port", "schema", "started", "token"]
+CHECK token non-empty string / masked: [true, "slhy...(len 43)"]
+CHECK contract_version: "1"
+{"client": "W", "connect": "connected", "elapsed": 0.0, "record": "rpc-17944.json", "port": 49942}
+{"client": "W", "recv": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+CHECK wrong-token frame: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+CHECK error.message / data / result present: ["auth failed", null, false]
+{"client": "W", "recv": "<zero bytes: closed by peer>", "partial": "", "elapsed": 0.0}
+CHECK next recv: "None"
+0 of 1535072 pixels differ; bbox None
+## after quit of 17944 (00:38:29)
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-17944.json': No such file or directory

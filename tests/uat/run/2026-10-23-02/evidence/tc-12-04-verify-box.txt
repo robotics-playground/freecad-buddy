@@ -1,0 +1,2 @@
+{"elapsed_ms": 5963, "predicates": [{"index": 0, "observed_json": "{\"element_index\":135,\"enabled\":true,\"frame\":{\"h\":22,\"w\":310,\"x\":16,\"y\":232},\"label\":\"box-10-20-30\",\"role\":\"TreeItem\",\"selected\":false}", "status": "unsatisfied", "unknown_reason": null}], "samples": 4, "stable": false, "status": "unsatisfied"}
+pid=30140 window_id=460014

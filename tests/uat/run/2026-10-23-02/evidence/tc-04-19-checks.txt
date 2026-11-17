@@ -1,0 +1,17 @@
+TC-04-19 checks (launch tc-04-a pid 29440; doc BadLength fcb-doc:iJQEbRMF3VVWxfkcSGv8Vw; tc-04-19-mcp.jsonl)
+Given: BlockBody, BlockProfile 20 x 30 on XY, verify_sketch OK dof 0. <session tmp> lists no FCB_TMP_snap_* entry.
+  Before: view_fit_viewport OK, tc-04-19-before.png.
+PASS zero: ZeroPad length 0 -> INVALID_INPUT "length must be positive, got 0.0" (contains "length must be positive, got 0").
+PASS negative: NegPad length -10 -> INVALID_INPUT "length must be positive, got -10.0" (contains "... got -10").
+PASS missing: NoLenPad -> INVALID_INPUT "up_to='Length' is length-driven; 'length' is required".
+PASS pre-transaction: none of the three results has structured_content, so no mutation.snapshot_path.
+PASS no snapshot: session folder lists no FCB_TMP_snap_* entry after the three steps.
+PASS nothing created: query_tree_summary depth 3 lists BlockBody, Origin and BlockProfile only.
+PASS no Tip: query_object BlockBody Tip null, Group ["<Sketcher::SketchObject>"].
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-19-before.png and tc-04-19-after.png: only the thin black outline of the flat rectangle in isometric view,
+  no shaded face, no extruded side, no dialog. p0_diff.py: 20 of 1535072 pixels differ, all at the Tasks panel corner
+  (1565-1567, 405-424). The floating Tasks panel (known limit c) covers the rectangle's right corner in the fit view, so
+  p0_cam.py moved the camera only: tc-04-19-after-shift.png shows that corner clear of the panel, a sharp outline corner
+  with no material. With the fit view, all four corners and all four edges are seen: no pad, not even a sliver.
+Cleanup: document_close.

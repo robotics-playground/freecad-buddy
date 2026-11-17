@@ -1,0 +1,18 @@
+TC-04-07 checks (launch tc-04-a pid 29440; doc HolePlate fcb-doc:Gx6-SMZ8Nj95jTPl-sc_6g; tc-04-07-mcp.jsonl)
+Given: PlatePad volume 12000.0; HoleProfile point sketch on PlatePad Face6, verify_sketch OK dof 0, oracle bbox point (10, 20, 5).
+PASS commit: feature_hole ClearanceHole diameter 5.5 depth 3 status OK, rolled_back false.
+PASS volume: 11915.64 (expected 11915.64); query_object DrillPoint "Angled", DrillPointAngle "118.0 deg".
+PASS DepthType "Dimension" (depth_type omitted).
+PASS blind bore: shape_summary solid_count 1, face_count 8 (> 6).
+PASS verify_shape OK.
+PASS no depth -> INVALID_INPUT "depth_type='Dimension' is depth-driven; 'depth' is required".
+PASS ThroughAll: on a second scratch document ThroughHolePlate (fresh 60 x 40 x 5 plate, same HoleProfile), depth_type
+  ThroughAll with no depth -> status OK, volume 11881.21 (expected 11881.2). The ThroughAll hole ran on its own plate because
+  the Then's expected volume is 12000 minus the bore; that document was closed after the read.
+PASS zero diameter -> INVALID_INPUT "diameter must be positive, got 0.0".
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-07-after.png (windows: main only): one whole 60 x 40 plate in isometric view, no dialog, one round bore
+  (an ellipse in isometric view) on the top face at pixel (738,406), the projection of (10, 20, 5) traced from the plate corners;
+  bore interior grey, no background through it. tc-04-07-after-zoom.png (p0_cam.py camera move only, centre (10,20,3),
+  height 14 mm): circular bore with shaded cylindrical wall and a lighter floor at its base; no opening through the plate.
+Cleanup: document_close.

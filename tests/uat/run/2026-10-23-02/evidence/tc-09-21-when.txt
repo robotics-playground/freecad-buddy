@@ -1,0 +1,86 @@
+2026-10-23T22:32:12+07:00
+Spawning headless H1 server + running the edge/corner/error sweep...
+
+  [FAIL] unknown_doc_handle         NO_STATUS 
+  [PASS] unknown_object_name        INVALID_INPUT 
+  [PASS] retired_max_nodes_rejected SCHEMA_ERROR additionalProperties: False rejects the retired parameter
+  [FAIL] depth_one_returns_roots_only NO_STATUS shown=None roots=0
+  [PASS] export_missing_path_schema SCHEMA_ERROR schema-required rejection
+  [FAIL] export_multi_object        NO_STATUS 
+  [PASS] stale_export_id            INVALID_INPUT 
+  [FAIL] screenshot_read_only       OK volume None -> None
+  [PASS] double_close_stale         INVALID_INPUT 
+  [PASS] open_bad_path              INVALID_INPUT 
+  [FAIL] compound_com_null          NO_STATUS com=None
+  [FAIL] fault_shape:wrong-volume   NO_STATUS status=NO_STATUS
+  [FAIL] fault_shape:non-watertight-open-shell NO_STATUS status=NO_STATUS
+
+6/13 edge checks passed
+report: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p7-sweep-tc-09-21\edge_report.json
+exit code of _run(): 1
+sweep exit=1
+2026-10-23T22:32:14+07:00
+{"tools_list_count": 46, "script_exec": true}
+  + Exception Group Traceback (most recent call last):
+  |   File "D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p7_h1.py", line 81, in <module>
+  |     asyncio.run(main())
+  |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\asyncio\base_events.py", line 691, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p7_h1.py", line 53, in main
+  |     async with stdio_client(params, errlog=errlog) as (read, write):
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "D:\Work\Personal\Sources\freecad-buddy\.venv\Lib\site-packages\mcp\client\stdio\__init__.py", line 183, in stdio_client
+  |     anyio.create_task_group() as tg,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "D:\Work\Personal\Sources\freecad-buddy\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 815, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "D:\Work\Personal\Sources\freecad-buddy\.venv\Lib\site-packages\mcp\client\stdio\__init__.py", line 189, in stdio_client
+    |     yield read_stream, write_stream
+    |   File "D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p7_h1.py", line 54, in main
+    |     async with ClientSession(read, write) as session:
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "D:\Work\Personal\Sources\freecad-buddy\.venv\Lib\site-packages\mcp\shared\session.py", line 238, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "D:\Work\Personal\Sources\freecad-buddy\.venv\Lib\site-packages\anyio\_backends\_asyncio.py", line 815, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p7_h1.py", line 61, in main
+      |     args = substitute(json.loads(raw), bindings)
+      |                       ^^^^^^^^^^^^^^^
+      |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\json\__init__.py", line 346, in loads
+      |     return _default_decoder.decode(s)
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\json\decoder.py", line 338, in decode
+      |     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+      |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\Lib\json\decoder.py", line 354, in raw_decode
+      |     obj, end = self.scan_once(s, idx)
+      |                ^^^^^^^^^^^^^^^^^^^^^^
+      | json.decoder.JSONDecodeError: Invalid \escape: line 1 column 12 (char 11)
+      +------------------------------------
+2026-10-23T22:32:16+07:00
+NOTE: first H1 probe start at 22:32:14 failed in the client before any call: my own JSON argument had an invalid escape (agent typo); fixed by forward slashes below.
+2026-10-23T22:32:29+07:00
+{"tools_list_count": 46, "script_exec": true}
+{"mcp": "document_open", "args": {"path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "is_error": false, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:R29CDzaFExgDID2Opfc55A", "name": "box_10_20_30", "label": "box-10-20-30", "path": "D:/Work/Personal/Sources/freecad-buddy/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:R29CDzaFExgDID2Opfc55A."}}
+{"mcp": "query_object", "args": {"doc": "fcb-doc:R29CDzaFExgDID2Opfc55A", "object": "NoSuchObject"}, "is_error": true, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "INVALID_INPUT", "detail": {"code": "INVALID_INPUT", "message": "unknown object: NoSuchObject", "data": {"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004ccbeed34\\scratchpad\\h1env\\Lib\\site-packages\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004ccbeed34\\scratchpad\\h1env\\Lib\\site-packages\\freecad_buddy\\hosts\\tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004ccbeed34\\scratchpad\\h1env\\Lib\\site-packages\\freecad_buddy\\usecases\\queries.py\", line 567, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004
+{"mcp": "query_tree_summary", "args": {"doc": "fcb-doc:does-not-exist"}, "is_error": true, "structured_content_is_null": true, "result": {"text": "INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist", "is_error": true}}
+{"mcp": "export_stl", "args": {"doc": "fcb-doc:R29CDzaFExgDID2Opfc55A", "path": "Q:/no_such_dir/x.stl"}, "is_error": true, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "RECOMPUTE_ERROR", "detail": {"code": "RECOMPUTE_ERROR", "message": "Directory does not exist", "data": {"exception": "OSError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004ccbeed34\\scratchpad\\h1env\\Lib\\site-packages\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004ccbeed34\\scratchpad\\h1env\\Lib\\site-packages\\freecad_buddy\\hosts\\tool_catalog.py\", line 854, in <lambda>\n    return lambda **p: fn(doc_registry, export_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\D--Work-Personal-Sources-freecad-buddy\\1d05bc05-6255-4b66-ad49-2004ccbeed34\\scratchpad\\h1env\\Lib\\site-packages\\freecad_buddy\\usecases\\exports.py\", line 269, in export_stl\n    return _mesh_export(registry, export_registry, \"stl\", doc, path, objects, linear, angular)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+{"mcp": "document_close", "args": {"doc": "fcb-doc:R29CDzaFExgDID2Opfc55A"}, "is_error": false, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:R29CDzaFExgDID2Opfc55A", "name": "box_10_20_30", "closed": true}, "text": "Closed box_10_20_30 (doc=fcb-doc:R29CDzaFExgDID2Opfc55A)."}}
+{"tools_list_after_count": 46}
+2026-10-23T22:32:31+07:00

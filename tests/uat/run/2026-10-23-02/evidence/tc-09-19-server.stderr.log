@@ -1,0 +1,47 @@
+2026-10-23 22:29:52,391 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-23 22:29:52,551 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-09-19-unwritable_dir
+2026-10-23 22:29:52,552 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-23 22:29:52,552 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-23 22:29:52,552 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-23 22:29:52,582 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-19-unwritable_dir'
+2026-10-23 22:29:52,591 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-19-unwritable_dir'
+2026-10-23 22:29:52,602 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 86, in before
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-19-unwritable_dir'
+2026-10-23 22:29:52,602 ERROR freecad_buddy.mcp_server: audit write failed
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\mcp_server.py", line 304, in _audit_safe
+    fn(*args)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 140, in after
+    self._write(record)
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\audit_log.py", line 48, in _write
+    with open(self._path, "a", encoding="utf-8") as handle:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-19-unwritable_dir'
+2026-10-23 22:29:52,662 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-10-23 22:29:52,662 INFO freecad_buddy.rpc_listener: client closed the connection

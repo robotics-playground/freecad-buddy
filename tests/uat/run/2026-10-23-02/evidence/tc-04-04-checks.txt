@@ -1,0 +1,16 @@
+TC-04-04 checks (P3 launch tc-04-a pid 29440; doc PadOptions fcb-doc:6F1MT_Jp1FFEZAQutk1VSA; tc-04-04-mcp.jsonl)
+Given: RevBody/RevProfile at (0,0), TwoBody/TwoProfile at (40,0), TaperBody/TaperProfile at (80,0); each 20 x 30 rectangle, verify_sketch OK dof 0.
+PASS commit: RevPad, TwoPad, TaperPad each status OK, rolled_back false.
+PASS reversed: RevPad volume 6000.0, bbox z -10.0..0.0; query_object Reversed true.
+PASS second_length: TwoPad volume 8400.0 (> 6000), Length2 "4.0 mm", SideType "Two sides", bbox z -4..10.
+PASS taper: TaperPad volume 6447.65 (!= 6000), TaperAngle "5.0 deg".
+PASS valid: verify_shape OK for RevPad, TwoPad, TaperPad (solid_count 1, valid, watertight).
+PASS taper bound: taper_angle 120 deg -> INVALID_INPUT "taper_angle must be in (-90.0, 90.0) degrees, got 120.0"; no structured_content, so no mutation.snapshot_path.
+PASS fit: view_fit_viewport OK (fitted true).
+PASS visual: tc-04-04-after.png (windows: main window only). Three separate grey boxes in isometric view, all whole, none clipped,
+  no dialog; Tasks panel top right does not cover them. Left box (RevPad): its top front edge projects exactly onto the seam
+  line of the middle box (traced along the x direction: (645,497) + 20 mm step (135,76) = (780,573), seam at (778,575)), so it
+  hangs below the sketch plane. Middle box (TwoPad) is the tallest and has a horizontal seam line about 2/7 up from its
+  base: material on both sides of the plane. Right box (TaperPad): front-left and right side edges lean outward from the base,
+  top wider than base: sloped side faces.
+Cleanup: document_close.

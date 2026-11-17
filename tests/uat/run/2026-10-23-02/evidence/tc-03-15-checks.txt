@@ -1,0 +1,17 @@
+TC-03-15 checks (doc tc-03-15-boss fcb-doc:biuNs_-6V0I73RtQuJUFnw; Given built by MCP, tc-03-15-given-mcp.jsonl:
+  two circles r2.5 at (0,0) and (40,0); Coincident centre-origin, Radius BossRadius 2.5, Equal, PointOnObject centre 2 on
+  H axis, Distance HoleSpacing 40; verify_sketch dof 0, 2 geometry, 5 constraints, both datums driving true)
+PASS Given capture: view_fit_viewport OK, edit mode, p0_cam centre (33,0,0) height 40 mm, tc-03-15-before.png.
+PASS zero radius refused: INVALID_INPUT "constraint 2 Radius value must be positive, got 0.0".
+PASS pre-transaction: structured_content {} (no mutation, no snapshot_path).
+PASS negative distance: SPEC_FAILED, mutation.rolled_back true (rolled_back_verified), digests equal.
+  Note: its explanation reads "ValueError: Invalid constraint index: 4", which does not name the negative value.
+PASS 1e9: status OK; verify_sketch OK, dof 0, malformed [] (the test case allows OK with dof 0).
+PASS BossRadius survives: query_sketch_info BossRadius {value 2.5, unit mm} after all three calls.
+PASS no orphan snapshot: session tmp FCB_TMP_session_29208_35e2cd2f empty before and after.
+PASS fit: view_fit_viewport OK (also after the 1e9 call).
+PASS visual: tc-03-15-before.png and tc-03-15-after.png (edit mode, same camera, after taken before the 1e9 call): two green
+  circles of the same size on the red axis, left one centred on the origin, labels "HoleSpacing = 40 mm" and
+  "BossRadius = R2.5 mm", equal glyphs, "Fully constrained", no dialog. Same place and proportions; p0_diff 0 pixels differ.
+INFO tc-03-15-final.png after the 1e9 commit and fit: view 763.58 km x 429.78 km, one dot near the top left, the second
+  circle not visible; property panel Constraints "[2.50 mm;1000.00 km]". Not judged (test case: a capture after it cannot show the profile).

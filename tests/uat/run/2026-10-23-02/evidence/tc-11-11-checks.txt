@@ -1,0 +1,8 @@
+TC-11-11 checks (H1 tc-11-11-h1.jsonl; workdir evidence/tc-11-11-workdir; first attempt tc-11-11-h1-fault1.* discarded: my malformed paths held a TAB)
+baseline FCB_TMP_prev_ count (after Body/Sketch/Pad, before any preview): 0
+after succeeding preview (n7 fillet r=1, status OK, validity OK): 0
+after failing preview (n10 fillet r=50, status OK, diff.validity.status RECOMPUTE_ERROR, explanation "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"): 0
+after raising preview (n13 pad profile NoSuchSketch): status INVALID_INPUT, detail.message "unknown object in profile: NoSuchSketch": 0
+document_list after each (n9, n12, n15): ['tc11_11'] only, no FCB_TMP_prev_
+detail.message per preview: n7 detail null (no message); n10 detail null (no message); n13 "unknown object in profile: NoSuchSketch"
+57320 of 1535072 pixels differ; bbox (0, 0, 1567, 36)

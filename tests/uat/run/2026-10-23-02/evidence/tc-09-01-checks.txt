@@ -1,0 +1,31 @@
+T1 all_passed:
+False
+T2 total:
+13
+T3 passed==total, failed:
+False 7
+T4 retired:
+[{'tool': 'retired_max_nodes_rejected', 'ok': True, 'status': 'SCHEMA_ERROR', 'detail': 'additionalProperties: False rejects the retired parameter'}]
+T5 fault_shape:
+[{'tool': 'fault_shape:wrong-volume', 'ok': False, 'status': 'NO_STATUS', 'detail': 'status=NO_STATUS'}, {'tool': 'fault_shape:non-watertight-open-shell', 'ok': False, 'status': 'NO_STATUS', 'detail': 'status=NO_STATUS'}]
+T6 exit code: wrapper _run() returned 1 (sweep as written: exit 2, fcb env missing)
+T7 crash grep:
+(grep exit 1)
+T8 INFO.*INVALID_INPUT count:
+5
+Traceback count:
+0
+all checks:
+{'tool': 'unknown_doc_handle', 'ok': False, 'status': 'NO_STATUS', 'detail': ''}
+{'tool': 'unknown_object_name', 'ok': True, 'status': 'INVALID_INPUT', 'detail': ''}
+{'tool': 'retired_max_nodes_rejected', 'ok': True, 'status': 'SCHEMA_ERROR', 'detail': 'additionalProperties: False rejects the retired parameter'}
+{'tool': 'depth_one_returns_roots_only', 'ok': False, 'status': 'NO_STATUS', 'detail': 'shown=None roots=0'}
+{'tool': 'export_missing_path_schema', 'ok': True, 'status': 'SCHEMA_ERROR', 'detail': 'schema-required rejection'}
+{'tool': 'export_multi_object', 'ok': False, 'status': 'NO_STATUS', 'detail': ''}
+{'tool': 'stale_export_id', 'ok': True, 'status': 'INVALID_INPUT', 'detail': ''}
+{'tool': 'screenshot_read_only', 'ok': False, 'status': 'OK', 'detail': 'volume None -> None'}
+{'tool': 'double_close_stale', 'ok': True, 'status': 'INVALID_INPUT', 'detail': ''}
+{'tool': 'open_bad_path', 'ok': True, 'status': 'INVALID_INPUT', 'detail': ''}
+{'tool': 'compound_com_null', 'ok': False, 'status': 'NO_STATUS', 'detail': 'com=None'}
+{'tool': 'fault_shape:wrong-volume', 'ok': False, 'status': 'NO_STATUS', 'detail': 'status=NO_STATUS'}
+{'tool': 'fault_shape:non-watertight-open-shell', 'ok': False, 'status': 'NO_STATUS', 'detail': 'status=NO_STATUS'}

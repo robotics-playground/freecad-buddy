@@ -1,0 +1,23 @@
+TC-12-06 (P10, pid 29744, display painting) -- verdict FAIL
+fault1 (agent execution fault, kept as tc-12-06-fault1-*): a background pixel click at the Undo arrow (206,87) was routed by the
+  driver to the Undo button's UIA invoke and undid the fillet. Document closed; scenario restarted from its Given.
+Given: p10_tc06.py given (p4_lib fixture_pad TC1206: Body, 20x20 Sketch, Pad 30 mm, volume 12000.0); depth-2 tree names
+  "v [PAD] Pad (+1) *tip"; toolbar Button "Undo" enabled (tc-12-06-undo-given.txt); vertical edges Edge1, Edge2, Edge5, Edge8 -> <edge>=Edge1.
+When: preview_dry_run + feature_fillet (Edge1, r 3, confirm) OK; tree "v [FILLET] Fillet *tip".
+When dropdown: no separate arrow token exists (Button "Undo" x158 w56 is one element); opened with cua-driver drag (206,87)->(207,87)
+  route global_input; popup window 3477426 "FreeCAD" listed. Popup snapshot: MenuItems "buddy: feature_fillet Fillet",
+  "buddy: feature_pad Pad", "buddy: add geometry to Sketch", "buddy: create sketch Sketch", "buddy: create body Body".
+Then begins "buddy: " PASS. Then label "buddy: feature_fillet Fillet" PASS.
+Then enabled: verify_state {label_contains "buddy:", enabled} on the popup -> "unknown", unknown_reason "multi_match" (5 matches)
+  -> not satisfied -> FAIL. Cause: test-case defect (selector matches every buddy: entry; TC-12-gui-workflows.md:350).
+Then undo removes feature: Edit > Undo -> tree "`-- v [PAD] Pad (+1) *tip", no Fillet PASS.
+Then geometry reverted: Pad volume 12000.0 = pre-fillet PASS.
+Then shared history: document_undo -> OK, undone "buddy: feature_pad Pad" (the next older), not the fillet PASS.
+Fit: view_fit_viewport OK.
+Visual: tc-12-06-edit.png (main-window capture) shows the Undo button pressed but NOT the dropdown list: the list is a separate popup
+  window. tc-12-06-popup.png and tc-12-06-edit-desktop.png (read) paint the list with first entry "buddy: feature_fillet Fillet".
+  Literal Then names tc-12-06-edit.png -> not met (harness limit: window capture excludes popups).
+  tc-12-06-after.png (read): no menu open, tree shows TC1206 > Body only, 3D view shows only the 20x20 sketch outline (rhombus in
+  iso), no solid: the pad's sharp corners cannot be seen because the Then at :353 (document_undo) removed the pad before the capture
+  -> not met. Cause: test-case defect (order of :353 and :355).
+Cleanup: document_close.

@@ -1,0 +1,11 @@
+TC-05-06 checks (R1, FreeCAD pid 24908, launch r1-L6-tc05 with FREECAD_BUDDY_AUTO_APPROVE=0: operator settings AUTO_APPROVE='0' (env), no SECURITY auto-approve line; script_exec on)
+Precondition snapshot check [] -> PASS
+Given doc tc-05-06 (fcb-doc:AEB3UUDZvWVAiUwu4HvaOQ, transient true): Body > Sketch 20x20 > Pad 30 > Fillet r2 on Pad Edge1 > Sketch001 (5x5 square at 7,7) on Fillet Face5 (top, z=30) > Pocket 900 mm (commits OK). query_dependencies: Sketch001 -> Fillet, Pocket -> Sketch001 -> PASS. view_fit_viewport OK; tc-05-06-before.png
+When reproducer 1 (new W4 text): preview_dry_run sketch_remove_geometry Sketch001 geo_ids [0] -> OK (valid=False, tnp FLAGGED); apply with its preview_id -> RECOMPUTE_ERROR "recompute left 1 object(s) invalid: Pocket: Wire is not closed."; mutation rolled_back true, rollback_proven "rolled_back_verified", changed [], snapshot_path null. Snapshot check [].
+When reproducer 2: preview + apply feature_set_parameters Fillet Radius 400 -> RECOMPUTE_ERROR "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"; rolled_back true, rolled_back_verified, changed [], snapshot_path null. Snapshot check [].
+Then every reproducer reached the bracket and failed there (RECOMPUTE_ERROR + mutation block, rolled_back true; no INVALID_INPUT) -> PASS. The W4 reproducer works: the 2026-10-23-02 INVALID_INPUT pre-bracket refusal is gone.
+Then escalation lines (rolled_back_via_snapshot, snapshot_path, restore rebinding): no reproducer escalated -> not applicable.
+Then CONDITIONAL: both returned rolled_back_verified -> scenario recorded NOT-EXERCISED (conditional PASS per TC-05:223-227); no run gave rolled_back true with rollback_proven null -> PASS
+Then tree depth 3 OK on the same handle (Pad, Fillet, Pocket *tip, Sketch001); document_list label tc-05-06 same as before -> PASS
+Then (visual) view_fit_viewport OK fitted fits 0.95 -> PASS
+Then (visual) before vs after: same tall 20x20x30 prism, rounded vertical edge at the left (r2 fillet), square 5x5 pocket opening in the top face with its closed square outline, same size; no oversized fillet, no empty view, no error marker in the tree, no dialog. 3D view pixel-identical (0 px). Whole-window difference only at the status-bar notification icon (1197-1233, 950-972): "2" after the two failed live applies (W2b control behaviour).

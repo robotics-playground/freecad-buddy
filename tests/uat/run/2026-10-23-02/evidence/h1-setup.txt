@@ -1,0 +1,41 @@
+H1 interpreter for run 2026-10-23-02
+
+The fcb micromamba env named by tests/uat/APPENDIX-B-environment-setup.md step 3
+(%USERPROFILE%\micromamba\envs\fcb) is not on this machine, and micromamba is not installed.
+The H1 legs of this run use a venv built on FreeCAD 1.1.4's own Python instead. Nothing in the
+repository or in the FreeCAD install was changed.
+
+Interpreter
+  C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Scripts\python.exe
+  Python 3.11.14 (conda-forge build bundled with FreeCAD), pyvenv.cfg home = C:\Program Files\FreeCAD 1.1\bin
+  FreeCAD 1.1.4 (FreeCAD.Version() through PYTHONPATH below)
+  packages: freecad-buddy 0.1.1 (non-editable copy of the repo at 3025e7c; diff -r against
+  src/freecad_buddy, __pycache__ excluded: identical), mcp 1.30.0, plus their dependencies
+
+Build (bash, from the session scratchpad)
+  uv venv h1env --python "C:/Program Files/FreeCAD 1.1/bin/python.exe"
+  uv pip install --python h1env/Scripts/python.exe D:/Work/Personal/Sources/freecad-buddy
+
+Environment for each H1 start (p0_h1.py sets it)
+  PYTHONPATH = C:\Program Files\FreeCAD 1.1\bin;C:\Program Files\FreeCAD 1.1\lib
+  PATH       = C:\Program Files\FreeCAD 1.1\bin;<inherited PATH>
+  every inherited FREECAD_BUDDY_* variable removed, then the scenario's own variables
+  command    = <interpreter> -m freecad_buddy.hosts.main serve --transport stdio --mode inline
+  cwd        = tests/uat/run/2026-10-23-02/evidence
+
+Import check
+  PYTHONPATH="C:/Program Files/FreeCAD 1.1/bin;C:/Program Files/FreeCAD 1.1/lib" \
+  PATH="/c/Program Files/FreeCAD 1.1/bin:$PATH" <interpreter> -c "import FreeCAD, mcp, freecad_buddy"
+  -> "H1 ok 1.1.4". Note: after `import FreeCAD` the name freecad_buddy resolves to the installed
+  addon (%APPDATA%\FreeCAD\v1-1\Mod\FreeCADBuddy, a junction to src\freecad_buddy); with `-m` the
+  host module loads first from site-packages. Both copies are identical to src at 3025e7c.
+
+Smoke check (evidence/h1-smoke-h1.jsonl, h1-smoke-h1.stderr.log)
+  FCB_PYTHON=<interpreter> uv run python p0_h1.py h1-smoke -- query_capabilities '{}'
+  -> tools/list 46 (script_exec listed), query_capabilities status OK, freecad_version 1.1.4,
+     render "none", exec_enabled true.
+
+Reuse in later phases
+  set FCB_PYTHON to the interpreter above and call evidence/p0_h1.py <tag> [NAME=VALUE ...] --
+  <tool> '<json>' ...; $PREV.<path> reads the previous result, $R<n>.<path> the n-th.
+  The scratchpad is session-scoped: if it is gone, rebuild with the two uv commands above.

@@ -1,0 +1,12 @@
+TC-02-10 checks (R1, pid 5432)
+Given A box-10-20-30 fcb-doc:-Kv-iujxcJ7LyHofyfH3iQ, B two-box-compound fcb-doc:iYV0CNdBPlxROhQmVVJ0pg; document_list lists both -> PASS
+When A read 1: "OK: 1 objects, 1 shown." "- [FEATURE] Box"
+When GUI (tc-02-10-gui.txt): get_window_state snapshot (tc-02-10-pre-click-tree.json); background UIA click on TreeItem two-box-compound; Windows > "2 box-10-20-30 : 1" (title -> box-10-20-30); clicks on TreeItems box-10-20-30 and two-box-compound; Windows > "3 two-box-compound : 1" (title -> two-box-compound). Windows popup left open, closed with Escape. (B was already the active document after the Given opens; the switch to A and back makes the change real.)
+Then GUI moved to B: fresh get_window_state (tc-02-10-active-tree.json) window title " two-box-compound - FreeCAD 1.1.4" -> PASS
+Then handle unchanged: re-read used fcb-doc:-Kv-iujxcJ7LyHofyfH3iQ -> PASS
+Then re-read tree text identical, tree line "- [FEATURE] Box" -> PASS
+Then structured result equal field for field (script compare True) -> PASS
+Then B tree "- [FEATURE] TwoBoxCompound" -> PASS
+Then B mass: volume 2000.0, counts.solids 2, com null -> PASS
+Then (visual) Show All, view_fit_viewport B OK fitted fits 0.95 -> PASS
+Then (visual) tc-02-10-after.png: two separate grey cubes, iso, both whole within the view (the right cube's back top corner sits at the left edge of the floating Tasks panel, R1-F3 note); title "* two-box-compound - FreeCAD 1.1.4" not box-10-20-30; tree lists box-10-20-30 and two-box-compound > TwoBoxCompound; tabs Start, box-10-20-30 : 1, two-box-compound : 1*. Counted 2 boxes. No dialog. -> PASS

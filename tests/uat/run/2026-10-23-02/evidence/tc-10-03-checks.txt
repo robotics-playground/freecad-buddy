@@ -1,0 +1,16 @@
+TC-10-03 checks (P8) - FreeCAD 11736 (launch tc-10-a); proxy 21508 (launcher 33700); listener 127.0.0.1:49721 (rpc-11736.json)
+Given addon loaded; ls rpc-*.json -> 60 files, rpc-11736.json present (59 are stale files of earlier FreeCAD pids; not touched)
+Given GUI document_open box OK fcb-doc:AKVYkUvl...; Given netstat :49721 -> ESTABLISHED 127.0.0.1:49721<->127.0.0.1:61358 owned by 11736 and 127.0.0.1:61358->:49721 owned by 21508 (proxy) -> PASS
+Given Show All; view_fit_viewport OK; tc-10-03-before.png read: one whole iso box, no dialog
+When as written: python3 -c "...glob(...rpc-*.json)[0]..." -> picks rpc-10224.json (FreeCAD 10224, not running) -> "127.0.0.1 64336 <token>" (tc-10-03-when-discovery.txt)
+Then B's TCP connect succeeds immediately: socket.create_connection(('127.0.0.1', 64336), timeout=5) -> ConnectionRefusedError 10061 after 2.05 s -> FAIL. Cause: test-case defect: glob(...)[0] takes the first of 60 discovery files, a stale one; the When does not select rpc-<live pid>.json. Every later B/C Then depends on that host/port.
+Informational run with the live record rpc-11736.json (p8_rpc.py s03; tc-10-03-rpc.jsonl), not used for the verdict:
+  B connect 0.0 s; B first frame {"code": -32000, "message": "bridge busy: another client session is active"} 0.219 s after hello; B next recv zero bytes
+  C first frame {"code": -32000, "message": "auth failed"}; C next recv zero bytes
+Then document_list via proxy -> OK, lists fcb-doc:AKVYkUvl... -> PASS
+Then grep -c "refused a second client: a session is active" addon.log -> 1 (22:54:50,558, from the informational live run); crash grep -> nothing -> PASS only because of the informational run
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-10-03-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal, one whole iso box at the same size and place; 0 pixels differ from before -> PASS
+Cleanup document_close OK
+Verdict: FAIL (When reads a stale discovery file; test-case defect). Product behaviour on the live record matches every B/C Then.
+Possible human intervention: the physical pointer moved from (2559,999) at 22:53:35 to (2559,1137) at 22:54:10 (I did not move it); it stayed outside the window.

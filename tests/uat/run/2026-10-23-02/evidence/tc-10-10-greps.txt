@@ -1,0 +1,21 @@
+$ grep -rniE "retry|re-?issue" mcp_server.py rpc_listener.py rpc_client.py headless/entry.py
+src/freecad_buddy/adapters/mcp_server.py:199:        "the document is now suspect: do not blind-retry, run a query_* read first to confirm "
+exit=0
+$ grep -A16 "READ_ONLY_PROFILE = frozenset" tool_catalog.py
+READ_ONLY_PROFILE = frozenset(
+    {
+        "query_capabilities",
+        "query_tree_summary",
+        "query_object",
+        "query_mass_properties",
+        "query_dependencies",
+        "query_sketch_info",
+        "query_placement",
+        "verify_shape",
+        "verify_sketch",
+        "verify_recompute",
+        "document_open",
+        "document_close",
+        "document_list",
+    }
+)

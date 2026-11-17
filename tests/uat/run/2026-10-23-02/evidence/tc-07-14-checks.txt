@@ -1,0 +1,16 @@
+DOC fcb-doc:XSz2SGh34ooFaWu9YJHomg
+CHECK unicode export: ["OK", null]
+CHECK unicode file exists: [true, ["boîte-立方体.step"]]
+CHECK path echoed: ["D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-14 exports\\boîte-立方体.step", true]
+CHECK unicode verify: ["OK", true, "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-14 exports\\boîte-立方体.step"]
+CHECK bytes vs stat: [6886, 6886]
+CHECK long export: ["RECOMPUTE_ERROR", "Writing of STEP failed", 298, false]
+CHECK reimport volume: ["OK", {"value": 6000.0, "unit": "mm^3"}]
+H_RT fcb-doc:p-kIWOu34u4q-wS9B031mw
+total 264
+drwxr-xr-x 1 thuan 197609    0 Oct 23 21:58 ./
+drwxr-xr-x 1 thuan 197609    0 Oct 23 21:58 ../
+-rw-r--r-- 1 thuan 197609 6886 Oct 23 21:58 boîte-立方体.step
+Given: mkdir -p "tc-07-14 exports" (inside run folder); document_open box-10-20-30 OK, OBJ=Box.
+Long name: path 298 characters; export_step -> RECOMPUTE_ERROR "Writing of STEP failed", no file at that path (also checked with the \?\ prefix) -> refused cleanly, allowed outcome.
+Visual: view_fit_viewport(H_RT) OK. tc-07-14-after.png: tab tc-07-14_rt, one closed box about 1:2:3, all visible faces whole, no corrupted face. Status bar notification badge "1" (from the failed long-name STEP write, harness limit h). A second top-level window "FreeCAD" (918178, 1000x533 at 226,423) was listed at capture time (harness limit e: transient untitled window); it is not in the main-window capture and does not change the judgement.

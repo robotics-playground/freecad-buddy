@@ -1,0 +1,10 @@
+TC-12-13 (P10, pid 29744, display frozen) -- non-visual Thens PASS, visual BLOCKED -> verdict BLOCKED
+Given: document_open box (A) and cylinder (B); list 2; both trees OK. B volume 1570.8.
+When: Windows > "2 box-10-20-30 : 1" -> title " box-10-20-30 - FreeCAD 1.1.4" (no *); File > Close -> title " cylinder-r5-h20";
+  a transient "FreeCAD" window seen once (harness limit e).
+Then stale reads: query_tree_summary "INVALID_INPUT: unknown or stale document handle", query_mass_properties INVALID_INPUT,
+  query_screenshot INVALID_INPUT, each < 0.07 s PASS. Then stale close: document_close INVALID_INPUT PASS.
+Then no crash: Get-Process freecad -> 29744 (same pid) PASS. Then list: one entry, handle B PASS. Then B volume 1570.8 OK PASS.
+Then listener: query_capabilities OK PASS.
+Then GUI closed it: snapshot TreeItems "cylinder-r5-h20", "Cylinder" only (tc-12-13-treeitems-after.txt); the PNG half of this Then
+  and the closing visual (tc-12-13-after.png black) -> BLOCKED (display frozen). Fit: Show All, view_fit_viewport B OK.

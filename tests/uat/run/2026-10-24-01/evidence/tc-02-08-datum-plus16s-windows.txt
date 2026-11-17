@@ -1,0 +1,1 @@
+4524538	* tc-02-08-plate - FreeCAD 1.1.4	{'height': 1000, 'width': 1600, 'x': 0, 'y': 0}

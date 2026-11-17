@@ -1,0 +1,12 @@
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+pid=11420 window_id=4524538
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "escalation": {"reason": "delivery_failed", "target": "foreground"}, "route": "synthetic_events"}
+pid=11420 window_id=4524538
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "not_applicable"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "not_applicable"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "not_applicable"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "global_input"}
+{"delivery": {"mode": "not_applicable"}, "effect": "unverifiable", "route": "global_input"}

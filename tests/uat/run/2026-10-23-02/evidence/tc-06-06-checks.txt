@@ -1,0 +1,22 @@
+TC-06-06 (launch P5 tc-06-b, pid 23332)
+Given: doc tc-06-06, two Part::Box (BoxA 20x20x20 at origin, BoxB 10x10x30 at x=40) by script_exec; tree 'v [BOX] BoxA' / 'v [BOX] BoxB'.
+       get_window_state lists role Tree 'Gui::...Gui::TreePanel.Gui::TreeWidget' with TreeItems BoxA, BoxB.
+Fit first: view_fit_viewport OK.
+When: default render -> rendered_objects ['BoxA','BoxB'] (tc-06-06-default1.png).
+      snapshot -> tc-06-06-tree.png; click TreeItem 'BoxB' by element_token (accessibility).
+      Hide: Space to a tree item is not delivered (harness limit b); used the tree context menu item 'Toggle Visibility'
+      (right_click token, popup MenuItem click).
+PASS  verify_state {label_contains BoxB, exists} -> status satisfied, stable, matches 3.
+PASS  tree after hide: 'v [BOX] BoxA' / '- [BOX] BoxB'.
+PASS  default render after hide: rendered_objects ['BoxA'] (tc-06-06-default-hidden.png: one cube).
+PASS  include ['BoxB'] -> rendered_objects ['BoxB'], resource_link non-null (tc-06-06-includeB.png).
+PASS  tc-06-06-hidden.png window: one cube (BoxA), BoxB greyed in the tree, nothing where BoxB stood; same set as the hidden render.
+      Restore: first two context-menu attempts did not land (UIA exposed only 8 of the 27 menu items: Edit BoxB, Transform,
+      Attachment Editor, Appearance per Face, Expression Actions, Link Actions, Tree Settings); the third used a pixel click on
+      'Toggle Visibility' read from the popup capture tc-06-06-ctxmenu.png. The test case asks to repeat the GUI step until it lands.
+PASS  restored: tree 'v [BOX] BoxB'; default render ['BoxA','BoxB'].
+PASS  fit: view_fit_viewport OK before the after capture.
+PASS  visual: tc-06-06-after.png window: two solids, cube BoxA and tall bar BoxB to its front-right (BoxB selection-highlighted blue).
+      tc-06-06-default-restored.png: the same two solids in the same arrangement and proportion.
+Observation: query_tree_summary header says '2 objects, 2 shown' while the BoxB line starts '- ' (hidden).
+Verdict: PASS.

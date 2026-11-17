@@ -1,0 +1,19 @@
+TC-06-11 (GUI: launch P5 tc-06-b, pid 23332; H1: evidence/p0_h1.py tag tc-06-11, 2026-10-23T21:18:18 to 21:18:21 +07:00,
+          worker pid 24224, FREECAD_BUDDY_AUDIT_LOG=evidence/tc-06-11-h1-audit.jsonl, no other FREECAD_BUDDY_* variable)
+Given: H1 query_capabilities -> render 'none' (freecad_version 1.1.4). GUI: document_open box-10-20-30 -> fcb-doc:iB7y..., Show All,
+       view_fit_viewport OK, then tc-06-11-before.png. H1 opened its own copy: fcb-doc:aQi4... .
+When (H1, one session): query_capabilities; script_exec listing temp_dir() FCB_TMP_shot_* -> ('freecad-buddy-workdir\tmp\FCB_TMP_session_24224_ba0deb88', []);
+      query_screenshot iso; the same listing again -> []. Get-ChildItem after: system %TEMP% FCB_TMP_shot_*.png 0 (0 before),
+      evidence\freecad-buddy-workdir\tmp FCB_TMP_shot_*.png 0 (tc-06-11-tmp-before.txt, tc-06-11-tmp-after.txt).
+PASS  ladder none: render 'none'.
+PASS  render OK: status OK.
+PASS  available false: render.available false.
+PASS  reason: render.reason "offscreen probe render failed: No module named 'pivy'".
+PASS  no fake PNG: render has no resource_link key; the envelope has no 'images' key (the GUI envelope carries one).
+PASS  no temp file: in-process listing [] before and after; Get-ChildItem 0 shot files in the H1 workdir and in %TEMP%.
+PASS  scene empty: rendered_objects [], focused_on null.
+PASS  no fit between captures (none run after the Given fit).
+PASS  visual: tc-06-11-before.png and tc-06-11-after.png both show the same grey box-10-20-30 box, same size and iso orientation,
+      no dialog; PIL ImageChops.difference bbox = None (pixel-identical). The H1 calls did not touch the GUI.
+Observation: the H1 host left an empty folder evidence\freecad-buddy-workdir\tmp\FCB_TMP_session_24224_ba0deb88 after it exited.
+Verdict: PASS.

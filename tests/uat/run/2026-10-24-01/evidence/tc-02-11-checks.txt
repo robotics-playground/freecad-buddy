@@ -1,0 +1,11 @@
+TC-02-11 checks (R1, pid 5432)
+Given doc tc-02-11-plate (Body > Sketch + Pad 60x40x10); depth 2 shows |-- / `-- child lines -> PASS. GUI Fit All toolbar (route accessibility); tc-02-11-before.png
+PASS depth 1: "OK: 11 objects, 1 shown." top-level only "v [BODY] Body (+2)"
+PASS depth omitted: same tree line "v [BODY] Body (+2)" as depth 1 (framing line "computed" vs "cached")
+PASS depth 0: isError, "Input validation error: 0 is less than the minimum of 1", no envelope
+PASS depth -1: isError, "Input validation error: -1 is less than the minimum of 1"
+PASS max_nodes 0: isError, "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)"; also depth 2 + max_nodes 5 same rejection
+PASS schema (tools/list, 46 tools; tc-02-11-schema.json): additionalProperties false; properties exactly depth, doc, expand, filters, focus; depth minimum 1 default 1
+PASS valid call after rejections: depth 2 "OK: 11 objects, 3 shown." first line starts "OK:"
+PASS (visual) GUI Fit All toolbar only, route accessibility
+PASS (visual) tc-02-11-before.png vs -after.png: whole window pixel-identical (r1_diff.py 0 px): the 60x40 plate seen from Top (camera left by the sketch tools), whole, same size and place, no dialog, no document added or closed. Display live: -after-live.png differs in the property tab (3086 px).

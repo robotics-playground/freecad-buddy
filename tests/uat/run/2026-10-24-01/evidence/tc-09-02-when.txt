@@ -1,0 +1,117 @@
+## status.py members
+['OK', 'SPEC_FAILED', 'RECOMPUTE_ERROR', 'TIMEOUT', 'OOM_KILLED', 'WORKER_CRASHED', 'INVALID_INPUT', 'QUEUED', 'RUNNING']
+## sweep statuses
+['INVALID_INPUT', 'OK', 'SCHEMA_ERROR', 'SPEC_FAILED']
+## check_status_vocab
+check_status_vocab OK
+exit 0
+## near-miss grep
+grep exit 1
+## status.py
+"""The closed set of terminal status/verdict/state values shared across the contracts.
+
+Defines the ``Literal`` status/verdict/state types; every other wire type imports
+``TerminalStatus``/``JobState`` from here.
+"""
+
+from __future__ import annotations
+
+from typing import Literal, TypedDict
+
+TerminalStatus = Literal[
+    "OK",
+    "SPEC_FAILED",
+    "RECOMPUTE_ERROR",
+    "TIMEOUT",
+    "OOM_KILLED",
+    "WORKER_CRASHED",
+    "INVALID_INPUT",
+]
+
+JobState = Literal["QUEUED", "RUNNING"] | TerminalStatus
+
+
+class ErrorDetail(TypedDict, total=False):
+    code: str
+## OOM_KILLED
+src/freecad_buddy/contracts/jsonschema/audit-record.schema.json:122:            "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/geometry-diff.schema.json:192:                "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/job-status.schema.json:156:            "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/job-status.schema.json:266:            "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/result-envelope.schema.json:158:        "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/retained/geometry-diff-1.schema.json:192:                "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/retained/mutation-1.schema.json:324:            "OOM_KILLED",
+src/freecad_buddy/contracts/jsonschema/validation-report.schema.json:340:        "OOM_KILLED",
+src/freecad_buddy/contracts/status.py:16:    "OOM_KILLED",
+Binary file src/freecad_buddy/contracts/__pycache__/status.cpython-311.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/status.cpython-312.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/status.cpython-314.pyc matches
+## WORKER_CRASHED
+src/freecad_buddy/adapters/rpc_client.py:6:parse, lookup, or socket failure is synthesized into an envelope (``WORKER_CRASHED`` for an
+src/freecad_buddy/adapters/rpc_client.py:23:    RPC_ERROR_WORKER_CRASHED,
+src/freecad_buddy/adapters/rpc_client.py:72:        "status": "WORKER_CRASHED",
+src/freecad_buddy/adapters/rpc_client.py:73:        "detail": {"code": "WORKER_CRASHED", "message": message, "data": data},
+src/freecad_buddy/adapters/rpc_client.py:83:    code (e.g. a dropped/auth-failed connection) falls back to ``WORKER_CRASHED``.
+src/freecad_buddy/adapters/rpc_client.py:451:        and error.get("code") == RPC_ERROR_WORKER_CRASHED
+src/freecad_buddy/adapters/rpc_dispatch.py:87:    # for the RECOMPUTE_ERROR/WORKER_CRASHED class so the error channel stays readable.
+src/freecad_buddy/adapters/rpc_listener.py:38:    RPC_ERROR_WORKER_CRASHED,
+src/freecad_buddy/adapters/rpc_listener.py:376:            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, "auth failed")
+src/freecad_buddy/adapters/rpc_listener.py:391:            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, RPC_BUSY_MESSAGE)
+Binary file src/freecad_buddy/adapters/__pycache__/rpc_client.cpython-311.pyc matches
+Binary file src/freecad_buddy/adapters/__pycache__/rpc_client.cpython-312.pyc matches
+Binary file src/freecad_buddy/adapters/__pycache__/rpc_listener.cpython-311.pyc matches
+Binary file src/freecad_buddy/adapters/__pycache__/rpc_listener.cpython-312.pyc matches
+src/freecad_buddy/contracts/jsonschema/audit-record.schema.json:123:            "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/geometry-diff.schema.json:193:                "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/job-status.schema.json:157:            "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/job-status.schema.json:267:            "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/result-envelope.schema.json:159:        "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/retained/geometry-diff-1.schema.json:193:                "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/retained/mutation-1.schema.json:325:            "WORKER_CRASHED",
+src/freecad_buddy/contracts/jsonschema/validation-report.schema.json:341:        "WORKER_CRASHED",
+src/freecad_buddy/contracts/rpc.py:17:RPC_ERROR_WORKER_CRASHED = -32000  # listener/marshal crash or dropped connection
+src/freecad_buddy/contracts/rpc.py:21:# The RPC_ERROR_WORKER_CRASHED message for an authenticated hello while another session is
+src/freecad_buddy/contracts/rpc.py:32:    RPC_ERROR_WORKER_CRASHED: "WORKER_CRASHED",
+src/freecad_buddy/contracts/status.py:17:    "WORKER_CRASHED",
+Binary file src/freecad_buddy/contracts/__pycache__/rpc.cpython-311.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/rpc.cpython-312.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/rpc.cpython-314.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/status.cpython-311.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/status.cpython-312.pyc matches
+Binary file src/freecad_buddy/contracts/__pycache__/status.cpython-314.pyc matches
+src/freecad_buddy/hosts/gui_external/entry.py:48:# A call in flight when FreeCAD died fails at once with WORKER_CRASHED; this delay lets its HTTP
+src/freecad_buddy/hosts/headless/entry.py:13:``WORKER_CRASHED``.
+src/freecad_buddy/hosts/headless/entry.py:71:                "WORKER_CRASHED",
+src/freecad_buddy/hosts/headless/entry.py:91:    body returns, every call is refused without dispatch. The refusal becomes ``WORKER_CRASHED``
+src/freecad_buddy/hosts/headless/entry.py:93:    document is lost. Once the worker has exited, every call returns ``WORKER_CRASHED``.
+Binary file src/freecad_buddy/hosts/headless/__pycache__/entry.cpython-311.pyc matches
+Binary file src/freecad_buddy/hosts/headless/__pycache__/entry.cpython-312.pyc matches
+## rpc_dispatch _invoke
+
+        The envelope carries ``display_decimals`` read when the call ran. An envelope that already
+        carries one keeps it: the GUI proxy has no FreeCAD, so it keeps the value FreeCAD stamped.
+        """
+        envelope = self._invoke(name, params)
+        envelope.setdefault("display_decimals", shim.display_decimals())
+        return envelope
+
+    def _invoke(self, name: str, params: dict) -> ResultEnvelope:
+        method = self._methods.get(name)
+        if method is None:
+            return _error_envelope("INVALID_INPUT", ValidationError(f"unknown method: {name}"))
+        try:
+            return method.handler(**params)
+        except ValidationError as exc:
+            return _error_envelope("INVALID_INPUT", exc)
+        except MarshalTimeout as exc:
+            # A timed-out call may still be running, so the session stays document-suspect until
+            # a fingerprint check confirms state.
+            envelope = _error_envelope("TIMEOUT", exc)
+            envelope["detail"]["data"]["marshal_timeout"] = True  # type: ignore[index]
+            envelope["detail"]["data"]["maybe_still_running"] = True  # type: ignore[index]
+            return envelope
+        except (TypeError, ValueError, KeyError) as exc:
+            # Bad params shape reaching a handler is caller-side invalid input.
+            return _error_envelope("INVALID_INPUT", exc)
+        except Exception as exc:  # noqa: BLE001 - single boundary: nothing raises past here
+            return _error_envelope("RECOMPUTE_ERROR", exc, unexpected=True)

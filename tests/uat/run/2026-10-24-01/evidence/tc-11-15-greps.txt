@@ -1,0 +1,6 @@
+## open a
+48:            with open(self._path, "a", encoding="utf-8") as handle:
+## readers
+src/freecad_buddy/usecases/documents.py:49:    Follows the ``FREECAD_BUDDY_AUDIT_LOG`` precedent: an operator overrides the location by
+## rotation
+48:            with open(self._path, "a", encoding="utf-8") as handle:

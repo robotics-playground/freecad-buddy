@@ -1,0 +1,1 @@
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}

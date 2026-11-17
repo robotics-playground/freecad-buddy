@@ -1,0 +1,16 @@
+TC-12-05 (P10, pid 29744, display painting; the frozen-display attempt is kept as tc-12-05-frozen-*) -- verdict FAIL (When route)
+Given: document_create TC1205 + script_exec ObjectA, ObjectB (Part::Box, B at x=30); tree "v [BOX] ObjectA" / "v [BOX] ObjectB" PASS.
+When: view_fit_viewport OK; tc-12-05-before.png. Click TreeItem ObjectB by token (default action) -> selected False.
+  invoke_menu View > Visibility > "Toggle Visibility" -> refused menu_path_unavailable "menu path segment 2 was not found"
+  (also "Toggle visibility", with "\tSpace", " Space"). The prescribed When route fails -> FAIL, cause test-case defect /
+  harness (invoke_menu does not resolve this leaf on 1.1.4; Std_ToggleVisibility "Toggle &Visibility", CommandView.cpp:907).
+Deviation to exercise the Thens: click {action:"select"} on the ObjectB token -> selected True; context menu route failed (menu
+  opened at the physical pointer, no "Toggle Visibility" item exposed); press_key space on the ObjectB token -> landed
+  (result said delivery_failed, but the tree changed).
+Then gone from viewport: tc-12-05-after.png shows ObjectA only PASS. Then flag: "v [BOX] ObjectA", "- [BOX] ObjectB" PASS.
+Then still listed: same lines, only ObjectB's first char differs PASS. Then no geometry change: A 1000.0, B 1000.0 before/after PASS.
+Then restore: second Space -> tree lines equal to the pre-toggle text (diff empty) PASS. Then live flag: no MCP mutation in between PASS.
+Fit: same view_fit_viewport as before.png, no camera change between captures.
+Visual (read): before.png two grey cubes, ObjectA upper left, ObjectB lower right, tree rows with eye icons; after.png only the
+  upper-left cube, ObjectB row greyed with crossed eye icon (and highlighted, selected), same camera PASS.
+Cleanup: visibility restored; document_close.

@@ -1,0 +1,23 @@
+## planted (00:44:40), live pid 17840
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp:
+FCB_TMP_session_17840_cafebabe/
+FCB_TMP_session_999996_deadbeef/
+FCB_TMP_snap_orphan/
+keep-me.txt
+not-reserved/
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_17840_cafebabe:
+keep.txt
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_999996_deadbeef:
+FCB_TMP_snap_x/
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_999996_deadbeef/FCB_TMP_snap_x:
+Doc.FCStd
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_snap_orphan:
+Doc.FCStd
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/not-reserved:
+keep.txt
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_snap_tc1119/

@@ -1,0 +1,10 @@
+19:23:00.759
+19:23:00.979
+refused: ConnectionRefusedError
+elapsed 2.03
+freecad_alive_rc=1
+    | httpx.ConnectError: All connection attempts failed
+    +------------------------------------
+19:23:05.918
+proxy_alive_rc=1
+listen_rc=1

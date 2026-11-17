@@ -1,0 +1,23 @@
+DOC fcb-doc:UDTNEsYcQyIbDKtG2-pzqw
+CHECK status: "OK"
+CHECK check ids: ["lib3mf.parses", "lib3mf.unit_millimeter", "lib3mf.manifold_and_oriented", "lib3mf.metadata_present", "trimesh_3mf.watertight", "trimesh_3mf.winding_consistent", "trimesh_3mf.is_volume", "trimesh_3mf.volume_band", "trimesh_3mf.euler", "self_read.facet_count", "self_read.vertex_count", "oracle.agreement"]
+CHECK present: {"lib3mf.parses": true, "lib3mf.unit_millimeter": true, "lib3mf.manifold_and_oriented": true, "lib3mf.metadata_present": true}
+CHECK present: {"trimesh_3mf.watertight": true, "trimesh_3mf.winding_consistent": true, "trimesh_3mf.is_volume": true, "trimesh_3mf.volume_band": true, "trimesh_3mf.euler": true}
+CHECK lib3mf.unit_millimeter: {"id": "lib3mf.unit_millimeter", "measured": {"unit": 1, "source_is_mm": true}, "passed": true}
+CHECK lib3mf.manifold_and_oriented: {"id": "lib3mf.manifold_and_oriented", "measured": {"meshes": 1, "non_manifold": 0}, "passed": true}
+CHECK lib3mf.metadata_present: {"id": "lib3mf.metadata_present", "measured": 1, "passed": true}
+CHECK self_read.facet_count: {"id": "self_read.facet_count", "measured": 100, "expected": 100, "passed": true, "detail": {"message": "facets 100 vs 100"}}
+CHECK self_read.vertex_count: {"id": "self_read.vertex_count", "measured": 52, "expected": 52, "passed": true, "detail": {"message": "vertices 52 vs 52"}}
+CHECK oracle.agreement: {"id": "oracle.agreement", "measured": {"lib3mf": true}, "passed": true, "detail": {"message": "oracles agree"}}
+CHECK trimesh_3mf.volume_band: {"id": "trimesh_3mf.volume_band", "measured": 1555.55, "expected": 1570.8, "tolerance": {"abs": 52.35987755982988}, "passed": true}
+CHECK volume_band / expected: [52.36, 52.35986666666667]
+CHECK measured within band of 1570.7963: [1555.55, true]
+1
+1
+True
+(lines above, in order: lib3mf.ModelUnit.MilliMeter = 1; outside lib3mf GetUnit = 1; outside trimesh is_watertight = True)
+Given: lib3mf importable; rm stale; document_open cylinder-r5-h20 OK -> fcb-doc:UDTNEsYcQyIb..., OBJ=Cylinder
+Note: volume_band 52.36 = (2/3)*0.1*785.40 rounded to 2 decimals; trimesh_3mf.volume_band tolerance {"abs": 52.3598...}, no rel key; measured 1555.55, |1555.55-1570.7963| = 15.2 <= 52.36.
+Visual: tc-07-09-source.png: source cylinder (Show All, view_fit_viewport OK), smooth round body about twice as tall as wide; status bar view size 45.84 mm x 25.80 mm.
+tc-07-09-after.png: view_fit_viewport(H_RT) OK; faceted round body, same on-screen size and same height:width as the source, top end flat and closed; status bar view size 45.79 mm x 25.77 mm (same scale as the source; no 1000x unit error). Axis cross in the corner same size in both.
+tc-07-09-after-bottom.png (supplementary, camera only, NaviCube BOTTOM): bottom end is a flat closed disc.

@@ -1,0 +1,13 @@
+unset run: approval count 1; confirm msg in unset jsonl: 0
+{'event': 'mutation', 'tool': 'document_create', 'params_digest': 'cb90b24a92bd6857087e8e353892fe15a2a3cc64d31df3c4e73ea34a82640de8', 'fingerprint_before': None, 'approval': None, 'verify_verdict': None}
+{'event': 'mutation', 'tool': 'document_create', 'params_digest': 'cb90b24a92bd6857087e8e353892fe15a2a3cc64d31df3c4e73ea34a82640de8', 'fingerprint_before': None, 'approval': None, 'verify_verdict': 'OK'}
+{'event': 'approval', 'tool': 'feature_body_create', 'params_digest': '4991ff26776470049f5dd262d1cf48a94e1a17ce3c8ca4afbc94e393a7175d9d', 'fingerprint_before': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'approval': {'args_digest': 'd12bf23f09cd6582686aec4a43e8ebfae73020a8e4b55c73cac0caf7bbcc43cb', 'doc': 'fcb-doc:ma8zxU84sOLftKTtNnAdhA', 'fingerprint_before': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'mode': 'auto_approve', 'source': 'FREECAD_BUDDY_AUTO_APPROVE', 'tool': 'feature_body_create'}, 'verify_verdict': None}
+{'event': 'mutation', 'tool': 'feature_body_create', 'params_digest': '4991ff26776470049f5dd262d1cf48a94e1a17ce3c8ca4afbc94e393a7175d9d', 'fingerprint_before': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'approval': None, 'verify_verdict': None}
+{'event': 'mutation', 'tool': 'feature_body_create', 'params_digest': '4991ff26776470049f5dd262d1cf48a94e1a17ce3c8ca4afbc94e393a7175d9d', 'fingerprint_before': '4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945', 'approval': None, 'verify_verdict': 'OK'}
+before line fp == approval fp: True | digests equal: True
+eq0: approval lines in its audit 0; status/message: INVALID_INPUT | this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+true: approval lines in its audit 0; status/message: INVALID_INPUT | this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+unset stderr auto-approve warning lines: 1
+eq0 stderr auto-approve warning lines: 0
+true stderr auto-approve warning lines: 0
+0 of 1535072 pixels differ; bbox None

@@ -1,0 +1,22 @@
+TC-08-18 (GUI launch P5 tc-08-a, pid 30488; four H1 starts via p0_h1.py, 21:29:37-21:29:45 +07:00, see launch-log.tsv)
+Given: H1 interpreter (h1-setup.txt) with FreeCAD bin/lib on the path: 'import FreeCAD, mcp' ok, FreeCAD 1.1.4.
+       Saved fixture evidence/tc-08-18-fixture.FCStd: Body + fully constrained 20x20 Sketch (built in the GUI with preview+confirm, document_save, closed).
+       GUI: document_open box-10-20-30 OK (fcb-doc:90FD...), Show All, view_fit_viewport OK, tc-08-18-before.png.
+When: each H1 run opens the fixture and calls feature_pad Pad 30 with no confirm; the unset run then repeats it with
+      confirm.preview_id 'fcb-preview:forged.AAAA'. Audit: unset -> tc-08-18-approve.jsonl; others -> tc-08-18-<p>-audit.jsonl.
+PASS  unset approves: feature_pad status OK, no confirm sent.
+PASS  forged token checked: INVALID_INPUT "confirm.preview_id carries an invalid signature".
+PASS  =1 approves: status OK.
+PASS  =0: "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id".
+PASS  =true: same refusal.
+PASS  startup line: stderr of unset and =1 each contain "SECURITY: mutation auto-approve ENABLED (to require preview_id, clear
+      Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)" (1 line each);
+      =0 and =true stderr: 0 such lines.
+PASS  audited: grep '"mode": *"auto_approve"' tc-08-18-approve.jsonl -> 1 line: event approval, approval.tool feature_pad,
+      approval.doc / doc.handle fcb-doc:1Upr1_..., approval.source "FREECAD_BUDDY_AUTO_APPROVE".
+PASS  no token: approval.args_digest 6f69c5d2... present; no preview_id anywhere in the file.
+PASS  forged call wrote no approval: exactly one approval line in the 7-line file.
+PASS  fit: view_fit_viewport OK.
+PASS  visual: before and after both show the same grey box-10-20-30 box in iso; p0_diff 0 pixels differ; no headless change reached the GUI.
+Kept (not deleted): tc-08-18-approve.jsonl (run evidence). p0_h1 logs: preview_id cut to 16 characters by p5_redact.py.
+Verdict: PASS.

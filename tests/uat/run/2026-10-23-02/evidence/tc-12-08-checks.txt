@@ -1,0 +1,21 @@
+TC-12-08 (P10, pid 29744) -- verdict FAIL (one Then, test-case defect)
+Given (run while the display was frozen, 09:17-09:18): File > New Document; View > Workbench > Part; Part > Primitives > Cube;
+  document_list handle fcb-doc:gSTV...; tree "v [BOX] Box \"Cube\"". document_save to evidence/tc-12-08-bracket.FCStd OK (09:18:12.824).
+  Note: list_windows right after the MCP save still read "* tc-12-08-bracket - FreeCAD 1.1.4".
+When: Part > Primitives > Cube -> second cube; pre-save title "* tc-12-08-bracket"; pre-save LastWriteTime 09:18:12.8240210.
+  (09:18-09:45 paused: display repaint + pointer, waiting for lead.)
+  File > Save by invoke_menu -> refused menu_path_unavailable "menu path segment 1 was not found" (tc-12-08-save-menu-fault.txt;
+  a Traceback was printed for the first attempt, same refusal); fallback as the When says: Save toolbar button by element_token.
+Then file written: LastWriteTime 09:45:40.9676925 > 09:18:12.8240210 PASS.
+Then no dialog: list_windows after save -> one window only PASS.
+Then title: " tc-12-08-bracket - FreeCAD 1.1.4", no "*"; pre-save had "*" PASS.
+Then handle identity: same doc fcb-doc:gSTV..., label tc-12-08-bracket PASS.
+Then handle valid: tree OK, "Box \"Cube\"", "Box001 \"Cube001\"" PASS.
+Then saved file: reopened tree names Cube and Cube001 (labels) PASS for the tree part;
+  query_mass_properties {object:"Cube001"} -> INVALID_INPUT "unknown object: Cube001" -> FAIL. The internal Name is Box001
+  (label Cube001); queries.py:188-198 resolves by Name only ("never keys on Label"). Diagnostic: object "Box001" -> volume 1000.0.
+  Cause: test-case defect (TC-12-gui-workflows.md:459,467 use the label as the object name).
+Fit: view_fit_viewport reopened OK PASS.
+Visual (tc-12-08-after.png, read): no dialog; title "tc-12-08-bracket - FreeCAD 1.1.4" without marker; tree lists Cube and Cube001
+  under tc-12-08-bracket; one grey cube drawn whole (the two cubes coincide) PASS.
+Cleanup: reopened doc closed; tc-12-08-bracket.FCStd kept (a Then failed).

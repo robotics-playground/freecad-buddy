@@ -1,0 +1,11 @@
+TC-12-09 (P10 re-run 09:55 on a painting display, pid 29744; frozen-display attempt kept as tc-12-09-frozen-*) -- verdict PASS
+Given: document_create TC1209 handle; list_windows only " TC1209 - FreeCAD 1.1.4" PASS.
+Then dialog up: list_windows after the script_exec: "Preferences" (722120) beside the main window PASS.
+Then not waited: script_exec OK, value_repr "'scheduled'" PASS.
+Then concurrent call: query_tree_summary during the dialog -> OK in 0.157 s (within 30 s) PASS. Then client told: OK envelope, no
+  disconnect PASS.
+Then dismissal: Cancel button by element_token (tc-12-09-dialog-tree.json) -> list_windows only the main window; route Cancel PASS.
+Then listener: query_capabilities OK PASS. Then intact: "OK: 0 objects" before and after PASS. Then proxy: :8765 LISTENING (pid 30520) PASS.
+Visual (read): tc-12-09-dialog.png: a separate "Preferences" window painted, General page, OK / Cancel / Apply buttons visible;
+  tc-12-09-after.png: main window "TC1209 - FreeCAD 1.1.4", no dialog over it, tree root TC1209, empty 3D view PASS.
+Cleanup: Cancel used, so no preference changed; document_close. The dialog PNG is kept as evidence (the Cleanup rm is not applied).

@@ -1,0 +1,24 @@
+TC-04-15 checks (launch tc-04-a pid 29440; doc UpToFace fcb-doc:_iJVr4eEg8cJDankz7Ll4A; tc-04-15-mcp.jsonl)
+Given: PlateBody; BaseProfile on XZ, 60 x 5 rectangle at sketch (0,20); BasePad length 40 midplane -> status OK, verify_shape OK,
+  volume 12000.0, bbox x 0..60, y -20..20, z 20..25. RiserProfile on XY, 10 x 10, oracle bbox [25,-5,0,35,5,0], verify_sketch OK dof 0.
+  Live Pad Type enum (query_capabilities): ['Length','UpToLast','UpToFirst','UpToFace','?TwoLengths','UpToShape'].
+  Oracle faces BasePad: Face1 plane z 20 (underside), as in the test case.
+PASS commit: RiserPad up_to UpToFace, up_to_face BasePad Face1 -> status OK, rolled_back false.
+PASS stopped at face: query_mass_properties RiserPad bbox z 0.0..25.0, volume 14000.0 (shape_summary bbox [60,40,25]).
+PASS no length needed: step 1 sent no length and was not refused.
+PASS written: query_object Type "UpToFace", UpToFace ["<PartDesign::Pad>", ["Face1"]]; query_dependencies out_list
+  ["BasePad", "RiserProfile"].
+PASS bad enum: up_to UpToInfinity -> INVALID_INPUT "up_to 'UpToInfinity' is not one of ['Length', 'UpToLast', 'UpToFirst',
+  'UpToFace', '?TwoLengths', 'UpToShape']".
+PASS pre-transaction: step 2 has no structured_content (no mutation.snapshot_path); query_tree_summary depth 3 names no BadTypePad.
+PASS verify_shape RiserPad OK.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-15-after.png (fit, isometric view): the slab, whole, with one square riser block under its centre; the
+  riser's front and right faces meet the slab underside along one line, no gap; no second pad body anywhere; no dialog
+  in the main window. A thin line runs across the slab top at y = 0: the BaseProfile sketch outline, which stays shown
+  (same observation as TC-04-10). tc-04-15-front.png (camera-only front view, 17.5 px/mm): a T shape, slab 88 px (5 mm)
+  thick, riser 175 px (10 mm) wide and 349 px (20 mm) tall; the riser top meets the slab underside flush, with no gap,
+  and nothing passes through the slab (its top line is straight and unbroken).
+Harness note: tc-04-15-after-windows.txt lists a transient untitled "FreeCAD" window 1000 x 73 at (201,883); it was gone
+  at the next capture. The main window shows no dialog.
+Cleanup: document_close.

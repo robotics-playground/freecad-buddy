@@ -1,0 +1,61 @@
+## listing after cleanup (08:03:25)
+### C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp:
+total 4
+drwxr-xr-x 1 thuan 197609 0 Oct 24 08:03 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  9 23:28 ../
+### %TEMP%\FCB_TMP_* (top level)
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_0iswf_tr
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_18ml26ed
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_1k4tiiqw
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_1pglm825
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_2ssr2pul
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_4kq2_l_g
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_4p7heue6
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_5fl4dy_t
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_5vdbh446
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_6kcb0c8g
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_6qhk8zgu
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_85oevc2x
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_8b_4nvmj
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test__jwobhpb
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_a0gc2zzx
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_awkzimrb
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_b7mlkjvp
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_bcltzipx
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_bjzlws6i
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_bwdp4loi
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_bybjt_dj
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_c4b9_1io
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_cx7asd2d
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_cxdjaohu
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_d1wqisc4
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_etneakuk
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_g7vqk1jj
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_i0ojr6xr
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_i5nk71hu
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_ik8auz7u
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_k1bxhsh7
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_k4ni5v1d
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_kel2jsik
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_n4bo5t7s
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_nwxi3cy7
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_osnv142d
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_osrnle9r
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_p7trb5q5
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_p_vu42zc
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_qolksyew
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_qv1w9nl9
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_qv3s1u3e
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_s3zr4wh5
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_uxzznm5r
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_uy96xskg
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_v5po2rb2
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_wba8bzt3
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_wc7wyo_z
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_x8aw4fzw
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_xi3sk_zk
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_xq4u0dh4
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_xx6j4o8e
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_ya0to5uk
+C:\Users\thuan\AppData\Local\Temp/FCB_TMP_export_test_yi5ftxis

@@ -1,0 +1,18 @@
+CHECK surface command: []
+== [when] verify_shape {"object": "Box", "strict": true}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('strict' was unexpected)", "is_error": true}
+== [when] query_tree_summary {"max_nodes": 50}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", "is_error": true}
+== [when] export_step {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-05-u.step", "overwrite": true}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('overwrite' was unexpected)", "is_error": true}
+== [when] document_close {"force": true}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('force' was unexpected)", "is_error": true}
+== [when] query_capabilities {"verbose": true}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('verbose' was unexpected)", "is_error": true}
+CHECK rejections: [true, true, true, true, true]
+CHECK texts: ["Input validation error: Additional properties are not allowed ('strict' was unexpected)", "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", "Input validation error: Additional properties are not allowed ('overwrite' was unexpected)", "Input validation error: Additional properties are not allowed ('force' was unexpected)", "Input validation error: Additional properties are not allowed ('verbose' was unexpected)"]
+CHECK statuses: [null, null, null, null, null]
+== [then document_list] document_list {}
+   isError=False {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:tN-DVcPTaBzpdXih5Od19w", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30."}
+CHECK document_list names H: true
+CHECK tc-09-05-u.step exists: false

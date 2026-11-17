@@ -1,0 +1,1 @@
+{"service":"freecad-buddy-mcp-proxy","freecad_pid":19140,"session_id":"203ae9b72afe3fbc"}

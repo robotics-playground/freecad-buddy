@@ -1,0 +1,16 @@
+TC-10-10 checks (P8) - same H1 session; FreeCAD 11736 for the GUI
+Given F = golden box opened on H1 fcb-doc:tyOEeF3H...; query_tree_summary F OK; no abandoned body
+Given GUI <G>: Show All; view_fit_viewport OK; tc-10-10-before.png read: one whole iso box
+When preview_dry_run F {feature_body_create FpProbe} -> fingerprint_before 554070c8...1330 (structured_content.diff.fingerprint_before; my driver first looked one level up and printed null; the digest is read from the logged envelope in tc-10-10-h1.jsonl, no call repeated)
+When script_exec F (40 s body + LateBox, code as written) -> TIMEOUT after 30.016 s; worker CPU idle at t0+43.4 s; query_tree_summary F -> "Box, LateBox"; preview_dry_run again -> d10f0d82...ce8b
+Then message contains "the document is now suspect: do not blind-retry, run a query_* read first to confirm " -> PASS
+Then audit (snapshot before the manual retry, tc-10-10-audit-before-retry.jsonl): script_exec on F = one before + one after (params_digest 90c1ce0dbfcf4790..., after verdict TIMEOUT) -> PASS
+Then no second before line for that params_digest in that snapshot; LateBox once in the query_tree_summary -> PASS
+Then digests differ (554070c8 vs d10f0d82) and the body landed (LateBox present) -> PASS
+Then manual retry after the clearing read -> dispatched; terminal envelope TIMEOUT (marshal_timeout true, maybe_still_running true); its body later added LateBox001 -> PASS. Note for the lead: the re-issued mutation overruns its budget by design, so its terminal envelope is TIMEOUT, not OK. The final tc-10-07-audit.jsonl therefore holds a second before/after pair with the same params_digest, written for this client retry.
+Then grep -rniE "retry|re-?issue" -> one hit, mcp_server.py:199 message text -> PASS
+Then (visual) H1 document_save F -> tc-10-10-F.FCStd OK before the retry; GUI document_open OK fcb-doc:nLrUjtFH...; Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-10-10-after.png read: window paints, title "* tc-10-10-F - FreeCAD 1.1.4", no Not Responding, no modal; tree tc-10-10-F > Box, LateBox; the box with exactly one LateBox at its back right, never doubled -> PASS
+Cleanup GUI document_close OK
+Verdict: PASS
+Human: pointer inside the window 23:28:40-23:31:52 ((890,933), then (1495,754) at capture time, Tasks panel area); the capture shows no preselection highlight.

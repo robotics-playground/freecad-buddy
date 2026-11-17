@@ -1,0 +1,7 @@
+wait start 19:08:47, sleeping 898 s (isolation: no other FreeCAD action)
+wait end 19:23:45
+CHECK now / expires_at: ["2026-10-24T12:23:45.753892+00:00", "2026-10-24T12:23:36.667633+00:00"]
+CHECK expired: ["INVALID_INPUT", "confirm.preview_id has expired; re-run preview_dry_run"]
+"status": "OK"
+"fits": true, "ratio": 0.95
+after capture 19:23:57

@@ -1,0 +1,20 @@
+## Given operator settings (tc-11-b-addon.log)
+FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default)
+## OS temp FCB_TMP_* count (baseline): 54
+## GUI leg (proxy, tc-11-18-mcp.jsonl), FreeCAD pid 35504 (list_windows pid=35504 window_id=465386)
+document_create tc11-18; Body, Sketch, sketch geometry, Pad 30 mm committed (auto-approve); preview_dry_run feature_fillet r=1 -> OK
+query_screenshot resource_link: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_35504_55ba6a3e\FCB_TMP_shot_czymfi9a.png (copied to tc-11-18-render.png, 42333 bytes)
+in-process listing: temp_dir() = C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_35504_55ba6a3e; entries ['FCB_TMP_shot_czymfi9a.png']; os.getpid() 35504
+-> no FCB_TMP_snap_ and no FCB_TMP_prev_ entry; folder name pid 35504 = FreeCAD pid; token 55ba6a3e = 8 hex
+## H1 leg (tc-11-18-h1.jsonl, FREECAD_BUDDY_WORKDIR=evidence/tc-11-18-workdir)
+mutations OK; worker os.getpid() = 37172; query_screenshot render {"available": false, "reason": "offscreen probe render failed: No module named 'pivy'"}
+ls -R tc-11-18-workdir: tmp/FCB_TMP_session_37172_e2f494e0/ (empty: no H1 render); nothing else at the top of tmp/
+H1 interpreter note: pivy is in C:\Program Files\FreeCAD 1.1\bin\Lib\site-packages\pivy, which the H1 venv (include-system-site-packages = false) does not see
+## OS temp
+FCB_TMP_* directly in %TEMP%: 54 before, 54 after
+"status": "OK"
+"value_repr": "('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_35504_55ba6a3e\\\\FCB_TMP_snap_4rq2z4d8\\\\tc11_18.FCStd', 'C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_35504_55ba6a3e\\\\FCB_TMP_prev_rm0ob77k\\\\FCB_TMP_prev_c5a1b86b82f1a15b.FCStd')"
+"value_repr": "[('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_35504_55ba6a3e', ['FCB_TMP_prev_rm0ob77k', 'FCB_TMP_snap_4rq2z4d8'], ['FCB_TMP_shot_czymfi9a.png']), ('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_35504_55ba6a3e\\\\FCB_TMP_prev_rm0ob77k', [], []), ('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_35504_55ba6a3e\\\\FCB_TMP_snap_4rq2z4d8', [], [])]"
+2559 of 1535072 pixels differ; bbox (43, 10, 241, 25)
+"status": "OK"
+"value_repr": "[('FCB_TMP_snap_4rq2z4d8', 'removed empty'), ('FCB_TMP_prev_rm0ob77k', 'removed empty')]"

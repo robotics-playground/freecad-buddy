@@ -1,0 +1,5 @@
+{"host": "127.0.0.1", "port": 62907, "record": "rpc-28980.json", "connect": "refused: ConnectionRefusedError", "elapsed": 2.03, "note": "plain TCP connect, no frame sent, 19:23:00, after Stop-Process -Force of FreeCAD 28980 (TC-01-14 When); output copied from tc-01-14-kill.txt"}
+{"host": "127.0.0.1", "port": 62561, "record": "rpc-28980-oldtoken-on-29952.json", "sent": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"rpc_hello\",\"params\":{\"token\":\"<token>\",\"contract_version\":\"1\"}}"}
+{"read": 1, "line": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"error\": {\"code\": -32000, \"message\": \"auth failed\"}}\n", "elapsed": 0.0}
+{"read": 2, "line": "", "elapsed": 0.0}
+{"note": "the line above: token of the killed session (rpc-28980.json) sent to the listener of FreeCAD 29952 with the proxy stopped"}

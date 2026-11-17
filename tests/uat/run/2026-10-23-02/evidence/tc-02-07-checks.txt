@@ -1,0 +1,10 @@
+TC-02-07 checks (same doc as TC-02-05, fcb-doc:D0-cjLUNVeKgwVnRWCCOhw)
+PASS Given: depth 3 tree names Body, Pad, Sketch.
+PASS per-object keys exactly object,in_list,out_list: {"object":"Pad","in_list":["Body"],"out_list":["Sketch"]}.
+PASS names are Name values (Body, Sketch match tree Names; no quoted labels).
+PASS out_list holds the Sketcher::SketchObject "Sketch"; in_list holds PartDesign::Body "Body"; no duplicates.
+PASS whole-doc keys exactly edges,total_edges,returned_edges,truncated; every edge {from,to}; total 11 = returned 11, truncated false.
+PASS views agree: edges contain {"from":"Pad","to":"Sketch"}.
+PASS fit: view_fit_viewport OK.
+PASS visual tc-02-07-after.png: one whole plate (Pad selected, blue highlight), no edge clipped; tree shows
+  tc-02-plate > Body > Origin, Pad > Sketch (Pad expanded by a cua-driver pixel click on its expander); no dialog.

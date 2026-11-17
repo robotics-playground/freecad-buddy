@@ -1,0 +1,10 @@
+2026-10-23T22:30:59+07:00
+{"tools_list_count": 46, "script_exec": true}
+{"mcp": "document_create", "args": {"label": "TC0920A"}, "is_error": false, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:q8-iwe0pqzvrVOCn-cvmWw", "name": "TC0920A", "label": "TC0920A"}, "text": "doc: fcb-doc:q8-iwe0pqzvrVOCn-cvmWw\nlabel: TC0920A\nname: TC0920A"}}
+snapshot tc-09-20-snap_1.jsonl: 585 bytes
+{"mcp": "document_create", "args": {"label": "TC0920B"}, "is_error": false, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:6TsWYRUfLzHIgd_cNU0MJw", "name": "TC0920B", "label": "TC0920B"}, "text": "doc: fcb-doc:6TsWYRUfLzHIgd_cNU0MJw\nlabel: TC0920B\nname: TC0920B"}}
+snapshot tc-09-20-snap_2.jsonl: 1170 bytes
+{"mcp": "document_close", "args": {"doc": "fcb-doc:q8-iwe0pqzvrVOCn-cvmWw"}, "is_error": false, "structured_content_is_null": false, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:q8-iwe0pqzvrVOCn-cvmWw", "name": "TC0920A", "closed": true}, "text": "Closed TC0920A (doc=fcb-doc:q8-iwe0pqzvrVOCn-cvmWw)."}}
+snapshot tc-09-20-snap_3.jsonl: 1859 bytes
+{"tools_list_after_count": 46}
+2026-10-23T22:31:01+07:00

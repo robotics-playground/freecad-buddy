@@ -1,0 +1,2 @@
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-11736.json
+port accepts a connect

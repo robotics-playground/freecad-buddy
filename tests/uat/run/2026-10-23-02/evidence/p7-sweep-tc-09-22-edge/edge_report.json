@@ -1,0 +1,86 @@
+{
+  "total": 13,
+  "passed": 6,
+  "failed": 7,
+  "all_passed": false,
+  "checks": [
+    {
+      "tool": "unknown_doc_handle",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": ""
+    },
+    {
+      "tool": "unknown_object_name",
+      "ok": true,
+      "status": "INVALID_INPUT",
+      "detail": ""
+    },
+    {
+      "tool": "retired_max_nodes_rejected",
+      "ok": true,
+      "status": "SCHEMA_ERROR",
+      "detail": "additionalProperties: False rejects the retired parameter"
+    },
+    {
+      "tool": "depth_one_returns_roots_only",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "shown=None roots=0"
+    },
+    {
+      "tool": "export_missing_path_schema",
+      "ok": true,
+      "status": "SCHEMA_ERROR",
+      "detail": "schema-required rejection"
+    },
+    {
+      "tool": "export_multi_object",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": ""
+    },
+    {
+      "tool": "stale_export_id",
+      "ok": true,
+      "status": "INVALID_INPUT",
+      "detail": ""
+    },
+    {
+      "tool": "screenshot_read_only",
+      "ok": false,
+      "status": "OK",
+      "detail": "volume None -> None"
+    },
+    {
+      "tool": "double_close_stale",
+      "ok": true,
+      "status": "INVALID_INPUT",
+      "detail": ""
+    },
+    {
+      "tool": "open_bad_path",
+      "ok": true,
+      "status": "INVALID_INPUT",
+      "detail": ""
+    },
+    {
+      "tool": "compound_com_null",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "com=None"
+    },
+    {
+      "tool": "fault_shape:wrong-volume",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "status=NO_STATUS"
+    },
+    {
+      "tool": "fault_shape:non-watertight-open-shell",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "status=NO_STATUS"
+    }
+  ]
+}

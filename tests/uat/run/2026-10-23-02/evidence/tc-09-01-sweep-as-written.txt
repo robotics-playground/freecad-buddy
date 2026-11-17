@@ -1,0 +1,2 @@
+fcb env python not found at C:\Users\thuan\micromamba\envs\fcb\python.exe; run the micromamba setup first
+exit=2

@@ -1,0 +1,8 @@
+== [d1] query_tree_summary {}
+   isError=False content=['text'] {"text": "OK: 61 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, ratio 2.41, cached, served from cache; unverified key component(s): geometry\nv [BODY] Body (+27)", "is_error": false}
+   elapsed_s=0.047
+OK: 61 objects, 1 shown.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+framing: does not fit, ratio 2.41, cached, served from cache; unverified key component(s): geometry
+v [BODY] Body (+27)

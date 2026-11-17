@@ -1,0 +1,2 @@
+2026-10-24 21:32:40,860 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped
+2026-10-24 21:32:40,860 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10054] An existing connection was forcibly closed by the remote host)

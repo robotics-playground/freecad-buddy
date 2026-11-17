@@ -1,0 +1,3 @@
+2026-10-23 23:41:40,648 INFO freecad_buddy.rpc_listener: client closed the connection
+2026-10-23 23:41:41,148 WARNING freecad_buddy.rpc_listener: first frame was not rpc_hello; closing
+2026-10-23 23:41:41,168 INFO freecad_buddy.rpc_listener: client closed the connection

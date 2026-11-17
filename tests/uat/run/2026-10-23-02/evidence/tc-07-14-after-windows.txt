@@ -1,0 +1,2 @@
+918178	FreeCAD	{'height': 533, 'width': 1000, 'x': 226, 'y': 423}
+858078	* tc-07-14_rt - FreeCAD 1.1.4	{'height': 1000, 'width': 1600, 'x': 0, 'y': 0}

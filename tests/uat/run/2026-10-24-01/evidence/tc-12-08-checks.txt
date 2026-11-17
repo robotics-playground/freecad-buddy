@@ -1,0 +1,15 @@
+TC-12-08 (R3). Launch tc-12-08 pid 12544 (fresh, temporary profile).
+Given: File > New Document (invoke_menu ["File","New Document"] resolved, one document Unnamed); workbench switched to Part with the workbench combo box (UIA click on the combo, foreground click on ListItem "Part"; combo then reads "Part"); invoke_menu ["Part","Primitives","Cube"] resolved: query_tree_summary 'v [BOX] Box "Cube"'. document_save over MCP to the run folder tc-12-08-bracket.FCStd -> status OK, label tc-12-08-bracket, file exists (6280 bytes). Directory writable.
+When: second cube added with invoke_menu ["Part","Primitives","Cube"]; pre-save title "* tc-12-08-bracket - FreeCAD 1.1.4" (tc-12-08-title-pre.txt); pre-save LastWriteTime 2026-10-24T21:14:50.377 (tc-12-08-mtime-pre.txt). GUI save: invoke_menu ["File","Save"] was refused menu_path_unavailable "segment 1 was not found" (the File popup lists only Open Recent in UIA; same cause as in TC-12-03); the popup was closed with Escape, then the Save toolbar button was clicked by element_token (route accessibility). No dialog appeared. document_close and document_open of the saved file followed.
+
+Then 1 file written: LastWriteTime 21:15:43.501 > 21:14:50.377. PASS
+Then 2 no dialog: list_windows after the save: main window only (tc-12-08-save-windows.txt). PASS
+Then 3 modified marker dropped: title " tc-12-08-bracket - FreeCAD 1.1.4" with no "*" after the save (before: "* tc-12-08-bracket"). PASS
+Then 4 bridge identifies the saved document: post-save document_list same doc fcb-doc:vASepb943kzY0UTSIBkL2Q, label tc-12-08-bracket. PASS
+Then 5 handle valid across the save: query_tree_summary on the old handle OK: 'Box "Cube"', 'Box001 "Cube001"'. PASS
+Then 6 file holds the GUI change: reopened tree names Cube and Cube001; query_mass_properties object Box001 volume 1000.0 (mm^3). PASS. Check: object "Cube001" (the Label) -> INVALID_INPUT "unknown object: Cube001" as designed (queries.py:188-191); the test case now uses Box001.
+Then 7 (visual) framed: view_fit_viewport on the reopened handle -> OK fitted true; GUI Fit All button clicked. PASS
+Then 8 (visual) tc-12-08-after.png read: title bar "tc-12-08-bracket - FreeCAD 1.1.4" with no modification marker; model tree: document tc-12-08-bracket with rows Cube and Cube001 (both visible, eye icons); Part workbench toolbars; 3D view: one whole cube in iso view (the two 10 mm cubes coincide at the origin, so one cube is drawn); document tab "tc-12-08-bracket : 1" without star; no dialog open. Pointer after the Fit All click: 2475,694 (outside window x154-2406,y65-1354; tc-12-08-after-pointer.txt). PASS
+Display check: tc-12-08-after-live.png differs from the capture (property tab): live.
+Notification badge: none visible.
+Cleanup: reopened handle closed (closed true); tc-12-08-bracket.FCStd removed after SHA-256 (tc-12-08-bracket-sha256.txt).

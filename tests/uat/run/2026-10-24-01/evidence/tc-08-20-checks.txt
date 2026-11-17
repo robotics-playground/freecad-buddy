@@ -1,0 +1,14 @@
+TC-08-20 (R2, launch r2-L1-tc08 pid 29140 AUTO_APPROVE=0)
+Given: doc B tc-08-20-B (empty) created first, then doc A tc-08-20-A with Body + fully constrained 20x20 Sketch; document_list returns two
+       handles; A in the live viewport; view_fit_viewport A OK fits 0.95; tc-08-20-before.png.
+When: preview_dry_run on A with operation.args.doc = A; then with args.doc = B.
+PASS args.doc A -> INVALID_INPUT "operation.args must not carry 'doc'; the preview supplies it".
+PASS args.doc B -> the same message, nothing about a mismatch.
+PASS TempDoc check on A '[]'.
+PASS query_tree_summary A (10 objects) and B (0 objects): no Pad in either.
+PASS same preview without args.doc -> OK.
+PASS that token applied to feature_pad on B -> INVALID_INPUT "confirm.preview_id was issued for a different document"; B tree still 0 objects.
+PASS fit A OK fits 0.95.
+PASS visual: before and after: title "* tc-08-20-A - FreeCAD 1.1.4", tab tc-08-20-A : 1* active, flat 20x20 rectangle, no pad; tree lists
+     tc-08-20-B and tc-08-20-A > Body; B not activated. r2_diff 0 px. Live check 3086 px.
+Verdict: PASS

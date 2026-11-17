@@ -1,0 +1,21 @@
+TC-09-01 (R2, GUI launch r2-L2 pid 29004 default posture; sweep H1 from FCB_ENV rerun env, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc0901, PYTHONUTF8=1)
+Given: no H1 server running (tc-09-01-given-processes.txt: only the GUI addon's own proxy "hosts.main serve --mode rpc --transport http"
+       pid 33608/2852 and my shells; no "--transport stdio --mode inline" process). document_open box-10-20-30 OK; Show All;
+       view_fit_viewport OK fits 0.95; tc-09-01-before.png.
+       Note: the Given's literal check "no freecad_buddy.hosts.main process" cannot hold while the GUI proxy (a hosts.main process) serves
+       the Given's own document_open; read as "no H1 server" (Given wording item, TC-09:46).
+When: uv run python scripts/automation/run_mcp_edge_cases.py (19:41) -> stdout tc-09-01-sweep-stdout.txt; report and stderr copied.
+PASS all_passed True.
+PASS total 14.
+PASS passed == total True, failed 0.
+PASS retired_max_nodes_rejected: one entry, status SCHEMA_ERROR, ok True.
+PASS fault_shape:wrong-volume ok True; fault_shape:non-watertight-open-shell ok True.
+PASS exit code 0.
+PASS crash-signature grep on tc-09-01-edge.stderr.log: nothing.
+PASS "INFO.*INVALID_INPUT" count 7 (>= 1); "^Traceback" count 0.
+PASS fit OK fits 0.95.
+PASS visual: before and after show the same whole grey box-10-20-30 in iso, framed; tree box-10-20-30 > Box; no dialog; badge blank;
+     r2_diff 0 px. (The "View" menu title is highlighted in both: keyboard focus left on the menu bar by the Show All invoke_menu.)
+     Live check 3086 px.
+Not run: cleanup "rm -f _automation/edge.stl _automation/edge_multi.step" (outside the run folder; RULES.md forbids deleting there).
+Verdict: PASS

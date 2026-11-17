@@ -1,0 +1,4 @@
+2026-10-23T22:51:08.180+07:00 CHECK tools/list count / script_exec listed: [46, true]
+2026-10-23T22:51:08.251+07:00 CHECK spans overlapping the previous span: [2, 4, 5]
+2026-10-23T22:51:08.251+07:00 CHECK statuses: ["OK", "OK", "OK", "OK", "OK", "OK"]
+2026-10-23T22:51:08.251+07:00 CHECK tool order equals sent order: true

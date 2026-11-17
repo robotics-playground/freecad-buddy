@@ -1,0 +1,9 @@
+grep -c script_exec: 2
+1 event exec digest64hex True code 'result = doc.Name' has_verify_verdict False None fingerprint_before None schema fcb.audit-record/1
+2 event exec digest64hex True code 'result = doc.Name' has_verify_verdict True OK fingerprint_before None schema fcb.audit-record/1
+digests equal True
+mutation document_create 9fd8cd1469f1b412892ee0df7fece9f08d597229110744b43d2ab7c363add446
+mutation document_create 9fd8cd1469f1b412892ee0df7fece9f08d597229110744b43d2ab7c363add446
+exec script_exec 450ccc3eaf8d9a9ba41d0f8ad11ba3c3898ee0626919ce8c5f5f61f4fe951d40
+exec script_exec 450ccc3eaf8d9a9ba41d0f8ad11ba3c3898ee0626919ce8c5f5f61f4fe951d40
+0 of 1535072 pixels differ; bbox None

@@ -1,0 +1,3 @@
+freecad:
+netstat:
+proxy 31980:

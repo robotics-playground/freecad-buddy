@@ -1,0 +1,10 @@
+TC-12-10 (P10, pid 29744, display frozen) -- verdict FAIL (Then 1 not met), visual BLOCKED
+Given: box (A), sphere (B) open; menu bar has Sketch and Part Design.
+Pre: A 6000.0, B 4188.79, render gui_constructed, handles fcb-doc:MqI2..., fcb-doc:1wmt...
+When: click ComboBox "Part Design" by token -> popup window "FreeCAD" opened and ListItem "Sketcher" appeared; click ListItem
+  "Sketcher" by token from a fresh snapshot -> effect unverifiable; combo still "Part Design", menu bar unchanged.
+Then 1: verify_state {role ComboBox, label_contains Sketcher, exists} -> "unknown" (observation_unavailable, matches 0) -> not met.
+  Cause not separable: the list click did not land; the display was frozen at the time (possible environment cause).
+Then handles resolve, volumes unchanged, same two handles, capabilities OK with render gui_constructed: PASS (but no switch happened).
+Fit: Show All, then view_fit_viewport A -> INVALID_INPUT "the live viewport is showing 'sphere_r10'": agent execution fault, A's tab
+  was not activated first as the Then says. Visual tc-12-10-after.png black -> BLOCKED. Cleanup: both closed.

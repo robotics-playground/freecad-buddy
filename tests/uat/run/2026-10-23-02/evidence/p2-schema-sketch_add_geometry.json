@@ -1,0 +1,246 @@
+tools/list count 46
+{
+ "type": "object",
+ "properties": {
+  "doc": {
+   "type": "string",
+   "description": "opaque fcb-doc handle"
+  },
+  "sketch": {
+   "type": "string"
+  },
+  "geometry": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "kind": {
+      "enum": [
+       "line_segment",
+       "circle",
+       "arc_of_circle",
+       "point"
+      ]
+     },
+     "start": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 3,
+      "description": "line start; a point takes start or center, not both"
+     },
+     "end": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 3
+     },
+     "center": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 3,
+      "description": "circle/arc center; a point takes start or center, not both"
+     },
+     "radius": {
+      "type": "object",
+      "properties": {
+       "value": {
+        "type": "number"
+       },
+       "unit": {
+        "enum": [
+         "mm"
+        ],
+        "description": "explicit unit"
+       }
+      },
+      "required": [
+       "value",
+       "unit"
+      ],
+      "additionalProperties": false
+     },
+     "start_angle": {
+      "type": "object",
+      "properties": {
+       "value": {
+        "type": "number"
+       },
+       "unit": {
+        "enum": [
+         "deg"
+        ],
+        "description": "explicit unit"
+       }
+      },
+      "required": [
+       "value",
+       "unit"
+      ],
+      "additionalProperties": false
+     },
+     "end_angle": {
+      "type": "object",
+      "properties": {
+       "value": {
+        "type": "number"
+       },
+       "unit": {
+        "enum": [
+         "deg"
+        ],
+        "description": "explicit unit"
+       }
+      },
+      "required": [
+       "value",
+       "unit"
+      ],
+      "additionalProperties": false
+     },
+     "construction": {
+      "type": "boolean",
+      "default": false
+     }
+    },
+    "required": [
+     "kind"
+    ],
+    "additionalProperties": false
+   },
+   "minItems": 1
+  },
+  "constraints": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "type": {
+      "enum": [
+       "Coincident",
+       "Horizontal",
+       "Vertical",
+       "Parallel",
+       "Perpendicular",
+       "Tangent",
+       "Equal",
+       "Symmetric",
+       "PointOnObject",
+       "Block",
+       "Distance",
+       "DistanceX",
+       "DistanceY",
+       "Radius",
+       "Diameter",
+       "Angle"
+      ]
+     },
+     "first": {
+      "type": "integer",
+      "description": "sketch geo_id; -1 HAxis, -2 VAxis"
+     },
+     "first_pos": {
+      "enum": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "description": "PointPos: 0 none, 1 start, 2 end, 3 mid"
+     },
+     "second": {
+      "type": "integer",
+      "description": "omit for single-point DistanceX/DistanceY: first, first_pos, value"
+     },
+     "second_pos": {
+      "enum": [
+       0,
+       1,
+       2,
+       3
+      ],
+      "description": "requires second"
+     },
+     "third": {
+      "type": "integer"
+     },
+     "third_pos": {
+      "enum": [
+       0,
+       1,
+       2,
+       3
+      ]
+     },
+     "value": {
+      "type": "object",
+      "properties": {
+       "value": {
+        "type": "number"
+       },
+       "unit": {
+        "enum": [
+         "mm",
+         "deg"
+        ],
+        "description": "explicit unit"
+       }
+      },
+      "required": [
+       "value",
+       "unit"
+      ],
+      "additionalProperties": false
+     },
+     "name": {
+      "type": "string",
+      "description": "intent-bearing constraint name"
+     },
+     "driving": {
+      "type": "boolean",
+      "default": true
+     }
+    },
+    "required": [
+     "type",
+     "first"
+    ],
+    "additionalProperties": false
+   },
+   "description": "applied in the same transaction as the geometry"
+  },
+  "confirm": {
+   "type": "object",
+   "description": "needed when the operator turned auto-approve off (FREECAD_BUDDY_AUTO_APPROVE set to any value other than 1); this mutation is then refused without it. When sent, it is checked in every posture. Call preview_dry_run for the same tool and arguments on the same document, then pass back the preview_id it returned.",
+   "properties": {
+    "preview_id": {
+     "type": "string",
+     "description": "the signed token preview_dry_run returned for this exact operation"
+    },
+    "elicitation_action": {
+     "enum": [
+      "accept"
+     ],
+     "description": "recorded outcome; decline/cancel never reach a mutation tool"
+    }
+   },
+   "required": [
+    "preview_id"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "required": [
+  "doc",
+  "sketch",
+  "geometry"
+ ],
+ "additionalProperties": false
+}

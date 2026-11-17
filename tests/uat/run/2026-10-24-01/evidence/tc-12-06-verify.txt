@@ -1,0 +1,1 @@
+{"elapsed_ms":4188,"predicates":[{"index":0,"observed_json":"{\"element_index\":1,\"enabled\":true,\"frame\":{\"h\":30,\"w\":243,\"x\":313,\"y\":175},\"label\":\"buddy:feature_filletFillet\",\"role\":\"MenuItem\"}","status":"satisfied","unknown_reason":null}],"samples":2,"stable":true,"status":"satisfied"}

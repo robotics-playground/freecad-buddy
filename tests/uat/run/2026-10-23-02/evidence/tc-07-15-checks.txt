@@ -1,0 +1,12 @@
+DOC fcb-doc:_2I9xGjRnh5OXLd1Avvq0A
+CHECK stale verify: ["SPEC_FAILED", "self_read.facet_count; self_read.vertex_count", {"id": "self_read.facet_count", "measured": 10106, "expected": 304, "passed": false, "detail": {"message": "facets 10106 vs 304"}}]
+CHECK writes [label, status, bytes, stat, facets, export_id]: [["coarse", "OK", 15284, 15284, 304, "fcb-export:2P34fhiPuWe9ALteYR5GiQ"], ["fine", "OK", 505384, 505384, 10106, "fcb-export:DdTg_uf5rnl_u0X2snDRVw"], ["coarse again", "OK", 15284, 15284, 304, "fcb-export:sumlbAtHVz17m1F8k2j5mQ"]]
+CHECK after fine stat == B2, != B1+B2: [true, true]
+CHECK third bytes == B1, facets == coarse: [true, true]
+CHECK ids distinct: true
+CHECK reimport volume: ["INVALID_INPUT", null]
+H_RT fcb-doc:M08ur97-UzQegt0MpHb81w
+True 1 3992.0105138866397
+(trimesh outside read of the final file: is_watertight True, split 1 body, volume 3992.01 < 4188.79, |diff| 196.8 <= coarse band 418.88)
+Given: rm stale; document_open sphere-r10 OK, OBJ=Sphere. B1 = 15284, B2 = 505384; stat after fine = 505384 (not B1+B2 = 520668).
+Visual: view_fit_viewport(H_RT) OK. tc-07-15-after.png: tab tc-07-15_rt, one closed round body made of large flat triangular facets (coarse), round outline, not two overlapping bodies, no torn surface. Status bar badge "1" (earlier notification).

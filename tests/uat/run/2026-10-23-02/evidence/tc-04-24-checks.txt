@@ -1,0 +1,25 @@
+TC-04-24 checks (launch tc-04-a pid 29440; doc RecomputeError fcb-doc:ZdQXf3OCD19jbcHn0JtSeQ; tc-04-24-mcp.jsonl)
+Given: PlatePad volume 12000.0; oracle Edge3 = 60 mm bottom edge at y 0, z 0; EdgeFillet radius 1 mm on Edge3 status OK
+  (volume 11987.12); verify_recompute OK before the call. <session tmp> lists no FCB_TMP_snap_* entry.
+  Before: view_fit_viewport OK, tc-04-24-before.png.
+PASS status: feature_set_parameters EdgeFillet {Radius: 20 mm} -> status RECOMPUTE_ERROR (detail.code mutation.recompute_error),
+  not SPEC_FAILED.
+PASS recompute flag: post_verify.recompute_clean false.
+PASS short-circuit: post_verify.is_valid false, fully_constrained "not_measured".
+PASS engine message: post_verify.explanation "recompute left 1 object(s) invalid: EdgeFillet: BRep_API: command not done".
+PASS rollback: mutation.rolled_back true (rollback_proven rolled_back_verified, no snapshot_path).
+PASS restored value: query_object EdgeFillet Radius "1.0 mm".
+PASS clean again: verify_recompute OK, failing_objects [].
+PASS snapshot deleted: session folder lists no FCB_TMP_snap_* entry after the call.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-24-before.png and tc-04-24-after.png (fit, isometric view): the same whole plate, its front bottom edge
+  slightly softened along its full length (a narrow shaded band), no large rounded edge, no dialog. p0_diff.py: 194 of
+  1535072 pixels differ, in the status-bar counter (587 -> 588) and at the Tasks panel corner, none on the plate.
+  tc-04-24-after-end.png (camera-only end view along +X, about 70 px/mm): the 5 mm plate section with its (y 0, z 0)
+  corner rounded by an arc of about 70 px (1 mm); the other corners square; no 20 mm round. In the same capture the tree
+  was expanded by a pixel click on the PlateBody arrow (GUI only, no model change): PlateBody > Origin, PlatePad
+  (hidden, grey), EdgeFillet. tc-04-24-tree-zoom.png (cua-driver zoom): EdgeFillet has the normal fillet icon with a small
+  green overlay at its bottom right and a normal black label; no red error overlay on any tree item.
+Harness note: tc-04-24-after-windows.txt lists a transient untitled "FreeCAD" window 1000 x 53 at (185,903) (same kind as
+  in TC-04-13/15). The main-window capture shows no dialog.
+Cleanup: document_close.

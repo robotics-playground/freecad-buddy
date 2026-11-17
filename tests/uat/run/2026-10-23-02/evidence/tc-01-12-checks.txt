@@ -1,0 +1,15 @@
+TC-01-12 checks (P1)
+Given query_capabilities OK; document_open box -> fcb-doc:8CnypC1q9HvqbDFe6eZSoA; Show All; view_fit_viewport OK; tc-01-12-before.png
+Given proxy pid: netstat :8765 LISTENING 29316 (child of addon-spawned launcher 24036)
+Given rpc-8380.json before: port 59884, token (43 chars) saved in the session scratchpad
+When Stop-Process -Id 29316 -> :8765 free after 2 s; launcher 24036 also gone; FreeCAD 8380 alive
+When proxy started by hand: .venv\Scripts\python.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http, env FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=<evidence>\tc-01-01-audit.jsonl (values of the operator settings line), launcher pid 20476; stdout/stderr tc-01-12-proxy.*.log
+Then tasklist: freecad.exe 8380 still present -> PASS
+Then rpc-8380.json byte-identical to the saved copy (same port 59884, same token) -> PASS
+Then :8765 LISTENING on new pid 30256 -> PASS; /healthz {"service":"freecad-buddy-mcp-proxy","freecad_pid":8380,"session_id":"c38bca6a3f6d5c61"}
+Then query_capabilities freecad_version 1.1.4 (same as before) -> PASS
+Then query_tree_summary on the pre-restart handle: "OK: 1 objects, 1 shown...." -> PASS
+Then document_list lists box-10-20-30 -> PASS
+Then (visual) Show All; view_fit_viewport OK through the restarted proxy -> PASS
+Then (visual) tc-01-12-before.png and tc-01-12-after.png read -> PASS
+Cleanup: document_close. The hand-started proxy (20476 -> 30256) now serves FreeCAD 8380 for the next scenarios.

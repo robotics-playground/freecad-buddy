@@ -1,0 +1,21 @@
+TC-11-11 (R2; H1 via r2_tc11.py 11 -> r2_h1sh.py, FCB_ENV rerun env, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc1111,
+          FREECAD_BUDDY_WORKDIR=evidence/tc-11-11-workdir, audit evidence/tc-11-11-h1-audit.jsonl; GUI launch r2-L2 pid 29004)
+Given: H1 doc tc11-11 with Body + Sketch + Pad 30; FCB_TMP_prev_ count in tmp/FCB_TMP_session_*/ = 0 (baseline). GUI: document_open
+       box-10-20-30, Show All, fit OK fits 0.95, tc-11-11-before.png.
+When: preview feature_fillet r1 (succeeds); preview feature_fillet r50 (fails post-verify); preview feature_pad profile NoSuchSketch (raises);
+      count and document_list after each (tc-11-11-h1.jsonl).
+PASS success path: count 0 (unchanged).
+PASS failure path: count 0.
+PASS exception path: count 0.
+PASS failing preview: status OK, diff.validity.status RECOMPUTE_ERROR.
+PASS raising preview: status INVALID_INPUT (closed set) with detail.message.
+PASS each cause read where its path puts it: succeeding preview OK + diff.validity.status OK; failing preview OK + validity.explanation
+     "recompute left 1 object(s) invalid: Fillet: BRep_API: command not done"; raising preview detail.message "unknown object in profile: NoSuchSketch".
+     No envelope contains "FCB_TMP", a temp directory, or a close/remove failure. (The OK envelopes carry detail null; TC-11:527 now reads
+     the cause from structured_content: W5 fix.)
+PASS document_list after each: only (tc11_11, tc11-11); no FCB_TMP_prev_ handle.
+PASS fit OK fits 0.95.
+PASS visual: before and after the same single box, whole and framed; tree box-10-20-30 > Box, no FCB_TMP_prev_ item, no new object,
+     no dialog; r2_diff 0 px. Live check 3086 px.
+Workdir after the run: tc-11-11-workdir/tmp/FCB_TMP_session_36264_4716bb2c/ empty (kept as evidence; cleanup rm -rf not run).
+Verdict: PASS

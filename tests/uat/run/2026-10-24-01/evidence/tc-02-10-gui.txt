@@ -1,0 +1,15 @@
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+pid=5432 window_id=2233716
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "accessibility"}
+pid=5432 window_id=2233716
+ box-10-20-30 - FreeCAD 1.1.4
+pid=5432 window_id=2233716
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "accessibility"}
+pid=5432 window_id=2233716
+ two-box-compound - FreeCAD 1.1.4
+pid=5432 window_id=2233716
+1382278 FreeCAD {'height': 246, 'width': 329, 'x': 480, 'y': 64}
+2233716  two-box-compound - FreeCAD 1.1.4 {'height': 1000, 'width': 1600, 'x': 0, 'y': 0}
+pid=5432 window_id=2233716

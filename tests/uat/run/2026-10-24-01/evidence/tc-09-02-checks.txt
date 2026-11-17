@@ -1,0 +1,17 @@
+TC-09-02 (R2, GUI launch r2-L2 pid 29004)
+Given: tc-09-01-edge_report.json exists (from TC-09-01 of this phase); document_open box-10-20-30 OK; Show All; fit OK fits 0.95; tc-09-02-before.png.
+When: the three commands of the When (output in tc-09-02-when.txt): status.py literal read; sweep status set; check_status_vocab.
+PASS closed set: TerminalStatus at src/freecad_buddy/contracts/status.py:11 = OK, SPEC_FAILED, RECOMPUTE_ERROR, TIMEOUT, OOM_KILLED,
+     WORKER_CRASHED, INVALID_INPUT and nothing else (the regex output also lists QUEUED, RUNNING: those are JobState at :21, not TerminalStatus).
+PASS sweep statuses [INVALID_INPUT, OK, SCHEMA_ERROR, SPEC_FAILED]: all in the seven plus the harness marker SCHEMA_ERROR
+     (the 2026-10-23-02 NO_STATUS value is gone: W3 sweep fix).
+PASS near-miss grep over src/freecad_buddy/: no match (grep exit 1).
+PASS check_status_vocab: "check_status_vocab OK", exit 0.
+PASS OOM_KILLED is only declared: status.py:16 and the generated JSON Schemas; no producer in adapters/, usecases/, hosts/.
+PASS WORKER_CRASHED producers: H1 front hosts/headless/entry.py:105-110 (worker exited) and :67-77 (_AbandonedCall.refusal past twice the budget);
+     H2 rpc_client.py:72 synthesized envelope; rpc_dispatch.py names it only in the comment at :87.
+PASS MethodRegistry._invoke rpc_dispatch.py:138-157 maps ValidationError/TypeError/ValueError/KeyError -> INVALID_INPUT, MarshalTimeout -> TIMEOUT,
+     final "except Exception" at :156 -> RECOMPUTE_ERROR.
+PASS fit OK fits 0.95.
+PASS visual: before and after: same whole box-10-20-30 in iso, framed, no dialog, badge blank; r2_diff 0 px. Live check 3086 px.
+Verdict: PASS

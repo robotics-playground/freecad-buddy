@@ -1,0 +1,25 @@
+H1 START 2026-10-24T19:52:13.986+07:00 tag=tc-10-07 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-24-01\evidence\tc-10-07-audit.jsonl stderr=tc-10-07-server.stderr.log
+CHECK tools/list count / script_exec listed: [46, true]
+== [given open D] document_open t=0.001..0.022 dur=0.021 status=OK
+== [given open E] document_open t=0.022..0.035 dur=0.013 status=OK
+== [given tree E] query_tree_summary t=0.035..0.039 dur=0.004 status=OK
+CHECK handles D E / E object: ["fcb-doc:P8gbDdr39vInDqUYF5iepA", "fcb-doc:sSLZXCg1MM3zCUQZZLONfQ", "Cylinder"]
+CHECK H1 process tree: [[33608, 29004, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [2852, 33608, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [28372, 22000, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [23780, 28372, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [19588, 23780, "fcbenv\\fcb\\python.exe -m freecad_buddy.hosts.headless.worker"], [29172, 19588, "D 1.1\\bin\\python.exe\" -m freecad_buddy.hosts.headless.worker"], [17296, 22000, "ssId,ParentProcessId,CommandLine | ConvertTo-Json -Compress\""]]
+CHECK worker pid: 29172
+WAIT 07 2026-10-24T19:52:15.652+07:00
+GO 07 2026-10-24T19:52:44.875+07:00
+== [when 07 overrun] script_exec t=29.677..59.694 dur=30.017 status=TIMEOUT
+CHECK 07 envelope: {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+CHECK 07 elapsed_s: 30.017
+== [when 07 query_object E #1] query_object t=59.891..59.894 dur=0.002 status=TIMEOUT
+CHECK 07 q1 s after envelope / duration / status / detail: [0.197, 0.002, "TIMEOUT", {"code": "TIMEOUT", "message": "not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns", "data": {"quarantined": true}}]
+CHECK 07 worker CPU reads (s after t0, value): [[30.02, "54.890625"], [33.02, "61.078125"]]
+== [when 07 query_object E #2 (~65 s)] query_object t=94.667..94.78 dur=0.112 status=WORKER_CRASHED
+CHECK 07 q2 s after t0 / status / detail: [64.99, "WORKER_CRASHED", {"code": "WORKER_CRASHED", "message": "not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents", "data": {"quarantined": true}}]
+CHECK 07 Get-Process worker after escalation: "Id          : 29172\r\nProcessName : python\r\nCPU         : 118.734375"
+== [when 07 query_object E #3 (~85 s)] query_object t=114.668..114.678 dur=0.01 status=OK
+CHECK 07 q3 s after t0 / status / detail: [84.99, "OK", null]
+CHECK 07 audit lines with verify_verdict TIMEOUT: [["script_exec", "TIMEOUT"]]
+WAIT 07end 2026-10-24T19:54:09.867+07:00
+GO 07end 2026-10-24T19:54:49.209+07:00
+H1 END 2026-10-24T19:54:49.278+07:00 (client stdin closed, host exited)

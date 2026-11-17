@@ -1,0 +1,18 @@
+H1 START 2026-10-23T22:56:02.420+07:00 tag=tc-10-05 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-10-05-audit.jsonl stderr=tc-10-05-server.stderr.log
+CHECK tools/list count / script_exec listed: [46, true]
+== [given create] document_create {"label": "TC1005Slow"} t=0.0..0.014 dur=0.014 status=OK msg=None
+== [given slow object] script_exec {"code": "import sys\nsys.path.insert(0, r'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence')\nimport p8_slow\np8_slow.Slow(doc.addObject('Part::F..."} t=0.014..0.026 dur=0.012 status=OK msg=None
+== [given tree] query_tree_summary {} t=0.027..0.03 dur=0.004 status=OK msg=1 objects, 1 shown.
+CHECK H1 process tree: [[33700, 11736, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [21508, 33700, "m freecad_buddy.hosts.main serve --mode rpc --transport http"], [23344, 15888, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [32780, 23344, "eecad_buddy.hosts.main serve --transport stdio --mode inline"], [20636, 32780, "nv\\Scripts\\python.exe -m freecad_buddy.hosts.headless.worker"], [25472, 20636, "D 1.1\\bin\\python.exe\" -m freecad_buddy.hosts.headless.worker"], [17884, 15888, "ssId,ParentProcessId,CommandLine | ConvertTo-Json -Compress\""]]
+CHECK worker pid: 25472
+== [when preview] preview_dry_run {"operation": {"tool": "feature_body_create", "args": {"name": "PreviewBody"}}} t=0.659..100.789 dur=100.13 status=OK msg=None
+CHECK preview status / duration_s: ["OK", 100.13]
+== [when document_list same session] document_list {} t=100.789..100.807 dur=0.019 status=OK msg=None
+CHECK document_list status: "OK"
+CHECK document_list entries: [["fcb-doc:YDQuHqmIaPt25jXfGjz8dA", "TC1005Slow", "TC1005Slow"]]
+CHECK FCB_TMP_prev_ names in document_list: []
+CHECK session temp folders for the worker pid: ["D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\freecad-buddy-workdir\\tmp\\FCB_TMP_session_25472_ace35783"]
+CHECK FCB_TMP_prev_* entries in them: []
+CHECK all entries in them: []
+== [cleanup close] document_close {} t=100.809..100.829 dur=0.02 status=OK msg=None
+H1 END 2026-10-23T22:57:44.572+07:00 (client stdin closed, host exited)

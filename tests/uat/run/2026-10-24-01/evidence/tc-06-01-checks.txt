@@ -1,0 +1,15 @@
+TC-06-01 checks (R1, FreeCAD pid 2604, fresh launch r1-L7-tc06, temporary -u/-s profile with no user.cfg before the launch)
+Precondition render gui_constructed, freecad 1.1.4 -> PASS
+Given AA seed (new W4 step): document_create tc-06-01-aa; script_exec GetInt('AntiAliasing',-1) -> value_repr "-1" (old value), SetInt 4; document_close -> PASS
+Given doc tc-06-01b (fcb-doc:mYoFl8Aha0Loxx7CNinV8Q) one Part::Box Bracket 60x40x5 (script_exec); document_list handle; tree "v [BOX] Bracket"; mass volume 12000, bbox 60x40x5 -> PASS
+When get_window_state -> tc-06-01-pre.png; toolbar "Standard Views" by element_token (route accessibility, sets isometric); toolbar "Fit All" by element_token (route accessibility) (tc-06-01-gui.txt)
+Then (visual, fit first) view_fit_viewport OK fitted fits 0.95 -> PASS
+When query_screenshot iso include [Bracket] -> tc-06-01-mcp.png (1920x1920); window captures tc-06-01-viewport.png and tc-06-01-after.png (1568 px), tc-06-01-viewport-native.png (cua max_image_dimension 0 for one capture, restored to 1568)
+PASS same object: window one flat plate; render one flat plate; scene.rendered_objects ["Bracket"]
+PASS proportions: window long front-left edge 722 px / right edge 482 px = 1.50; render 1301 / 867 = 1.50 (60/40); thin height in both: flat and wide
+PASS camera/framing: both iso, long (X) face front-left, short (Y) face right, Z up, centred; no flip
+PASS no missing/extra geometry: one solid in both; no Body/Sketch/Origin
+PASS anti-aliasing: script_exec GetInt('AntiAliasing',-1) on the scenario doc -> "4". Diagonal silhouette edge zooms: render tc-06-01-zoom-mcp.png (crop 480,1160-520,1200) 15 distinct colours with grey steps between the line and both sides; window tc-06-01-zoom-window-native.png (crop 695,680-735,720 of the native capture) 16 distinct colours, same blended steps. Neither is a hard two-colour stair. Control: the 2026-10-23-02 capture by the same route with no AntiAliasing key gave 3 colours (hard stair). The W4 seed works.
+PASS tone band: verify_render_tone passed True, tone (99,101,103), background 255, difference 155.9; Read: no face pure black or white, all faces clear of the white background. Face shading differs from the window (render top dark, window top light): excluded (AD-34).
+PASS (visual) tc-06-01-after.png: one whole flat 60x40x5 plate, iso, long face front-left, short face right, Z up; no Tasks panel over the part in this fresh session; no dialog. The render shows the same object set, silhouette, proportion and camera. Display live: after differs from pre (Standard Views + fit).
+Cleanup: the Cleanup as written, p.RemoveInt('AntiAliasing') (TC-06:135), failed: script_exec status RECOMPUTE_ERROR, detail AttributeError 'RemoveInt' (FreeCAD 1.1.4 ParameterGrp has RemBool/RemFloat/RemGroup/RemInt/RemString/RemUnsigned, no RemoveInt). Finding R1-F4 (test-case defect in a Cleanup, not a Then). Restored on a scratch document with p.RemInt('AntiAliasing') -> GetInt returns -1. The cleanup `rm tc-06-01-*.png` was NOT run: the PNGs are this run's evidence (RULES: evidence kept).

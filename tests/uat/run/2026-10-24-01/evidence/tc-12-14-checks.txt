@@ -1,0 +1,18 @@
+TC-12-14 (R3). Launch tc-12-14 pid 29620 (fresh, temporary profile; run ended by File > Exit), restart launch tc-12-14-restart pid 19140.
+Given: Get-Process freecad -> 29620; netstat 127.0.0.1:8765 LISTENING pid 6320 (tc-12-14-pre-netstat.txt); document_list [] (tc-12-14-list-given.txt); discovery file rpc-29620.json present (tc-12-14-pre-rpc.txt). Proxy pid 6320 is a separate process (ParentProcessId 33544, not 29620; command line: "pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http", tc-12-14-pids.txt). healthz before the quit: freecad_pid 29620.
+When: watchdog before File > Exit (tc-12-14-watchdog pre-exit file r3-watchdog-tc1214-pre-exit.txt, all ok). addon.log byte offset before the quit: 695083 (tc-12-14-addonlog-offset-prequit.txt); quit time 21:32:40.642; File > Exit by invoke_menu ["File","Exit"] resolved this time (route accessibility); no save prompt (no document open). After the quit I read addon.log from byte 695083 (tc-12-14-addon-after-quit.log) and the other facts.
+
+Then 1 FreeCAD exited: Get-Process freecad count 0 (tc-12-14-post-process.txt). PASS
+Then 2 :8765 stops listening: netstat rows after excluding TIME_WAIT: 0 (tc-12-14-post-netstat.txt; only client TIME_WAIT rows remain). PASS
+Then 3 proxy child gone: Get-Process -Id 6320 -> none (count 0, tc-12-14-post-proxy.txt). PASS
+Then 4 discovery file deleted: rpc-29620.json no longer exists (tc-12-14-post-rpc.txt). PASS
+Then 5 client call fails at the transport: query_capabilities over http://127.0.0.1:8765/mcp -> httpx.ConnectError "All connection attempts failed" in 2.6 s, no hang (r3_mcp output). PASS
+Then 6 addon.log clean shutdown: new bytes after offset 695083 (tc-12-14-addon-after-quit.log, 2 lines):
+  2026-10-24 21:32:40,860 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped
+  2026-10-24 21:32:40,860 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10054] An existing connection was forcibly closed by the remote host)
+  The exact line named by the Then is present, 0.22 s after the Exit call; no unhandled exception or traceback. PASS (the product fix to stop_bridge, bootstrap.py, now logs the line; in 2026-10-23-02 it was absent).
+Then 7 restart is clean: new launch pid 19140: rpc-19140.json created (tc-12-14-restart-rpc.txt), :8765 LISTENING again (tc-12-14-restart-netstat.txt), healthz freecad_pid 19140 (tc-12-14-restart-healthz.txt), query_capabilities status OK. PASS
+Then 8 (visual) window gone after the quit: list_windows for pid 29620 returns windows [] (tc-12-14-post-windows.txt). Before capture tc-12-14-before.png (read): live FreeCAD 1.1.4 window titled "FreeCAD 1.1.4", menu bar, toolbars, Model panel, and the first-start Welcome panel (painted, because the profile is a fresh temporary one). After capture tc-12-14-after.png (read): freshly started FreeCAD 1.1.4 window titled "FreeCAD 1.1.4", same layout and Welcome panel (first start of its fresh temporary profile; the Start page is behind it, Start tab visible), no crash or recovery dialog. Pointers: before 2479,697; after 2479,697 (outside x154-2406,y65-1354). The test case expects "its start page"; the Welcome panel of a fresh profile covers it (observation). PASS
+Display check: tc-12-14-after-live.png differs from the capture (property tab): live.
+Notification badge: none visible.
+Cleanup: FreeCAD reopened (pid 19140), left running for the next scenario.

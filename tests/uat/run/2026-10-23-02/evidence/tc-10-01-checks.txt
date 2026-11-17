@@ -1,0 +1,15 @@
+TC-10-01 checks (P8) - FreeCAD 11736 (launch tc-10-a), H1 interpreter of h1-setup.txt
+Given ls evidence/*.lock -> nothing (exit 2) -> PASS (tc-10-01-given-lock.txt)
+Given GUI document_open box-10-20-30 OK fcb-doc:lrpahwAE...; Show All; view_fit_viewport OK; tc-10-01-before.png read: one whole iso box, tree "box-10-20-30 > Box", Tasks panel, no dialog
+When sweep as written: uv run python scripts/automation/run_mcp_e2e.py -> "fcb env python not found at C:\Users\thuan\micromamba\envs\fcb\python.exe", exit 2 (tc-10-01-sweep-as-written.txt). _automation/ files unchanged (Oct 13 13:33); the as-written cp was not done: it would copy a 10-day-old report.
+When sweep through p7_sweep.py (run_mcp_e2e._run unchanged; interpreter + output folder replaced) -> 4/9, exit 1 (tc-10-01-sweep.txt, p8-sweep-tc-10-01/); copied to tc-10-01-e2e_report.json, tc-10-01-server.stderr.log
+When six reads on one H1 connection (p8_h1.py six) -> tc-10-01-six-spans.json, tc-10-01-h1.jsonl. First attempt discarded as my own client fault: spans were computed from time.time() (15.6 ms ticks) and overlapped by clock rounding; kept as run1-clockfault-*; client fixed to perf_counter and re-run.
+Then spans do not overlap; six statuses OK -> PASS (overlaps [], all OK; gaps 0.06-0.13 ms)
+Then tool sequence = sent order -> PASS; sweep report order ['tools/list','query_capabilities','tree_summary:x5','document_save','document_open(reopen)'] matches the record order of run_mcp_e2e.py for the path it took (each model stops at tree_summary) -> PASS
+Then grep -c marshal tc-10-01-server.stderr.log -> 0 (no nested-call warnings) -> PASS
+Then all_passed -> False -> FAIL. Cause: harness defect. run_mcp_e2e.py:57-58 _status reads structuredContent; query_tree_summary has no output schema and returns one text block with no structuredContent (adapters/mcp_server.py:111-115), so every tree_summary check is NO_STATUS {}.
+Then grep reentrant|deadlock|already in marshal -> nothing (exit 1) -> PASS
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-10-01-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4" (no Not Responding), no modal, one whole iso box framed; 0 of 1535072 pixels differ from before -> PASS
+Cleanup document_close OK
+Verdict: FAIL (one Then: sweep gate all_passed False; harness defect)

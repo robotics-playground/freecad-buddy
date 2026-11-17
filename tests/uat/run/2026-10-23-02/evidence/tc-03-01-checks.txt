@@ -1,0 +1,16 @@
+TC-03-01 checks (doc BracketPlate fcb-doc:V-XFu-WmT1ZwVqFmK3W3WQ)
+PASS three creates: status OK, mutation.rolled_back false, post_verify.fully_constrained true, post_verify.passed true.
+PASS verify_sketch PlateProfileXY: status OK, subject.dof 0, fully_constrained true.
+PASS query_sketch_info RibProfileXZ: geometry [], constraints [].
+PASS placement: EndProfileYZ axis (0.58,0.58,0.58) angle 120 deg; PlateProfileXY axis (0,0,1) angle 0 -> distinct rotation.
+PASS plane ZX: schema reject "Input validation error: 'ZX' is not one of ['XY', 'XZ', 'YZ']"; tree names only the 3 sketches.
+INFO fit: view_fit_viewport -> SPEC_FAILED "no visible object to frame; datum planes are infinite and are not measured"
+  (empty sketches); GUI Fit All toolbar button used instead, as the test case allows.
+PASS visual (edit mode by script_exec setEdit, one at a time, resetEdit after each):
+  tc-03-01-after-PlateProfileXY.png: navigation cube TOP; red horizontal and green vertical sketch axes crossing at the
+    origin point; no geometry; task panel "Empty sketch", empty constraint list.
+  tc-03-01-after-RibProfileXZ.png: navigation cube FRONT; green vertical axis; no geometry; "Empty sketch".
+  tc-03-01-after-EndProfileYZ.png: navigation cube RIGHT; green vertical axis; no geometry; "Empty sketch".
+  The three orientations differ. Tree holds only PlateProfileXY, RibProfileXZ, EndProfileYZ. No error dialog.
+  Note: in the FRONT and RIGHT edit views the red horizontal sketch axis is not drawn; only the green one shows.
+  That line is FreeCAD's Sketcher drawing, not bridge output; no profile or edge is present in any view.

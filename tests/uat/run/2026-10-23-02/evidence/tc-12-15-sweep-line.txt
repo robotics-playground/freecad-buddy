@@ -1,0 +1,1 @@
+2:2026-10-24 10:42:00,375 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)

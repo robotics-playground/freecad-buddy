@@ -1,0 +1,4 @@
+TC-12-12 (P10, pid 35252, display frozen) -- verdict BLOCKED
+Given: the Start page needed "Done" on the first-start widget (temporary profile). The Examples card list exposes 8 ListItems with no
+  name in UIA (label "...StartGui::FileCardView"); the card name is only painted, and every capture is the frozen frame
+  (tc-12-12-given-shot.png). The Given "a snapshot lists a card for ArchDetail.FCStd" cannot be verified -> not run.

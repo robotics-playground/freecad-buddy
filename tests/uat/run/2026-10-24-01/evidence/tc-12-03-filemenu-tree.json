@@ -1,0 +1,63 @@
+{
+ "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+ "app_name": "freecad.exe",
+ "element_count": 2,
+ "elements": [
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 0,
+   "element_index": 0,
+   "element_token": "s000002ca:0",
+   "enabled": true,
+   "frame": {
+    "h": 548,
+    "w": 300,
+    "x": 162,
+    "y": 128
+   },
+   "label": "Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&File.&File",
+   "role": "Menu"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 1,
+   "element_token": "s000002ca:1",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 297,
+    "x": 163,
+    "y": 190
+   },
+   "label": "Open Recent",
+   "parent_index": 0,
+   "role": "MenuItem"
+  }
+ ],
+ "elements_complete": false,
+ "pid": 36132,
+ "returned_element_count": 2,
+ "screenshot_file_path": "\\\\?\\D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\evidence\\tc-12-03-filemenu.png",
+ "screenshot_height": 547,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 298,
+ "snapshot_id": "s000002ca",
+ "total_element_count": 2,
+ "tree_markdown": "- [0] Menu [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&File.&File actions=[invoke,set_value]]\n  - [1] MenuItem \"Open Recent\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&File.&File.QAction actions=[invoke,expand,set_value]]\n",
+ "window_bounds": {
+  "height": 549,
+  "width": 300,
+  "x": 163,
+  "y": 129
+ },
+ "window_id": 9503910,
+ "window_title": "FreeCAD"
+}

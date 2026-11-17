@@ -1,0 +1,19 @@
+2026-10-23T22:50:58+07:00
+Spawning headless H1 FreeCAD MCP server + running the tool sweep...
+
+  [PASS] tools/list                 OK 46 tools
+  [PASS] query_capabilities         OK freecad=1.1.4 render=none
+  [FAIL] tree_summary:box-10-20-30  NO_STATUS {}
+  [FAIL] tree_summary:cylinder-r5-h20 NO_STATUS {}
+  [FAIL] tree_summary:sphere-r10    NO_STATUS {}
+  [FAIL] tree_summary:box40-hole-r5 NO_STATUS {}
+  [FAIL] tree_summary:two-box-compound NO_STATUS {}
+  [PASS] document_save              OK 
+  [PASS] document_open(reopen)      OK 
+
+4/9 checks passed
+report: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p8-sweep-tc-10-01\e2e_report.json
+server stderr: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\p8-sweep-tc-10-01\server.stderr.log
+exit code of _run(): 1
+e2e exit=1
+2026-10-23T22:51:00+07:00

@@ -1,0 +1,19 @@
+TC-06-09 (launch P5 tc-06-b, pid 23332)
+Given: document_open benchmarks/g0/golden-models/box-10-20-30.FCStd -> OK; Show All (invoke_menu View>Visibility>Show All Objects, foreground route); verify_recompute OK, failing_objects [].
+Fit first: view_fit_viewport OK.
+PASS  volume unchanged: before 6000.0 mm^3, after 6000.0 mm^3 (whole query_mass_properties structured_content equal: True).
+PASS  com unchanged: (5, 10, 15) before and after.
+PASS  tree unchanged: 'OK: 1 objects, 1 shown ... v [FEATURE] Box' before and after (equal: True).
+PASS  strict guard: render.dirty_document false on the iso, top-styled and front-focus renders (and on the unstyled re-render).
+PASS  nothing Touched: script_exec -> value_repr '[]'.
+PASS  styles did not persist: unstyled iso render after the green render (tc-06-09-unstyled-after.png) shows the box grey; tc-06-09-top-styled.png green.
+FAIL  temp PNGs: Then (TC-06-file:474) says the FCB_TMP_shot_*.png files in the session temp folder are "at most the files still
+      referenced by the three render.resource_link values". The session folder FCB_TMP_session_23332_3a81f8e5 held 17 files before
+      the renders and 21 after (21 > 3). The 4 new files are exactly the 3 When links + the unstyled re-render link that the
+      'styles did not persist' Then needs; the other 17 are the renders of TC-06-02/06/08 in the same FreeCAD session. Every one of
+      the 21 names matches a resource_link returned in this session (no orphan). System temp FCB_TMP_shot_*.png: [] before and after.
+      Cause: test-case defect (the Then assumes a session folder with no earlier renders, and its own unstyled render adds a fourth file).
+PASS  fit first: view_fit_viewport OK.
+PASS  visual: tc-06-09-after.png window: one grey box, tall (Z 30), narrow face front-left (X 10), wide face right (Y 20), not green.
+      tc-06-09-iso.png render: the same box, same proportion and orientation, grey.
+Verdict: FAIL (one Then, test-case defect).

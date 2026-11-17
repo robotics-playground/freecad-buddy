@@ -1,0 +1,1 @@
+4:2026-10-24 21:35:27,715 WARNING freecad_buddy.hosts.gui_external: FreeCAD pid 19140 has exited; the MCP proxy exits and frees port 8765

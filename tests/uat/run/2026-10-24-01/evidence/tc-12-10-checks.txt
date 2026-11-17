@@ -1,0 +1,14 @@
+TC-12-10 (R3). Launch tc-12-10 pid 21148 (fresh, temporary profile; default workbench Part Design). Given: box-10-20-30 (A) and sphere-r10 (B) opened with document_open: 2 entries; menu bar items include Sketch and Part Design (tc-12-10 menubar list: System, File, Edit, View, Tools, Macro, Sketch, Part Design, Windows, Help).
+When: pre reads: Box 6000.0, Sphere 4188.79 (tc-12-10-vol-pre.txt); render "gui_constructed". Workbench switch to Sketcher: UIA click on the combo box (background), snapshot, foreground click on ListItem "Sketcher" by element_token, pointer moved off the window after the foreground action. Mid reads (tc-12-10-vol-mid.txt) OK 6000.0 / 4188.79. Switch back to Part Design the same way (combo "Sketcher" -> ListItem "Part Design"), post reads OK. Then A's tab made active with invoke_menu ["Windows","2 box-10-20-30 : 1"], Show All Objects, view_fit_viewport, GUI Fit All, capture.
+
+Then 1 workbench changed: verify_state ComboBox label_contains "Sketcher" -> satisfied, observed value "Sketcher" (tc-12-10-verify-sketcher.txt). PASS
+Then 2 both handles resolve after the switch: query_mass_properties on both -> OK (not INVALID_INPUT). PASS
+Then 3 geometry unchanged: Box 6000.0 and Sphere 4188.79 identical before and after. PASS
+Then 4 no handle remapped: document_list handle strings fcb-doc:HomjlYJVQfEYxTAeOQbiqQ and fcb-doc:6roJhSIl5TExkEorvcnewQ identical before, during and after (HANDLES_EQUAL). PASS
+Then 5 switch back harmless: after Part Design both volumes unchanged. PASS
+Then 6 listener unaffected: query_capabilities OK, render gui_constructed after both switches (tc-12-10-render-post.txt). PASS
+Then 7 (visual) framed: Show All (invoke_menu) with A active, view_fit_viewport OK fitted true, GUI Fit All clicked. PASS
+Then 8 (visual) tc-12-10-after.png read: selector combo reads "Part Design"; the toolbars are the Part Design ones (body, sketch, pad/pocket, fillet rows), the Sketcher toolbar is gone; Model tree lists box-10-20-30 (child Box) and sphere-r10; tabs Start, "box-10-20-30 : 1*" (active), "sphere-r10 : 1"; the 3D view shows the whole box of document A in iso view. No dialog open; the "View" menu bar item is drawn highlighted (hover leftover; the windows list at capture time is in tc-12-10-after-windows.txt). Pointer 2461,671 (outside window; tc-12-10-after-pointer.txt). PASS
+Display check: tc-12-10-after-live.png differs (property tab): live.
+Notification badge: none visible.
+Cleanup: both documents closed.

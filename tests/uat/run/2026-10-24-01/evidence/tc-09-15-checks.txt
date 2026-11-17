@@ -1,0 +1,13 @@
+TC-09-15 (R2, GUI launch r2-L2 pid 29004; H1 via r2_h1.py from FCB_ENV, FREECAD_USER_HOME temp)
+Given: edge sweep completed (TC-09-01 of this phase, exit 0); document_open box-10-20-30 OK; Show All; fit OK fits 0.95; tc-09-15-before.png.
+       Real pointer at (1800,300), outside the window, for every capture (tc-09-15-before-pointer.txt, tc-09-15-after-pointer.txt).
+When: verify_recompute {doc: {"handle": "fcb-doc:x"}} on H1 (tc-09-15-h1.jsonl) and on the H2 proxy :8765 (tc-09-15-h2raw.jsonl).
+PASS H1: isError true, structuredContent null, text "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'".
+PASS H2: isError true, structuredContent null, the same text. The hosts do not diverge.
+PASS neither message names "unknown or stale document handle".
+PASS grep "doc handle must be a string": adapters/mcp_server.py:259 and adapters/rpc_listener.py:418, one line each; usecases/ none.
+PASS both hosts answer tools/list after the call: H1 46 tools, H2 46 tools.
+PASS fit OK fits 0.95.
+PASS visual: before and after the same whole box-10-20-30 in iso, framed; no preselection highlight, no dialog; badge blank; r2_diff 0 px.
+     The 2026-10-23-02 FAIL (physical pointer preselection) does not recur. Live check 3086 px.
+Verdict: PASS

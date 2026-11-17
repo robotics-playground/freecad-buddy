@@ -1,0 +1,252 @@
+[
+ {
+  "tool": "document_open",
+  "duration_s": 0.04,
+  "status": "OK"
+ },
+ {
+  "tool": "query_tree_summary",
+  "duration_s": 0.004,
+  "status": "OK"
+ },
+ {
+  "tool": "query_object",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_mass_properties",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_placement",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_shape",
+  "duration_s": 0.011,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_recompute",
+  "duration_s": 0.008,
+  "status": "OK"
+ },
+ {
+  "tool": "query_screenshot",
+  "duration_s": 0.042,
+  "status": "OK"
+ },
+ {
+  "tool": "document_list",
+  "duration_s": 0.008,
+  "status": "OK"
+ },
+ {
+  "tool": "document_close",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "document_open",
+  "duration_s": 0.012,
+  "status": "OK"
+ },
+ {
+  "tool": "query_tree_summary",
+  "duration_s": 0.004,
+  "status": "OK"
+ },
+ {
+  "tool": "query_object",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_mass_properties",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_placement",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_shape",
+  "duration_s": 0.011,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_recompute",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_screenshot",
+  "duration_s": 0.014,
+  "status": "OK"
+ },
+ {
+  "tool": "document_list",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "document_close",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "document_open",
+  "duration_s": 0.012,
+  "status": "OK"
+ },
+ {
+  "tool": "query_tree_summary",
+  "duration_s": 0.003,
+  "status": "OK"
+ },
+ {
+  "tool": "query_object",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_mass_properties",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "query_placement",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_shape",
+  "duration_s": 0.011,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_recompute",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_screenshot",
+  "duration_s": 0.014,
+  "status": "OK"
+ },
+ {
+  "tool": "document_list",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "document_close",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "document_open",
+  "duration_s": 0.012,
+  "status": "OK"
+ },
+ {
+  "tool": "query_tree_summary",
+  "duration_s": 0.004,
+  "status": "OK"
+ },
+ {
+  "tool": "query_object",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_mass_properties",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "query_placement",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_shape",
+  "duration_s": 0.012,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_recompute",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_screenshot",
+  "duration_s": 0.014,
+  "status": "OK"
+ },
+ {
+  "tool": "document_list",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "document_close",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "document_open",
+  "duration_s": 0.012,
+  "status": "OK"
+ },
+ {
+  "tool": "query_tree_summary",
+  "duration_s": 0.003,
+  "status": "OK"
+ },
+ {
+  "tool": "query_object",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_mass_properties",
+  "duration_s": 0.01,
+  "status": "OK"
+ },
+ {
+  "tool": "query_placement",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_shape",
+  "duration_s": 0.011,
+  "status": "OK"
+ },
+ {
+  "tool": "verify_recompute",
+  "duration_s": 0.009,
+  "status": "OK"
+ },
+ {
+  "tool": "query_screenshot",
+  "duration_s": 0.015,
+  "status": "OK"
+ },
+ {
+  "tool": "document_list",
+  "duration_s": 0.008,
+  "status": "OK"
+ },
+ {
+  "tool": "document_close",
+  "duration_s": 0.01,
+  "status": "OK"
+ }
+]

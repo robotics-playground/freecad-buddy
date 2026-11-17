@@ -1,0 +1,14 @@
+TC-10-09 checks (P8) - same H1 session; FreeCAD 11736 for the GUI
+Given D suspect from TC-10-08; query_tree_summary on E -> "OK: 1 objects, 1 shown." -> quarantine lifted
+Given tc-10-09-before.png (no fit) read: one whole iso box (0 px diff to tc-10-08-after)
+When query_object D NoSuchObject; script_exec D marker; query_tree_summary D; script_exec D QuarantineCleared (codes as written)
+Then first call INVALID_INPUT ("unknown object: NoSuchObject") -> PASS
+Then second call refused: INVALID_INPUT "document-suspect: a prior call timed out on this document and its body may still be running; ..."; tc-10-09-D.marker absent -> PASS
+Then third call OK ("OK: 1 objects, 1 shown.") -> PASS
+Then fourth call OK, not refused (value_repr 'ran'); D tree then "Box, QuarantineCleared" -> PASS
+Then a mutation never clears it: the refused second call left D suspect until the passing read -> PASS
+Then READ_ONLY_PROFILE lists query_tree_summary (tc-10-10-greps.txt) -> PASS
+Then (visual) H1 document_save D -> tc-10-09-D.FCStd OK; GUI document_open OK fcb-doc:EobY94xM...; Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-10-09-after.png read: window paints, title "* tc-10-09-D - FreeCAD 1.1.4", no Not Responding, no modal; tree tc-10-09-D > Box, QuarantineCleared; the 10x20x30 box drawn whole and framed with exactly one small cube beside it -> PASS
+Cleanup GUI document_close OK; tc-10-09-D.marker absent
+Verdict: PASS

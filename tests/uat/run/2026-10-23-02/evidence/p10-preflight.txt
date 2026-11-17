@@ -1,0 +1,5 @@
+## P10 preflight 2026-10-24T08:07:10+07:00
+freecad.exe processes: 0
+:8765 netstat rows: 0
+user.cfg SHA-256: CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B (expected ccf87cfe...832b)
+cua-driver processes: 5516 (daemon, session 1), 11840 (session 1); left alone

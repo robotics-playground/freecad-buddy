@@ -1,0 +1,2 @@
+{"host": "127.0.0.1", "port": 62561, "record": "rpc-29952.json", "sent": "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"rpc_hello\",\"params\":{\"token\":\"<token>\",\"contract_version\":\"1\"}}"}
+{"read": 1, "line": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": {\"contract_version\": \"1\", \"freecad_version\": \"1.1.4\", \"capabilities\": {\"gui\": true, \"qt_loop\": true, \"exec_enabled\": true}}}\n", "elapsed": 0.0}

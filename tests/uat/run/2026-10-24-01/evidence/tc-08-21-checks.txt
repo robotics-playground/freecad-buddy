@@ -1,0 +1,30 @@
+TC-08-21 (R2, launch r2-L1-tc08 pid 29140 AUTO_APPROVE=0)
+Run 1 (agent execution fault, kept as tc-08-21-run1-*): my shell line started the open-transaction step twice, and the helper's
+  state read used a non-existent attribute (doc.getAvailableUndoNames), so that script_exec failed twice and posted its traceback
+  to the GUI notification area. Every Then of run 1 had the same result as run 2. Re-run once from the Given, per RULES.md.
+Run 2:
+Given: document_create UndoProbe; view_fit_viewport -> SPEC_FAILED "no visible object to frame..." (empty document), so GUI Fit All
+       toolbar button by element_token (route accessibility); tc-08-21-before.png.
+When: document_undo on the empty stack; feature_body_create Body (preview+confirm); document_undo; document_undo again.
+      Then the GUI Fit All fallback and tc-08-21-after.png, while UndoProbe is in the viewport.
+      UndoOff: plant UndoMode 0 (script_exec PATCH), document_undo, restore; add Part::Box via script_exec, preview+apply
+      feature_body_create Probe, break Box (Length 0) via script_exec, document_undo.
+      TxnProbe (Body + Sketch + Pad 30): Body expanded by a pixel click, double-click on the Pad tree row opens the Pad task dialog
+      (tc-08-21-txn-edit.png); script_exec reads (HasPendingTransaction True, UndoNames ['Edit Pad', 'buddy: feature_pad Pad', ...]);
+      document_undo; Cancel clicks close the dialog (tc-08-21-txn-closed.png).
+PASS empty stack -> INVALID_INPUT "nothing to undo on UndoProbe: the undo stack is empty".
+PASS first undo after the mutation -> OK, undone "buddy: create body Body".
+PASS past bottom -> the same empty-stack refusal.
+PASS both refusals: structured_content {} - no matches_pre_op, fingerprint_after or undone.
+PASS UndoMode 0 -> INVALID_INPUT "undo is unavailable on UndoOff: the document reports UndoMode 0"; restore script_exec OK.
+PASS open transaction -> INVALID_INPUT "TxnProbe has an open transaction; undo would commit it and revert the transaction beneath it. Commit or abort it first."
+PASS broken undo -> status RECOMPUTE_ERROR, detail.objects [Box], errors [{name Box, error [Touched, Invalid]}].
+PASS undo_count 0 after the successful undo.
+PASS fit: MCP fit SPEC_FAILED on the empty document; GUI Fit All fallback used as the Then allows.
+PASS visual: before: title "UndoProbe - FreeCAD 1.1.4", tree UndoProbe with no child, empty viewport. After: same empty tree and
+     viewport, Body gone from tree and viewport, no dialog. r2_diff 4866 px: title and tab gain the modified mark "*", Redo button turns
+     green - direct effects of the undo, not model content. Status-bar badge "2" in both (carried over from run 1).
+Observations (no verdict effect):
+  - The broken-undo leg posts "Box: Length of box too small" to the GUI notification area (badge 2 -> 3 in run 2): a recompute of the
+    user's own document, expected. A failing script_exec posts its full traceback (run 1, tc-08-21-notifications.png): N-13, still open.
+Verdict: PASS (run 2)

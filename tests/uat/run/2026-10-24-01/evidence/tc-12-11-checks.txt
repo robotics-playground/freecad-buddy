@@ -1,0 +1,15 @@
+TC-12-11 (R3). Launch tc-12-11 pid 19104 (fresh, temporary profile). Given: document_create TC1211, then one script_exec (r3-tc-12-11-build.py, copied from the 2026-10-23-02 build): Body with 26 Sketch/Pad pairs; 61 objects (query_tree_summary depth 3: "OK: 61 objects, 61 shown."). The Body was expanded in the GUI as written (foreground pixel click on the Body arrow; tc-12-11-tree.png shows Body expanded with Origin, Pad000..Pad017 rows).
+Reading note: query_tree_summary is a text_blocks tool without structuredContent (mcp-tools-design.md:60). The design gives its text line as "<total_objects> objects, <shown> shown." plus ", truncated" when cut (mcp-tools-design.md:282), and this implementation also appends ", N matches" with filters. The Thens name shown, matches and truncated; they are read from that text line, which is the documented carrier. No Then here reads structured_content.
+Display check: tc-12-11-after-live.png differs (property tab): live. Pointers: after the scroll and after the Fit All click the real pointer was at 2480,700 (window x154-2406,y65-1354; tc-12-11-tree2-pointer.txt, tc-12-11-after-pointer.txt).
+
+Then 1 GUI tree scrolls: UIA snapshot of Model-panel TreeItems: tc-12-11-tree-snap-tree.json 18 rows, first (topmost y=297) "TC1211", last "Pad014"; after a foreground scroll down 10 at (110,350) (route global_input, effect unverifiable; tc-12-11-scroll-result.txt) tc-12-11-tree2-snap-tree.json: first (y=297) "Pad006", last "Pad023". Different first row. PASS
+Then 2 default depth shallow: depth 1: "OK: 61 objects, 1 shown." one line "v [BODY] Body (+27)". PASS
+Then 3 deeper depth: depth 3: "OK: 61 objects, 61 shown." (61 > 1), 61 tree lines (<= 200), not truncated (no ", truncated", no "more lines" line). PASS
+Then 4 filters: types ["PAD"] and name_pattern "Pad*" both: "OK: 61 objects, 27 shown, 26 matches." (27 < 61); the matches Pad000.. are listed under "v [BODY] Body (+1 more)" on its opened path. PASS
+Then 5 max_nodes refused: "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)" (isError True). PASS
+Then 6 budget: every query_tree_summary call 0.016-0.047 s (< 30 s). PASS
+Then 7 GUI responsive: get_window_state after the queries: 175 elements, degraded None. PASS
+Then 8 (visual) framed: Std_ViewIsometric set with script_exec (camera setup), view_fit_viewport OK fitted true, GUI Fit All clicked. PASS
+Then 9 (visual): tc-12-11-tree.png: Model tree rows TC1211, Body, Origin, Pad000 ... Pad017 (labels readable, Body expanded); tc-12-11-tree2.png: rows Pad006 ... Pad025 (a different set, no row hover highlight; the status bar still shows the older preselection text "Valid, Internal name: Pad011"); tc-12-11-after.png: the 3D view shows one tall stack of 26 layered 10 x 10 mm pads, whole and framed in iso view, nothing clipped. PASS
+Notification badge: none visible.
+Cleanup: document_close OK (no prompt). tc-12-11-tree.png and tc-12-11-tree2.png kept as evidence (the TC cleanup would delete them).

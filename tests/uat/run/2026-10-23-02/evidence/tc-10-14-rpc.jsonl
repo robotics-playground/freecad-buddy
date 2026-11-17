@@ -1,0 +1,20 @@
+{"client": "A", "connect": "connected", "elapsed": 0.0, "record": "rpc-11736.json", "port": 49721}
+{"client": "A", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.0}
+{"client": "A", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+{"client": "A", "sent": "{\"x\":\"A... (17 MiB, no newline)", "bytes": 17825798, "newline": false, "elapsed": 0.015}
+{"client": "A", "recv": "<ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host>", "elapsed": 0.109}
+{"client": "C2", "connect": "connected", "elapsed": 0.0, "record": "rpc-11736.json", "port": 49721}
+{"client": "C2", "sent": "<raw bytes ff fe fd ' not utf-8 ' c3 28>", "bytes": 17, "newline": true, "elapsed": 0.0}
+{"client": "C2", "recv": "<zero bytes: closed by peer>", "partial": "", "elapsed": 0.0}
+{"client": "C3", "connect": "connected", "elapsed": 0.0, "record": "rpc-11736.json", "port": 49721}
+{"client": "C3", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.0}
+{"client": "C3", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+{"client": "C3", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 2, \"method\": \"document_list\", \"params\": {}}", "bytes": 69, "newline": true, "elapsed": 0.0}
+{"client": "C3", "recv": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"documents": [{"doc": "fcb-doc:Sv4L6xAKdVFcRT6xJqCZaw", "name": "box_10_20_30", "label": "box-10-20-30", "transient": false}]}, "text": "1 open document(s): box-10-20-30.", "display_decimals": 2}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+{"client": "C3", "closed_by_client": true, "elapsed": 0.0}
+{"client": "M", "connect": "connected", "elapsed": 0.031, "record": "rpc-11736.json", "port": 49721}
+{"client": "M", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.031}
+{"client": "M", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.031, "since_last_send_s": 0.0}
+{"client": "M", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 2, \"method\": \"script_exec\", \"params\": {\"doc\": \"fcb-doc:Sv4L6xAKdVFcRT6xJqCZaw\", \"code\": \"result = len(doc.Objects)\"}}", "bytes": 143, "newline": true, "elapsed": 0.031}
+{"client": "M", "recv": {"jsonrpc": "2.0", "id": 2, "result": {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:Sv4L6xAKdVFcRT6xJqCZaw", "stdout": "", "value_repr": "1", "fingerprint_after": null}, "text": "doc: fcb-doc:Sv4L6xAKdVFcRT6xJqCZaw\nfingerprint_after: None\nstdout: \nvalue_repr: 1", "framing": {"fits": true, "ratio": 0.9508426966292135, "checked": "computed", "stale_reason": null}, "display_decimals": 2}}, "elapsed": 0.031, "since_last_send_s": 0.0}
+{"client": "M", "closed_by_client": true, "elapsed": 0.031}

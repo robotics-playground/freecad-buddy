@@ -1,0 +1,2 @@
+{"elapsed_ms": 4164, "predicates": [{"index": 0, "observed_json": "{\"matches\":4}", "status": "satisfied", "unknown_reason": null}], "samples": 2, "stable": true, "status": "satisfied"}
+pid=30140 window_id=460014

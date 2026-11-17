@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "D:\Work\Personal\Sources\freecad-buddy\benchmarks\g3\fault-injection\score_g3_replay.py", line 46, in <module>
+    import yaml
+ModuleNotFoundError: No module named 'yaml'

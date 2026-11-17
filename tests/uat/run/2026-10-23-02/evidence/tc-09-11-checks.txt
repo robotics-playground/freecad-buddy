@@ -1,0 +1,16 @@
+== [when max_nodes 0] query_tree_summary {"max_nodes": 0}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", "is_error": true}
+== [when max_nodes 50] query_tree_summary {"max_nodes": 50}
+   isError=True {"text": "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", "is_error": true}
+CHECK rejections: [true, true]
+CHECK texts: ["Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)", "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)"]
+CHECK any OK / truncated: [[null, false], [null, false]]
+CHECK property-list command: ["doc", "focus", "expand", "depth", "filters"]
+== [then plain] query_tree_summary {}
+   isError=False {"text": "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.95, computed\nv [FEATURE] Box", "is_error": false}
+CHECK plain first line / truncated: ["OK: 1 objects, 1 shown.", false]
+== [then depth 1] query_tree_summary {"depth": 1}
+   isError=False {"text": "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.95, cached, served from cache; unverified key component(s): geometry\nv [FEATURE] Box", "is_error": false}
+CHECK depth 1 shown vs tree lines: [["OK", 1, 1], 1]
+CHECK edge report retired_max_nodes_rejected: [{"tool": "retired_max_nodes_rejected", "ok": true, "status": "SCHEMA_ERROR", "detail": "additionalProperties: False rejects the retired parameter"}]
+['doc', 'focus', 'expand', 'depth', 'filters']

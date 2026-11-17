@@ -1,0 +1,13 @@
+TC-01-02 checks (R1, FreeCAD pid 33584, launch r1-L1, default posture)
+Given 5 golden models -> PASS. No fcb python process (only 22608, 15584 cadgen mcp) -> PASS.
+Given box-10-20-30 open on GUI: document_open OK fcb-doc:TMTLARr83n9JnkcWtJs3CQ; Show All; view_fit_viewport OK; tc-01-02-before.png
+When FCB_ENV=<rerun\fcbenv\fcb> FREECAD_USER_HOME=<rerun\fchome-r1> PYTHONUTF8=1 uv run python scripts/automation/run_mcp_e2e.py (18:20:01-18:20:06)
+Then exit 0 -> PASS (exit=0, "29/29 checks passed", tc-01-02-sweep-stdout.txt)
+Then all_passed True -> PASS (total 29 passed 29 failed 0)
+Then query_mass_properties:box-10-20-30 volume=6000.0 -> PASS ("volume=6000.0 (expect 6000.0, rel_ok=True)")
+Then every verify_export_step:* / verify_export_stl:* status OK -> PASS (10 entries, all OK)
+Then grep access violation|segfault|swig director in server.stderr.log -> 0 lines -> PASS
+Then GUI query_capabilities OK after the sweep -> PASS
+Then (visual) Show All, view_fit_viewport OK fitted, fits 0.95 -> PASS
+Then (visual) before/after read: both one grey box-10-20-30 iso, whole, eight corners inside the view, tree box-10-20-30 > Box, title "* box-10-20-30 - FreeCAD 1.1.4", tabs Start + box-10-20-30 : 1*, no extra document, no dialog; windows.txt lists only the main window. Same picture. Live check: tc-01-02-after-live.png differs in the property tab area (111,907)-(204,944), 3086 px -> display live -> PASS
+Note: sweep report/stderr written by the script to _automation/ (as written) and copied here.

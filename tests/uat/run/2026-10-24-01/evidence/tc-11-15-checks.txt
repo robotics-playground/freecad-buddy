@@ -1,0 +1,19 @@
+TC-11-15 (R2; H1 via r2_tc11.py 15 / 15w 1 / 15w 2 -> r2_h1sh.py, FCB_ENV rerun env, FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc1115;
+          FREECAD_BUDDY_AUDIT_LOG=evidence/tc-11-15-append.jsonl set on each H1 command line; GUI launch r2-L2 pid 29004)
+Given: scratch audit path evidence/tc-11-15-append.jsonl (passed to H1 on its command line; the agent shell variable itself was not
+       exported - the Given's "echo $FREECAD_BUDDY_AUDIT_LOG" reads the H1 environment, recorded in tc-11-15-h1.jsonl / launch-log.tsv).
+       GUI document_open box-10-20-30, Show All, fit OK fits 0.95, tc-11-15-before.png.
+When: batch 1 (document_create, Body, Sketch, geometry) -> 8 lines, sha256 b974ba9a... (tc-11-15-batch1-*.txt, copy kept);
+      batch 2 on the same file (Pad, Fillet) -> 17 lines; comparison; source greps (tc-11-15-greps.txt); concurrent writers 1 and 2.
+PASS first 8 lines byte-identical to the batch-1 copy (cmp).
+PASS line count 8 -> 17.
+PASS sha256 of the first 8 lines = batch-1 digest b974ba9a...ad63.
+PASS grep 'open(self._path, "a"' audit_log.py -> line 48.
+PASS readers grep (usecases/, contracts/, minus operator_settings.py) -> only usecases/documents.py:49, the docstring naming the variable.
+PASS rotation grep on audit_log.py -> only line 48, the append-mode open (the W5 call-pattern grep no longer matches the docstring).
+PASS concurrent two-writer run: 17 -> 48 lines, 0 unparsable lines.
+PASS fit OK fits 0.95.
+PASS visual: before and after the same single box, whole and framed, no new object, no dialog; pointer at (1800,300) outside the window
+     for both captures; r2_diff 0 px. Live check 3086 px.
+Kept as evidence (cleanup rm not run): tc-11-15-append.jsonl.
+Verdict: PASS

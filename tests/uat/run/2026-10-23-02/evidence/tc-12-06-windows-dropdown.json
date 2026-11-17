@@ -1,0 +1,61 @@
+{
+  "_legacy_windows": [
+    {
+      "height": 153,
+      "is_on_screen": true,
+      "minimized": false,
+      "pid": 29744,
+      "title": "FreeCAD",
+      "width": 246,
+      "window_id": 3477426,
+      "x": 159,
+      "y": 109
+    },
+    {
+      "height": 1000,
+      "is_on_screen": true,
+      "minimized": false,
+      "pid": 29744,
+      "title": "* TC1206 - FreeCAD 1.1.4",
+      "width": 1600,
+      "window_id": 3540980,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "current_space_id": null,
+  "windows": [
+    {
+      "app_name": "freecad.exe",
+      "bounds": {
+        "height": 153,
+        "width": 246,
+        "x": 159,
+        "y": 109
+      },
+      "is_on_screen": true,
+      "layer": 0,
+      "minimized": false,
+      "pid": 29744,
+      "title": "FreeCAD",
+      "window_id": 3477426,
+      "z_index": 1
+    },
+    {
+      "app_name": "freecad.exe",
+      "bounds": {
+        "height": 1000,
+        "width": 1600,
+        "x": 0,
+        "y": 0
+      },
+      "is_on_screen": true,
+      "layer": 0,
+      "minimized": false,
+      "pid": 29744,
+      "title": "* TC1206 - FreeCAD 1.1.4",
+      "window_id": 3540980,
+      "z_index": 0
+    }
+  ]
+}

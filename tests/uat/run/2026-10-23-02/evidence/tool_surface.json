@@ -1,0 +1,475 @@
+{
+ "document_close": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc"
+  ]
+ },
+ "document_create": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "label",
+   "path"
+  ]
+ },
+ "document_list": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": []
+ },
+ "document_open": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "path"
+  ]
+ },
+ "document_recompute": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc"
+  ]
+ },
+ "document_save": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "path"
+  ]
+ },
+ "document_undo": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "expect_fingerprint"
+  ]
+ },
+ "export_3mf": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "angular",
+   "doc",
+   "linear",
+   "objects",
+   "path"
+  ]
+ },
+ "export_step": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "ap",
+   "doc",
+   "objects",
+   "path"
+  ]
+ },
+ "export_stl": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "angular",
+   "doc",
+   "linear",
+   "objects",
+   "path"
+  ]
+ },
+ "feature_body_create": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "base_feature",
+   "confirm",
+   "doc",
+   "name"
+  ]
+ },
+ "feature_chamfer": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "angle",
+   "base",
+   "body",
+   "chamfer_type",
+   "confirm",
+   "doc",
+   "edges",
+   "name",
+   "second_size",
+   "size"
+  ]
+ },
+ "feature_datum": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "attachment",
+   "body",
+   "confirm",
+   "doc",
+   "kind",
+   "map_mode",
+   "name",
+   "offset"
+  ]
+ },
+ "feature_fillet": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "base",
+   "body",
+   "confirm",
+   "doc",
+   "edges",
+   "name",
+   "radius"
+  ]
+ },
+ "feature_hole": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "body",
+   "confirm",
+   "cut_depth",
+   "cut_diameter",
+   "cut_type",
+   "depth",
+   "depth_type",
+   "diameter",
+   "doc",
+   "name",
+   "profile",
+   "reversed",
+   "thread_type"
+  ]
+ },
+ "feature_mirror": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "body",
+   "confirm",
+   "doc",
+   "mirror_plane",
+   "name",
+   "originals"
+  ]
+ },
+ "feature_pad": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "body",
+   "confirm",
+   "doc",
+   "length",
+   "midplane",
+   "name",
+   "profile",
+   "reversed",
+   "second_length",
+   "taper_angle",
+   "up_to",
+   "up_to_face"
+  ]
+ },
+ "feature_pattern": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "angle",
+   "axis",
+   "body",
+   "confirm",
+   "direction",
+   "doc",
+   "kind",
+   "length",
+   "mode",
+   "name",
+   "occurrences",
+   "offset",
+   "originals",
+   "reversed"
+  ]
+ },
+ "feature_pocket": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "body",
+   "confirm",
+   "doc",
+   "length",
+   "midplane",
+   "name",
+   "profile",
+   "reversed",
+   "second_length",
+   "taper_angle",
+   "up_to",
+   "up_to_face"
+  ]
+ },
+ "feature_revolve": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "angle",
+   "axis",
+   "body",
+   "confirm",
+   "doc",
+   "midplane",
+   "name",
+   "profile",
+   "reversed",
+   "second_angle",
+   "up_to"
+  ]
+ },
+ "feature_set_parameters": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "doc",
+   "feature",
+   "parameters"
+  ]
+ },
+ "preview_dry_run": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "operation",
+   "render",
+   "view"
+  ]
+ },
+ "query_capabilities": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": []
+ },
+ "query_dependencies": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "max_edges",
+   "object"
+  ]
+ },
+ "query_mass_properties": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "object"
+  ]
+ },
+ "query_object": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "object"
+  ]
+ },
+ "query_placement": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "object"
+  ]
+ },
+ "query_screenshot": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "view"
+  ]
+ },
+ "query_sketch_info": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "sketch"
+  ]
+ },
+ "query_tree_summary": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "depth",
+   "doc",
+   "expand",
+   "filters",
+   "focus"
+  ]
+ },
+ "script_exec": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "code",
+   "doc"
+  ]
+ },
+ "sketch_add_constraint": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "constraints",
+   "doc",
+   "sketch"
+  ]
+ },
+ "sketch_add_external_geometry": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "doc",
+   "edge",
+   "sketch"
+  ]
+ },
+ "sketch_add_geometry": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "constraints",
+   "doc",
+   "geometry",
+   "sketch"
+  ]
+ },
+ "sketch_create": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "body",
+   "confirm",
+   "doc",
+   "face",
+   "name",
+   "plane"
+  ]
+ },
+ "sketch_remove_constraint": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "constraints",
+   "doc",
+   "sketch"
+  ]
+ },
+ "sketch_remove_geometry": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "doc",
+   "geo_ids",
+   "sketch"
+  ]
+ },
+ "sketch_set_datum": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "constraint",
+   "doc",
+   "sense",
+   "sketch",
+   "value"
+  ]
+ },
+ "sketch_toggle_construction": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "confirm",
+   "doc",
+   "geo_ids",
+   "sketch"
+  ]
+ },
+ "verify_export_3mf": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "export_id"
+  ]
+ },
+ "verify_export_step": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "export_id"
+  ]
+ },
+ "verify_export_stl": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "export_id"
+  ]
+ },
+ "verify_recompute": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc"
+  ]
+ },
+ "verify_shape": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "anchor_frame",
+   "checks",
+   "doc",
+   "object"
+  ]
+ },
+ "verify_sketch": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc",
+   "sketch"
+  ]
+ },
+ "view_fit_viewport": {
+  "additionalProperties": false,
+  "mut": true,
+  "props": [
+   "doc"
+  ]
+ }
+}

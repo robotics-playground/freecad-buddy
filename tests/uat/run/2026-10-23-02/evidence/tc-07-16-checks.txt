@@ -1,0 +1,12 @@
+DOC fcb-doc:tlN7Ozum2Wk2vmaaLKzvVg
+CHECK failures [tool, file, status, message, has export_id]: [["export_step", "tc-07-16-fail-multi.step", "INVALID_INPUT", "export supports a single object; got multiple", false], ["export_step", "tc-07-16-fail-unknown.step", "INVALID_INPUT", "unknown object: NoSuchObject", false], ["export_stl", "tc-07-16-fail-defl.stl", "INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=1e-05, angular=0.5", false], ["export_3mf", "tc-07-16-fail-defl.3mf", "INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=0.1, angular=0.0", false], ["export_step", "x.step", "RECOMPUTE_ERROR", "Writing of STEP failed", false]]
+CHECK fail files: []
+CHECK no-such-dir exists: false
+CHECK recovery: ["OK", true, 6886]
+CHECK reimport volume: ["OK", {"value": 6000.0, "unit": "mm^3"}]
+H_RT fcb-doc:9gkUn8vOd9UqYR0Nw9RVag
+find-size0-done
+(find -size 0 for tc-07-16-fail-* printed nothing)
+Given: rm stale; document_open box-10-20-30 OK, OBJ=Box.
+All five failures non-OK (4 INVALID_INPUT, 1 RECOMPUTE_ERROR "Writing of STEP failed"); no failure file; no zero-byte stub; no tc-07-16-no-such-dir; no export_id in any failure envelope; recovery export to tc-07-16-fail-multi.step OK, file 6886 bytes; re-import 6000.0.
+Visual: view_fit_viewport(H_RT) OK. tc-07-16-after.png: tab tc-07-16_rt, one closed box about 1:2:3, no stray fragment or partial surface; tree holds Reimport only. Status bar badge "1" (failed STEP write notification, harness limit h). At capture time a second top-level "FreeCAD" window (858294, 1000x533) was listed: transient window after the failed STEP write (harness limit e); not in the main-window capture.

@@ -1,0 +1,3 @@
+2026-10-24 00:33:20,002 INFO freecad_buddy.hosts.gui_external: pinned to FreeCAD pid 17944
+2026-10-24 00:33:20,027 INFO freecad_buddy.hosts.gui_external: freecad-buddy GUI-external MCP server on http://127.0.0.1:8765/mcp
+2026-10-24 00:38:23,432 WARNING freecad_buddy.hosts.gui_external: FreeCAD pid 17944 has exited; the MCP proxy exits and frees port 8765

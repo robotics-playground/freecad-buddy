@@ -1,0 +1,25 @@
+TC-01-02 checks (P1)
+Given 5 golden models: ls benchmarks/g0/golden-models/*.FCStd | wc -l -> 5 -> PASS
+Given no stale fcb H1 server: python.exe processes are 22608, 15584 (uv cache cadgen.exe mcp), none from micromamba/envs/fcb -> PASS
+Given box open on GUI: document_open OK, doc fcb-doc:4iSe6Tb1wBdA3ms06lN0uw; Show All; view_fit_viewport OK; tc-01-02-before.png
+When (as written): uv run python scripts/automation/run_mcp_e2e.py
+  -> "fcb env python not found at C:\Users\thuan\micromamba\envs\fcb\python.exe; run the micromamba setup first", exit=2 (tc-01-02-literal.txt)
+When (H1 interpreter of h1-setup.txt): FCB_PYTHON=<h1env python> uv run python p1_e2e.py tc-01-02 (run_mcp_e2e._run unchanged; only _fcb_env and OUT_DIR replaced), cwd evidence/tc-01-02-e2e
+  stdout: tc-01-02-sweep-stdout.txt; report tc-01-02-e2e_report.json; stderr tc-01-02-server.stderr.log
+Then exit 0 -> FAIL (exit=1)
+Then all_passed True -> FAIL (False, 4/9)
+  [FAIL] tree_summary:box-10-20-30 NO_STATUS {}  (same for cylinder-r5-h20, sphere-r10, box40-hole-r5, two-box-compound)
+Then query_mass_properties:box-10-20-30 volume=6000.0 -> FAIL (entry absent: the sweep skips a model after the tree_summary failure)
+Then every verify_export_step:* / verify_export_stl:* status OK -> FAIL (no such entry)
+Then grep -iE "access violation|segfault|swig director" server.stderr.log -> nothing -> PASS (0 Traceback lines)
+Then GUI query_capabilities still OK after the sweep -> PASS
+Then (visual) Show All before; view_fit_viewport OK -> PASS
+Then (visual) before/after captures read -> PASS
+Cause (test-harness defect): scripts/automation/run_mcp_e2e.py:128-130
+    tree = await session.call_tool("query_tree_summary", {"doc": handle})
+    if _status(tree) != "OK":
+_status reads structuredContent (:57-58); since 57d3adb "fix(mcp): send query_tree_summary without structuredContent" the tool returns text only.
+Same call on the GUI host: {"text": "OK: 1 objects, 1 shown.\nframing: fits, ratio 0.95, computed\nv [FEATURE] Box", "is_error": false}
+The tool works; the sweep reads a field the tool no longer sends.
+Harness note: invoke_menu View > Visibility > Show All Objects left the View menu and its Visibility submenu open as two top-level windows (3017202, 3605080). The main-window capture does not show them. Closed with press_key escape. From here on every capture writes <stem>-windows.txt.
+State: H1 sweep output kept in evidence/tc-01-02-e2e/ (scratch.FCStd, audit.jsonl). GUI document closed so the next scenarios start clean (it is not part of the failure).

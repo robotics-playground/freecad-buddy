@@ -1,0 +1,28 @@
+2026-10-23 22:32:31,275 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-23 22:32:31,425 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-09-21-h1-audit.jsonl
+2026-10-23 22:32:31,425 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-23 22:32:31,425 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-23 22:32:31,426 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-23 22:32:31,476 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchObject
+2026-10-23 22:32:31,479 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+Traceback (most recent call last):
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\adapters\rpc_dispatch.py", line 143, in _invoke
+    return method.handler(**params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\hosts\tool_catalog.py", line 854, in <lambda>
+    return lambda **p: fn(doc_registry, export_registry, **p)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\exports.py", line 269, in export_stl
+    return _mesh_export(registry, export_registry, "stl", doc, path, objects, linear, angular)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\exports.py", line 252, in _mesh_export
+    return registry.with_document(doc, write)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\documents.py", line 418, in with_document
+    return fn(handle, document)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thuan\AppData\Local\Temp\claude\D--Work-Personal-Sources-freecad-buddy\1d05bc05-6255-4b66-ad49-2004ccbeed34\scratchpad\h1env\Lib\site-packages\freecad_buddy\usecases\exports.py", line 227, in write
+    mesh.write(path)
+OSError: Directory does not exist
+2026-10-23 22:32:31,850 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-10-23 22:32:31,850 INFO freecad_buddy.rpc_listener: client closed the connection

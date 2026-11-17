@@ -1,0 +1,17 @@
+TC-01-15 checks (P1)
+Given FreeCAD 22308 (launch tc-01-14r) with its auto-spawned proxy: spawn line pid 3584, :8765 LISTENING 6060; token of rpc-22308.json recorded (43 chars)
+Given document_open box -> fcb-doc:-ZarNdrE3hbP3I2_5mZSUA; Show All; view_fit_viewport OK; tc-01-15-before.png
+When curl -s -i http://127.0.0.1:8765/healthz -> tc-01-15-healthz.txt
+Then "HTTP/1.1 200 OK", content-type application/json -> PASS
+Then body {"service":"freecad-buddy-mcp-proxy","freecad_pid":22308,"session_id":"f30d4e2fe98e68a0"} -> PASS
+Then session_id non-empty; grep -c <token> healthz output = 0; no path, no environment value in the body -> PASS
+Then (visual) tc-01-15-probed.png read beside tc-01-15-before.png -> PASS
+When document_close OK; invoke_menu File > Exit; FreeCAD 22308 gone; :8765 free
+When holder: uv run python -m http.server 8765 --bind 127.0.0.1, started from an empty scratchpad folder (uv wrapper 17912); netstat LISTENING pid 28228; addon.log moved to addon.log.prev (kept as p1-addon-L4-L5.log)
+When p1_launch.ps1 tc-01-15b -NoProxy -> pid 29308; addon.log copied 15 s after rpc-29308.json appeared (tc-01-15-addon.log)
+Then grep -c ERROR = 1; line: "MCP proxy not started: port 8765 is still held by another program, or by an MCP proxy from an older freecad-buddy build after 10.0 s. End that process by hand, then restart FreeCAD. The RPC listener is up." -> PASS (contains the quoted text)
+Then grep "spawned MCP proxy" -> nothing; netstat :8765 LISTENING only 28228 -> PASS
+Then "freecad-buddy RPC listener started on 127.0.0.1:61358"; rpc-29308.json exists -> PASS
+Then (visual) tc-01-15-startpage.png (no document: Start page with the first-run Welcome panel, no 3D view) and, after a GUI New Document and Fit All, tc-01-15-after.png read -> PASS
+Test-case defect (same as TC-01-13): the Then names a 3D view but the scenario opens no document.
+Cleanup: Stop-Process 28228 (and wrapper 17912); :8765 free; addon.log.prev removed; FreeCAD 29308 File > Exit.

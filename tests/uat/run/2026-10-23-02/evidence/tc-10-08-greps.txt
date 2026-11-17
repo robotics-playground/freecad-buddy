@@ -1,0 +1,11 @@
+$ grep -c "document-suspect" src/freecad_buddy/hosts/gui_external/entry.py
+0
+$ grep -n "document-suspect" src/freecad_buddy/adapters/rpc_listener.py
+422:                "document-suspect: a prior call timed out on this document; "
+461:        """Clear a document-suspect flag only on a non-mutating OK that re-read the same doc."""
+$ grep verify_verdict INVALID_INPUT tc-10-07-audit.jsonl
+{"actor": "operator", "code": "open(r'D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-10-08-D.marker', 'w').write('x'); result = 'ran'", "doc": {"handle": "fcb-doc:MmXcPTu8axfX4zWOm5mYUg"}, "event": "exec", "fingerprint_after": null, "fingerprint_before": null, "params_digest": "e263c391307867c429fc683a4ac3241435b24ae9862c845715ee32f2e4790c9d", "rollback": 
+$ ls tc-10-08-D.marker
+ls: cannot access 'tests/uat/run/2026-10-23-02/evidence/tc-10-08-D.marker': No such file or directory
+$ ls tc-10-08-E.marker
+tests/uat/run/2026-10-23-02/evidence/tc-10-08-E.marker

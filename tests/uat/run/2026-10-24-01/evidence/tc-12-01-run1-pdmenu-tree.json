@@ -1,0 +1,334 @@
+{
+ "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Issue #22865: use `max_elements` / `max_depth` to bound the UIA walk on apps with very large trees.",
+ "app_name": "freecad.exe",
+ "element_count": 16,
+ "elements": [
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 0,
+   "element_index": 0,
+   "element_token": "s00000260:0",
+   "enabled": true,
+   "frame": {
+    "h": 525,
+    "w": 222,
+    "x": 530,
+    "y": 128
+   },
+   "label": "Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design",
+   "role": "Menu"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 1,
+   "element_token": "s00000260:1",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 130
+   },
+   "label": "New Body",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 2,
+   "element_token": "s00000260:2",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 161
+   },
+   "label": "Shape Binder",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 3,
+   "element_token": "s00000260:3",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 191
+   },
+   "label": "Sub-Shape Binder",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 4,
+   "element_token": "s00000260:4",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 252
+   },
+   "label": "Additive Features",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 5,
+   "element_token": "s00000260:5",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 282
+   },
+   "label": "Additive Primitive",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 6,
+   "element_token": "s00000260:6",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 313
+   },
+   "label": "Subtractive Features",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 7,
+   "element_token": "s00000260:7",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 343
+   },
+   "label": "Subtractive Primitive",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 8,
+   "element_token": "s00000260:8",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 375
+   },
+   "label": "Dress-Up Features",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "expand",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 9,
+   "element_token": "s00000260:9",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 406
+   },
+   "label": "Transformation Features",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 10,
+   "element_token": "s00000260:10",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 437
+   },
+   "label": "Boolean Operation",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 11,
+   "element_token": "s00000260:11",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 468
+   },
+   "label": "Inspect Appearance",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 12,
+   "element_token": "s00000260:12",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 498
+   },
+   "label": "Inspect Material",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 13,
+   "element_token": "s00000260:13",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 561
+   },
+   "label": "Involute Gear",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 14,
+   "element_token": "s00000260:14",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 591
+   },
+   "label": "Sprocket",
+   "parent_index": 0,
+   "role": "MenuItem"
+  },
+  {
+   "actions": [
+    "invoke",
+    "set_value"
+   ],
+   "depth": 1,
+   "element_index": 15,
+   "element_token": "s00000260:15",
+   "enabled": true,
+   "frame": {
+    "h": 30,
+    "w": 220,
+    "x": 531,
+    "y": 622
+   },
+   "label": "Shaft Design Wizard",
+   "parent_index": 0,
+   "role": "MenuItem"
+  }
+ ],
+ "elements_complete": false,
+ "pid": 30012,
+ "returned_element_count": 16,
+ "screenshot_file_path": "\\\\?\\D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\evidence\\tc-12-01-pdmenu.png",
+ "screenshot_height": 523,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 221,
+ "snapshot_id": "s00000260",
+ "total_element_count": 16,
+ "tree_markdown": "- [0] Menu [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design actions=[invoke,set_value]]\n  - [1] MenuItem \"New Body\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_Body actions=[invoke,set_value]]\n  - [2] MenuItem \"Shape Binder\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_ShapeBinder actions=[invoke,set_value]]\n  - [3] MenuItem \"Sub-Shape Binder\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_SubShapeBinder actions=[invoke,set_value]]\n  - MenuItem \"Clone\"\n  - [4] MenuItem \"Additive Features\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.Additive Features actions=[invoke,expand,set_value]]\n  - [5] MenuItem \"Additive Primitive\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.QAction actions=[invoke,expand,set_value]]\n  - [6] MenuItem \"Subtractive Features\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.Subtractive Features actions=[invoke,expand,set_value]]\n  - [7] MenuItem \"Subtractive Primitive\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.QAction actions=[invoke,expand,set_value]]\n  - [8] MenuItem \"Dress-Up Features\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.Dress-Up Features actions=[invoke,expand,set_value]]\n  - [9] MenuItem \"Transformation Features\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.Transformation Features actions=[invoke,expand,set_value]]\n  - [10] MenuItem \"Boolean Operation\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_Boolean actions=[invoke,set_value]]\n  - [11] MenuItem \"Inspect Appearance\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.Materials_InspectAppearance actions=[invoke,set_value]]\n  - [12] MenuItem \"Inspect Material\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.Materials_InspectMaterial actions=[invoke,set_value]]\n  - MenuItem \"Check Geometry\"\n  - [13] MenuItem \"Involute Gear\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_InvoluteGear actions=[invoke,set_value]]\n  - [14] MenuItem \"Sprocket\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_Sprocket actions=[invoke,set_value]]\n  - [15] MenuItem \"Shaft Design Wizard\" [id=Gui::GUISingleApplication.Gui::MainWindow.QMenuBar.&Part Design.&Part Design.PartDesign_WizardShaft actions=[invoke,set_value]]\n",
+ "window_bounds": {
+  "height": 525,
+  "width": 223,
+  "x": 530,
+  "y": 129
+ },
+ "window_id": 4457946,
+ "window_title": "FreeCAD"
+}

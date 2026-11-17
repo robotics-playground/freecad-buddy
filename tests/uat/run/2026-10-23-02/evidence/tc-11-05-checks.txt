@@ -1,0 +1,69 @@
+listener port from rpc-17944.json: 49942
+## netstat :49942 LISTENING
+  TCP    127.0.0.1:49942        0.0.0.0:0              LISTENING       17944
+## LISTENING line count: 1
+## stop proxy
+stopping proxy pid 28164 (parent 26812); launch command: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http
+:8765 rows:
+
+  TCP    127.0.0.1:53567        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:53568        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:53569        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:53570        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:53571        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:53572        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:54346        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58900        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58901        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58902        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58903        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58904        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58905        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58908        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58909        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:58910        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:65517        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:65518        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+  TCP    127.0.0.1:65519        127.0.0.1[7m:8765 [0m        TIME_WAIT       0
+listener port 49942 rows:
+  TCP    127.0.0.1[7m:49942 [0m       0.0.0.0:0              LISTENING       17944
+
+## probes
+CHECK record host / port: ["127.0.0.1", 49942]
+CHECK LAN connect raised: "ConnectionRefusedError: [WinError 10061] No connection could be made because the target machine actively refused it after 2.031 s"
+{"client": "L", "connect": "connected", "elapsed": 0.016, "record": "rpc-17944.json", "port": 49942}
+{"client": "L", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.016}
+{"client": "L", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.016, "since_last_send_s": 0.0}
+CHECK loopback hello: {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}
+{"client": "L", "closed_by_client": true, "elapsed": 0.016}
+## after: Show All, then MCP view_fit_viewport (proxy stopped)
+    | httpx.ConnectError: All connection attempts failed
+    +------------------------------------
+## fallback: GUI Fit All toolbar
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+34459 of 1535072 pixels differ; bbox (745, 210, 1490, 969)
+(first after capture tc-11-05-after-noshowall.png: my p9_gui.py fit aborted at the MCP connect before its Show All; Show All now run separately)
+{"delivery": {"mode": "foreground"}, "effect": "unverifiable", "route": "accessibility"}
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+34459 of 1535072 pixels differ; bbox (745, 210, 1490, 969)
+restarted: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http (launcher pid 35916) with FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-a-audit.jsonl FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir
+healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":17944,"session_id":"f99f0f66711d0b11"}
+proxy process 35916 parent 32756: "D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+proxy process 32412 parent 35916: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+:8765 rows:
+
+  TCP    127.0.0.1[7m:8765 [0m        0.0.0.0:0              LISTENING       32412
+listener port 49942 rows:
+  TCP    127.0.0.1[7m:49942 [0m       0.0.0.0:0              LISTENING       17944
+
+restarted: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http (launcher pid 35916) with FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-a-audit.jsonl FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir
+healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":17944,"session_id":"f99f0f66711d0b11"}
+proxy process 35916 parent 32756: "D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+proxy process 32412 parent 35916: "C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+:8765 rows:
+
+  TCP    127.0.0.1[7m:8765 [0m        0.0.0.0:0              LISTENING       32412
+listener port 49942 rows:
+  TCP    127.0.0.1[7m:49942 [0m       0.0.0.0:0              LISTENING       17944
+
+(the restart script output above was read from the background task; its trailing query_capabilities ran only after TC-11-16 had stopped the proxy and is not part of TC-11-05. The query_capabilities check of the restarted proxy is in tc-11-05-mcp.jsonl: OK, exec_enabled true, tools/list 46 in tc-11-05-proxy-tools.json)

@@ -1,0 +1,12 @@
+2026-10-24 00:20:23,180 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-24 00:20:23,343 INFO freecad_buddy.hosts.headless: audit log: D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-14-h1-audit.jsonl
+2026-10-24 00:20:23,344 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 00:20:23,344 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-24 00:20:23,344 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-10-24 00:20:23,555 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Box
+2026-10-24 00:20:23,598 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Box
+2026-10-24 00:20:23,610 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:not-issued
+2026-10-24 00:20:23,663 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:not-issued
+2026-10-24 00:20:23,666 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:not-issued
+2026-10-24 00:20:24,197 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-10-24 00:20:24,197 INFO freecad_buddy.rpc_listener: client closed the connection

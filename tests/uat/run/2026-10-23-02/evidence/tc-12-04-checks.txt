@@ -1,0 +1,25 @@
+TC-12-04 (P10, FreeCAD pid 30140) -- verdict FAIL
+Given: document_open box and sphere OK; document_list 2 entries.
+When: volumes recorded: Box 6000.0, Sphere 4188.79 (displayed, 2 decimals).
+When: Show All in sphere (active), Windows > "2 box-10-20-30 : 1", Show All in box.
+When: tc-12-04-tree.png snapshot; click TreeItem "sphere-r10" by element_token -> effect unverifiable, route accessibility.
+Then 1 FAIL: verify_state {role TreeItem, label_contains sphere-r10, selected:true} -> unsatisfied, observed selected:false (tc-12-04-verify.txt).
+  Diagnostic, not a retry for a verdict: background pixel click on the row -> still selected:false (tc-12-04-verify-diag-pixel.txt);
+  capture tc-12-04-diag-select.png: no row highlighted, active tab box-10-20-30.
+Deviation: the When step did not make the sphere active, so the agent made it active through Windows > "3 sphere-r10 : 1*"
+  (title "* sphere-r10 - FreeCAD 1.1.4") before the box-handle queries, and box active through Windows > "2 box-10-20-30 : 1*" before
+  the sphere-handle queries. A token click on the box row was also not selected (tc-12-04-verify-box.txt).
+Then 2 PASS: box handle volume 6000.0.
+Then 3 PASS: box tree "v [FEATURE] Box", no Sphere.
+Then 4 PASS: box render scene.rendered_objects ["Box"].
+Then 5 FAIL: sphere handle volume 4188.79, the Then names 4188.7902 (TC-12-gui-workflows.md:254); test-plan.md:141 says floats are
+  rounded to 2 decimals -> test-case defect. (Same value in the Then at :251 "NOT 4188.7902" is met.)
+Then 6 PASS: no handle-query response names an object of the other document.
+Then 7 PASS (as written): Show All, then view_fit_viewport box -> OK fitted true.
+Then 8 FAIL: tc-12-04-after.png (read): no tree row highlighted; tree lists box-10-20-30 (Box child, visible) and sphere-r10;
+  3D view shows a grey rectangle cut by the top-right corner of the view, NaviCube "TOP", status bar 7.36 mm x 4.14 mm: the box is not
+  shown whole. A recapture and a GUI Fit All (tc-12-04-after-recapture.png, tc-12-04-diag-guifit.png) show the same pixels, while a
+  script_exec camera read gives an orthographic iso-direction camera of height 37.4: the window did not repaint.
+  Context: FreeCAD was found minimized at 08:15:49 (not by the agent); the agent restored it with bring_to_front at 08:16:06; from
+  08:19 every capture of FreeCAD is black (tc-12-04-diag-resize*.png, -0823, -0830; p10-desktop-0820/0821/0835.png).
+Cleanup: document_close both after the evidence (needed so File > Exit raises no save prompt).

@@ -1,0 +1,4 @@
+tools: 46 script_exec listed: True
+mut tools with confirm: ['sketch_create', 'sketch_add_geometry', 'sketch_remove_geometry', 'sketch_add_constraint', 'sketch_remove_constraint', 'sketch_set_datum', 'sketch_toggle_construction', 'sketch_add_external_geometry', 'feature_pad', 'feature_pocket', 'feature_revolve', 'feature_hole', 'feature_fillet', 'feature_chamfer', 'feature_pattern', 'feature_mirror', 'feature_datum', 'feature_body_create', 'feature_set_parameters']
+export_* props: {'export_step': ['ap', 'doc', 'objects', 'path'], 'export_stl': ['angular', 'doc', 'linear', 'objects', 'path'], 'export_3mf': ['angular', 'doc', 'linear', 'objects', 'path']}
+export_* additionalProperties: {'export_step': False, 'export_stl': False, 'export_3mf': False}

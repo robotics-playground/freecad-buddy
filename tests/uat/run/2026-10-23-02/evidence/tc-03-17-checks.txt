@@ -1,0 +1,16 @@
+TC-03-17 checks (doc tc-03-17-plate fcb-doc:scO_8TotSfqwaTgitfx3Rw; Given built by MCP, tc-03-17-given-mcp.jsonl:
+  PlateBody > PlateProfile (60x40 rectangle, 4 lines, 11 constraints, dof 0) padded 5 mm as PlatePad; only one sketch)
+PASS Given: query_sketch_info PlateProfile 4 geometry entries; session tmp empty (tc-03-17-snapdirs-before.txt).
+PASS Given capture: view_fit_viewport OK, edit mode, p0_cam centre (50,20,0) height 70 mm, tc-03-17-before.png.
+PASS unknown sketch: INVALID_INPUT "unknown object: NoSuchSketch".
+PASS out-of-range geo_id: INVALID_INPUT "geo_id 99 is outside the sketch (0..3)".
+PASS non-sketch: INVALID_INPUT "object is not a sketch: PlatePad".
+PASS no transaction: all three structured_content {} (no mutation, no snapshot_path).
+PASS no snapshot written: session tmp still empty (tc-03-17-snapdirs-after.txt).
+PASS document untouched: depth 2 tree "v [BODY] PlateBody / |-- - [ORIGIN] Origin (+7) / `-- v [PAD] PlatePad (+1) *tip" as in the Given.
+PASS status exactly INVALID_INPUT for all three.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-03-17-before.png and tc-03-17-after.png (edit mode, same camera) read: one closed green rectangle, four
+  joined corners, lower-left on the origin, PlateWidth = 60 mm and PlateDepth = 40 mm labels, no stray dot at the origin,
+  no missing edge, "Fully constrained", no dialog; p0_diff 0 pixels differ. tc-03-17-after-3d.png (after the fit, not in
+  edit mode): one whole grey plate; the floating Tasks panel ("Modeling Tools") covers the plate's right corner area.

@@ -1,0 +1,4 @@
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+framing: does not fit, cached, served from cache; unverified key component(s): geometry
+v [BOX] ObjectA
+v [BOX] ObjectB

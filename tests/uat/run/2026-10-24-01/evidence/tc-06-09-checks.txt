@@ -1,0 +1,15 @@
+TC-06-09 checks (R1, pid 2604, same FreeCAD as TC-06-01)
+Given box-10-20-30 open fcb-doc:iwqjeB8nTmgwAYrrBw4nEw; Show All (invoke_menu); verify_recompute OK, failing_objects [] -> PASS
+When session temp listing before: [FCB_TMP_shot_01wrawww.png] (the TC-06-01 render of this session); system temp FCB_TMP_shot_* []
+When before mass/tree; renders iso, top styled (Box green, transparency 50), front focus face 2; after mass/tree; touched; unstyled iso render
+PASS volume 6000.0 before = after
+PASS com (5,10,15) before = after (structured result equal)
+PASS tree text before = after (incl. v/- markers)
+PASS every render dirty_document false (4 renders)
+PASS Touched list [] after the renders
+PASS styles not persisted: tc-06-09-unstyled-after.png grey box, not green; byte-identical to tc-06-09-iso.png (cmp); tc-06-09-top-styled.png green
+PASS temp: files added = FCB_TMP_shot_3bk9go_1, _etgmkiun, _gn6kfj9d, _wsin084v = exactly the four render.resource_link files of this scenario; FCB_TMP_shot_01wrawww (listed in the When) stays; system temp [] (W4 rewritten Then)
+PASS (visual) view_fit_viewport OK fitted
+PASS (visual) tc-06-09-after.png: one grey 10x20x30 box, iso, narrow face front-left, wider face right, tall, whole, original grey colour (not green); no dialog. The iso render tc-06-09-iso.png shows the same box, same face layout and proportion (face shading excluded, AD-34).
+Observation (R1-F5): the status-bar notification icon shows "1" in tc-06-09-after.png. Opening it (tc-06-09-notifications.png) shows one error entry: the Python traceback of the failed TC-06-01 cleanup script_exec (AttributeError: RemoveInt, through rpc_dispatch.py:143 -> script_exec.py:44). The renders posted nothing. Popup closed with Escape; tc-06-09-after-closing.png (no popup).
+Cleanup: rm tc-06-09-*.png NOT run (evidence kept).

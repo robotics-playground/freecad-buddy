@@ -1,0 +1,3 @@
+Prepared 1 package in 266ms
+Installed 1 package in 8ms
+ + pyyaml==6.0.3

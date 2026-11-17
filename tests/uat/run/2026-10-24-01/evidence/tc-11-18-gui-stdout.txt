@@ -1,0 +1,22 @@
+== [when create tc11-18] document_create {"label": "tc11-18"}
+   isError=False content=['text'] {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:tROb7JT8VuPUNmZew30VhA", "name": "tc11_18", "label": "tc11-18"}, "text": "doc: fcb-doc:tROb7JT8VuPUNmZew30VhA\nlabel: tc11-18\nname: tc11_18"}
+== [when feature_body_create] feature_body_create -> OK
+== [when sketch_create] sketch_create -> OK
+== [when sketch_add_geometry] sketch_add_geometry -> OK
+== [when feature_pad] feature_pad -> OK
+PAD OK
+== [when preview fillet] preview_dry_run -> OK
+PREVIEW OK
+== [when query_screenshot] query_screenshot -> OK
+RENDER C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_29004_4a5bd995\FCB_TMP_shot_job62cm0.png
+   render tc-11-18-render: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_29004_4a5bd995\FCB_TMP_shot_job62cm0.png -> tc-11-18-render.png size=size unknown: No module named 'PIL' bytes=23080
+== [when listing] script_exec {"code": "import os; from freecad_buddy.usecases.documents import temp_dir; result = (temp_dir(), sorted(os.listdir(temp_dir())))"}
+   isError=False content=['text'] {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:tROb7JT8VuPUNmZew30VhA", "stdout": "", "value_repr": "('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_29004_4a5bd995', ['FCB_TMP_shot_htswacso.png', 'FCB_TMP_shot_job62cm0.png'])", "fingerprint_after": null}, "text": "doc: fcb-doc:tROb7JT8VuPUNmZew30VhA\nfingerprint_after: None\nstdout: \nvalue_repr: ('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_290
+WHEN LISTING ('C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir\\tmp\\FCB_TMP_session_29004_4a5bd995', ['FCB_TMP_shot_htswacso.png', 'FCB_TMP_shot_job62cm0.png'])
+== [when minted paths] script_exec {"code": "from freecad_buddy.usecases import transaction, preview; result = (transaction.temp_snapshot_path(doc), preview._tempdoc_path())"}
+   isError=False content=['text'] {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:tROb7JT8VuPUNmZew30VhA", "stdout": "", "value_repr": "('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_29004_4a5bd995\\\\FCB_TMP_snap_c9jflz7r\\\\tc11_18.FCStd', 'C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_29004_4a5bd995\\\\FCB_TMP_prev_3rw_9z7z\\\\FCB_TMP_prev_a8332020786aa59e.FCStd')", "fingerprint_after": null}, "text": "doc: fcb-doc:tROb7JT8VuPU
+WHEN MINTED PATHS ('C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir\\tmp\\FCB_TMP_session_29004_4a5bd995\\FCB_TMP_snap_c9jflz7r\\tc11_18.FCStd', 'C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir\\tmp\\FCB_TMP_session_29004_4a5bd995\\FCB_TMP_prev_3rw_9z7z\\FCB_TMP_prev_a8332020786aa59e.FCStd')
+== [when pid] script_exec {"code": "import os; result = os.getpid()"}
+   isError=False content=['text'] {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:tROb7JT8VuPUNmZew30VhA", "stdout": "", "value_repr": "29004", "fingerprint_after": null}, "text": "doc: fcb-doc:tROb7JT8VuPUNmZew30VhA\nfingerprint_after: None\nstdout: \nvalue_repr: 29004\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.", "framing": {"fits": false, "ratio": null, "checked": "cached", "stale_reason": "served from cache; unverified key component(s): geometr
+WHEN PID 29004
+DOC fcb-doc:tROb7JT8VuPUNmZew30VhA

@@ -1,0 +1,1 @@
+{"elapsed_ms":5010,"predicates":[{"index":0,"observed_json":"{\"element_index\":72,\"enabled\":true,\"frame\":{\"h\":30,\"w\":197,\"x\":516,\"y\":137},\"label\":\"Sketcher\",\"role\":\"ComboBox\",\"value\":\"Sketcher\"}","status":"satisfied","unknown_reason":null}],"samples":2,"stable":true,"status":"satisfied"}

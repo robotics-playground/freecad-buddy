@@ -1,0 +1,58 @@
+H1 START 2026-10-23T22:53:06.507+07:00 tag=tc-10-02 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-10-02-h1-audit.jsonl stderr=tc-10-02-h1.stderr.log
+CHECK tools/list count / script_exec listed: [46, true]
+== [open box-10-20-30] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\box-10-20-30.FCStd"} t=0.0..0.04 dur=0.04 status=OK msg=None
+== [box-10-20-30] query_tree_summary {} t=0.04..0.044 dur=0.004 status=OK msg=1 objects, 1 shown.
+== [box-10-20-30] query_object {"object": "Box"} t=0.044..0.053 dur=0.009 status=OK msg=None
+== [box-10-20-30] query_mass_properties {"object": "Box"} t=0.053..0.062 dur=0.009 status=OK msg=None
+== [box-10-20-30] query_placement {"object": "Box"} t=0.062..0.071 dur=0.009 status=OK msg=None
+== [box-10-20-30] verify_shape {"object": "Box"} t=0.071..0.082 dur=0.011 status=OK msg=None
+== [box-10-20-30] verify_recompute {} t=0.082..0.091 dur=0.008 status=OK msg=None
+== [box-10-20-30] query_screenshot {"view": {"camera": "iso"}} t=0.091..0.132 dur=0.042 status=OK msg=None
+== [box-10-20-30] document_list {} t=0.132..0.141 dur=0.008 status=OK msg=None
+== [close box-10-20-30] document_close {} t=0.141..0.15 dur=0.01 status=OK msg=None
+== [open cylinder-r5-h20] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\cylinder-r5-h20.FCStd"} t=0.15..0.162 dur=0.012 status=OK msg=None
+== [cylinder-r5-h20] query_tree_summary {} t=0.162..0.166 dur=0.004 status=OK msg=1 objects, 1 shown.
+== [cylinder-r5-h20] query_object {"object": "Cylinder"} t=0.166..0.175 dur=0.009 status=OK msg=None
+== [cylinder-r5-h20] query_mass_properties {"object": "Cylinder"} t=0.175..0.184 dur=0.009 status=OK msg=None
+== [cylinder-r5-h20] query_placement {"object": "Cylinder"} t=0.184..0.194 dur=0.009 status=OK msg=None
+== [cylinder-r5-h20] verify_shape {"object": "Cylinder"} t=0.194..0.205 dur=0.011 status=OK msg=None
+== [cylinder-r5-h20] verify_recompute {} t=0.205..0.214 dur=0.009 status=OK msg=None
+== [cylinder-r5-h20] query_screenshot {"view": {"camera": "iso"}} t=0.214..0.228 dur=0.014 status=OK msg=None
+== [cylinder-r5-h20] document_list {} t=0.228..0.236 dur=0.009 status=OK msg=None
+== [close cylinder-r5-h20] document_close {} t=0.236..0.246 dur=0.01 status=OK msg=None
+== [open sphere-r10] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\sphere-r10.FCStd"} t=0.247..0.258 dur=0.012 status=OK msg=None
+== [sphere-r10] query_tree_summary {} t=0.259..0.262 dur=0.003 status=OK msg=1 objects, 1 shown.
+== [sphere-r10] query_object {"object": "Sphere"} t=0.262..0.271 dur=0.009 status=OK msg=None
+== [sphere-r10] query_mass_properties {"object": "Sphere"} t=0.271..0.28 dur=0.01 status=OK msg=None
+== [sphere-r10] query_placement {"object": "Sphere"} t=0.28..0.29 dur=0.009 status=OK msg=None
+== [sphere-r10] verify_shape {"object": "Sphere"} t=0.29..0.301 dur=0.011 status=OK msg=None
+== [sphere-r10] verify_recompute {} t=0.301..0.31 dur=0.009 status=OK msg=None
+== [sphere-r10] query_screenshot {"view": {"camera": "iso"}} t=0.31..0.324 dur=0.014 status=OK msg=None
+== [sphere-r10] document_list {} t=0.324..0.333 dur=0.009 status=OK msg=None
+== [close sphere-r10] document_close {} t=0.333..0.342 dur=0.01 status=OK msg=None
+== [open box40-hole-r5] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\box40-hole-r5.FCStd"} t=0.342..0.355 dur=0.012 status=OK msg=None
+== [box40-hole-r5] query_tree_summary {} t=0.355..0.358 dur=0.004 status=OK msg=1 objects, 1 shown.
+== [box40-hole-r5] query_object {"object": "BoxHole"} t=0.358..0.367 dur=0.009 status=OK msg=None
+== [box40-hole-r5] query_mass_properties {"object": "BoxHole"} t=0.367..0.377 dur=0.01 status=OK msg=None
+== [box40-hole-r5] query_placement {"object": "BoxHole"} t=0.377..0.386 dur=0.009 status=OK msg=None
+== [box40-hole-r5] verify_shape {"object": "BoxHole"} t=0.386..0.398 dur=0.012 status=OK msg=None
+== [box40-hole-r5] verify_recompute {} t=0.398..0.407 dur=0.009 status=OK msg=None
+== [box40-hole-r5] query_screenshot {"view": {"camera": "iso"}} t=0.407..0.421 dur=0.014 status=OK msg=None
+== [box40-hole-r5] document_list {} t=0.421..0.43 dur=0.009 status=OK msg=None
+== [close box40-hole-r5] document_close {} t=0.43..0.439 dur=0.01 status=OK msg=None
+== [open two-box-compound] document_open {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\benchmarks\\g0\\golden-models\\two-box-compound.FCStd"} t=0.439..0.452 dur=0.012 status=OK msg=None
+== [two-box-compound] query_tree_summary {} t=0.452..0.455 dur=0.003 status=OK msg=1 objects, 1 shown.
+== [two-box-compound] query_object {"object": "TwoBoxCompound"} t=0.455..0.464 dur=0.009 status=OK msg=None
+== [two-box-compound] query_mass_properties {"object": "TwoBoxCompound"} t=0.464..0.474 dur=0.01 status=OK msg=None
+== [two-box-compound] query_placement {"object": "TwoBoxCompound"} t=0.475..0.483 dur=0.009 status=OK msg=None
+== [two-box-compound] verify_shape {"object": "TwoBoxCompound"} t=0.483..0.495 dur=0.011 status=OK msg=None
+== [two-box-compound] verify_recompute {} t=0.495..0.503 dur=0.009 status=OK msg=None
+== [two-box-compound] query_screenshot {"view": {"camera": "iso"}} t=0.504..0.518 dur=0.015 status=OK msg=None
+== [two-box-compound] document_list {} t=0.518..0.527 dur=0.008 status=OK msg=None
+== [close two-box-compound] document_close {} t=0.527..0.536 dur=0.01 status=OK msg=None
+CHECK sampled read-only calls / median: [40, 0.009]
+CHECK statuses not OK: []
+CHECK query_screenshot entries: [{"tool": "query_screenshot", "duration_s": 0.042, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.014, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.014, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.014, "status": "OK"}, {"tool": "query_screenshot", "duration_s": 0.015, "status": "OK"}]
+CHECK calls at or over their tool_catalog timeout: []
+CHECK max duration per tool: {"document_close": 0.01, "document_list": 0.009, "document_open": 0.04, "query_mass_properties": 0.01, "query_object": 0.009, "query_placement": 0.009, "query_screenshot": 0.042, "query_tree_summary": 0.004, "verify_recompute": 0.009, "verify_shape": 0.012}
+H1 END 2026-10-23T22:53:08.287+07:00 (client stdin closed, host exited)

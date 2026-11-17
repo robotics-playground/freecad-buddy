@@ -1,0 +1,1 @@
+"value_repr": "[('C:\\\\Users\\\\thuan\\\\AppData\\\\Roaming\\\\FreeCAD\\\\v1-1\\\\freecad-buddy\\\\workdir\\\\tmp\\\\FCB_TMP_session_35504_55ba6a3e', [], ['FCB_TMP_shot_czymfi9a.png'])]"

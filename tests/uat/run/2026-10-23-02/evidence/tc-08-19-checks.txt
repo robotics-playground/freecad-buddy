@@ -1,0 +1,17 @@
+TC-08-19 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0)
+Given: doc tc-08-19, Body + 20x20 Sketch; TempDoc check '[]'; view_fit_viewport OK; tc-08-19-before.png.
+PASS  document_save: INVALID_INPUT "not a previewable mutation tool: 'document_save' (previewable: feature_body_create, feature_chamfer,
+      feature_datum, feature_fillet, feature_hole, feature_mirror, feature_pad, feature_pattern, feature_pocket, feature_revolve,
+      feature_set_parameters, sketch_add_constraint, sketch_add_external_geometry, sketch_add_geometry, sketch_create,
+      sketch_remove_constraint, sketch_remove_geometry, sketch_set_datum, sketch_toggle_construction)" (sorted, comma-separated).
+PASS  the list is the 19: 8 sketch_* + 11 feature_*; no document_*, export_*, script_exec.
+PASS  script_exec: same form, 'script_exec' quoted.
+PASS  no_such_tool: same form, 'no_such_tool' quoted.
+PASS  missing tool: "Input validation error: 'tool' is a required property".
+PASS  args not an object: "Input validation error: 'not an object' is not of type 'object'".
+PASS  no file written: TempDoc check '[]'; tc-08-19-save.FCStd does not exist.
+PASS  missing operation: "Input validation error: 'operation' is a required property".
+PASS  fit: view_fit_viewport OK.
+PASS  visual: before and after: title '* tc-08-19 - FreeCAD 1.1.4' in both (the '*' was there before the previews), tree Body only,
+      the flat square sketch, no new feature; p0_diff 0 pixels differ.
+Verdict: PASS.

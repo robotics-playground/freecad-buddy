@@ -1,0 +1,15 @@
+TC-01-13 checks (P1)
+Given tasklist freecad.exe: none; :8765 LISTENING: none -> PASS
+Given addon.log moved to addon.log.prev (its L1/L2 lines are kept as p1-addon-L1-L2.log)
+When p1_launch.ps1 tc-01-13 -NoProxy FREECAD_BUDDY_NO_AUTO_MCP=no -> pid 6456 (Start-Process with the variable in its environment, not a cua-driver .cmd wrapper). New log: tc-01-13-addon.log
+When CLI (repo venv): tc-01-13-cli.txt
+Then "freecad-buddy RPC listener started on 127.0.0.1:62818"; rpc-6456.json exists -> PASS
+Then proxy not spawned: netstat :8765 shows no LISTENING row (13 TIME_WAIT client rows of the previous session only) -> PASS
+Then "FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy" -> PASS
+Then truthiness: value 'no' (operator settings: FREECAD_BUDDY_NO_AUTO_MCP='no' (env)) -> PASS
+Then serve --mode rpc -> stderr "--mode rpc requires --transport http." exit=2 (stdout empty) -> PASS
+Then serve --transport http --mode inline -> stderr "transport 'http' is not available yet; use --transport stdio." exit=2 (stdout empty) -> PASS
+Then no LISTENING on :8765 after both commands -> PASS
+Then (visual) fit through the GUI: the scenario opens no document, so FreeCAD shows the Start page (first-run "Welcome to FreeCAD" panel of the temporary profile) and has no enabled Fit All button (capture tc-01-13-startpage.png). A new empty document was opened with the New Document toolbar button (cua-driver, route accessibility), then Fit All was clicked (route accessibility). A reframe of an empty view cannot be seen in pixels.
+Then (visual) tc-01-13-after.png read -> PASS
+Test-case defect: the scenario asks for a 3D view area and a Fit All click but opens no document; with no proxy, only a GUI New Document gives a 3D view.

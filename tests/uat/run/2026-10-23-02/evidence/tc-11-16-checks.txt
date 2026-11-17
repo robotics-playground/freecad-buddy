@@ -1,0 +1,49 @@
+masked token: slhy...(len 43)
+== [when create] document_create -> OK
+== [when mutation] feature_body_create -> OK
+== [when query_tree_summary] query_tree_summary -> None
+== [when query_object] query_object -> OK
+== [when query_dependencies] query_dependencies -> OK
+== [when query_capabilities] query_capabilities -> OK
+== [when query_screenshot] query_screenshot -> OK
+   render tc-11-16-render: no file (None)
+== [when verify_recompute] verify_recompute -> OK
+== [when verify_shape] verify_shape -> INVALID_INPUT
+== [when export_step] export_step -> OK
+== [when verify_export_step] verify_export_step -> OK
+== [when close tc11-16] document_close -> OK
+== [then query_capabilities] query_capabilities -> OK
+CHECK token in e2e report: False
+CHECK token in tc-11-16-before.png: False
+CHECK token in tc-11-16-audit.jsonl: False
+CHECK token in addon.log: False
+CHECK token in mcp-proxy.log: False
+CHECK query_capabilities field equal to token: False
+supplement: the first query_screenshot ran on an empty-Body document and wrote no PNG; render the box and verify_shape it
+== [when query_screenshot box] query_screenshot -> OK
+   render tc-11-16-render: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_17944_5578405b\FCB_TMP_shot_00uynreu.png -> tc-11-16-render.png size=size unknown: No module named 'PIL' bytes=34929
+== [when verify_shape box] verify_shape -> OK
+CHECK token in e2e report: False
+CHECK token in tc-11-16-before.png: False
+CHECK token in tc-11-16-render.png: False
+CHECK token in tc-11-16-audit.jsonl: False lines 9
+0 of 1535072 pixels differ; bbox None
+## stop proxy
+stopping proxy pid 32412 (parent 35916); launch command: "D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+:8765 rows:
+
+  TCP    127.0.0.1:56952        127.0.0.1[7m:8765 [0m        SYN_SENT        15776
+listener port 49942 rows:
+  TCP    127.0.0.1[7m:49942 [0m       0.0.0.0:0              LISTENING       17944
+
+## hello and greps
+CHECK masked token: "slhy...(len 43)"
+CHECK token in tc-11-16-after.png: false
+CHECK token in tc-11-16-render.png: false
+CHECK token in addon.log: false
+CHECK token in mcp-proxy.log: false
+{"client": "H", "connect": "connected", "elapsed": 0.0, "record": "rpc-17944.json", "port": 49942}
+{"client": "H", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.0, "since_last_send_s": 0.0}
+CHECK hello frame: {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}
+CHECK hello result keys: ["capabilities", "contract_version", "freecad_version"]
+{"client": "H", "closed_by_client": true, "elapsed": 0.0}

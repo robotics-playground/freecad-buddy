@@ -1,0 +1,21 @@
+TC-06-01 (launch P5 tc-06-a, pid 21204, temp profile with no AntiAliasing key)
+Given: doc tc-06-01b, one Part::Box 'Bracket' 60x40x5 (script_exec); query_tree_summary names 'v [BOX] Bracket'; mass bbox 60x40x5.
+  Note: first fixture (PartDesign plate) closed unused: default-depth tree named only 'PlateBody (+2)', not the object.
+When: get_window_state -> tc-06-01-pre.png; click 'Standard Views' token (accessibility); click 'Fit All' token (accessibility).
+      view_fit_viewport OK fitted ratio 0.95 (visual Then, before captures); query_screenshot iso include [Bracket] -> tc-06-01-mcp.png
+      captures tc-06-01-viewport.png, tc-06-01-after.png; Tasks box collapsed by pixel click, tc-06-01-after2.png (camera unchanged).
+PASS  same object: window one flat plate; render one flat plate; rendered_objects ['Bracket'].
+PASS  proportions: window long front face 723 px / right face 481 px = 1.50 (60/40), thickness ~60 px; render 1300/866 = 1.50, thickness 108 px.
+PASS  camera/framing: both iso, long (X) face front-left, short (Y) face right, Z up; both centred.
+PASS  no missing/extra geometry: one solid in both; no Body/Sketch/Origin.
+FAIL  anti-aliasing: Select-String on %APPDATA%\FreeCAD\v1-1\user.cfg -> 'AntiAliasing Value="4"' (8 samples = configured on).
+      Render edge (tc-06-01-zoom-mcp.png, crop 300,610-360,650) = 3 colours (255,255,255)/(25,25,25)/(90,92,93): hard stair, not smooth.
+      Cause: harness limit. The run's mandatory temp -u profile is the live config; there the key is absent:
+      script_exec ParamGet(View).GetInt('AntiAliasing',-1) -> (-1, False). Window native capture (max_image_dimension 0,
+      tc-06-01-after-native.png, crop 530,408-570,438) = 3 colours, hard stair too. Render and window agree (both off).
+PASS  tone band: verify_render_tone -> passed True, tone (99,101,103), background 255, difference 156; no face pure black/white.
+PASS  fit first: view_fit_viewport OK.
+PASS  visual: window shows one whole flat wide plate, iso, front-left long face, right short face, Z up (Tasks box overlaps a
+      small part of the far top edge: harness limit c, collapsed for after2). Render shows the same plate, silhouette, proportion, camera.
+      Face shades differ (window top light, render top dark): excluded (AD-34).
+Verdict: FAIL (one Then, harness limit).

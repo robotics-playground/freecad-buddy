@@ -1,0 +1,13 @@
+## after quit of 17944 (00:38:29)
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-17944.json': No such file or directory
+ls: cannot access 'C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-17944.json': No such file or directory
+0 of 1535072 pixels differ; bbox None
+## s09 (tc-11-09-s09-stdout.txt, frames in tc-11-09-rpc.jsonl with tokens replaced)
+CHECK old record pid / masked token: [17944, "slhy...(len 43)"]
+CHECK new record pid / masked token: [35504, "A4lW...(len 43)"]
+CHECK tokens differ: true
+CHECK old rpc file exists: false
+CHECK OLD-token frame: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+CHECK next recv after refusal: "None"
+CHECK OLD-token + unsupported version frame: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+CHECK NEW-token hello: {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}

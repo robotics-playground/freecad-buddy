@@ -1,0 +1,13 @@
+{"client": "B", "connect": "connected", "elapsed": 0.0, "record": "rpc-29004.json", "port": 57269}
+CHECK B connect seconds: 0.0
+{"client": "B", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.0}
+{"client": "B", "recv": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "bridge busy: another client session is active"}}, "elapsed": 0.219, "since_last_send_s": 0.219}
+CHECK B first frame / seconds after hello: [{"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "bridge busy: another client session is active"}}, 0.219]
+{"client": "B", "recv": "<zero bytes: closed by peer>", "partial": "", "elapsed": 0.219}
+CHECK B next recv: "None"
+{"client": "C", "connect": "connected", "elapsed": 0.016, "record": "rpc-29004.json", "port": 57269}
+{"client": "C", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"not-the-token\", \"contract_version\": \"1\"}}", "bytes": 114, "newline": true, "elapsed": 0.016}
+{"client": "C", "recv": {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}, "elapsed": 0.016, "since_last_send_s": 0.0}
+CHECK C first frame: {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}
+{"client": "C", "recv": "<zero bytes: closed by peer>", "partial": "", "elapsed": 0.016}
+CHECK C next recv: "None"

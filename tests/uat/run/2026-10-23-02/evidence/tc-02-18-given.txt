@@ -1,0 +1,12 @@
+Name                    Length IsReadOnly
+----                    ------ ----------
+tc-02-18-readonly.FCStd   2215       True
+readonly sha256 before: 94969AC4FF909A583C66F6C8091E828C905B6936805000B705F34C0273523136
+cylinder golden sha256 before: 0CE4635591595CACF6BCC08E9544125D0196A2D17E858CF28DBAAB909BAB8617
+no-such-dir exists before: False
+readonly sha256 after: 94969AC4FF909A583C66F6C8091E828C905B6936805000B705F34C0273523136
+cylinder golden sha256 after: 0CE4635591595CACF6BCC08E9544125D0196A2D17E858CF28DBAAB909BAB8617
+no-such-dir exists after: False
+evidence is directory: True
+writable file: 3725
+addon.log lines since offset 6286 with Traceback: 0

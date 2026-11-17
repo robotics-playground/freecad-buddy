@@ -1,0 +1,11 @@
+## P10 end check 2026-10-24T09:04:14.2952357+07:00 (interim: phase stopped, display frozen)
+freecad.exe processes: 0
+:8765 LISTENING rows: 0
+user.cfg SHA-256: CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B (expected CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B)
+rpc-*.json left: rpc-10224.json rpc-1136.json rpc-11924.json rpc-12928.json rpc-13036.json rpc-13632.json rpc-1420.json rpc-1444.json rpc-1456.json rpc-14732.json rpc-16284.json rpc-18020.json rpc-18060.json rpc-1876.json rpc-19588.json rpc-20096.json rpc-21148.json rpc-21164.json rpc-2156.json rpc-21572.json rpc-21652.json rpc-21704.json rpc-21952.json rpc-22420.json rpc-2304.json rpc-23376.json rpc-23968.json rpc-25216.json rpc-25344.json rpc-26672.json rpc-26948.json rpc-27440.json rpc-28980.json rpc-29124.json rpc-29816.json rpc-29916.json rpc-30412.json rpc-30472.json rpc-30884.json rpc-31276.json rpc-31824.json rpc-32380.json rpc-33052.json rpc-33492.json rpc-35048.json rpc-35828.json rpc-36708.json rpc-36828.json rpc-36912.json rpc-38812.json rpc-6084.json rpc-6180.json rpc-6656.json rpc-7428.json rpc-8432.json rpc-8556.json rpc-9032.json rpc-9248.json rpc-9756.json rpc-9828.json
+
+## P10 end check 2026-10-24T10:44:14.5860302+07:00
+freecad.exe processes: 0
+:8765 LISTENING rows: 0
+user.cfg SHA-256: CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B (expected CCF87CFE7650DAA8D9F533B0E10C5DC7AE1DB0C7A3AA68DF3A44A04C0973832B)
+rpc files of P10 pids left: rpc-33684.json

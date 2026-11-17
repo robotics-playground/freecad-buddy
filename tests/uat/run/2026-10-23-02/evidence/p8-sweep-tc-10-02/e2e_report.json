@@ -1,0 +1,62 @@
+{
+  "total": 9,
+  "passed": 4,
+  "failed": 5,
+  "all_passed": false,
+  "checks": [
+    {
+      "tool": "tools/list",
+      "ok": true,
+      "status": "OK",
+      "detail": "46 tools"
+    },
+    {
+      "tool": "query_capabilities",
+      "ok": "1.1.4",
+      "status": "OK",
+      "detail": "freecad=1.1.4 render=none"
+    },
+    {
+      "tool": "tree_summary:box-10-20-30",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "{}"
+    },
+    {
+      "tool": "tree_summary:cylinder-r5-h20",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "{}"
+    },
+    {
+      "tool": "tree_summary:sphere-r10",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "{}"
+    },
+    {
+      "tool": "tree_summary:box40-hole-r5",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "{}"
+    },
+    {
+      "tool": "tree_summary:two-box-compound",
+      "ok": false,
+      "status": "NO_STATUS",
+      "detail": "{}"
+    },
+    {
+      "tool": "document_save",
+      "ok": true,
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "tool": "document_open(reopen)",
+      "ok": true,
+      "status": "OK",
+      "detail": ""
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+TC-02-14 checks (R1, pid 5432)
+Given doc tc-02-14-nested built with the script_exec of the Given (OuterPart > InnerPart > LinkTarget box; BoxLink -> LinkTarget, x+20); depth 5 shows [PART] and [LINK] lines -> PASS
+Note: shown read from the text header (text-only tool; R1-F2).
+PASS link is a leaf: "`-- v [LINK] BoxLink -> LinkTarget", no child line at depth 1, 5
+PASS only [LINK] lines carry " -> "
+PASS depth 1: "v [PART] OuterPart (+3)", no child line
+PASS leaf carries no count: BoxLink, LinkTarget and the axis/plane/point lines end without (+N)
+PASS depth 5: InnerPart under OuterPart; each App::Part lists its [ORIGIN] line first; InnerPart children (Origin002, LinkTarget) under it
+PASS focus InnerPart depth 3: "path: OuterPart > InnerPart", shown 10 < 20 (depth 5)
+PASS no cycle: depth 5 twice, identical text; all calls returned within seconds (whole When step under 10 s)
+PASS focus LinkTarget: OK, line 2 "v [BOX] LinkTarget"
+PASS (visual) view_fit_viewport OK fitted fits 0.95
+PASS (visual) tc-02-14-after.png: two equal grey cubes (LinkTarget and the linked copy at x+20), both whole within the view (the right cube's back top corner at the left edge of the floating Tasks panel, R1-F3 note); tree tc-02-14-nested > OuterPart > (Origin, InnerPart > (Origin004, LinkTarget), BoxLink) after expanding with pixel clicks on the arrows; no dialog. Display live: capture shows the expansions.

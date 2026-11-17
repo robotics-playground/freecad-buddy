@@ -1,0 +1,15 @@
+TC-02-14 checks (doc tc-02-14-nested, fcb-doc:lr9ePV2oUdMhepXXsqgzmQ; Given built with the test case's script_exec code)
+PASS Given: depth 5 shows [PART] OuterPart, [PART] InnerPart and "`-- v [LINK] BoxLink -> LinkTarget".
+PASS link is a leaf: the [LINK] line ends "-> LinkTarget" and has no child line at depth 5.
+PASS only [LINK] lines carry " -> ".
+PASS depth 1: "v [PART] OuterPart (+3)", no child line.
+PASS leaf has no count: "[LINK] BoxLink -> LinkTarget" and "[BOX] LinkTarget" end without (+N).
+PASS nesting: InnerPart under OuterPart; each Part lists its [ORIGIN] line first; LinkTarget under InnerPart.
+PASS focus InnerPart depth 3: "path: OuterPart > InnerPart", 10 shown < 20 shown at depth 5.
+PASS no cycle: two depth 5 calls return the same 20 tree lines, each well under 30 s (only the framing line differs: computed vs cached).
+PASS link target reachable: focus LinkTarget -> "path: OuterPart > InnerPart > LinkTarget" then "v [BOX] LinkTarget".
+PASS fit: view_fit_viewport OK (fits, ratio 0.95, computed).
+PASS visual tc-02-14-after.png: two equal grey cubes side by side, both whole, no edge cut by the viewport border; tree
+  tc-02-14-nested > OuterPart > Origin, InnerPart > Origin004, LinkTarget, and BoxLink (expanded with cua-driver pixel
+  clicks on the expanders); no dialog. Note: the floating Tasks panel ("Start Part / New Body") overlaps the 3D view at
+  its right side and hides the back top corner of the right cube; the viewport border clips nothing.

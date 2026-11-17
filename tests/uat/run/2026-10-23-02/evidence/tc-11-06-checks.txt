@@ -1,0 +1,20 @@
+## netstat :8765 LISTENING
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       28164
+## curl POST LAN 192.168.50.13:8765/mcp
+http_code=000
+curl exit=7
+curl: (7) Failed to connect to 192.168.50.13 port 8765 after 2037 ms: Could not connect to server
+## curl loopback
+307
+## rebind flag
+usage: freecad-buddy [-h] {serve} ...
+freecad-buddy: error: unrecognized arguments: --host 0.0.0.0
+exit=2
+## grep _HOST/_PORT
+44:_HOST = "127.0.0.1"
+45:_PORT = 8765
+128:def run(host: str = _HOST, port: int = _PORT) -> int:
+## grep auth
+(grep exit=1)
+  TCP    127.0.0.1:8765         0.0.0.0:0              LISTENING       28164
+0 of 1535072 pixels differ; bbox None

@@ -1,0 +1,127 @@
+2026-10-24 14:29:37,802 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\runner\\audit-group-0.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+2026-10-24 14:29:37,802 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-24 14:29:37,803 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-24 14:29:37,803 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 14:29:37,967 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:54513
+2026-10-24 14:29:38,281 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: C:\Users\thuan\.local\bin\uv.EXE
+2026-10-24 14:29:38,289 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 28332) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-24 14:29:42,793 INFO freecad_buddy.dispatch: INVALID_INPUT: document has no save target; call document_save with a 'path' first
+2026-10-24 14:30:01,900 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Sphere
+2026-10-24 14:30:01,908 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Box
+2026-10-24 14:30:09,433 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchPad
+2026-10-24 14:30:26,537 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,553 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,553 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,569 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,569 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,585 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,585 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,585 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,607 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,616 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,616 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:26,632 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:30:31,711 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:hdSQxUBGqO4TX0-OBNP74A
+2026-10-24 14:30:31,721 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:hdSQxUBGqO4TX0-OBNP74A
+2026-10-24 14:30:39,682 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-24-01/runner/tc-02-17-does-not-exist.FCStd': File 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-24-01/runner/tc-02-17-does-not-exist.FCStd' does not exist!
+2026-10-24 14:30:39,742 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/README.md': Invalid project file D:/Work/Personal/Sources/freecad-buddy/tests/uat/README.md: ios_base::failbit set: iostream stream error
+
+2026-10-24 14:30:39,758 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open requires a 'path'
+2026-10-24 14:30:39,809 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for 'D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-10-24-01/runner': Invalid project file
+2026-10-24 14:30:45,196 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in body: NoSuchBody
+2026-10-24 14:30:50,606 INFO freecad_buddy.dispatch: INVALID_INPUT: sketch_create requires exactly one of 'plane' and 'face'
+2026-10-24 14:30:50,695 INFO freecad_buddy.dispatch: INVALID_INPUT: Face1 on Cylinder is not a planar face
+2026-10-24 14:30:50,729 INFO freecad_buddy.dispatch: INVALID_INPUT: selector kind must be 'mapped_name'; 'geometric' is not resolvable by a sketch tool
+2026-10-24 14:31:08,349 INFO freecad_buddy.dispatch: INVALID_INPUT: sketch_set_datum requires exactly one of 'value' and 'sense'
+2026-10-24 14:31:08,357 INFO freecad_buddy.dispatch: INVALID_INPUT: constraint 12 is not driving; its datum is read-only
+2026-10-24 14:31:14,679 INFO freecad_buddy.dispatch: INVALID_INPUT: geo_id 4 is listed twice; a double toggle is a no-op
+2026-10-24 14:31:14,679 INFO freecad_buddy.dispatch: INVALID_INPUT: geo_id 99 is outside the sketch (0..4)
+2026-10-24 14:31:20,395 INFO freecad_buddy.dispatch: INVALID_INPUT: geo_id 7 is outside the sketch (0..3)
+2026-10-24 14:31:26,176 INFO freecad_buddy.dispatch: INVALID_INPUT: no constraint named 'NoSuchConstraint' in the sketch
+2026-10-24 14:31:37,301 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in edge selector: NoSuchPad
+2026-10-24 14:31:37,317 INFO freecad_buddy.dispatch: INVALID_INPUT: edge selector 'Face1' resolves to a Face, not an Edge
+2026-10-24 14:31:43,353 INFO freecad_buddy.dispatch: INVALID_INPUT: constraints[0].second geo_id -9 names external geometry the sketch has not projected (0 projected)
+2026-10-24 14:31:54,121 INFO freecad_buddy.dispatch: INVALID_INPUT: Distance value unit must be one of ['mm'], got 'deg'
+2026-10-24 14:32:12,412 INFO freecad_buddy.dispatch: INVALID_INPUT: base_feature Box is already adopted by a Body
+2026-10-24 14:32:12,446 INFO freecad_buddy.dispatch: INVALID_INPUT: base_feature LooseSketch carries no shape to adopt
+2026-10-24 14:32:30,852 INFO freecad_buddy.dispatch: INVALID_INPUT: 'diameter' cannot be combined with thread_type='ISOMetricProfile': FreeCAD sizes a threaded hole from its ThreadSize table entry, so the requested diameter is stored but never reaches the geometry. Drop 'diameter', or use thread_type='None' to drill a plain bore.
+2026-10-24 14:32:30,870 INFO freecad_buddy.dispatch: INVALID_INPUT: cut_type 'ISO 4762' is not one of ['None', 'Counterbore', 'Countersink', 'Counterdrill']
+2026-10-24 14:32:30,887 INFO freecad_buddy.dispatch: INVALID_INPUT: thread_type 'ISOMetricFake' is not one of ['None', 'ISOMetricProfile', 'ISOMetricFineProfile', 'UNC', 'UNF', 'UNEF', 'NPT', 'BSP', 'BSW', 'BSF', 'ISOTyre']
+2026-10-24 14:32:37,484 INFO freecad_buddy.dispatch: INVALID_INPUT: dress-up base OtherPad is not in Body PlateBody; name a feature the Body owns (['CornerFillet', 'PlatePad', 'PlateProfile'])
+2026-10-24 14:32:37,495 INFO freecad_buddy.dispatch: INVALID_INPUT: edges[0] names OtherPad, not the dress-up base CornerFillet
+2026-10-24 14:32:37,507 INFO freecad_buddy.dispatch: INVALID_INPUT: edges[1] repeats Edge1
+2026-10-24 14:32:52,126 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in mirror_plane: NoSuchPlane
+2026-10-24 14:32:58,500 INFO freecad_buddy.dispatch: INVALID_INPUT: feature_set_parameters requires a non-empty 'parameters' object
+2026-10-24 14:33:05,020 INFO freecad_buddy.dispatch: INVALID_INPUT: occurrences must be an integer between 2 and 1000, got 5000
+2026-10-24 14:33:18,338 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchObject
+2026-10-24 14:33:25,465 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchObject
+2026-10-24 14:33:32,514 INFO freecad_buddy.dispatch: INVALID_INPUT: sub-element selector requires both element_type and index
+2026-10-24 14:33:32,529 INFO freecad_buddy.dispatch: INVALID_INPUT: selector cannot carry both mapped_name and element_type/index
+2026-10-24 14:33:40,050 INFO freecad_buddy.dispatch: INVALID_INPUT: camera 'custom' requires custom_orientation (a 4-float quaternion)
+2026-10-24 14:33:40,083 INFO freecad_buddy.dispatch: INVALID_INPUT: custom_orientation is degenerate (zero norm): [0, 0, 0, 0]
+2026-10-24 14:33:45,651 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown assertion fn: 'expect_genus'
+2026-10-24 14:34:00,167 INFO freecad_buddy.dispatch: INVALID_INPUT: object is not a sketch: Group
+2026-10-24 14:34:06,267 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:bogus
+2026-10-24 14:34:12,503 INFO freecad_buddy.dispatch: INVALID_INPUT: document has multiple objects; specify 'objects' with the one to export
+2026-10-24 14:34:19,269 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+2026-10-24 14:34:19,281 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+2026-10-24 14:34:19,286 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+2026-10-24 14:34:19,295 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+2026-10-24 14:34:19,303 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: not-a-handle at all
+2026-10-24 14:34:19,398 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:AkRIDYNmPaeZG4pmAxLn6Q
+2026-10-24 14:34:19,406 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:AkRIDYNmPaeZG4pmAxLn6Q
+2026-10-24 14:35:12,162 INFO freecad_buddy.dispatch: INVALID_INPUT: the live viewport is showing 'DocB', not the targeted 'DocA'; call view_fit_viewport with the handle for 'DocB', or open a 3D view for 'DocA'
+2026-10-24 14:35:19,525 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: no-such-handle
+2026-10-24 14:35:19,533 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:HfcdKEOjSXAI0PNgYhG0pA
+2026-10-24 14:35:44,944 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='0' (env), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\runner\\audit-group-1.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+2026-10-24 14:35:44,947 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-24 14:35:44,947 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 14:35:45,312 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:50525
+2026-10-24 14:35:45,627 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: C:\Users\thuan\.local\bin\uv.EXE
+2026-10-24 14:35:45,632 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 35812) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-24 14:35:55,880 INFO freecad_buddy.dispatch: INVALID_INPUT: undo is unavailable on TC0508: the document reports UndoMode 0
+2026-10-24 14:36:03,311 INFO freecad_buddy.dispatch: INVALID_INPUT: expect_fingerprint record: cannot compare fingerprints: serializer tag missing/mismatch (None vs 'exportBinary')
+2026-10-24 14:36:03,320 INFO freecad_buddy.dispatch: INVALID_INPUT: expect_fingerprint serializer None does not match this build's 'exportBinary'; fingerprints with different serializers cannot be compared
+2026-10-24 14:36:30,288 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id has already authorized a mutation; re-run preview_dry_run
+2026-10-24 14:36:36,611 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id was issued for 'feature_pad', not 'feature_pocket'
+2026-10-24 14:36:43,010 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id was issued for different arguments
+2026-10-24 14:36:43,033 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id was issued for different arguments
+2026-10-24 14:36:50,625 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id was issued for a different document
+2026-10-24 14:36:56,969 INFO freecad_buddy.dispatch: INVALID_INPUT: the document has changed since the preview was taken; re-run preview_dry_run
+2026-10-24 14:36:57,160 INFO freecad_buddy.dispatch: INVALID_INPUT: cannot read the state of fcb-doc:2EVRRxUNSveFcH1xfM3PHQ to authorize the mutation: planted: state unreadable
+2026-10-24 14:37:04,389 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id was issued for different arguments
+2026-10-24 14:37:04,475 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id has already authorized a mutation; re-run preview_dry_run
+2026-10-24 14:37:11,381 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is not a preview token
+2026-10-24 14:37:11,395 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is malformed
+2026-10-24 14:37:11,408 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is malformed
+2026-10-24 14:37:11,422 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is malformed
+2026-10-24 14:37:11,443 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id is not decodable
+2026-10-24 14:37:11,456 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id carries an invalid signature
+2026-10-24 14:37:11,470 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id carries an invalid signature
+2026-10-24 14:37:11,484 INFO freecad_buddy.dispatch: INVALID_INPUT: confirm.preview_id carries an invalid signature
+2026-10-24 14:37:36,903 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='0' (env), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\runner\\audit-group-2.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+2026-10-24 14:37:36,904 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-24 14:37:36,904 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-24 14:37:37,182 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:51127
+2026-10-24 14:37:37,495 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: C:\Users\thuan\.local\bin\uv.EXE
+2026-10-24 14:37:37,500 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 31772) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-24 14:52:41,795 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-24-01\\evidence\\f1-audit.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+2026-10-24 14:52:41,795 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-10-24 14:52:41,795 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-10-24 14:52:41,795 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-24 14:52:41,964 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:60740
+2026-10-24 14:52:42,277 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: C:\Users\thuan\.local\bin\uv.EXE
+2026-10-24 14:52:42,282 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 20924) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-24 14:53:25,614 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchPad
+2026-10-24 14:55:12,556 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,572 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,572 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,588 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,588 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,604 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,604 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,619 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,635 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,635 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,651 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle
+2026-10-24 14:55:12,667 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle

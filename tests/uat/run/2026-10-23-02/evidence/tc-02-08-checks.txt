@@ -1,0 +1,21 @@
+TC-02-08 checks (same doc, fcb-doc:D0-cjLUNVeKgwVnRWCCOhw)
+PASS Given: script_exec Body.Placement = (30,20,10) rot Z 30 deg -> OK; query_placement Body local (30,20,10) 30 deg.
+PASS Given: Pad Face6 is the plane face at z=10 (topology oracle); feature_datum DatumPlane on Pad Face6 offset 5 mm -> OK.
+PASS shape: keys exactly object, local, global (Body, Pad, DatumPlane, Origin, Sketch).
+PASS units: position x/y/z are {value, unit:"mm"}; axis {x,y,z} bare floats; angle {value, unit:"deg"}.
+PASS global != local inside the moved Body: Pad local (0,0,0) global (30,20,10); DatumPlane local (0,0,15) global (30,20,25).
+PASS top level global == local: Body local == global field for field.
+PASS composition: Body (30,20,10) rot Z 30 applied to Pad local (0,0,0) = (30,20,10) = Pad global;
+  applied to DatumPlane local (0,0,15) = (30,20,25) = DatumPlane global.
+PASS no placement: Spreadsheet::Sheet NoPlacementSheet (added by script_exec, hasattr Placement False) ->
+  INVALID_INPUT "object has no placement: NoPlacementSheet".
+FAIL visual (prescribed MCP fit): view_fit_viewport -> status OK, fitted true. tc-02-08-after.png: the plate fills the
+  upper right of the view and is cut by the top and right viewport borders; the yellow datum plane runs off the left
+  and bottom. A later query_tree_summary reports "framing: fits, ratio 0.95, computed" for this clipped view.
+  Oracle (script_exec, same doc): measured set is_default_renderable = Sketch, Pad with Body-local boxes
+  Pad (0,0,0)-(60,40,10); Body (not measured) global box (10,20,10)-(81.96,84.64,20). The fit and the framing
+  verdict frame the local box and ignore the Body placement:
+  src/freecad_buddy/usecases/framing.py:91 (model_bounds over is_default_renderable objects) and :99-102 (obj.Shape.BoundBox).
+INFO GUI Fit All fallback (tc-02-08-after-guifit.png, tc-02-08-after-axiscross.png with View > Toggle Axis Cross on):
+  whole rotated plate on the yellow datum plane, clearly away from the world axis cross at the origin; no dialog.
+  The right corner of the plate touches the floating Tasks panel edge. Axis cross turned off again after the capture.

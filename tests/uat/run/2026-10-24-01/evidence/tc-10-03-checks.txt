@@ -1,0 +1,17 @@
+TC-10-03 (R2, GUI launch r2-L2 pid 29004; listener 127.0.0.1:57269; proxy pid 33608, its interpreter child 2852 holds the socket)
+Given: rpc-29004.json readable (tc-10-03-given-discovery.txt); document_open box-10-20-30 OK through the proxy; netstat :57269 shows one
+       ESTABLISHED pair 57296<->57269 owned by 2852 (child of proxy 33608) and FreeCAD 29004 (tc-10-03-given-netstat.txt); Show All;
+       fit OK fits 0.95; tc-10-03-before.png.
+When: discovery file of the running FreeCAD read: "29004 127.0.0.1 57269 <token masked>" - pid field names the FreeCAD pid (W5 fix: the
+      file is chosen by pid, not glob[0]). Token masked in every saved file (tc-10-03-when-discovery.txt; r2_rpc.py writes "<token>";
+      grep of the live token over tc-10-03* finds 0 files). Client B valid hello; client C wrong token; proxy document_list.
+PASS B TCP connect returned at once (0.0 s).
+PASS B first frame {"error": {"code": -32000, "message": "bridge busy: another client session is active"}} 0.219 s after its hello (< 1 s).
+PASS B next recv: zero bytes (closed by peer).
+PASS C first frame {"error": {"code": -32000, "message": "auth failed"}}.
+PASS proxy document_list OK, lists fcb-doc:F2k5....
+PASS addon.log: "refused a second client: a session is active" count 4 (>= 1; this phase's line at 19:51:04,753);
+     "connection handler crashed|handshake crashed" count 0.
+PASS fit OK fits 0.95 (no hang).
+PASS visual: window paints, no Not Responding, no modal, one whole box at the same size and place; r2_diff 0 px. Live check 3086 px.
+Verdict: PASS

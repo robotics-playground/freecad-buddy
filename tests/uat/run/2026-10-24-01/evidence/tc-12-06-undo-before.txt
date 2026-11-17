@@ -1,0 +1,2 @@
+s000002dc:66 Button 'Undo' True {'h': 41, 'w': 56, 'x': 312, 'y': 132} 
+pid=11744 window_id=9046522

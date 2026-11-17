@@ -1,0 +1,17 @@
+TC-03-19 checks (doc tc-03-19-plate fcb-doc:uaGx3LDsDMAQA8dUw4Q_rw; Given built by MCP, tc-03-19-given-mcp.jsonl:
+  PlateProfile 60x40 rectangle, 4 lines, 11 constraints; ScrapProfile two horizontal 30 mm lines at y=60 and y=70, each
+  pinned by its own DistanceX/DistanceY/Horizontal/DistanceX, so removing one keeps dof 0)
+PASS Given: verify_sketch PlateProfile geometry_count 4, malformed []; query_sketch_info ScrapProfile 2 entries.
+PASS Given capture: view_fit_viewport OK, PlateProfile edit mode, p0_cam centre (40,35,0) height 90, tc-03-19-before.png.
+INFO remove ScrapProfile geo 1: OK, committed, ScrapProfile dof 0, 1 geometry, 4 constraints (cascade).
+PASS stale geo_id: INVALID_INPUT "constraints[0].first geo_id 1 is outside the sketch (0..0, or -1/-2 axes)".
+PASS pre-transaction: structured_content {} (no snapshot_path).
+PASS mixed batch refused: INVALID_INPUT "constraints[1].first geo_id 88 is outside the sketch (0..3, or -1/-2 axes)".
+PASS valid constraint did not land: PlateProfile constraints list ids 1..11 unchanged.
+PASS malformed []; verify_sketch PlateProfile OK, dof 0.
+PASS no snapshot left: session tmp empty before and after.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-03-19-before.png vs tc-03-19-after.png (PlateProfile edit mode, same camera): the green rectangle is the
+  same (four joined corners, one horizontal glyph on the bottom edge as before, labels 60 and 40, "Fully constrained");
+  ScrapProfile shows one black line where it showed two (the upper y=70 line is gone, the y=60 line unchanged); no
+  dangling fragment, no dialog. p0_diff: 1587 pixels differ, all in bbox (727,322)-(951,330), the removed line.

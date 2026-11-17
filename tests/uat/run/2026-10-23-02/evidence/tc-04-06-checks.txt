@@ -1,0 +1,17 @@
+TC-04-06 checks (launch tc-04-a pid 29440; doc Shaft fcb-doc:NkNzEX49Snwoz2w1sXxBsg; tc-04-06-mcp.jsonl)
+Given: ShaftBody, ShaftProfile on XZ, rectangle sketch x 0..5, sketch-y 0..20; verify_sketch OK dof 0.
+PASS commit: feature_revolve ShaftRev V_Axis 360 deg status OK, rolled_back false.
+PASS volume: 1570.8 (display rounding; analytic 1570.7963, diff 0.0002 %).
+PASS closed cylinder: shape_summary solid_count 1, face_count 3, is_valid true; bbox x/y -5..5, z 0..20.
+PASS ReferenceAxis ["<Sketcher::SketchObject>", ["V_Axis"]]; query_dependencies out_list ["ShaftProfile"].
+PASS verify_shape OK.
+PASS Edge1 axis -> INVALID_INPUT "axis on the profile sketch must be one of ['H_Axis', 'N_Axis', 'V_Axis'], got 'Edge1'".
+PASS 400 deg -> INVALID_INPUT "angle must be in (0.0, 360.0] degrees, got 400.0"; no structured_content, no snapshot_path.
+PASS second_angle -> INVALID_INPUT "second_angle is only read when up_to='TwoAngles'; got up_to=None".
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-06-after.png (windows: main only). One upright closed cylinder in the centre of the 3D view, whole, no dialog:
+  full elliptical top cap and round bottom rim, no wedge gap and no open side. Side height 440 px vs width 270 px = 1.63, the
+  isometric value for a height of twice the diameter (20/10 x cos 35 deg = 1.63). One vertical seam line on the side. The radial line on the top cap
+  is not a solid edge: the ShaftRev edge oracle (tc-04-17-mcp.jsonl, same build) lists only Edge1/Edge2 circles and the Edge3
+  seam; it is the top edge of the ShaftProfile sketch, which stays shown after feature_revolve (see the sketch-visibility finding).
+Cleanup: document_close.

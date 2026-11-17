@@ -1,0 +1,17 @@
+CHECK status/verdict: ["OK", "OK"]
+CHECK check ids: ["export_step.volume", "export_step.valid", "export_step.topology_counts", "export_step.schema"]
+CHECK schema: {"id": "export_step.schema", "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF", "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF", "tolerance": null, "passed": true, "detail": {"message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"}}
+CHECK volume: {"id": "export_step.volume", "measured": 15214.6, "expected": 15214.6, "tolerance": {"rel": 0.001}, "passed": true, "detail": {"message": "|15214.6 - 15214.6| = 0.0 <= 15.2146"}}
+CHECK volume within 0.1% of 15214.6018: true
+CHECK valid: {"id": "export_step.valid", "measured": true, "expected": true, "tolerance": null, "passed": true, "detail": {"message": "isValid() True"}}
+CHECK topology: {"id": "export_step.topology_counts", "measured": {"faces": 7, "edges": 15, "solids": 1}, "expected": {"faces": 7, "edges": 15, "solids": 1}, "tolerance": null, "passed": true, "detail": {"message": "faces 7 vs 7, edges 15 vs 15, solids 1 vs 1"}}
+CHECK subject: [{"export_id": "fcb-export:0EG-kOkiMvZT2ecghv3F8A", "path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-07-rt.step"}, "fcb-export:0EG-kOkiMvZT2ecghv3F8A", "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-07-07-rt.step"]
+CHECK FCB_TMP names: []
+CHECK all docs: [["fcb-doc:nEyq0zvz5UVWa4FJh439xg", "box40_hole_r5"]]
+CHECK reimport volume: ["OK", {"value": 15214.6, "unit": "mm^3"}]
+H_RT fcb-doc:f8qyPAHa52i9nSvwDbUHow
+CHECK reimport within 0.1% of 15214.6018: [15214.6, true]
+Given: rm stale; document_open box40-hole-r5 OK -> fcb-doc:nEyq0zvz..., OBJ=BoxHole
+Visual: view_fit_viewport(H_RT) OK fitted true. tc-07-07-after.png (iso): tab tc-07-07_rt, one box with one round opening on the top face, bore wall visible.
+Note: a camera set by p3_cam followed by view_fit_viewport came back to the iso direction (the fit resets the view direction); so the see-through view was taken with p3_cam AFTER the fit, no fit after it.
+tc-07-07-after-top.png (supplementary, camera only): top view, square with one round hole that shows the white background through it -> the opening goes through.

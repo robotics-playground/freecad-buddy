@@ -1,0 +1,16 @@
+TC-10-08 checks (P8) - same H1 session as TC-10-07; FreeCAD 11736 for the GUI capture
+Given TC-10-07's last query_tree_summary returned OK; D suspect from TC-10-07
+Given tc-10-08-before.png (no fit) read: one whole iso box, same scene as tc-10-07-after (0 px diff)
+When script_exec on D writing tc-10-08-D.marker -> envelope read; then the same on E writing tc-10-08-E.marker
+Then status INVALID_INPUT -> PASS
+Then message starts "document-suspect: a prior call timed out on this document and its body may " -> PASS
+Then message contains "run a query_* read to confirm the document still responds " -> PASS
+Then ls tc-10-08-D.marker -> No such file; tc-10-07-server.stderr.log gained 0 bytes during the D call -> PASS
+Then grep '"verify_verdict": "INVALID_INPUT"' tc-10-07-audit.jsonl -> 1 line, tool script_exec, doc D -> PASS
+Then E call -> OK, tc-10-08-E.marker existed -> PASS (during TC-10-07 a call on E was refused by the quarantine: TIMEOUT "not dispatched: the session is quarantined ...")
+Then grep -c document-suspect gui_external/entry.py -> 0; rpc_listener.py:422 "document-suspect: a prior call timed out on this document; " (own wording) -> PASS (tc-10-08-greps.txt)
+Then (visual) no fit -> PASS
+Then (visual) tc-10-08-after.png read: window paints, no Not Responding, no modal, same scene as before (0 px diff) -> PASS
+Cleanup tc-10-08-E.marker removed (my own file in the run folder)
+Verdict: PASS
+Human: pointer inside the window at 23:24:35 (719,607), right after the before capture.

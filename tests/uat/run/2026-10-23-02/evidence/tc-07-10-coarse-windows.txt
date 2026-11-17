@@ -1,0 +1,1 @@
+858078	* tc-07-10_coarse - FreeCAD 1.1.4	{'height': 1000, 'width': 1600, 'x': 0, 'y': 0}

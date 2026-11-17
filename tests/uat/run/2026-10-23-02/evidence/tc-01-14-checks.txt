@@ -1,0 +1,25 @@
+TC-01-14 checks (P1)
+Given launch tc-01-14: FreeCAD 28980, window 4921406; query_capabilities OK; rpc-28980.json port 62907 (copy with token kept in the session scratchpad); :8765 LISTENING 17320, spawn line pid 20944
+Given document_open box, Show All, Fit All toolbar click (route accessibility); tc-01-14-before.png read
+When kill_app {pid: 28980} -> refused "foreign_process_termination_denied" (19:22:55); Stop-Process -Id 28980 -Force at 19:23:00.8 (tc-01-14-kill.txt)
+When TCP connect to 127.0.0.1:62907 (no frame sent) -> "refused: ConnectionRefusedError", "elapsed 2.03"
+When MCP query_capabilities through :8765 -> httpx.ConnectError "All connection attempts failed"
+Then tasklist 28980 -> nothing -> PASS
+Then RPC port refused, never "connected" -> PASS
+Then elapsed 2.03 < 5 s -> PASS
+Then proxy 20944/17320 gone and no LISTENING on :8765 at 19:23:05.9 (within 5 s) -> PASS; proxy log line at 19:23:01,465
+Then grep -c "FreeCAD pid 28980 has exited; the MCP proxy exits and frees port 8765" mcp-proxy.log = 1 (tc-01-14-mcp-proxy.log) -> PASS
+Then rpc-28980.json still exists (stale) -> PASS (observed state)
+Then relaunch (tc-01-14r, pid 22308): rpc-22308.json written, :8765 LISTENING 6060 -> PASS
+Then /healthz http=200 {"service":"freecad-buddy-mcp-proxy","freecad_pid":22308,...}; LISTENING pid 6060 != 17320; no "MCP proxy not started" line -> PASS
+Then new token differs from the killed session token -> PASS; old token no longer authenticates (rpc_hello) -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+Then (visual) relaunched FreeCAD: document_open box, Show All, view_fit_viewport OK -> PASS
+Then (visual) tc-01-14-before.png and tc-01-14-after.png read; get_window_state on killed pid 28980 / window 4921406 -> "No window with window_id 4921406 exists", no file -> PASS
+No Document Recovery dialog at the relaunch.
+Cleanup: document_close was done in TC-01-15 (same session); rpc-28980.json kept as the dead-pid input for TC-01-11.
+--- socket step, approved by the lead; the earlier plain connect is recorded in tc-01-14-rpc.jsonl
+When rpc_hello with the killed session's token (rpc-28980.json) and contract "1" to the listener of FreeCAD 29952, proxy stopped (tc-01-14-rpc.jsonl):
+  reply {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}}, then the socket closed
+Then old token no longer authenticates -> PASS
+Then (visual) after the proxy restart tc-01-04-after2.png read: one whole box, no dialog
+Verdict now: PASS

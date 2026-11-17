@@ -1,0 +1,9 @@
+TC-09-02 checks (raw output in tc-09-02-when.txt)
+T1 closed set seven: status.py:11-19 TerminalStatus = OK, SPEC_FAILED, RECOMPUTE_ERROR, TIMEOUT, OOM_KILLED, WORKER_CRASHED, INVALID_INPUT -> PASS
+T2 observed statuses ['INVALID_INPUT', 'NO_STATUS', 'OK', 'SCHEMA_ERROR'] -> NO_STATUS is outside the seven and is not SCHEMA_ERROR -> FAIL
+   NO_STATUS is the stale sweep's marker for a result with no structuredContent (run_mcp_e2e.py _status); see tc-09-01.
+T3 near-miss grep: no match (grep exit 1) -> PASS
+T4 check_status_vocab.py: "check_status_vocab OK", exit 0 -> PASS
+T5 OOM_KILLED only declared at status.py:16, never emitted -> PASS
+T6 WORKER_CRASHED: headless/entry.py:69-77 (quarantine past 2x budget) and :104-110 (worker exited); rpc_client.py:72-73 (H2); rpc_dispatch.py names it only in the comment at :87 -> PASS
+T7 MethodRegistry._invoke rpc_dispatch.py:138-157: ValidationError/TypeError/ValueError/KeyError -> INVALID_INPUT, MarshalTimeout -> TIMEOUT, final except Exception at :156 -> RECOMPUTE_ERROR -> PASS

@@ -1,0 +1,2 @@
+{"elapsed_ms": 3383, "predicates": [{"index": 0, "observed_json": "{\"element_index\":129,\"enabled\":true,\"frame\":{\"h\":22,\"w\":310,\"x\":16,\"y\":232},\"label\":\"box40-hole-r5\",\"role\":\"TreeItem\",\"selected\":false}", "status": "satisfied", "unknown_reason": null}], "samples": 2, "stable": true, "status": "satisfied"}
+pid=29208 window_id=6362520

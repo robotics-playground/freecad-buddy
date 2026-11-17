@@ -1,0 +1,48 @@
+== [when unknown] feature_set_parameters {"feature": "BlockPad", "parameters": {"Thickness": {"value": 3, "unit": "mm"}}}
+   status=INVALID_INPUT message=BlockPad has no property named 'Thickness'
+   {}
+   detail.data={"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy
+== [when read-only Shape] feature_set_parameters {"feature": "BlockPad", "parameters": {"Shape": 1}}
+   status=INVALID_INPUT message=BlockPad.Shape is a Part::PropertyPartShape, which feature_set_parameters cannot write
+   {}
+   detail.data={"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy
+== [when wrong unit] feature_set_parameters {"feature": "BlockPad", "parameters": {"Length": {"value": 25, "unit": "deg"}}}
+   status=INVALID_INPUT message=Length value unit must be one of ['mm'], got 'deg'
+   {}
+   detail.data={"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy
+== [when list value] feature_set_parameters {"feature": "BlockPad", "parameters": {"Length": [25]}}
+   status=INVALID_INPUT message=BlockPad.Length is a App::PropertyLength and takes a {value, unit} quantity or a number, got [25]
+   {}
+   detail.data={"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy
+== [then snaps] script_exec {"code": "import os, glob; root = os.path.join(os.environ.get('FREECAD_BUDDY_WORKDIR') or os.path.join(FreeCAD.getUserAppDataDir(), 'freecad-buddy', 'workdir'), 'tmp'); result = sorted(os.path.relpath(p, root) for p in glob.glob(os.path.join(root, 'FCB_TMP_ses
+   status=OK message=None
+   {"doc": "fcb-doc:TlRda_scZ1AoMyrj9LxrZw", "stdout": "", "value_repr": "[]", "fingerprint_after": null}
+== [then volume] query_mass_properties {"object": "BlockPad"}
+   status=OK message=None
+   {"name": "BlockPad", "solid": true, "volume": {"value": 6000.0, "unit": "mm^3"}, "area": {"value": 2200.0, "unit": "mm^2"}, "bbox": {"xmin": {"value": 0.0, "unit": "mm"}, "xmax": {"value": 20.0, "unit": "mm"}, "ymin": {"value": 0.0, "unit": "mm"}, "ymax": {"value": 30.0, "unit": "mm"}, "zmin": {"value": 0.0, "unit": "mm"}, "zmax": {"value": 10.0, "unit": "mm"}}, "com": {"x": {"value": 10.0, "unit": "mm"}, "y": {"value": 15.0, "unit": "mm"}, "z": {"value": 5.0, "unit": "mm"}}, "counts": {"faces": 6, "edges": 12, "vertices": 8, "solids": 1}}
+== [then batch] feature_set_parameters {"feature": "BlockPad", "parameters": {"Length": {"value": 12, "unit": "mm"}, "Thickness": 3}}
+   status=INVALID_INPUT message=BlockPad has no property named 'Thickness'
+   {}
+   detail.data={"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy
+== [then Length] query_object {"object": "BlockPad"}
+   status=OK message=None
+   {"name": "BlockPad", "label": "BlockPad", "type": "PartDesign::Pad", "properties": {"AddSubShape": "<Solid object at 000001D69CB494F0>", "AllowMultiFace": true, "AlongSketchNormal": true, "BaseFeature": null, "Direction": "Vector (0.0, 0.0, 1.0)", "ExpressionEngine": [], "FuzzyTolerance": -1.0, "Label": "BlockPad", "Label2": "", "Length": "10.0 mm", "Length2": "10.0 mm", "Midplane": false, "Offset": "0.0 mm", "Offset2": "0.0 mm", "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]", "PreviewShape": "<Shape object at 000001D69CB490D0>", "Profile": ["<Sketcher::SketchObject>", []], "ReferenceAxis": null, "Refine": true, "Reversed": false, "Shape": "<Solid object at 000001D69CB49860>", "ShapeMaterial": "<Material at 000001D69D42C190>", "SideType": "One side", "Suppressed": false, "SuppressedShape": "<Shape object at 000001D69CB490D0>", "TaperAngle": "0.0 deg", "TaperAngle2": "0.0 
+== [create] document_create {"label": "ReadOnlyShaft"}
+   status=OK message=None
+   {"doc": "fcb-doc:xWlH0rrOByRdVqMWcEr2pg", "name": "ReadOnlyShaft", "label": "ReadOnlyShaft"}
+== [given body] feature_body_create -> OK
+== [given ShaftProfile] sketch_create -> OK
+== [given ShaftProfile geometry] sketch_add_geometry -> OK
+== [given dof] verify_sketch {"sketch": "ShaftProfile"}
+   status=OK message=None
+   {"subject": {"sketch": "ShaftProfile", "dof": 0, "fully_constrained": true, "geometry_count": 4, "constraint_count": 11, "conflicting": [], "malformed": [], "redundant": [], "partially_redundant": [], "solver_status_code": 0}, "checks": [{"id": "sketch.fully_constrained", "measured": true, "expected": true, "passed": true, "detail": {"message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"}}], "warnings": [], "schema": "fcb.validation-report/1", "banner": {"freecad_version": "1.1.4", "element_map_version": 15}, "verdict": "OK"}
+== [given revolve] feature_revolve {"body": "ShaftBody", "profile": "ShaftProfile", "name": "ShaftRev", "axis": {"kind": "mapped_name", "object": "ShaftProfile", "mapped_name": "V_Axis"}, "angle": {"value": 360, "unit": "deg"}}
+   status=OK message=None
+   {"rolled_back": false, "rollback": null, "snapshot_path": null, "fingerprint_equal": false, "post_verify": {"recompute_clean": true, "is_valid": true, "fully_constrained": true, "passed": true, "explanation": null}, "tnp": "CLEAN", "feature_state": {"schema": "fcb.feature-state/1", "feature": "ShaftRev", "readable": true, "body": "ShaftBody", "is_tip": true, "shape_summary": {"solid_count": 1, "face_count": 3, "edge_count": 3, "vertex_count": 2, "is_valid": true, "volume": 1570.8, "area": 785.4, "bbox": [10.0, 10.0, 20.0]}}, "other": {"feature": "ShaftRev"}}
+== [then revolution Base] feature_set_parameters {"feature": "ShaftRev", "parameters": {"Base": {"value": 1, "unit": "mm"}}}
+   status=INVALID_INPUT message=ShaftRev.Base is read-only
+   {}
+   detail.data={"exception": "ValidationError", "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy\\adapters\\rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\Mod\\FreeCADBuddy\\.\\freecad_buddy
+== [then Base cleanup] document_close {}
+   status=OK message=None
+   {"doc": "fcb-doc:xWlH0rrOByRdVqMWcEr2pg", "name": "ReadOnlyShaft", "closed": true}

@@ -1,0 +1,24 @@
+TC-08-21 (launch P5 tc-08-a, pid 30488, AUTO_APPROVE=0)
+Given: document_create UndoProbe -> fcb-doc:6l2a... . view_fit_viewport -> SPEC_FAILED "no visible object to frame; datum planes are
+       infinite and are not measured" (empty document), so the GUI Fit All toolbar fallback was used; tc-08-21-before.png.
+PASS  empty stack: INVALID_INPUT "nothing to undo on UndoProbe: the undo stack is empty".
+PASS  first real undo (after preview+confirm feature_body_create Body): status OK, undone 'buddy: create body Body'.
+PASS  past the bottom: the same empty-stack refusal.
+PASS  no fabricated result: both refusals have structured_content {} (no matches_pre_op, fingerprint_after, undone).
+PASS  UndoMode 0 (planted on UndoOff by the test case's script_exec patch): INVALID_INPUT "undo is unavailable on UndoOff: the
+      document reports UndoMode 0"; restore script_exec OK.
+PASS  open transaction: on a third document TxnProbe (Body/Sketch/Pad 30), the Pad was double-clicked in the model tree (cua-driver),
+      which opened the Pad Parameters task dialog and its GUI transaction (tc-08-21-txn-edit.png). document_undo ->
+      INVALID_INPUT "TxnProbe has an open transaction; undo would commit it and revert the transaction beneath it. Commit or abort it first."
+      Then Cancel (toolbar token) closed the dialog: HasPendingTransaction False, Pad Length 30.0.
+PASS  broken undo: Box added and broken by script_exec around a typed feature_body_create Probe; document_undo ->
+      status RECOMPUTE_ERROR, detail.objects ['Box'], errors [{'name':'Box','error':['Touched','Invalid']}].
+PASS  undo_count 0 after the successful undo on UndoProbe.
+PASS  fit: GUI Fit All fallback (view_fit_viewport SPEC_FAILED on the empty document, as above).
+PASS  visual: before: tree 'UndoProbe' with no child, empty viewport, no dialog. after (taken after the two undos, UndoProbe active):
+      tree 'UndoProbe' with no child, no Body in tree or viewport, no dialog. p0_diff 4,970 pixels differ (bbox 33,10-789,943):
+      title gains '*', Redo button enabled, tab label 'UndoProbe : 1*' - traces of the create + undo, not of a Body.
+Notes: a transient untitled 'FreeCAD' top-level window (1000x573) was listed for under 2 s after Cancel (harness limit e).
+       The status bar notification badge shows '1' from the planted broken Box (expected error).
+Verdict: PASS.
+Note: my state probe script_exec in the open-transaction leg failed (AttributeError: 'App.Document' object has no attribute 'getAvailableUndoNames'); it read nothing and changed nothing; the Then rests on the document_undo refusal and the tc-08-21-txn-edit.png capture.

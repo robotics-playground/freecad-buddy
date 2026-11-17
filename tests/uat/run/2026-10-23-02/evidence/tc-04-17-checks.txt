@@ -1,0 +1,21 @@
+TC-04-17 checks (launch tc-04-a pid 29440; doc SeamFillet fcb-doc:gK32K_IgUGWRjNjyfqpCkw; tc-04-17-mcp.jsonl)
+Given: ShaftRev (as TC-04-06), volume 1570.8. Oracle ShaftRev edges: Edge1 circle z 0, Edge2 circle z 20, Edge3 straight 20 mm
+  seam at x 5, as in the test case. <session tmp> FCB_TMP_session_29440_7e8e8e42: no FCB_TMP_snap_* entry.
+  Before: view_fit_viewport OK, tc-04-17-before.png.
+PASS refused: DropFillet Edge3 -> INVALID_INPUT "1 of 1 requested edge(s) on ShaftRev cannot be shown to survive the
+  dress-up: ['Edge3']; each needs exactly two adjacent faces meeting at a measurable crease, and FreeCAD drops the rest
+  without reporting it".
+PASS reason stated: the same message carries "each needs exactly two adjacent faces meeting at a measurable crease, and
+  FreeCAD drops the rest without reporting it".
+PASS pre-transaction: no structured_content on either refusal (no mutation.snapshot_path); session folder lists no
+  FCB_TMP_snap_* after both steps.
+PASS mixed refused whole: MixedFillet [Edge1, Edge3] -> INVALID_INPUT "1 of 2 requested edge(s) ... ['Edge3'] ...".
+PASS nothing created: query_tree_summary depth 3 lists ShaftRev (tip) and ShaftProfile only.
+PASS base untouched: ShaftRev volume 1570.8 before and after.
+NOT RUN (conditional): "dressed N of the M requested edge(s)" - no input is known that passes the up-front edge check and
+  then dresses fewer edges; none was found. Recorded as NOT RUN, as the Then directs.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-17-before.png and tc-04-17-after.png: one whole upright cylinder, sharp top and bottom rims (no rounded
+  rim, including the bottom circle Edge1), straight vertical seam line, no dialog. p0_diff.py: 20 of 1535072 pixels
+  differ, all at the Tasks panel corner (1565-1567, 405-424); the solid is pixel-identical.
+Cleanup: document_close.

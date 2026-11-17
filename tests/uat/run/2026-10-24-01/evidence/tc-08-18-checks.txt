@@ -1,0 +1,20 @@
+TC-08-18 (R2, GUI launch r2-L1-tc08 pid 29140; four H1 starts via r2_h1.py 19:27:14-19:27:23 +07, see launch-log.tsv)
+Given: H1 env FCB_ENV (h1-env.txt: 'import FreeCAD, mcp' ok, FreeCAD 1.1.4), FREECAD_USER_HOME temp per run.
+       Saved fixture evidence/tc-08-18-fixture.FCStd: Body + fully constrained 20x20 Sketch (built in the GUI with preview+confirm, saved, closed).
+       GUI: document_open box-10-20-30 OK (fcb-doc:BGXs...), Show All, view_fit_viewport OK fits 0.95, tc-08-18-before.png.
+When: each H1 run opens the fixture and calls feature_pad Pad 30 without confirm; the unset run then repeats it with
+      confirm.preview_id 'fcb-preview:forged.AAAA'. Audit: unset -> tc-08-18-approve.jsonl; others -> tc-08-18-<eq1|eq0|true>-audit.jsonl.
+PASS unset approves: status OK "Mutation committed", no confirm sent.
+PASS forged token on the unset host: INVALID_INPUT "confirm.preview_id carries an invalid signature".
+PASS =1 approves: OK, no confirm.
+PASS =0: "this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id".
+PASS =true: same refusal.
+PASS startup line: the full "SECURITY: mutation auto-approve ENABLED (to require preview_id, ...FREECAD_BUDDY_AUTO_APPROVE=0)" line is
+     in tc-08-18-unset-h1.stderr.log (1) and tc-08-18-eq1-h1.stderr.log (1); 0 in eq0 and true.
+PASS audited: grep '"mode": *"auto_approve"' tc-08-18-approve.jsonl -> 1 line, tool feature_pad, doc handle fcb-doc:IRix..., source FREECAD_BUDDY_AUTO_APPROVE.
+PASS no token: args_digest 6f69c5d2... present; 0 occurrences of preview_id in the file.
+PASS forged call wrote no approval line: exactly 1 "event": "approval" line in the 7-line file.
+PASS fit OK fits 0.95.
+PASS visual: before and after show the same grey box-10-20-30 in iso, tree box-10-20-30 > Box, no dialog, badge blank; r2_diff 0 px. Live check 3086 px.
+Kept (cleanup rm not run): tc-08-18-approve.jsonl as run evidence.
+Verdict: PASS

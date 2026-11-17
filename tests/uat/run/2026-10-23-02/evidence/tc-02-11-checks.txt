@@ -1,0 +1,14 @@
+TC-02-11 checks (same doc, fcb-doc:D0-cjLUNVeKgwVnRWCCOhw)
+PASS Given: depth 2 shows "|-- - [ORIGIN] Origin (+7)" and "`-- v [PAD] Pad (+1) *tip".
+PASS Given fit: GUI Fit All toolbar button by element_token (route accessibility), then tc-02-11-before.png.
+PASS depth 1: OK, "OK: 11 objects, 1 shown." top-level line only "v [BODY] Body (+2)".
+PASS omitted depth = depth 1 text (same tree line; framing line identical "cached").
+PASS depth 0: is_error, "Input validation error: 0 is less than the minimum of 1".
+PASS depth -1: is_error, "Input validation error: -1 is less than the minimum of 1".
+PASS max_nodes 0: is_error, "Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)".
+PASS depth 2 + max_nodes 5: same rejection.
+PASS schema (tc-02-11-schema.json, tools/list count 46): additionalProperties false, properties exactly
+  depth, doc, expand, filters, focus; depth minimum 1.
+PASS valid call after the rejections: depth 2 returns "OK: 11 objects, 3 shown.".
+PASS visual: GUI Fit All again, tc-02-11-after.png. Both images read: same plate, same size and position, Pad selected,
+  tree Body > Origin, Pad > Sketch, no dialog, no document added or closed. p0_diff: 0 of 1535072 pixels differ.

@@ -1,0 +1,14 @@
+TC-10-02 checks (P8) - FreeCAD 11736 (launch tc-10-a), H1 interpreter of h1-setup.txt
+Given ls benchmarks/g0/golden-models/*.FCStd | wc -l -> 5 (>= 5) -> PASS
+Given GUI document_open box OK fcb-doc:ErgkYlRB...; Show All; view_fit_viewport OK; tc-10-02-before.png read: one whole iso box, no dialog
+When sweep as written -> exit 2, fcb env missing (tc-10-02-sweep-as-written.txt); via p7_sweep.py -> 4/9, exit 1 (tc-10-02-sweep.txt, p8-sweep-tc-10-02/) -> tc-10-02-e2e_report.json. Finding (no Then reads it): the 5 tree_summary checks are NO_STATUS (run_mcp_e2e.py:57-58; same harness defect as TC-10-01).
+When p8_h1.py latency: one H1 connection, 5 golden models, 60 calls timed entry to return -> tc-10-02-latency.json, tc-10-02-h1.jsonl; tool timeouts from tool_catalog.tool_specs() -> tc-10-02-timeouts.json
+Then median command -> "40 0.009": median 0.009 s <= 15.0 -> PASS
+Then samples 40 >= 8 -> PASS
+Then grep -c '"status": "TIMEOUT"' -> tc-10-02-latency.json:0, tc-10-02-e2e_report.json:0 -> PASS
+Then query_screenshot 5 entries, all OK, 0.014-0.042 s < 60 -> PASS (render.available false, reason "offscreen probe render failed: No module named 'pivy'"; status OK)
+Then no call at or over its timeout_s (max per tool: document_open 0.04 s vs 60, query_screenshot 0.042 vs 60, verify_recompute 0.009 vs 120) -> PASS
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-10-02-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal, one whole iso box framed; 0 pixels differ from before -> PASS
+Cleanup document_close OK
+Verdict: PASS

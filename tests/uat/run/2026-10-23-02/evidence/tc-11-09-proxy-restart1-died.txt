@@ -1,0 +1,2 @@
+restarted: D:\Work\Personal\Sources\freecad-buddy\.venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http (launcher pid 23176) with FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-23-02\evidence\tc-11-b-audit.jsonl FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir
+healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":35504,"session_id":"8d027d5366035148"}

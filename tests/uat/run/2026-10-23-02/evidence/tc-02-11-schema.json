@@ -1,0 +1,49 @@
+tools/list count 46
+{
+ "type": "object",
+ "properties": {
+  "doc": {
+   "type": "string",
+   "description": "opaque fcb-doc handle"
+  },
+  "focus": {
+   "type": "string",
+   "description": "object Name; show only its subtree under a 'path:' line"
+  },
+  "expand": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "description": "object Names to open one level; their ancestors open only along the path"
+  },
+  "depth": {
+   "type": "integer",
+   "default": 1,
+   "minimum": 1,
+   "description": "levels open below the start. With focus the start is that object (depth 1 = it and its children); without focus the start is the document (depth 1 = top level, collapsed). Ignored when filters are given"
+  },
+  "filters": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "reveal matches inside the start subtree on their paths, in place of depth; both given = a match passes both",
+   "properties": {
+    "types": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "tree codes in any case (PAD), or TypeIds matched exactly. A code is not unique (Part::Plane and App::Plane are both PLANE); give the TypeId to select one"
+    },
+    "name_pattern": {
+     "type": "string",
+     "description": "regex searched over 'Name Label'"
+    }
+   }
+  }
+ },
+ "required": [
+  "doc"
+ ],
+ "additionalProperties": false
+}

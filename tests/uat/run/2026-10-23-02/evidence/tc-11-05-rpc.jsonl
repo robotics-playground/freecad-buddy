@@ -1,0 +1,4 @@
+{"client": "L", "connect": "connected", "elapsed": 0.016, "record": "rpc-17944.json", "port": 49942}
+{"client": "L", "sent": "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"rpc_hello\", \"params\": {\"token\": \"<token>\", \"contract_version\": \"1\"}}", "bytes": 144, "newline": true, "elapsed": 0.016}
+{"client": "L", "recv": {"jsonrpc": "2.0", "id": 1, "result": {"contract_version": "1", "freecad_version": "1.1.4", "capabilities": {"gui": true, "qt_loop": true, "exec_enabled": true}}}, "elapsed": 0.016, "since_last_send_s": 0.0}
+{"client": "L", "closed_by_client": true, "elapsed": 0.016}

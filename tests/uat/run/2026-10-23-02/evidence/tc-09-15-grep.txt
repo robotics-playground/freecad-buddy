@@ -1,0 +1,5 @@
+grep:
+src/freecad_buddy/adapters/mcp_server.py:259:            envelope = _invalid_input_envelope("doc handle must be a string")
+src/freecad_buddy/adapters/rpc_listener.py:418:            return _invalid_input("doc handle must be a string")
+usecases:
+(exit 1)

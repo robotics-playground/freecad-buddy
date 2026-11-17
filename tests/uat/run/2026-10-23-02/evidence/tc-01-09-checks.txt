@@ -1,0 +1,19 @@
+TC-01-09 checks (P1) - FreeCAD 27956
+When rpc-27956.json read -> tc-01-09-discovery.json (token redacted to length and sha256 prefix)
+Then path %APPDATA%\FreeCAD\v1-1\freecad-buddy\rpc-27956.json; %APPDATA%\FreeCAD\Mod\ is empty -> PASS
+Then keys exactly schema, pid, host, port, token, contract_version, freecad_version, started -> PASS
+Then pid 27956 = list_windows pid; tasklist shows freecad.exe 27956 -> PASS
+Then host 127.0.0.1, port 61484, netstat "127.0.0.1:61484 LISTENING 27956" -> PASS
+Then contract_version "1" -> PASS
+Then freecad_version 1.1.4 = query_capabilities -> PASS
+Then token authenticates (rpc_hello with the proxy stopped) -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+Then mode: ls -l "-rw-r--r--", Attributes Archive, ACL SYSTEM/Administrators/thuan FullControl (Windows: recorded, not failed per the Then)
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) get_window_state on pid 27956 (from the discovery file) -> tc-01-09-after.png read -> PASS
+Cleanup (proxy restart) not needed: the proxy was not stopped.
+--- socket step, approved by the lead; FreeCAD 29952, proxy stopped (see tc-01-04-checks.txt)
+When rpc_hello with the record's token and contract_version "1" (tc-01-09-rpc.jsonl) -> result with capabilities {"gui": true, "qt_loop": true, "exec_enabled": true}
+Then token authenticates -> PASS
+Cleanup: proxy restarted by hand with the operator-settings values; query_capabilities OK
+Then (visual) tc-01-04-after2.png (pid 29952 = discovery-file pid) read -> PASS
+Verdict now: PASS

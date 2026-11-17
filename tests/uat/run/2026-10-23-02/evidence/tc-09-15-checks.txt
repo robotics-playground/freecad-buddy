@@ -1,0 +1,8 @@
+{"tools_list_count": 46, "script_exec": true}
+{"mcp": "verify_recompute", "args": {"doc": {"handle": "fcb-doc:x"}}, "is_error": true, "structured_content_is_null": true, "result": {"text": "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'", "is_error": true}}
+{"tools_list_after_count": 46}
+== [when H2] verify_recompute {}
+   isError=True {"text": "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'", "is_error": true}
+CHECK H2: [true, "Input validation error: {'handle': 'fcb-doc:x'} is not of type 'string'"]
+tools/list answered: 46 tools, script_exec listed: True
+2026-10-23T22:26 physical mouse pointer seen over the FreeCAD 3D view (status bar Preselected: ... in tc-09-14-before, tc-09-15-before, tc-09-15-after; green preselection of Face2 in tc-09-15-after); cursor at (2046,175) at 22:26:51, outside the window. Possible human intervention (mouse movement), no window move or minimize.

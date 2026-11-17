@@ -1,0 +1,16 @@
+TC-10-13 checks (P8) - FreeCAD 11736 (launch tc-10-a); listener 127.0.0.1:49721
+Given rpc-11736.json exists; a TCP connect to 49721 succeeds (connect only, closed at once) -> PASS (tc-10-13-given.txt)
+Given (before the proxy stop) GUI document_open box OK fcb-doc:wRWiYwtv...; Show All; view_fit_viewport OK; tc-10-13-before.png read: one whole iso box, no dialog
+Given proxy stopped: Stop-Process 29312 (hand-started proxy of TC-10-06, launcher 21064); netstat :49721 ESTABLISHED -> nothing -> PASS
+When A: rpc_hello OK, then a document_list request with no trailing newline, socket closed at once; addon.log read from the byte offset (tc-10-13-addonlog-since.txt); B: connect, rpc_hello, document_list (p8_rpc.py s13, tc-10-13-rpc.jsonl)
+Then grep "WARNING.*frame read failed; closing connection: connection closed mid-frame" addon.log (whole file, as written) -> one line, 23:48:15,383; no Traceback follows it -> PASS
+Then B's connect succeeds -> PASS
+Then B handshake result contract_version "1" -> PASS
+Then B document_list status OK -> PASS
+Then no document-suspect in the log slice of this scenario -> PASS
+Then GUI answers a menu query: get_window_state at 23:48:24 lists MenuItem 'Edit' enabled with invoke/expand actions (tc-10-13-menu-query.txt) -> PASS
+Then (visual) Show All; mcp view_fit_viewport -> httpx.ConnectError (proxy stopped), so the Fit All toolbar button by element_token (route accessibility) -> PASS
+Then (visual) tc-10-13-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal or error popup, one whole iso box framed -> PASS
+Cleanup proxy restarted by hand with the operator-settings values (launcher 34740); /healthz freecad_pid 11736; query_capabilities OK; GUI document_close OK
+Verdict: PASS
+Human: pointer inside the window at 23:48:00 (1264,800) and 23:49:44 (1592,746), after the captures.

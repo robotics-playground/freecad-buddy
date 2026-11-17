@@ -1,0 +1,16 @@
+DOC fcb-doc:gRbawAQjI5RHlDreGzPXTA
+CHECK facets coarse/fine: [218, 10174, true]
+CHECK verify statuses: ["OK", "OK"]
+CHECK bands coarse/fine/ratio: [418.88, 8.38, 49.98568019093078, 418.88, 8.3776]
+CHECK fine trimesh_stl.volume_band: {"id": "trimesh_stl.volume_band", "measured": 4182.76, "expected": 4188.79, "tolerance": {"abs": 8.377580409572781}, "passed": true}
+CHECK coarse trimesh_stl.volume_band: {"id": "trimesh_stl.volume_band", "measured": 3942.88, "expected": 4188.79, "tolerance": {"abs": 418.87902047863906}, "passed": true}
+CHECK coarse measured < 4188.7902 and passed: [true, true]
+CHECK floor: ["INVALID_INPUT", "deflection out of range: finite linear>=0.0001 and finite angular>0 required, got linear=1e-05, angular=0.5", false]
+218 10174
+COARSE fcb-doc:GBpeFUPn5PEw9MHp9mOPmg
+FINE fcb-doc:0cEre0d-_7Gjw2nrGkybig
+(last numeric line: trimesh faces coarse, fine = 218 10174: smaller then larger)
+Given: rm stale; document_open sphere-r10 OK, OBJ=Sphere
+Note: reported bands 418.88 / 8.38 (2 decimals) -> ratio 49.99; the check tolerances 418.879 / 8.3776 -> ratio 50.00; both match the "about 418.88 and 8.378" values. Fine band 8.38, not 4.19; tolerance has abs key only.
+Visual: tc-07-10-coarse.png (H_COARSE fit OK): sphere made of large flat triangular plates, visibly angular outline (polygon edges along the silhouette).
+tc-07-10-after.png (H_FINE fit OK): smooth round body, round outline, only faint facet shading at highlights. The two images differ as the deflection says.

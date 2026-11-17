@@ -1,0 +1,14 @@
+TC-01-05 checks (P1)
+Given Mod/FreeCADBuddy/freecad_buddy LinkType Junction, Target D:\Work\Personal\Sources\freecad-buddy\src\freecad_buddy -> PASS
+Given document_open box OK (fcb-doc:2CexMk7cpUJ-h2-KpS7k3Q)
+When tool_specs() dump -> tc-01-05-budgets.txt (45 rows)
+Then distinct budgets [30.0, 60.0, 120.0, 180.0] -> PASS
+Then 180 s rows: ['preview_dry_run'] -> PASS
+Then 30 s rows: document_close, document_create, document_list, query_capabilities, query_dependencies, query_mass_properties, query_object, query_placement, query_sketch_info, query_tree_summary, view_fit_viewport (11) -> PASS
+Then 60 s rows: document_open, query_screenshot, verify_shape, verify_sketch -> PASS
+Then sketch_/feature_/export_ rows not 120 s: [] -> PASS
+Then query_*/verify_* mutating not False: []; sketch_/feature_/export_ not True: [] -> PASS
+Then document_open True, document_close True -> PASS
+Then (visual) Show All; view_fit_viewport OK -> PASS
+Then (visual) tc-01-05-after.png read; only the main window listed -> PASS
+Cleanup: document_close.

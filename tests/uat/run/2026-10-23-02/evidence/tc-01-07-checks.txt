@@ -1,0 +1,13 @@
+TC-01-07 checks (P1) - FreeCAD 27956
+Given rpc-27956.json exists -> PASS
+Given document_open box OK (fcb-doc:hPL9ZVNDCL050Km5aZEQZw); view_fit_viewport OK; tc-01-07-before.png read (one whole box, no dialog)
+When raw socket frame(s) to the RPC listener -> NOT RUN (raw RPC socket; phase rule, no answer from the lead)
+Every Then depends on that When -> NOT RUN
+--- superseded by the run below (lead approved the socket steps)
+FreeCAD 29952, proxy up. tc-01-07-before.png after Show All + view_fit_viewport OK. "token mismatch; closing" lines in addon.log before: 0
+When rpc_hello {token "not-the-token", contract "99"} -> {"jsonrpc": "2.0", "id": 7, "error": {"code": -32000, "message": "auth failed"}}, then ""
+When rpc_hello {contract "99"} (token omitted) -> same -32000 "auth failed", then ""   (tc-01-07-rpc.jsonl)
+Then -32000 / "auth failed", not -32004 -> PASS; no capabilities, freecad_version or supported -> PASS; omitted-token case identical -> PASS
+Then addon.log "token mismatch; closing": 2 lines (19:31:54,722 and 19:31:54,800; tc-01-07-addonlog-lines.txt) -> PASS
+Then query_capabilities OK -> PASS
+Then (visual) view_fit_viewport OK; before/after captures read: same whole box, no dialog -> PASS

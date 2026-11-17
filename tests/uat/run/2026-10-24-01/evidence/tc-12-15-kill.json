@@ -1,0 +1,10 @@
+{
+ "call_start": "21:35:25.931",
+ "kill_time": "21:35:27.434",
+ "kill_rc": 0,
+ "kill_stderr": "",
+ "result": "{'schema': 'fcb.result-envelope/1', 'status': 'WORKER_CRASHED', 'detail': {'code': 'WORKER_CRASHED', 'message': 'listener connection dropped', 'data': {'rpc': 'unreachable'}}, 'structured_content': {}, 'text': ''}",
+ "call_elapsed_s": 1.72,
+ "call_end": "21:35:27.655",
+ "worker_alive_after_90s": false
+}

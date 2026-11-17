@@ -1,0 +1,1 @@
+-rw-r--r-- 1 thuan 197609 219 Oct 24 21:35 C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/rpc-34316.json

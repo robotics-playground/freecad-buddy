@@ -1,0 +1,12 @@
+## Q4 listing before the sweep-only H1 start (00:44:13)
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp:
+total 4
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:41 ./
+drwxr-xr-x 1 thuan 197609 0 Oct  9 23:28 ../
+drwxr-xr-x 1 thuan 197609 0 Oct 24 00:43 FCB_TMP_session_35504_55ba6a3e/
+
+C:\Users\thuan\AppData\Roaming/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_35504_55ba6a3e:
+total 48
+drwxr-xr-x 1 thuan 197609     0 Oct 24 00:43 ./
+drwxr-xr-x 1 thuan 197609     0 Oct 24 00:41 ../
+-rw-r--r-- 1 thuan 197609 42333 Oct 24 00:41 FCB_TMP_shot_czymfi9a.png

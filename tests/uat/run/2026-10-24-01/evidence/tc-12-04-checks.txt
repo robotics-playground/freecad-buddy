@@ -1,0 +1,15 @@
+TC-12-04 (R3). Launch tc-12-04 pid 11324 (fresh, temporary profile). Given: box-10-20-30 and sphere-r10 opened with document_open, 2 entries in document_list.
+Display check: tc-12-04-after-live.png differs from tc-12-04-after.png in the property panel tab; every capture followed my action. Pointer after the foreground select and Fit All: 2476,687 (outside window x154-2406,y65-1354); positions in tc-12-04-after-pointer.txt.
+When: volumes before: Box 6000.0, Sphere 4188.79. Show All run with sphere active (invoke_menu ["View","Visibility","Show All Objects"]), then box activated through invoke_menu ["Windows","2 box-10-20-30 : 1"] and Show All run again; menu popups closed with Escape (no dialog open at that time). SPHERE row selected: r3_fg clickel "sphere-r10" TreeItem select (foreground), pointer moved out afterwards.
+
+Then 1 GUI selection changed: tc-12-04-tree-sel-tree.json: Model-panel TreeItem "sphere-r10" (frame x170,y320) selected True; title "* sphere-r10 - FreeCAD 1.1.4" (tc-12-04-sel-windows.txt). The property view also lists a TreeItem "sphere-r10" (Label row, selected False), as the test case says. PASS
+Then 2 box volume while sphere active: query_mass_properties Box volume 6000.0 (not 4188.79). PASS
+Then 3 box tree: query_tree_summary names "v [FEATURE] Box" only. PASS
+Then 4 render follows the handle: query_screenshot box handle scene.rendered_objects ["Box"]. PASS
+Then 5 reverse direction: after the BOX row was selected (title "* box-10-20-30 - FreeCAD 1.1.4", tc-12-04-sel-box-windows.txt), query_mass_properties sphere handle volume 4188.79 (analytic 4188.7902 under the Decimals preference). PASS
+Then 6 no tool used the active doc: no response of either block names an object of the other document (box blocks: Box; sphere blocks: Sphere). PASS
+Then 7 (visual) framed: view_fit_viewport box handle -> OK fitted true; GUI Fit All toolbar button clicked. PASS
+Then 8 (visual) tc-12-04-after.png read: Model panel lists two documents: "box-10-20-30" (expanded, child Box with eye icon) drawn bold with the blue selection highlight, and "sphere-r10" (collapsed, regular weight). Document tabs: Start, "box-10-20-30 : 1*" (active, bold), "sphere-r10 : 1*". 3D view: one whole box in iso view, no edge clipped. Property panel shows the box document properties. No dialog open (windows list: main window only). PASS
+Notes: query_tree_summary and query_mass_properties of a handle whose document is not the active one carry "framing: does not fit, ratio 4.82" or a Warning "the model does not fully fit the live viewport" (the sphere/box not shown in the viewport): informational, not graded.
+Notification badge: none visible.
+Cleanup: both documents closed (closed true). tc-12-04-tree.png (cleanup file) not created; my tree captures are tc-12-04-tree-pre.png and tc-12-04-tree-sel.png.

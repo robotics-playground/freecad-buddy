@@ -1,0 +1,32 @@
+TC-11-18 (R2, GUI launch r2-L2 pid 29004 default posture; H1 via r2_tc11.py 18 -> r2_h1sh.py, FCB_ENV rerun env (pivy imports),
+          FREECAD_USER_HOME %TEMP%\fcb-r2-home\tc1118, FREECAD_BUDDY_WORKDIR=evidence/tc-11-18-workdir)
+Run 1 (agent execution fault, kept as tc-11-18-run1-*): I ran the When before the Given's fit and before capture, so run 1 has no
+  framed baseline. Its minted snap/prev folders were removed in-process, both documents closed. Re-run once from the Given.
+Run 2:
+Given: operator settings FREECAD_BUDDY_WORKDIR='C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir' (default)
+       (tc-11-18-given-settings.txt); FCB_TMP_* directly in %TEMP%: 189; document_open box-10-20-30, Show All, fit OK fits 0.95,
+       tc-11-18-before.png.
+When: GUI document_create tc11-18; Body, Sketch, geometry, Pad 30 committed (auto-approve); preview_dry_run feature_fillet r1 OK;
+      query_screenshot; in-process listing; minted paths; os.getpid() (tc-11-18-gui-stdout.txt, tc-11-18-mcp.jsonl);
+      H1 with FREECAD_BUDDY_WORKDIR: document_create, Body/Sketch/Pad, query_screenshot, getpid, ls -R (tc-11-18-h1.jsonl).
+PASS temp_dir() = C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\workdir\tmp\FCB_TMP_session_29004_4a5bd995 (under the per-user default).
+PASS session folder FCB_TMP_session_29004_4a5bd995: 29004 = FreeCAD pid from list_windows; 4a5bd995 = 8 hex.
+PASS render resource_link <session folder>\FCB_TMP_shot_job62cm0.png, listed in-process (copied to tc-11-18-render.png).
+PASS in-process listing [FCB_TMP_shot_htswacso.png (run 1 render), FCB_TMP_shot_job62cm0.png]: no FCB_TMP_snap_, no FCB_TMP_prev_.
+PASS snapshot path <session folder>\FCB_TMP_snap_c9jflz7r\tc11_18.FCStd.
+PASS preview path <session folder>\FCB_TMP_prev_3rw_9z7z\FCB_TMP_prev_a8332020786aa59e.FCStd (16 hex).
+PASS H1: ls -R shows tmp/FCB_TMP_session_35716_0666354d/FCB_TMP_shot_u8kalx8f.png; 35716 = worker os.getpid(); nothing else in tmp/.
+     H1 render available true (2026-10-23-02 BLOCKED cause, no pivy, is gone).
+PASS %TEMP% FCB_TMP_* count after = 189 = baseline.
+PASS fit: Show All; view_fit_viewport on the golden -> INVALID_INPUT "the live viewport is showing 'tc11_18', not the targeted
+     'box_10_20_30'; ..." (AD-31), so the GUI Fit All toolbar button (route accessibility) was used, as the Then allows.
+FAIL visual "the window is identical to tc-11-18-before.png ... the same single box": tc-11-18-after.png shows title "* tc11-18 - FreeCAD 1.1.4",
+     tab tc11-18 : 1* active, tree box-10-20-30 + tc11-18 > Body, viewport the tc11-18 pad from the top after Show All; r2_diff 244401 px.
+     Cause: the When's GUI document_create gives tc11-18 its own view and FreeCAD brings it to the front; the bridge never activates
+     another document's view (AD-31), and the Then has no step to bring the golden back (TC-09-09 got such a step in W5; TC-11 file
+     :887 (When :867) did not). Product behaves as designed. Cause class: test-case defect.
+     Informational (not the graded capture): after Windows > "2 box-10-20-30 : 1*" and a fit, tc-11-18-info-box-activated.png shows the
+     golden box whole, at the same size and place as before, 3D view region 0 px different; tree adds tc11-18, tab bar adds tc11-18.
+     tc11-18 now has a tab and a tree row (2026-10-23-02 N-16 "no MDI tab and no tree entry" not seen).
+Cleanup: minted snap/prev folders removed in-process ('removed' x2); both documents closed; tc-11-18-workdir kept as evidence.
+Verdict: FAIL (test-case defect)

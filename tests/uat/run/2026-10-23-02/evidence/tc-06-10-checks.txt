@@ -1,0 +1,17 @@
+TC-06-10 (launch P5 tc-06-b, pid 23332)
+Given: document_create tc-06-10; Body, BoxSketch (fully constrained 20 x 10 rectangle on XY, verify_sketch dof 0 fully_constrained true),
+       feature_pad BoxPad 10 mm all OK; volume 2000.0; clean render dirty_document false (tc-06-10-given-clean.png).
+Fit first: view_fit_viewport OK.
+PASS  really dirty: script_exec 'BoxPad.Length = 25; result = State' -> value_repr "['Touched']".
+PASS  dirty render not a hard fail: status OK.
+PASS  dirty flag: structured_content.render.dirty_document true.
+PASS  image produced: resource_link non-null, tc-06-10-dirty.png 48,890 bytes.
+PASS  text: "Rendered 2 objects. Document dirty (pending/broken recompute)."
+PASS  flag in structured_content.render (render.dirty_document true) where a client can branch on it.
+PASS  clean again: document_recompute OK (clean, 2 touched, errors []); post-recompute render dirty_document false.
+PASS  volume 5000.0 mm^3, bbox z 0..25.
+PASS  same objects: dirty ['BoxSketch','BoxPad'] = post-recompute ['BoxSketch','BoxPad'].
+PASS  fit: view_fit_viewport OK after the recompute, before the after capture.
+PASS  visual: tc-06-10-after.png window: one box, front-left face 331 px, right face 166 px, height 414 px = 20 : 10 : 25.
+      tc-06-10-recomputed.png render: one box 934 : 466 : 1168 px = 20 : 10 : 25, same orientation.
+Verdict: PASS.

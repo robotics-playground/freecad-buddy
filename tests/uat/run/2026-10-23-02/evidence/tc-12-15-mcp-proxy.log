@@ -1,0 +1,4 @@
+2026-10-24 10:39:36,283 INFO freecad_buddy.hosts.gui_external: pinned to FreeCAD pid 33684
+2026-10-24 10:39:36,284 INFO freecad_buddy.hosts.gui_external: freecad-buddy GUI-external MCP server on http://127.0.0.1:8765/mcp
+2026-10-24 10:41:21,330 WARNING freecad_buddy.hosts.gui_external: FreeCAD pid 33684 has exited; the MCP proxy exits and frees port 8765
+2026-10-24 10:41:21,354 WARNING freecad_buddy.rpc_client: listener connection dropped during document_open: [WinError 10054] An existing connection was forcibly closed by the remote host

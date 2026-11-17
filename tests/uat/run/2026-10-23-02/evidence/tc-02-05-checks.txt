@@ -1,0 +1,21 @@
+TC-02-05 checks (doc tc-02-plate, fcb-doc:D0-cjLUNVeKgwVnRWCCOhw; Body > Sketch + Pad 60x40x10 built by MCP, see tc-02-05-given-mcp.jsonl)
+Note: query_tree_summary has no structuredContent; "shown"/"matches" are read from the envelope text header "OK: N objects, S shown[, M matches]".
+PASS depth 1: "OK: 11 objects, 1 shown." one line "v [BODY] Body (+2)", no connector, shown 1 = 1 line.
+PASS depth 3: shown 11 > 1, |-- / `-- connectors under Body.
+PASS focus Body depth 2: line 1 "path: Body", line 2 "v [BODY] Body", nothing outside Body.
+PASS unknown focus: is_error, "INVALID_INPUT: unknown object: NoSuchObject".
+PASS expand [Pad]: "v [BODY] Body (+1 more)", one child "`-- v [PAD] Pad *tip", then "    `-- v [SKETCH] Sketch".
+PASS types PAD == types PartDesign::Pad (same tree text, "2 shown, 1 matches"; Pad under Body; 1 Pad in doc).
+PASS name_pattern ^Pad: only revealed line is Pad.
+PASS AND-stack: "1 shown, 0 matches", tree line "v [BODY] Body (+2)" equal to depth 1 (header adds ", 0 matches"; framing line differs: cached vs computed).
+PASS v/- marker: before "`-- v [PAD] Pad (+1) *tip", after hide "`-- - [PAD] Pad (+1) *tip", after restore "`-- v [PAD] Pad (+1) *tip".
+  Hide route deviation: cua-driver click on the Pad TreeItem did not select it, and press_key Space returned
+  effect unverifiable, escalation {reason: delivery_failed, target: foreground} (also the px form). Not escalated to
+  foreground. Used the tree item's context menu (right_click, route global_input) > "Toggle Visibility" (Std_ToggleVisibility,
+  the same command Space runs). tc-02-05-hidden.png shows the Pad hidden (only the sketch outline drawn).
+PASS visible_only: is_error, "Input validation error: Additional properties are not allowed ('visible_only' was unexpected)".
+PASS unknown_filter: is_error, "Input validation error: Additional properties are not allowed ('unknown_filter' was unexpected)".
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-02-05-before.png and tc-02-05-after.png: same grey/blue 60x40x10 plate, same four outline corners
+  (about 470,446 / 852,226 / 1425,557 / 1043,887), whole, no edge clipped, no dialog. After differs only by the
+  selection highlight (Pad selected), the expanded tree and the property panel.

@@ -1,0 +1,2 @@
+{"delivery": {"mode": "background"}, "effect": "unverifiable", "route": "accessibility"}
+pid=37468 window_id=4330596

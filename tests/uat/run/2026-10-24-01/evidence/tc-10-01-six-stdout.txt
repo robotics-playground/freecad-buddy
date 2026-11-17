@@ -1,0 +1,15 @@
+H1 START 2026-10-24T19:49:17.943+07:00 tag=tc-10-01 FREECAD_BUDDY_AUDIT_LOG=D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\2026-10-24-01\evidence\tc-10-01-h1-audit.jsonl stderr=tc-10-01-h1.stderr.log
+CHECK tools/list count / script_exec listed: [46, true]
+== [given open] document_open t=0.0..0.022 dur=0.021 status=OK
+== [given tree] query_tree_summary t=0.022..0.025 dur=0.004 status=OK
+== [when six reads] query_tree_summary t=0.026..0.029 dur=0.003 status=OK
+== [when six reads] query_object t=0.029..0.037 dur=0.008 status=OK
+== [when six reads] query_mass_properties t=0.037..0.047 dur=0.009 status=OK
+== [when six reads] query_placement t=0.047..0.055 dur=0.008 status=OK
+== [when six reads] verify_shape t=0.055..0.065 dur=0.01 status=OK
+== [when six reads] document_list t=0.065..0.073 dur=0.008 status=OK
+CHECK spans overlapping the previous span: []
+CHECK statuses: ["OK", "OK", "OK", "OK", "OK", "OK"]
+CHECK tool order equals sent order: true
+== [cleanup close] document_close t=0.074..0.083 dur=0.009 status=OK
+H1 END 2026-10-24T19:49:19.288+07:00 (client stdin closed, host exited)

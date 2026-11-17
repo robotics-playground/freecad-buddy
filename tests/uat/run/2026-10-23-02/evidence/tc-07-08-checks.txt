@@ -1,0 +1,23 @@
+DOC fcb-doc:9wdBqV20SZly-OLUZnucLg
+CHECK status: "OK"
+CHECK check ids: ["trimesh_stl.watertight", "trimesh_stl.winding_consistent", "trimesh_stl.is_volume", "trimesh_stl.volume_band", "trimesh_stl.euler", "stl2.facets", "stl2.manifold_edge_pairing", "stl2.local_winding", "stl2.non_degenerate", "self_read.facet_count", "self_read.vertex_count", "oracle.agreement"]
+CHECK present trimesh_stl: {"trimesh_stl.watertight": true, "trimesh_stl.winding_consistent": true, "trimesh_stl.is_volume": true, "trimesh_stl.volume_band": true, "trimesh_stl.euler": true}
+CHECK present stl2: {"stl2.facets": true, "stl2.manifold_edge_pairing": true, "stl2.local_winding": true, "stl2.non_degenerate": true}
+CHECK self_read: [{"id": "self_read.facet_count", "measured": 12, "expected": 12, "passed": true, "detail": {"message": "facets 12 vs 12"}}, {"id": "self_read.vertex_count", "measured": 8, "expected": 8, "passed": true, "detail": {"message": "vertices 8 vs 8"}}]
+CHECK oracle.agreement: {"id": "oracle.agreement", "measured": {"trimesh_stl": true, "stdlib_stl": true}, "passed": true, "detail": {"message": "oracles agree"}}
+CHECK volume_band / expected (2/3)*0.1*2200: [146.67, 146.66666666666666]
+CHECK trimesh_stl.volume_band: {"id": "trimesh_stl.volume_band", "measured": 6000.0, "expected": 6000.0, "tolerance": {"abs": 146.66666666666666}, "passed": true}
+CHECK tess: {"linear": 0.1, "angular": 0.5}
+CHECK export result keys: ["bytes", "export_id", "facets", "path", "verified"]
+EID fcb-export:EcHxp-Gv6XyJDngRjXGIwg
+CHECK truncated size: 100
+CHECK truncated verify: ["SPEC_FAILED", "trimesh_stl.readable; stdlib_stl.readable; self_read.facet_count; self_read.vertex_count", [["trimesh_stl.readable", false], ["stdlib_stl.readable", false], ["self_read.facet_count", false], ["self_read.vertex_count", false], ["oracle.agreement", true]]]
+CHECK re-export: ["OK", 684, 684]
+True True 6000.0
+(trimesh outside read of the re-exported intact STL: True True 6000.0 -> within band 146.67 of 6000)
+Given: uv run python -c "import trimesh" ok; rm stale; document_open box-10-20-30 OK, OBJ=Box
+Note: volume_band reported 146.67 = (2/3)*0.1*2200 = 146.666... rounded to 2 decimals (results carry 2 decimals); check tolerance {"abs": 146.666...} (abs key, no rel).
+Truncation is inside the run folder (own export file).
+Visual: view_fit_viewport(H_RT) OK. tc-07-08-after.png (iso): tab tc-07-08_rt, mesh Reimport, one box: top, front, right faces present, uniform shading, no gap, no dark inverted patch.
+tc-07-08-after-back.png (supplementary, camera only, NaviCube shows BOTTOM/REAR/LEFT): the other three faces present, no gap, no dark patch -> all six sides present over the two captures.
+Finding (no Then): mesh re-import query_mass_properties INVALID_INPUT "object has no queryable shape: Reimport" (as TC-07-06).

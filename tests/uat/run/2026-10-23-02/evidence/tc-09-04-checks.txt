@@ -1,0 +1,12 @@
+== [when] query_tree_summary {"depth": "1"}
+   isError=True {"text": "Input validation error: '1' is not of type 'integer'", "is_error": true}
+== [when] export_step {"path": 42, "objects": ["Box"]}
+   isError=True {"text": "Input validation error: 42 is not of type 'string'", "is_error": true}
+== [when] export_step {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-04-t.step", "objects": {"0": "Box"}}
+   isError=True {"text": "Input validation error: {'0': 'Box'} is not of type 'array'", "is_error": true}
+== [when] export_stl {"path": "D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-09-04-t.stl", "linear": "0.1"}
+   isError=True {"text": "Input validation error: '0.1' is not of type 'number'", "is_error": true}
+CHECK rejections: [true, true, true, true]
+CHECK texts: ["Input validation error: '1' is not of type 'integer'", "Input validation error: 42 is not of type 'string'", "Input validation error: {'0': 'Box'} is not of type 'array'", "Input validation error: '0.1' is not of type 'number'"]
+CHECK any status OK: [null, null, null, null]
+CHECK tc-09-04-t.* files: []

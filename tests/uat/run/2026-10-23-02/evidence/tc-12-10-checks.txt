@@ -1,0 +1,17 @@
+TC-12-10 (P10 re-run 09:57-10:05 on a painting display, pid 29744; frozen attempt kept as tc-12-10-frozen-*) -- verdict FAIL
+Given: box (A, fcb-doc:7hBc...) and sphere (B, fcb-doc:X6r9...) opened; list 2. The workbench was Part (left from TC-12-08), so
+  the menu bar had no Sketch / Part Design. GUI routes to Part Design did not switch: View > Workbench > "Part Design" refused
+  (segment 2 not found); combo click + ListItem "Part Design" click / select action / pixel / Return: no switch. Given set with
+  script_exec FreeCADGui.activateWorkbench("PartDesignWorkbench") -> menu bar has Sketch and Part Design (tc-12-10-menubar-given.txt).
+Pre: A 6000.0, B 4188.79, render gui_constructed.
+When: click ComboBox "Part Design" by token -> list popup opens; click ListItem "Sketcher" by token from a fresh snapshot -> no switch.
+Then 1: verify_state {role ComboBox, label_contains Sketcher, exists} -> "unknown" (observation_unavailable, matches 0); combo still
+  "Part Design" -> NOT met -> FAIL. Cause: harness limit: a UIA click on a combo-box popup ListItem does not activate it on 1.1.4,
+  but TC-12-gui-workflows.md:556 prescribes it (frozen-display attempt gave the same result).
+Then handles OK / volumes equal / same handles / capabilities OK render gui_constructed: PASS, but no workbench switch happened.
+Then switch back: not exercised (no switch).
+Fit: A tab activated by MDI tab pixel click (Windows > "2 box-10-20-30 : 1" refused, segment 1 not found); Show All refused
+  (View > Visibility > Show All Objects: segment 2 not found, also after closing every open menu); view_fit_viewport A ->
+  SPEC_FAILED (nothing to frame, Box hidden). Visual tc-12-10-after.png (read): selector "Part Design", Part Design toolbars, tree
+  lists both documents, 3D view empty (Box hidden, greyed row) -> not met.
+Cleanup: both closed.

@@ -1,0 +1,63 @@
+W1 vocabulary:
+['OK', 'SPEC_FAILED', 'RECOMPUTE_ERROR', 'TIMEOUT', 'OOM_KILLED', 'WORKER_CRASHED', 'INVALID_INPUT', 'QUEUED', 'RUNNING']
+W2 observed statuses:
+['INVALID_INPUT', 'NO_STATUS', 'OK', 'SCHEMA_ERROR']
+W3 check_status_vocab:
+check_status_vocab OK
+exit=0
+T1 status.py:
+1:"""The closed set of terminal status/verdict/state values shared across the contracts.
+2:
+3:Defines the ``Literal`` status/verdict/state types; every other wire type imports
+4:``TerminalStatus``/``JobState`` from here.
+5:"""
+6:
+7:from __future__ import annotations
+8:
+9:from typing import Literal, TypedDict
+10:
+11:TerminalStatus = Literal[
+12:    "OK",
+13:    "SPEC_FAILED",
+14:    "RECOMPUTE_ERROR",
+15:    "TIMEOUT",
+16:    "OOM_KILLED",
+17:    "WORKER_CRASHED",
+18:    "INVALID_INPUT",
+19:]
+20:
+21:JobState = Literal["QUEUED", "RUNNING"] | TerminalStatus
+22:
+23:
+24:class ErrorDetail(TypedDict, total=False):
+25:    code: str
+26:    message: str  # required
+27:    objects: list[str]
+28:    constraint_ids: list[dict]
+29:    data: dict
+T3 near-miss grep:
+(grep exit 1)
+T5 OOM_KILLED in src:
+src/freecad_buddy/contracts/status.py:16:    "OOM_KILLED",
+T6 WORKER_CRASHED in src:
+src/freecad_buddy/adapters/rpc_client.py:6:parse, lookup, or socket failure is synthesized into an envelope (``WORKER_CRASHED`` for an
+src/freecad_buddy/adapters/rpc_client.py:23:    RPC_ERROR_WORKER_CRASHED,
+src/freecad_buddy/adapters/rpc_client.py:72:        "status": "WORKER_CRASHED",
+src/freecad_buddy/adapters/rpc_client.py:73:        "detail": {"code": "WORKER_CRASHED", "message": message, "data": data},
+src/freecad_buddy/adapters/rpc_client.py:83:    code (e.g. a dropped/auth-failed connection) falls back to ``WORKER_CRASHED``.
+src/freecad_buddy/adapters/rpc_client.py:451:        and error.get("code") == RPC_ERROR_WORKER_CRASHED
+src/freecad_buddy/adapters/rpc_dispatch.py:87:    # for the RECOMPUTE_ERROR/WORKER_CRASHED class so the error channel stays readable.
+src/freecad_buddy/adapters/rpc_listener.py:38:    RPC_ERROR_WORKER_CRASHED,
+src/freecad_buddy/adapters/rpc_listener.py:376:            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, "auth failed")
+src/freecad_buddy/adapters/rpc_listener.py:391:            self._write_error(conn, req_id, RPC_ERROR_WORKER_CRASHED, RPC_BUSY_MESSAGE)
+src/freecad_buddy/contracts/rpc.py:17:RPC_ERROR_WORKER_CRASHED = -32000  # listener/marshal crash or dropped connection
+src/freecad_buddy/contracts/rpc.py:21:# The RPC_ERROR_WORKER_CRASHED message for an authenticated hello while another session is
+src/freecad_buddy/contracts/rpc.py:32:    RPC_ERROR_WORKER_CRASHED: "WORKER_CRASHED",
+src/freecad_buddy/contracts/status.py:17:    "WORKER_CRASHED",
+src/freecad_buddy/hosts/gui_external/entry.py:48:# A call in flight when FreeCAD died fails at once with WORKER_CRASHED; this delay lets its HTTP
+src/freecad_buddy/hosts/headless/entry.py:13:``WORKER_CRASHED``.
+src/freecad_buddy/hosts/headless/entry.py:71:                "WORKER_CRASHED",
+src/freecad_buddy/hosts/headless/entry.py:91:    body returns, every call is refused without dispatch. The refusal becomes ``WORKER_CRASHED``
+src/freecad_buddy/hosts/headless/entry.py:93:    document is lost. Once the worker has exited, every call returns ``WORKER_CRASHED``.
+T6 grep rpc_dispatch:
+87:    # for the RECOMPUTE_ERROR/WORKER_CRASHED class so the error channel stays readable.

@@ -1,0 +1,16 @@
+TC-03-04 checks (doc tc-03-04-plate fcb-doc:FcgVc_zHFntk2_kXLdpfGw; Given: sketch_create PlateProfile XY, query_sketch_info geometry [])
+PASS commit: sketch_add_geometry status OK, rolled_back false.
+PASS AD-8: verify_sketch OK, subject.dof 0, fully_constrained true.
+PASS check id: checks[0] id sketch.fully_constrained, expected true, passed true.
+PASS post_verify: fully_constrained true, passed true.
+PASS counts: geometry_count 4, constraint_count 11.
+PASS conflicting [] and malformed [].
+PASS names: PlateWidth (id 10, DistanceX, 60 mm, driving true), PlateDepth (id 11, DistanceY, 40 mm, driving true).
+PASS sketch_state: readable true, dof 0, fully_constrained true.
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-03-04-after.png (edit mode by script_exec setEdit; Sketcher re-frames the camera on setEdit, so the
+  rectangle filled the view and its right side sat under the floating Tasks panel). p0_cam.py moved the camera only
+  (centre 50,20,0, height 70 mm) and tc-03-04-after2.png was taken: one closed rectangle, green edges, four green corner
+  points joined with no gap, width about 1.5 x depth, lower-left corner on the sketch origin where the red and green axes
+  cross, horizontal/vertical glyphs, labels "PlateWidth = 60 mm" and "PlateDepth = 40 mm", task panel "Fully constrained",
+  no edge clipped, no error dialog.

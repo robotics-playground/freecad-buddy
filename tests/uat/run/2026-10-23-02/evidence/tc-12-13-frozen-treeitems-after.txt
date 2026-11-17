@@ -1,0 +1,3 @@
+s00000126:149 TreeItem 'cylinder-r5-h20' True {'h': 22, 'w': 310, 'x': 16, 'y': 232} False
+s00000126:150 TreeItem 'Cylinder' True {'h': 22, 'w': 295, 'x': 31, 'y': 255} False
+pid=29744 window_id=3540980

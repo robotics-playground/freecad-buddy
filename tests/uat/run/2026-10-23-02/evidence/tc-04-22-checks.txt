@@ -1,0 +1,15 @@
+TC-04-22 checks (launch tc-04-a pid 29440; doc Orphans fcb-doc:zCAWiuApm-KwHCjd-DNZkw; tc-04-22-mcp.jsonl)
+Given: query_tree_summary depth 3: PlateBody (Origin and its 7 children), PlatePad *tip, PlateProfile. <session tmp> lists no
+  FCB_TMP_snap_* entry. Before: view_fit_viewport OK, tc-04-22-before.png.
+PASS unknown body -> INVALID_INPUT "unknown object in body: NoSuchBody".
+PASS unknown profile -> INVALID_INPUT "unknown object in profile: NoSuchSketch".
+PASS unknown base -> INVALID_INPUT "unknown object in base: NoSuchPad".
+PASS wrong type -> INVALID_INPUT "object is not a PartDesign Body: PlateProfile".
+PASS nothing created: tree after the four steps lists the same objects (11 objects), no OrphanPad, OrphanFillet or WrongTypePad.
+PASS no transaction: none of the four results has structured_content (no mutation.snapshot_path).
+PASS no snapshot: session folder lists no FCB_TMP_snap_* entry.
+PASS taken name: feature_pad name PlatePad -> INVALID_INPUT "an object named PlatePad already exists".
+PASS fit: view_fit_viewport OK.
+PASS visual: tc-04-22-before.png and tc-04-22-after.png: the same single 60 x 40 x 5 plate, whole, sharp edges, no second
+  pad, no fillet, no dialog. p0_diff.py: 20 of 1535072 pixels differ, all at the Tasks panel corner (1565-1567, 405-424).
+Cleanup: document_close.

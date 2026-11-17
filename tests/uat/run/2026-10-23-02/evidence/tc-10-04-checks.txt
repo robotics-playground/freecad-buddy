@@ -1,0 +1,15 @@
+TC-10-04 checks (P8) - FreeCAD 11736 (launch tc-10-a); listener 127.0.0.1:49721 (rpc-11736.json)
+Given (before the proxy stop) GUI document_open box OK fcb-doc:T7XeAyV6...; Show All; view_fit_viewport OK; tc-10-04-before.png read: one whole iso box, no dialog
+Given proxy stopped: Stop-Process 21508 (the :8765 LISTENING process; its launcher 33700 ended with it); netstat :49721 | grep ESTABLISHED -> nothing (exit 1) -> PASS (tc-10-04-proxy-stop.txt, tc-10-04-given-netstat.txt)
+When A hello + document_list + close; B document_list as first frame; C hello + document_list (p8_rpc.py s04; tc-10-04-rpc.jsonl)
+Then A result carries contract_version "1", freecad_version "1.1.4", capabilities {gui, qt_loop, exec_enabled} -> PASS
+Then B error frame {"code": -32002, "message": "handshake required"} -> PASS
+Then B next recv zero bytes -> PASS
+Then C result contract_version "1" -> PASS
+Then C document_list status OK -> PASS
+Then C connected after B was refused (addon.log 23:41:41,148 "first frame was not rpc_hello; closing", then C served) -> PASS
+Then (visual) Show All; mcp view_fit_viewport -> not reachable, httpx.ConnectError (proxy stopped; tc-10-04-mcp-fit-attempt.txt), so the GUI route: Fit All toolbar button by element_token, route accessibility -> PASS
+Then (visual) tc-10-04-after.png read: window paints, title "* box-10-20-30 - FreeCAD 1.1.4", no Not Responding, no modal or error popup, one whole iso box framed (Fit All frames it slightly larger than the MCP fit: 34459 px differ, the box outline only) -> PASS
+Cleanup proxy restarted by hand: .venv\Scripts\pythonw.exe -m freecad_buddy.hosts.main serve --mode rpc --transport http with FREECAD_BUDDY_AUTO_APPROVE=1 FREECAD_BUDDY_SCRIPT_EXEC=1 FREECAD_BUDDY_AUDIT_LOG=<evidence>\tc-10-a-audit.jsonl FREECAD_BUDDY_WORKDIR=<default> (values of the last "operator settings:" line); launcher 31100, LISTENING 29348; /healthz freecad_pid 11736; query_capabilities OK; tools/list 46 with script_exec; document_close OK
+Verdict: PASS
+Human: pointer inside the window at 23:41:25 (1147,657) and 23:42:28 (1076,741); both captures taken while it was outside.

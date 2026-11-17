@@ -1,0 +1,13 @@
+2026-10-23 20:36:49,242 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='0' (env), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='D:\\Work\\Personal\\Sources\\freecad-buddy\\tests\\uat\\run\\2026-10-23-02\\evidence\\tc-05-a-audit.jsonl' (env), FREECAD_BUDDY_WORKDIR='C:\\Users\\thuan\\AppData\\Roaming\\FreeCAD\\v1-1\\freecad-buddy\\workdir' (default), uv path ''
+2026-10-23 20:36:49,242 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 1 leftover temp artifact(s)
+2026-10-23 20:36:49,242 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-10-23 20:36:50,947 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:64161
+2026-10-23 20:36:51,248 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: C:\Users\thuan\.local\bin\uv.EXE
+2026-10-23 20:36:51,295 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 26888) -> http://127.0.0.1:8765/mcp; proxy log: C:\Users\thuan\AppData\Roaming\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log
+2026-10-23 20:37:26,585 INFO freecad_buddy.dispatch: INVALID_INPUT: object has no queryable shape: Body
+2026-10-23 20:40:36,739 INFO freecad_buddy.dispatch: INVALID_INPUT: length must be a {value, unit} quantity, got None
+2026-10-23 20:41:49,775 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object in base: NoSuchPad
+2026-10-23 20:41:49,790 INFO freecad_buddy.dispatch: INVALID_INPUT: this mutation requires a confirm; call preview_dry_run and pass the preview_id it returns as confirm.preview_id
+2026-10-23 20:44:45,076 INFO freecad_buddy.dispatch: INVALID_INPUT: the live viewport is showing 'tc_05_13_box_copy', not the targeted 'box_10_20_30'; call view_fit_viewport with the handle for 'tc_05_13_box_copy', or open a 3D view for 'box_10_20_30'
+2026-10-23 20:46:34,736 INFO freecad_buddy.dispatch: INVALID_INPUT: dress-up base Pad is not the Tip of Body Body; the Tip is Fillet. A dress-up builds from its base alone, so it would drop every feature after the base; name the Tip as the base
+2026-10-23 20:49:27,172 INFO freecad_buddy.rpc_listener: client reset the connection ([WinError 10054] An existing connection was forcibly closed by the remote host)

@@ -1,0 +1,17 @@
+TC-01-10 checks (P1)
+Launch: p1_launch.ps1 tc-01-10 -> pid 27576, window 3150460, frame set to 1600x1000.
+Setup for the Given: document_open box-10-20-30, Show All, document_save {path: evidence/tc-01-10-box.FCStd} (a copy, so the golden file is not changed).
+  Observation: after document_save (twice) the title still read "* tc-01-10-box - FreeCAD 1.1.4" (GUI modified mark). A click on the GUI Save toolbar button cleared it, so File > Exit raised no save prompt.
+Given rpc-27576.json exists -> PASS
+Given document_list: [{"label": "tc-01-10-box", "transient": false}] -> PASS
+Given spawn line: "spawned MCP proxy (pid 5480) -> http://127.0.0.1:8765/mcp"; :8765 LISTENING 29676 -> recorded
+Given Fit All toolbar click (route accessibility) then tc-01-10-before.png; 59 rpc-*.json files in total, 58 for other pids
+When invoke_menu File > Exit at 19:19:54 (route accessibility); freecad.exe gone at 19:19:56
+Then tasklist | grep freecad.exe -> nothing -> PASS
+Then rpc-27576.json: No such file -> PASS
+Then proxy 5480 and 29676 absent from tasklist -> PASS
+Then netstat :8765: only TIME_WAIT client rows, no LISTENING -> PASS
+Then rpc-*.json count 58 (other pids unchanged in count) -> PASS
+Then (visual) list_windows: no freecad.exe window; get_window_state on pid 27576 / window 3150460: "No window with window_id 3150460 exists", no file written -> PASS
+Then (visual) tc-01-10-before.png read -> PASS
+Cleanup: relaunch is done by the next scenario.

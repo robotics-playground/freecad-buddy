@@ -1,0 +1,1369 @@
+diff --git a/.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md b/.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md
+index 556a49d..6108bdf 100644
+--- a/.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md
++++ b/.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md
+@@ -76,6 +76,15 @@ Record `git status` to compare at the end.
+ 
+ ### 2. Launch
+ 
++**Profile.** Every FreeCAD that a test starts, GUI or `FreeCADCmd`, gets its own profile:
++`-u <temp>\user.cfg -s <temp>\system.cfg`. FreeCAD writes both files when it exits. A launch
++without them rewrites the developer's `%APPDATA%\FreeCAD\v1-1\user.cfg` and `system.cfg`, and no
++copy of the old file is kept. A Python process that runs `import FreeCAD` has no FreeCAD command
++line: set `FREECAD_USER_HOME` to a temp directory before the import. A temporary profile also
++starts the bridge with its default preferences. It does not move the user app data folder:
++`addon.log` and the default audit log still go to `%APPDATA%\FreeCAD\v1-1\`. Record the
++SHA-256 of the developer `user.cfg` before and after the run; a changed hash is a run defect.
++
+ Choose the mutation approval posture first. Two controls set it. The bridge reads both once, at
+ start, so a change has no effect until FreeCAD restarts:
+ 
+diff --git a/README.md b/README.md
+index b37faa8..3953086 100644
+--- a/README.md
++++ b/README.md
+@@ -303,10 +303,12 @@ uv run ruff check .
+ uv run pytest tests/external
+ ```
+ 
+-Run the in-FreeCAD suite with FreeCAD's own command-line interpreter:
++Run the in-FreeCAD suite with FreeCAD's own command-line interpreter. FreeCAD writes its
++`user.cfg` and `system.cfg` on exit, so give it a temporary profile to keep yours unchanged:
+ 
+ ```powershell
+-& "C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe" tests/run_tests.py
++$cfg = New-Item -ItemType Directory -Force "$env:TEMP\fcb-infc"
++& "C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe" -u "$cfg\user.cfg" -s "$cfg\system.cfg" tests/run_tests.py
+ ```
+ 
+ For a dev install, link the source package into the FreeCAD `Mod` folder, or build a copy with
+diff --git a/_bmad-output/implementation-artifacts/deferred-work.md b/_bmad-output/implementation-artifacts/deferred-work.md
+index 4c006a2..38f92dc 100644
+--- a/_bmad-output/implementation-artifacts/deferred-work.md
++++ b/_bmad-output/implementation-artifacts/deferred-work.md
+@@ -1790,6 +1790,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
+ - source_spec: none
+   summary: Story 10.8 goal 3 — full gate run TC-01..TC-14, TC-99 and the G3 live replay on FreeCAD 1.1.4 through the 10.7b runner with agent review per test-plan §9, settling the 15 open part V agent checks; report committed under `tests/uat/run/` (epics.md Story 10.8 AC1).
+   evidence: Split from Story 10.8 at bmad-build scope check (2026-10-23): depends on goal 1 (query_capabilities no-active-view fix, Critical TC-11-17) and goal 2; several hours of agent-driven GUI work, best in a fresh session with the desktop free.
++  status: run 2026-10-23-02 done 2026-10-23..24 (`tests/uat/run/2026-10-23-02/report.md`, `bugs.md`): Gate 1 red (Critical 126/174 = 72.4 %, High 54/67 = 80.6 %; 33 FAIL, 33 BLOCKED), Gate 2 not run, G3 headless unchanged, G3 GUI not run. Fixes on branch `fix/uat-gate-1-failures`; re-run into a new run folder pending (spec D2).
+ 
+ - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
+   summary: Correct the TC-08-07 test case: its premise that an empty body leaves the document digest unchanged is stale since Story 10.3. The Critical scenario FAILs on every run until the test case is corrected, so the correction must land before the Story 10.8 goal 3 gate run.
+@@ -1803,3 +1804,75 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
+ - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
+   summary: For the Story 10.8 goal 3 gate run, an `agent_check` that names a before-capture or between-step Given needs the agent to re-run that scenario's steps by MCP up to the named step and capture there, since the runner hands over only after the last step.
+   evidence: The runner captures once, after the last step (`tests/uat/runner/README.md`, Per scenario); 36 committed scenario files name such a capture in `agent_check` (part V and D1 files, and goal 2 files such as TC-03-08, TC-04-14, TC-08-09, TC-09-06, TC-14-08).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: Display freeze during UAT run 2026-10-23-02: after some minutes with no physical input, GPU-drawn windows (FreeCAD, WezTerm) stop repainting on screen and in captures until a physical mouse move; it stopped P11 (TC-13), P12 (TC-14, TC-99) and the G3 GUI replay. Cause not proven; the two full-screen `Cua.AgentCursorOverlay` windows of `cua-driver` are the main suspect. A Gate 1 re-run needs a display that keeps painting.
++  evidence: Seen 2026-10-24 about 08:15-09:18 and 10:04-12:20; `cua-driver` `move_cursor` does not end it; an idle test without `cua-driver` activity did not freeze (lead log `lead-log-2026-10-24-uat-fixes.md` §2; `tests/uat/run/2026-10-23-02/evidence/lead-desktop-0910.png`, `p10-recovery-watch.txt`; `bugs.md` N-01).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: Discovery files `rpc-<pid>.json` of dead FreeCADs are never removed: 61 in `%APPDATA%\FreeCAD\v1-1\freecad-buddy` at the end of run 2026-10-23-02, the oldest from 2026-08-01, each holding a dead token. AD-25 binds every file writer ("unbounded artifact growth"). Proposed fix, not made: the bridge-start sweep also deletes `rpc-<pid>.json` whose pid is dead.
++  evidence: Lead log §5 W5; run P9 finding B8; TC-10-03 picked a stale file through `glob(...)[0]` (`bugs.md` N-02, B-18).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: The H1 stdio front can deadlock on a pip-installed numpy: with numpy 2.4.6, `verify_export_stl` hangs in `import trimesh` because a thread is blocked on `sys.stdin.buffer.readline()` when `import numpy` runs. FreeCAD's conda numpy 1.26.4 does not hang. Possible fix: import the oracle modules at front start, before the stdio reader starts. Owner decision needed.
++  evidence: `adapters/export_oracle.py:187`, reached from `rpc_proxy.py:49`; minimal repro `scratchpad/fix/w3/repro_numpy_stdin.py` (lead log §5 W3; `bugs.md` N-03).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: A `feature_pattern` with 200 occurrences recomputes without any limit (more than 10 min and 5 GB in a fix-work probe); 20 occurrences commit. Possible robustness defect against intent Phase 4 ("survives a long unattended run without crash, hang"); not tested through the bridge.
++  evidence: Lead log §5 W4 (TC-05-06 reproducer search; `bugs.md` N-04).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: FreeCADCmd started without `-u` (for example `freecadcmd tests/run_tests.py` for the in-FreeCAD suite) saves its parameters on exit and rewrites the developer `user.cfg` and `system.cfg`. The documented test command and the harness should pass `-u <temp>\user.cfg -s <temp>\system.cfg` so a test never changes the developer profile.
++  evidence: 2026-10-24 12:52:29 a fix-work `freecadcmd.exe` call rewrote `user.cfg` 67547 → 67483 B (`4c415695…`), and `system.cfg` at 12:52:29 and 12:56:02; no copy of the previous file existed (lead log §4; run `report.md` Teardown; `bugs.md` N-05).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: The `fcb` micromamba env of `tests/uat/APPENDIX-B-environment-setup.md` step 3 (and micromamba itself) does not exist on this machine, so the H1 preconditions cannot pass as written; run 2026-10-23-02 used a scratchpad stand-in venv. Create the env per APPENDIX-B before the re-run.
++  evidence: `tests/uat/run/2026-10-23-02/evidence/h1-setup.txt`; `run_mcp_e2e.py:44` exit 2 "fcb env python not found" (lead log §5 W5 "Open"; `bugs.md` N-06).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: TC-08-12 and TC-09-15 need a re-run only, no fix: TC-08-12 failed on an agent execution fault (another scenario ran in the same GUI during the 900 s TTL wait), TC-09-15 on a physical mouse over the 3D view (preselection highlight in the capture).
++  evidence: `tests/uat/run/2026-10-23-02/evidence/tc-08-12-checks.txt`, `tc-09-15-checks.txt`, `tc-09-15-after.png` (`bugs.md` B-14, B-16).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: Phases P11 (TC-13, 16 agent-driven), P12 (TC-14, 11 agent-driven; TC-99, 5) and the G3 GUI replay (`tests/uat/run/2026-10-03-04/evidence/g3_gui_replay.py`) did not run; with the BLOCKED TC-12 scenarios (TC-12-01, -03, -12, -13, -15) they must run in the re-run folder. Gate 2 has no result until then.
++  evidence: `tests/uat/run/2026-10-23-02/report.md` Execution notes, Gate 2, G3 replay (32 Gate 1 scenarios and 5 TC-99 BLOCKED by the display freeze).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: TC-11-18 is BLOCKED: its Then needs an H1 render, and the H1 stand-in venv has no `pivy` (`include-system-site-packages=false`), so the H1 render reports "offscreen probe render failed: No module named 'pivy'". Re-run on an H1 env that has `pivy`.
++  evidence: `tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md:883`; `tests/uat/run/2026-10-23-02/evidence/tc-11-18-checks.txt` (`bugs.md` N-07).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: `document_save` reports `saved true` but the window title keeps the modified mark `*`; FreeCAD's own GUI Save clears it. Likely the App-level save does not clear the `Gui::Document` modified flag (not verified).
++  evidence: TC-01-10 run note: `document_save {doc, path}` then `document_save {doc}`, title stays `* tc-01-10-box - FreeCAD 1.1.4`; `usecases/documents.py:341` saveAs, `:533` save (`bugs.md` N-08).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: The profile sketch consumed by `feature_pad`, `feature_pocket` or `feature_revolve` stays visible; FreeCAD's own Pad command hides it. No Then covers it.
++  evidence: `usecases/features.py:516-532`; `tests/uat/run/2026-10-23-02/evidence/tc-04-10-top.png`, TC-04-06/15/17, TC-05-15 captures (`bugs.md` N-09).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: `feature_datum` returns a wrong feature state: `feature_state.body ""`, `is_tip false`, and `shape_summary` volume 4e+101, area 8e+100 for an infinite datum plane.
++  evidence: `usecases/features.py:329-335` reads `_Body`, `:296`; TC-04-13 run note (`bugs.md` N-10).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: The mutation summary text prints `None` ("Mutation rolled back (None): ...", "...could not be proven: None.") and, for a committed but unhashable mutation, says "Mutation failed and its rollback could not be proven: <path>." although the commit landed. No Then reads the text.
++  evidence: `usecases/transaction.py:491-497` `summarize_mutation`; TC-05-10, TC-05-12, TC-05-18, TC-11-12 run notes (`bugs.md` N-11).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: Failed-check messages print a fixed `<=` even when the check failed, for example `|7200.0 - 6000.0| = 1200.0 <= 6 mm^3`.
++  evidence: `usecases/assertions.py:861`, `:892`, `:917`, `:954`; `usecases/exports.py:360`; TC-07-20 run note (`bugs.md` N-12).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: A failing `script_exec` posts its full Python traceback as a GUI notification in the human's FreeCAD (badge and pop-up), the same channel that the TC-08-02 fix closes for a failing preview.
++  evidence: Run P5 observation (a); `tests/uat/run/2026-10-23-02/evidence/tc-08-12-notifications.png` ("Box: Length of box too small" plus traceback) (`bugs.md` N-13).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: `query_tree_summary` reports "2 objects, 2 shown" while one of the two lines carries the `-` hidden marker, so the "shown" count disagrees with the tree it prints.
++  evidence: TC-06-06 run note; run P5 observation (b) (`bugs.md` N-14).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: Temp hygiene (AD-25): the GUI session folder under `<workdir>/tmp` survives File > Exit, and an H1 worker leaves an empty `FCB_TMP_session_<pid>_<token>` after a clean stdin close; only the next start sweep removes them.
++  evidence: Run P5 observations (c)(d), P8 F-P8-6, P9 B9 (`bugs.md` N-15).
++
++- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
++  summary: A document created over MCP becomes the active document (window title `* tc11-18`) but has no MDI tab and no tree entry in the GUI.
++  evidence: `tests/uat/run/2026-10-23-02/evidence/tc-11-18-after.png`; run P9 B10 (`bugs.md` N-16).
+diff --git a/scripts/automation/run_mcp_e2e.py b/scripts/automation/run_mcp_e2e.py
+index 5ef409b..fbcaff3 100644
+--- a/scripts/automation/run_mcp_e2e.py
++++ b/scripts/automation/run_mcp_e2e.py
+@@ -7,7 +7,8 @@ no manual restarts: this process owns the H1 subprocess lifecycle.
+ 
+ Run from the uv env (which has the ``mcp`` client):
+ ``uv run python scripts/automation/run_mcp_e2e.py``.
+-The H1 server runs under the conda ``fcb`` env python (which has FreeCAD + mcp + oracles).
++The H1 server runs under the conda ``fcb`` env python (which has FreeCAD + mcp + oracles): the env
++at ``$FCB_ENV``, else ``micromamba/envs/fcb`` under ``%USERPROFILE%``.
+ 
+ Outputs (under ``_automation/``):
+   e2e_report.json      per-tool pass/fail with real measured values
+@@ -18,6 +19,7 @@ from __future__ import annotations
+ 
+ import json
+ import os
++import re
+ import sys
+ from pathlib import Path
+ 
+@@ -41,7 +43,9 @@ GOLDEN_EXPECTED = {
+ 
+ def _fcb_env() -> tuple[str, dict]:
+     """The fcb conda env python and the child env that makes ``import FreeCAD`` resolve."""
+-    env_dir = Path(os.path.expandvars(r"%USERPROFILE%\micromamba\envs\fcb"))
++    env_dir = Path(
++        os.environ.get("FCB_ENV") or os.path.expandvars(r"%USERPROFILE%\micromamba\envs\fcb")
++    )
+     py = env_dir / "python.exe"
+     lib_bin = env_dir / "Library" / "bin"
+     lib_lib = env_dir / "Library" / "lib"
+@@ -53,8 +57,23 @@ def _fcb_env() -> tuple[str, dict]:
+     return str(py), child
+ 
+ 
++_STATUS_LINE = re.compile(r"([A-Z_]+): ")
++
++
++def _text(res) -> str:
++    return res.content[0].text if res.content else ""
++
++
+ def _status(res) -> str:
+-    return (res.structuredContent or {}).get("status", "NO_STATUS")
++    """The envelope status, or ``NO_STATUS`` when no envelope came back (an input-schema rejection).
++
++    A tool without an ``outputSchema`` (``query_tree_summary``) sends no ``structuredContent``;
++    its status is the ``<STATUS>: `` prefix of its one text block.
++    """
++    if res.structuredContent is not None:
++        return res.structuredContent.get("status", "NO_STATUS")
++    line = _STATUS_LINE.match(_text(res))
++    return line.group(1) if line else "NO_STATUS"
+ 
+ 
+ def _payload(res) -> dict:
+@@ -62,18 +81,12 @@ def _payload(res) -> dict:
+ 
+ 
+ def _tree_names(res) -> list[str]:
+-    """Object Names on the top-level lines of a ``query_tree_summary`` tree text block.
++    """Object Names on the top-level lines of a ``query_tree_summary`` text.
+ 
+-    The tree travels as the second content block, one ``<v|-> [CODE] Name ...`` line per object;
+-    a child line starts with a connector or a prefix and is skipped.
++    The tree follows the status line and an optional framing line, one ``<v|-> [CODE] Name ...``
++    line per object; a child line starts with a connector or a prefix and is skipped.
+     """
+-    if len(res.content) < 2:
+-        return []
+-    return [
+-        line.split(" ")[2]
+-        for line in res.content[1].text.splitlines()
+-        if line[:1] in ("v", "-")
+-    ]
++    return [line.split(" ")[2] for line in _text(res).splitlines() if line[:1] in ("v", "-")]
+ 
+ 
+ def _rel(measured: float, expected: float) -> float:
+@@ -131,7 +144,7 @@ async def _sweep(session: ClientSession, rep: Report) -> None:
+         # recorded here instead of surfacing as a tool defect in every later measurement.
+         tree = await session.call_tool("query_tree_summary", {"doc": handle})
+         if _status(tree) != "OK":
+-            rep.record(f"tree_summary:{name}", False, str(_payload(tree)), _status(tree))
++            rep.record(f"tree_summary:{name}", False, _text(tree), _status(tree))
+             continue
+         roots = _tree_names(tree)
+         obj_name = roots[0] if roots else None
+diff --git a/scripts/automation/run_mcp_edge_cases.py b/scripts/automation/run_mcp_edge_cases.py
+index e0935c4..4530f2c 100644
+--- a/scripts/automation/run_mcp_edge_cases.py
++++ b/scripts/automation/run_mcp_edge_cases.py
+@@ -8,12 +8,14 @@ reaches the client faithfully — the layer the in-process unit tests do not exe
+ dispatch mapping and MCP serialization).
+ 
+ Run from the uv env: ``uv run python scripts/automation/run_mcp_edge_cases.py``. The H1 server runs
+-under the conda ``fcb`` env python. Writes ``_automation/edge_report.json``.
++under the conda ``fcb`` env python (``$FCB_ENV``, as in ``run_mcp_e2e.py``). Writes
++``_automation/edge_report.json``.
+ """
+ 
+ from __future__ import annotations
+ 
+ import json
++import re
+ import sys
+ from pathlib import Path
+ 
+@@ -29,6 +31,7 @@ from run_mcp_e2e import (  # reuse env + envelope helpers from the happy-path ha
+     _fcb_env,
+     _payload,
+     _status,
++    _text,
+     _tree_names,
+ )
+ 
+@@ -64,25 +67,26 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
+         # query_tree_summary carried max_nodes/truncated when this harness was written; the tool
+         # now bounds by depth and sets additionalProperties: False, so the boundary worth
+         # asserting is that the retired parameter is rejected rather than silently ignored.
+-        # Rejected at the input-schema gate, so there is no envelope to read a status from —
+-        # asserted the same way as export_missing_path_schema above.
++        # Rejected at the input-schema gate, so there is no envelope to read a status from. The
++        # tool sends no structuredContent even on success, so "no envelope" means no status line.
+         r = await session.call_tool("query_tree_summary", {"doc": handle, "max_nodes": 0})
+         rep.record(
+             "retired_max_nodes_rejected",
+-            r.isError and r.structuredContent is None,
++            r.isError and _status(r) == "NO_STATUS",
+             "additionalProperties: False rejects the retired parameter",
+             "SCHEMA_ERROR",
+         )
+ 
+         # --- P1 boundary: depth bounds the walk without dropping the root --------------------
+         r = await session.call_tool("query_tree_summary", {"doc": handle, "depth": 1})
+-        p = _payload(r)
++        summary = re.search(r"(\d+) shown", _text(r))
++        shown = int(summary.group(1)) if summary else None
+         roots = _tree_names(r)
+-        ok = _status(r) == "OK" and p.get("shown") == len(roots) > 0
++        ok = _status(r) == "OK" and shown == len(roots) > 0
+         rep.record(
+             "depth_one_returns_roots_only",
+             ok,
+-            f"shown={p.get('shown')} roots={len(roots)}",
++            f"shown={shown} roots={len(roots)}",
+             _status(r),
+         )
+ 
+diff --git a/src/freecad_buddy/hosts/gui_addon/bootstrap.py b/src/freecad_buddy/hosts/gui_addon/bootstrap.py
+index eed5516..a4f808f 100644
+--- a/src/freecad_buddy/hosts/gui_addon/bootstrap.py
++++ b/src/freecad_buddy/hosts/gui_addon/bootstrap.py
+@@ -530,6 +530,7 @@ def stop_bridge() -> None:
+         return
+     _listener.stop()
+     _listener = None
++    logger.info("freecad-buddy bridge stopped")
+ 
+ 
+ def _register_shutdown() -> None:
+diff --git a/src/freecad_buddy/usecases/framing.py b/src/freecad_buddy/usecases/framing.py
+index 493a6da..cd24252 100644
+--- a/src/freecad_buddy/usecases/framing.py
++++ b/src/freecad_buddy/usecases/framing.py
+@@ -95,11 +95,15 @@ def _object_bounds(obj: object) -> Bounds | None:
+     """``obj``'s shape or mesh bounding box as six finite floats, or ``None`` when it has none.
+ 
+     A ``Mesh::Feature`` carries no ``Shape``; its geometry, and so its box, is the ``Mesh``.
++    A feature inside a moved container (a PartDesign Body, an App::Part) carries its geometry in
++    the container's coordinates while the camera projects document coordinates, so the box is
++    read after ``_document_box`` moves it by the containers' placement. The local box would make
++    the fit centre on where the part would sit if its container had not moved.
+     """
+     geometry = getattr(obj, "Shape", None)
+     if geometry is None:
+         geometry = getattr(obj, "Mesh", None)
+-    box = getattr(geometry, "BoundBox", None)
++    box = _document_box(obj, geometry)
+     if box is None:
+         return None
+     try:
+@@ -117,6 +121,32 @@ def _object_bounds(obj: object) -> Bounds | None:
+     return values if finite else None
+ 
+ 
++def _document_box(obj: object, geometry: object) -> object | None:
++    """``geometry``'s ``BoundBox`` in document coordinates, without copying the geometry.
++
++    The container part of the placement — the global placement times the inverse of the
++    geometry's own placement — moves the local box's 8 corners, and the result is the
++    axis-aligned box around them. Under a rotation that box can be larger than the exact box of
++    the moved geometry, never smaller. Larger is the correct error for framing: a box that
++    contains the model may report a fit as missed, but never reports the model visible while
++    part of it is off screen (CAP-9: when the bridge reports that the human can see the model,
++    the human can see it). A ``shape.copy()`` per object would give the exact box at the cost
++    of a full geometry copy on the GUI thread, up to three times per fit.
++
++    An invalid box (an empty shape) is returned as is: ``transformed`` refuses it, and its
++    ``DBL_MAX`` bounds are skipped as infinite by the caller.
++    """
++    box = getattr(geometry, "BoundBox", None)
++    getter = getattr(obj, "getGlobalPlacement", None)
++    current = getattr(geometry, "Placement", None)
++    if box is None or getter is None or current is None or not box.isValid():
++        return box
++    placement = getter()
++    if placement.isSame(current):
++        return box
++    return box.transformed(placement.multiply(current.inverse()).toMatrix())
++
++
+ def corners(box: Bounds) -> list[tuple[float, float, float]]:
+     """The 8 corners of ``(xmin, ymin, zmin, xmax, ymax, zmax)`` in world coordinates."""
+     xmin, ymin, zmin, xmax, ymax, zmax = box
+diff --git a/src/freecad_buddy/usecases/preview.py b/src/freecad_buddy/usecases/preview.py
+index 49eb59a..6d8484c 100644
+--- a/src/freecad_buddy/usecases/preview.py
++++ b/src/freecad_buddy/usecases/preview.py
+@@ -470,42 +470,45 @@ def preview_dry_run(
+     gated_args_digest: str | None = None
+     try:
+         live.saveCopy(path)
+-        opened = registry.document_open(path)
+-        temp_handle = opened["structured_content"]["doc"]
+-        copy = registry.with_document(temp_handle, lambda h, d: d)
+-        copy.recompute()
+-
+-        # The op runs OUTSIDE registry.with_document: the registry lock is non-reentrant, so
+-        # calling a mutation use case (which resolves its own document) from inside a callback
+-        # holding it self-deadlocks even though the two handles name different documents.
+-        # The confirm gate is exempted for exactly this call: it runs against the throwaway copy,
+-        # and it is what mints the token a live apply of the same op must present. The exemption
+-        # reports the argument digest the gate computed, which is what the token is signed over.
+-        with confirm.preview_exemption() as exemption:
+-            op_envelope = op_fn(registry, doc=temp_handle, **args)
+-        gated_args_digest = exemption.args_digest
+-
+-        copy = registry.with_document(temp_handle, lambda h, d: d)
+-        after = document_metrics(copy)
+-        names_after = [o.Name for o in copy.Objects]
+-        content = op_envelope.get("structured_content") or {}
+-        mutation = content.get("mutation") or {}
+-        post = mutation.get("post_verify")
+-        touched = [n for n in list(mutation.get("touched") or []) if n in set(names_after)]
+-        diff = _diff(
+-            doc_handle=handle,
+-            tool=tool,
+-            before=before,
+-            after=after,
+-            names_before=names_before,
+-            names_after=names_after,
+-            touched=touched,
+-            post_verify=post,
+-            status=op_envelope.get("status"),
+-            pre_existing=pre_existing,
+-            fingerprint_before=fp_before["digest"],
+-            render_block=_render_block(render, render_port),
+-        )
++        # Every console message inside this block concerns the TempDoc, not the human's document.
++        with shim.notifications_muted():
++            opened = registry.document_open(path)
++            temp_handle = opened["structured_content"]["doc"]
++            copy = registry.with_document(temp_handle, lambda h, d: d)
++            copy.recompute()
++
++            # The op runs OUTSIDE registry.with_document: the registry lock is non-reentrant, so
++            # calling a mutation use case (which resolves its own document) from inside a
++            # callback holding it self-deadlocks even though the two handles name different
++            # documents. The confirm gate is exempted for exactly this call: it runs against the
++            # throwaway copy, and it is what mints the token a live apply of the same op must
++            # present. The exemption reports the argument digest the gate computed, which is what
++            # the token is signed over.
++            with confirm.preview_exemption() as exemption:
++                op_envelope = op_fn(registry, doc=temp_handle, **args)
++            gated_args_digest = exemption.args_digest
++
++            copy = registry.with_document(temp_handle, lambda h, d: d)
++            after = document_metrics(copy)
++            names_after = [o.Name for o in copy.Objects]
++            content = op_envelope.get("structured_content") or {}
++            mutation = content.get("mutation") or {}
++            post = mutation.get("post_verify")
++            touched = [n for n in list(mutation.get("touched") or []) if n in set(names_after)]
++            diff = _diff(
++                doc_handle=handle,
++                tool=tool,
++                before=before,
++                after=after,
++                names_before=names_before,
++                names_after=names_after,
++                touched=touched,
++                post_verify=post,
++                status=op_envelope.get("status"),
++                pre_existing=pre_existing,
++                fingerprint_before=fp_before["digest"],
++                render_block=_render_block(render, render_port),
++            )
+     finally:
+         _discard_tempdoc(registry, temp_handle, path)
+ 
+diff --git a/src/freecad_buddy/usecases/shim.py b/src/freecad_buddy/usecases/shim.py
+index cb4ef29..d619243 100644
+--- a/src/freecad_buddy/usecases/shim.py
++++ b/src/freecad_buddy/usecases/shim.py
+@@ -73,6 +73,42 @@ def serializer_tag() -> Literal["exportBinary", "exportBrep"]:
+     return "exportBinary" if export_binary_available() else "exportBrep"
+ 
+ 
++# The console observer the GUI's notification area attaches (``Gui/NotificationArea.cpp``), and
++# every message level it listens to.
++_NOTIFICATION_OBSERVER = "NotificationAreaObserver"
++_NOTIFICATION_LEVELS = ("Err", "Wrn", "Critical", "Notification")
++
++
++@contextmanager
++def notifications_muted() -> Iterator[None]:
++    """Keep a throwaway document's console messages out of the human's notification area.
++
++    A recompute that leaves an object in error reports it through ``Base::Console().error``
++    (``App/Document.cpp``), and so does an attachment that cannot be placed
++    (``AttachExtension.cpp``); the notification area turns each into a badge and a pop-up about
++    a document the human never opened. ``Document::IgnoreErrorOnRecompute``, the flag FreeCAD's
++    own commands set to suppress that report, has no Python binding, so the observer is switched
++    off instead and restored on every path. The Report View and the caller's own reading of the
++    object state still carry the error. Without a GUI the observer does not exist: ``GetStatus``
++    returns ``None`` and nothing is changed.
++    """
++    import FreeCAD
++
++    console = FreeCAD.Console
++    saved = {
++        level: console.GetStatus(_NOTIFICATION_OBSERVER, level) for level in _NOTIFICATION_LEVELS
++    }
++    for level, status in saved.items():
++        if status is not None:
++            console.SetStatus(_NOTIFICATION_OBSERVER, level, False)
++    try:
++        yield
++    finally:
++        for level, status in saved.items():
++            if status is not None:
++                console.SetStatus(_NOTIFICATION_OBSERVER, level, status)
++
++
+ @contextmanager
+ def _scratch_document(name: str) -> Iterator[object]:
+     """Open a throwaway probe document and close it on every path.
+@@ -80,15 +116,17 @@ def _scratch_document(name: str) -> Iterator[object]:
+     ``temp=True`` is what keeps the caller's state: FreeCAD makes every new document active and
+     puts the previous one back only for a temporary document, and closing the active document
+     leaves none active, so a GUI session would lose its active 3D view. ``hidden=True`` opens no
+-    view. Raises whatever ``FreeCAD.newDocument`` raises.
++    view. The notification area stays muted while the document exists, because a probe fails
++    objects on purpose. Raises whatever ``FreeCAD.newDocument`` raises.
+     """
+     import FreeCAD
+ 
+-    doc = FreeCAD.newDocument(name, hidden=True, temp=True)
+-    try:
+-        yield doc
+-    finally:
+-        FreeCAD.closeDocument(doc.Name)
++    with notifications_muted():
++        doc = FreeCAD.newDocument(name, hidden=True, temp=True)
++        try:
++            yield doc
++        finally:
++            FreeCAD.closeDocument(doc.Name)
+ 
+ 
+ @lru_cache(maxsize=1)
+diff --git a/tests/external/test_gui_addon_proxy_start.py b/tests/external/test_gui_addon_proxy_start.py
+index 65a707a..90e091c 100644
+--- a/tests/external/test_gui_addon_proxy_start.py
++++ b/tests/external/test_gui_addon_proxy_start.py
+@@ -321,3 +321,26 @@ def test_should_not_spawn_when_the_bridge_stops_after_the_port_frees(
+ 
+     # Assert
+     assert spawned == []
++
++
++class _RecordingListener:
++    def __init__(self) -> None:
++        self.stopped = False
++
++    def stop(self) -> None:
++        self.stopped = True
++
++
++def test_should_log_one_teardown_line_when_the_bridge_stops(monkeypatch, bootstrap, caplog):
++    # Arrange
++    mock_listener = _RecordingListener()
++    monkeypatch.setattr(bootstrap, "_listener", mock_listener)
++    monkeypatch.setattr(bootstrap, "_mcp_proxy", None)
++
++    # Act
++    with caplog.at_level(logging.INFO, logger=bootstrap.logger.name):
++        bootstrap.stop_bridge()
++
++    # Assert
++    assert mock_listener.stopped
++    assert [r.getMessage() for r in caplog.records] == ["freecad-buddy bridge stopped"]
+diff --git a/tests/infc/test_preview.py b/tests/infc/test_preview.py
+index 85a60b4..fa684a2 100644
+--- a/tests/infc/test_preview.py
++++ b/tests/infc/test_preview.py
+@@ -23,6 +23,7 @@ import Sketcher
+ from freecad_buddy.hosts.tool_catalog import preview_op_table
+ from freecad_buddy.usecases import confirm, preview, queries, shim
+ from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
++from infc.notification_console import NotificationAreaConsole
+ 
+ SQUARE = 10.0
+ PAD_LENGTH = 5.0
+@@ -450,6 +451,65 @@ class FailingOperationTest(_PreviewFixture):
+         self.assertEqual(validity["recompute_errors"], [])
+ 
+ 
++class NotificationAreaTest(_PreviewFixture):
++    """A TempDoc recompute error never reaches the human's notification area."""
++
++    def setUp(self):
++        super().setUp()
++        self.mock_console = NotificationAreaConsole()
++        real_console = App.Console
++        App.Console = self.mock_console
++        self.addCleanup(setattr, App, "Console", real_console)
++
++    def _recording_table(self, op, seen):
++        def recording_op(registry, doc=None, **kwargs):
++            envelope = op(registry, doc=doc, **kwargs)
++            seen.append(dict(self.mock_console.levels))
++            return envelope
++
++        return {"feature_fillet": recording_op}
++
++    def test_should_mute_the_notification_area_when_the_op_breaks_the_copy(self):
++        # Arrange
++        seen = []
++        table = self._recording_table(self.op_table["feature_fillet"], seen)
++
++        # Act
++        diff = self._diff(operation=_fillet_op(radius=500.0), table=table)
++
++        # Assert
++        self.assertEqual(diff["validity"]["status"], "RECOMPUTE_ERROR")
++        self.assertEqual(seen, [dict.fromkeys(shim._NOTIFICATION_LEVELS, False)])
++
++    def test_should_restore_the_notification_area_when_the_preview_returns(self):
++        # Arrange
++        original = dict(self.mock_console.levels)
++        operation = _fillet_op(radius=500.0)
++
++        # Act
++        self._preview(operation=operation)
++
++        # Assert
++        self.assertEqual(self.mock_console.levels, original)
++
++    def test_should_restore_the_notification_area_when_the_op_raises(self):
++        # Arrange
++        original = dict(self.mock_console.levels)
++
++        def exploding_op(registry, doc=None, **kwargs):  # noqa: ARG001
++            raise RuntimeError("op blew up mid-preview")
++
++        table = {"feature_fillet": exploding_op}
++
++        # Act
++        act = lambda: self._preview(table=table)  # noqa: E731
++
++        # Assert
++        with self.assertRaises(RuntimeError):
++            act()
++        self.assertEqual(self.mock_console.levels, original)
++
++
+ class PreExistingBreakageTest(_PreviewFixture):
+     """Breakage that predates the preview never flips the op's own verdict."""
+ 
+diff --git a/tests/run_tests.py b/tests/run_tests.py
+index b6bccd4..acc2546 100644
+--- a/tests/run_tests.py
++++ b/tests/run_tests.py
+@@ -1,7 +1,9 @@
+ """In-FreeCAD test runner (decision 002).
+ 
+-Run via ``FreeCADCmd tests/run_tests.py`` — never a foreign ``python -c "import FreeCAD"``
+-(sidesteps the conda PYTHONPATH edge, feedstock #21). Discovers stdlib-unittest suites
++Run via ``FreeCADCmd -u <temp>/user.cfg -s <temp>/system.cfg tests/run_tests.py`` — never a
++foreign ``python -c "import FreeCAD"`` (sidesteps the conda PYTHONPATH edge, feedstock #21).
++FreeCADCmd writes both profile files on exit, so a run without ``-u``/``-s`` rewrites the
++developer's own. Discovers stdlib-unittest suites
+ under tests/infc/ and runs them in one process. Phase 0: no cases yet → empty discovery
+ passes (exit 0). This is tooling, not src/, so stdout use is fine.
+ """
+@@ -33,13 +35,13 @@ def _is_top_level_script() -> bool:
+ 
+     FreeCADCmd runs a script with ``__name__`` set to the file stem rather than ``"__main__"``
+     on some platforms, so the standard guard alone would silently skip discovery; this also
+-    matches ``__file__`` against the launched ``sys.argv[1]``.
++    matches ``__file__`` against every launch argument, because options such as ``-u <cfg>``
++    come before the script.
+     """
+     if __name__ == "__main__":
+         return True
+-    if len(sys.argv) > 1:
+-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
+-    return False
++    own = Path(__file__).resolve()
++    return any(Path(arg).resolve() == own for arg in sys.argv[1:])
+ 
+ 
+ if _is_top_level_script():
+diff --git a/tests/uat/runner/launch.py b/tests/uat/runner/launch.py
+index fbe0884..3a78383 100644
+--- a/tests/uat/runner/launch.py
++++ b/tests/uat/runner/launch.py
+@@ -169,15 +169,24 @@ def stop(process):
+ 
+ @contextlib.contextmanager
+ def freecad(launch, audit_log):
+-    """Start FreeCAD with the probe and a temporary ``-u`` profile; yield ``(process, record)``.
++    """Start FreeCAD with the probe and a temporary profile; yield ``(process, record)``.
+ 
+-    The temporary profile keeps the developer's ``user.cfg`` unchanged and gives the bridge its
++    FreeCAD writes both profile files on exit, so the temporary ``-u`` and ``-s`` files keep the
++    developer's ``user.cfg`` and ``system.cfg`` unchanged and give the bridge its
+     default preferences. Refuses, before starting anything, when a FreeCAD runs or ``:8765`` is
+     held, for example by the previous group's proxy.
+     """
+     check_free()
+     with tempfile.TemporaryDirectory(prefix="fcb-uat-run-", ignore_cleanup_errors=True) as work:
+-        command = [FREECAD_EXE, "-M", str(PROBE_DIR), "-u", str(Path(work) / "user.cfg")]
++        command = [
++            FREECAD_EXE,
++            "-M",
++            str(PROBE_DIR),
++            "-u",
++            str(Path(work) / "user.cfg"),
++            "-s",
++            str(Path(work) / "system.cfg"),
++        ]
+         process = subprocess.Popen(
+             command,
+             env=launch_environment(launch, audit_log),
+diff --git a/tests/uat/scenarios/tc-08-13.json b/tests/uat/scenarios/tc-08-13.json
+index add3343..432564f 100644
+--- a/tests/uat/scenarios/tc-08-13.json
++++ b/tests/uat/scenarios/tc-08-13.json
+@@ -892,5 +892,5 @@
+       "inside": true
+     }
+   },
+-  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: framed fit and before capture before the preview (GUI action); decline refused with 'elicitation_action must be accept' (the MCP schema refuses it first) (raw RPC or second client)."
++  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: framed fit and before capture before the preview (GUI action)."
+ }
+diff --git a/tests/uat/testcases/TC-01-session-lifecycle-and-transport.md b/tests/uat/testcases/TC-01-session-lifecycle-and-transport.md
+index 3ae794d..3cb6283 100644
+--- a/tests/uat/testcases/TC-01-session-lifecycle-and-transport.md
++++ b/tests/uat/testcases/TC-01-session-lifecycle-and-transport.md
+@@ -22,7 +22,7 @@ the shipped catalog from the repo venv and needs no host.
+ - [ ] Addon linked into the FreeCAD Mod dir (verify: `ls "$APPDATA/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py"`)
+ - [ ] Repo venv exists so the addon can discover the proxy interpreter (verify: `ls .venv/Scripts/pythonw.exe`)
+ - [ ] cua-driver daemon runs in an interactive session (verify: `cua-driver status` shows `SessionId` ≥ 1)
+-- [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
++- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
+ - [ ] No FreeCAD process and nothing on `:8765` before TC-01-01 (verify: `netstat -ano | grep :8765` returns nothing)
+ - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
+ 
+@@ -84,7 +84,7 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+ **And** a golden model is open on the GUI host so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
+ **And** the GUI's pre-sweep state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the happy-path sweep is run. It spawns its own H1 stdio host from the `fcb` env and does not touch the GUI bridge.  
++**When** the happy-path sweep is run. It spawns its own H1 stdio host from the `fcb` env and does not touch the GUI bridge. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run.  
+ ```bash
+ uv run python scripts/automation/run_mcp_e2e.py
+ ```
+@@ -509,6 +509,11 @@ cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+ ".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --mode rpc; echo "exit=$?"
+ ".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --transport http --mode inline; echo "exit=$?"
+ ```
++**And** a new empty document is created through the GUI. FreeCAD starts on the Start page, which has no 3D view and no enabled **Fit All** button, and the suppressed proxy leaves the GUI as the only path  
++```
++cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "New Document"] }
++```
++If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token` from a fresh `get_window_state` snapshot.
+ 
+ **Then** the listener still started — verify: `grep "freecad-buddy RPC listener started on" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns a line, and `rpc-<pid>.json` exists  
+ **And** the proxy was not spawned — verify: `netstat -ano | grep :8765` returns nothing  
+@@ -517,8 +522,8 @@ cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+ **And** `--mode rpc` without `--transport http` exits 2 — verify: the first CLI command writes exactly `--mode rpc requires --transport http.` to stderr and `exit=2`  
+ **And** `--transport http --mode inline` is refused — verify: the second CLI command writes exactly `transport 'http' is not available yet; use --transport stdio.` to stderr and `exit=2`  
+ **And** neither refused command bound a port — verify: `netstat -ano | grep :8765` still returns nothing  
+-**And** *(visual)* the view is framed through the GUI only — verify: take a fresh `'{"pid":<freecad pid>,"window_id":<window id>}' | & cua-driver call get_window_state`, resolve the **Fit All** toolbar element's `element_token`, and click it; the response carries `route: "accessibility"` and the view reframes. The MCP fit is not available and must not be attempted: the suppressed proxy is the state under test, so the toolbar button is the only framing path, and it touches none of the code under test. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1.  
+-**And** *(visual)* the GUI came up normally despite the suppressed proxy — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, tree panel, and a 3D view area, no error dialog, and no crash or splash screen left up. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image, and here no MCP endpoint exists to ask.  
++**And** *(visual)* the new document's view is framed through the GUI only — verify: take a fresh `'{"pid":<freecad pid>,"window_id":<window id>}' | & cua-driver call get_window_state`, resolve the **Fit All** toolbar element's `element_token`, and click it; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. The MCP fit is not available and must not be attempted: the suppressed proxy is the state under test, so the toolbar button is the only framing path, and it touches none of the code under test. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1.  
++**And** *(visual)* the GUI came up normally despite the suppressed proxy — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document, and an empty 3D view with the navigation cube, no error dialog, and no crash or splash screen left up. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image, and here no MCP endpoint exists to ask.  
+ 
+ **Cleanup**: restart FreeCAD without the variable so later scenarios get the auto-spawned proxy. Close it through its own menu: `kill_app` refuses a FreeCAD that the `.cmd` wrapper started (`foreign_process_termination_denied`).
+ ```
+@@ -623,11 +628,17 @@ cua-driver call launch_app { path: "$FREECAD_EXE" }
+ ```bash
+ cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+ ```
++**And** a new empty document is created through the GUI. FreeCAD starts on the Start page, which has no 3D view and no enabled **Fit All** button, and this FreeCAD has no MCP endpoint  
++```
++cua-driver call invoke_menu { pid: <new freecad pid>, window_id: <new window id>, path: ["File", "New Document"] }
++```
++If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token` from a fresh `get_window_state` snapshot.
+ 
+ **Then** the addon reports the foreign holder once — verify: `grep -c "ERROR" addon.log` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
+ **And** no proxy was spawned — verify: `grep "spawned MCP proxy" addon.log` returns nothing, and `netstat -ano | grep :8765` shows `LISTENING` only on the holder pid recorded from `netstat`  
+ **And** the RPC listener is up — verify: `grep "freecad-buddy RPC listener started on" addon.log` returns a line, and `rpc-<new freecad pid>.json` exists  
+-**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, tree panel and 3D view, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
++**And** *(visual)* the new document's view is framed through the GUI only — verify: click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<new pid>,"window_id":<new wid>}' | & cua-driver call get_window_state`; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable`.  
++**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document and an empty 3D view with the navigation cube, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
+ 
+ **Cleanup**: stop the process that holds `:8765`, then restart FreeCAD so later scenarios get the auto-spawned proxy. Use the Windows pid from `netstat`; the shell's `$!` names the `uv` wrapper, not the python child that holds the port.
+ ```bash
+diff --git a/tests/uat/testcases/TC-03-sketch-authoring.md b/tests/uat/testcases/TC-03-sketch-authoring.md
+index 9c16075..1bd9496 100644
+--- a/tests/uat/testcases/TC-03-sketch-authoring.md
++++ b/tests/uat/testcases/TC-03-sketch-authoring.md
+@@ -435,7 +435,7 @@ mcp sketch_add_geometry { doc: <handle>, sketch: "LooseProfile",
+ **And** the rollback is proven — verify: the envelope carries `mutation.rolled_back=true` and `mutation.post_verify.passed=false`  
+ **And** the cause names the sketch and its dof — verify: `mutation.post_verify.explanation` starts `verify_sketch failed on LooseProfile (dof=` with a non-zero dof  
+ **And** the geometry is gone too — verify: `mcp query_sketch_info { doc: <handle>, sketch: "LooseProfile" }` returns `geometry=[]`, so the rollback removed the line, not only the failure  
+-**And** the document is back to its prior state — verify: `mutation.fingerprint_before.digest` equals `mutation.fingerprint_after.digest`, or the rollback state is `rolled_back_via_snapshot`  
++**And** the document is back to its prior state — verify: `mutation.rollback_proven` is `rolled_back_verified` or `rolled_back_via_snapshot`, and `mutation.changed` is empty. `rolled_back_verified` means equal digests or, when the digests differ, equal mass properties over the same object names: the recompute after the abort writes new B-rep bytes for the shapes it restores, so the digests can differ while the geometry is unchanged (AD-5; `verification-design.md` §1.2, `transaction.py:340-382`)  
+ **And** no snapshot is left behind — verify: `<session tmp>` (Preconditions) holds no `FCB_TMP_snap_*` folder created by this call, because a proven rollback deletes its snapshot  
+ **And** the sketch is still gradeable — verify: `mcp verify_sketch { doc: <handle>, sketch: "LooseProfile" }` returns `status=OK` with `subject.dof=0`  
+ **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+diff --git a/tests/uat/testcases/TC-04-feature-modelling.md b/tests/uat/testcases/TC-04-feature-modelling.md
+index 2949370..0105a0a 100644
+--- a/tests/uat/testcases/TC-04-feature-modelling.md
++++ b/tests/uat/testcases/TC-04-feature-modelling.md
+@@ -683,7 +683,7 @@ mcp feature_fillet { doc: <handle>, body: "PlateBody", base: "PlatePad",
+ **And** The failure is explained — verify: `mutation.post_verify.explanation` is non-empty and names the feature and the engine's own status string  
+ **And** No partial solid survives — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names no `TooBigFillet`  
+ **And** The plate is unchanged — verify: `mcp query_mass_properties { doc: <handle>, object: "PlatePad" }` again returns `volume=12000.0` within 0.1 %  
+-**And** The fingerprint proves it — verify: `mutation.fingerprint_before.digest` equals `mutation.fingerprint_after.digest`, or the rollback state is `rolled_back_via_snapshot`  
++**And** The fingerprint proves it — verify: `mutation.rollback_proven` is `rolled_back_verified` or `rolled_back_via_snapshot`, and `mutation.changed` is empty. `rolled_back_verified` means equal digests or, when the digests differ, equal mass properties over the same object names: the recompute after the abort writes new B-rep bytes for the shapes it restores, so the digests can differ while the geometry is unchanged (AD-5; `verification-design.md` §1.2, `transaction.py:340-382`)  
+ **And** The snapshot was deleted — verify: `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`, because a proven rollback removes its snapshot  
+ **And** The document still recomputes clean — verify: `mcp verify_recompute { doc: <handle> }` returns `status=OK`  
+ **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+@@ -905,9 +905,9 @@ mcp feature_set_parameters { doc: <handle>, feature: "BlockPad",
+ ```
+ 
+ **Then** An unknown property is refused — verify: step 1 returns `status=INVALID_INPUT` naming `BlockPad has no property named 'Thickness'`  
+-**And** A property the tool cannot write is refused — verify: step 2 returns `status=INVALID_INPUT` naming `BlockPad.Shape is a Part::PropertyPartShape, which feature_set_parameters cannot write` (`features.py:1764`); a revolution's `Base` gets `ShaftRev.Base is read-only`  
++**And** A property the tool cannot write is refused — verify: step 2 returns `status=INVALID_INPUT` naming `BlockPad.Shape is a Part::PropertyPartShape, which feature_set_parameters cannot write` (`features.py:1767`); a revolution's `Base` gets `ShaftRev.Base is read-only`  
+ **And** A wrong unit is refused — verify: step 3 returns `status=INVALID_INPUT` naming `Length value unit must be one of ['mm'], got 'deg'`  
+-**And** An unsupported value type is refused — verify: step 4 returns `status=INVALID_INPUT` naming `Length value must be a quantity, number, boolean or enum string`  
++**And** An unsupported value type is refused — verify: step 4 returns `status=INVALID_INPUT` naming `BlockPad.Length is a App::PropertyLength and takes a {value, unit} quantity or a number, got [25]` (`features.py:1789`; `mcp-tools-design.md` §3.7: the message names `<feature>.<prop>` and its type)  
+ **And** Every refusal is pre-transaction — verify: none of the four envelopes carries `mutation.snapshot_path`  
+ **And** No snapshot was written — verify: after all four steps `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
+ **And** The feature is unchanged — verify: `mcp query_mass_properties { doc: <handle>, object: "BlockPad" }` again returns `volume=6000.0` within 0.1 %  
+@@ -997,7 +997,7 @@ mcp feature_pad { doc: <handle>, body: "LooseBody", profile: "LooseProfile",
+ **And** The shape check passed before the sketch check failed — verify: the same block carries `recompute_clean=true`, `is_valid=true` and `fully_constrained=false`, so the failure is the AD-8 step, not the solid  
+ **And** No partial solid survives — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` names no `LoosePad`  
+ **And** The Body carries no Tip — verify: `mcp query_object { doc: <handle>, object: "LooseBody" }` reports no Tip feature  
+-**And** The fingerprint proves the rollback — verify: `mutation.fingerprint_before.digest` equals `mutation.fingerprint_after.digest`, or the rollback state is `rolled_back_via_snapshot`  
++**And** The fingerprint proves the rollback — verify: `mutation.rollback_proven` is `rolled_back_verified` or `rolled_back_via_snapshot`, and `mutation.changed` is empty. `rolled_back_verified` means equal digests or, when the digests differ, equal mass properties over the same object names: the recompute after the abort writes new B-rep bytes for the shapes it restores, so the digests can differ while the geometry is unchanged (AD-5; `verification-design.md` §1.2, `transaction.py:340-382`)  
+ **And** The snapshot was deleted — verify: `<session tmp>` lists the same `FCB_TMP_snap_*` entries as the `Given`  
+ **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** *(visual)* the FreeCAD window shows only the loose rectangle sketch and no padded solid — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-04-23-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and confirm no extruded material appeared; a visible 10 mm block would mean the rollback restored the tree but not the view. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+diff --git a/tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md b/tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md
+index e0e6750..0c84af6 100644
+--- a/tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md
++++ b/tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md
+@@ -229,14 +229,16 @@ be accepted is `rolled_back: true` with `rollback_proven: null`.
+ **Given** a body with a `Pad`, a `Fillet` on that pad, a `Sketch001` mapped to a fillet-created face, and a 900 mm `Pocket` from `Sketch001` — a topology chain where undo has historically failed to restore the boundary. The 900 mm pocket cuts through the whole solid and commits `OK`, so it is part of the chain, not a reproducer — verify: `mcp query_dependencies { doc: <handle> }` shows `Sketch001` depending on `Fillet` and `Pocket` on `Sketch001`  
+ **And** the pre-mutation window is framed and captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view); then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-06-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the reproducer search runs — each of the following failing mutations is previewed, then attempted in turn, recording `mutation.rollback_proven` for each  
++**When** the reproducer search runs — each of the following failing mutations is previewed, then attempted in turn, recording `mutation.rollback_proven` for each. Reproducer 1 removes one line of `Sketch001`, so its wire is open and the `Pocket` on the fillet face fails its recompute. Reproducer 2 asks the `Fillet` for a radius it cannot carry  
+ ```
+-mcp feature_pattern { doc: <handle>, body: "Body", name: "Pattern", kind: "linear", originals: ["Pocket"], direction: { kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }, occurrences: 200, confirm: { preview_id: "<token>" } }
++mcp sketch_remove_geometry { doc: <handle>, sketch: "Sketch001", geo_ids: [0], confirm: { preview_id: "<token>" } }
+ mcp feature_set_parameters { doc: <handle>, feature: "Fillet", parameters: { Radius: { value: 400, unit: "mm" } }, confirm: { preview_id: "<token>" } }
+ ```
++A linear pattern of `Pocket` is not a reproducer here: along `Edge1` it repeats the through cut in its own column, so 20 occurrences commit with no change, and 200 occurrences did not finish: a FreeCADCmd 1.1.4 recompute ran past 10 minutes and 5 GB of memory.
+ **And** which, if any, reported `rolled_back_via_snapshot` is recorded  
+ 
+-**Then** if any reproducer hit the escalation — verify: `mutation.rollback_proven` equals `"rolled_back_via_snapshot"`  
++**Then** every reproducer reached the bracket and failed there — verify: each apply returns `status` `RECOMPUTE_ERROR` or `SPEC_FAILED` with a `mutation` block whose `rolled_back` is `true`. An `INVALID_INPUT` refusal means the reproducer did not run, and the search is incomplete  
++**And** if any reproducer hit the escalation — verify: `mutation.rollback_proven` equals `"rolled_back_via_snapshot"`  
+ **And** the snapshot path is named on the escalated block — verify: `mutation.snapshot_path` is a non-null path under a `FCB_TMP_snap_` directory inside the session temp folder  
+ **And** rollback is still claimed as proven — verify: `mutation.rolled_back` is `true`, because the re-hash after the restore matched  
+ **And** the geometry returned to the pre-mutation value — verify: `mutation.changed` is `[]`. On this path the proof compares mass properties, not digests: reopening a file re-serializes every shape, so `fingerprint_after.digest` never equals the pre-mutation digest after a snapshot restore (Story 10.3 D4)  
+@@ -245,7 +247,7 @@ mcp feature_set_parameters { doc: <handle>, feature: "Fillet", parameters: { Rad
+ **And** the snapshot was deleted after the proven restore — verify: the **snapshot check** (Preconditions) returns `[]`  
+ **And** CONDITIONAL — if every reproducer returned `rolled_back_verified`, record the scenario as not-exercised. Verify: no run produced `rolled_back: true` with `rollback_proven: null`  
+ **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+-**And** *(visual)* the human's window shows the pre-mutation document, not an empty or replaced one — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what each one shows. The after image must show the same solid with the same fillet at the same size as the before image: the same 900 mm pocket, no 200-instance pattern array, no oversized fillet, no empty viewport, no error marker, no dialog. A snapshot restore reopens the document behind the human's back, so an empty viewport or a stale window here is a real defect that the rebound handle and matching digest both hide. The judgement is on the pixels alone — no MCP status, digest, or render may stand in for looking at the two images.  
++**And** *(visual)* the human's window shows the pre-mutation document, not an empty or replaced one — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what each one shows. The after image must show the same solid with the same fillet at the same size as the before image: the same 900 mm pocket with its closed square outline, no oversized fillet, no empty viewport, no error marker, no dialog. A snapshot restore reopens the document behind the human's back, so an empty viewport or a stale window here is a real defect that the rebound handle and matching digest both hide. The judgement is on the pixels alone — no MCP status, digest, or render may stand in for looking at the two images.  
+ 
+ **Cleanup**:
+ ```bash
+@@ -655,16 +657,16 @@ mcp document_close { doc: <handle-b> }
+ 
+ ---
+ 
+-### TC-05-17: TNP flags BROKEN when a referent vanishes
++### TC-05-17: TNP Layer-0 sweep flags BROKEN when the recompute breaks the pad
+ 
+ **Priority**: Critical
+-**Design Ref**: `verification-design.md` §3 (AD-7, Layer 0 validity sweep and Layer 1 unresolvable element)
++**Design Ref**: `verification-design.md` §1.3 and §3.2 (AD-7, Layer 0 error sweep)
+ 
+ **Given** a body with a 30 mm `Pad` and a 2 mm `Fillet` on `Edge1` of that pad is open  
+ **And** this build exposes an element map  
+ **And** the pre-mutation window is framed and captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view); then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-17-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the geometry the fillet's base depends on is removed — the pad's profile sketch is shrunk so the filleted edge no longer exists  
++**When** the geometry the fillet's base depends on is removed — the pad's profile sketch loses one of its four lines, so its wire is open, the pad cannot rebuild, and the filleted edge has no source  
+ ```
+ mcp preview_dry_run { doc: <handle>, operation: { tool: "sketch_remove_geometry", args: { sketch: "Sketch", geo_ids: [0] } } }
+ mcp sketch_remove_geometry { doc: <handle>, sketch: "Sketch", geo_ids: [0], confirm: { preview_id: "<token>" } }
+@@ -674,7 +676,7 @@ mcp sketch_remove_geometry { doc: <handle>, sketch: "Sketch", geo_ids: [0], conf
+ **And** the audit still ran and flagged it — verify: `mutation.post_verify.tnp_audit.status` equals `"FLAGGED"`, not `"CLEAN"` and not `"UNSUPPORTED"`  
+ **And** a BROKEN finding is present — verify: `tnp_audit.findings` contains an entry with `verdict: "BROKEN"`  
+ **And** the finding comes from the Layer-0 validity sweep — verify: that entry's `layer` is `0`  
+-**And** the break is attributed to the fillet — verify: a BROKEN entry's `owner` is `"Fillet"`  
++**And** the break is attributed to the object the recompute broke — verify: a BROKEN entry's `owner` is `"Pad"`, its `prop` is `"Profile"`, and its `detail` starts `Pad is invalid after the mutation: `. The Layer-0 sweep reports each object that fails `isValid()` (`verification-design.md` §1.3 and §3, `tnp_guard.py:369`). FreeCAD does not recompute the `Fillet` above a failed `Pad`, so the `Fillet` stays valid and gets no Layer-0 entry  
+ **And** the mutation was rolled back — verify: `mutation.rolled_back` is `true`  
+ **And** the fillet is intact after the rollback — verify: `mcp query_mass_properties { doc: <handle>, object: "Fillet" }` returns `status: "OK"`  
+ **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+diff --git a/tests/uat/testcases/TC-06-render-and-gui-visual-fidelity.md b/tests/uat/testcases/TC-06-render-and-gui-visual-fidelity.md
+index d2646fb..8be0cff 100644
+--- a/tests/uat/testcases/TC-06-render-and-gui-visual-fidelity.md
++++ b/tests/uat/testcases/TC-06-render-and-gui-visual-fidelity.md
+@@ -39,7 +39,7 @@ headless host with no GL context to prove the honest-degradation path.
+ - [ ] `cua-driver` is reachable and in the interactive session (verify: `cua-driver status` reports the daemon and NOT Session 0)
+ - [ ] The render ladder reports a usable mode (verify: `mcp query_capabilities {}` returns `render` = `gui_constructed`)
+ - [ ] The FreeCAD `(pid, window_id)` pair is known (verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns the window whose `title` is `FreeCAD <live version>`)
+-- [ ] `script_exec` is on, as it is by default (verify: `tools/list` includes `script_exec`). TC-06-09, TC-06-10 and TC-06-12 use it to read or change state that no typed tool reaches.
++- [ ] `script_exec` is on, as it is by default (verify: `tools/list` includes `script_exec`). TC-06-01, TC-06-09, TC-06-10 and TC-06-12 use it to read or change state that no typed tool reaches.
+ - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
+ - [ ] The session temp folder is known: `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`). Take it from the folder of any `render.resource_link`. If the agent shell gets "Access is denied", list it in-process: `mcp script_exec {doc:<handle>, code:"import os\nfrom freecad_buddy.usecases.documents import temp_dir\nresult = sorted(os.listdir(temp_dir()))"}`.
+ - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
+@@ -79,7 +79,14 @@ view. The button exists in the UIA tree **only while a document is open**.
+ **Priority**: Critical
+ **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
+ 
+-**Given** a document with one shape-bearing object is open — verify: `mcp document_list {}` returns a handle; `mcp query_tree_summary {doc:<handle>}` names the object  
++**Given** the live FreeCAD has anti-aliasing on before the scenario's document opens. FreeCAD reads `AntiAliasing` once per 3D view, when it builds the view (`View3DInventor.cpp:112-117`), and a UAT launch runs on a temporary profile (`freecad-gui-e2e-harness.md` §2 Launch, **Profile**), so the developer's `user.cfg` says nothing about the live window. `script_exec` needs a document, so a scratch document carries the write and is closed before the scenario's document opens  
++```
++mcp document_create { label: "tc-06-01-aa" }
++mcp script_exec { doc: <scratch handle>, code: "p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\nresult = p.GetInt('AntiAliasing', -1)\np.SetInt('AntiAliasing', 4)" }
++mcp document_close { doc: <scratch handle> }
++```
++— verify: record the `value_repr` as the old value (`-1` when the key is unset); the stored enum `4` maps to 8 samples (mapping table in TC-06-12)  
++**And** a document with one shape-bearing object is open — verify: `mcp document_list {}` returns a handle; `mcp query_tree_summary {doc:<handle>}` names the object  
+ **And** the object's geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"<Object>"}` returns `volume` and `bbox`  
+ 
+ **When** the GUI camera is set through the **toolbar buttons**, not the View menu and not keystrokes. Snapshot first, then act on a token from that same snapshot.  
+@@ -116,7 +123,7 @@ Copy the returned `render.resource_link` PNG to `$RUN_DIR/evidence/tc-06-01-mcp.
+ **And** the proportions match the geometry — verify: the rendered extents agree with the `bbox` from `mcp query_mass_properties {doc:<handle>, object:"<Object>"}` (a 60x40x5 mm bracket reads flat and wide, not cubic)  
+ **And** the camera and framing are consistent — verify: the iso orientation in `$RUN_DIR/evidence/tc-06-01-mcp.png` matches `$RUN_DIR/evidence/tc-06-01-viewport.png`; any axis flip or off-centre framing is recorded  
+ **And** there is no missing or extra geometry — verify: no object visible in the viewport is absent from the MCP render, and no `PartDesign::Body`, `Sketcher::SketchObject`, or `App::Origin` child leaked into it  
+-**And** anti-aliasing is honored — verify: edges are smooth when AA is configured; read the configured value with `Select-String AntiAliasing "$env:APPDATA/FreeCAD/v1-1/user.cfg"`  
++**And** anti-aliasing is honored — verify: `mcp script_exec {doc:<handle>, code:"result = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View').GetInt('AntiAliasing', -1)"}` returns `value_repr` `4`, and a zoom of one diagonal silhouette edge shows blended intermediate pixels, not a hard two-colour stair, in both `$RUN_DIR/evidence/tc-06-01-mcp.png` and `$RUN_DIR/evidence/tc-06-01-viewport.png`  
+ **And** the render face tone is inside the AD-34 band — verify: `uv run python -c "from freecad_buddy.usecases.render_tone import verify_render_tone as v; print(v(r'$RUN_DIR/evidence/tc-06-01-mcp.png'))"` prints `'passed': True`, and when you `Read` the PNG no visible face is pure black or pure white and every face stands clear of the background. Do not compare face tone with `$RUN_DIR/evidence/tc-06-01-viewport.png`: the render has its own lighting rig, so a face that is darker or brighter than in the window is not a finding (AD-34; `integration-mcp-freecad.md` §6 lighting rig, headlight 0.80; sprint-change-proposal-2026-10-04 decision 4)  
+ **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
+ **And** *(visual)* the window shows one whole object, drawn as FreeCAD draws it, and the render depicts that same object — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many solids, what shape and proportion, which corner faces the viewer. Then `Read` `$RUN_DIR/evidence/tc-06-01-mcp.png` and judge the render against that description on object set, silhouette, proportion and camera. Face shading is excluded from this comparison: the render is judged on the AD-34 tone band alone (line above). The window is the referent for what is drawn; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree on what is drawn, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+@@ -125,6 +132,7 @@ Copy the returned `render.resource_link` PNG to `$RUN_DIR/evidence/tc-06-01-mcp.
+ ```bash
+ rm -f "$RUN_DIR/evidence/tc-06-01-"*.png
+ ```
++Restore the old `AntiAliasing` value recorded in the `Given`: `mcp script_exec {doc:<handle>, code:"p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\np.SetInt('AntiAliasing', <old value>)"}`, or `p.RemoveInt('AntiAliasing')` when the old value was `-1`.
+ 
+ ---
+ 
+@@ -453,6 +461,7 @@ rm -f "$RUN_DIR/evidence/tc-06-08-"*.png
+ mcp query_mass_properties {doc:<handle>, object:"Box"}
+ mcp query_tree_summary {doc:<handle>, depth:2}
+ ```
++**And** the `FCB_TMP_shot_*.png` files already in the session temp folder are listed (see Preconditions). Earlier renders of the same FreeCAD session are still there  
+ **And** several renders with different view options are run  
+ ```bash
+ mcp query_screenshot {doc:<handle>, view:{camera:"iso"}}
+@@ -471,7 +480,7 @@ mcp query_tree_summary {doc:<handle>, depth:2}
+ **And** the strict guard is active — verify: every render response has `render.dirty_document` false, which is the state in which the before-equals-after mutation assertion runs  
+ **And** no object was left Touched — verify: `mcp script_exec {doc:<handle>, code:"result = [o.Name for o in doc.Objects if 'Touched' in o.State]"}` returns `value_repr` `[]` after the renders; a render must not touch the document. (`verify_recompute` recomputes first, so it can never see a Touched object.)  
+ **And** styles did not persist — verify: a render with no `styles` after the styled render shows `Box` in its original color, so the style override lived only in the constructed scene  
+-**And** no temp PNG is orphaned beyond the returned links — verify: the `FCB_TMP_shot_*.png` files in the session temp folder (see Preconditions) are at most the files still referenced by the three `render.resource_link` values, and the system temp folder holds no `FCB_TMP_shot_*.png` written by these calls  
++**And** no temp PNG is orphaned beyond the returned links — verify: list the `FCB_TMP_shot_*.png` files of the session temp folder again; the files added since the list in the `When` are exactly the files named by this scenario's `render.resource_link` values (the three renders of the `When` plus the unstyled render of the line above), and the system temp folder holds no `FCB_TMP_shot_*.png` written by these calls. The files listed in the `When` stay: a link may still be read after its call returns, so the session-start sweep removes render files, never the render call (AD-25)  
+ **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
+ **And** *(visual)* the window shows one box in its original colour, not green, and the iso render depicts that same box — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-09-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: one box, its proportions, and its colour — which is its original colour, not the green the styled render used. Then `Read` the iso render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `dirty_document` flag, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+ 
+diff --git a/tests/uat/testcases/TC-08-preview-confirm-and-undo.md b/tests/uat/testcases/TC-08-preview-confirm-and-undo.md
+index 1a2b665..ae6b97b 100644
+--- a/tests/uat/testcases/TC-08-preview-confirm-and-undo.md
++++ b/tests/uat/testcases/TC-08-preview-confirm-and-undo.md
+@@ -60,7 +60,7 @@ The check passes when `value_repr` is `[]`.
+ mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_pad", args: { body: "Body", profile: "Sketch", name: "Pad", length: { value: 30, unit: "mm" } } } }
+ ```
+ 
+-**Then** the envelope succeeded — verify: `status` is `OK`, `detail` is `null`, and `structured_content.diff.schema` equals `"fcb.geometry-diff/1"`  
++**Then** the envelope succeeded — verify: `status` is `OK`, `detail` is `null`, and `structured_content.diff.schema` equals `"fcb.geometry-diff/2"` (`contracts/diff.py:77`; `data-contracts-design.md` §7)  
+ **And** the volume delta is measured with units — verify: `diff.deltas.volume` reports `before: 0.0`, `after: 12000.0`, `delta: 12000.0`, `units: "mm^3"`  
+ **And** area and bbox carry their own units — verify: `diff.deltas.area.units` equals `"mm^2"` and `diff.deltas.bbox.units` equals `"mm"`, and `diff.deltas.com.units` equals `"mm"`  
+ **And** topology counts are deltas, not totals — verify: `diff.counts.solids` reports `before: 0`, `after: 1`, `delta: 1`, and `diff.counts.faces.delta` equals `6`  
+@@ -510,7 +510,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
+ **And** the corrected call was NOT refused as spent — verify: the corrected call's response contains no `has already authorized a mutation` message  
+ **And** the geometry landed — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` returns `volume` = `12000.0`  
+ **And** the token is spent only after the successful apply — verify: re-sending the same token a fourth time now returns `confirm.preview_id has already authorized a mutation; re-run preview_dry_run`  
+-**And** other refusal paths also leave the token usable — verify: repeating the flow where the middle call is refused with `confirm.elicitation_action must be 'accept', got 'decline'` still lets the corrected call succeed  
++**And** other refusal paths also leave the token usable — verify: repeating the flow where the middle call sends `confirm: { preview_id: "<token>", elicitation_action: "decline" }` gets the MCP input-schema refusal `Input validation error: 'decline' is not one of ['accept']`, and the corrected call with the same token still succeeds. The `Confirm` schema allows only `accept`, so a decline never reaches the mutation tool (`mcp-tools-design.md` §4); the listener's own message `confirm.elicitation_action must be 'accept', got 'decline'` (`usecases/confirm.py:215`) is reachable only over raw RPC, which this scenario does not use  
+ **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** *(visual)* the window shows exactly one 30 mm pad — verify: capture immediately after the refused 60 mm call to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-13-refused.png"}' | & cua-driver call get_window_state`, and again after the corrected apply to `"$RUN_DIR/evidence/tc-08-13-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid. The after image must show a single extruded solid whose height reads as 30 mm, not the 60 mm of the refused call. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
+ 
+diff --git a/tests/uat/testcases/TC-09-error-contract-and-fault-injection.md b/tests/uat/testcases/TC-09-error-contract-and-fault-injection.md
+index ef0bc72..3c7464d 100644
+--- a/tests/uat/testcases/TC-09-error-contract-and-fault-injection.md
++++ b/tests/uat/testcases/TC-09-error-contract-and-fault-injection.md
+@@ -28,7 +28,7 @@ listener carries the non-string-`doc` guard and the suspect-document logic
+ ## Preconditions
+ - [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+ - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
+-- [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
++- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
+ - [ ] Fault fixtures present (verify: `ls benchmarks/g0/fault-injection/wrong-volume/fixture.FCStd`)
+ - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/*.FCStd` lists 5 files)
+ - [ ] No stale H1 server holding the fixtures (verify: `netstat -ano | grep :8765` shows at most the GUI proxy)
+@@ -48,7 +48,7 @@ listener carries the non-string-`doc` guard and the suspect-document logic
+ **And** the model is framed, so the before and after images share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** the untouched GUI window is captured after that fit — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-01-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the automated edge sweep is run. It spawns its own headless H1 server and drives the failure and boundary contract over real MCP stdio  
++**When** the automated edge sweep is run. It spawns its own headless H1 server and drives the failure and boundary contract over real MCP stdio. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+ ```bash
+ uv run python scripts/automation/run_mcp_edge_cases.py
+ ```
+@@ -373,7 +373,7 @@ rm -f "$RUN_DIR/evidence/tc-09-08-n.step" "$RUN_DIR/evidence/tc-09-08-n2.step"
+ ### TC-09-09: Very long strings are handled without truncation or crash
+ 
+ **Priority**: Medium
+-**Design Ref**: `data-contracts-design.md` §3 (string fields), `mcp-tools-design.md` §3.1
++**Design Ref**: `data-contracts-design.md` §3 (string fields), `mcp-tools-design.md` §3.1, spine AD-31 (a fit never activates another document's view)
+ 
+ **Given** a scratch document is available — verify: `document_create` returns `OK`  
+ **And** a golden model is open as `<H>` so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`  
+@@ -400,8 +400,9 @@ mcp query_object { doc: <H>, object: "<65536 'c' characters>" }
+ **And** the traceback in `detail.data.traceback` is capped — verify: its length is at most 4000 characters, matching `_TRACEBACK_LIMIT` at `src/freecad_buddy/adapters/rpc_dispatch.py:25`  
+ **And** the server survives — verify: `mcp query_capabilities {}` returns `OK` after the long-name query  
+ **And** the 16 MiB frame cap is not reached by any of these — verify: no `handshake required` or frame-size error appears in the addon log  
++**And** *(visual)* `<H>`'s view is brought to the front through the GUI — the accepted `document_create` gave the long-labelled document its own view, FreeCAD made that view active, and the bridge never activates another document's view (spine AD-31), so `view_fit_viewport { doc: <H> }` is refused while the new view is in front. Activate `<H>` through its numbered `Windows` menu entry: the entry reads `<n> box-10-20-30 : 1*`, where the trailing `*` is there because Show All marked the document modified; take `<n>` and the exact text from a fresh `get_window_state` snapshot — verify: `'{"pid":<pid>,"window_id":<wid>,"path":["Windows","<n> box-10-20-30 : 1*"]}' | & cua-driver call invoke_menu` returns `route: "accessibility"`, and the `list_windows` title names `box-10-20-30`  
+ **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+-**And** *(visual)* the refused long-path open left no half-opened document on screen — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-09-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the golden model still shown whole and framed, no extra empty document tab or blank 3D view, the two images visually identical apart from any legitimately created long-labelled document, and no error dialog or modal raised by the oversized strings. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
++**And** *(visual)* the refused long-path open left no half-opened document on screen — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-09-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the golden model shown whole and framed at the same size and position as in the before image; the model tree lists the documents of the before image plus the one long-labelled document (and its tab), and no document whose name starts `tc-09-09-bbb`; and no error dialog or modal raised by the oversized strings. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+ 
+ **Cleanup**:
+ ```
+@@ -858,12 +859,12 @@ mcp document_close { doc: <H> }
+ **Priority**: Critical
+ **Design Ref**: `data-contracts-design.md` §3 (nothing raises past the dispatch boundary)
+ 
+-**Given** both sweeps have run in this session — verify: `ls "$RUN_DIR/evidence/tc-09-22-e2e_report.json" "$RUN_DIR/evidence/tc-09-01-edge_report.json"`  
++**Given** both sweep scripts are present, so the When can run them; the When writes the report files — verify: `ls scripts/automation/run_mcp_e2e.py scripts/automation/run_mcp_edge_cases.py`  
+ **And** a golden model is open in the GUI as `<H>` so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`  
+ **And** the model is framed, so the before and after images share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** the untouched GUI window is captured after that fit — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-22-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** both sweeps are run so their stderr logs are current, and their outputs are copied from `_automation/` into the run folder  
++**When** both sweeps are run so their stderr logs are current, and their outputs are copied from `_automation/` into the run folder. Each sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+ ```bash
+ uv run python scripts/automation/run_mcp_e2e.py
+ cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-09-22-e2e_report.json"
+diff --git a/tests/uat/testcases/TC-10-concurrency-timeout-and-quarantine.md b/tests/uat/testcases/TC-10-concurrency-timeout-and-quarantine.md
+index 11fb03f..5fd9ed1 100644
+--- a/tests/uat/testcases/TC-10-concurrency-timeout-and-quarantine.md
++++ b/tests/uat/testcases/TC-10-concurrency-timeout-and-quarantine.md
+@@ -36,7 +36,7 @@ process and never appear in the GUI window, so an H1 scenario's GUI capture show
+ - [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+ - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
+ - [ ] The H1 host starts as `"$FCB_PYTHON" -m freecad_buddy.hosts.main serve --transport stdio --mode inline`; its front spawns the worker with the same interpreter (`sys.executable`). The worker pid is the child of the front whose command line ends `-m freecad_buddy.hosts.headless.worker`
+-- [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
++- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
+ - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
+ - [ ] For the H2 scenarios only: FreeCAD GUI running with the addon loaded (verify: `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp` returns a non-`000` code)
+ - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
+@@ -55,7 +55,7 @@ process and never appear in the GUI window, so an H1 scenario's GUI capture show
+ **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
+ **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-01-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the happy-path sweep is run on its own H1 host, and its report and server stderr are copied from `_automation/`, where the sweep writes them  
++**When** the happy-path sweep is run on its own H1 host, and its report and server stderr are copied from `_automation/`, where the sweep writes them. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+ ```bash
+ uv run python scripts/automation/run_mcp_e2e.py
+ cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-10-01-e2e_report.json"
+@@ -101,7 +101,7 @@ larger (30 s for most `query_*`, 60 s for `query_screenshot` / `verify_shape` /
+ **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
+ **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-02-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the happy-path sweep is run, and its report is copied from `_automation/`  
++**When** the happy-path sweep is run, and its report is copied from `_automation/`. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+ ```bash
+ uv run python scripts/automation/run_mcp_e2e.py
+ cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-10-02-e2e_report.json"
+@@ -143,14 +143,14 @@ with the message `bridge busy: another client session is active`, and its connec
+ Authentication runs first: a wrong token gets `auth failed`, never the busy message.
+ 
+ **Given** the FreeCAD GUI is running with the addon loaded  
+-**And** the discovery file is readable — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-"*.json`  
++**And** the discovery file of the running FreeCAD is readable — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<pid>.json"`, where `<pid>` is the FreeCAD pid from `cua-driver call list_windows`. The folder can also hold `rpc-*.json` files of FreeCAD processes that were killed: the listener deletes its file only on a clean shutdown, and clients skip a file whose pid is dead (`integration-mcp-freecad.md` §2.6)  
+ **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle. This call also makes the proxy connect, and it keeps that connection as the active session  
+ **And** the proxy holds the session — verify: `netstat -ano | findstr <listener-port>` shows one `ESTABLISHED` pair owned by the proxy pid  
+ **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-03-before.png"}' | & cua-driver call get_window_state`  
+ 
+-**When** the host, port and token are read from the discovery file  
++**When** the host, port and token are read from the discovery file of the running FreeCAD, and its `pid` field is printed to confirm it names `<pid>`  
+ ```bash
+-python3 -c "import glob,json,os;p=glob.glob(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-*.json'))[0];r=json.load(open(p));print(r['host'],r['port'],r['token'])"
++python3 -c "import json,os;r=json.load(open(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-<pid>.json')));print(r['pid'],r['host'],r['port'],r['token'])"
+ ```
+ **And** client B opens a TCP connection to that port, sends a valid `rpc_hello`, and records the time until the first reply frame arrives  
+ **And** client C opens a TCP connection to that port and sends `rpc_hello` with a wrong token  
+@@ -312,19 +312,19 @@ mcp script_exec { doc: <D>, code: "import time, Part\nend = time.monotonic() + 7
+ ```
+ **And** the returned envelope is read in full and its elapsed time recorded  
+ **And** the worker's CPU time is read twice, 3 s apart, right after the envelope arrives: `powershell -NoProfile -Command "(Get-Process -Id <worker pid>).CPU"`  
+-**And** within 5 s of that envelope, `mcp query_tree_summary { doc: <E> }` is issued and its elapsed time recorded  
+-**And** about 65 s after the first call started, `mcp query_tree_summary { doc: <E> }` is issued again  
+-**And** about 85 s after the first call started, when the body has returned, `mcp query_tree_summary { doc: <E> }` is issued once more  
++**And** within 5 s of that envelope, `mcp query_object { doc: <E>, object: "Cylinder" }` is issued and its elapsed time recorded. The probe is a structured, read-only, doc-scoped tool, because the Thens read `detail.data`: `query_tree_summary` returns text only (mcp-tools-design §1.3), with no JSON block and no `structuredContent` (`mcp-tools-design.md:60`)  
++**And** about 65 s after the first call started, `mcp query_object { doc: <E>, object: "Cylinder" }` is issued again  
++**And** about 85 s after the first call started, when the body has returned, `mcp query_object { doc: <E>, object: "Cylinder" }` is issued once more  
+ 
+ **Then** the envelope status is `TIMEOUT` within the budget plus 1 s — verify: the returned `status` field is exactly `TIMEOUT` and the elapsed time is between 30 s and 31 s  
+ **And** the timeout is flagged as a marshal timeout — verify: `detail.data.marshal_timeout` is `true`  
+ **And** the envelope says the body may still be running — verify: `detail.data.maybe_still_running` is `true`  
+ **And** the message names the budget and the consequence — verify: `detail.message` contains `did not answer script_exec within its 30 s budget` and `the document is now suspect: do not blind-retry, run a query_* read first to confirm `  
+ **And** the call was NOT preempted — verify: the worker's CPU time grew between the two reads  
+-**And** the next call is refused without dispatch, at once — verify: the first `query_tree_summary` on `E` returns in under 1 s with `status` `TIMEOUT`, `detail.data.quarantined` `true`, no `marshal_timeout` key, and a message starting `not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker`  
+-**And** past twice the budget the refusal escalates — verify: the second `query_tree_summary` returns `status` `WORKER_CRASHED`, `detail.data.quarantined` `true`, and a message containing `has run past twice its 30 s budget` and `restart the headless host`  
++**And** the next call is refused without dispatch, at once — verify: the first `query_object` on `E` returns in under 1 s with `status` `TIMEOUT`, `detail.data.quarantined` `true`, no `marshal_timeout` key, and a message starting `not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker`  
++**And** past twice the budget the refusal escalates — verify: the second `query_object` returns `status` `WORKER_CRASHED`, `detail.data.quarantined` `true`, and a message containing `has run past twice its 30 s budget` and `restart the headless host`  
+ **And** the front did not end the worker — verify: `Get-Process -Id <worker pid>` still finds the worker after the escalation  
+-**And** the session is served again once the body returns — verify: the third `query_tree_summary` returns `status` `OK`  
++**And** the session is served again once the body returns — verify: the third `query_object` returns `status` `OK`  
+ **And** the timeout was audit-logged — verify: `grep '"verify_verdict": "TIMEOUT"' "$RUN_DIR/evidence/tc-10-07-audit.jsonl"` returns at least one line whose `tool` is `script_exec`  
+ **And** *(visual)* no fit is performed on `D` here, by either route: `D` is now suspect, and a fit is a mutating call the suspect rule must refuse. The `before.png` was framed in the `Given` so the two images already share a camera.  
+ **And** *(visual)* the FreeCAD window is alive and unchanged by the H1 timeout — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-07-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the window paints, the title bar carries no `Not Responding`, no modal is stuck on screen, and `<G>` is drawn whole — not blank, not half-painted, and not frozen. The H1 worker is a separate process, so the GUI window must not change. A correct `TIMEOUT` envelope over a frozen FreeCAD window is the exact defect class commit `636fb8a` fixed, and every numeric `Then` above would still pass. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+@@ -349,7 +349,7 @@ wording (`adapters/rpc_listener.py:420-424`): `document-suspect: a prior call ti
+ document; run a query_* read to confirm state before mutating`. The H2 proxy adds no rule of its
+ own.
+ 
+-**Given** TC-10-07 has just run on the same H1 session, and its abandoned body has returned — verify: the last `query_tree_summary` of TC-10-07 returned `OK`  
++**Given** TC-10-07 has just run on the same H1 session, and its abandoned body has returned — verify: the last `query_object` of TC-10-07 returned `OK`  
+ **And** document `D` is marked suspect by the timed-out `script_exec` of TC-10-07  
+ **And** the GUI window's current state is captured before the attempt, with no fit of any kind — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-08-before.png"}' | & cua-driver call get_window_state`  
+ 
+diff --git a/tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md b/tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md
+index 0c35bf8..7700f0b 100644
+--- a/tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md
++++ b/tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md
+@@ -524,7 +524,7 @@ shell can list that folder as `$RUN_DIR/evidence/tc-11-11-workdir/tmp/FCB_TMP_se
+ **And** the exception path leaves nothing — verify: the same count is unchanged after the raising preview  
+ **And** the failure is reported as a successful preview of a failing diff — verify: the failing preview's `status` is `OK` and `structured_content.diff.validity.status` is `RECOMPUTE_ERROR` (`usecases/preview.py:439-440`)  
+ **And** the exception still returned an envelope — verify: the raising preview's `status` is a closed-set value with a `detail.message`  
+-**And** cleanup never masked the outcome — verify: each preview's `detail.message` names the real cause, not a cleanup failure  
++**And** cleanup never masked the outcome — verify: each preview reports its own cause, and no envelope names the TempDoc, its temp directory, or a close or remove failure. An `OK` envelope carries `detail` `null` (`data-contracts-design.md` §4: `detail` is "required non-null unless status == "OK""), so the cause is read where each path puts it: the succeeding preview is `OK` with `structured_content.diff.validity.status` `OK`; the failing preview is `OK` and its `structured_content.diff.validity.explanation` names the failing object, for example `recompute left 1 object(s) invalid: Fillet: ...` (`usecases/preview.py:439-440`); the raising preview's `detail.message` names the missing object, for example `unknown object in profile: <name>`  
+ **And** no TempDoc is left open in FreeCAD — verify: `document_list` reports no `FCB_TMP_prev_` handle after any of the three  
+ **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** *(visual)* the window is identical to `tc-11-11-before.png` — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-11-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the same single box, whole and framed, the model tree carrying no `FCB_TMP_prev_` item, no new object in the viewport, no dialog raised. `document_list` is bridge output, so a preview copy it omits from its own answer is exactly what that assertion cannot catch — the tree in the image is the independent check. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+@@ -692,8 +692,8 @@ mcp document_close { doc: "<handle>" }
+ **And** reads modified no file — verify: every modification time in the post-sweep listing equals its first-listing value  
+ **And** `preview_dry_run` wrote nothing there — verify: no `FCB_TMP_prev_` file appears in the post-sweep listing  
+ **And** no snapshot was written there — verify: no `FCB_TMP_snap_` entry appears in the post-sweep listing  
+-**And** the explicit export wrote exactly one new file — verify: the third listing adds only the requested `path`  
+-**And** `document_save` touched only the document — verify: only the `.FCStd` file's modification time changed, plus its `.FCBak` if FreeCAD writes one  
++**And** the explicit export wrote exactly one new file — verify: compared with the post-sweep listing, the third listing adds the requested `path` and, at most, the one `.FCBak` backup of the next line; no other name is new  
++**And** `document_save` touched only the document — verify: of the post-sweep files, only the `.FCStd` file's modification time changed. The one other new name allowed is `<stem>.<YYYYmmdd-HHMMSS>.FCBak`: `document_save` calls FreeCAD's own `Document.save()` (`usecases/documents.py:533`), which keeps the previous file as that backup when the `CreateBackupFiles` preference is on, its default (`docs/references/FreeCAD/src/App/Document.cpp:1866-1895`). The backup is the renamed previous file, so its modification time equals the first-listing time of the `.FCStd`  
+ **And** no audit log was written there — verify: no `freecad-buddy-audit.jsonl` appears in the folder unless `FREECAD_BUDDY_AUDIT_LOG` explicitly named it (see TC-99-06)  
+ **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** *(visual)* the window is identical to `tc-11-14-before.png` — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-11-14-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the same single box, whole and framed, no new object in the viewport, no dialog raised by the sweep or the export. The sweep was declared read-only; a `query_*` or `preview_dry_run` that reported success while altering the human's model is exactly what a directory listing cannot catch. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+@@ -701,6 +701,7 @@ mcp document_close { doc: "<handle>" }
+ **Cleanup**:
+ ```bash
+ rm -f "<user document folder>/tc11-export.stl"
++rm -f "<user document folder>/<the .FCBak name the third listing added, if any>"
+ ```
+ ```
+ mcp document_close { doc: "<handle>" }
+@@ -731,8 +732,8 @@ rotates, or reads it.
+ **And** the line count grew — verify: the post-comparison line count is greater than the first-batch count  
+ **And** no line was rewritten — verify: the digest of the first N lines equals the first-batch digest  
+ **And** the file is opened append-only — verify: `grep -n 'open(self._path, "a"' src/freecad_buddy/adapters/audit_log.py` returns line 48  
+-**And** no bridge tool reads the audit log — verify: `grep -rn "FREECAD_BUDDY_AUDIT_LOG\|audit.jsonl" src/freecad_buddy/usecases/ src/freecad_buddy/contracts/ | grep -v operator_settings.py` returns only the `usecases/documents.py` docstring line that names the variable as a precedent for the workdir variable. `usecases/operator_settings.py` only names the default path for the GUI host's environment and never opens it  
+-**And** no rotation or truncation exists — verify: `grep -rniE "rotate|truncate|\"w\"|'w'" src/freecad_buddy/adapters/audit_log.py` returns nothing  
++**And** no bridge tool reads the audit log — verify: `grep -rn --include='*.py' "FREECAD_BUDDY_AUDIT_LOG\|audit.jsonl" src/freecad_buddy/usecases/ src/freecad_buddy/contracts/ | grep -v operator_settings.py` returns only the `usecases/documents.py` docstring line that names the variable as a precedent for the workdir variable. `usecases/operator_settings.py` only names the default path for the GUI host's environment and never opens it  
++**And** no rotation or truncation exists — verify: `grep -nE "open\(|\.truncate\(|\.write_text\(|\.write_bytes\(|\.rename\(|\.replace\(|\.unlink\(|os\.remove\(|shutil\.|Rotating" src/freecad_buddy/adapters/audit_log.py` returns only line 48, the append-mode `open`. The pattern matches calls, not words, so the module docstring that says the sink "never truncates, rotates, or reads it" does not match  
+ **And** writes are serialized — verify: the file after a concurrent two-writer run contains no interleaved partial line; every line parses as JSON  
+ **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
+ **And** *(visual)* the window is identical to `tc-11-15-before.png` — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-11-15-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the same single box, whole and framed, no new object in the viewport, no dialog raised. Two batches of mutations ran on the separate H1 host; a batch that reached across into the human's model is what the audit-file assertions cannot catch. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+diff --git a/tests/uat/testcases/TC-12-gui-workflows.md b/tests/uat/testcases/TC-12-gui-workflows.md
+index cb5e5fb..88f89ae 100644
+--- a/tests/uat/testcases/TC-12-gui-workflows.md
++++ b/tests/uat/testcases/TC-12-gui-workflows.md
+@@ -86,6 +86,26 @@ not the visual: a control can be present in the UIA tree and not painted on scre
+ - `modifier` is not honored on a background click on Windows. Escalate that single action to
+   `delivery_mode:"foreground"` when a Ctrl-click is genuinely required. `right_click` and `count > 1`
+   skip the UIA Invoke step.
++- **A tree row is selected only by a foreground click.** On FreeCAD 1.1.4 a background UIA click,
++  a background `action:"select"` and a background pixel click on a model-tree row all leave the row
++  unselected (`selected: false`, `FreeCADGui.Selection` empty). `click` by `element_token` with
++  `action:"select"` and `delivery_mode:"foreground"` selects it (route `global_input`: it moves the
++  real pointer). Pick the row in the Model panel: when a document or object is selected, the
++  property view lists `TreeItem` rows too, one of them with the same text as the `Label`, so a
++  `verify_state` selector `{role:"TreeItem", label_contains:"<label>"}` can return `unknown`
++  `multi_match`. Read `selected` off the Model-panel row in a fresh snapshot instead.
++- **A combo box popup item and a scroll land only in the foreground.** A background click on a
++  `ListItem` of the workbench combo box popup does not activate it, and `scroll` by
++  `element_token` falls back to `global_input` with no effect. Click the `ListItem` by token, and
++  scroll at a pixel over the tree, each with `delivery_mode:"foreground"`.
++- **Close a popup or a menu that stays open with `press_key` `escape`**, one key per open level, and
++  confirm with `list_windows` that only the main window is left. An `invoke_menu` call can leave
++  its menus open as extra `FreeCAD` popup windows of the pid.
++- **Move the real pointer off the window after a foreground action.** A foreground action leaves
++  the real pointer over FreeCAD, and a pointer over a tree row or the 3D view paints a hover or
++  preselection highlight. After any foreground action and before any visual capture, move the
++  pointer to a desktop point outside the FreeCAD window rectangle from `list_windows`, then wait
++  1 s: `'{"x":<x outside the window>,"y":<y outside the window>,"scope":"desktop"}' | & cua-driver call move_cursor`.
+ - `replay_trajectory` cannot re-resolve element tokens across sessions. Record a trajectory as
+   regression evidence only; never use it as the executor for these scenarios.
+ 
+@@ -234,10 +254,12 @@ mcp query_mass_properties {doc:<handleBox>, object:"Box"}
+ mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}
+ ```
+ **And** Show All is run in each document while its tab is active, so the renders below have a visible subject  
+-**And** the SPHERE document is selected in the GUI model tree. Re-snapshot, then click its tree row through the token from that snapshot, matched on `role == "TreeItem"` and its label.  
++**And** the SPHERE document is selected in the GUI model tree. Re-snapshot, then select its root row in the Model panel through the token from that snapshot, matched on `role == "TreeItem"` and its label, with a foreground `select` (see the tree-row rule above). Selecting a document row also makes that document the active one (`Tree.cpp:3946-3953`, `SyncView` defaults to on, `TreeParams.cpp:99`). Confirm from the `list_windows` title.  
+ ```bash
+ '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-tree.png"}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"element_token":"<sphere row token from this snapshot>"}' | & cua-driver call click
++'{"pid":<PID>,"window_id":<WID>,"element_token":"<sphere row token from this snapshot>","action":"select","delivery_mode":"foreground"}' | & cua-driver call click
++'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
++'{"pid":<PID>}' | & cua-driver call list_windows
+ ```
+ **And** the BOX handle is queried while the sphere is the GUI's active document  
+ ```bash
+@@ -247,14 +269,14 @@ mcp query_screenshot {doc:<handleBox>, view:{camera:"iso"}}
+ ```
+ **And** the BOX document is selected in the GUI, then the SPHERE handle is queried the same way  
+ 
+-**Then** the GUI selection changed — verify: `'{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"role":"TreeItem","label_contains":"sphere-r10"},"selected":true}}]}' | & cua-driver call verify_state` returns `satisfied`  
+-**And** the box handle still returns box geometry — verify: the box-handle `volume` equals `6000.0` mm3, NOT `4188.7902`  
++**Then** the GUI selection changed — verify: in the snapshot taken after the select, the Model-panel `TreeItem` labelled `sphere-r10` reports `selected: true`, and the `list_windows` title names `sphere-r10`. A `verify_state` selector on `label_contains:"sphere-r10"` also matches the property view's `Label` row and returns `unknown` `multi_match`  
++**And** the box handle still returns box geometry — verify: the box-handle `volume` equals `6000.0` mm3, NOT `4188.79`  
+ **And** the box handle's tree is the box's — verify: the box-handle `query_tree_summary` names `Box` and not the sphere object  
+ **And** the render follows the handle, not the selection — verify: the box-handle `query_screenshot` returns `scene.rendered_objects` containing the box object only  
+-**And** the reverse direction holds — verify: after the box document is selected, `mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}` returns `4188.7902` mm3  
++**And** the reverse direction holds — verify: after the box document is selected, `mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}` returns `4188.79` mm3, the analytic `4188.7902` rounded to the `Decimals` preference (`test-plan.md` §3 rule 9)  
+ **And** no tool silently used the active document — verify: no response in either handle-query block names an object belonging to the other document  
+ **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handleBox>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test  
+-**And** *(visual)* the GUI tree shows the selection the scenario made — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state what is on screen: the model tree lists both documents, the `box-10-20-30` row is the highlighted selection, and the 3D view shows the box document's model rather than the sphere. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
++**And** *(visual)* the GUI tree shows the selection the scenario made — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state what is on screen: the model tree lists both documents, the `box-10-20-30` row is the highlighted selection and is drawn bold (FreeCAD's mark for the active document), its document tab is the active tab, and the 3D view shows the box document's model rather than the sphere. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+ 
+ **Cleanup**:
+ ```bash
+@@ -282,27 +304,33 @@ mcp query_tree_summary {doc:<handle>}
+ ```bash
+ '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-before.png"}' | & cua-driver call get_window_state
+ ```
+-**And** `<ObjectB>` is hidden in the GUI. Re-snapshot, select its tree row by `element_token`, then toggle visibility through the `View` menu; the leaf label is resolved at runtime by `invoke_menu`.  
++**And** `<ObjectB>` is hidden in the GUI. Re-snapshot, select its tree row by `element_token` with a foreground `select` (see the tree-row rule above), confirm the row reads `selected: true`, then run View > Visibility > Toggle Visibility (`Std_ToggleVisibility`, menu text `Toggle &Visibility`, `CommandView.cpp:907`). The command is enabled only while something is selected (`CommandView.cpp:927-930`), and `invoke_menu` refuses its leaf with `menu_path_unavailable` while nothing is selected. Close the menus it leaves open with `escape`.  
+ ```bash
+ '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-tree.png"}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"element_token":"<ObjectB row token from this snapshot>"}' | & cua-driver call click
++'{"pid":<PID>,"window_id":<WID>,"element_token":"<ObjectB row token from this snapshot>","action":"select","delivery_mode":"foreground"}' | & cua-driver call click
+ '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"window_id":<WID>,"path":["View","Visibility"]}' | & cua-driver call invoke_menu
++'{"pid":<PID>,"window_id":<WID>,"path":["View","Visibility","Toggle Visibility"]}' | & cua-driver call invoke_menu
++'{"pid":<PID>,"window_id":<WID>,"key":"escape"}' | & cua-driver call press_key
++'{"pid":<PID>}' | & cua-driver call list_windows
+ ```
+ **And** the bridge is re-read  
+ ```bash
+ mcp query_tree_summary {doc:<handle>}
+ ```
+-**And** visibility is restored by repeating the toggle, then the bridge is re-read again  
++**And** the post-toggle window is captured under the same camera as `tc-12-05-before.png`, before the restore below  
++```bash
++'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-after.png"}' | & cua-driver call get_window_state
++```
++**And** visibility is restored by repeating the toggle (`<ObjectB>` stays selected), then the bridge is re-read again  
+ 
+-**Then** the object vanished from the viewport — verify: a `cua-driver` viewport grab after the toggle no longer shows `<ObjectB>`  
++**Then** the object vanished from the viewport — verify: `tc-12-05-after.png` no longer shows `<ObjectB>`  
+ **And** the bridge reports the new flag — verify: in the post-toggle tree text the `<ObjectB>` line starts `- ` and the `<ObjectA>` line starts `v `  
+ **And** the hidden object is still listed — verify: the post-toggle tree text has the same lines as the pre-toggle one apart from the first character of the `<ObjectB>` line; visibility marks a line, it does not drop it  
+ **And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"<ObjectA>"}` and the same call for `<ObjectB>` return the same volumes before and after the toggle; visibility is a view flag, not geometry  
+ **And** restoring works both ways — verify: after the restore, the `<ObjectB>` line starts `v ` again and the tree text equals the pre-toggle one  
+ **And** the bridge read the live flag, not a cache — verify: the post-toggle result differs from the pre-toggle result without any MCP mutation call in between  
+-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test. Use the same fit that produced `tc-12-05-before.png`, so the two images share a camera.  
+-**And** *(visual)* the hidden object is gone from the window and the tree marks it hidden — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the before PNG shows both `<ObjectA>` and `<ObjectB>` drawn in the 3D view, the after PNG shows `<ObjectA>` only, and the `<ObjectB>` tree row is drawn in the greyed style FreeCAD uses for a hidden object. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
++**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test. Use the same fit that produced `tc-12-05-before.png`, and no camera change before `tc-12-05-after.png`, so the two images share a camera.  
++**And** *(visual)* the hidden object is gone from the window and the tree marks it hidden — verify: `Read` both PNGs and state what is on screen: the before PNG shows both `<ObjectA>` and `<ObjectB>` drawn in the 3D view, the after PNG shows `<ObjectA>` only, and the `<ObjectB>` tree row is drawn in the greyed style FreeCAD uses for a hidden object. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+ 
+ **Cleanup**:
+ ```bash
+@@ -326,14 +354,17 @@ Restore `<ObjectB>` visibility before leaving the scenario.
+ mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_fillet", args:{body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}}}}
+ mcp feature_fillet {doc:<handle>, body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}, confirm:{preview_id:"<token>"}}
+ ```
+-**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. Open the dropdown by its arrow, by `element_token` from a fresh snapshot. The list is a popup: find it with `list_windows` and snapshot it, or read the painted pixels.  
++**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. On FreeCAD 1.1.4 the button and its arrow are one UIA element (`Button "Undo"`), so the arrow has no token of its own, and a click on the arrow pixel, background or by token, runs Undo instead of opening the list. Open the list with a press and release on the arrow pixel: a 1 px `drag` that starts on the arrow, read from the snapshot image (route `global_input`: it moves the real pointer). The list is a separate popup window, and a capture of the main window does not contain it: find it with `list_windows` (a second window of the pid, titled `FreeCAD`) and capture that window as `<POPUP_WID>`. Run the `verify_state` on the popup while it is open.  
+ ```bash
+-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"element_token":"<Undo dropdown arrow token from this snapshot>"}' | & cua-driver call click
++'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-pre-dropdown.png"}' | & cua-driver call get_window_state
++'{"pid":<PID>,"window_id":<WID>,"from_x":<arrow x>,"from_y":<arrow y>,"to_x":<arrow x + 1>,"to_y":<arrow y>}' | & cua-driver call drag
++'{"pid":<PID>}' | & cua-driver call list_windows
++'{"pid":<PID>,"window_id":<POPUP_WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-edit.png"}' | & cua-driver call get_window_state
++'{"pid":<PID>,"window_id":<POPUP_WID>,"expect":[{"element":{"selector":{"label_contains":"buddy: feature_fillet Fillet"},"enabled":true}}]}' | & cua-driver call verify_state
++'{"pid":<PID>,"window_id":<WID>,"key":"escape"}' | & cua-driver call press_key
+ '{"pid":<PID>}' | & cua-driver call list_windows
+-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-edit.png"}' | & cua-driver call get_window_state
+ ```
+-Close the dropdown without choosing an entry before the next step.
++The `escape` closes the dropdown without choosing an entry; the last `list_windows` must show the popup window gone before the next step.
+ **And** Undo is invoked from the GUI  
+ ```bash
+ '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
+@@ -344,19 +375,28 @@ Close the dropdown without choosing an entry before the next step.
+ mcp query_tree_summary {doc:<handle>}
+ mcp query_mass_properties {doc:<handle>, object:"<Pad>"}
+ ```
++**And** the model is framed and the post-undo window is captured, before the bridge undo below changes the document  
++```bash
++mcp view_fit_viewport {doc:<handle>}
++'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-after.png"}' | & cua-driver call get_window_state
++```
++**And** the bridge undo is run on the same document  
++```bash
++mcp document_undo {doc:<handle>}
++```
+ 
+ **Then** the Undo entry names the bridge's transaction — verify: the first entry of the toolbar `Undo` dropdown begins with `buddy: `. An entry without that prefix means the mutation did not run inside a named transaction, which is a defect.  
+ **And** the label names the tool — verify: that entry reads `buddy: feature_fillet Fillet`, so a human reading the GUI can tell which bridge call produced it  
+-**And** the undo is enabled — verify: `'{"pid":<PID>,"window_id":<POPUP_WID>,"expect":[{"element":{"selector":{"label_contains":"buddy:"},"enabled":true}}]}' | & cua-driver call verify_state` on the dropdown popup window returns `satisfied`; `unknown` is inconclusive  
++**And** the undo is enabled — verify: the `verify_state` run on the open dropdown popup in the When returns `satisfied`; `unknown` is inconclusive. The selector names the fillet entry in full, because the popup lists one `buddy:` entry per bridge transaction and a bare `buddy:` selector matches all of them (`unknown`, `multi_match`)  
+ **And** GUI Undo removes the feature — verify: the post-undo `query_tree_summary` no longer names the fillet  
+ **And** the geometry reverted — verify: the post-undo `query_mass_properties` returns the pre-fillet volume  
+-**And** the bridge and the GUI share one undo history — verify: after the GUI Undo, `mcp document_undo {doc:<handle>}` either undoes the NEXT older transaction or refuses with an empty stack; it must not undo the same fillet twice  
+-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test  
+-**And** *(visual)* the window shows the `buddy:` Undo entry and then the un-filleted body — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: `tc-12-06-edit.png` shows the toolbar `Undo` dropdown open with a first entry whose visible text begins `buddy: `, and the after PNG shows no menu or dropdown open, the model tree without a fillet row, and the pad's corners sharp again. Read the entry label off the painted dropdown in the image, not off the accessibility tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
++**And** the bridge and the GUI share one undo history — verify: the `mcp document_undo {doc:<handle>}` run after the GUI Undo either undoes the NEXT older transaction or refuses with an empty stack; it must not undo the same fillet twice  
++**And** *(visual)* the model is framed — verify: the `view_fit_viewport` run before the after capture returned `OK`; if it did not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test, and capture `tc-12-06-after.png` again before the bridge undo  
++**And** *(visual)* the window shows the `buddy:` Undo entry and then the un-filleted body — verify: `Read` both PNGs and state what is on screen: `tc-12-06-edit.png` (the capture of the popup window) shows the toolbar `Undo` dropdown list with a first entry whose visible text begins `buddy: `, and `tc-12-06-after.png` (taken after the GUI Undo and before the bridge undo) shows no menu or dropdown open, the model tree without a fillet row, and the pad's corners sharp again. Read the entry label off the painted dropdown in the image, not off the accessibility tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+ 
+ **Cleanup**:
+ ```bash
+-rm -f $RUN_DIR/evidence/tc-12-06-edit.png
++rm -f $RUN_DIR/evidence/tc-12-06-edit.png $RUN_DIR/evidence/tc-12-06-pre-dropdown.png
+ ```
+ Close the document in the GUI and discard changes.
+ 
+@@ -456,15 +496,21 @@ mcp query_tree_summary {doc:<handle>}
+ mcp document_close {doc:<handle>}
+ mcp document_open {path:"$RUN_DIR/evidence/tc-12-08-bracket.FCStd"}
+ mcp query_tree_summary {doc:<handleReopened>}
+-mcp query_mass_properties {doc:<handleReopened>, object:"Cube001"}
++mcp query_mass_properties {doc:<handleReopened>, object:"Box001"}
+ ```
++`Part > Primitives > Cube` makes a `Part::Box` whose internal Name is `Box`, `Box001`, ... and
++whose Label is `Cube`, `Cube001`, .... The tree line shows both (`Box001 "Cube001"`). The `object`
++argument of a query tool takes the immutable Name, never the Label (`queries.py:188-191`,
++`_resolve_object`: "Resolves by immutable ``Name``; never keys on ``Label``"; the design types the
++`object` argument of `query_dependencies` and `verify_shape` the same way, `"immutable Name"` in
++`mcp-tools-design.md` §3.2.1 and §3.3).
+ 
+ **Then** the GUI Save wrote the file — verify: `(Get-Item $RUN_DIR/evidence/tc-12-08-bracket.FCStd).LastWriteTime` after the save is later than the pre-save value  
+ **And** no dialog opened — verify: the `list_windows` after the save returns only the main window  
+ **And** the title bar dropped the modified marker — verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns a window title that names `tc-12-08-bracket` with no `*` marker, where the pre-save title had one  
+ **And** the bridge identifies the saved document — verify: the post-save `document_list` entry has the same `doc` handle and the `label` `tc-12-08-bracket` (the file stem; `document_list` carries no path)  
+ **And** the handle stayed valid across the save — verify: the post-save `query_tree_summary` on `<handle>` returns `OK` and names `Cube` and `Cube001`, so a GUI Save does not invalidate an existing bridge handle  
+-**And** the saved file holds the GUI change — verify: the reopened `query_tree_summary` names `Cube` and `Cube001`, and `query_mass_properties` on `Cube001` returns `volume` `1000.0`  
++**And** the saved file holds the GUI change — verify: the reopened `query_tree_summary` names `Cube` and `Cube001`, and `query_mass_properties` on `Box001` (the Name of `Cube001`) returns `volume` `1000.0`  
+ **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handleReopened>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test  
+ **And** *(visual)* the window shows the reopened saved document — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-08-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state what is on screen: no dialog is open, the title bar reads `tc-12-08-bracket` with no modification marker, and the model tree lists `Cube` and `Cube001`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+ 
+@@ -545,7 +591,7 @@ Confirm the dialog was dismissed with Cancel (or `reject()`), so no preference c
+ **Design Ref**: `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
+ 
+ **Given** two golden documents are open, A = `box-10-20-30` and B = `sphere-r10` — verify: `mcp document_open` on each returns a handle; `mcp document_list {}` returns two entries  
+-**And** both the `Sketch` and `Part Design` menus are present — verify: `get_window_state` lists both at menu depth 2  
++**And** both the `Sketch` and `Part Design` menus are present — verify: `get_window_state` lists both at menu depth 2. If another workbench is active, switch to `Part Design` first with the selector route of the When below  
+ 
+ **When** both handles are recorded and each one is read  
+ ```bash
+@@ -553,12 +599,12 @@ mcp document_list {}
+ mcp query_mass_properties {doc:<handleA>, object:"Box"}
+ mcp query_mass_properties {doc:<handleB>, object:"Sphere"}
+ ```
+-**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box, re-snapshot, then click the `Sketcher` list item, each by `element_token`.  
++**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box, re-snapshot, then click the `Sketcher` list item, each by `element_token`. The list item click must be a foreground click (see the combo box rule above); a background click leaves the selector unchanged. `invoke_menu ["View","Workbench","<name>"]` is not used: on FreeCAD 1.1.4 it switched to `Sketcher` once and then refused `["View","Workbench","Part Design"]` with `menu_path_unavailable` in the same session.  
+ ```bash
+ '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-10-wb.png"}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"element_token":"<workbench ComboBox token from this snapshot>"}' | & cua-driver call click
++'{"pid":<PID>,"window_id":<WID>,"element_token":"<workbench ComboBox token from this snapshot>"}' | & cua-driver call click
+ '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"element_token":"<Sketcher list item token from THIS snapshot>"}' | & cua-driver call click
++'{"pid":<PID>,"window_id":<WID>,"element_token":"<Sketcher list item token from THIS snapshot>","delivery_mode":"foreground"}' | & cua-driver call click
+ ```
+ **And** both handles are re-read, then the workbench is switched to Part Design the same way and both are read again  
+ ```bash
+@@ -603,14 +649,15 @@ mcp query_tree_summary {doc:<handle>, depth:3}
+ mcp query_tree_summary {doc:<handle>, filters:{types:["PAD"]}}
+ mcp query_tree_summary {doc:<handle>, filters:{name_pattern:"Pad*"}}
+ ```
+-**And** the GUI tree is scrolled and inspected. Re-snapshot before the scroll and act by `element_token`.  
++**And** the GUI tree is scrolled and inspected. Re-snapshot before the scroll, then scroll in the foreground at a pixel inside the Model panel's tree rows, read from that snapshot's image (see the scroll rule above: a `scroll` by `element_token` has no effect). The scroll leaves the real pointer over the tree: move it off the window before the second capture (see the pointer rule above), so no row shows a hover highlight.  
+ ```bash
+ '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-11-tree.png"}' | & cua-driver call get_window_state
+-'{"pid":<PID>,"element_token":"<Tree token from this snapshot>","direction":"down","amount":10}' | & cua-driver call scroll
++'{"pid":<PID>,"window_id":<WID>,"x":<x inside the tree rows>,"y":<y inside the tree rows>,"direction":"down","amount":10,"delivery_mode":"foreground"}' | & cua-driver call scroll
++'{"x":<x outside the window>,"y":<y outside the window>,"scope":"desktop"}' | & cua-driver call move_cursor
+ '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-11-tree2.png"}' | & cua-driver call get_window_state
+ ```
+ 
+-**Then** the GUI tree scrolls — verify: the two snapshot trees taken around the scroll expose different visible rows, so the list is navigable at this size  
++**Then** the GUI tree scrolls — verify: the two snapshots taken around the scroll expose different visible rows: the UIA snapshot lists only the Model-panel `TreeItem` rows that are laid out, so the first such row (the topmost by frame `y`) has a different label in the second snapshot  
+ **And** the default depth stays shallow — verify: the first read returns top-level lines only, not all 50 features; `depth` defaults to 1  
+ **And** deeper depth returns more — verify: the depth-3 read has a strictly greater `shown` than the depth-1 read, and at most 200 tree lines; when the cap cuts it, `truncated` is true and the last line is `... <K> more lines; narrow with focus or a smaller depth`  
+ **And** filters reveal a slice — verify: both filtered calls report `matches`, show each match on its opened path, and have a smaller `shown` than the depth-3 call  
+@@ -776,7 +823,7 @@ Get-ChildItem "$env:APPDATA/FreeCAD/v1-1/freecad-buddy"
+ **And** the proxy child is gone — verify: the proxy pid recorded before the quit is no longer in `Get-Process`; it was torn down with its parent, not orphaned  
+ **And** the discovery file is deleted — verify: the post-quit `Get-ChildItem` no longer lists the RPC discovery file  
+ **And** a client call now fails at the transport — verify: `mcp query_capabilities {}` fails to connect to `http://127.0.0.1:8765/mcp`; it must not hang indefinitely  
+-**And** the addon log records a clean shutdown — verify: `Get-Content "$env:APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" -Tail 20` shows the teardown and no unhandled exception  
++**And** the addon log records a clean shutdown — verify: `Get-Content "$env:APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" -Tail 20` shows `INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped` (written by `stop_bridge`, `hosts/gui_addon/bootstrap.py`) and no unhandled exception  
+ **And** restart is clean — verify: reopening FreeCAD recreates the discovery file, re-serves `:8765`, and `mcp query_capabilities {}` returns `OK` again  
+ **And** *(visual)* the window that existed is gone, and the restarted one is back — verify: `'{"pid":<PID>}' | & cua-driver call list_windows` after the quit returns no FreeCAD window, then after the restart `'{"pid":<NEW_PID>,"window_id":<NEW_WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-14-after.png"}' | & cua-driver call get_window_state`; `Read` both PNGs and state what is on screen: the before PNG shows a live FreeCAD main window titled with the live version, with its menu bar and painted workspace, and the after PNG shows a freshly started FreeCAD window titled with the live version, with its start page and no crash or recovery dialog. No auto-fit is issued by either route: the target process does not exist between the quit and the restart, and the restarted instance holds no document, so the `Fit All` toolbar button is absent from the UIA tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+ 

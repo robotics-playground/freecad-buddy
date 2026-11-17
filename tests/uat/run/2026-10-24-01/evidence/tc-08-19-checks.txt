@@ -1,0 +1,20 @@
+TC-08-19 (R2, launch r2-L1-tc08 pid 29140 AUTO_APPROVE=0)
+Run 1 (agent execution fault, kept as tc-08-19-run1-*): my shell line started the When script twice, so the five refused previews,
+  the TempDoc check and the missing-operation call ran twice on doc fcb-doc:x8v2.... Every call was refused both times and the window
+  stayed identical (0 px), but the When was not run as written once. Re-run once from the Given, per RULES.md.
+Run 2:
+Given: tc-08-19 Body + fully constrained 20x20 Sketch; TempDoc check '[]'; view_fit_viewport OK fits 0.95; tc-08-19-before.png.
+When: preview_dry_run of document_save (path evidence/tc-08-19-save.FCStd), script_exec {code "1"}, no_such_tool; operation {args {name Pad}};
+      operation {tool feature_pad, args "not an object"}.
+PASS document_save -> INVALID_INPUT "not a previewable mutation tool: 'document_save' (previewable: " + comma-separated list.
+PASS list = 19 names, sorted, equal to the 19 tools that carry confirm (8 sketch_*, 11 feature_*); no document_*, export_*, script_exec.
+PASS script_exec -> same form with 'script_exec'.
+PASS no_such_tool -> same form with 'no_such_tool'.
+PASS missing tool -> isError "Input validation error: 'tool' is a required property" (schema refusal).
+PASS args not an object -> isError "Input validation error: 'not an object' is not of type 'object'" (schema refusal).
+PASS TempDoc check after the five calls '[]'; no tc-08-19-save.FCStd written.
+PASS missing operation -> isError "Input validation error: 'operation' is a required property".
+PASS fit OK fits 0.95.
+PASS visual: before and after: flat 20x20 rectangle in iso, tree tc-08-19 > Body, title "* tc-08-19 - FreeCAD 1.1.4" in both (the * was
+     there before: unsaved new document), no new feature, no save marker change, no dialog; r2_diff 0 px. Live check 3086 px.
+Verdict: PASS (run 2)

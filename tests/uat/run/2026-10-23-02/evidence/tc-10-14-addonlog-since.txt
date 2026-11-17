@@ -1,0 +1,4 @@
+2026-10-23 23:50:54,106 WARNING freecad_buddy.rpc_listener: frame read failed; closing connection: frame exceeds 16 MiB cap
+2026-10-23 23:50:54,275 WARNING freecad_buddy.rpc_listener: frame read failed; closing connection: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+2026-10-23 23:50:54,277 INFO freecad_buddy.rpc_listener: client closed the connection
+2026-10-23 23:50:54,400 INFO freecad_buddy.rpc_listener: client closed the connection

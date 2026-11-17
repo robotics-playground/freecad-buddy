@@ -1,0 +1,14 @@
+## grep generic code tool names
+1071:    audit_event="exec",
+SCRIPT_EXEC_SPEC = ToolSpec(
+    name="script_exec",
+    make_handler=lambda doc_registry, export_registry, caps, render_port, viewport_port: (
+## mutating families (catalog mutating flag, 46 specs = H1 tools/list 46)
+mutating 30 outside families: []
+## closed schemas (tc-11-04-tool_surface.json = H1 tools/list, inputSchema written as input_schema)
+True
+## previews
+2 preview_dry_run INVALID_INPUT "not a previewable mutation tool: 'script_exec' (previewable: feature_body_create, feature_chamfer, feature_datum, featur"
+3 preview_dry_run INVALID_INPUT "not a previewable mutation tool: 'no_such_tool' (previewable: feature_body_create, feature_chamfer, feature_datum, featu"
+4 query_capabilities None "Input validation error: Additional properties are not allowed ('undeclared_key' was unexpected)"
+0 of 1535072 pixels differ; bbox None
