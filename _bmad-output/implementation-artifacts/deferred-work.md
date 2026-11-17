@@ -1790,6 +1790,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: none
   summary: Story 10.8 goal 3 — full gate run TC-01..TC-14, TC-99 and the G3 live replay on FreeCAD 1.1.4 through the 10.7b runner with agent review per test-plan §9, settling the 15 open part V agent checks; report committed under `tests/uat/run/` (epics.md Story 10.8 AC1).
   evidence: Split from Story 10.8 at bmad-build scope check (2026-10-23): depends on goal 1 (query_capabilities no-active-view fix, Critical TC-11-17) and goal 2; several hours of agent-driven GUI work, best in a fresh session with the desktop free.
+  status: run 2026-10-23-02 done 2026-10-23..24 (`tests/uat/run/2026-10-23-02/report.md`, `bugs.md`): Gate 1 red (Critical 126/174 = 72.4 %, High 54/67 = 80.6 %; 33 FAIL, 33 BLOCKED), Gate 2 not run, G3 headless unchanged, G3 GUI not run. Fixes on branch `fix/uat-gate-1-failures`; re-run into a new run folder pending (spec D2).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
   summary: Correct the TC-08-07 test case: its premise that an empty body leaves the document digest unchanged is stale since Story 10.3. The Critical scenario FAILs on every run until the test case is corrected, so the correction must land before the Story 10.8 goal 3 gate run.
@@ -1803,6 +1804,78 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-b-encode-remaining-runner-scenarios.md`
   summary: For the Story 10.8 goal 3 gate run, an `agent_check` that names a before-capture or between-step Given needs the agent to re-run that scenario's steps by MCP up to the named step and capture there, since the runner hands over only after the last step.
   evidence: The runner captures once, after the last step (`tests/uat/runner/README.md`, Per scenario); 36 committed scenario files name such a capture in `agent_check` (part V and D1 files, and goal 2 files such as TC-03-08, TC-04-14, TC-08-09, TC-09-06, TC-14-08).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: Display freeze during UAT run 2026-10-23-02: after some minutes with no physical input, GPU-drawn windows (FreeCAD, WezTerm) stop repainting on screen and in captures until a physical mouse move; it stopped P11 (TC-13), P12 (TC-14, TC-99) and the G3 GUI replay. Cause not proven; the two full-screen `Cua.AgentCursorOverlay` windows of `cua-driver` are the main suspect. A Gate 1 re-run needs a display that keeps painting.
+  evidence: Seen 2026-10-24 about 08:15-09:18 and 10:04-12:20; `cua-driver` `move_cursor` does not end it; an idle test without `cua-driver` activity did not freeze (lead log `lead-log-2026-10-24-uat-fixes.md` §2; `tests/uat/run/2026-10-23-02/evidence/lead-desktop-0910.png`, `p10-recovery-watch.txt`; `bugs.md` N-01).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: Discovery files `rpc-<pid>.json` of dead FreeCADs are never removed: 61 in `%APPDATA%\FreeCAD\v1-1\freecad-buddy` at the end of run 2026-10-23-02, the oldest from 2026-08-01, each holding a dead token. AD-25 binds every file writer ("unbounded artifact growth"). Proposed fix, not made: the bridge-start sweep also deletes `rpc-<pid>.json` whose pid is dead.
+  evidence: Lead log §5 W5; run P9 finding B8; TC-10-03 picked a stale file through `glob(...)[0]` (`bugs.md` N-02, B-18).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: The H1 stdio front can deadlock on a pip-installed numpy: with numpy 2.4.6, `verify_export_stl` hangs in `import trimesh` because a thread is blocked on `sys.stdin.buffer.readline()` when `import numpy` runs. FreeCAD's conda numpy 1.26.4 does not hang. Possible fix: import the oracle modules at front start, before the stdio reader starts. Owner decision needed.
+  evidence: `adapters/export_oracle.py:187`, reached from `rpc_proxy.py:49`; minimal repro `scratchpad/fix/w3/repro_numpy_stdin.py` (lead log §5 W3; `bugs.md` N-03).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: A `feature_pattern` with 200 occurrences recomputes without any limit (more than 10 min and 5 GB in a fix-work probe); 20 occurrences commit. Possible robustness defect against intent Phase 4 ("survives a long unattended run without crash, hang"); not tested through the bridge.
+  evidence: Lead log §5 W4 (TC-05-06 reproducer search; `bugs.md` N-04).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: FreeCADCmd started without `-u` (for example `freecadcmd tests/run_tests.py` for the in-FreeCAD suite) saves its parameters on exit and rewrites the developer `user.cfg` and `system.cfg`. The documented test command and the harness should pass `-u <temp>\user.cfg -s <temp>\system.cfg` so a test never changes the developer profile.
+  evidence: 2026-10-24 12:52:29 a fix-work `freecadcmd.exe` call rewrote `user.cfg` 67547 → 67483 B (`4c415695…`), and `system.cfg` at 12:52:29 and 12:56:02; no copy of the previous file existed (lead log §4; run `report.md` Teardown; `bugs.md` N-05).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: The `fcb` micromamba env of `tests/uat/APPENDIX-B-environment-setup.md` step 3 (and micromamba itself) does not exist on this machine, so the H1 preconditions cannot pass as written; run 2026-10-23-02 used a scratchpad stand-in venv. Create the env per APPENDIX-B before the re-run.
+  evidence: `tests/uat/run/2026-10-23-02/evidence/h1-setup.txt`; `run_mcp_e2e.py:44` exit 2 "fcb env python not found" (lead log §5 W5 "Open"; `bugs.md` N-06).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: TC-08-12 and TC-09-15 need a re-run only, no fix: TC-08-12 failed on an agent execution fault (another scenario ran in the same GUI during the 900 s TTL wait), TC-09-15 on a physical mouse over the 3D view (preselection highlight in the capture).
+  evidence: `tests/uat/run/2026-10-23-02/evidence/tc-08-12-checks.txt`, `tc-09-15-checks.txt`, `tc-09-15-after.png` (`bugs.md` B-14, B-16).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: Phases P11 (TC-13, 16 agent-driven), P12 (TC-14, 11 agent-driven; TC-99, 5) and the G3 GUI replay (`tests/uat/run/2026-10-03-04/evidence/g3_gui_replay.py`) did not run; with the BLOCKED TC-12 scenarios (TC-12-01, -03, -12, -13, -15) they must run in the re-run folder. Gate 2 has no result until then.
+  evidence: `tests/uat/run/2026-10-23-02/report.md` Execution notes, Gate 2, G3 replay (32 Gate 1 scenarios and 5 TC-99 BLOCKED by the display freeze).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: TC-11-18 is BLOCKED: its Then needs an H1 render, and the H1 stand-in venv has no `pivy` (`include-system-site-packages=false`), so the H1 render reports "offscreen probe render failed: No module named 'pivy'". Re-run on an H1 env that has `pivy`.
+  evidence: `tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md:883`; `tests/uat/run/2026-10-23-02/evidence/tc-11-18-checks.txt` (`bugs.md` N-07).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: `document_save` reports `saved true` but the window title keeps the modified mark `*`; FreeCAD's own GUI Save clears it. Likely the App-level save does not clear the `Gui::Document` modified flag (not verified).
+  evidence: TC-01-10 run note: `document_save {doc, path}` then `document_save {doc}`, title stays `* tc-01-10-box - FreeCAD 1.1.4`; `usecases/documents.py:341` saveAs, `:533` save (`bugs.md` N-08).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: The profile sketch consumed by `feature_pad`, `feature_pocket` or `feature_revolve` stays visible; FreeCAD's own Pad command hides it. No Then covers it.
+  evidence: `usecases/features.py:516-532`; `tests/uat/run/2026-10-23-02/evidence/tc-04-10-top.png`, TC-04-06/15/17, TC-05-15 captures (`bugs.md` N-09).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: `feature_datum` returns a wrong feature state: `feature_state.body ""`, `is_tip false`, and `shape_summary` volume 4e+101, area 8e+100 for an infinite datum plane.
+  evidence: `usecases/features.py:329-335` reads `_Body`, `:296`; TC-04-13 run note (`bugs.md` N-10).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: The mutation summary text prints `None` ("Mutation rolled back (None): ...", "...could not be proven: None.") and, for a committed but unhashable mutation, says "Mutation failed and its rollback could not be proven: <path>." although the commit landed. No Then reads the text.
+  evidence: `usecases/transaction.py:491-497` `summarize_mutation`; TC-05-10, TC-05-12, TC-05-18, TC-11-12 run notes (`bugs.md` N-11).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: Failed-check messages print a fixed `<=` even when the check failed, for example `|7200.0 - 6000.0| = 1200.0 <= 6 mm^3`.
+  evidence: `usecases/assertions.py:861`, `:892`, `:917`, `:954`; `usecases/exports.py:360`; TC-07-20 run note (`bugs.md` N-12).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: A failing `script_exec` posts its full Python traceback as a GUI notification in the human's FreeCAD (badge and pop-up), the same channel that the TC-08-02 fix closes for a failing preview.
+  evidence: Run P5 observation (a); `tests/uat/run/2026-10-23-02/evidence/tc-08-12-notifications.png` ("Box: Length of box too small" plus traceback) (`bugs.md` N-13).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: `query_tree_summary` reports "2 objects, 2 shown" while one of the two lines carries the `-` hidden marker, so the "shown" count disagrees with the tree it prints.
+  evidence: TC-06-06 run note; run P5 observation (b) (`bugs.md` N-14).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: Temp hygiene (AD-25): the GUI session folder under `<workdir>/tmp` survives File > Exit, and an H1 worker leaves an empty `FCB_TMP_session_<pid>_<token>` after a clean stdin close; only the next start sweep removes them.
+  evidence: Run P5 observations (c)(d), P8 F-P8-6, P9 B9 (`bugs.md` N-15).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: A document created over MCP becomes the active document (window title `* tc11-18`) but has no MDI tab and no tree entry in the GUI.
+  evidence: `tests/uat/run/2026-10-23-02/evidence/tc-11-18-after.png`; run P9 B10 (`bugs.md` N-16).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-linux-appimage-proxy-env.md`
   summary: The proxy child drops `PYTHONHOME` and `PYTHONPATH` on every launch route, including the verbatim `FREECAD_BUDDY_MCP_CMD` / `McpCommand` override, and neither CLAUDE.md section 16 nor the `McpCommand` preference text says so.
