@@ -8,12 +8,14 @@ reaches the client faithfully — the layer the in-process unit tests do not exe
 dispatch mapping and MCP serialization).
 
 Run from the uv env: ``uv run python scripts/automation/run_mcp_edge_cases.py``. The H1 server runs
-under the conda ``fcb`` env python. Writes ``_automation/edge_report.json``.
+under the conda ``fcb`` env python (``$FCB_ENV``, as in ``run_mcp_e2e.py``). Writes
+``_automation/edge_report.json``.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -29,6 +31,7 @@ from run_mcp_e2e import (  # reuse env + envelope helpers from the happy-path ha
     _fcb_env,
     _payload,
     _status,
+    _text,
     _tree_names,
 )
 
@@ -64,25 +67,26 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
         # query_tree_summary carried max_nodes/truncated when this harness was written; the tool
         # now bounds by depth and sets additionalProperties: False, so the boundary worth
         # asserting is that the retired parameter is rejected rather than silently ignored.
-        # Rejected at the input-schema gate, so there is no envelope to read a status from —
-        # asserted the same way as export_missing_path_schema above.
+        # Rejected at the input-schema gate, so there is no envelope to read a status from. The
+        # tool sends no structuredContent even on success, so "no envelope" means no status line.
         r = await session.call_tool("query_tree_summary", {"doc": handle, "max_nodes": 0})
         rep.record(
             "retired_max_nodes_rejected",
-            r.isError and r.structuredContent is None,
+            r.isError and _status(r) == "NO_STATUS",
             "additionalProperties: False rejects the retired parameter",
             "SCHEMA_ERROR",
         )
 
         # --- P1 boundary: depth bounds the walk without dropping the root --------------------
         r = await session.call_tool("query_tree_summary", {"doc": handle, "depth": 1})
-        p = _payload(r)
+        summary = re.search(r"(\d+) shown", _text(r))
+        shown = int(summary.group(1)) if summary else None
         roots = _tree_names(r)
-        ok = _status(r) == "OK" and p.get("shown") == len(roots) > 0
+        ok = _status(r) == "OK" and shown == len(roots) > 0
         rep.record(
             "depth_one_returns_roots_only",
             ok,
-            f"shown={p.get('shown')} roots={len(roots)}",
+            f"shown={shown} roots={len(roots)}",
             _status(r),
         )
 

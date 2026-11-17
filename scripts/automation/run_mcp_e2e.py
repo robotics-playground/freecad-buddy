@@ -7,7 +7,8 @@ no manual restarts: this process owns the H1 subprocess lifecycle.
 
 Run from the uv env (which has the ``mcp`` client):
 ``uv run python scripts/automation/run_mcp_e2e.py``.
-The H1 server runs under the conda ``fcb`` env python (which has FreeCAD + mcp + oracles).
+The H1 server runs under the conda ``fcb`` env python (which has FreeCAD + mcp + oracles): the env
+at ``$FCB_ENV``, else ``micromamba/envs/fcb`` under ``%USERPROFILE%``.
 
 Outputs (under ``_automation/``):
   e2e_report.json      per-tool pass/fail with real measured values
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -41,7 +43,9 @@ GOLDEN_EXPECTED = {
 
 def _fcb_env() -> tuple[str, dict]:
     """The fcb conda env python and the child env that makes ``import FreeCAD`` resolve."""
-    env_dir = Path(os.path.expandvars(r"%USERPROFILE%\micromamba\envs\fcb"))
+    env_dir = Path(
+        os.environ.get("FCB_ENV") or os.path.expandvars(r"%USERPROFILE%\micromamba\envs\fcb")
+    )
     py = env_dir / "python.exe"
     lib_bin = env_dir / "Library" / "bin"
     lib_lib = env_dir / "Library" / "lib"
@@ -53,8 +57,23 @@ def _fcb_env() -> tuple[str, dict]:
     return str(py), child
 
 
+_STATUS_LINE = re.compile(r"([A-Z_]+): ")
+
+
+def _text(res) -> str:
+    return res.content[0].text if res.content else ""
+
+
 def _status(res) -> str:
-    return (res.structuredContent or {}).get("status", "NO_STATUS")
+    """The envelope status, or ``NO_STATUS`` when no envelope came back (an input-schema rejection).
+
+    A tool without an ``outputSchema`` (``query_tree_summary``) sends no ``structuredContent``;
+    its status is the ``<STATUS>: `` prefix of its one text block.
+    """
+    if res.structuredContent is not None:
+        return res.structuredContent.get("status", "NO_STATUS")
+    line = _STATUS_LINE.match(_text(res))
+    return line.group(1) if line else "NO_STATUS"
 
 
 def _payload(res) -> dict:
@@ -62,18 +81,12 @@ def _payload(res) -> dict:
 
 
 def _tree_names(res) -> list[str]:
-    """Object Names on the top-level lines of a ``query_tree_summary`` tree text block.
+    """Object Names on the top-level lines of a ``query_tree_summary`` text.
 
-    The tree travels as the second content block, one ``<v|-> [CODE] Name ...`` line per object;
-    a child line starts with a connector or a prefix and is skipped.
+    The tree follows the status line and an optional framing line, one ``<v|-> [CODE] Name ...``
+    line per object; a child line starts with a connector or a prefix and is skipped.
     """
-    if len(res.content) < 2:
-        return []
-    return [
-        line.split(" ")[2]
-        for line in res.content[1].text.splitlines()
-        if line[:1] in ("v", "-")
-    ]
+    return [line.split(" ")[2] for line in _text(res).splitlines() if line[:1] in ("v", "-")]
 
 
 def _rel(measured: float, expected: float) -> float:
@@ -131,7 +144,7 @@ async def _sweep(session: ClientSession, rep: Report) -> None:
         # recorded here instead of surfacing as a tool defect in every later measurement.
         tree = await session.call_tool("query_tree_summary", {"doc": handle})
         if _status(tree) != "OK":
-            rep.record(f"tree_summary:{name}", False, str(_payload(tree)), _status(tree))
+            rep.record(f"tree_summary:{name}", False, _text(tree), _status(tree))
             continue
         roots = _tree_names(tree)
         obj_name = roots[0] if roots else None
