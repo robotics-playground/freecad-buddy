@@ -530,6 +530,7 @@ def stop_bridge() -> None:
         return
     _listener.stop()
     _listener = None
+    logger.info("freecad-buddy bridge stopped")
 
 
 def _register_shutdown() -> None:

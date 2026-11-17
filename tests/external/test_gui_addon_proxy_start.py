@@ -321,3 +321,26 @@ def test_should_not_spawn_when_the_bridge_stops_after_the_port_frees(
 
     # Assert
     assert spawned == []
+
+
+class _RecordingListener:
+    def __init__(self) -> None:
+        self.stopped = False
+
+    def stop(self) -> None:
+        self.stopped = True
+
+
+def test_should_log_one_teardown_line_when_the_bridge_stops(monkeypatch, bootstrap, caplog):
+    # Arrange
+    mock_listener = _RecordingListener()
+    monkeypatch.setattr(bootstrap, "_listener", mock_listener)
+    monkeypatch.setattr(bootstrap, "_mcp_proxy", None)
+
+    # Act
+    with caplog.at_level(logging.INFO, logger=bootstrap.logger.name):
+        bootstrap.stop_bridge()
+
+    # Assert
+    assert mock_listener.stopped
+    assert [r.getMessage() for r in caplog.records] == ["freecad-buddy bridge stopped"]
