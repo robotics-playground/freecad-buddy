@@ -22,7 +22,7 @@ the shipped catalog from the repo venv and needs no host.
 - [ ] Addon linked into the FreeCAD Mod dir (verify: `ls "$APPDATA/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py"`)
 - [ ] Repo venv exists so the addon can discover the proxy interpreter (verify: `ls .venv/Scripts/pythonw.exe`)
 - [ ] cua-driver daemon runs in an interactive session (verify: `cua-driver status` shows `SessionId` ≥ 1)
-- [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
+- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
 - [ ] No FreeCAD process and nothing on `:8765` before TC-01-01 (verify: `netstat -ano | grep :8765` returns nothing)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
 
@@ -84,7 +84,7 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
 **And** a golden model is open on the GUI host so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the GUI's pre-sweep state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the happy-path sweep is run. It spawns its own H1 stdio host from the `fcb` env and does not touch the GUI bridge.  
+**When** the happy-path sweep is run. It spawns its own H1 stdio host from the `fcb` env and does not touch the GUI bridge. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run.  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 ```
@@ -509,6 +509,11 @@ cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
 ".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --mode rpc; echo "exit=$?"
 ".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --transport http --mode inline; echo "exit=$?"
 ```
+**And** a new empty document is created through the GUI. FreeCAD starts on the Start page, which has no 3D view and no enabled **Fit All** button, and the suppressed proxy leaves the GUI as the only path  
+```
+cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "New Document"] }
+```
+If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token` from a fresh `get_window_state` snapshot.
 
 **Then** the listener still started — verify: `grep "freecad-buddy RPC listener started on" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns a line, and `rpc-<pid>.json` exists  
 **And** the proxy was not spawned — verify: `netstat -ano | grep :8765` returns nothing  
@@ -517,8 +522,8 @@ cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
 **And** `--mode rpc` without `--transport http` exits 2 — verify: the first CLI command writes exactly `--mode rpc requires --transport http.` to stderr and `exit=2`  
 **And** `--transport http --mode inline` is refused — verify: the second CLI command writes exactly `transport 'http' is not available yet; use --transport stdio.` to stderr and `exit=2`  
 **And** neither refused command bound a port — verify: `netstat -ano | grep :8765` still returns nothing  
-**And** *(visual)* the view is framed through the GUI only — verify: take a fresh `'{"pid":<freecad pid>,"window_id":<window id>}' | & cua-driver call get_window_state`, resolve the **Fit All** toolbar element's `element_token`, and click it; the response carries `route: "accessibility"` and the view reframes. The MCP fit is not available and must not be attempted: the suppressed proxy is the state under test, so the toolbar button is the only framing path, and it touches none of the code under test. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1.  
-**And** *(visual)* the GUI came up normally despite the suppressed proxy — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, tree panel, and a 3D view area, no error dialog, and no crash or splash screen left up. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image, and here no MCP endpoint exists to ask.  
+**And** *(visual)* the new document's view is framed through the GUI only — verify: take a fresh `'{"pid":<freecad pid>,"window_id":<window id>}' | & cua-driver call get_window_state`, resolve the **Fit All** toolbar element's `element_token`, and click it; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. The MCP fit is not available and must not be attempted: the suppressed proxy is the state under test, so the toolbar button is the only framing path, and it touches none of the code under test. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1.  
+**And** *(visual)* the GUI came up normally despite the suppressed proxy — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document, and an empty 3D view with the navigation cube, no error dialog, and no crash or splash screen left up. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image, and here no MCP endpoint exists to ask.  
 
 **Cleanup**: restart FreeCAD without the variable so later scenarios get the auto-spawned proxy. Close it through its own menu: `kill_app` refuses a FreeCAD that the `.cmd` wrapper started (`foreign_process_termination_denied`).
 ```
@@ -623,11 +628,17 @@ cua-driver call launch_app { path: "$FREECAD_EXE" }
 ```bash
 cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
 ```
+**And** a new empty document is created through the GUI. FreeCAD starts on the Start page, which has no 3D view and no enabled **Fit All** button, and this FreeCAD has no MCP endpoint  
+```
+cua-driver call invoke_menu { pid: <new freecad pid>, window_id: <new window id>, path: ["File", "New Document"] }
+```
+If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token` from a fresh `get_window_state` snapshot.
 
 **Then** the addon reports the foreign holder once — verify: `grep -c "ERROR" addon.log` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
 **And** no proxy was spawned — verify: `grep "spawned MCP proxy" addon.log` returns nothing, and `netstat -ano | grep :8765` shows `LISTENING` only on the holder pid recorded from `netstat`  
 **And** the RPC listener is up — verify: `grep "freecad-buddy RPC listener started on" addon.log` returns a line, and `rpc-<new freecad pid>.json` exists  
-**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, tree panel and 3D view, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
+**And** *(visual)* the new document's view is framed through the GUI only — verify: click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<new pid>,"window_id":<new wid>}' | & cua-driver call get_window_state`; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable`.  
+**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document and an empty 3D view with the navigation cube, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
 
 **Cleanup**: stop the process that holds `:8765`, then restart FreeCAD so later scenarios get the auto-spawned proxy. Use the Windows pid from `netstat`; the shell's `$!` names the `uv` wrapper, not the python child that holds the port.
 ```bash

@@ -86,6 +86,26 @@ not the visual: a control can be present in the UIA tree and not painted on scre
 - `modifier` is not honored on a background click on Windows. Escalate that single action to
   `delivery_mode:"foreground"` when a Ctrl-click is genuinely required. `right_click` and `count > 1`
   skip the UIA Invoke step.
+- **A tree row is selected only by a foreground click.** On FreeCAD 1.1.4 a background UIA click,
+  a background `action:"select"` and a background pixel click on a model-tree row all leave the row
+  unselected (`selected: false`, `FreeCADGui.Selection` empty). `click` by `element_token` with
+  `action:"select"` and `delivery_mode:"foreground"` selects it (route `global_input`: it moves the
+  real pointer). Pick the row in the Model panel: when a document or object is selected, the
+  property view lists `TreeItem` rows too, one of them with the same text as the `Label`, so a
+  `verify_state` selector `{role:"TreeItem", label_contains:"<label>"}` can return `unknown`
+  `multi_match`. Read `selected` off the Model-panel row in a fresh snapshot instead.
+- **A combo box popup item and a scroll land only in the foreground.** A background click on a
+  `ListItem` of the workbench combo box popup does not activate it, and `scroll` by
+  `element_token` falls back to `global_input` with no effect. Click the `ListItem` by token, and
+  scroll at a pixel over the tree, each with `delivery_mode:"foreground"`.
+- **Close a popup or a menu that stays open with `press_key` `escape`**, one key per open level, and
+  confirm with `list_windows` that only the main window is left. An `invoke_menu` call can leave
+  its menus open as extra `FreeCAD` popup windows of the pid.
+- **Move the real pointer off the window after a foreground action.** A foreground action leaves
+  the real pointer over FreeCAD, and a pointer over a tree row or the 3D view paints a hover or
+  preselection highlight. After any foreground action and before any visual capture, move the
+  pointer to a desktop point outside the FreeCAD window rectangle from `list_windows`, then wait
+  1 s: `'{"x":<x outside the window>,"y":<y outside the window>,"scope":"desktop"}' | & cua-driver call move_cursor`.
 - `replay_trajectory` cannot re-resolve element tokens across sessions. Record a trajectory as
   regression evidence only; never use it as the executor for these scenarios.
 
@@ -234,10 +254,12 @@ mcp query_mass_properties {doc:<handleBox>, object:"Box"}
 mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}
 ```
 **And** Show All is run in each document while its tab is active, so the renders below have a visible subject  
-**And** the SPHERE document is selected in the GUI model tree. Re-snapshot, then click its tree row through the token from that snapshot, matched on `role == "TreeItem"` and its label.  
+**And** the SPHERE document is selected in the GUI model tree. Re-snapshot, then select its root row in the Model panel through the token from that snapshot, matched on `role == "TreeItem"` and its label, with a foreground `select` (see the tree-row rule above). Selecting a document row also makes that document the active one (`Tree.cpp:3946-3953`, `SyncView` defaults to on, `TreeParams.cpp:99`). Confirm from the `list_windows` title.  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-tree.png"}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<sphere row token from this snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"element_token":"<sphere row token from this snapshot>","action":"select","delivery_mode":"foreground"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
+'{"pid":<PID>}' | & cua-driver call list_windows
 ```
 **And** the BOX handle is queried while the sphere is the GUI's active document  
 ```bash
@@ -247,14 +269,14 @@ mcp query_screenshot {doc:<handleBox>, view:{camera:"iso"}}
 ```
 **And** the BOX document is selected in the GUI, then the SPHERE handle is queried the same way  
 
-**Then** the GUI selection changed — verify: `'{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"role":"TreeItem","label_contains":"sphere-r10"},"selected":true}}]}' | & cua-driver call verify_state` returns `satisfied`  
-**And** the box handle still returns box geometry — verify: the box-handle `volume` equals `6000.0` mm3, NOT `4188.7902`  
+**Then** the GUI selection changed — verify: in the snapshot taken after the select, the Model-panel `TreeItem` labelled `sphere-r10` reports `selected: true`, and the `list_windows` title names `sphere-r10`. A `verify_state` selector on `label_contains:"sphere-r10"` also matches the property view's `Label` row and returns `unknown` `multi_match`  
+**And** the box handle still returns box geometry — verify: the box-handle `volume` equals `6000.0` mm3, NOT `4188.79`  
 **And** the box handle's tree is the box's — verify: the box-handle `query_tree_summary` names `Box` and not the sphere object  
 **And** the render follows the handle, not the selection — verify: the box-handle `query_screenshot` returns `scene.rendered_objects` containing the box object only  
-**And** the reverse direction holds — verify: after the box document is selected, `mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}` returns `4188.7902` mm3  
+**And** the reverse direction holds — verify: after the box document is selected, `mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}` returns `4188.79` mm3, the analytic `4188.7902` rounded to the `Decimals` preference (`test-plan.md` §3 rule 9)  
 **And** no tool silently used the active document — verify: no response in either handle-query block names an object belonging to the other document  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handleBox>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test  
-**And** *(visual)* the GUI tree shows the selection the scenario made — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state what is on screen: the model tree lists both documents, the `box-10-20-30` row is the highlighted selection, and the 3D view shows the box document's model rather than the sphere. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the GUI tree shows the selection the scenario made — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state what is on screen: the model tree lists both documents, the `box-10-20-30` row is the highlighted selection and is drawn bold (FreeCAD's mark for the active document), its document tab is the active tab, and the 3D view shows the box document's model rather than the sphere. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -282,27 +304,33 @@ mcp query_tree_summary {doc:<handle>}
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-before.png"}' | & cua-driver call get_window_state
 ```
-**And** `<ObjectB>` is hidden in the GUI. Re-snapshot, select its tree row by `element_token`, then toggle visibility through the `View` menu; the leaf label is resolved at runtime by `invoke_menu`.  
+**And** `<ObjectB>` is hidden in the GUI. Re-snapshot, select its tree row by `element_token` with a foreground `select` (see the tree-row rule above), confirm the row reads `selected: true`, then run View > Visibility > Toggle Visibility (`Std_ToggleVisibility`, menu text `Toggle &Visibility`, `CommandView.cpp:907`). The command is enabled only while something is selected (`CommandView.cpp:927-930`), and `invoke_menu` refuses its leaf with `menu_path_unavailable` while nothing is selected. Close the menus it leaves open with `escape`.  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-tree.png"}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<ObjectB row token from this snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"element_token":"<ObjectB row token from this snapshot>","action":"select","delivery_mode":"foreground"}' | & cua-driver call click
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"window_id":<WID>,"path":["View","Visibility"]}' | & cua-driver call invoke_menu
+'{"pid":<PID>,"window_id":<WID>,"path":["View","Visibility","Toggle Visibility"]}' | & cua-driver call invoke_menu
+'{"pid":<PID>,"window_id":<WID>,"key":"escape"}' | & cua-driver call press_key
+'{"pid":<PID>}' | & cua-driver call list_windows
 ```
 **And** the bridge is re-read  
 ```bash
 mcp query_tree_summary {doc:<handle>}
 ```
-**And** visibility is restored by repeating the toggle, then the bridge is re-read again  
+**And** the post-toggle window is captured under the same camera as `tc-12-05-before.png`, before the restore below  
+```bash
+'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-after.png"}' | & cua-driver call get_window_state
+```
+**And** visibility is restored by repeating the toggle (`<ObjectB>` stays selected), then the bridge is re-read again  
 
-**Then** the object vanished from the viewport — verify: a `cua-driver` viewport grab after the toggle no longer shows `<ObjectB>`  
+**Then** the object vanished from the viewport — verify: `tc-12-05-after.png` no longer shows `<ObjectB>`  
 **And** the bridge reports the new flag — verify: in the post-toggle tree text the `<ObjectB>` line starts `- ` and the `<ObjectA>` line starts `v `  
 **And** the hidden object is still listed — verify: the post-toggle tree text has the same lines as the pre-toggle one apart from the first character of the `<ObjectB>` line; visibility marks a line, it does not drop it  
 **And** no geometry changed — verify: `mcp query_mass_properties {doc:<handle>, object:"<ObjectA>"}` and the same call for `<ObjectB>` return the same volumes before and after the toggle; visibility is a view flag, not geometry  
 **And** restoring works both ways — verify: after the restore, the `<ObjectB>` line starts `v ` again and the tree text equals the pre-toggle one  
 **And** the bridge read the live flag, not a cache — verify: the post-toggle result differs from the pre-toggle result without any MCP mutation call in between  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test. Use the same fit that produced `tc-12-05-before.png`, so the two images share a camera.  
-**And** *(visual)* the hidden object is gone from the window and the tree marks it hidden — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the before PNG shows both `<ObjectA>` and `<ObjectB>` drawn in the 3D view, the after PNG shows `<ObjectA>` only, and the `<ObjectB>` tree row is drawn in the greyed style FreeCAD uses for a hidden object. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test. Use the same fit that produced `tc-12-05-before.png`, and no camera change before `tc-12-05-after.png`, so the two images share a camera.  
+**And** *(visual)* the hidden object is gone from the window and the tree marks it hidden — verify: `Read` both PNGs and state what is on screen: the before PNG shows both `<ObjectA>` and `<ObjectB>` drawn in the 3D view, the after PNG shows `<ObjectA>` only, and the `<ObjectB>` tree row is drawn in the greyed style FreeCAD uses for a hidden object. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -326,14 +354,17 @@ Restore `<ObjectB>` visibility before leaving the scenario.
 mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_fillet", args:{body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}}}}
 mcp feature_fillet {doc:<handle>, body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}, confirm:{preview_id:"<token>"}}
 ```
-**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. Open the dropdown by its arrow, by `element_token` from a fresh snapshot. The list is a popup: find it with `list_windows` and snapshot it, or read the painted pixels.  
+**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. On FreeCAD 1.1.4 the button and its arrow are one UIA element (`Button "Undo"`), so the arrow has no token of its own, and a click on the arrow pixel, background or by token, runs Undo instead of opening the list. Open the list with a press and release on the arrow pixel: a 1 px `drag` that starts on the arrow, read from the snapshot image (route `global_input`: it moves the real pointer). The list is a separate popup window, and a capture of the main window does not contain it: find it with `list_windows` (a second window of the pid, titled `FreeCAD`) and capture that window as `<POPUP_WID>`. Run the `verify_state` on the popup while it is open.  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Undo dropdown arrow token from this snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-pre-dropdown.png"}' | & cua-driver call get_window_state
+'{"pid":<PID>,"window_id":<WID>,"from_x":<arrow x>,"from_y":<arrow y>,"to_x":<arrow x + 1>,"to_y":<arrow y>}' | & cua-driver call drag
 '{"pid":<PID>}' | & cua-driver call list_windows
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-edit.png"}' | & cua-driver call get_window_state
+'{"pid":<PID>,"window_id":<POPUP_WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-edit.png"}' | & cua-driver call get_window_state
+'{"pid":<PID>,"window_id":<POPUP_WID>,"expect":[{"element":{"selector":{"label_contains":"buddy: feature_fillet Fillet"},"enabled":true}}]}' | & cua-driver call verify_state
+'{"pid":<PID>,"window_id":<WID>,"key":"escape"}' | & cua-driver call press_key
+'{"pid":<PID>}' | & cua-driver call list_windows
 ```
-Close the dropdown without choosing an entry before the next step.
+The `escape` closes the dropdown without choosing an entry; the last `list_windows` must show the popup window gone before the next step.
 **And** Undo is invoked from the GUI  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
@@ -344,19 +375,28 @@ Close the dropdown without choosing an entry before the next step.
 mcp query_tree_summary {doc:<handle>}
 mcp query_mass_properties {doc:<handle>, object:"<Pad>"}
 ```
+**And** the model is framed and the post-undo window is captured, before the bridge undo below changes the document  
+```bash
+mcp view_fit_viewport {doc:<handle>}
+'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-after.png"}' | & cua-driver call get_window_state
+```
+**And** the bridge undo is run on the same document  
+```bash
+mcp document_undo {doc:<handle>}
+```
 
 **Then** the Undo entry names the bridge's transaction — verify: the first entry of the toolbar `Undo` dropdown begins with `buddy: `. An entry without that prefix means the mutation did not run inside a named transaction, which is a defect.  
 **And** the label names the tool — verify: that entry reads `buddy: feature_fillet Fillet`, so a human reading the GUI can tell which bridge call produced it  
-**And** the undo is enabled — verify: `'{"pid":<PID>,"window_id":<POPUP_WID>,"expect":[{"element":{"selector":{"label_contains":"buddy:"},"enabled":true}}]}' | & cua-driver call verify_state` on the dropdown popup window returns `satisfied`; `unknown` is inconclusive  
+**And** the undo is enabled — verify: the `verify_state` run on the open dropdown popup in the When returns `satisfied`; `unknown` is inconclusive. The selector names the fillet entry in full, because the popup lists one `buddy:` entry per bridge transaction and a bare `buddy:` selector matches all of them (`unknown`, `multi_match`)  
 **And** GUI Undo removes the feature — verify: the post-undo `query_tree_summary` no longer names the fillet  
 **And** the geometry reverted — verify: the post-undo `query_mass_properties` returns the pre-fillet volume  
-**And** the bridge and the GUI share one undo history — verify: after the GUI Undo, `mcp document_undo {doc:<handle>}` either undoes the NEXT older transaction or refuses with an empty stack; it must not undo the same fillet twice  
-**And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test  
-**And** *(visual)* the window shows the `buddy:` Undo entry and then the un-filleted body — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: `tc-12-06-edit.png` shows the toolbar `Undo` dropdown open with a first entry whose visible text begins `buddy: `, and the after PNG shows no menu or dropdown open, the model tree without a fillet row, and the pad's corners sharp again. Read the entry label off the painted dropdown in the image, not off the accessibility tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** the bridge and the GUI share one undo history — verify: the `mcp document_undo {doc:<handle>}` run after the GUI Undo either undoes the NEXT older transaction or refuses with an empty stack; it must not undo the same fillet twice  
+**And** *(visual)* the model is framed — verify: the `view_fit_viewport` run before the after capture returned `OK`; if it did not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test, and capture `tc-12-06-after.png` again before the bridge undo  
+**And** *(visual)* the window shows the `buddy:` Undo entry and then the un-filleted body — verify: `Read` both PNGs and state what is on screen: `tc-12-06-edit.png` (the capture of the popup window) shows the toolbar `Undo` dropdown list with a first entry whose visible text begins `buddy: `, and `tc-12-06-after.png` (taken after the GUI Undo and before the bridge undo) shows no menu or dropdown open, the model tree without a fillet row, and the pad's corners sharp again. Read the entry label off the painted dropdown in the image, not off the accessibility tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
-rm -f $RUN_DIR/evidence/tc-12-06-edit.png
+rm -f $RUN_DIR/evidence/tc-12-06-edit.png $RUN_DIR/evidence/tc-12-06-pre-dropdown.png
 ```
 Close the document in the GUI and discard changes.
 
@@ -456,15 +496,21 @@ mcp query_tree_summary {doc:<handle>}
 mcp document_close {doc:<handle>}
 mcp document_open {path:"$RUN_DIR/evidence/tc-12-08-bracket.FCStd"}
 mcp query_tree_summary {doc:<handleReopened>}
-mcp query_mass_properties {doc:<handleReopened>, object:"Cube001"}
+mcp query_mass_properties {doc:<handleReopened>, object:"Box001"}
 ```
+`Part > Primitives > Cube` makes a `Part::Box` whose internal Name is `Box`, `Box001`, ... and
+whose Label is `Cube`, `Cube001`, .... The tree line shows both (`Box001 "Cube001"`). The `object`
+argument of a query tool takes the immutable Name, never the Label (`queries.py:188-191`,
+`_resolve_object`: "Resolves by immutable ``Name``; never keys on ``Label``"; the design types the
+`object` argument of `query_dependencies` and `verify_shape` the same way, `"immutable Name"` in
+`mcp-tools-design.md` §3.2.1 and §3.3).
 
 **Then** the GUI Save wrote the file — verify: `(Get-Item $RUN_DIR/evidence/tc-12-08-bracket.FCStd).LastWriteTime` after the save is later than the pre-save value  
 **And** no dialog opened — verify: the `list_windows` after the save returns only the main window  
 **And** the title bar dropped the modified marker — verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns a window title that names `tc-12-08-bracket` with no `*` marker, where the pre-save title had one  
 **And** the bridge identifies the saved document — verify: the post-save `document_list` entry has the same `doc` handle and the `label` `tc-12-08-bracket` (the file stem; `document_list` carries no path)  
 **And** the handle stayed valid across the save — verify: the post-save `query_tree_summary` on `<handle>` returns `OK` and names `Cube` and `Cube001`, so a GUI Save does not invalidate an existing bridge handle  
-**And** the saved file holds the GUI change — verify: the reopened `query_tree_summary` names `Cube` and `Cube001`, and `query_mass_properties` on `Cube001` returns `volume` `1000.0`  
+**And** the saved file holds the GUI change — verify: the reopened `query_tree_summary` names `Cube` and `Cube001`, and `query_mass_properties` on `Box001` (the Name of `Cube001`) returns `volume` `1000.0`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: "<handleReopened>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test  
 **And** *(visual)* the window shows the reopened saved document — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-08-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and state what is on screen: no dialog is open, the title bar reads `tc-12-08-bracket` with no modification marker, and the model tree lists `Cube` and `Cube001`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
@@ -545,7 +591,7 @@ Confirm the dialog was dismissed with Cancel (or `reject()`), so no preference c
 **Design Ref**: `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
 
 **Given** two golden documents are open, A = `box-10-20-30` and B = `sphere-r10` — verify: `mcp document_open` on each returns a handle; `mcp document_list {}` returns two entries  
-**And** both the `Sketch` and `Part Design` menus are present — verify: `get_window_state` lists both at menu depth 2  
+**And** both the `Sketch` and `Part Design` menus are present — verify: `get_window_state` lists both at menu depth 2. If another workbench is active, switch to `Part Design` first with the selector route of the When below  
 
 **When** both handles are recorded and each one is read  
 ```bash
@@ -553,12 +599,12 @@ mcp document_list {}
 mcp query_mass_properties {doc:<handleA>, object:"Box"}
 mcp query_mass_properties {doc:<handleB>, object:"Sphere"}
 ```
-**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box, re-snapshot, then click the `Sketcher` list item, each by `element_token`.  
+**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box, re-snapshot, then click the `Sketcher` list item, each by `element_token`. The list item click must be a foreground click (see the combo box rule above); a background click leaves the selector unchanged. `invoke_menu ["View","Workbench","<name>"]` is not used: on FreeCAD 1.1.4 it switched to `Sketcher` once and then refused `["View","Workbench","Part Design"]` with `menu_path_unavailable` in the same session.  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-10-wb.png"}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<workbench ComboBox token from this snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"element_token":"<workbench ComboBox token from this snapshot>"}' | & cua-driver call click
 '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Sketcher list item token from THIS snapshot>"}' | & cua-driver call click
+'{"pid":<PID>,"window_id":<WID>,"element_token":"<Sketcher list item token from THIS snapshot>","delivery_mode":"foreground"}' | & cua-driver call click
 ```
 **And** both handles are re-read, then the workbench is switched to Part Design the same way and both are read again  
 ```bash
@@ -603,14 +649,15 @@ mcp query_tree_summary {doc:<handle>, depth:3}
 mcp query_tree_summary {doc:<handle>, filters:{types:["PAD"]}}
 mcp query_tree_summary {doc:<handle>, filters:{name_pattern:"Pad*"}}
 ```
-**And** the GUI tree is scrolled and inspected. Re-snapshot before the scroll and act by `element_token`.  
+**And** the GUI tree is scrolled and inspected. Re-snapshot before the scroll, then scroll in the foreground at a pixel inside the Model panel's tree rows, read from that snapshot's image (see the scroll rule above: a `scroll` by `element_token` has no effect). The scroll leaves the real pointer over the tree: move it off the window before the second capture (see the pointer rule above), so no row shows a hover highlight.  
 ```bash
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-11-tree.png"}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<Tree token from this snapshot>","direction":"down","amount":10}' | & cua-driver call scroll
+'{"pid":<PID>,"window_id":<WID>,"x":<x inside the tree rows>,"y":<y inside the tree rows>,"direction":"down","amount":10,"delivery_mode":"foreground"}' | & cua-driver call scroll
+'{"x":<x outside the window>,"y":<y outside the window>,"scope":"desktop"}' | & cua-driver call move_cursor
 '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-11-tree2.png"}' | & cua-driver call get_window_state
 ```
 
-**Then** the GUI tree scrolls — verify: the two snapshot trees taken around the scroll expose different visible rows, so the list is navigable at this size  
+**Then** the GUI tree scrolls — verify: the two snapshots taken around the scroll expose different visible rows: the UIA snapshot lists only the Model-panel `TreeItem` rows that are laid out, so the first such row (the topmost by frame `y`) has a different label in the second snapshot  
 **And** the default depth stays shallow — verify: the first read returns top-level lines only, not all 50 features; `depth` defaults to 1  
 **And** deeper depth returns more — verify: the depth-3 read has a strictly greater `shown` than the depth-1 read, and at most 200 tree lines; when the cap cuts it, `truncated` is true and the last line is `... <K> more lines; narrow with focus or a smaller depth`  
 **And** filters reveal a slice — verify: both filtered calls report `matches`, show each match on its opened path, and have a smaller `shown` than the depth-3 call  
@@ -776,7 +823,7 @@ Get-ChildItem "$env:APPDATA/FreeCAD/v1-1/freecad-buddy"
 **And** the proxy child is gone — verify: the proxy pid recorded before the quit is no longer in `Get-Process`; it was torn down with its parent, not orphaned  
 **And** the discovery file is deleted — verify: the post-quit `Get-ChildItem` no longer lists the RPC discovery file  
 **And** a client call now fails at the transport — verify: `mcp query_capabilities {}` fails to connect to `http://127.0.0.1:8765/mcp`; it must not hang indefinitely  
-**And** the addon log records a clean shutdown — verify: `Get-Content "$env:APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" -Tail 20` shows the teardown and no unhandled exception  
+**And** the addon log records a clean shutdown — verify: `Get-Content "$env:APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" -Tail 20` shows `INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped` (written by `stop_bridge`, `hosts/gui_addon/bootstrap.py`) and no unhandled exception  
 **And** restart is clean — verify: reopening FreeCAD recreates the discovery file, re-serves `:8765`, and `mcp query_capabilities {}` returns `OK` again  
 **And** *(visual)* the window that existed is gone, and the restarted one is back — verify: `'{"pid":<PID>}' | & cua-driver call list_windows` after the quit returns no FreeCAD window, then after the restart `'{"pid":<NEW_PID>,"window_id":<NEW_WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-14-after.png"}' | & cua-driver call get_window_state`; `Read` both PNGs and state what is on screen: the before PNG shows a live FreeCAD main window titled with the live version, with its menu bar and painted workspace, and the after PNG shows a freshly started FreeCAD window titled with the live version, with its start page and no crash or recovery dialog. No auto-fit is issued by either route: the target process does not exist between the quit and the restart, and the restarted instance holds no document, so the `Fit All` toolbar button is absent from the UIA tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 

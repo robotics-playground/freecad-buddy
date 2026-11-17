@@ -39,7 +39,7 @@ headless host with no GL context to prove the honest-degradation path.
 - [ ] `cua-driver` is reachable and in the interactive session (verify: `cua-driver status` reports the daemon and NOT Session 0)
 - [ ] The render ladder reports a usable mode (verify: `mcp query_capabilities {}` returns `render` = `gui_constructed`)
 - [ ] The FreeCAD `(pid, window_id)` pair is known (verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns the window whose `title` is `FreeCAD <live version>`)
-- [ ] `script_exec` is on, as it is by default (verify: `tools/list` includes `script_exec`). TC-06-09, TC-06-10 and TC-06-12 use it to read or change state that no typed tool reaches.
+- [ ] `script_exec` is on, as it is by default (verify: `tools/list` includes `script_exec`). TC-06-01, TC-06-09, TC-06-10 and TC-06-12 use it to read or change state that no typed tool reaches.
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
 - [ ] The session temp folder is known: `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`). Take it from the folder of any `render.resource_link`. If the agent shell gets "Access is denied", list it in-process: `mcp script_exec {doc:<handle>, code:"import os\nfrom freecad_buddy.usecases.documents import temp_dir\nresult = sorted(os.listdir(temp_dir()))"}`.
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
@@ -79,7 +79,14 @@ view. The button exists in the UIA tree **only while a document is open**.
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
-**Given** a document with one shape-bearing object is open — verify: `mcp document_list {}` returns a handle; `mcp query_tree_summary {doc:<handle>}` names the object  
+**Given** the live FreeCAD has anti-aliasing on before the scenario's document opens. FreeCAD reads `AntiAliasing` once per 3D view, when it builds the view (`View3DInventor.cpp:112-117`), and a UAT launch runs on a temporary profile (`freecad-gui-e2e-harness.md` §2 Launch, **Profile**), so the developer's `user.cfg` says nothing about the live window. `script_exec` needs a document, so a scratch document carries the write and is closed before the scenario's document opens  
+```
+mcp document_create { label: "tc-06-01-aa" }
+mcp script_exec { doc: <scratch handle>, code: "p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\nresult = p.GetInt('AntiAliasing', -1)\np.SetInt('AntiAliasing', 4)" }
+mcp document_close { doc: <scratch handle> }
+```
+— verify: record the `value_repr` as the old value (`-1` when the key is unset); the stored enum `4` maps to 8 samples (mapping table in TC-06-12)  
+**And** a document with one shape-bearing object is open — verify: `mcp document_list {}` returns a handle; `mcp query_tree_summary {doc:<handle>}` names the object  
 **And** the object's geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"<Object>"}` returns `volume` and `bbox`  
 
 **When** the GUI camera is set through the **toolbar buttons**, not the View menu and not keystrokes. Snapshot first, then act on a token from that same snapshot.  
@@ -116,7 +123,7 @@ Copy the returned `render.resource_link` PNG to `$RUN_DIR/evidence/tc-06-01-mcp.
 **And** the proportions match the geometry — verify: the rendered extents agree with the `bbox` from `mcp query_mass_properties {doc:<handle>, object:"<Object>"}` (a 60x40x5 mm bracket reads flat and wide, not cubic)  
 **And** the camera and framing are consistent — verify: the iso orientation in `$RUN_DIR/evidence/tc-06-01-mcp.png` matches `$RUN_DIR/evidence/tc-06-01-viewport.png`; any axis flip or off-centre framing is recorded  
 **And** there is no missing or extra geometry — verify: no object visible in the viewport is absent from the MCP render, and no `PartDesign::Body`, `Sketcher::SketchObject`, or `App::Origin` child leaked into it  
-**And** anti-aliasing is honored — verify: edges are smooth when AA is configured; read the configured value with `Select-String AntiAliasing "$env:APPDATA/FreeCAD/v1-1/user.cfg"`  
+**And** anti-aliasing is honored — verify: `mcp script_exec {doc:<handle>, code:"result = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View').GetInt('AntiAliasing', -1)"}` returns `value_repr` `4`, and a zoom of one diagonal silhouette edge shows blended intermediate pixels, not a hard two-colour stair, in both `$RUN_DIR/evidence/tc-06-01-mcp.png` and `$RUN_DIR/evidence/tc-06-01-viewport.png`  
 **And** the render face tone is inside the AD-34 band — verify: `uv run python -c "from freecad_buddy.usecases.render_tone import verify_render_tone as v; print(v(r'$RUN_DIR/evidence/tc-06-01-mcp.png'))"` prints `'passed': True`, and when you `Read` the PNG no visible face is pure black or pure white and every face stands clear of the background. Do not compare face tone with `$RUN_DIR/evidence/tc-06-01-viewport.png`: the render has its own lighting rig, so a face that is darker or brighter than in the window is not a finding (AD-34; `integration-mcp-freecad.md` §6 lighting rig, headlight 0.80; sprint-change-proposal-2026-10-04 decision 4)  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
 **And** *(visual)* the window shows one whole object, drawn as FreeCAD draws it, and the render depicts that same object — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many solids, what shape and proportion, which corner faces the viewer. Then `Read` `$RUN_DIR/evidence/tc-06-01-mcp.png` and judge the render against that description on object set, silhouette, proportion and camera. Face shading is excluded from this comparison: the render is judged on the AD-34 tone band alone (line above). The window is the referent for what is drawn; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree on what is drawn, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
@@ -125,6 +132,7 @@ Copy the returned `render.resource_link` PNG to `$RUN_DIR/evidence/tc-06-01-mcp.
 ```bash
 rm -f "$RUN_DIR/evidence/tc-06-01-"*.png
 ```
+Restore the old `AntiAliasing` value recorded in the `Given`: `mcp script_exec {doc:<handle>, code:"p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\np.SetInt('AntiAliasing', <old value>)"}`, or `p.RemoveInt('AntiAliasing')` when the old value was `-1`.
 
 ---
 
@@ -453,6 +461,7 @@ rm -f "$RUN_DIR/evidence/tc-06-08-"*.png
 mcp query_mass_properties {doc:<handle>, object:"Box"}
 mcp query_tree_summary {doc:<handle>, depth:2}
 ```
+**And** the `FCB_TMP_shot_*.png` files already in the session temp folder are listed (see Preconditions). Earlier renders of the same FreeCAD session are still there  
 **And** several renders with different view options are run  
 ```bash
 mcp query_screenshot {doc:<handle>, view:{camera:"iso"}}
@@ -471,7 +480,7 @@ mcp query_tree_summary {doc:<handle>, depth:2}
 **And** the strict guard is active — verify: every render response has `render.dirty_document` false, which is the state in which the before-equals-after mutation assertion runs  
 **And** no object was left Touched — verify: `mcp script_exec {doc:<handle>, code:"result = [o.Name for o in doc.Objects if 'Touched' in o.State]"}` returns `value_repr` `[]` after the renders; a render must not touch the document. (`verify_recompute` recomputes first, so it can never see a Touched object.)  
 **And** styles did not persist — verify: a render with no `styles` after the styled render shows `Box` in its original color, so the style override lived only in the constructed scene  
-**And** no temp PNG is orphaned beyond the returned links — verify: the `FCB_TMP_shot_*.png` files in the session temp folder (see Preconditions) are at most the files still referenced by the three `render.resource_link` values, and the system temp folder holds no `FCB_TMP_shot_*.png` written by these calls  
+**And** no temp PNG is orphaned beyond the returned links — verify: list the `FCB_TMP_shot_*.png` files of the session temp folder again; the files added since the list in the `When` are exactly the files named by this scenario's `render.resource_link` values (the three renders of the `When` plus the unstyled render of the line above), and the system temp folder holds no `FCB_TMP_shot_*.png` written by these calls. The files listed in the `When` stay: a link may still be read after its call returns, so the session-start sweep removes render files, never the render call (AD-25)  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
 **And** *(visual)* the window shows one box in its original colour, not green, and the iso render depicts that same box — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-09-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: one box, its proportions, and its colour — which is its original colour, not the green the styled render used. Then `Read` the iso render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `dirty_document` flag, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 

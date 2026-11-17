@@ -892,5 +892,5 @@
       "inside": true
     }
   },
-  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: framed fit and before capture before the preview (GUI action); decline refused with 'elicitation_action must be accept' (the MCP schema refuses it first) (raw RPC or second client)."
+  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: framed fit and before capture before the preview (GUI action)."
 }

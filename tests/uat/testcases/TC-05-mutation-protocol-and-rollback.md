@@ -229,14 +229,16 @@ be accepted is `rolled_back: true` with `rollback_proven: null`.
 **Given** a body with a `Pad`, a `Fillet` on that pad, a `Sketch001` mapped to a fillet-created face, and a 900 mm `Pocket` from `Sketch001` — a topology chain where undo has historically failed to restore the boundary. The 900 mm pocket cuts through the whole solid and commits `OK`, so it is part of the chain, not a reproducer — verify: `mcp query_dependencies { doc: <handle> }` shows `Sketch001` depending on `Fillet` and `Pocket` on `Sketch001`  
 **And** the pre-mutation window is framed and captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view); then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-06-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the reproducer search runs — each of the following failing mutations is previewed, then attempted in turn, recording `mutation.rollback_proven` for each  
+**When** the reproducer search runs — each of the following failing mutations is previewed, then attempted in turn, recording `mutation.rollback_proven` for each. Reproducer 1 removes one line of `Sketch001`, so its wire is open and the `Pocket` on the fillet face fails its recompute. Reproducer 2 asks the `Fillet` for a radius it cannot carry  
 ```
-mcp feature_pattern { doc: <handle>, body: "Body", name: "Pattern", kind: "linear", originals: ["Pocket"], direction: { kind: "mapped_name", object: "Pad", mapped_name: "Edge1" }, occurrences: 200, confirm: { preview_id: "<token>" } }
+mcp sketch_remove_geometry { doc: <handle>, sketch: "Sketch001", geo_ids: [0], confirm: { preview_id: "<token>" } }
 mcp feature_set_parameters { doc: <handle>, feature: "Fillet", parameters: { Radius: { value: 400, unit: "mm" } }, confirm: { preview_id: "<token>" } }
 ```
+A linear pattern of `Pocket` is not a reproducer here: along `Edge1` it repeats the through cut in its own column, so 20 occurrences commit with no change, and 200 occurrences did not finish: a FreeCADCmd 1.1.4 recompute ran past 10 minutes and 5 GB of memory.
 **And** which, if any, reported `rolled_back_via_snapshot` is recorded  
 
-**Then** if any reproducer hit the escalation — verify: `mutation.rollback_proven` equals `"rolled_back_via_snapshot"`  
+**Then** every reproducer reached the bracket and failed there — verify: each apply returns `status` `RECOMPUTE_ERROR` or `SPEC_FAILED` with a `mutation` block whose `rolled_back` is `true`. An `INVALID_INPUT` refusal means the reproducer did not run, and the search is incomplete  
+**And** if any reproducer hit the escalation — verify: `mutation.rollback_proven` equals `"rolled_back_via_snapshot"`  
 **And** the snapshot path is named on the escalated block — verify: `mutation.snapshot_path` is a non-null path under a `FCB_TMP_snap_` directory inside the session temp folder  
 **And** rollback is still claimed as proven — verify: `mutation.rolled_back` is `true`, because the re-hash after the restore matched  
 **And** the geometry returned to the pre-mutation value — verify: `mutation.changed` is `[]`. On this path the proof compares mass properties, not digests: reopening a file re-serializes every shape, so `fingerprint_after.digest` never equals the pre-mutation digest after a snapshot restore (Story 10.3 D4)  
@@ -245,7 +247,7 @@ mcp feature_set_parameters { doc: <handle>, feature: "Fillet", parameters: { Rad
 **And** the snapshot was deleted after the proven restore — verify: the **snapshot check** (Preconditions) returns `[]`  
 **And** CONDITIONAL — if every reproducer returned `rolled_back_verified`, record the scenario as not-exercised. Verify: no run produced `rolled_back: true` with `rollback_proven: null`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the human's window shows the pre-mutation document, not an empty or replaced one — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what each one shows. The after image must show the same solid with the same fillet at the same size as the before image: the same 900 mm pocket, no 200-instance pattern array, no oversized fillet, no empty viewport, no error marker, no dialog. A snapshot restore reopens the document behind the human's back, so an empty viewport or a stale window here is a real defect that the rebound handle and matching digest both hide. The judgement is on the pixels alone — no MCP status, digest, or render may stand in for looking at the two images.  
+**And** *(visual)* the human's window shows the pre-mutation document, not an empty or replaced one — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what each one shows. The after image must show the same solid with the same fillet at the same size as the before image: the same 900 mm pocket with its closed square outline, no oversized fillet, no empty viewport, no error marker, no dialog. A snapshot restore reopens the document behind the human's back, so an empty viewport or a stale window here is a real defect that the rebound handle and matching digest both hide. The judgement is on the pixels alone — no MCP status, digest, or render may stand in for looking at the two images.  
 
 **Cleanup**:
 ```bash
@@ -655,16 +657,16 @@ mcp document_close { doc: <handle-b> }
 
 ---
 
-### TC-05-17: TNP flags BROKEN when a referent vanishes
+### TC-05-17: TNP Layer-0 sweep flags BROKEN when the recompute breaks the pad
 
 **Priority**: Critical
-**Design Ref**: `verification-design.md` §3 (AD-7, Layer 0 validity sweep and Layer 1 unresolvable element)
+**Design Ref**: `verification-design.md` §1.3 and §3.2 (AD-7, Layer 0 error sweep)
 
 **Given** a body with a 30 mm `Pad` and a 2 mm `Fillet` on `Edge1` of that pad is open  
 **And** this build exposes an element map  
 **And** the pre-mutation window is framed and captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view); then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-05-17-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the geometry the fillet's base depends on is removed — the pad's profile sketch is shrunk so the filleted edge no longer exists  
+**When** the geometry the fillet's base depends on is removed — the pad's profile sketch loses one of its four lines, so its wire is open, the pad cannot rebuild, and the filleted edge has no source  
 ```
 mcp preview_dry_run { doc: <handle>, operation: { tool: "sketch_remove_geometry", args: { sketch: "Sketch", geo_ids: [0] } } }
 mcp sketch_remove_geometry { doc: <handle>, sketch: "Sketch", geo_ids: [0], confirm: { preview_id: "<token>" } }
@@ -674,7 +676,7 @@ mcp sketch_remove_geometry { doc: <handle>, sketch: "Sketch", geo_ids: [0], conf
 **And** the audit still ran and flagged it — verify: `mutation.post_verify.tnp_audit.status` equals `"FLAGGED"`, not `"CLEAN"` and not `"UNSUPPORTED"`  
 **And** a BROKEN finding is present — verify: `tnp_audit.findings` contains an entry with `verdict: "BROKEN"`  
 **And** the finding comes from the Layer-0 validity sweep — verify: that entry's `layer` is `0`  
-**And** the break is attributed to the fillet — verify: a BROKEN entry's `owner` is `"Fillet"`  
+**And** the break is attributed to the object the recompute broke — verify: a BROKEN entry's `owner` is `"Pad"`, its `prop` is `"Profile"`, and its `detail` starts `Pad is invalid after the mutation: `. The Layer-0 sweep reports each object that fails `isValid()` (`verification-design.md` §1.3 and §3, `tnp_guard.py:369`). FreeCAD does not recompute the `Fillet` above a failed `Pad`, so the `Fillet` stays valid and gets no Layer-0 entry  
 **And** the mutation was rolled back — verify: `mutation.rolled_back` is `true`  
 **And** the fillet is intact after the rollback — verify: `mcp query_mass_properties { doc: <handle>, object: "Fillet" }` returns `status: "OK"`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  

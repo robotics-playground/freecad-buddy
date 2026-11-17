@@ -36,7 +36,7 @@ process and never appear in the GUI window, so an H1 scenario's GUI capture show
 - [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
 - [ ] The H1 host starts as `"$FCB_PYTHON" -m freecad_buddy.hosts.main serve --transport stdio --mode inline`; its front spawns the worker with the same interpreter (`sys.executable`). The worker pid is the child of the front whose command line ends `-m freecad_buddy.hosts.headless.worker`
-- [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
+- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
 - [ ] For the H2 scenarios only: FreeCAD GUI running with the addon loaded (verify: `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp` returns a non-`000` code)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
@@ -55,7 +55,7 @@ process and never appear in the GUI window, so an H1 scenario's GUI capture show
 **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-01-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the happy-path sweep is run on its own H1 host, and its report and server stderr are copied from `_automation/`, where the sweep writes them  
+**When** the happy-path sweep is run on its own H1 host, and its report and server stderr are copied from `_automation/`, where the sweep writes them. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-10-01-e2e_report.json"
@@ -101,7 +101,7 @@ larger (30 s for most `query_*`, 60 s for `query_screenshot` / `verify_shape` / 
 **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-02-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the happy-path sweep is run, and its report is copied from `_automation/`  
+**When** the happy-path sweep is run, and its report is copied from `_automation/`. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-10-02-e2e_report.json"
@@ -143,14 +143,14 @@ with the message `bridge busy: another client session is active`, and its connec
 Authentication runs first: a wrong token gets `auth failed`, never the busy message.
 
 **Given** the FreeCAD GUI is running with the addon loaded  
-**And** the discovery file is readable — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-"*.json`  
+**And** the discovery file of the running FreeCAD is readable — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<pid>.json"`, where `<pid>` is the FreeCAD pid from `cua-driver call list_windows`. The folder can also hold `rpc-*.json` files of FreeCAD processes that were killed: the listener deletes its file only on a clean shutdown, and clients skip a file whose pid is dead (`integration-mcp-freecad.md` §2.6)  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle. This call also makes the proxy connect, and it keeps that connection as the active session  
 **And** the proxy holds the session — verify: `netstat -ano | findstr <listener-port>` shows one `ESTABLISHED` pair owned by the proxy pid  
 **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-03-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the host, port and token are read from the discovery file  
+**When** the host, port and token are read from the discovery file of the running FreeCAD, and its `pid` field is printed to confirm it names `<pid>`  
 ```bash
-python3 -c "import glob,json,os;p=glob.glob(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-*.json'))[0];r=json.load(open(p));print(r['host'],r['port'],r['token'])"
+python3 -c "import json,os;r=json.load(open(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-<pid>.json')));print(r['pid'],r['host'],r['port'],r['token'])"
 ```
 **And** client B opens a TCP connection to that port, sends a valid `rpc_hello`, and records the time until the first reply frame arrives  
 **And** client C opens a TCP connection to that port and sends `rpc_hello` with a wrong token  
@@ -312,19 +312,19 @@ mcp script_exec { doc: <D>, code: "import time, Part\nend = time.monotonic() + 7
 ```
 **And** the returned envelope is read in full and its elapsed time recorded  
 **And** the worker's CPU time is read twice, 3 s apart, right after the envelope arrives: `powershell -NoProfile -Command "(Get-Process -Id <worker pid>).CPU"`  
-**And** within 5 s of that envelope, `mcp query_tree_summary { doc: <E> }` is issued and its elapsed time recorded  
-**And** about 65 s after the first call started, `mcp query_tree_summary { doc: <E> }` is issued again  
-**And** about 85 s after the first call started, when the body has returned, `mcp query_tree_summary { doc: <E> }` is issued once more  
+**And** within 5 s of that envelope, `mcp query_object { doc: <E>, object: "Cylinder" }` is issued and its elapsed time recorded. The probe is a structured, read-only, doc-scoped tool, because the Thens read `detail.data`: `query_tree_summary` returns text only (mcp-tools-design §1.3), with no JSON block and no `structuredContent` (`mcp-tools-design.md:60`)  
+**And** about 65 s after the first call started, `mcp query_object { doc: <E>, object: "Cylinder" }` is issued again  
+**And** about 85 s after the first call started, when the body has returned, `mcp query_object { doc: <E>, object: "Cylinder" }` is issued once more  
 
 **Then** the envelope status is `TIMEOUT` within the budget plus 1 s — verify: the returned `status` field is exactly `TIMEOUT` and the elapsed time is between 30 s and 31 s  
 **And** the timeout is flagged as a marshal timeout — verify: `detail.data.marshal_timeout` is `true`  
 **And** the envelope says the body may still be running — verify: `detail.data.maybe_still_running` is `true`  
 **And** the message names the budget and the consequence — verify: `detail.message` contains `did not answer script_exec within its 30 s budget` and `the document is now suspect: do not blind-retry, run a query_* read first to confirm `  
 **And** the call was NOT preempted — verify: the worker's CPU time grew between the two reads  
-**And** the next call is refused without dispatch, at once — verify: the first `query_tree_summary` on `E` returns in under 1 s with `status` `TIMEOUT`, `detail.data.quarantined` `true`, no `marshal_timeout` key, and a message starting `not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker`  
-**And** past twice the budget the refusal escalates — verify: the second `query_tree_summary` returns `status` `WORKER_CRASHED`, `detail.data.quarantined` `true`, and a message containing `has run past twice its 30 s budget` and `restart the headless host`  
+**And** the next call is refused without dispatch, at once — verify: the first `query_object` on `E` returns in under 1 s with `status` `TIMEOUT`, `detail.data.quarantined` `true`, no `marshal_timeout` key, and a message starting `not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker`  
+**And** past twice the budget the refusal escalates — verify: the second `query_object` returns `status` `WORKER_CRASHED`, `detail.data.quarantined` `true`, and a message containing `has run past twice its 30 s budget` and `restart the headless host`  
 **And** the front did not end the worker — verify: `Get-Process -Id <worker pid>` still finds the worker after the escalation  
-**And** the session is served again once the body returns — verify: the third `query_tree_summary` returns `status` `OK`  
+**And** the session is served again once the body returns — verify: the third `query_object` returns `status` `OK`  
 **And** the timeout was audit-logged — verify: `grep '"verify_verdict": "TIMEOUT"' "$RUN_DIR/evidence/tc-10-07-audit.jsonl"` returns at least one line whose `tool` is `script_exec`  
 **And** *(visual)* no fit is performed on `D` here, by either route: `D` is now suspect, and a fit is a mutating call the suspect rule must refuse. The `before.png` was framed in the `Given` so the two images already share a camera.  
 **And** *(visual)* the FreeCAD window is alive and unchanged by the H1 timeout — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-07-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen: the window paints, the title bar carries no `Not Responding`, no modal is stuck on screen, and `<G>` is drawn whole — not blank, not half-painted, and not frozen. The H1 worker is a separate process, so the GUI window must not change. A correct `TIMEOUT` envelope over a frozen FreeCAD window is the exact defect class commit `636fb8a` fixed, and every numeric `Then` above would still pass. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
@@ -349,7 +349,7 @@ wording (`adapters/rpc_listener.py:420-424`): `document-suspect: a prior call ti
 document; run a query_* read to confirm state before mutating`. The H2 proxy adds no rule of its
 own.
 
-**Given** TC-10-07 has just run on the same H1 session, and its abandoned body has returned — verify: the last `query_tree_summary` of TC-10-07 returned `OK`  
+**Given** TC-10-07 has just run on the same H1 session, and its abandoned body has returned — verify: the last `query_object` of TC-10-07 returned `OK`  
 **And** document `D` is marked suspect by the timed-out `script_exec` of TC-10-07  
 **And** the GUI window's current state is captured before the attempt, with no fit of any kind — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-08-before.png"}' | & cua-driver call get_window_state`  
 
