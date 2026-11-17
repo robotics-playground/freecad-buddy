@@ -1,53 +1,95 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
+    "architecture-design": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/architecture-design/SKILL.md",
+      "computedHash": "dd85dfdefb2e8b72c867eda3ca2e33119a1c966b601cfd96501c728f1555da8b"
+    },
+    "bmad-leader": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-leader/SKILL.md",
+      "computedHash": "e400694459a92d22412c48cdc54d2b1cc924ef00690bd3f51820bc22260ab3d0"
+    },
+    "close-loop-dev-setup": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/close-loop-dev-setup/SKILL.md",
+      "computedHash": "e347c7487bdd7e86717172f0ffd023697d74fd07023f8704d9b431a3e01a4a84"
+    },
+    "create-intent": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/create-intent/SKILL.md",
+      "computedHash": "92cf1a175367c7159ecec489e533673d5e4efecbc9ddebb7123ccc25ed59e634"
+    },
+    "github-sync": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/github-sync/SKILL.md",
+      "computedHash": "af78372508f94877914e214061108af8bd3a354bc44111627c6e9fa27b066058"
+    },
     "load-docs": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/load-docs/SKILL.md",
-      "computedHash": "b788eedefc89f2dcecf395d605098d9c7f2ab34199737dbdc0b70accf5a27df5"
+      "computedHash": "aeda6a384d5335ce5c1f5b86a9f326a4207c6017fafe53b96f07274de2d4063c"
     },
     "manual-testing": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/manual-testing/SKILL.md",
-      "computedHash": "0f452bce005308c12a2651d9afebdc59f0eb42cb34351241c252f1d341f0fd4f"
+      "computedHash": "988562890ac4ab1b900735249773dec78db1e37989e1553614b2cd68dead0c44"
     },
     "release-please": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/release-please/SKILL.md",
-      "computedHash": "d3ab08b8a02ca41da5f92c004b81c69fb3ddb384977846f28792c77db1e492e3"
+      "computedHash": "6330523f3aa15c45715a48b402b1ab84a3fecfc6d21430ef742d9547af8f3c3c"
     },
     "software-research": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/software-research/SKILL.md",
-      "computedHash": "387b53ceaa116cbb34bcf1e2b3e0160bb58d2e7459b5ae9c4f48e2e16c80b54e"
+      "computedHash": "7c4c32b77eb464613a0a6ba7fbb1ef04aaca2052559d44298794a7d99d2b9805"
+    },
+    "to-markdown": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/to-markdown/SKILL.md",
+      "computedHash": "122369d1c44e83cd6775f9f2517b103f6fbf1191ab7f291cefdc7a0aead9dacc"
+    },
+    "to-wiki": {
+      "source": "bmad-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/to-wiki/SKILL.md",
+      "computedHash": "95969db0fd9396ec5283308ea2997bfcaf1b746a911d535a2c09d59833f5c447"
     },
     "typescript-clean-code": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/typescript-clean-code/SKILL.md",
-      "computedHash": "32dd11d590211d7098dfefe206e10acf929d6fcea28151a3994a1823b04df239"
+      "computedHash": "cb029ad5e7807d5d4d48210e1e74a4cda5d63fbff7bf692df43e8918554d978c"
     },
     "typescript-e2e-testing": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/typescript-e2e-testing/SKILL.md",
-      "computedHash": "bfddd43517751607b6f1554994de562912286046848e76b194861cabdcf225a1"
+      "computedHash": "8f89ad8197dcbfa2cd7967f52bf5ce0eff353af4d8b5a4d0a8aea1a77b3f86a3"
     },
     "typescript-unit-testing": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/typescript-unit-testing/SKILL.md",
-      "computedHash": "e1c9f96fe0e0823ff3b4c4a077583737bf6fd8061daf67ee65bc9543b39b9624"
+      "computedHash": "6492f7861b0cfd97c7cb85b388141019c2532a41ab4c8a169e0b2f1b4927d188"
     },
     "ultrathink-protocol": {
       "source": "bmad-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/ultrathink-protocol/SKILL.md",
-      "computedHash": "5f40786e4233e12489cb201315e445eddf6b456306999583b85d062951e205ff"
+      "computedHash": "3cca6c54d411bdd1381a7868e9a6ff39ed8c71cbba8be13f6f71c10ec741f88d"
     }
   }
 }
