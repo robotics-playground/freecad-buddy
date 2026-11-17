@@ -39,7 +39,8 @@ ATSPI_RULE = "qt.accessibility.atspi.warning=false"
 LATE_SESSION_DELAY_S = 5
 
 # Starts `fcb-cua-mcp` with a session probe that fails for the first LATE_SESSION_DELAY_S seconds,
-# waits until the process has become `cua-driver mcp`, and prints its address and the session's.
+# waits until the process image is the `cua-driver` binary, and prints its address and the
+# session's.
 LATE_SESSION_SCRIPT = r"""
 set -u
 mcp_pid=""
@@ -59,7 +60,8 @@ session_address="$(tr '\0' '\n' </proc/$session_pid/environ \
 PATH="$shim_dir:$PATH" fcb-cua-mcp < <(sleep 60) >/dev/null 2>&1 &
 mcp_pid=$!
 for _ in $(seq 1 60); do
-    if tr '\0' ' ' <"/proc/$mcp_pid/cmdline" 2>/dev/null | grep -q 'cua-driver mcp'; then
+    exe="$(readlink -f "/proc/$mcp_pid/exe" 2>/dev/null)"
+    if [ "$exe" = "$(readlink -f /usr/local/bin/cua-driver)" ]; then
         sleep 1
         address="$(tr '\0' '\n' <"/proc/$mcp_pid/environ" \
             | sed -n 's/^DBUS_SESSION_BUS_ADDRESS=//p')"

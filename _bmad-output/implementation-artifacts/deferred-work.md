@@ -1902,7 +1902,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
   summary: The driver's `invoke_menu` (cua-driver 0.28.1) refuses FreeCAD's Qt menu bar (`menu path segment 0 has no safe activation action`: top-level menu items expose only `ShowMenu`), so test-case steps written as `invoke_menu` need the element-token route; the runner's menu step already presses the leaf item by token.
-  evidence: `tests/uat/run/2026-11-17-10-9-smoke/evidence/demo-*.png`; `tests/uat/runner/capture.py` `invoke_menu`. A newer driver (0.53.0 is released) may accept the path; the pinned version is 0.28.1.
+  evidence: `tests/uat/run/2026-11-17-10-9-smoke/evidence/demo-*.png`; `tests/uat/runner/capture.py` `invoke_menu`. A newer driver (0.53.0 is released) may accept the path; the pinned version is 0.28.1. `tests/uat/testcases/TC-01-session-lifecycle-and-transport.md` lines 391, 530, 615 and 650 still close FreeCAD with `invoke_menu` `["File", "Exit"]`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
   summary: `tests/uat/testcases/TC-*.md` still hold other Windows-host commands in their Given and step text (`tasklist`, `netstat`, `$APPDATA\FreeCAD/v1-1\...`, PowerShell `& cua-driver call ...`), and `freecad-automation-verification.md` still documents the conda `fcb` env.

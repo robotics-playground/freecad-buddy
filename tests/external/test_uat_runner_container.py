@@ -3,6 +3,7 @@ discovery and teardown, with a fake ``/proc`` and fake processes (no FreeCAD, no
 
 from __future__ import annotations
 
+import asyncio
 import shutil
 import sys
 from pathlib import Path
@@ -13,10 +14,13 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "tests" / "uat" / "runner"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "automation"))
+sys.path.insert(0, str(REPO_ROOT / "tests" / "close-loop"))
 import capture  # noqa: E402
 import launch  # noqa: E402
+import check_harness  # noqa: E402
 import run  # noqa: E402
 import run_mcp_e2e  # noqa: E402
+import run_mcp_edge_cases  # noqa: E402
 
 
 def _fake_proc(root: Path, processes: dict) -> Path:
@@ -640,3 +644,33 @@ def test_Should_see_the_process_table_before_the_kill_When_stop_collects_the_sta
 
     # Assert
     assert not leftover.exists()
+
+
+def test_Should_record_a_failed_check_When_the_edge_sweep_finds_no_golden_fixture(
+    monkeypatch, tmp_path
+):
+    # Arrange
+    monkeypatch.setattr(run_mcp_edge_cases, "GOLDEN_DIR", tmp_path)
+    report = run_mcp_e2e.Report()
+    session = SimpleNamespace()
+
+    # Act
+    handle = asyncio.run(run_mcp_edge_cases._open_golden(session, report, "box-10-20-30"))
+
+    # Assert
+    assert handle is None
+    assert report.summary()["all_passed"] is False
+    assert report.checks[0]["tool"] == "open:box-10-20-30"
+
+
+def test_Should_find_the_server_by_its_executable_When_the_late_session_script_polls_the_process():
+    # Arrange
+    script = check_harness.LATE_SESSION_SCRIPT
+
+    # Act
+    reads_cmdline = "/cmdline" in script
+    reads_executable = "/proc/$mcp_pid/exe" in script
+
+    # Assert
+    assert not reads_cmdline
+    assert reads_executable

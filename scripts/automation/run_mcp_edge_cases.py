@@ -42,13 +42,17 @@ from run_mcp_e2e import (  # reuse env + envelope helpers from the happy-path ha
 FAULT_DIR = Path(__file__).resolve().parents[2] / "benchmarks" / "g0" / "fault-injection"
 
 
-async def _open_golden(session, name: str) -> str | None:
-    """Open a golden model and return its doc handle, or None if the fixture is missing."""
+async def _open_golden(session, rep: Report, name: str) -> str | None:
+    """Open a golden model and return its doc handle; a missing one is a FAILED check."""
     fcstd = GOLDEN_DIR / f"{name}.FCStd"
     if not fcstd.is_file():
+        rep.record(f"open:{name}", False, "fixture missing", "MISSING")
         return None
     opened = await session.call_tool("document_open", {"path": container_path(fcstd)})
-    return _payload(opened)["doc"] if _status(opened) == "OK" else None
+    if _status(opened) != "OK":
+        rep.record(f"open:{name}", False, str(_payload(opened)), _status(opened))
+        return None
+    return _payload(opened)["doc"]
 
 
 async def _sole_object(session, handle: str) -> str | None:
@@ -62,7 +66,7 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
     rep.record("unknown_doc_handle", _status(r) == "INVALID_INPUT", "", _status(r))
 
     # --- P0 invalid-input: unknown object name on a real doc ----------------------------------
-    handle = await _open_golden(session, "box-10-20-30")
+    handle = await _open_golden(session, rep, "box-10-20-30")
     if handle:
         r = await session.call_tool("query_object", {"doc": handle, "object": "NoSuchObject"})
         rep.record("unknown_object_name", _status(r) == "INVALID_INPUT", "", _status(r))
@@ -163,7 +167,7 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
     rep.record("open_bad_path", _status(r) == "INVALID_INPUT", "", _status(r))
 
     # --- P1 corner: two-box compound -> mass properties OK with com == null -------------------
-    comp = await _open_golden(session, "two-box-compound")
+    comp = await _open_golden(session, rep, "two-box-compound")
     if comp:
         obj = await _sole_object(session, comp)
         r = await session.call_tool("query_mass_properties", {"doc": comp, "object": obj})
