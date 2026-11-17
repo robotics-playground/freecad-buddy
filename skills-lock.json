@@ -9,9 +9,10 @@
     },
     "bmad-leader": {
       "source": "bmad-labs/skills",
+      "commit": "561b02ccf2111ef7aaa9889821990006c1e59ff1",
       "sourceType": "github",
       "skillPath": "skills/bmad-leader/SKILL.md",
-      "computedHash": "e400694459a92d22412c48cdc54d2b1cc924ef00690bd3f51820bc22260ab3d0"
+      "computedHash": "4080f2a5f5fda6ab24fd7f9c50d4eeece5700831af34db0754bde72cc522d0fb"
     },
     "close-loop-dev-setup": {
       "source": "bmad-labs/skills",
