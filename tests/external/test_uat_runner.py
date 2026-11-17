@@ -765,7 +765,7 @@ def test_Should_record_the_attempt_count_When_a_menu_step_runs(tmp_path):
     record = run.run_scenario(_scenario(tmp_path), session, tmp_path)
 
     # Assert
-    assert record["steps"][1] == {"menu": SHOW_ALL, "attempts": 2}
+    assert record["steps"][1] == {"menu": SHOW_ALL, "attempts": 2, "attempt_log": []}
     assert record["verdict"] == "PASS"
 
 
@@ -1191,10 +1191,6 @@ def test_Should_reach_invoke_menu_only_through_the_allow_list_When_runner_files_
 
     # Assert
     assert callers == [
-        (
-            "capture.py",
-            'cua("invoke_menu", {"pid": pid, "window_id": window_id, "path": list(path)})',
-        ),
         ("run.py", "capture.invoke_menu(self.pid, self.window_id, path)"),
     ]
     assert capture.MENU_ALLOW_LIST == (
@@ -1467,7 +1463,7 @@ def test_Should_exit_with_the_documented_code_and_write_both_files_When_the_run_
     summary_text = (out / "summary.md").read_text("utf-8")
     assert code == expected_code
     assert written["scenarios"] == records
-    assert set(written["run"]) >= {"git_commit", "git_dirty", "freecad_exe", "started", "errors"}
+    assert set(written["run"]) >= {"git_commit", "git_dirty", "freecad_apprun", "started", "errors"}
     assert written["run"]["errors"] == (
         [f"group 0 (default): {group_error}"] if group_error else []
     )
@@ -1580,18 +1576,19 @@ def test_Should_drop_inherited_bridge_variables_When_the_launch_environment_is_b
 @pytest.mark.parametrize(
     ("change", "message"),
     [
-        ({"FREECAD_EXE": "Z:/no/freecad.exe"}, "is not a file"),
-        ({"which": None}, "is not on PATH"),
+        ({"FREECAD_APPRUN": "Z:/no/AppRun"}, "is not a file"),
+        ({"which": None}, "is not an executable file"),
         ({"status": "Cua Driver daemon is not running"}, "daemon is not running"),
     ],
-    ids=["no freecad.exe", "no cua-driver", "daemon down"],
+    ids=["no AppRun", "no cua-driver", "daemon down"],
 )
 def test_Should_refuse_When_a_tool_the_run_needs_is_missing(monkeypatch, tmp_path, change, message):
     # Arrange
-    exe = tmp_path / "freecad.exe"
-    exe.write_bytes(b"")
-    monkeypatch.setattr(launch, "FREECAD_EXE", change.get("FREECAD_EXE", str(exe)))
-    monkeypatch.setattr(launch.shutil, "which", lambda name: change.get("which", "cua-driver.exe"))
+    apprun = tmp_path / "AppRun"
+    apprun.write_bytes(b"")
+    monkeypatch.setenv("DISPLAY", ":1")
+    monkeypatch.setattr(launch, "FREECAD_APPRUN", change.get("FREECAD_APPRUN", str(apprun)))
+    monkeypatch.setattr(launch.shutil, "which", lambda name: change.get("which", "cua-driver"))
     status = change.get("status", "Cua Driver daemon is running")
     monkeypatch.setattr(
         launch.subprocess,
@@ -1607,20 +1604,19 @@ def test_Should_refuse_When_a_tool_the_run_needs_is_missing(monkeypatch, tmp_pat
         act()
 
 
-def test_Should_exit_2_without_a_traceback_When_tasklist_fails(tmp_path, capsys, monkeypatch):
+def test_Should_exit_2_without_a_traceback_When_the_process_list_is_unreadable(
+    tmp_path, capsys, monkeypatch
+):
     # Arrange
-    def fail(*args, **kwargs):
-        raise subprocess.CalledProcessError(1, "tasklist")
-
     monkeypatch.setattr(launch, "check_tools", lambda: None)
-    monkeypatch.setattr(launch.subprocess, "run", fail)
+    monkeypatch.setattr(launch, "_PROC_ROOT", str(tmp_path / "no-proc"))
 
     # Act
     code = run.main([str(SCENARIO_DIR / "tc-02-02.json"), "--out", str(tmp_path / "out")])
 
     # Assert
     assert code == 2
-    assert "cannot list processes with tasklist" in capsys.readouterr().out
+    assert "cannot list processes under" in capsys.readouterr().out
 
 
 def test_Should_refuse_before_starting_FreeCAD_When_a_group_finds_8765_held(monkeypatch, tmp_path):
@@ -1664,6 +1660,7 @@ def test_Should_wait_When_healthz_names_another_freecad(monkeypatch, tmp_path):
     discovery.write_text('{"pid": 4242, "port": 1, "token": "t"}', "utf-8")
     monkeypatch.setattr(launch, "_healthz", lambda: {"freecad_pid": 999})
     monkeypatch.setattr(launch, "discovery_file", lambda pid: discovery)
+    monkeypatch.setattr(launch, "descendant_pids", lambda root: {root})
     monkeypatch.setattr(launch, "START_TIMEOUT_S", 0.2)
     monkeypatch.setattr(launch, "POLL_S", 0.05)
 
@@ -1671,17 +1668,20 @@ def test_Should_wait_When_healthz_names_another_freecad(monkeypatch, tmp_path):
     act = lambda: launch.wait_until_ready(_FakeProcess())  # noqa: E731
 
     # Assert
-    with pytest.raises(launch.LaunchError, match="no /healthz naming it"):
+    with pytest.raises(launch.LaunchError, match="no /healthz naming a FreeCAD below it"):
         act()
 
 
-def test_Should_end_only_its_own_process_When_it_stops_freecad(monkeypatch, tmp_path):
+def test_Should_end_only_its_own_process_group_When_it_stops_freecad(monkeypatch, tmp_path):
     # Arrange
     def no_other_process(*args, **kwargs):
         raise AssertionError("stop must not start or end another process")
 
+    ended = []
     monkeypatch.setattr(launch.subprocess, "run", no_other_process)
     monkeypatch.setattr(launch.subprocess, "Popen", no_other_process)
+    monkeypatch.setattr(launch.os, "killpg", lambda pid, sig: ended.append(pid), raising=False)
+    monkeypatch.setattr(launch.signal, "SIGKILL", 9, raising=False)
     monkeypatch.setattr(launch, "discovery_file", lambda pid: tmp_path / "gone.json")
     monkeypatch.setattr(launch, "port_held", lambda port=launch.PROXY_PORT: False)
     process = _FakeProcess()
@@ -1690,7 +1690,7 @@ def test_Should_end_only_its_own_process_When_it_stops_freecad(monkeypatch, tmp_
     launch.stop(process)
 
     # Assert
-    assert process.killed == 1
+    assert ended == [process.pid]
 
 
 def test_Should_return_structured_content_or_the_text_When_a_tool_result_arrives():

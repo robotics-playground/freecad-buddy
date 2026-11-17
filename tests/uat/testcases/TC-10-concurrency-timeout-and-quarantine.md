@@ -33,10 +33,10 @@ process and never appear in the GUI window, so an H1 scenario's GUI capture show
 
 ## Preconditions
 
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
 - [ ] The H1 host starts as `"$FCB_PYTHON" -m freecad_buddy.hosts.main serve --transport stdio --mode inline`; its front spawns the worker with the same interpreter (`sys.executable`). The worker pid is the child of the front whose command line ends `-m freecad_buddy.hosts.headless.worker`
-- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
+- [ ] The container interpreter is H1-capable (verify: `docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
 - [ ] For the H2 scenarios only: FreeCAD GUI running with the addon loaded (verify: `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp` returns a non-`000` code)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
@@ -55,7 +55,7 @@ process and never appear in the GUI window, so an H1 scenario's GUI capture show
 **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-01-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the happy-path sweep is run on its own H1 host, and its report and server stderr are copied from `_automation/`, where the sweep writes them. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+**When** the happy-path sweep is run on its own H1 host, and its report and server stderr are copied from `_automation/`, where the sweep writes them. The sweep starts its H1 server in the container (`docker exec -i -u cua fcb-desktop fcb-py`); start the container first  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-10-01-e2e_report.json"
@@ -101,7 +101,7 @@ larger (30 s for most `query_*`, 60 s for `query_screenshot` / `verify_shape` / 
 **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the model is framed and the starting state is captured through that same framing, so before and after share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-02-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the happy-path sweep is run, and its report is copied from `_automation/`. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+**When** the happy-path sweep is run, and its report is copied from `_automation/`. The sweep starts its H1 server in the container (`docker exec -i -u cua fcb-desktop fcb-py`); start the container first  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-10-02-e2e_report.json"

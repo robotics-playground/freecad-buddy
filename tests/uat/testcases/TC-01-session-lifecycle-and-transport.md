@@ -17,12 +17,12 @@ the shipped catalog from the repo venv and needs no host.
 
 ## Preconditions
 
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
 - [ ] Addon linked into the FreeCAD Mod dir (verify: `ls "$APPDATA/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py"`)
 - [ ] Repo venv exists so the addon can discover the proxy interpreter (verify: `ls .venv/Scripts/pythonw.exe`)
 - [ ] cua-driver daemon runs in an interactive session (verify: `cua-driver status` shows `SessionId` ≥ 1)
-- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
+- [ ] The container interpreter is H1-capable (verify: `docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`)
 - [ ] No FreeCAD process and nothing on `:8765` before TC-01-01 (verify: `netstat -ano | grep :8765` returns nothing)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
 
@@ -37,9 +37,9 @@ the shipped catalog from the repo venv and needs no host.
 **And** `:8765` is free — verify: `netstat -ano | grep :8765` returns nothing  
 **And** the addon log is rotated aside so the new run's lines are unambiguous — verify: `mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"`  
 
-**When** FreeCAD is launched through cua-driver. Do **not** run any `serve` command by hand — starting `serve --mode rpc` manually invalidates this scenario.  
+**When** FreeCAD is launched with `fcb-freecad start`. Do **not** run any `serve` command by hand — starting `serve --mode rpc` manually invalidates this scenario.  
 ```
-cua-driver call launch_app { path: "$FREECAD_EXE" }
+docker exec -u cua fcb-desktop fcb-freecad start
 ```
 **And** the main window is waited for, then the pid and window id are recorded  
 ```
@@ -80,11 +80,11 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
 **Design Ref**: `mcp-tools-design.md` §1 (tool surface), `verification-design.md` §6 (export pairing)
 
 **Given** golden models are present — verify: `ls benchmarks/g0/golden-models/*.FCStd` lists 5 files  
-**And** no stale H1 server holds the golden files — verify: `tasklist | grep -i "python.exe"` shows no `micromamba/envs/fcb` process  
+**And** no stale H1 server holds the golden files — verify: `docker exec -u cua fcb-desktop pgrep -af freecad_buddy.hosts.main` returns nothing  
 **And** a golden model is open on the GUI host so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the GUI's pre-sweep state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the happy-path sweep is run. It spawns its own H1 stdio host from the `fcb` env and does not touch the GUI bridge. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run.  
+**When** the happy-path sweep is run. It spawns its own H1 stdio host in the container and does not touch the GUI bridge. The sweep starts its H1 server in the container (`docker exec -i -u cua fcb-desktop fcb-py`); start the container first.  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 ```
@@ -404,7 +404,7 @@ tasklist | grep -i freecad.exe
 
 **Cleanup**: relaunch FreeCAD for the following scenarios.
 ```
-cua-driver call launch_app { path: "$FREECAD_EXE" }
+docker exec -u cua fcb-desktop fcb-freecad start
 ```
 
 ---
@@ -528,7 +528,7 @@ If `["File","New Document"]` is refused, click the `New Document` toolbar button
 **Cleanup**: restart FreeCAD without the variable so later scenarios get the auto-spawned proxy. Close it through its own menu: `kill_app` refuses a FreeCAD that the `.cmd` wrapper started (`foreign_process_termination_denied`).
 ```
 cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "Exit"] }
-cua-driver call launch_app { path: "$FREECAD_EXE" }
+docker exec -u cua fcb-desktop fcb-freecad start
 ```
 ```bash
 rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
@@ -623,7 +623,7 @@ mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freeca
 ```
 **And** FreeCAD is launched and the addon log is read after 15 s, past the addon's 10 s wait for the port to free  
 ```
-cua-driver call launch_app { path: "$FREECAD_EXE" }
+docker exec -u cua fcb-desktop fcb-freecad start
 ```
 ```bash
 cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
@@ -648,5 +648,5 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
 ```
 ```
 cua-driver call invoke_menu { pid: <new freecad pid>, window_id: <new window id>, path: ["File", "Exit"] }
-cua-driver call launch_app { path: "$FREECAD_EXE" }
+docker exec -u cua fcb-desktop fcb-freecad start
 ```

@@ -7,7 +7,7 @@ Commands are written for PowerShell 7 on Windows unless marked otherwise.
 
 **UAT runs FreeCAD in the `fcb-desktop` container, never on the host.** For a UAT run, do Steps
 C1–C4 below instead of Steps 1, 2, 4 and 5. Steps 1, 2, 4 and 5 are the Windows host procedure, for
-development on the host. Step 3 (H1 legs) stays on the host. Steps 6, 6a and 7 apply unchanged
+development on the host. Step 3 (H1 legs) runs in the container too. Steps 6, 6a and 7 apply unchanged
 through MCP server `freecad-buddy-docker`. Container reference: `tests/close-loop/README.md`.
 
 ---
@@ -91,24 +91,19 @@ real one is `%APPDATA%\FreeCAD\v1-1\Mod\`. Checking the legacy path gives a fals
 
 ## Step 3 — H1 legs
 
-The headless host needs FreeCAD and `mcp` importable from the **same** interpreter.
+The headless host runs inside the `fcb-desktop` container, in the interpreter that holds FreeCAD
+and `mcp` together: `fcb-py` (the AppImage's Python 3.11 with the pinned `mcp`, `trimesh` and
+`lib3mf`, and the addon installed in the image; rebuild the image after a change under `src/`). No micromamba env and no host FreeCAD is involved.
 
-- [ ] `fcb` env is H1-capable (verify, **bash** — the PYTHONPATH patch is required):
+- [ ] The container interpreter is H1-capable (verify, **bash**):
       ```bash
-      FCB="$USERPROFILE/micromamba/envs/fcb"
-      PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" \
-        "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"
+      docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"
       ```
-      Expect `H1 ok <version>`. Record that version as the H1 version.
-
-      **A bare `"$FCB/python.exe" -c "import FreeCAD"` always fails with `ModuleNotFoundError`.**
-      `FreeCAD.pyd` lives in `Library/bin`, not on the default `sys.path`. This is not a broken
-      env — `scripts/automation/run_mcp_e2e.py` applies the same patch in `_fcb_env` before it
-      spawns the H1 server. Do not "fix" the env in response to the bare-import failure.
-
-      The H1 leg and the GUI can run different FreeCAD builds. Record both versions live (the H1
-      line above, and `query_capabilities.freecad_version` on the GUI), and record which host
-      produced a result whenever a version-sensitive value (fingerprint, element map) is compared.
+      Expect `H1 ok 1.1.4`. Record that version as the H1 version. The H1 leg and the GUI run the
+      same FreeCAD build.
+- [ ] Both sweeps pass against the container (verify: `uv run python scripts/automation/run_mcp_e2e.py`
+      and `uv run python scripts/automation/run_mcp_edge_cases.py` exit 0). Each prints
+      `N/N checks passed` and writes its report under `_automation/`.
 - [ ] Repo `uv` env is present (verify: `uv run python -c "import sys; print(sys.version)"` reports
       Python 3.12.12)
 

@@ -19,7 +19,7 @@ document, so the closing visual reads the human's own 3D view.
 
 ## Preconditions
 
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] FreeCAD GUI is open and the addon spawned the proxy (verify: `netstat -ano | grep :8765` shows LISTENING)
 - [ ] The MCP tool surface is complete (verify: `tools/list` returns the live count: 45 typed tools, plus `script_exec` when it is on, so 46 by default)
 - [ ] The host runs the operator auto-approve posture, so a mutation needs no `preview_id` (verify: the addon log carries `SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)`)

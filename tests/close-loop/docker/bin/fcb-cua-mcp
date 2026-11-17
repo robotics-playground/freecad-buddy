@@ -3,7 +3,19 @@
 #   docker exec -i -u cua fcb-desktop fcb-cua-mcp
 # cua-driver serves MCP over stdio only, so `docker exec -i` is the transport and no port opens.
 set -euo pipefail
-eval "$(fcb-session-env)"
+# Wait for the XFCE session, because cua-driver reads the D-Bus address once, at start. A bare
+# `eval "$(fcb-session-env)"` succeeds on empty output, so a start before the session would run
+# the server with no AT-SPI bus. Give up after 120 s instead of starting it blind.
+FCB_SESSION_WAIT_S="${FCB_SESSION_WAIT_S:-120}"
+deadline=$((SECONDS + FCB_SESSION_WAIT_S))
+until env_lines="$(fcb-session-env 2>/dev/null)"; do
+    if [ "$SECONDS" -ge "$deadline" ]; then
+        echo "fcb-cua-mcp: no desktop session after ${FCB_SESSION_WAIT_S} s; not starting cua-driver without the AT-SPI bus" >&2
+        exit 1
+    fi
+    sleep 1
+done
+eval "$env_lines"
 # /usr/local/bin/cua-driver is the pinned release binary; /opt/venv/bin/cua-driver is the base
 # image's older Python wrapper, which also fails as user cua.
 exec /usr/local/bin/cua-driver mcp "$@"

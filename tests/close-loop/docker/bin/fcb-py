@@ -1,0 +1,13 @@
+#!/bin/bash
+# Run the FreeCAD AppImage's Python 3.11 with the pinned third-party packages of /opt/fcb-site
+# (mcp, trimesh, lib3mf at the uv.lock versions) and FreeCAD's own modules importable. The UAT
+# runner, the UAT watchdog and the H1 headless host start through it, because the addon's managed
+# venv exists only after a first FreeCAD start. Inside a desktop session it also exports DISPLAY
+# and the session D-Bus address, which a FreeCAD GUI started by the runner needs.
+#   docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/runner/run.py ...
+set -euo pipefail
+if env_lines="$(fcb-session-env 2>/dev/null)"; then
+    eval "$env_lines"
+fi
+export PYTHONPATH="/opt/fcb-site:/opt/freecad/usr/lib${PYTHONPATH:+:$PYTHONPATH}"
+exec /opt/freecad/AppRun python "$@"

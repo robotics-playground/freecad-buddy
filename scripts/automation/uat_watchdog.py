@@ -6,9 +6,9 @@ behind it. When one dies the symptom is a stalled run, not an error — the 2026
 its ``cua-driver`` session twice and each loss surfaced only as an empty capture several calls
 later. This turns each of those into a named non-zero exit.
 
-Run between test cases::
+Run it inside the ``fcb-desktop`` container, between test cases::
 
-    uv run python scripts/automation/uat_watchdog.py --pid 26912 --window 398030
+    docker exec -u cua fcb-desktop fcb-py /repo/scripts/automation/uat_watchdog.py --pid 776
 
 Exits 0 when every check passes, 1 naming the first failure. ``--revive`` (default on) restarts a
 lapsed ``cua-driver`` session in place and reports that it did, which is usually enough to keep a
@@ -20,10 +20,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -36,9 +36,15 @@ _HTTP_TIMEOUT_S = 10.0
 
 _PROXY_URL = "http://127.0.0.1:8765/mcp/"
 
+# A bare ``cua-driver`` resolves to the base image's Python wrapper in /opt/venv/bin, which fails
+# as user cua (tests/close-loop/README.md).
+_CUA_DRIVER = "/usr/local/bin/cua-driver"
+
 # The reserved prefix the bridge uses for both snapshot directories and render output.
 _SNAP_PREFIX = "FCB_TMP_snap_"
 _SHOT_PREFIX = "FCB_TMP_shot_"
+_SESSION_PREFIX = "FCB_TMP_session_"
+_WORKDIR_ENV = "FREECAD_BUDDY_WORKDIR"
 
 
 class CheckFailed(Exception):
@@ -55,9 +61,9 @@ def _cua(command: str, payload: dict) -> dict:
 
     :raises CheckFailed: the binary is missing or the call timed out.
     """
-    exe = shutil.which("cua-driver")
+    exe = shutil.which(_CUA_DRIVER)
     if exe is None:
-        raise CheckFailed("cua-driver is not on PATH")
+        raise CheckFailed(f"{_CUA_DRIVER} is not an executable file")
     try:
         done = subprocess.run(
             [exe, "call", command, "--json", json.dumps(payload)],
@@ -140,35 +146,61 @@ def check_proxy() -> str:
     return "MCP proxy on :8765 answered initialize"
 
 
-def check_temp(since: datetime | None) -> str:
+def default_workdir() -> Path:
+    """The bridge's session workdir: ``FREECAD_BUDDY_WORKDIR``, else the GUI default.
+
+    The GUI default is ``freecad-buddy/workdir`` under the FreeCAD user data folder, which is
+    ``~/.local/share/FreeCAD/<version>/`` in the container.
+    """
+    configured = os.environ.get(_WORKDIR_ENV)
+    if configured:
+        return Path(configured)
+    found = sorted(Path.home().glob(".local/share/FreeCAD/*/freecad-buddy/workdir"))
+    return found[-1] if found else Path.home() / ".local/share/FreeCAD/v1-1/freecad-buddy/workdir"
+
+
+def _reserved(root: Path, prefix: str) -> list[Path]:
+    """Entries named ``prefix*`` in ``root`` and in each session folder the bridge made there."""
+    return sorted([*root.glob(f"{prefix}*"), *root.glob(f"{_SESSION_PREFIX}*/{prefix}*")])
+
+
+def check_temp(since: datetime | None, workdir: Path | None = None) -> str:
     """Report reserved-prefix leftovers, and fail on a snapshot leaked since ``since``.
 
-    A surviving ``FCB_TMP_snap_`` means a mutation bracket did not close, which invalidates the
-    snapshot assertions of every scenario that follows. Render output (``FCB_TMP_shot_``) is only
-    counted: it accumulates by design today (finding R2-04) and is not a reason to stop a run.
+    The bridge writes every temp file under ``<workdir>/tmp/FCB_TMP_session_<pid>_<token>/``
+    (AD-25), never into the OS temp folder, so that is where this looks. A surviving
+    ``FCB_TMP_snap_`` means a mutation bracket did not close, which invalidates the snapshot
+    assertions of every scenario that follows. Render output (``FCB_TMP_shot_``) is only counted:
+    it accumulates by design today (finding R2-04) and is not a reason to stop a run.
     """
-    root = Path(tempfile.gettempdir())
-    snaps = sorted(p for p in root.glob(f"{_SNAP_PREFIX}*") if p.is_dir())
-    shots = sorted(root.glob(f"{_SHOT_PREFIX}*"))
+    configured = workdir or (Path(os.environ[_WORKDIR_ENV]) if _WORKDIR_ENV in os.environ else None)
+    if configured is not None and not configured.is_dir():
+        raise CheckFailed(f"workdir {configured} does not exist: check --workdir")
+    # The bridge creates `tmp` on first use, so a fresh FreeCAD has none: that is zero leftovers.
+    root = (configured or default_workdir()) / "tmp"
+    snaps = [p for p in _reserved(root, _SNAP_PREFIX) if p.is_dir()]
+    shots = _reserved(root, _SHOT_PREFIX)
     if since is not None:
         fresh = [p for p in snaps if _created_after(p, since)]
         if fresh:
             names = ", ".join(p.name for p in fresh[:5])
             raise CheckFailed(f"{len(fresh)} snapshot dir(s) leaked since cutoff: {names}")
-    return f"temp: {len(snaps)} snapshot dir(s) total, {len(shots)} render file(s)"
+    return f"temp {root}: {len(snaps)} snapshot dir(s) total, {len(shots)} render file(s)"
 
 
 def _created_after(path: Path, since: datetime) -> bool:
     """True when ``path`` was created after ``since``; an unreadable stat is not evidence.
 
-    ``st_birthtime`` is the real creation time where the platform exposes it; on Windows, where
-    this suite runs, ``st_ctime`` already is creation time.
+    Linux exposes no creation time through ``stat``, so ``st_ctime`` stands in: the inode change
+    time of the folder, which is the time of the last entry added to or removed from it. The bridge
+    writes the snapshot file right after it creates the folder, so this is within a second of the
+    creation; a later chmod, rename or write makes an old folder look new.
     """
     try:
         stat = path.stat()
     except OSError:
         return False
-    created = getattr(stat, "st_birthtime", None) or getattr(stat, "st_ctime")
+    created = stat.st_ctime
     return datetime.fromtimestamp(created) > since
 
 
@@ -196,7 +228,16 @@ def main() -> int:
         "--since",
         type=parse_since,
         default=None,
-        help="ISO timestamp; fail if a snapshot dir was created after it",
+        help=(
+            "ISO timestamp, container-local time unless it carries an offset; "
+            "fail if a snapshot dir was created after it"
+        ),
+    )
+    parser.add_argument(
+        "--workdir",
+        type=Path,
+        default=None,
+        help="the bridge's session workdir (default: FREECAD_BUDDY_WORKDIR, else the GUI default)",
     )
     parser.add_argument(
         "--no-revive",
@@ -210,7 +251,7 @@ def main() -> int:
         ("cua-session", lambda: check_cua_session(args.session, args.revive)),
         ("freecad-window", lambda: check_window(args.session, args.pid, args.window)),
         ("mcp-proxy", check_proxy),
-        ("temp-hygiene", lambda: check_temp(args.since)),
+        ("temp-hygiene", lambda: check_temp(args.since, args.workdir)),
     )
 
     for name, run in checks:

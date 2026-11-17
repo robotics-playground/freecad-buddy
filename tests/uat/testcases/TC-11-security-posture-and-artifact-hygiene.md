@@ -45,9 +45,9 @@ command; the worker inherits it:
 
 ## Preconditions
 
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
-- [ ] micromamba `fcb` env is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
+- [ ] The container interpreter is H1-capable (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
 - [ ] The `script_exec` posture is the default in the shell used for the default-posture scenarios and in the GUI: none of `FREECAD_BUDDY_SCRIPT_EXEC`, `FREECAD_BUDDY_UNATTENDED` and `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` is set, and the GUI's **Allow script_exec** preference (Edit > Preferences > FreeCAD Buddy, key `ScriptExec`) is at its default, on (verify: `env | grep -E 'FREECAD_BUDDY_(SCRIPT_EXEC|UNATTENDED)'` returns nothing, and the `operator settings:` line in `addon.log` contains `FREECAD_BUDDY_SCRIPT_EXEC='1' (preference)`, `FREECAD_BUDDY_UNATTENDED='' (unset)` and `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset)`)
 - [ ] The host machine has a non-loopback IPv4 address for the bind scenarios (verify: `ipconfig | grep IPv4`)
 - [ ] FreeCAD GUI is running with a 3D view open, so each scenario's closing visual has a baseline (verify: the FreeCAD window shows a 3D view; confirm by looking at a `cua-driver` capture, not by an MCP field)

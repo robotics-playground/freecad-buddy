@@ -231,22 +231,23 @@ document.
   on `:8765`) and GUI server `cua-driver-docker` (`cua-driver` 0.28.1 in the container)
 - The container sees the repo read-only at `/repo` and `tests/uat/run/` writable at
   `/repo/tests/uat/run/`
-- micromamba `fcb` env at `$FCB_ENV` (FreeCAD + `mcp` in one interpreter) for the H1 legs
+- `fcb-py` in the container (FreeCAD + `mcp` in one interpreter) for the H1 legs
 - Repo `uv` env (`$PROJECT_ROOT/.venv`, Python 3.12.12) for the client and the sweep scripts
 - Golden models under `$PROJECT_ROOT/benchmarks/g0/golden-models/*.FCStd`
 - Fault fixtures under `$PROJECT_ROOT/benchmarks/g0/fault-injection/` and
   `$PROJECT_ROOT/benchmarks/g0/export-fault-injection/`
 - No FreeCAD process running in the container before the run starts, and no document open once
   it is launched
-- Runner scenarios (`tests/uat/runner/`) are `NOT RUN` until story `10-9-uat-runner-in-container`
-  ports the runner from the Windows host to the container. They never run on the host
+- Runner scenarios (`tests/uat/runner/`) run in the container through
+  `docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/runner/run.py ...`
+  (`tests/uat/runner/README.md`). They never run on the host
 
 Full step-by-step setup with per-step verify commands is in `APPENDIX-B-environment-setup.md`.
 
 ### Setup Commands
 ```bash
-# H1-capable interpreter check
-"$FCB_PYTHON" -c "import FreeCAD, mcp; print('H1 ok')"
+# H1-capable interpreter check, in the container
+docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok')"
 
 # Container up with the code under test, FreeCAD started by its helper
 uv run python scripts/build_addon.py --release
@@ -268,9 +269,8 @@ runs on any checkout. Export these before the first scenario:
 ```bash
 export PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 export RUN_DIR="$PROJECT_ROOT/tests/uat/run/$(date +%F)-01"     # absolute; pick the next free -NN
-export FREECAD_EXE="C:/Program Files/FreeCAD 1.1/bin/freecad.exe"
-export FCB_ENV="$USERPROFILE/micromamba/envs/fcb"
-export FCB_PYTHON="$FCB_ENV/python.exe"
+export MSYS_NO_PATHCONV=1                                       # Git Bash on Windows: keep /opt/... in docker exec arguments
+export FCB_PYTHON="$PROJECT_ROOT/scripts/automation/fcb_py.sh"  # runs the container's fcb-py (FreeCAD + mcp) from a host shell
 mkdir -p "$RUN_DIR/evidence"
 ```
 
@@ -279,7 +279,7 @@ against FreeCAD's own working directory, and the call fails).
 
 **Paths in tool arguments are container paths.** FreeCAD runs in the container, so in every MCP
 tool argument and every `cua-driver` call `$PROJECT_ROOT` is `/repo` and `$RUN_DIR` is
-`/repo/tests/uat/run/<run>`. Host-side commands (Bash, `Read`, the H1 legs) keep the host values.
+`/repo/tests/uat/run/<run>`. Host-side commands (Bash, `Read`) keep the host values; the H1 sweeps send container paths themselves.
 Under `/repo` only `tests/uat/run/` is writable; an export or save elsewhere fails. Copy a
 `cua-driver` screenshot out with `docker cp fcb-desktop:<file> <host path>` when it was not
 written under the run folder.
@@ -287,7 +287,6 @@ written under the run folder.
 To start FreeCAD with a `FREECAD_BUDDY_*` variable, pass it to the helper:
 `docker exec -u cua -e NAME=value fcb-desktop fcb-freecad start`. In the container, the GUI
 defaults below that name `%APPDATA%\FreeCAD\v1-1\` are under `/home/cua/.local/share/FreeCAD/v1-1/`.
-`FREECAD_EXE` serves only the Windows-host runner.
 
 The GUI host reads its operator settings once, at bridge start, from Edit > Preferences >
 **FreeCAD Buddy**. A `FREECAD_BUDDY_*` variable that is set in the environment FreeCAD inherits wins
@@ -299,9 +298,7 @@ only **Round numbers to FreeCAD display precision** applies at once.
 | --- | --- | --- |
 | `PROJECT_ROOT` | repository checkout root; every fixture and golden-model path is written against it | `D:/Work/.../freecad-buddy` |
 | `RUN_DIR` | this run's folder, absolute; every evidence path is written against it | `$PROJECT_ROOT/tests/uat/run/2026-09-13-01` |
-| `FREECAD_EXE` | FreeCAD launcher, passed to `cua-driver call launch_app` | `C:/Program Files/FreeCAD 1.1/bin/freecad.exe` |
-| `FCB_ENV` | micromamba env holding FreeCAD **and** `mcp` in one interpreter, for the H1 legs | `$USERPROFILE/micromamba/envs/fcb` |
-| `FCB_PYTHON` | that env's interpreter | `$FCB_ENV/python.exe` |
+| `FCB_PYTHON` | wrapper that runs the container's `fcb-py` (the AppImage's Python with FreeCAD and `mcp`) for the H1 legs; it rewrites `$PROJECT_ROOT` to `/repo` in its arguments and `FREECAD_BUDDY_*` values | `$PROJECT_ROOT/scripts/automation/fcb_py.sh` |
 | `FREECAD_BUDDY_SCRIPT_EXEC` | `script_exec` switch: unset or `"1"` = on; any other value (use `"0"`) = off. Overrides the **Allow script_exec** preference (`ScriptExec`, default on) | `0` |
 | `FREECAD_BUDDY_UNATTENDED` | marks an unattended run; exactly `"1"` turns `script_exec` off unless `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. Any other value is off | `1` |
 | `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` | operator opt-in that keeps `script_exec` on in an unattended run; must be exactly `"1"` | `1` |
