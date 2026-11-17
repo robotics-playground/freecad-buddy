@@ -1,6 +1,6 @@
 ---
 name: cua-driver
-description: Drive a native GUI app (macOS, Windows, Linux) via the cua-driver CLI (default) or MCP server; snapshot its accessibility tree, act through snapshot-bound element tokens, native menu paths, exact window geometry, or pixel coordinates, and verify from fresh state. Use when the user asks you to operate, drive, automate, or perform a GUI task in a real application on the host, or to continue, resume, or recall recent Cua activity.
+description: Drive a native GUI app (macOS, Windows, Linux) via the cua-driver CLI (default) or MCP server; snapshot its accessibility tree, act through snapshot-bound element tokens, native menu paths, exact window geometry, or pixel coordinates, and verify from fresh state. Use when the user asks you to operate, drive, automate, or perform a GUI task in a real application, or to continue, resume, or recall recent Cua activity. In this repository the driver and FreeCAD run in the `fcb-desktop` container; read CONTAINER.md first.
 version: 0.28.1 # x-release-please-version
 metadata:
   openclaw:
@@ -64,6 +64,10 @@ material (forbidden-list, accessibility tree implementation, launch
 semantics, click dispatch) lives in companion files in this same
 directory:
 
+- **This repository (freecad-buddy)** — read `CONTAINER.md` first. The
+  driver runs only in the `fcb-desktop` Linux container (X11), so
+  `LINUX.md` is the platform file; the macOS and Windows files do not
+  apply.
 - **macOS** — read `MACOS.md` (no-foreground contract, forbidden
   `open`/`osascript`/`cliclick` invocations, AXMenuBar navigation,
   SkyLight pixel-click dispatch).
