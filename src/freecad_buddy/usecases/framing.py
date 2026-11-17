@@ -95,11 +95,15 @@ def _object_bounds(obj: object) -> Bounds | None:
     """``obj``'s shape or mesh bounding box as six finite floats, or ``None`` when it has none.
 
     A ``Mesh::Feature`` carries no ``Shape``; its geometry, and so its box, is the ``Mesh``.
+    A feature inside a moved container (a PartDesign Body, an App::Part) carries its geometry in
+    the container's coordinates while the camera projects document coordinates, so the box is
+    read after ``_document_box`` moves it by the containers' placement. The local box would make
+    the fit centre on where the part would sit if its container had not moved.
     """
     geometry = getattr(obj, "Shape", None)
     if geometry is None:
         geometry = getattr(obj, "Mesh", None)
-    box = getattr(geometry, "BoundBox", None)
+    box = _document_box(obj, geometry)
     if box is None:
         return None
     try:
@@ -115,6 +119,32 @@ def _object_bounds(obj: object) -> Bounds | None:
         return None
     finite = all(math.isfinite(value) and abs(value) < _INFINITE_EXTENT for value in values)
     return values if finite else None
+
+
+def _document_box(obj: object, geometry: object) -> object | None:
+    """``geometry``'s ``BoundBox`` in document coordinates, without copying the geometry.
+
+    The container part of the placement — the global placement times the inverse of the
+    geometry's own placement — moves the local box's 8 corners, and the result is the
+    axis-aligned box around them. Under a rotation that box can be larger than the exact box of
+    the moved geometry, never smaller. Larger is the correct error for framing: a box that
+    contains the model may report a fit as missed, but never reports the model visible while
+    part of it is off screen (CAP-9: when the bridge reports that the human can see the model,
+    the human can see it). A ``shape.copy()`` per object would give the exact box at the cost
+    of a full geometry copy on the GUI thread, up to three times per fit.
+
+    An invalid box (an empty shape) is returned as is: ``transformed`` refuses it, and its
+    ``DBL_MAX`` bounds are skipped as infinite by the caller.
+    """
+    box = getattr(geometry, "BoundBox", None)
+    getter = getattr(obj, "getGlobalPlacement", None)
+    current = getattr(geometry, "Placement", None)
+    if box is None or getter is None or current is None or not box.isValid():
+        return box
+    placement = getter()
+    if placement.isSame(current):
+        return box
+    return box.transformed(placement.multiply(current.inverse()).toMatrix())
 
 
 def corners(box: Bounds) -> list[tuple[float, float, float]]:
