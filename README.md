@@ -303,10 +303,12 @@ uv run ruff check .
 uv run pytest tests/external
 ```
 
-Run the in-FreeCAD suite with FreeCAD's own command-line interpreter:
+Run the in-FreeCAD suite with FreeCAD's own command-line interpreter. FreeCAD writes its
+`user.cfg` and `system.cfg` on exit, so give it a temporary profile to keep yours unchanged:
 
 ```powershell
-& "C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe" tests/run_tests.py
+$cfg = New-Item -ItemType Directory -Force "$env:TEMP\fcb-infc"
+& "C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe" -u "$cfg\user.cfg" -s "$cfg\system.cfg" tests/run_tests.py
 ```
 
 For a dev install, link the source package into the FreeCAD `Mod` folder, or build a copy with

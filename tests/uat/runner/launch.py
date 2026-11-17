@@ -169,15 +169,24 @@ def stop(process):
 
 @contextlib.contextmanager
 def freecad(launch, audit_log):
-    """Start FreeCAD with the probe and a temporary ``-u`` profile; yield ``(process, record)``.
+    """Start FreeCAD with the probe and a temporary profile; yield ``(process, record)``.
 
-    The temporary profile keeps the developer's ``user.cfg`` unchanged and gives the bridge its
+    FreeCAD writes both profile files on exit, so the temporary ``-u`` and ``-s`` files keep the
+    developer's ``user.cfg`` and ``system.cfg`` unchanged and give the bridge its
     default preferences. Refuses, before starting anything, when a FreeCAD runs or ``:8765`` is
     held, for example by the previous group's proxy.
     """
     check_free()
     with tempfile.TemporaryDirectory(prefix="fcb-uat-run-", ignore_cleanup_errors=True) as work:
-        command = [FREECAD_EXE, "-M", str(PROBE_DIR), "-u", str(Path(work) / "user.cfg")]
+        command = [
+            FREECAD_EXE,
+            "-M",
+            str(PROBE_DIR),
+            "-u",
+            str(Path(work) / "user.cfg"),
+            "-s",
+            str(Path(work) / "system.cfg"),
+        ]
         process = subprocess.Popen(
             command,
             env=launch_environment(launch, audit_log),

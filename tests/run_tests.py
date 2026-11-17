@@ -1,7 +1,9 @@
 """In-FreeCAD test runner (decision 002).
 
-Run via ``FreeCADCmd tests/run_tests.py`` — never a foreign ``python -c "import FreeCAD"``
-(sidesteps the conda PYTHONPATH edge, feedstock #21). Discovers stdlib-unittest suites
+Run via ``FreeCADCmd -u <temp>/user.cfg -s <temp>/system.cfg tests/run_tests.py`` — never a
+foreign ``python -c "import FreeCAD"`` (sidesteps the conda PYTHONPATH edge, feedstock #21).
+FreeCADCmd writes both profile files on exit, so a run without ``-u``/``-s`` rewrites the
+developer's own. Discovers stdlib-unittest suites
 under tests/infc/ and runs them in one process. Phase 0: no cases yet → empty discovery
 passes (exit 0). This is tooling, not src/, so stdout use is fine.
 """
@@ -33,13 +35,13 @@ def _is_top_level_script() -> bool:
 
     FreeCADCmd runs a script with ``__name__`` set to the file stem rather than ``"__main__"``
     on some platforms, so the standard guard alone would silently skip discovery; this also
-    matches ``__file__`` against the launched ``sys.argv[1]``.
+    matches ``__file__`` against every launch argument, because options such as ``-u <cfg>``
+    come before the script.
     """
     if __name__ == "__main__":
         return True
-    if len(sys.argv) > 1:
-        return Path(sys.argv[1]).resolve() == Path(__file__).resolve()
-    return False
+    own = Path(__file__).resolve()
+    return any(Path(arg).resolve() == own for arg in sys.argv[1:])
 
 
 if _is_top_level_script():

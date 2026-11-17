@@ -98,6 +98,15 @@ Record `git status` to compare at the end.
 
 ### 2. Launch
 
+**Profile.** Every FreeCAD that a test starts, GUI or `FreeCADCmd`, gets its own profile:
+`-u <temp>\user.cfg -s <temp>\system.cfg`. FreeCAD writes both files when it exits. A launch
+without them rewrites the developer's `%APPDATA%\FreeCAD\v1-1\user.cfg` and `system.cfg`, and no
+copy of the old file is kept. A Python process that runs `import FreeCAD` has no FreeCAD command
+line: set `FREECAD_USER_HOME` to a temp directory before the import. A temporary profile also
+starts the bridge with its default preferences. It does not move the user app data folder:
+`addon.log` and the default audit log still go to `%APPDATA%\FreeCAD\v1-1\`. Record the
+SHA-256 of the developer `user.cfg` before and after the run; a changed hash is a run defect.
+
 Choose the mutation approval posture first. Two controls set it. The bridge reads both once, at
 start, so a change has no effect until FreeCAD restarts:
 
