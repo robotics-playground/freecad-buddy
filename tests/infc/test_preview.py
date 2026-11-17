@@ -23,6 +23,7 @@ import Sketcher
 from freecad_buddy.hosts.tool_catalog import preview_op_table
 from freecad_buddy.usecases import confirm, preview, queries, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from infc.notification_console import NotificationAreaConsole
 
 SQUARE = 10.0
 PAD_LENGTH = 5.0
@@ -448,6 +449,65 @@ class FailingOperationTest(_PreviewFixture):
         self.assertEqual(validity["status"], "OK")
         self.assertIsNone(validity["explanation"])
         self.assertEqual(validity["recompute_errors"], [])
+
+
+class NotificationAreaTest(_PreviewFixture):
+    """A TempDoc recompute error never reaches the human's notification area."""
+
+    def setUp(self):
+        super().setUp()
+        self.mock_console = NotificationAreaConsole()
+        real_console = App.Console
+        App.Console = self.mock_console
+        self.addCleanup(setattr, App, "Console", real_console)
+
+    def _recording_table(self, op, seen):
+        def recording_op(registry, doc=None, **kwargs):
+            envelope = op(registry, doc=doc, **kwargs)
+            seen.append(dict(self.mock_console.levels))
+            return envelope
+
+        return {"feature_fillet": recording_op}
+
+    def test_should_mute_the_notification_area_when_the_op_breaks_the_copy(self):
+        # Arrange
+        seen = []
+        table = self._recording_table(self.op_table["feature_fillet"], seen)
+
+        # Act
+        diff = self._diff(operation=_fillet_op(radius=500.0), table=table)
+
+        # Assert
+        self.assertEqual(diff["validity"]["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(seen, [dict.fromkeys(shim._NOTIFICATION_LEVELS, False)])
+
+    def test_should_restore_the_notification_area_when_the_preview_returns(self):
+        # Arrange
+        original = dict(self.mock_console.levels)
+        operation = _fillet_op(radius=500.0)
+
+        # Act
+        self._preview(operation=operation)
+
+        # Assert
+        self.assertEqual(self.mock_console.levels, original)
+
+    def test_should_restore_the_notification_area_when_the_op_raises(self):
+        # Arrange
+        original = dict(self.mock_console.levels)
+
+        def exploding_op(registry, doc=None, **kwargs):  # noqa: ARG001
+            raise RuntimeError("op blew up mid-preview")
+
+        table = {"feature_fillet": exploding_op}
+
+        # Act
+        act = lambda: self._preview(table=table)  # noqa: E731
+
+        # Assert
+        with self.assertRaises(RuntimeError):
+            act()
+        self.assertEqual(self.mock_console.levels, original)
 
 
 class PreExistingBreakageTest(_PreviewFixture):

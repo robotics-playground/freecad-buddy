@@ -470,42 +470,45 @@ def preview_dry_run(
     gated_args_digest: str | None = None
     try:
         live.saveCopy(path)
-        opened = registry.document_open(path)
-        temp_handle = opened["structured_content"]["doc"]
-        copy = registry.with_document(temp_handle, lambda h, d: d)
-        copy.recompute()
+        # Every console message inside this block concerns the TempDoc, not the human's document.
+        with shim.notifications_muted():
+            opened = registry.document_open(path)
+            temp_handle = opened["structured_content"]["doc"]
+            copy = registry.with_document(temp_handle, lambda h, d: d)
+            copy.recompute()
 
-        # The op runs OUTSIDE registry.with_document: the registry lock is non-reentrant, so
-        # calling a mutation use case (which resolves its own document) from inside a callback
-        # holding it self-deadlocks even though the two handles name different documents.
-        # The confirm gate is exempted for exactly this call: it runs against the throwaway copy,
-        # and it is what mints the token a live apply of the same op must present. The exemption
-        # reports the argument digest the gate computed, which is what the token is signed over.
-        with confirm.preview_exemption() as exemption:
-            op_envelope = op_fn(registry, doc=temp_handle, **args)
-        gated_args_digest = exemption.args_digest
+            # The op runs OUTSIDE registry.with_document: the registry lock is non-reentrant, so
+            # calling a mutation use case (which resolves its own document) from inside a
+            # callback holding it self-deadlocks even though the two handles name different
+            # documents. The confirm gate is exempted for exactly this call: it runs against the
+            # throwaway copy, and it is what mints the token a live apply of the same op must
+            # present. The exemption reports the argument digest the gate computed, which is what
+            # the token is signed over.
+            with confirm.preview_exemption() as exemption:
+                op_envelope = op_fn(registry, doc=temp_handle, **args)
+            gated_args_digest = exemption.args_digest
 
-        copy = registry.with_document(temp_handle, lambda h, d: d)
-        after = document_metrics(copy)
-        names_after = [o.Name for o in copy.Objects]
-        content = op_envelope.get("structured_content") or {}
-        mutation = content.get("mutation") or {}
-        post = mutation.get("post_verify")
-        touched = [n for n in list(mutation.get("touched") or []) if n in set(names_after)]
-        diff = _diff(
-            doc_handle=handle,
-            tool=tool,
-            before=before,
-            after=after,
-            names_before=names_before,
-            names_after=names_after,
-            touched=touched,
-            post_verify=post,
-            status=op_envelope.get("status"),
-            pre_existing=pre_existing,
-            fingerprint_before=fp_before["digest"],
-            render_block=_render_block(render, render_port),
-        )
+            copy = registry.with_document(temp_handle, lambda h, d: d)
+            after = document_metrics(copy)
+            names_after = [o.Name for o in copy.Objects]
+            content = op_envelope.get("structured_content") or {}
+            mutation = content.get("mutation") or {}
+            post = mutation.get("post_verify")
+            touched = [n for n in list(mutation.get("touched") or []) if n in set(names_after)]
+            diff = _diff(
+                doc_handle=handle,
+                tool=tool,
+                before=before,
+                after=after,
+                names_before=names_before,
+                names_after=names_after,
+                touched=touched,
+                post_verify=post,
+                status=op_envelope.get("status"),
+                pre_existing=pre_existing,
+                fingerprint_before=fp_before["digest"],
+                render_block=_render_block(render, render_port),
+            )
     finally:
         _discard_tempdoc(registry, temp_handle, path)
 

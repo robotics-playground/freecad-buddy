@@ -73,6 +73,42 @@ def serializer_tag() -> Literal["exportBinary", "exportBrep"]:
     return "exportBinary" if export_binary_available() else "exportBrep"
 
 
+# The console observer the GUI's notification area attaches (``Gui/NotificationArea.cpp``), and
+# every message level it listens to.
+_NOTIFICATION_OBSERVER = "NotificationAreaObserver"
+_NOTIFICATION_LEVELS = ("Err", "Wrn", "Critical", "Notification")
+
+
+@contextmanager
+def notifications_muted() -> Iterator[None]:
+    """Keep a throwaway document's console messages out of the human's notification area.
+
+    A recompute that leaves an object in error reports it through ``Base::Console().error``
+    (``App/Document.cpp``), and so does an attachment that cannot be placed
+    (``AttachExtension.cpp``); the notification area turns each into a badge and a pop-up about
+    a document the human never opened. ``Document::IgnoreErrorOnRecompute``, the flag FreeCAD's
+    own commands set to suppress that report, has no Python binding, so the observer is switched
+    off instead and restored on every path. The Report View and the caller's own reading of the
+    object state still carry the error. Without a GUI the observer does not exist: ``GetStatus``
+    returns ``None`` and nothing is changed.
+    """
+    import FreeCAD
+
+    console = FreeCAD.Console
+    saved = {
+        level: console.GetStatus(_NOTIFICATION_OBSERVER, level) for level in _NOTIFICATION_LEVELS
+    }
+    for level, status in saved.items():
+        if status is not None:
+            console.SetStatus(_NOTIFICATION_OBSERVER, level, False)
+    try:
+        yield
+    finally:
+        for level, status in saved.items():
+            if status is not None:
+                console.SetStatus(_NOTIFICATION_OBSERVER, level, status)
+
+
 @contextmanager
 def _scratch_document(name: str) -> Iterator[object]:
     """Open a throwaway probe document and close it on every path.
@@ -80,15 +116,17 @@ def _scratch_document(name: str) -> Iterator[object]:
     ``temp=True`` is what keeps the caller's state: FreeCAD makes every new document active and
     puts the previous one back only for a temporary document, and closing the active document
     leaves none active, so a GUI session would lose its active 3D view. ``hidden=True`` opens no
-    view. Raises whatever ``FreeCAD.newDocument`` raises.
+    view. The notification area stays muted while the document exists, because a probe fails
+    objects on purpose. Raises whatever ``FreeCAD.newDocument`` raises.
     """
     import FreeCAD
 
-    doc = FreeCAD.newDocument(name, hidden=True, temp=True)
-    try:
-        yield doc
-    finally:
-        FreeCAD.closeDocument(doc.Name)
+    with notifications_muted():
+        doc = FreeCAD.newDocument(name, hidden=True, temp=True)
+        try:
+            yield doc
+        finally:
+            FreeCAD.closeDocument(doc.Name)
 
 
 @lru_cache(maxsize=1)
