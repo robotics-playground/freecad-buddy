@@ -1,0 +1,22 @@
+## RT-1 TC-10:185/:260/:558/:595 as written (port 41781 from rpc-22338.json); proxy up and one MCP call made
+$ docker exec -u cua fcb-desktop ss -tnp | grep ":41781" | grep ESTAB    # TC-10:185 proxy up
+ESTAB 0      0          127.0.0.1:47938    127.0.0.1:41781 users:(("python",pid=22429,fd=9))
+ESTAB 0      0          127.0.0.1:41781    127.0.0.1:47938 users:(("freecad",pid=22338,fd=21))
+exit=0
+
+$ docker exec -u cua fcb-desktop ss -ltnp | grep ":41781" | grep ESTABLISHED    # old form (5ee4824)
+exit=1
+
+proxy cmdline: /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http 
+$ docker exec -u cua fcb-desktop kill 22429    # stop the proxy
+exit=0
+
+$ docker exec -u cua fcb-desktop ss -tnp | grep ":41781" | grep ESTAB    # TC-10:185 proxy stopped
+exit=1
+
+$ docker exec -d -u cua fcb-desktop /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http     # restart proxy by hand (test-plan §6)
+exit=0
+
+$ curl -s http://127.0.0.1:18765/healthz    # healthz
+{"service":"freecad-buddy-mcp-proxy","freecad_pid":22338,"session_id":"eb57f1f6dd06fcf3"}exit=0
+

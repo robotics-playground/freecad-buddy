@@ -1,0 +1,29 @@
+## TC-13-03 When, as written (Box row read from evidence/tc-13-03-rows.png at x=80,y=175)
+$ mcp query_tree_summary
+- [FEATURE] Box
+$ mcp script_exec selection
+"value_repr": "[]"
+$ echo '{"pid":8790,"window_id":37748834,"x":80,"y":175,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # TC-13 click
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+$ mcp script_exec selection
+"value_repr": "['Box']"
+$ echo '{"pid":8790,"window_id":37748834,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # TC-13 press_key
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary
+v [FEATURE] Box

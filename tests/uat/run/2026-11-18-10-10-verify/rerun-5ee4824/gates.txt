@@ -1,0 +1,11 @@
+== ruff check
+All checks passed!
+== check_imports
+check_imports OK
+== format: tests/external/test_fcb_cua_wrapper.py
+tests/uat/run/2026-11-18-10-10-proof/mcpcall.py
+tests/uat/run/2026-11-18-10-10-proof/sweep-state-files.py
+tests/uat/run/2026-11-18-10-10-proof/then-check.py
+4 files already formatted
+== pytest tests/external
+1782 passed, 4 skipped, 6 warnings in 98.79s (0:01:38)

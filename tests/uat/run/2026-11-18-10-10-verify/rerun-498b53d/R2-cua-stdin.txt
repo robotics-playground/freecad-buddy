@@ -1,0 +1,14 @@
+$ python sweep-cua-stdin.py
+calls without stdin: 0
+exit=0
+## interactive-style: standard input is a pipe that stays open (as a terminal does) for 30 s
+TC-14:191 command: echo '{}' | "$FCB_CUA" list_windows
+{
+  "windows": [
+    {
+      "app_name": "Xfdesktop",
+      
+exit= elapsed=30s
+## old prose form, same open stdin
+exit=124 elapsed=30s (124 = timed out waiting on stdin)
+my grep (stdin-less $FCB_CUA calls in testcases, test-plan, APPENDIX-B): 0

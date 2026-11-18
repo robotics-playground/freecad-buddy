@@ -1,0 +1,25 @@
+## N4: listed menu leaves vs state (sphere-r10 active)
+state (selection, doc, UndoNames, mustExecute): "value_repr": "([], 'sphere-r10', [], False)"
+{'Undo': False, 'Redo': False, 'Recompute': False, 'Toggle Visibility': False, 'Show All Objects': True}
+$ echo '{"pid":16744,"window_id":37748834,"x":90,"y":211,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # select Sphere row (90,211) fg
+exit=0
+
+state: "value_repr": "([], 'sphere-r10', [], False)"
+{'Undo': False, 'Redo': False, 'Recompute': False, 'Toggle Visibility': False, 'Show All Objects': True}
+(touch Sphere, add a transaction)
+state: "value_repr": "([], 'sphere-r10', [], True)"
+{'Undo': False, 'Redo': False, 'Recompute': True, 'Toggle Visibility': False, 'Show All Objects': True}
+## N4 cont.: Sphere row is at (90,193) (n4-tree.png); previous click at y=211 hit empty space
+$ echo '{"pid":16744,"window_id":37748834,"x":90,"y":193,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # select Sphere row (90,193) fg
+exit=0
+
+state: "value_repr": "(['Sphere'], 'sphere-r10', [], True)"
+{'Undo': False, 'Redo': False, 'Recompute': True, 'Toggle Visibility': True, 'Show All Objects': True}
+(F5 recompute, then a real transaction: Label Sphere -> SphereT)
+state: "value_repr": "(['Sphere'], 'sphere-r10', ['verify t'], False)"
+{'Undo': True, 'Redo': False, 'Recompute': False, 'Toggle Visibility': True, 'Show All Objects': True}
+$ echo '{"pid":16744,"keys":["ctrl","z"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey >/dev/null    # ctrl+z
+exit=0
+
+state: "value_repr": "(['Sphere'], 'sphere-r10', [], False)"
+{'Undo': False, 'Redo': True, 'Recompute': False, 'Toggle Visibility': True, 'Show All Objects': True}

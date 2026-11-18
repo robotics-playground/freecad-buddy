@@ -1,0 +1,6 @@
+## planted head edit, worktree copy at 498b53d (C:/Users/thuan/AppData/Local/Temp/claude/3d3814eab912640f/80656cee-5d10-43d7-b7e4-03863efd893d/scratchpad/wt498), tests/uat/testcases/TC-11-security-posture-and-artifact-hygiene.md:187
+Then/And lines compared: 2340; verify clauses changed: 379; failures: 1
+FAIL TC-11-security-posture-and-artifact-hygiene.md:187: head differs
+  before: **Then** two lines were written for the one call
+  after:  **Then** NOT two lines were written for the one call
+exit=1

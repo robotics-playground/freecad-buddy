@@ -1,0 +1,40 @@
+## N2: TC-12-04 route (document row foreground pixel click), Then TC-12:273 reads
+title: [' sphere-r10 - FreeCAD 1.1.4']
+G.ActiveDocument.Document.Label: "value_repr": "'sphere-r10'"
+$ echo '{"pid":16744,"window_id":37748834,"x":77,"y":157,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # click box40-hole-r5 row (77,157)
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+title: ['* box40-hole-r5 - FreeCAD 1.1.4']
+G.ActiveDocument.Document.Label: "value_repr": "'box40-hole-r5'"
+$ echo '{"pid":16744,"window_id":37748834,"x":72,"y":175,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # click sphere-r10 row (72,175)
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+title: ['* box40-hole-r5 - FreeCAD 1.1.4']
+G.ActiveDocument.Document.Label: "value_repr": "'box40-hole-r5'"
+## (the tree re-laid out after the first click: tc-12-04-tree2.png; my second click hit BoxHole) sphere-r10 row now at (68,193)
+$ echo '{"pid":16744,"window_id":37748834,"x":68,"y":193,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # click sphere-r10 row (68,193)
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+title: [' sphere-r10 - FreeCAD 1.1.4']
+G.ActiveDocument.Document.Label: "value_repr": "'sphere-r10'"

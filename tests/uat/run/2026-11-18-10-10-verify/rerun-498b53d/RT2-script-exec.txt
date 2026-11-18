@@ -1,0 +1,17 @@
+## RT-2 as written (doc handle = rt3-verify)
+TC-12:273 text: script_exec { doc: <handle>, code: "import FreeCADGui as G; result = G.ActiveDocument.Document.Label" }
+"status": "OK"
+"value_repr": "'rt3-verify'"
+test-plan.md:347 text: script_exec { doc: <handle>, code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }
+"status": "OK"
+"value_repr": "['B17']"
+## the form without doc (5ee4824 text), for contrast
+Input validation error: 'doc' is a required property
+## builder sweep run-script-exec-sites.py in the container
+TC-12- status=OK value=['B17'] code=import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelec
+TC-12- status=OK value='rt3-verify' code=import FreeCADGui as G; result = G.ActiveDocument.Document.Label
+TC-12- status=OK value=[] code=result = list(doc.UndoNames)
+TC-12- status=OK value=[] code=result = list(doc.UndoNames)
+TC-13- status=OK value=['B17'] code=import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelec
+TC-13- status=OK value=(0.0, 0.0, 0.0, 1.0) code=import FreeCADGui as G; result = G.ActiveDocument.ActiveView.getCamera
+test-p status=OK value=['B17'] code=import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelec

@@ -1,0 +1,21 @@
+$ docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/../Mod"    # D4 TC-01:361
+ls: cannot access '/home/cua/.local/share/FreeCAD/v1-1/../Mod': No such file or directory
+exit=2
+
+$ docker exec -u cua fcb-desktop ls /home/cua/.local/share/FreeCAD    # D4 context
+v1-1
+exit=0
+
+$ grep 'TC-01-session-lifecycle-and-transport.md:361' tests/uat/run/2026-11-18-10-10-proof/then-verify-diff.txt    # D4 then-verify-diff row
+TC-01-session-lifecycle-and-transport.md:361 hand [K7] legacy Mod folder sub-check kept: in the container FreeCAD/Mod does not exist
+exit=0
+
+$ grep -n 'LISTENING' tests/uat/testcases/TC-*.md | cut -c1-120    # D5
+tests/uat/testcases/TC-01-session-lifecycle-and-transport.md:59:**And** `:8765` is LISTENING — verify: `docker exec -u
+tests/uat/testcases/TC-01-session-lifecycle-and-transport.md:65:**And** *(visual)* the auto-spawned bridge really drives
+exit=0
+
+$ docker exec -u cua fcb-desktop curl -sS http://172.20.0.2:8765/mcp    # D7 TC-11:312
+curl: (7) Failed to connect to 172.20.0.2 port 8765 after 0 ms: Couldn't connect to server
+exit=7
+

@@ -1,0 +1,15 @@
+## RT-5 TC-01:83 as written, GUI proxy up, no headless host
+$ docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve --transport stdio|hosts.headless.worker'    # TC-01:83
+exit=1
+
+$ docker exec -u cua fcb-desktop pgrep -af 'hosts.main'    # context: GUI proxy
+22429 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+exit=0
+
+## start a stray headless H1 host (test-plan FCB_PYTHON form), stdin held open 40 s
+$ docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve --transport stdio|hosts.headless.worker'    # TC-01:83 with the stray host
+22463 /bin/bash /opt/freecad/AppRun python -m freecad_buddy.hosts.main serve --transport stdio --mode inline
+22479 /opt/freecad/usr/bin/python -m freecad_buddy.hosts.main serve --transport stdio --mode inline
+22480 /opt/freecad/usr/bin/python -m freecad_buddy.hosts.headless.worker
+exit=0
+

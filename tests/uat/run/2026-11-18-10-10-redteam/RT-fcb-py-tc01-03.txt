@@ -1,0 +1,5 @@
+$ "$FCB_PYTHON" -c "<TC-01-03 When snippet, verbatim>"
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+46
+exit=0
+-rw-r--r-- 1 thuan 197609 966 Nov 18 12:53 D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-11-18-10-10-redteam/evidence/tc-01-03-tools_list.json

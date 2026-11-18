@@ -1,0 +1,38 @@
+## K2 menu leaves: File > New Document, then Windows > Next until title names box-10-20-30 (TC-09:403 route)
+['* box-10-20-30 - FreeCAD 1.1.4']
+New leaf token=s0000001e:120
+$ echo '{"pid":4911,"element_token":"s0000001e:120"}' | "$FCB_CUA" click    # press New leaf
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+[' Unnamed - FreeCAD 1.1.4']
+Next leaf token=s0000001f:324
+$ echo '{"pid":4911,"element_token":"s0000001f:324"}' | "$FCB_CUA" click    # press Next leaf (1)
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+title: [' Unnamed - FreeCAD 1.1.4']
+Next leaf token=s00000020:281
+$ echo '{"pid":4911,"element_token":"s00000020:281"}' | "$FCB_CUA" click    # press Next leaf (2)
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+title: ['* box-10-20-30 - FreeCAD 1.1.4']

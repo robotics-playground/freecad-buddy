@@ -1,0 +1,6 @@
+# TC-12:97, TC-12:273 (Then verify of TC-12-04), TC-13:226, TC-13:359, test-plan.md §6 "Tree row toggle": script_exec { code: ... } with no doc
+$ mcp script_exec { code: "import FreeCADGui as G; result = G.ActiveDocument.Document.Label" }   # TC-12:273 as written
+Input validation error: 'doc' is a required property
+$ mcp script_exec { code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }   # test-plan §6 / TC-13:226 as written
+Input validation error: 'doc' is a required property
+# compare TC-12:362, which passes doc: mcp script_exec {doc:<handle>, code:"result = list(doc.UndoNames)"}

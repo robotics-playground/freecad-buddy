@@ -1,0 +1,9 @@
+## test-plan §6 GUI routes: Document Recovery after kill -KILL (3 modified docs open)
+$ docker exec -u cua fcb-desktop kill -KILL 16744    # kill
+exit=0
+
+$ docker exec -u cua fcb-desktop fcb-freecad start    # start
+fcb-freecad: started; log /tmp/freecad.log
+exit=0
+
+pid=17961 windows: [(37748834, 'FreeCAD 1.1.4')]

@@ -1,0 +1,49 @@
+$ docker exec -u cua fcb-desktop ss -ltnp | grep :8765
+exit=1
+$ docker exec -d -u cua fcb-desktop fcb-py -m http.server 8765 --bind 127.0.0.1
+exit=0
+$ docker exec -u cua fcb-desktop ss -ltnp | grep :8765
+LISTEN 0      5          127.0.0.1:8765       0.0.0.0:*    users:(("python",pid=19865,fd=3))   
+exit=0
+$ docker exec -u cua fcb-desktop mv "$FCB_USER_DIR/freecad-buddy/addon.log" "$FCB_USER_DIR/freecad-buddy/addon.log.prev"
+exit=0
+$ docker exec -u cua fcb-desktop fcb-freecad start
+fcb-freecad: started; log /tmp/freecad.log
+exit=0
+$ docker exec -u cua fcb-desktop cat "$FCB_USER_DIR/freecad-buddy/addon.log"
+2026-11-18 05:58:18,049 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/audit.jsonl' (default), FREECAD_BUDDY_WORKDIR='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir' (default), uv path ''
+2026-11-18 05:58:18,066 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-11-18 05:58:18,066 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-11-18 05:58:18,066 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-11-18 05:58:19,419 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:40199
+2026-11-18 05:58:20,437 INFO freecad_buddy.hosts.gui_addon.bootstrap: port 8765 is held by another program, or by an MCP proxy from an older freecad-buddy build; waiting up to 10.0 s for it to free
+2026-11-18 05:58:30,452 ERROR freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy not started: port 8765 is still held by another program, or by an MCP proxy from an older freecad-buddy build after 10.0 s. End that process by hand, then restart FreeCAD. The RPC listener is up.
+exit=0
+## Then
+$ docker exec -u cua fcb-desktop grep -c ERROR "$FCB_USER_DIR/freecad-buddy/addon.log"
+1
+exit=0
+$ docker exec -u cua fcb-desktop grep "spawned MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log"
+exit=1
+$ docker exec -u cua fcb-desktop ss -ltnp | grep :8765
+LISTEN 0      5          127.0.0.1:8765       0.0.0.0:*    users:(("python",pid=19865,fd=3))   
+exit=0
+$ docker exec -u cua fcb-desktop grep "freecad-buddy RPC listener started on" "$FCB_USER_DIR/freecad-buddy/addon.log"
+2026-11-18 05:58:19,419 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:40199
+exit=0
+$ docker exec -u cua fcb-desktop pgrep -af "^/opt/freecad/usr/bin/freecad"
+19896 /opt/freecad/usr/bin/freecad
+exit=0
+## Cleanup as written
+$ docker exec -u cua fcb-desktop kill 19865
+exit=0
+$ docker exec -u cua fcb-desktop ss -ltnp | grep :8765
+exit=1
+$ docker exec -u cua fcb-desktop rm -f "$FCB_USER_DIR/freecad-buddy/addon.log.prev"
+exit=0
+$ docker exec -u cua fcb-desktop fcb-freecad stop
+fcb-freecad: stopped
+exit=0
+$ docker exec -u cua fcb-desktop fcb-freecad start
+fcb-freecad: started; log /tmp/freecad.log
+exit=0

@@ -1,0 +1,10 @@
+## C1 row 8: TC-13:350-353 Isometric push button, then TC-06:157 '1 Front'
+camera Q: "value_repr": "[0.0, 0.0, 0.0, 1.0]"
+$ echo '{"pid":16744,"element_token":"s000000bd:396"}' | "$FCB_CUA" click >/dev/null    # Isometric button
+exit=0
+
+camera Q: "value_repr": "[0.4247, 0.1759, 0.3399, 0.8205]"
+$ echo '{"pid":16744,"element_token":"s000000bf:397"}' | "$FCB_CUA" click >/dev/null    # 1 Front button
+exit=0
+
+camera Q: "value_repr": "[0.7071, 0.0, 0.0, 0.7071]"

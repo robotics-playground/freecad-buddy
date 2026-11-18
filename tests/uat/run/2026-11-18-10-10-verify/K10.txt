@@ -1,0 +1,26 @@
+$ "$FCB_PYTHON" -c "import lib3mf; print(int(lib3mf.ModelUnit.MilliMeter))"    # TC-07:365 (K10)
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+1
+exit=0
+
+$ docker exec -u cua fcb-desktop fcb-py -c "import socket; socket.create_connection(('127.0.0.1', 36805), timeout=5)"    # TC-10:159 (hand)
+exit=0
+
+$ (TC-01-03 When block, verbatim)
+"$FCB_PYTHON" -c "
+import asyncio, json
+from mcp.client.streamable_http import streamablehttp_client
+from mcp import ClientSession
+async def main():
+    async with streamablehttp_client('http://127.0.0.1:8765/mcp') as (r, w, _):
+        async with ClientSession(r, w) as s:
+            await s.initialize()
+            names = sorted(t.name for t in (await s.list_tools()).tools)
+            json.dump(names, open('$RUN_DIR/evidence/tc-01-03-tools_list.json','w'), indent=1)
+            print(len(names))
+asyncio.run(main())
+"
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+46
+exit=0
+-rw-r--r-- 1 thuan 197609 966 Nov 18 11:38 D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-11-18-10-10-verify/evidence/tc-01-03-tools_list.json

@@ -1,0 +1,42 @@
+## C1 row 15: TC-12-10 workbench switch as written
+active workbench: "value_repr": "'PartDesignWorkbench'"
+combo token=s000000b9:383
+$ echo '{"pid":16744,"window_id":37748834,"element_token":"s000000b9:383"}' | "$FCB_CUA" click    # click combo
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+menu item {'h': 24, 'w': 203, 'x': 1, 'y': 289} s000000ba:241
+list item {'h': 22, 'w': 261, 'x': 290, 'y': 292} s000000ba:396
+Sketcher list item frame (screen) x=290 y=292 w=261 h=22 -> centre (420,303) screen -> window (420,252) (window origin 0,51)
+$ echo '{"pid":16744,"window_id":37748834,"x":420,"y":252,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # foreground pixel click Sketcher item
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+active workbench: "value_repr": "'SketcherWorkbench'"
+$ echo '{"pid":16744,"window_id":37748834,"expect":[{"element":{"selector":{"role":"ComboBox","label_contains":"Sketcher"},"exists":true}}]}' | "$FCB_CUA" verify_state | head -12    # TC-12 Then verify_state
+{
+  "elapsed_ms": 2267,
+  "predicates": [
+    {
+      "index": 0,
+      "observed_json": "{\"element_index\":335,\"enabled\":true,\"frame\":{\"h\":24,\"w\":204,\"x\":289,\"y\":77},\"label\":\"Sketcher\",\"role\":\"combo box\"}",
+      "status": "satisfied",
+      "unknown_reason": null
+    }
+  ],
+  "samples": 2,
+  "stable": true,
+exit=0
+

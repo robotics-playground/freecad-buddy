@@ -2,7 +2,7 @@
 title: 'Story 10.10: UAT test cases run in the fcb-desktop container'
 type: 'chore'
 created: '2026-11-18'
-status: 'in-review'
+status: 'done'
 baseline_commit: '031d8e868cad07e3a98c424480b29c1a381bbcb8'
 route: 'dispatch'
 review_loop_iteration: 0

@@ -1,0 +1,9 @@
+$ MSYS_NO_PATHCONV=1 FCB_USER_DIR=/home/cua/.local/share/FreeCAD/v1-1 (test-plan §6 exports)
+$ docker exec -u cua -e FCB_USER_DIR fcb-desktop sh -c 'echo "$FCB_USER_DIR"; ls "$FCB_USER_DIR"/freecad-buddy/rpc-*.json | head -3'
+/home/cua/.local/share/FreeCAD/v1-1
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-1096.json
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-14439.json
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-16744.json
+exit=0
+# without MSYS_NO_PATHCONV
+C:/Program Files/Git/home/cua/.local/share/FreeCAD/v1-1

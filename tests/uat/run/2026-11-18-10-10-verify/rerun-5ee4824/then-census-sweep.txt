@@ -1,0 +1,8 @@
+$ then-check.py --allow TC-01-session-lifecycle-and-transport.md:368 TC-09-error-contract-and-fault-injection.md:403
+Then/And lines compared: 2340; verify clauses changed: 379; failures: 0
+exit=0
+$ census.sh
+ANY 0
+$ sweep-state-files.py
+hits: 0
+exit=0

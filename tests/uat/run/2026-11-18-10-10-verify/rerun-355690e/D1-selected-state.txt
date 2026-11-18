@@ -1,0 +1,7 @@
+menu item 'Visibility' selected= False states= None
+menu item 'Toggle Visibility' selected= False states= None
+tree item 'Box' selected= None states= None
+tree item 'box-10-20-30' selected= None states= None
+tree item 'Box' selected= None states= None
+tree item 'Box' selected= None states= None
+text 'Python 3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:25:33) [GCC 14.3.0] on linux\nType \'help\', \'copyright\', \'credits\' or \'license\' for more information.\n>>> # Gui.runCommand(\'Std_Workbench\',8)\n>>> # Gui.runCommand(\'Std_ViewStatusBar\',1)\n>>> # Gui.runCommand(\'Start_Start\',0)\n>>> # App.setActiveDocument("box_10_20_30")\n>>> # App.ActiveDocument=App.getDocument("box_10_20_30")\n>>> # Gui.ActiveDocument=Gui.getDocument("box_10_20_30")\n>>> # Gui.runCommand(\'Std_OrthographicCamera\',1)\n>>> # Gui.Selection.addSelection(\'box_10_20_30\',\'Box\')\n>>> # Gui.runCommand(\'Std_ToggleVisibility\',0)\n>>> ' selected= None states= None

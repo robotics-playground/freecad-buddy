@@ -1,15 +1,37 @@
 # Epic 10 status
 
 Goal: correct the behaviour found by the first full UAT run and prove Gate 1 green (Story 10.8) before Epic 4 resumes.
-Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-9. Gate 1 fixes from run 2026-10-23-02 — `84c8e07`..`fab7ba6`.
-In progress: none. The leader stopped at the decision-16 stop point (10-9 merged).
-Remaining: 10-7b (status `review`: close after its sub-spec review evidence is confirmed), a new Story for the container rewrite of `tests/uat/testcases/` (R1-26, to plan), then 10-8 (new Gate 1 run in the container).
-Branch / head: integration `fix/uat-gate-1-failures` = merge of `story/10-9-uat-runner-in-container` (Story head `f23d58d` plus the leader-record commit). Nothing pushed.
-Blockers: Story 10-8 is blocked by R1-26 — 737 lines of Windows-only commands in `tests/uat/testcases/` must be rewritten for the container first.
-Open decisions: weekly `canary` workflow fails on `main` (2026-11-02, 11-09, 11-16); 10.8 AC needs "CI green" — user to say whether 10-8 includes the canary fix.
-Open for the user to confirm: preset `anthropic-balanced` (`.leader.json`, left untracked); integration branch `fix/uat-gate-1-failures`; the decision-16 autonomy contract ends at this stop point.
-Agents alive: none (builder-10-9-b and verifier-10-9 shut down at the end of the run). Container `fcb-desktop` stopped (`docker compose ... down`).
-Updated: 2026-11-18 at `f23d58d`
+Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-7b, 10-9, 10-10. Gate 1 fixes from run 2026-10-23-02 — `84c8e07`..`fab7ba6`.
+In progress: none. The leader stopped at the decision-22 stop point (10-10 merged).
+Remaining: 10-8 — new UAT Gate 1 run in the container, includes the weekly `canary` fix on `main` (decision 19). Needs planning.
+Branch / head: integration `fix/uat-gate-1-failures` = merge of `story/10-10-uat-testcases-in-container` (Story head `498b53d` plus the leader-record commit). `origin` is at `031d8e8`: the 10-10 merge is not pushed (decision 21).
+Blockers: none for 10-8.
+Open decisions: push of the 10-10 merge; 10-8 plan (canary cause not yet read).
+Confirmed by the user: preset `anthropic-balanced`, integration branch `fix/uat-gate-1-failures` (decision 20).
+Agents alive: none (builder-10-10, verifier-10-10 shut down; redteam-10-10 shut down earlier). Container `fcb-desktop` stopped. Computer stays on (decision 22).
+Updated: 2026-11-18 at `498b53d`
+
+## Final report, Story 10-10 (2026-11-18)
+
+Result: done and merged into `fix/uat-gate-1-failures`. No push, no change to `main`.
+
+What changed:
+- `tests/uat/testcases/` (17 files), `test-plan.md`, `APPENDIX-B`, `README.md`, `coverage-matrix.md`: every Windows-host command has a container form. Census of host-command lines: 905 before, 0 after.
+- New `scripts/automation/fcb_cua.sh` (`$FCB_CUA`, the container `cua-driver` CLI from a host shell); path mapping shared with `fcb_py.sh` in `fcb_paths.sh`; 32 wrapper tests, exit code passes through.
+- `test-plan.md` §6 "GUI routes in the container": measured routes for 48 `cua-driver` tools, actions and tree fields. Tree rows and combo items take a foreground pixel click in screenshot pixels; keys go to the window; the rename editor takes window-level typing; selection is read with `script_exec` (no `selected` field in the container tree); Recompute is `F5`; `cua-driver` exits 0 on a tool error, so a step is judged by its text.
+- Then observables unchanged except two listed lines (TC-01:368 Windows chmod exception removed; TC-09:403 route to the document view). One recorded weakening: TC-12-06 reads the undo list from `doc.UndoNames` (the Undo dropdown does not open in the container).
+
+Verification: verifier-10-10 PASS at `498b53d` after 3 fix rounds (`verify-10-10.md`); red team at `5ee4824` found 5 medium, all fixed and proven by running the test-case text as written. Gates: ruff clean, check_imports OK, pytest tests/external 1784 passed 4 skipped, `then-check.py` 2340 lines 0 failures. Developer `user.cfg` unchanged. Ledger: `review-ledger-10-10.md`.
+
+Limits that stay (`deferred-work.md`):
+- Whole scenarios were not run end to end: only each command kind and each GUI route. Story 10-8 runs them; a route found broken there is a test-case defect fixed in the run.
+- Low: "Pixel points" should say scroll the row into view first; proof-tool blind spots; `cua-driver` exits 0 on tool errors.
+- `invoke_menu` on the Qt menu bar is still refused by cua-driver 0.28.1 (test cases no longer use it).
+
+Next steps for the user:
+1. Push `fix/uat-gate-1-failures` (the 10-10 merge), if wanted.
+2. Plan Story 10-8: read the `canary` failure cause on `main`, then the Gate 1 run in the container.
+3. Optional: Epic 10 retrospective after 10-8.
 
 ## Final report, Story 10-9 (2026-11-18)
 

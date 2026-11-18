@@ -1,0 +1,136 @@
+## TC-13-03 When: Toggle Visibility by space on the Box tree row
+$ mcp query_tree_summary (before)
+C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe: can't open file 'D:\\c\\Users\\thuan\\AppData\\Local\\Temp\\claude\\3d3814eab912640f\\80656cee-5d10-43d7-b7e4-03863efd893d\\scratchpad\\mcpcall.py': [Errno 2] No such file or directory
+Box token (snapshot 1) = s00000014:494
+$ echo '{"pid":4911,"element_token":"s00000014:494"}' | "$FCB_CUA" click    # TC-13:221 click
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+Box token (snapshot 2) = s00000015:530
+$ echo '{"pid":4911,"element_token":"s00000015:530","key":"space"}' | "$FCB_CUA" press_key    # TC-13:223 press_key space
+AT-SPI Component.GrabFocus returned false for element 530
+exit=0
+
+$ mcp query_tree_summary (after)
+C:\Users\thuan\AppData\Roaming\uv\python\cpython-3.12.12-windows-x86_64-none\python.exe: can't open file 'D:\\c\\Users\\thuan\\AppData\\Local\\Temp\\claude\\3d3814eab912640f\\80656cee-5d10-43d7-b7e4-03863efd893d\\scratchpad\\mcpcall.py': [Errno 2] No such file or directory
+## first try: space landed? tree after:
+OK: 1 objects, 1 shown.
+framing: unknown, unavailable, no visible shape-bearing objects to measure
+- [FEATURE] Box
+## TC-13-03 retry with delivery_mode foreground (as the case says)
+Box token = s00000016:530
+$ echo '{"pid":4911,"element_token":"s00000016:530","key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # TC-13:223 + foreground
+AT-SPI Component.GrabFocus returned false for element 530
+exit=0
+
+$ mcp query_tree_summary (after retry)
+OK: 1 objects, 1 shown.
+framing: unknown, unavailable, no visible shape-bearing objects to measure
+- [FEATURE] Box
+## extra (not in TC): pixel click on Box row, foreground, then window-level space
+$ echo '{"pid":4911,"window_id":37748834,"x":60,"y":230,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # pixel click
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+selection:
+  "value_repr": "[]",
+ "text": "doc: fcb-doc:IqyhulnB2E0n-RcvB0yoqA\nfingerprint_after: None\nstdout: \nvalue_repr: []",
+$ echo '{"pid":4911,"window_id":37748834,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # space window-level foreground
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+OK: 1 objects, 1 shown.
+framing: unknown, unavailable, no visible shape-bearing objects to measure
+- [FEATURE] Box
+## extra: pixel click at the Box row as seen in v-toggle-state.png (80,175)
+$ echo '{"pid":4911,"window_id":37748834,"x":80,"y":175}' | "$FCB_CUA" click    # pixel click bg
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+selection:
+  "value_repr": "[]",
+$ echo '{"pid":4911,"window_id":37748834,"key":"space"}' | "$FCB_CUA" press_key    # space window-level
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+OK: 1 objects, 1 shown.
+framing: unknown, unavailable, no visible shape-bearing objects to measure
+- [FEATURE] Box
+$ echo '{"pid":4911,"window_id":37748834,"x":80,"y":175,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # pixel click fg (80,175)
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+selection:
+  "value_repr": "['Box']",
+$ echo '{"pid":4911,"window_id":37748834,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # space window-level fg
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+OK: 1 objects, 1 shown.
+
+Warning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+framing: does not fit, computed
+v [FEATURE] Box
+## extra: clear selection, token click with foreground, then token space foreground
+  "value_repr": "1",
+token=s00000018:494
+$ echo '{"pid":4911,"element_token":"s00000018:494","delivery_mode":"foreground"}' | "$FCB_CUA" click    # token click fg
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+selection:
+  "value_repr": "[]",
+token=s00000019:530
+$ echo '{"pid":4911,"element_token":"s00000019:530","key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # token space fg
+AT-SPI Component.GrabFocus returned false for element 530
+exit=0
+
+v [FEATURE] Box

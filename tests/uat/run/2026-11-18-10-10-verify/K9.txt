@@ -1,0 +1,31 @@
+$ docker exec -u cua fcb-desktop ls -l "$FCB_CONFIG_DIR/user.cfg"    # K6 context: user.cfg exists
+-rw-r--r-- 1 cua cua 17112 Nov 18 03:50 /home/cua/.config/FreeCAD/v1-1/user.cfg
+exit=0
+
+$ docker exec -u cua fcb-desktop hostname -I    # TC-11:258 (K9)
+172.20.0.2 
+exit=0
+
+$ docker exec -u cua fcb-desktop curl -sS http://172.20.0.2:8765/mcp    # TC-11:312 (K9)
+curl: (7) Failed to connect to 172.20.0.2 port 8765 after 0 ms: Couldn't connect to server
+exit=7
+
+$ docker exec -u cua fcb-desktop nc -zv 172.20.0.2 36805    # TC-11:268 (K9, RPC port)
+nc: connect to 172.20.0.2 port 36805 (tcp) failed: Connection refused
+exit=1
+
+$ docker exec -u cua fcb-desktop curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp    # TC-11:313 (K9)
+307exit=0
+
+$ curl -s http://127.0.0.1:18765/healthz    # TC-10:528 (K9 relay)
+{"service":"freecad-buddy-mcp-proxy","freecad_pid":4911,"session_id":"c3a1fb62ee88acff"}exit=0
+
+$ docker exec -u cua fcb-desktop curl -s -i http://127.0.0.1:8765/healthz    # TC-01:605 (K9 in container)
+HTTP/1.1 200 OK
+date: Wed, 18 Nov 2026 04:38:30 GMT
+server: uvicorn
+content-length: 88
+content-type: application/json
+
+{"service":"freecad-buddy-mcp-proxy","freecad_pid":4911,"session_id":"c3a1fb62ee88acff"}exit=0
+

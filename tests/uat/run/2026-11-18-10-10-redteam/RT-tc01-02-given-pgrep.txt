@@ -1,0 +1,6 @@
+# TC-01:83 Given "no stale H1 server holds the golden files", run while the GUI FreeCAD is up (the same Given block needs the GUI: :84 document_open, :85 capture)
+$ docker exec -u cua fcb-desktop pgrep -af freecad_buddy.hosts.main
+20214 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+exit=0
+$ git blame -L 83,83 031d8e8 -- tests/uat/testcases/TC-01-session-lifecycle-and-transport.md
+9019b76c (thuantan2060 2026-11-18 00:23:20 +0700 83) **And**

@@ -1,0 +1,40 @@
+## C1 row 31: TC-14:474-493 as written (orig 0,51,1600,949; hex wid 0x02400062)
+list_windows: [(0, 51, 1600, 949)]
+$ docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir 0x02400062 -b remove,maximized_vert,maximized_horz'    # TC-14:474 un-maximize
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"x":0,"y":51,"width":960,"height":949}' | "$FCB_CUA" set_window_frame    # TC-14:475 set_window_frame
+{
+  "delivery": {
+    "mode": "not_applicable"
+  },
+  "effect": "unverifiable",
+  "evidence": [
+    {
+      "kind": "value_readback"
+    }
+  ],
+  "route": "system_api"
+}
+exit=0
+
+list_windows: [(5, 56, 960, 949)]
+$ echo '{"pid":16744,"window_id":37748834,"x":0,"y":51,"width":1600,"height":949}' | "$FCB_CUA" set_window_frame    # TC-14:492 restore
+{
+  "delivery": {
+    "mode": "not_applicable"
+  },
+  "effect": "unverifiable",
+  "evidence": [
+    {
+      "kind": "value_readback"
+    }
+  ],
+  "route": "system_api"
+}
+exit=0
+
+$ docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir 0x02400062 -b add,maximized_vert,maximized_horz'    # TC-14:493 re-maximize
+exit=0
+
+list_windows: [(0, 51, 1600, 949)]

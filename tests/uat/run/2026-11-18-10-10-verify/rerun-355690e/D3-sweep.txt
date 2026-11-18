@@ -1,0 +1,7 @@
+$ python sweep-state-files.py   # at 355690e
+hits: 0
+exit=0
+$ python sweep-state-files.py <b5064f1 testcases>
+hits: 1
+TC-01-session-lifecycle-and-transport.md:639: grep "spawned MCP proxy" addon.log
+exit=1

@@ -1,0 +1,23 @@
+$ docker exec -u cua fcb-desktop sh -c "tr '\0' ' ' < /proc/5005/cmdline"    # TC-01:60 (K5)
+/home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http exit=0
+
+$ docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve'    # TC-01:61 (K5)
+5005 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+exit=0
+
+$ docker exec -u cua fcb-desktop pgrep -f '^/opt/freecad/usr/bin/freecad'    # TC-12:764 (K5)
+4911
+exit=0
+
+$ docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'    # TC-01:398 form (K4)
+4911 /opt/freecad/usr/bin/freecad
+exit=0
+
+$ docker exec -u cua fcb-desktop ps -o cputimes= -p 5005; docker exec -u cua fcb-desktop ps -o rss= -p 5005    # K5 cpu/rss (test-plan §6)
+       0
+58916
+exit=0
+
+$ docker exec -u cua fcb-desktop ps -p 999999 -o pid=    # TC-01:400 form, dead pid (K4)
+exit=1
+

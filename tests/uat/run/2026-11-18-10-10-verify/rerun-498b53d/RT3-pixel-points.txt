@@ -1,0 +1,31 @@
+## RT-3 Pixel points rule (test-plan §6) on the 40-box document; window 0 51 1600 949
+screenshot 1568x930; B16 frame {'h': 18, 'w': 222, 'x': 24, 'y': 491}; converted point x=132 y=440
+$ echo '{"pid":22338,"window_id":37748834,"x":132,"y":440,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # click B16
+exit=0
+
+selection: "value_repr": "['B16']"
+screenshot 1568x930; B30 frame {'h': 18, 'w': 222, 'x': 24, 'y': 743}; converted point x=132 y=687
+$ echo '{"pid":22338,"window_id":37748834,"x":132,"y":687,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # click B30
+exit=0
+
+selection: "value_repr": "['B16']"
+screenshot 1568x930; B12 frame {'h': 18, 'w': 222, 'x': 24, 'y': 419}; converted point x=132 y=369
+$ echo '{"pid":22338,"window_id":37748834,"x":132,"y":369,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # click B12
+exit=0
+
+selection: "value_repr": "['B12']"
+## B30 is listed with a frame below the visible tree area (rt3-before-B30.png shows rows up to B19; the tree has a scroll bar): the converted point lands in the property panel
+screenshot 1568x930; B18 frame {'h': 18, 'w': 222, 'x': 24, 'y': 527}; converted point x=132 y=475
+window y of the row centre: 484.7043010752688
+$ echo '{"pid":22338,"window_id":37748834,"x":132,"y":475,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # click B18
+exit=0
+
+selection: "value_repr": "['B18']"
+screenshot 1568x930; B17 frame {'h': 18, 'w': 222, 'x': 24, 'y': 509}; converted point x=132 y=458
+window y of the row centre: 467.35698924731184
+$ echo '{"pid":22338,"window_id":37748834,"x":132,"y":458,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # click B17
+exit=0
+
+selection: "value_repr": "['B17']"
+## same row with the unconverted (window-pixel) point, for contrast
+B18 frame {'h': 18, 'w': 222, 'x': 24, 'y': 527} raw window point 135 485
