@@ -484,7 +484,7 @@
     {
       "step": "preview",
       "path": "structured_content.diff.validity.explanation",
-      "regex": "\bFillet\b"
+      "regex": "\\bFillet\\b"
     },
     {
       "step": "preview",

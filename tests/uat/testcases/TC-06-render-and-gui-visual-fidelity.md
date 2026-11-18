@@ -128,7 +128,7 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 ```bash
 rm -f "$RUN_DIR/evidence/tc-06-01-"*.png
 ```
-Restore the old `AntiAliasing` value recorded in the `Given`: `mcp script_exec {doc:<handle>, code:"p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\np.SetInt('AntiAliasing', <old value>)"}`, or `p.RemoveInt('AntiAliasing')` when the old value was `-1`.
+Restore the old `AntiAliasing` value recorded in the `Given`: `mcp script_exec {doc:<handle>, code:"p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\np.SetInt('AntiAliasing', <old value>)"}`, or `p.RemInt('AntiAliasing')` when the old value was `-1`.
 
 ---
 

@@ -12,6 +12,7 @@ import re
 import struct
 import subprocess
 import sys
+import unicodedata
 import zlib
 from pathlib import Path
 from types import SimpleNamespace
@@ -1216,6 +1217,67 @@ def test_Should_validate_every_file_When_the_committed_scenarios_are_read():
     assert any("pixel" in item for item in items)
     assert any("probe" in item for item in items)
     assert any(check for item in items for check in item["expect"])
+
+
+def _strings_of(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for key, inner in value.items():
+            yield key
+            yield from _strings_of(inner)
+    elif isinstance(value, list):
+        for inner in value:
+            yield from _strings_of(inner)
+
+
+def _control_character_offenders(directory):
+    return [
+        (path.name, text)
+        for path in sorted(directory.glob("*.json"))
+        for text in _strings_of(json.loads(path.read_text(encoding="utf-8")))
+        if any(
+            unicodedata.category(character) == "Cc" and character not in "\n\r\t"
+            for character in text
+        )
+    ]
+
+
+def test_Should_hold_no_control_character_in_a_string_When_the_committed_scenarios_are_decoded():
+    # Arrange
+    paths = sorted(SCENARIO_DIR.glob("*.json"))
+
+    # Act
+    offenders = _control_character_offenders(SCENARIO_DIR)
+
+    # Assert
+    assert paths
+    assert offenders == []
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"regex": "\u0008Fillet\u0008"},
+        {"regex": "a\u007fb"},
+        {"regex": "a\u0085b"},
+        {"nested": [{"a\u0001b": "x"}]},
+    ],
+    ids=["backspace", "delete", "c1", "key"],
+)
+def test_Should_report_the_file_When_a_scenario_string_or_key_holds_a_control_character(
+    tmp_path, document
+):
+    # Arrange
+    (tmp_path / "bad.json").write_text(json.dumps(document), encoding="utf-8")
+    allowed = {"regex": "multi\nline \ttext"}
+    (tmp_path / "good.json").write_text(json.dumps(allowed), encoding="utf-8")
+
+    # Act
+    offenders = _control_character_offenders(tmp_path)
+
+    # Assert
+    assert [name for name, _ in offenders] == ["bad.json"]
 
 
 def test_Should_name_a_heading_of_its_test_case_When_a_committed_scenario_is_read():
