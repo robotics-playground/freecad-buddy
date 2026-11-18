@@ -1908,3 +1908,14 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   summary: `tests/uat/testcases/TC-*.md` still hold other Windows-host commands in their Given and step text (`tasklist`, `netstat`, `$APPDATA\FreeCAD/v1-1\...`, PowerShell `& cua-driver call ...`), and `freecad-automation-verification.md` still documents the conda `fcb` env.
   evidence: Story 10-9 replaced `$FREECAD_EXE` (21 uses), `$FCB_ENV` (8) and `$FCB_PYTHON` (24, now `scripts/automation/fcb_py.sh`) in step and Given text only, no Then changed; each kind was run in the container. The other host commands are outside those three variables and need the same pass. Known to need it first: TC-10 worker-pid steps (`Get-Process -Id`), and TC-11-19 (its sleeper started with `"$FCB_PYTHON"` now runs in the container, while its checks use host `tasklist`, `taskkill` and `$APPDATA`; the whole case belongs to a container rewrite).
 
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: `tests/uat/probe/run_faults.py` has no preflight for a running container FreeCAD: when one holds `:8765`, every case reads `no verdict: :8765 still held` (0/5 detected, exit 1, about 2 minutes) instead of one clear stop message.
+  evidence: verifier-10-9 at `f23d58d`; `tests/uat/probe/README.md:154` tells the operator to stop FreeCAD first. The failure is visible (exit 1), so no false pass.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: `tests/uat/probe/README.md` lines 28 and 41 (manual examples) still show the Windows `freecad.exe` launch and the `%APPDATA%` discovery path; the `run_faults.py` lines are already container text.
+  evidence: verifier-10-9 at `f23d58d`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: The unit test for the `check_harness.py` `mcp-session-env` check (match by `/proc/<pid>/exe`) checks the script text only; the behaviour is proven live (10 of 10 full runs, D-Bus wait removed gives red every time), not by the unit test.
+  evidence: verifier-10-9 at `73c84d4` (V-4).

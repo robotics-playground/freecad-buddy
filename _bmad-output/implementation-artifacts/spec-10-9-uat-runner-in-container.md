@@ -2,7 +2,7 @@
 title: 'Story 10.9: UAT and E2E harness in the fcb-desktop container'
 type: 'feature'
 created: '2026-11-17'
-status: 'in-review'
+status: 'done'
 baseline_commit: '9c214a97525117c44f14db1c10f5fbff175c64de'
 route: 'dispatch'
 review_loop_iteration: 0
