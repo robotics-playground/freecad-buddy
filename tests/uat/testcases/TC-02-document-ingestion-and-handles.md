@@ -367,8 +367,8 @@ mcp query_placement { doc: <handle>, object: "DatumPlane" }
 
 **When** the file is opened by the FreeCAD GUI, not through MCP. Do not use File > Open: its file dialog is modal, and a modal dialog opened through `invoke_menu` keeps the UIA provider busy until it closes. Use a non-modal route: close FreeCAD through its own menu, then launch it with the file path as its argument and wait for `:8765`. (The Start page **Recent Files** entry for `box40-hole-r5` is a second non-modal route when it is listed.)  
 ```bash
-'{"pid":<pid>,"window_id":<wid>,"path":["File","Exit"]}' | & cua-driver call invoke_menu
-'{"path":"$FREECAD_EXE","additional_arguments":["$PROJECT_ROOT\\benchmarks\\g0\\golden-models\\box40-hole-r5.FCStd"]}' | & cua-driver call launch_app
+docker exec -u cua fcb-desktop fcb-freecad stop
+docker exec -u cua fcb-desktop fcb-freecad start /repo/benchmarks/g0/golden-models/box40-hole-r5.FCStd
 ```
 **And** the document is confirmed loaded in the GUI, with the new pid and window id from `list_windows`  
 ```bash

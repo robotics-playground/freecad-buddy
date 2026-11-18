@@ -1828,6 +1828,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: The `fcb` micromamba env of `tests/uat/APPENDIX-B-environment-setup.md` step 3 (and micromamba itself) does not exist on this machine, so the H1 preconditions cannot pass as written; run 2026-10-23-02 used a scratchpad stand-in venv. Create the env per APPENDIX-B before the re-run.
   evidence: `tests/uat/run/2026-10-23-02/evidence/h1-setup.txt`; `run_mcp_e2e.py:44` exit 2 "fcb env python not found" (lead log §5 W5 "Open"; `bugs.md` N-06).
+  resolution: resolved by spec-10-9-uat-runner-in-container (G3): both sweeps run the H1 host inside the `fcb-desktop` container through `fcb-py`; `run_mcp_e2e.py` 29/29 and `run_mcp_edge_cases.py` 14/14 passed there with no conda env; `FCB_ENV` is gone from `scripts/automation/`, `APPENDIX-B-environment-setup.md` step 3 and `test-plan.md`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: TC-08-12 and TC-09-15 need a re-run only, no fix: TC-08-12 failed on an agent execution fault (another scenario ran in the same GUI during the 900 s TTL wait), TC-09-15 on a physical mouse over the 3D view (preselection highlight in the capture).
@@ -1892,3 +1893,29 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: none
   summary: Story 10-9-uat-runner-in-container — port the scripted UAT runner (`tests/uat/runner/`), the UAT probe and `scripts/automation/uat_watchdog.py` from the Windows host to the `fcb-desktop` container, and rewrite test-case steps written as `invoke_menu`/`element_index` to the pixel or keyboard route.
   evidence: UAT now runs only in the container (CLAUDE.md section 9), but `tests/uat/runner/launch.py:27` launches `C:\Program Files\FreeCAD 1.1\bin\freecad.exe` and uses `tasklist`, `%APPDATA%` and the host `cua-driver` daemon; 16 test-case files use element actions that the container FreeCAD (AppImage Qt without AT-SPI bridge) cannot serve. Until it lands, runner scenarios are NOT RUN.
+  resolution: resolved by spec-10-9-uat-runner-in-container (G2): the runner, its probe launch and the watchdog run inside the container (`fcb-py`); smoke run `tests/uat/run/2026-11-17-10-9-smoke/` launched and tore down 3 FreeCAD groups with no run error, and the watchdog gave exit 0, 1 and 1 on its three cases. The remaining part, test-case steps that need element actions, is the next entry.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: Container FreeCAD showed `cua-driver` only its top-level window (no `element_index`, no menu path), and 16 test-case files use element actions.
+  evidence: AppImage Qt 6.8.3 (conda-forge) is built without the AT-SPI bridge (Qt `configure.cmake:665` needs `ATSPI2_FOUND`).
+  resolution: resolved by spec-10-9-uat-runner-in-container (decision 14): the image rebuilds `libQt6Gui` and `libQt6XcbQpa` from the pinned qtbase 6.8.3 with the bridge; FreeCAD shows 346 elements with File, Edit and View, and an element-token click changes FreeCAD (`tests/uat/run/2026-11-17-10-9-smoke/evidence/demo-*.png`). The hang of the first rebuilt image was a FreeCAD deadlock (gdb: main thread in `pthread_mutex_lock` under `NotificationArea::pushNotification` under `showInNotificationArea`, `NotificationArea.cpp:1143`; the bridge's `Received text event for invalid interface` warning re-enters it), removed by `QT_LOGGING_RULES=qt.accessibility.atspi.warning=false` in `fcb-freecad start` and the runner. Guards: `journey_box.py` PASS 49.7%, 0 of 1,458,240 pixels differ from the original-library scene, `check_harness.py` all PASS.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: The driver's `invoke_menu` (cua-driver 0.28.1) refuses FreeCAD's Qt menu bar (`menu path segment 0 has no safe activation action`: top-level menu items expose only `ShowMenu`), so test-case steps written as `invoke_menu` need the element-token route; the runner's menu step already presses the leaf item by token.
+  evidence: `tests/uat/run/2026-11-17-10-9-smoke/evidence/demo-*.png`; `tests/uat/runner/capture.py` `invoke_menu`. A newer driver (0.53.0 is released) may accept the path; the pinned version is 0.28.1. `tests/uat/testcases/TC-01-session-lifecycle-and-transport.md` lines 391, 530, 615 and 650 still close FreeCAD with `invoke_menu` `["File", "Exit"]`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: `tests/uat/testcases/TC-*.md` still hold other Windows-host commands in their Given and step text (`tasklist`, `netstat`, `$APPDATA\FreeCAD/v1-1\...`, PowerShell `& cua-driver call ...`), and `freecad-automation-verification.md` still documents the conda `fcb` env.
+  evidence: Story 10-9 replaced `$FREECAD_EXE` (21 uses), `$FCB_ENV` (8) and `$FCB_PYTHON` (24, now `scripts/automation/fcb_py.sh`) in step and Given text only, no Then changed; each kind was run in the container. The other host commands are outside those three variables and need the same pass. Known to need it first: TC-10 worker-pid steps (`Get-Process -Id`), and TC-11-19 (its sleeper started with `"$FCB_PYTHON"` now runs in the container, while its checks use host `tasklist`, `taskkill` and `$APPDATA`; the whole case belongs to a container rewrite).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: `tests/uat/probe/run_faults.py` has no preflight for a running container FreeCAD: when one holds `:8765`, every case reads `no verdict: :8765 still held` (0/5 detected, exit 1, about 2 minutes) instead of one clear stop message.
+  evidence: verifier-10-9 at `f23d58d`; `tests/uat/probe/README.md:154` tells the operator to stop FreeCAD first. The failure is visible (exit 1), so no false pass.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: `tests/uat/probe/README.md` lines 28 and 41 (manual examples) still show the Windows `freecad.exe` launch and the `%APPDATA%` discovery path; the `run_faults.py` lines are already container text.
+  evidence: verifier-10-9 at `f23d58d`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
+  summary: The unit test for the `check_harness.py` `mcp-session-env` check (match by `/proc/<pid>/exe`) checks the script text only; the behaviour is proven live (10 of 10 full runs, D-Bus wait removed gives red every time), not by the unit test.
+  evidence: verifier-10-9 at `73c84d4` (V-4).

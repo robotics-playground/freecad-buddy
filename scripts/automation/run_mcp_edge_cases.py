@@ -1,50 +1,58 @@
 """Edge/corner/error-case MCP sweep for the Epic-1 tool surface (gate G0).
 
 Complements ``run_mcp_e2e.py`` (the happy-path golden-model sweep) by driving the *failure* and
-*boundary* contract over the real MCP stdio protocol against the headless H1 server: invalid
-inputs, stale/mismatched ids, ambiguous selections, boundary values, planted-fault fixtures, and
-read-only-invariance. It asserts the CLOSED terminal-status set (INVALID_INPUT / SPEC_FAILED / OK)
-reaches the client faithfully — the layer the in-process unit tests do not exercise (they bypass
-dispatch mapping and MCP serialization).
+*boundary* contract over the real MCP stdio protocol against the headless H1 server in the
+``fcb-desktop`` container: invalid inputs, stale/mismatched ids, ambiguous selections, boundary
+values, planted-fault fixtures, and read-only-invariance. It asserts the CLOSED terminal-status set
+(INVALID_INPUT / SPEC_FAILED / OK) reaches the client faithfully — the layer the in-process unit
+tests do not exercise (they bypass dispatch mapping and MCP serialization).
 
 Run from the uv env: ``uv run python scripts/automation/run_mcp_edge_cases.py``. The H1 server runs
-under the conda ``fcb`` env python (``$FCB_ENV``, as in ``run_mcp_e2e.py``). Writes
-``_automation/edge_report.json``.
+in the ``fcb-desktop`` container, as in ``run_mcp_e2e.py``. Writes ``_automation/edge_report.json``.
 """
 
 from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 import anyio
 import yaml
 from mcp.client.session import ClientSession
-from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.client.stdio import stdio_client
 
 from run_mcp_e2e import (  # reuse env + envelope helpers from the happy-path harness
+    CONTAINER,
+    CONTAINER_OUT,
     GOLDEN_DIR,
     OUT_DIR,
     Report,
-    _fcb_env,
     _payload,
     _status,
     _text,
     _tree_names,
+    container_path,
+    prepare_container,
+    server_parameters,
 )
 
 FAULT_DIR = Path(__file__).resolve().parents[2] / "benchmarks" / "g0" / "fault-injection"
 
 
-async def _open_golden(session, name: str) -> str | None:
-    """Open a golden model and return its doc handle, or None if the fixture is missing."""
+async def _open_golden(session, rep: Report, name: str) -> str | None:
+    """Open a golden model and return its doc handle; a missing one is a FAILED check."""
     fcstd = GOLDEN_DIR / f"{name}.FCStd"
     if not fcstd.is_file():
+        rep.record(f"open:{name}", False, "fixture missing", "MISSING")
         return None
-    opened = await session.call_tool("document_open", {"path": str(fcstd)})
-    return _payload(opened)["doc"] if _status(opened) == "OK" else None
+    opened = await session.call_tool("document_open", {"path": container_path(fcstd)})
+    if _status(opened) != "OK":
+        rep.record(f"open:{name}", False, str(_payload(opened)), _status(opened))
+        return None
+    return _payload(opened)["doc"]
 
 
 async def _sole_object(session, handle: str) -> str | None:
@@ -58,7 +66,7 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
     rep.record("unknown_doc_handle", _status(r) == "INVALID_INPUT", "", _status(r))
 
     # --- P0 invalid-input: unknown object name on a real doc ----------------------------------
-    handle = await _open_golden(session, "box-10-20-30")
+    handle = await _open_golden(session, rep, "box-10-20-30")
     if handle:
         r = await session.call_tool("query_object", {"doc": handle, "object": "NoSuchObject"})
         rep.record("unknown_object_name", _status(r) == "INVALID_INPUT", "", _status(r))
@@ -107,7 +115,7 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
         # a selection of MULTIPLE objects to a single-shape export -> INVALID_INPUT envelope -----
         r = await session.call_tool(
             "export_step",
-            {"doc": handle, "path": str(OUT_DIR / "edge_multi.step"), "objects": [obj, obj]},
+            {"doc": handle, "path": f"{CONTAINER_OUT}/edge_multi.step", "objects": [obj, obj]},
         )
         rep.record("export_multi_object", _status(r) == "INVALID_INPUT", "", _status(r))
 
@@ -119,7 +127,7 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
 
         # --- P1 error: verify_export_step against an STL export_id (format mismatch) ----------
         stl = await session.call_tool(
-            "export_stl", {"doc": handle, "path": str(OUT_DIR / "edge.stl"), "objects": [obj]}
+            "export_stl", {"doc": handle, "path": f"{CONTAINER_OUT}/edge.stl", "objects": [obj]}
         )
         if _status(stl) == "OK":
             lid = _payload(stl)["export_id"]
@@ -127,13 +135,21 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
             rep.record("verify_format_mismatch", _status(r) == "INVALID_INPUT", "", _status(r))
 
         # --- P0 state: a screenshot must not mutate; a second query still measures the same ---
-        before = _payload(
-            await session.call_tool("query_mass_properties", {"doc": handle, "object": obj})
-        ).get("volume", {}).get("value")
+        before = (
+            _payload(
+                await session.call_tool("query_mass_properties", {"doc": handle, "object": obj})
+            )
+            .get("volume", {})
+            .get("value")
+        )
         await session.call_tool("query_screenshot", {"doc": handle, "view": {"camera": "iso"}})
-        after = _payload(
-            await session.call_tool("query_mass_properties", {"doc": handle, "object": obj})
-        ).get("volume", {}).get("value")
+        after = (
+            _payload(
+                await session.call_tool("query_mass_properties", {"doc": handle, "object": obj})
+            )
+            .get("volume", {})
+            .get("value")
+        )
         rep.record(
             "screenshot_read_only",
             before is not None and before == after,
@@ -147,11 +163,11 @@ async def _edge_sweep(session: ClientSession, rep: Report) -> None:
         rep.record("double_close_stale", _status(r) == "INVALID_INPUT", "", _status(r))
 
     # --- P0 invalid-input: open a nonexistent path --------------------------------------------
-    r = await session.call_tool("document_open", {"path": str(OUT_DIR / "nope-missing.FCStd")})
+    r = await session.call_tool("document_open", {"path": f"{CONTAINER_OUT}/nope-missing.FCStd"})
     rep.record("open_bad_path", _status(r) == "INVALID_INPUT", "", _status(r))
 
     # --- P1 corner: two-box compound -> mass properties OK with com == null -------------------
-    comp = await _open_golden(session, "two-box-compound")
+    comp = await _open_golden(session, rep, "two-box-compound")
     if comp:
         obj = await _sole_object(session, comp)
         r = await session.call_tool("query_mass_properties", {"doc": comp, "object": obj})
@@ -185,7 +201,7 @@ async def _fault_shape_case(session: ClientSession, rep: Report, case: str) -> N
     checks = (yaml.safe_load(case_yaml.read_text(encoding="utf-8")).get("assertions") or {}).get(
         "checks", []
     )
-    opened = await session.call_tool("document_open", {"path": str(fcstd)})
+    opened = await session.call_tool("document_open", {"path": container_path(fcstd)})
     if _status(opened) != "OK":
         rep.record(f"fault_shape:{case}", False, "open failed", _status(opened))
         return
@@ -203,24 +219,13 @@ async def _fault_shape_case(session: ClientSession, rep: Report, case: str) -> N
 async def _run() -> int:
     OUT_DIR.mkdir(exist_ok=True)
     stderr_path = OUT_DIR / "edge.stderr.log"
-    py, child_env = _fcb_env()
-    if not Path(py).is_file():
-        print(f"fcb env python not found at {py}; run the micromamba setup first", file=sys.stderr)
+    try:
+        prepare_container()
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        print(f"container {CONTAINER} is not usable: {exc}", file=sys.stderr)
         return 2
 
-    params = StdioServerParameters(
-        command=py,
-        args=[
-            "-m",
-            "freecad_buddy.hosts.main",
-            "serve",
-            "--mode",
-            "inline",
-            "--transport",
-            "stdio",
-        ],
-        env=child_env,
-    )
+    params = server_parameters()
     rep = Report()
     print("Spawning headless H1 server + running the edge/corner/error sweep...\n")
     with open(stderr_path, "w", encoding="utf-8") as errlog:

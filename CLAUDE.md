@@ -204,14 +204,19 @@ Code is written for the standards, never compressed:
     `cua-computer-use` are not for UAT.
   - After any change under `src/`, run the build and compose commands again. The image installs
     `dist/addon/`, not the source tree.
-  - The container FreeCAD shows no widgets to `cua-driver`: its AppImage Qt has no AT-SPI bridge.
-    Run a step written as `invoke_menu` or `element_index` through the pixel or keyboard route. A
-    step that cannot run that way is `NOT RUN`, with the reason. No host fallback.
+  - The container FreeCAD shows its widgets to `cua-driver` (the image swaps in Qt libraries with the
+    AT-SPI bridge; start FreeCAD with `fcb-freecad start`, which sets the rule that prevents a hang).
+    Click an element by `element_token`. The driver's `invoke_menu` refuses FreeCAD's menu bar: press
+    the leaf menu item by its token, or use a key or a pixel click. A step that cannot run that way
+    is `NOT RUN`, with the reason. No host fallback.
   - Container screenshots use Linux software rendering. Compare them only with captures from the
     same image, never with Windows-host captures.
-  - The scripted runner (`tests/uat/runner/`) still launches the Windows host FreeCAD. Until story
-    `10-9-uat-runner-in-container` ports it, its scenarios are `NOT RUN`. Do not run them on the
-    host.
+  - The scripted runner (`tests/uat/runner/`) and the watchdog (`scripts/automation/uat_watchdog.py`)
+    run inside the container: `docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/runner/run.py
+    ... --out /repo/tests/uat/run/<run>/runner`. The runner's menu step presses the leaf item
+    through the element tree. Never run them on the host.
+  - The headless sweeps `scripts/automation/run_mcp_e2e.py` and `run_mcp_edge_cases.py` run from the
+    host `uv` env against the container: the H1 host runs there, over the addon installed in the image. No conda env.
 - GUI end-to-end harness — launch, install modes, MCP over HTTP, canary, visual check, shutdown: [freecad-gui-e2e-harness](.knowledge-base/technical/standards/testing/freecad-gui-e2e-harness.md). Read it before you launch FreeCAD for any test.
 - Native FreeCAD validation — prove a built part with FreeCAD's own Check Geometry, an in-FreeCAD kernel macro and Fit all screenshots, driven with `cua-driver`; includes a subagent brief and troubleshooting: [freecad-native-validation](.knowledge-base/technical/standards/testing/freecad-native-validation.md). Use it whenever a result must not rest on MCP output alone.
 - UAT run practices — lead and phase-agent roles, phase plan, phase-agent brief, profile and `addon.log` hygiene, foreground `cua-driver` rules, grading with cause classes, fixes between runs, records and end checklist: [uat-run-practices](.knowledge-base/technical/standards/testing/uat-run-practices.md). Read it before you plan or run a UAT gate or a re-run.

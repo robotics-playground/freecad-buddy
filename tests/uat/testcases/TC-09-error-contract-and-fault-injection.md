@@ -26,9 +26,9 @@ listener carries the non-string-`doc` guard and the suspect-document logic
 (`rpc_listener.py:417-424`), so the two hosts refuse the same inputs.
 
 ## Preconditions
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
-- [ ] micromamba `fcb` env is H1-capable (verify, bash, with the `PYTHONPATH` step that `APPENDIX-B-environment-setup.md` Step 3 requires: `FCB="$FCB_ENV"; PYTHONPATH="$FCB/Library/bin;$FCB/Library/lib" PATH="$FCB/Library/bin:$PATH" "$FCB/python.exe" -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`. A bare `import FreeCAD` without that step fails with `ModuleNotFoundError` on a healthy env)
+- [ ] The container interpreter is H1-capable (verify: `docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`)
 - [ ] Fault fixtures present (verify: `ls benchmarks/g0/fault-injection/wrong-volume/fixture.FCStd`)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/*.FCStd` lists 5 files)
 - [ ] No stale H1 server holding the fixtures (verify: `netstat -ano | grep :8765` shows at most the GUI proxy)
@@ -48,7 +48,7 @@ listener carries the non-string-`doc` guard and the suspect-document logic
 **And** the model is framed, so the before and after images share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the untouched GUI window is captured after that fit — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-01-before.png"}' | & cua-driver call get_window_state`  
 
-**When** the automated edge sweep is run. It spawns its own headless H1 server and drives the failure and boundary contract over real MCP stdio. The sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+**When** the automated edge sweep is run. It spawns its own headless H1 server and drives the failure and boundary contract over real MCP stdio. The sweep starts its H1 server in the container (`docker exec -i -u cua fcb-desktop fcb-py`); start the container first  
 ```bash
 uv run python scripts/automation/run_mcp_edge_cases.py
 ```
@@ -864,7 +864,7 @@ mcp document_close { doc: <H> }
 **And** the model is framed, so the before and after images share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the untouched GUI window is captured after that fit — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-22-before.png"}' | & cua-driver call get_window_state`  
 
-**When** both sweeps are run so their stderr logs are current, and their outputs are copied from `_automation/` into the run folder. Each sweep starts its H1 server from `$FCB_ENV` (test-plan §Environment Variables), else from `%USERPROFILE%/micromamba/envs/fcb`; export `FCB_ENV` before the run  
+**When** both sweeps are run so their stderr logs are current, and their outputs are copied from `_automation/` into the run folder. The sweep starts its H1 server in the container (`docker exec -i -u cua fcb-desktop fcb-py`); start the container first  
 ```bash
 uv run python scripts/automation/run_mcp_e2e.py
 cp _automation/e2e_report.json "$RUN_DIR/evidence/tc-09-22-e2e_report.json"

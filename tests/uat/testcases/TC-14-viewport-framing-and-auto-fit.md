@@ -33,7 +33,7 @@ document on H1. TC-14-15 is a repo-level CI check and needs no host.
 
 ## Preconditions
 
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] FreeCAD GUI is running with a 3D view open (verify: `mcp query_capabilities {}` returns `render: "gui_constructed"`)
 - [ ] Proxy is LISTENING on `:8765` (verify: `netstat -ano | grep :8765` shows a LISTENING line)
 - [ ] `FREECAD_BUDDY_AUDIT_LOG` resolves to a writable absolute path, per APPENDIX-B step 6a (verify: a scratch `feature_body_create` returns `status: "OK"`)

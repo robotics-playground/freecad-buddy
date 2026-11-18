@@ -1,0 +1,9 @@
+MISSED      wrong-visibility: no verdict: LaunchError: :8765 still held 15 s after exit
+MISSED      wrong-volume: no verdict: LaunchError: :8765 still held 15 s after exit
+MISSED      modified-flag: no verdict: LaunchError: :8765 still held 15 s after exit
+MISSED      wrong-active-document: no verdict: LaunchError: :8765 still held 15 s after exit
+MISSED      clipped-view: no verdict: LaunchError: :8765 still held 15 s after exit
+FALSE ALARM clean: no verdict: LaunchError: :8765 still held 15 s after exit
+FALSE ALARM clean-queried-twice: no verdict: LaunchError: :8765 still held 15 s after exit
+detected 0/5
+false alarms 2/2

@@ -90,15 +90,3 @@ def test_should_list_only_top_level_names_when_the_tree_follows_status_and_frami
 
     # Assert
     assert names == ["Body", "Box"]
-
-
-def test_should_run_the_fcb_env_python_when_fcb_env_is_set(monkeypatch, tmp_path):
-    # Arrange
-    monkeypatch.setenv("FCB_ENV", str(tmp_path))
-
-    # Act
-    python, child = run_mcp_e2e._fcb_env()
-
-    # Assert
-    assert python == str(tmp_path / "python.exe")
-    assert child["PYTHONPATH"] == str(tmp_path / "Library" / "bin")

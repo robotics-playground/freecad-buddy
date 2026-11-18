@@ -1,7 +1,8 @@
 # Scripted UAT runner
 
-Runs UAT scenario files with no LLM call. It starts its own FreeCAD, calls tools over the `:8765`
-MCP proxy, and checks the results against the UAT probe (`tests/uat/probe/`), which reads
+Runs UAT scenario files with no LLM call. It runs inside the `fcb-desktop` container
+(`tests/close-loop/README.md`), starts its own FreeCAD there, calls tools over the container's
+`:8765` MCP proxy, and checks the results against the UAT probe (`tests/uat/probe/`), which reads
 FreeCAD directly. The agent gets the escalation queue (failed checks, probe/MCP disagreements,
 missing captures and the Thens a script cannot judge) and the review set: the captures it reads
 (`tests/uat/test-plan.md` §9). The scripted pixel check grades every other capture.
@@ -9,17 +10,18 @@ missing captures and the Thens a script cannot judge) and the review set: the ca
 The test-case markdown in `tests/uat/testcases/` stays the human source. A scenario file encodes
 the scripted Thens of one `TC-xx-yy` scenario.
 
-**Not usable for UAT yet.** UAT runs FreeCAD in the `fcb-desktop` container
-(`tests/close-loop/README.md`), but this runner still launches the Windows host FreeCAD
-(`FREECAD_EXE`), uses `tasklist`, `%APPDATA%` and the host `cua-driver` daemon. Until story
-`10-9-uat-runner-in-container` ports it, runner scenarios in a UAT run are `NOT RUN`. Do not run
-them on the host instead.
-
 ## Run
 
-```powershell
-uv run python tests/uat/runner/run.py tests/uat/scenarios --out <run dir> [--seed <n>]
+```bash
+docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/runner/run.py /repo/tests/uat/scenarios \
+    --out /repo/tests/uat/run/<run>/runner [--seed <n>]
 ```
+
+`fcb-py` is the container's helper: the AppImage's Python with the pinned `mcp` and the desktop
+session's `DISPLAY` and D-Bus address (`tests/close-loop/README.md`). The container sees the repo
+read-only at `/repo` and writes `tests/uat/run/` there, so `--out` is a container path and the run
+folder appears on the host. Stop the container FreeCAD first (`fcb-freecad stop`): a running
+FreeCAD fails the preflight.
 
 Arguments are scenario files or folders of `*.json`. `--seed` sets the seed of the review sample,
 for debugging and replay only; a gate run omits it and the runner draws a seed. A past seed draws
@@ -33,34 +35,40 @@ an integer stops the run with exit 2 before any launch.
 | 2 | the run was refused before any launch: invalid scenario or failed preflight |
 | 3 | a launch group failed: it did not launch (its scenarios are not run) or its teardown failed (FreeCAD or `:8765` may be left behind). 3 wins over 1 |
 
-The runner tests the **installed** addon: the `Mod/FreeCADBuddy` folder of the FreeCAD user
-app data, not the working tree. In a dev install its `freecad_buddy` package is a junction to
-`src/freecad_buddy`; with a built copy or a release zip, source edits do not reach the run.
-`results.json` records which addon ran.
+The runner tests the **installed** addon: the `Mod/FreeCADBuddy` folder of the container's
+FreeCAD user data (`~/.local/share/FreeCAD/v1-1/`), which the image builds from `dist/addon/`, not
+the working tree. After a change under `src/`, run the build and compose commands of
+`tests/close-loop/README.md` again. `results.json` records which addon ran.
 
 1. **Validate.** Every scenario is loaded first. An unknown key, a missing `id`, a reference to
    an unknown step or a menu path outside the allow-list stops the run with exit 2. The message
    names the file and the key.
-2. **Preflight.** The run stops with exit 2 when `FREECAD_EXE` is not a file, `cua-driver` is
-   not on `PATH` or its daemon does not answer `cua-driver status`, `tasklist` fails, a FreeCAD
-   process runs (the message names its pid) or `127.0.0.1:8765` is held. Each group launch
-   repeats the FreeCAD and `:8765` check; a failure there is a launch failure (exit 3).
+2. **Preflight.** The run stops with exit 2 when `/opt/freecad/AppRun` is not a file,
+   `/usr/local/bin/cua-driver` is not an executable file or its daemon does not answer
+   `cua-driver status`, `/proc` cannot be listed, a FreeCAD process runs in the container (the
+   message names its pid) or the container's `127.0.0.1:8765` is held. Each group launch repeats
+   the FreeCAD and `:8765` check; a failure there is a launch failure (exit 3).
 3. **Group.** Scenarios with the same `launch` map share one FreeCAD.
-4. **Launch.** Per group: `freecad.exe -M tests/uat/probe -u <temporary user.cfg>`, started
-   with `subprocess` at the runner's integrity level. Inherited `FREECAD_BUDDY_*` variables are
-   removed, `FREECAD_BUDDY_AUDIT_LOG` is `<run dir>/audit-group-<n>.jsonl`, then the group's
-   `launch` map is applied. The temporary profile keeps the developer's `user.cfg` unchanged.
-   FreeCAD is ready when `GET /healthz` names its pid and the probe discovery file exists. The
-   main window is set to a fixed frame (`capture.WINDOW_FRAME`).
+4. **Launch.** Per group: `/opt/freecad/AppRun -M /repo/tests/uat/probe -u <temporary user.cfg>
+   -s <temporary system.cfg>`, started with `subprocess` in a new session. Inherited
+   `FREECAD_BUDDY_*`, `PYTHONPATH` and `PYTHONHOME` variables are removed,
+   `FREECAD_BUDDY_AUDIT_LOG` is `<run dir>/audit-group-<n>.jsonl`, then the group's `launch` map
+   is applied. The temporary profile keeps the container user's `user.cfg` unchanged. `AppRun`
+   starts `/opt/freecad/usr/bin/freecad` as a child, so FreeCAD is ready when `GET /healthz`
+   names a pid below the runner's process and its probe discovery file exists. The main window is
+   set to a fixed frame (`capture.WINDOW_FRAME`).
 5. **Per scenario.** Close every open document, run the steps, take a probe snapshot, capture
    the window to `<run dir>/captures/<id>.png`, then judge the checks.
-6. **Teardown.** Close every document, end the FreeCAD the runner started, delete its probe
-   discovery file, and wait until `:8765` is free. The runner never ends a process it did not
-   start.
+6. **Teardown.** Close every document, end the process group of the FreeCAD the runner started,
+   delete its probe discovery file, and wait until `:8765` is free. The runner never ends a
+   process it did not start.
 
-Windows only: FreeCAD is found with `tasklist`, the probe discovery file under `%APPDATA%`. Set
-`FREECAD_EXE` to use another `freecad.exe`. `cua-driver` must be on `PATH`, with its daemon
-started from the agent shell (see the GUI harness standard).
+FreeCAD is found by its command line under `/proc`, and the probe discovery file under
+`~/.local/share/FreeCAD/*/fcb-uat-probe/`. `cua-driver` is `/usr/local/bin/cua-driver`; its
+daemon is `fcb-cua-serve`, started by supervisord. The menu step resolves the allow-listed path in the element tree and presses the leaf item by
+`element_token`: the driver's own menu-path tool refuses FreeCAD's Qt menu bar (`tests/close-loop/README.md`). Container
+screenshots use Linux software rendering and Linux fonts: compare them with captures of the
+same image only, never with Windows captures.
 
 ## Scenario file
 
@@ -93,14 +101,16 @@ The full schema is the docstring of `scenario.py`. Example (shortened from `tc-0
 - `$name.<path>` reads an earlier step result; `$PROJECT_ROOT` and `$RUN_DIR` are absolute
   paths with forward slashes.
 - `menu` accepts only `View > Visibility > Show All Objects` and `Edit > Recompute`. Both are
-  non-modal. `invoke_menu` delivers through the foreground and does not confirm its effect, so
-  the runner confirms Show All through the probe: every shape object of the active document
-  must read visible within 5 s, else the step raises. `cua-driver` sometimes refuses Show All
-  with `menu_path_unavailable` although the path exists. After each refusal the runner reads
-  the probe every `run.POLL_S` (0.25 s) for up to 4 polls (1 s); it delivers Show All again only
-  when the shape objects still read hidden, up to `run.MENU_ATTEMPTS` (3) attempts in total. The
-  step record in `results.json` carries `attempts`. Three refusals make the scenario `ESCALATE`
-  naming the refusal.
+  non-modal. The runner presses the leaf item by its `element_token` (the driver's own menu-path
+  tool refuses Qt's menu bar) and does not get a confirmation of the effect, so it confirms Show
+  All through the probe: every shape object of the active document must read visible within 5 s.
+  A delivery that is refused (`menu_path_unavailable`: the item is missing from a partial tree,
+  still disabled after `capture.MENU_ENABLE_S`, or the click is refused) or that the probe does
+  not confirm is delivered again, up to `run.MENU_ATTEMPTS` (3) attempts in total. After a refusal
+  the runner reads the probe every `run.POLL_S` (0.25 s) for up to 4 polls (1 s) first, so a
+  refused delivery that took effect late is not sent twice. The step record in `results.json`
+  carries `attempts` and `attempt_log` (why each repeat happened). Three refusals, or three
+  deliveries the probe does not confirm, make the scenario `ESCALATE`.
 - `pixel.samples` reads the pixel at the projected centre of the object's bounding box. For a
   hollow or concave part (tube, ring, L-bracket, a part with a through-hole) that point can be
   background or another face behind the part. Such a scenario must not use a centre sample, and
@@ -108,6 +118,10 @@ The full schema is the docstring of `scenario.py`. Example (shortened from `tc-0
 - `agent_check` names a Then the script cannot judge. The runner has no GUI **Fit All** button,
   so a test case that frames through that button (TC-02-15, TC-02-16, TC-02-17) carries an
   `agent_check`, and its capture is unframed.
+
+**First press.** The first press of Show All Objects after the first document opens can change
+nothing in the container (measured: a second press 5 s later took effect), so one repeat is normal;
+read `attempt_log` before you treat a repeat as a finding.
 
 ## Checks and verdicts
 
@@ -131,6 +145,9 @@ reasons; group failures are listed under `Run errors`.
 
 ## Agent review set
 
+Paths in `summary.md` and `results.json` are container paths (`/repo/tests/uat/run/<run>/...`); the
+same file is at `tests/uat/run/<run>/...` in the repository on the host, which the agent reads.
+
 After the run, `run.mark_review` draws the review set: the captures the agent reads, each with a
 complete visual comparison (`tests/uat/test-plan.md` §9). `summary.md` lists it under
 `## Agent review` with the sample seed and its source, one line per scenario with its reason and
@@ -150,9 +167,9 @@ pixel check grades every scenario outside the set on its capture.
 
 `results.json` is `{"run": ..., "scenarios": [...]}`:
 
-- `run`: `git_commit`, `git_dirty`, `freecad_exe`, `freecad_version` (from the probe),
+- `run`: `git_commit`, `git_dirty`, `freecad_apprun`, `freecad_version` (from the probe),
   `addon` (`path` of `Mod/FreeCADBuddy`, `exists`, `linked` when its `freecad_buddy` package
-  is a junction or symlink, and its `target`), `started`, `ended`, `groups` (per group: `launch`,
+  is a symlink, and its `target`), `started`, `ended`, `groups` (per group: `launch`,
   `scenarios`, `freecad_pid`, `freecad_version`, `addon`, `error`), `errors`, `sample_seed`
   and `sample_seed_source` (`drawn`, or `given` by `--seed`).
 - `scenarios`: per scenario, each step's args and result, the probe snapshot, the findings
@@ -192,7 +209,7 @@ part moved off its sample point and a part too small must each give their findin
 gradient background control must give none. It prints the detected and false-alarm counts and
 exits 1 on a miss or a false alarm:
 
-```powershell
+```bash
 uv run python tests/uat/runner/pixel_faults.py
 ```
 
@@ -201,7 +218,7 @@ uv run python tests/uat/runner/pixel_faults.py
 `compare.py` compares a runner run with the verdicts of a past agent-run report, for example the
 replay of run 2026-10-03-04 (Story 10.7b AC9):
 
-```powershell
+```bash
 uv run python tests/uat/runner/compare.py tests/uat/run/2026-10-03-04 <replay run dir>
 ```
 
@@ -232,9 +249,9 @@ uv run python tests/uat/runner/compare.py tests/uat/run/2026-10-03-04 <replay ru
 |------|------|
 | `run.py` | CLI, scenario execution, verdicts, review set, `results.json` and `summary.md` |
 | `scenario.py` | schema, validation, `$name` references, JSON paths |
-| `launch.py` | preflight, launch groups, readiness, teardown, probe snapshot |
-| `mcp_client.py` | synchronous MCP client for `http://127.0.0.1:8765/mcp` |
-| `capture.py` | `cua-driver`: main window, fixed frame, capture, allow-listed menu |
+| `launch.py` | preflight, launch groups in the container, readiness, teardown, probe snapshot |
+| `mcp_client.py` | synchronous MCP client for the container's `http://127.0.0.1:8765/mcp` |
+| `capture.py` | container `cua-driver`: main window, fixed frame, capture, allow-listed menu |
 | `png.py` | stdlib PNG decoder: 8-bit RGB or RGBA, every filter type |
 | `pixel.py` | capture placement, samples, extent, golden difference |
 | `pixel_faults.py` | planted-fault set for the pixel check: detected and false-alarm counts |
@@ -243,4 +260,5 @@ uv run python tests/uat/runner/compare.py tests/uat/run/2026-10-03-04 <replay ru
 The runner imports the standard library, `mcp` and the probe modules `expect` only; never
 `freecad_buddy`.
 
-Tests that need no FreeCAD: `uv run pytest tests/external/test_uat_runner.py`.
+Tests that need no FreeCAD or container: `uv run pytest tests/external/test_uat_runner.py
+tests/external/test_uat_runner_container.py` (the launch logic against a fake `/proc`).

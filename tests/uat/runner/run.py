@@ -1,9 +1,11 @@
 """Scripted UAT runner: run scenario files against a FreeCAD it starts, with no LLM call.
 
-    uv run python tests/uat/runner/run.py <scenario files or folders...> --out <run dir> [--seed N]
+    fcb-py /repo/tests/uat/runner/run.py <scenario files or folders...> --out <run dir> [--seed N]
+
+Run it inside the ``fcb-desktop`` container: ``docker exec -u cua fcb-desktop fcb-py ...``.
 
 Every scenario is validated before anything starts; an invalid one stops the run with exit 2.
-Preflight refuses (exit 2) when ``FREECAD_EXE`` or the ``cua-driver`` daemon is missing, another
+Preflight refuses (exit 2) when ``FREECAD_APPRUN`` or the ``cua-driver`` daemon is missing, another
 FreeCAD runs or ``:8765`` is held. Scenarios are grouped by their ``launch`` map, one FreeCAD per
 group; each launch repeats the FreeCAD and ``:8765`` check. Per scenario: close every open
 document, run the steps over the ``:8765`` MCP proxy, take a probe snapshot and a window capture,
@@ -14,7 +16,8 @@ Verdicts: ``PASS`` only when every check passes and a capture exists. ``FAIL`` w
 fails. ``ESCALATE`` when the probe and MCP disagree, a step or the probe raised, the capture is
 missing, or the scenario names an ``agent_check`` the script cannot judge. A check failure or
 a disagreement is reported, never retried; only the delivery of the Show All menu step is
-retried when ``cua-driver`` refuses it (``MENU_ATTEMPTS``). Every non-``PASS`` scenario is in the
+retried, when it is refused or the probe does not confirm it (``MENU_ATTEMPTS``; the step record
+names the reason of each repeat). Every non-``PASS`` scenario is in the
 escalation queue with its reasons, for the agent and its ``cua-driver`` ladder.
 
 After the run, ``mark_review`` draws the review set: the captures the agent reads
@@ -75,9 +78,8 @@ def _active_shapes_shown(snapshot):
     )
 
 
-# invoke_menu delivers through the foreground and reports its effect as unverifiable, so a
-# window that takes the focus at that moment drops the command without an error. The probe
-# confirms the effect; a menu path with no entry here is not confirmed.
+# The menu press reports its effect as unverifiable, and a command can be dropped without an
+# error. The probe confirms the effect; a menu path with no entry here is not confirmed.
 MENU_EFFECTS = {("View", "Visibility", "Show All Objects"): _active_shapes_shown}
 
 
@@ -85,7 +87,7 @@ class LiveSession:
     """One launched FreeCAD: MCP calls, allow-listed menu commands, probe and captures."""
 
     def __init__(self, process, probe_record, client):
-        self.pid = process.pid
+        self.pid = probe_record["pid"]
         self.probe_record = probe_record
         self.client = client
         self.window_id = capture.main_window(self.pid)["window_id"]
@@ -102,34 +104,48 @@ class LiveSession:
     def menu(self, path):
         """Deliver an allow-listed menu command; return the number of delivery attempts.
 
-        A path with a probe effect is delivered again when ``cua-driver`` refuses it as
-        ``menu_path_unavailable``, up to ``MENU_ATTEMPTS`` in total. After each refusal the probe
-        is read for up to ``4 * POLL_S``; the path is delivered again only when the effect is
-        still absent, so a refused delivery that took effect late is not sent twice.
+        A path with a probe effect is delivered again, up to ``MENU_ATTEMPTS`` in total, when a
+        delivery is refused as ``menu_path_unavailable`` or the probe does not confirm its effect.
+        After a refusal the probe is read for up to ``4 * POLL_S`` first, so a refused delivery that
+        took effect late is not sent twice. ``last_menu_log`` names why each repeat happened.
+
+        The first press after the first document opens can change nothing in the container
+        (measured: the second press, 5 s later, took effect).
         """
         effect = MENU_EFFECTS.get(tuple(path))
-        attempts = 0
-        while True:
-            attempts += 1
+        self.last_menu_log = []
+        last_refusal = None
+        for attempt in range(1, MENU_ATTEMPTS + 1):
             try:
                 capture.invoke_menu(self.pid, self.window_id, path)
-                break
             except capture.CuaError as exc:
                 if effect is None or MENU_UNAVAILABLE not in str(exc):
                     raise
+                last_refusal = exc
+                self.last_menu_log.append(f"refused: {str(exc)[:160]}")
                 if self._shows(effect, 4 * POLL_S):
-                    return attempts
-                if attempts == MENU_ATTEMPTS:
-                    raise MenuError(
-                        f"menu {list(path)} refused on {attempts} of {MENU_ATTEMPTS} "
-                        f"attempts: {exc}"
-                    ) from exc
-        if effect is not None and not self._shows(effect, MENU_EFFECT_TIMEOUT_S):
+                    return attempt
+                continue
+            last_refusal = None
+            if effect is None or self._shows(effect, MENU_EFFECT_TIMEOUT_S):
+                return attempt
+            self.last_menu_log.append("delivered, no effect")
+        refused = sum(entry.startswith("refused") for entry in self.last_menu_log)
+        if refused == MENU_ATTEMPTS:
             raise MenuError(
-                f"menu {list(path)} had no effect in {MENU_EFFECT_TIMEOUT_S:.0f} s; "
-                "FreeCAD may not have had the foreground"
+                f"menu {list(path)} refused on {MENU_ATTEMPTS} of {MENU_ATTEMPTS} "
+                f"attempts: {last_refusal}"
+            ) from last_refusal
+        if refused == 0:
+            raise MenuError(
+                f"menu {list(path)} had no effect in {MENU_EFFECT_TIMEOUT_S:.0f} s "
+                f"on {MENU_ATTEMPTS} of {MENU_ATTEMPTS} attempts"
             )
-        return attempts
+        raise MenuError(
+            f"menu {list(path)} not confirmed on {MENU_ATTEMPTS} of {MENU_ATTEMPTS} attempts "
+            f"({refused} refused, {MENU_ATTEMPTS - refused} with no effect): "
+            + "; ".join(self.last_menu_log)
+        ) from last_refusal
 
     def _shows(self, effect, seconds):
         """Poll the probe every ``POLL_S`` for up to ``seconds``; True once ``effect`` holds."""
@@ -300,7 +316,13 @@ def _run_steps(item, session, bindings, record):
     for step in item["steps"]:
         if "menu" in step:
             attempts = session.menu(step["menu"])
-            record["steps"].append({"menu": step["menu"], "attempts": attempts})
+            record["steps"].append(
+                {
+                    "menu": step["menu"],
+                    "attempts": attempts,
+                    "attempt_log": getattr(session, "last_menu_log", []),
+                }
+            )
             continue
         args = substitute(step.get("args", {}), bindings)
         result = session.call(step["mcp"], args)
@@ -585,8 +607,14 @@ def _now():
 
 def _git(*args):
     try:
+        # The container mounts the repository read-only under another owner, which git refuses
+        # as a "dubious ownership" repository unless it is named safe.
         return subprocess.run(
-            ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=True
+            ["git", "-c", f"safe.directory={REPO_ROOT.as_posix()}", *args],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return None
@@ -603,7 +631,7 @@ def run_metadata(groups, errors, started, ended):
     return {
         "git_commit": _git("rev-parse", "HEAD"),
         "git_dirty": None if status is None else bool(status),
-        "freecad_exe": launch.FREECAD_EXE,
+        "freecad_apprun": launch.FREECAD_APPRUN,
         "freecad_version": launched.get("freecad_version"),
         "addon": launched.get("addon"),
         "started": started,

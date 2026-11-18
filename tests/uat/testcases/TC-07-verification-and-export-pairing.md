@@ -28,7 +28,7 @@ The re-imported object is `Reimport`. Read its volume with
 needs no Show All. The `fcb` env (`Part.read`, `Mesh.Mesh`) is an equal alternative.
 
 ## Preconditions
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`. If `invoke_menu` refuses the path, show the objects with `mcp script_exec { doc: <H>, code: "for o in doc.Objects: o.Visibility = True" }`.
 - [ ] `script_exec` is on (the default: `tools/list` names it). The re-import recipe and the TC-07-03 and TC-07-12 fixtures need it.
 - [ ] FreeCAD GUI open, addon loaded, proxy serving `:8765` (verify: `netstat -ano | grep :8765` shows LISTENING)

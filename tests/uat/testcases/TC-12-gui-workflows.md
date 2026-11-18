@@ -21,7 +21,7 @@ not the visual: a control can be present in the UIA tree and not painted on scre
 
 ## Preconditions
 
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] FreeCAD GUI is open (verify: `Get-Process -Name freecad | Select-Object Id,MainWindowTitle` lists one process whose title ends `FreeCAD <live version>`). Find the process by NAME; a `*FreeCAD*` title regex also matches VS Code.
 - [ ] FreeCAD runs at the agent shell's integrity level, so the agent shell can stop it (verify: the `cua-driver` daemon was started from the agent shell, per `freecad-gui-e2e-harness.md` §2)
 - [ ] The MCP proxy serves `:8765` — the addon auto-spawns it on FreeCAD start (verify: `netstat -ano | Select-String ":8765" | Select-String "LISTENING"` returns a row)
@@ -214,8 +214,8 @@ mcp document_close {doc:<handle>}
 
 **When** the golden model is opened by the FreeCAD GUI through a non-modal route. File > Open is modal, so it is not used: quit FreeCAD through its own menu, launch it again with the file path as its argument, wait for `:8765`, and record the new pid and window id from `list_windows`. The Start page **Recent Files** entry for `box-10-20-30` is a second non-modal route when it is listed: double-click it.  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"path":["File","Exit"]}' | & cua-driver call invoke_menu
-'{"path":"$FREECAD_EXE","additional_arguments":["$PROJECT_ROOT\\benchmarks\\g0\\golden-models\\box-10-20-30.FCStd"]}' | & cua-driver call launch_app
+docker exec -u cua fcb-desktop fcb-freecad stop
+docker exec -u cua fcb-desktop fcb-freecad start /repo/benchmarks/g0/golden-models/box-10-20-30.FCStd
 ```
 **And** the bridge's view is read  
 ```bash

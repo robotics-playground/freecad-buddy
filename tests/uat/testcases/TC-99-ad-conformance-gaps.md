@@ -56,9 +56,9 @@ the two images share a camera and a difference between them is a real change, no
 ## Preconditions
 
 - [ ] The repository is at the revision under test (verify: `git rev-parse HEAD`)
-- [ ] FreeCAD 1.1.x installed (verify: `ls "$FREECAD_EXE"`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
+- [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
-- [ ] micromamba `fcb` env is H1-capable, for the headless legs of TC-99-04 and TC-99-06 (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
+- [ ] The container interpreter is H1-capable, for the headless legs of TC-99-04 and TC-99-06 (verify: `"$FCB_PYTHON" -c "import FreeCAD, mcp"`)
 - [ ] FreeCAD GUI is running with the addon loaded (verify: `netstat -ano | grep ":8765" | grep LISTENING`)
 - [ ] `curl` is available (verify: `curl --version`)
 - [ ] Golden models are present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)

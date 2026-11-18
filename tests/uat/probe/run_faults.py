@@ -1,6 +1,6 @@
 """Prove the UAT probe detects each planted fault in ``faults/cases.json`` (AD-13).
 
-    uv run python tests/uat/probe/run_faults.py
+    docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/probe/run_faults.py
 
 Per case: start a FreeCAD of its own with the probe (``-M``), a temporary ``-u`` user config,
 the bridge addon disabled and the case's plant macro; wait for the probe discovery file and the
@@ -9,48 +9,47 @@ FreeCAD. A fault is detected when its named field mismatches. A control is a fal
 any snapshot mismatches or two snapshots of the same scene differ. Exit 0 only when every fault
 is detected and no control is flagged. Ends only the processes it started.
 
-Windows only: the discovery file is found under ``%APPDATA%``, and the default ``freecad.exe``
-is the FreeCAD 1.1 install path (override with ``FREECAD_EXE``).
+Runs inside the ``fcb-desktop`` container with the launch code of the scripted runner
+(``tests/uat/runner/launch.py``): FreeCAD is the AppImage under ``/opt/freecad``, and the
+discovery file is under the user's ``~/.local/share``.
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 PROBE_DIR = Path(__file__).resolve().parent
 FAULTS_DIR = PROBE_DIR / "faults"
 REPO_ROOT = PROBE_DIR.parents[2]
-FREECAD_EXE = os.environ.get("FREECAD_EXE", r"C:\Program Files\FreeCAD 1.1\bin\freecad.exe")
 START_TIMEOUT_S = 120.0
+LAYOUT_TIMEOUT_S = 30.0
 REQUIRED_FAULTS = 5
 REQUIRED_CONTROLS = 2
-REQUEST_TIMEOUT_S = 30.0
 
 sys.path.insert(0, str(PROBE_DIR))
+sys.path.insert(0, str(PROBE_DIR.parent / "runner"))
 import expect  # noqa: E402
+import launch  # noqa: E402
 
-
-class LaunchError(Exception):
-    pass
+LaunchError = launch.LaunchError
 
 
 def discovery_file(pid):
-    pattern = f"FreeCAD/*/fcb-uat-probe/probe-{pid}.json"
-    return next(Path(os.environ["APPDATA"]).glob(pattern), None)
+    return launch.discovery_file(pid)
 
 
 def wait_until_planted(process, done_marker):
+    """Wait for the marker and the probe file of the FreeCAD below ``process``, not ``AppRun``."""
     deadline = time.monotonic() + START_TIMEOUT_S
     while time.monotonic() < deadline:
         if process.poll() is not None:
             raise LaunchError(f"FreeCAD exited with code {process.returncode}")
-        discovery = discovery_file(process.pid)
+        discoveries = [discovery_file(pid) for pid in sorted(launch.started_pids(process.pid))]
+        discovery = next((found for found in discoveries if found is not None), None)
         if discovery is not None and done_marker.exists():
             error = done_marker.read_text(encoding="utf-8")
             if error:
@@ -60,22 +59,20 @@ def wait_until_planted(process, done_marker):
     raise LaunchError(f"no discovery file or plant marker after {START_TIMEOUT_S:.0f} s")
 
 
-def get_snapshot(record):
-    request = urllib.request.Request(
-        f"http://127.0.0.1:{record['port']}/snapshot",
-        headers={"X-Probe-Token": record["token"]},
-    )
-    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
-        return json.load(response)
+def wait_until_laid_out(record):
+    """Wait until the 3D view has a visible region.
 
-
-def stop(process):
-    process.kill()
-    process.wait()
-    # A killed FreeCAD cannot delete its own discovery file.
-    discovery = discovery_file(process.pid)
-    if discovery is not None:
-        discovery.unlink()
+    The plant marker is written before the window manager has placed the main window. A snapshot
+    taken then has ``view.clipped`` of ``None`` and a view rectangle that moves a moment later, so
+    a clean scene would read as a false alarm.
+    """
+    deadline = time.monotonic() + LAYOUT_TIMEOUT_S
+    while time.monotonic() < deadline:
+        view = launch.get_snapshot(record)["view"]
+        if view is not None and view["clipped"] is not None:
+            return
+        time.sleep(0.5)
+    raise LaunchError(f"the 3D view had no visible region after {LAYOUT_TIMEOUT_S:.0f} s")
 
 
 def take_snapshots(case, scene):
@@ -84,24 +81,29 @@ def take_snapshots(case, scene):
         scene_copy = work / scene.name
         shutil.copy2(scene, scene_copy)
         done_marker = work / "planted"
-        environment = dict(
-            os.environ, FCB_PROBE_SCENE=str(scene_copy), FCB_PROBE_PLANT_DONE=str(done_marker)
-        )
+        environment = launch.launch_environment({}, work / "audit.jsonl") | {
+            "FCB_PROBE_SCENE": str(scene_copy),
+            "FCB_PROBE_PLANT_DONE": str(done_marker),
+        }
         command = [
-            FREECAD_EXE,
-            "-M", str(PROBE_DIR),
-            "-u", str(work / "user.cfg"),
-            "--disable-addon", "FreeCADBuddy",
+            *launch.freecad_command(work),
+            "--disable-addon",
+            "FreeCADBuddy",
             str(FAULTS_DIR / case["macro"]),
-        ]  # fmt: skip
+        ]
         process = subprocess.Popen(
-            command, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            command,
+            env=environment,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
         try:
             record = wait_until_planted(process, done_marker)
-            return [get_snapshot(record) for _ in range(case.get("queries", 1))]
+            wait_until_laid_out(record)
+            return [launch.get_snapshot(record) for _ in range(case.get("queries", 1))]
         finally:
-            stop(process)
+            launch.stop(process)
 
 
 def check_case_set(cases):

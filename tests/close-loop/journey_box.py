@@ -10,8 +10,8 @@ Runs on the host against the `fcb-desktop` container (see tests/close-loop/READM
 4. PASS only when the 3D view region of that screenshot holds a shaded solid. The screenshot is
    copied to tests/close-loop/evidence/ and must still be looked at.
 
-The check is on pixels because the FreeCAD 1.1.4 AppImage's Qt is built without the AT-SPI bridge:
-cua-driver sees FreeCAD's top-level window but none of its widgets, so there is no tree row to read.
+The check is on pixels: the model tree could be read through the accessibility bridge, but a pixel
+check also catches a FreeCAD whose main thread hangs.
 
 A failed tool call does not stop the run: the window is observed either way, so a run where the box
 was never built proves the observation step reports the absence.

@@ -169,7 +169,7 @@ development_status:
   10-6-session-transport-and-bounded-execution: done
   10-7-uat-suite-and-harness-maintenance: done
   10-7b-scripted-uat-runner-and-freecad-probe: review
-  10-9-uat-runner-in-container: backlog
+  10-9-uat-runner-in-container: done
   10-8-uat-gate-1-rerun: backlog
   epic-10-retrospective: optional
   epic-11: done

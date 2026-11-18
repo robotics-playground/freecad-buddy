@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=FreeCAD 1.1.4
+GenericName=3D parametric modeler
+Comment=FreeCAD 1.1.4 with the FreeCAD Buddy addon
+Exec=fcb-freecad start
+Icon=/opt/freecad/org.freecad.FreeCAD.svg
+Terminal=false
+Categories=Graphics;Engineering;

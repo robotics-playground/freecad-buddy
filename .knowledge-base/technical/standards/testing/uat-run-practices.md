@@ -22,13 +22,17 @@ for this guide:
 - The phase-agent brief points at the container: `fcb-freecad start` and `stop` instead of a host
   launch, MCP server `freecad-buddy-docker`, GUI server `cua-driver-docker`, evidence copied out
   with `docker cp`. The launch-log row still applies; the profile column reads `container`.
-- The machine-hygiene rules for the developer `user.cfg` (§5) apply only to FreeCAD or FreeCADCmd
-  that still runs on the host, such as the H1 env. A container FreeCAD cannot write that file.
-- The foreground rules in §6 were measured on the Windows host. In the container, drive FreeCAD
-  with pixel clicks and keys (FreeCAD shows no widgets to `cua-driver` there) and record any rule
-  that differs.
-- Runner scenarios (`tests/uat/runner/`) are `NOT RUN` until story `10-9-uat-runner-in-container`
-  ports the runner. Never run them on the host instead.
+- The machine-hygiene rules for the developer `user.cfg` (§5) apply only to a FreeCADCmd call on the
+  host, such as the in-FreeCAD test suite. A container FreeCAD cannot write that file.
+- The foreground rules in §6 were measured on the Windows host. In the container, FreeCAD shows its
+  widgets to `cua-driver`: click by `element_token`. `invoke_menu` refuses FreeCAD's menu bar, so
+  press the leaf menu item by its token or use keys or pixels. Start FreeCAD with
+  `fcb-freecad start`; a FreeCAD started without `QT_LOGGING_RULES=qt.accessibility.atspi.warning=false`
+  can hang. Record any rule that differs.
+- Runner scenarios (`tests/uat/runner/`) run in the container with
+  `docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/runner/run.py ...`; the watchdog runs the
+  same way. Stop the container FreeCAD first: the runner starts its own. Its menu step presses the
+  leaf item through the element tree. Never run them on the host.
 
 ## 1. Roles
 
@@ -36,7 +40,7 @@ A run has one **lead** agent and a sequence of **phase agents**.
 
 | Role | Does | Does not |
 |------|------|----------|
-| Lead | Opens the run folder, writes `RUN-CONTEXT.md` and the phase rules, builds the H1 env, runs or spawns the runner phase, spawns one phase agent at a time, checks each phase report, re-reads key captures, records lead grades, writes `report.md` and `bugs.md`, keeps the lead log | Drive scenarios in parallel with a phase agent. Accept a phase report without a check |
+| Lead | Opens the run folder, writes `RUN-CONTEXT.md` and the phase rules, proves the H1 host, runs or spawns the runner phase, spawns one phase agent at a time, checks each phase report, re-reads key captures, records lead grades, writes `report.md` and `bugs.md`, keeps the lead log | Drive scenarios in parallel with a phase agent. Accept a phase report without a check |
 | Phase agent | Runs its scenario list from each Given, captures, grades each Then, writes verdict rows and a short report | Edit product, runner, scenarios, test cases, scripts or standards. Retry a check to get a PASS |
 
 Rules:
@@ -67,20 +71,16 @@ Rules:
    and the selection rule.
 4. **Phase rules file** (`RULES.md`) in the lead scratchpad. Every phase agent reads it first.
    Template in [§4](#4-phase-agent-brief).
-5. **H1 env** (`FCB_ENV`). Build it from the code under test, then prove it before any phase:
-   - The APPENDIX-B Step 3 command prints `H1 ok <version>`.
-   - `run_mcp_e2e.py` and `run_mcp_edge_cases.py` both exit 0.
-   - `diff -r --exclude=__pycache__ src/freecad_buddy <env>/Lib/site-packages/freecad_buddy`
-     shows no difference.
-   - **No pip numpy in the env.** Use FreeCAD's bundled numpy. A pip numpy 2.x makes
-     `import trimesh` hang in the H1 stdio front while its reader thread blocks on stdin, so
-     `verify_export_stl` never returns.
-   - When no conda `fcb` env exists, an fcb-shaped venv works:
-     `uv venv --system-site-packages --python "<FreeCAD>\bin\python.exe"`, then
-     `uv pip install <repo> pyyaml`, then `uv pip uninstall numpy`. Give it the `fcb` layout:
-     `<env>\fcb\python.exe` plus junctions `<env>\fcb\Library\{bin,lib,...}` to the FreeCAD
-     install folders.
-6. **Record the developer profile hash** (`%APPDATA%\FreeCAD\v1-1\user.cfg`, SHA-256).
+5. **H1 host** (runs in the container; no conda env). Prove it before any phase:
+   - `docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"`
+     prints `H1 ok 1.1.4`.
+   - `run_mcp_e2e.py` and `run_mcp_edge_cases.py` both exit 0. They run the H1 host in the
+     container over the addon installed in the image (`import FreeCAD` puts `Mod/FreeCADBuddy` ahead of `/repo/src`), so rebuild the image after a change under `src/`.
+   - **No pip numpy ahead of the AppImage's.** `fcb-py` uses FreeCAD's bundled numpy 1.26.4; the
+     pinned site folder `/opt/fcb-site` omits numpy. A pip numpy 2.x makes `import trimesh` hang
+     in the H1 stdio front while its reader thread blocks on stdin, so `verify_export_stl` never
+     returns.
+6. **Record the developer profile hash** (`%APPDATA%\FreeCAD\v1-1\user.cfg`, SHA-256). It guards the host-side FreeCADCmd calls only; nothing in a container run writes it.
 
 ## 3. Phase plan
 

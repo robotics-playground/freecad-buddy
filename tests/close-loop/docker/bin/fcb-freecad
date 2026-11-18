@@ -1,6 +1,7 @@
 #!/bin/bash
 # Run FreeCAD 1.1.4 inside the container desktop.
-#   fcb-freecad start     launch the GUI in the XFCE session; the addon then starts the MCP proxy
+#   fcb-freecad start [file...]  launch the GUI in the XFCE session, opening the files; the addon then
+#                         starts the MCP proxy
 #   fcb-freecad stop      close the GUI (window close first, kill after 20 s)
 #   fcb-freecad status    print the FreeCAD pids and the proxy's /healthz answer
 #   fcb-freecad userdir   print FreeCAD's user data directory (the parent of Mod/)
@@ -17,7 +18,14 @@ start)
         exit 1
     fi
     eval "$(fcb-session-env)"
-    setsid "$APPDIR/AppRun" >/tmp/freecad.log 2>&1 </dev/null &
+    # With the AT-SPI bridge on, Qt warns "Received text event for invalid interface" while FreeCAD
+    # builds a notification label. FreeCAD's message handler forwards that warning to
+    # NotificationArea::pushNotification, which locks the mutex that showInNotificationArea
+    # (NotificationArea.cpp:1143) already holds: the main thread deadlocks. Silence the category.
+    # Qt applies the last matching rule, so this one goes after any rule the caller set.
+    export QT_LOGGING_RULES="${QT_LOGGING_RULES:+$QT_LOGGING_RULES;}qt.accessibility.atspi.warning=false"
+    shift
+    setsid "$APPDIR/AppRun" "$@" >/tmp/freecad.log 2>&1 </dev/null &
     echo "fcb-freecad: started; log /tmp/freecad.log"
     ;;
 stop)
