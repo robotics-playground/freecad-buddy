@@ -123,7 +123,7 @@ graph LR
 
 - **Binds:** all FreeCAD-touching code; CI
 - **Prevents:** version-sensitive calls scattered through use cases; incomparable TNP metrics across legs
-- **Rule:** Supported: FreeCAD 1.1.x (blocking CI; the latest patch on conda-forge, 1.1.3 at 2026-10-03); 1.2-dev weekly is an allowed-to-fail canary; 1.0.x and 0.21 are unsupported (decision 016). All version-sensitive calls live in one shim module: `AttachmentSupport`/`Support` accessor, `element_map_available()` probe (hard-gates AD-7), `addObject` type-string table, VarSet-with-Spreadsheet-fallback driving-dimension façade. Capability probes, never version-string comparisons, gate behavior. Round-trip fixtures authored on 1.0 still load on 1.1; new fixtures are authored on 1.1.
+- **Rule:** Supported: FreeCAD 1.1.x (blocking CI; the latest patch on conda-forge, 1.1.3 at 2026-10-03); the next FreeCAD development line (weekly builds) is an allowed-to-fail canary; 1.0.x and 0.21 are unsupported (decision 016). All version-sensitive calls live in one shim module: `AttachmentSupport`/`Support` accessor, `element_map_available()` probe (hard-gates AD-7), `addObject` type-string table, VarSet-with-Spreadsheet-fallback driving-dimension façade. Capability probes, never version-string comparisons, gate behavior. Round-trip fixtures authored on 1.0 still load on 1.1; new fixtures are authored on 1.1.
 
 ### AD-12 — In-FreeCAD code is dependency-free [ADOPTED]
 
@@ -394,7 +394,7 @@ graph LR
 | Name | Version |
 | --- | --- |
 | Python | floor 3.11 (`requires-python >=3.11`); CI runs the FreeCAD 1.1.x conda-forge build on 3.11; a local Windows env may run 3.12 because conda-forge ships no win-64 1.1.3 build for 3.11 |
-| FreeCAD | 1.1.x (latest patch **available on conda-forge** — feedstock lags point releases; 1.1.3 at 2026-10-03) / 1.2-dev canary (conda-forge if published, else weekly AppImage) |
+| FreeCAD | 1.1.x (latest patch **available on conda-forge** — feedstock lags point releases; 1.1.3 at 2026-10-03) / canary on the next FreeCAD development line, weekly builds (conda-forge if published, else weekly AppImage) |
 | MCP Python SDK | official `mcp` python-sdk, pinned `>=1.28,<2` — **closed at the Phase 0 gate** (decision 005); PrefectHQ `fastmcp` rejected. Code builds the **low-level `mcp.server.lowlevel.Server`**, not FastMCP. The `<2` cap sits below the SDK v2 rename so an unattended upgrade cannot break the import surface. Spec ≥2025-06-18 (elicitation + structured output; AD-10 depends on it) |
 | trimesh, lib3mf | `trimesh==4.*`, `lib3mf==2.*` — export oracles |
 | admesh | optional secondary STL oracle (dormant upstream, no Windows wheels); fallback second oracle chosen at Phase 0 gate |
@@ -449,7 +449,7 @@ freecad-buddy/
   skills/          # 18 skill dirs (12 Track A/B + 3 Track W + 3 Phase-5 robot/sourcing): SKILL.md + references/ + optional read-only scripts/
   benchmarks/      # runner.py + harness/; per-gate g0/ g1/ g2/ (each with dev/, heldout/, fault-injection/); _registry/, gate-artifacts/
   tests/           # two worlds: infc/ (FreeCADCmd + stdlib unittest via run_tests.py), external/ (pytest)
-  .github/workflows/  # ci.yml: one blocking 1.1.x leg + 1.2-dev canary
+  .github/workflows/  # ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line
 ```
 
 **Environments:** dev = GUI addon + external server (HTTP) on Windows/Linux desktop; CI = `ubuntu-latest`, micromamba conda-forge FreeCAD, `FreeCADCmd run_tests.py`, xvfb + software-GL leg for render tests (a separate job, blocking); unattended = the same headless bridge, driven by an agent the operator starts, with no service or worker pool of our own (AD-35).

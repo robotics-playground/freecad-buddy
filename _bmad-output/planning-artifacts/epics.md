@@ -111,7 +111,7 @@ deferred-work, not a fix story.
 | **NFR1** | The producing agent never grades itself in a cited number — pass/fail comes from deterministic code or an independent grader only | AD-13 |
 | **NFR2** | Every validator proves sensitivity ≥95 % / false-alarm ≤5 % on its fault suite before its scores are citable; suites land before phase implementation | AD-13, AD-19 |
 | **NFR3** | Statistics discipline: majority-of-R scoring (R=5 dev / R≥10 exit), Wilson 95 % CI beside every rate, exact McNemar for ablations, pp-threshold claims on n≥40 sets, dev/held-out gap >15pp blocks exit | AD-14 |
-| **NFR4** | All suites run headless in CI on the blocking FreeCAD 1.1.x leg (Py 3.11) + 1.2-dev canary; version-sensitive calls live in one shim behind capability probes | AD-11 |
+| **NFR4** | All suites run headless in CI on the blocking FreeCAD 1.1.x leg (Py 3.11) + canary on the next FreeCAD development line (weekly builds); version-sensitive calls live in one shim behind capability probes | AD-11 |
 | **NFR5** | In-FreeCAD code imports stdlib + FreeCAD API only; all third-party deps live in the uv-managed external process | AD-12 |
 | **NFR6** | Clean Architecture dependency rule enforced by CI import checks; Qt only in `hosts/` + the two named adapter exemptions | AD-1 |
 | **NFR7** | Security posture: localhost-only binds, per-session RPC token, stderr-only logging on stdio, no free-form exec in any AI path | AD-3, AD-4 |
@@ -273,7 +273,7 @@ A developer or MCP client can programmatically drive FreeCAD — documents, quer
 3. **Given** a push to any branch  
    **When** `ci.yml` runs  
    **Then** `arch-checks` (uv-only) and the `headless` leg {FreeCAD 1.1.*/Py 3.11} executes with a cached micromamba env, blocking (NFR4)  
-   **And** `canary.yml` exists as weekly allowed-to-fail 1.2-dev leg
+   **And** `canary.yml` exists as weekly allowed-to-fail leg on the next FreeCAD development line (weekly builds)
 
 4. **Given** the five Phase 0 spike questions (AR9: `exportBinary` Python exposure, conda `FreeCADCmd` path edge, `renderToImage` vs Xvfb, VarSet exposure on 1.1, MCP SDK v2 pin)  
    **When** the story completes  

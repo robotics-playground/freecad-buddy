@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sprint change: AD-11 names the next development line</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0 auto; max-width: 1160px; padding: 40px 24px 90px;
+         font: 15.5px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+         color: #1c1c1c; background: #fcfcfb; }
+  header { border-bottom: 2px solid #1c1c1c; padding-bottom: 16px; }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.015em; }
+  h2 { font-size: 20px; margin: 54px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }
+  h3 { font-size: 16.5px; margin: 28px 0 6px; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 6px 0 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  .meta { color: #5d5d5d; font-size: 13.5px; }
+  .badge { display: inline-block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+           padding: 2px 8px; border-radius: 999px; border: 1px solid; margin-left: 8px; vertical-align: 3px; }
+  .badge.done { color: #0a7d32; border-color: #0a7d32; background: #eef7f0; }
+  .badge.open { color: #8a6a00; border-color: #8a6a00; background: #faf5e6; }
+  .badge.need { color: #8a2b00; border-color: #8a2b00; background: #fdf0e8; }
+  .v-ok { color: #0a7d32; font-weight: 600; }
+  .v-watch { color: #8a2b00; font-weight: 600; }
+  ol li .badge { margin-right: 6px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         font-size: 12.5px; background: #f1f1ee; padding: 1px 4px; border-radius: 4px; }
+  pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12.5px; line-height: 1.45; background: #fff; border: 1px solid #e3e3e0;
+        border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 8px 0 14px; }
+  .del { color: #b3122b; }
+  .add { color: #0a7d32; }
+  .chg { color: #7a5800; }
+  .note { color: #6b6b6b; }
+  strong.hl { background: #fbf3cf; padding: 0 2px; }
+  .nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; margin: 18px 0 0; }
+  .nav a { color: #1a4f8a; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  .legend { display: flex; gap: 22px; flex-wrap: wrap; margin: 14px 0 0; font-size: 13px;
+            background: #fff; border: 1px solid #e3e3e0; border-radius: 8px; padding: 10px 14px; }
+  .card { background: #fff; border: 1px solid #e3e3e0; border-radius: 10px; padding: 18px 20px;
+          margin: 16px 0; }
+  .card h3 { margin-top: 0; }
+  .card dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 10px 0 0; }
+  .card dt { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #6f6f6f;
+             padding-top: 2px; }
+  .card dd { margin: 0 0 6px; }
+  .card .diagram { margin: 14px 0 0; }
+  .card .pair pre { font-size: 11.5px; padding: 10px 12px; }
+  .review { display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+            border-top: 1px solid #ececea; margin-top: 14px; padding-top: 11px; font-size: 13px; }
+  .review label { display: flex; gap: 7px; align-items: center; }
+  .review input[type="checkbox"] { width: 15px; height: 15px; accent-color: #0a7d32; }
+  .review select { font: inherit; font-size: 13px; padding: 3px 7px; border: 1px solid #cfcfcb;
+                   border-radius: 6px; background: #fff; }
+  .progress { font-size: 13.5px; color: #4a4a4a; margin: 2px 0 0; }
+  .scroll { overflow-x: auto; border: 1px solid #e3e3e0; border-radius: 8px; background: #fff; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 11px; border-bottom: 1px solid #ececea; }
+  th { background: #f4f4f1; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: #4a4a4a; }
+  tbody tr:last-child td { border-bottom: none; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0 20px; }
+  .pair pre { margin: 0; min-width: 0; }
+  .label { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: #6f6f6f;
+           margin: 0 0 5px; }
+  .term { border-bottom: 1px dotted #8a8a8a; cursor: help; position: relative; }
+  .term:hover::after, .term:focus::after {
+    content: attr(data-tip); position: absolute; left: 0; top: 1.55em; z-index: 20;
+    width: max-content; max-width: 330px; white-space: normal;
+    background: #23231f; color: #f6f6f2; font-size: 12.5px; line-height: 1.45;
+    padding: 8px 10px; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  .term:hover::before, .term:focus::before {
+    content: ""; position: absolute; left: 10px; top: 1.05em; z-index: 21;
+    border: 6px solid transparent; border-bottom-color: #23231f; }
+  table .term:hover::after { left: auto; right: 0; }
+  details { margin: 18px 0; border: 1px solid #e3e3e0; border-radius: 8px; background: #fff; padding: 0 16px; }
+  summary { cursor: pointer; padding: 13px 0; font-weight: 600; font-size: 14px; }
+  details[open] summary { border-bottom: 1px solid #ececea; margin-bottom: 14px; }
+  footer { margin-top: 50px; padding-top: 14px; border-top: 1px solid #ddd; font-size: 12px; color: #777; }
+  @media print { body { background: #fff; } .nav { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sprint change: AD-11 names the next development line</h1>
+  <p class="meta">freecad-buddy · 2026-11-18 · 11 clauses in 1 batch · source tree <code>9aee2bf</code> plus worktree edits</p>
+  <nav class="nav"><a href="#overview">Overview</a><a href="#purpose">Purpose</a><a href="#behaviour">Behaviour changes</a><a href="#documents">Document-only changes</a><a href="#impact">Impact</a><a href="#process">Process before and after</a><a href="#enables">What it enables</a><a href="#decisions">Decisions</a></nav>
+  <div class="legend">
+    <span><b class="del">red</b> — before only, removed</span>
+    <span><b class="add">green</b> — after only, added</span>
+    <span><b class="chg">amber</b> — changed in place</span>
+    <span><strong class="hl">highlighted</strong> — the deciding fact</span>
+    <span><span class="badge need">your decision</span> — an item that needs your answer</span>
+    <span><b class="v-ok">green word</b> / <b class="v-watch">amber word</b> — no effect / effect, in the Impact table</span>
+  </div>
+</header>
+
+<h2 id="overview">1. Overview</h2>
+<table><tbody>
+<tr><td style="width:170px"><b>Scope</b></td><td><b>11 clauses</b>: 6 architecture tier, 5 detail tier. <b>11 applied</b> in the worktree, <b>0 proposed</b>.</td></tr>
+<tr><td><b>Reason</b></td><td>The documents call the canary line <span class="del">1.2-dev</span>. <strong class="hl">FreeCAD never released 1.2.</strong> The canary asked for <code>freecad=1.2</code> and failed on every run.</td></tr>
+<tr><td><b>Effect on the user's work</b></td><td><b class="v-ok">No change.</b> The rule stays: allowed-to-fail canary; conda-forge if published, else weekly AppImage.</td></tr>
+<tr><td><b>Status</b></td><td>Wording change, tier architecture <span class="badge done">clauses 1 to 6 approved 2026-11-18, decision 37</span> <span class="badge done">clauses 7 to 9 detail, decision 39</span> <span class="badge done">applied in worktree</span></td></tr>
+</tbody></table>
+
+<h2 id="purpose">2. Purpose</h2>
+<p>The architecture documents are read as <span class="term" data-tip="The design documents are the build contract. Agents follow them as their task description." tabindex="0">instructions</span> by the builder Agent, the planner Agent and the tests. A wrong name causes one of two faults.</p>
+<table>
+<thead><tr><th style="width:220px">Fault</th><th>Consequence</th><th style="width:280px">Example in this batch</th></tr></thead>
+<tbody>
+<tr><td><b>A sentence names a thing that does not exist</b></td><td>The reader looks for <b>a release that does not exist</b>. A builder writes <code>freecad=1.2</code>.</td><td><span class="del">1.2-dev weekly</span>: <b>no 1.2 exists</b>; the weekly build is 26.3.0 dev.</td></tr>
+<tr><td><b>A sentence omits a fact that is needed</b></td><td>The reader has no answer and must infer one.</td><td>None in this batch.</td></tr>
+</tbody></table>
+
+<h2 id="behaviour">3. Behaviour changes</h2>
+<p>None. All 11 clauses are wording. No product behaviour changes. The canary workflow fix is a separate change (spec-10-8-e) and follows the unchanged rule.</p>
+
+<h2 id="documents">4. Document-only changes</h2>
+<p>11 clauses in 4 files. <b>No decision is needed from you in this section</b>; the approval is recorded as decision 37 (clauses 1 to 6), decision 39 (clauses 7 to 9) and decision 41 (clauses 10 and 11).</p>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>Where</th><th>Stated before</th><th>Actual</th><th>Effect if unchanged</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>ARCHITECTURE-SPINE.md:126</code><br>the AD-11 rule sentence on supported versions</td><td><span class="del">1.2-dev weekly is an allowed-to-fail canary</span></td><td><span class="add">the next FreeCAD development line (weekly builds) is an allowed-to-fail canary</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>2</td><td><code>ARCHITECTURE-SPINE.md:397</code><br>the tech-stack table, FreeCAD row</td><td><span class="del">/ 1.2-dev canary (conda-forge if published, else weekly AppImage)</span></td><td><span class="add">/ canary on the next FreeCAD development line, weekly builds (conda-forge if published, else weekly AppImage)</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>3</td><td><code>ARCHITECTURE-SPINE.md:452</code><br>the repository tree comment for <code>.github/workflows/</code></td><td><span class="del">ci.yml: one blocking 1.1.x leg + 1.2-dev canary</span></td><td><span class="add">ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>4</td><td><code>design/project-structure.md:127</code><br>the tree comment for <code>canary.yml</code></td><td><span class="del">weekly 1.2-dev allowed-to-fail leg (AD-11)</span></td><td><span class="add">weekly allowed-to-fail leg on the next FreeCAD development line (AD-11)</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>5</td><td><code>design/project-structure.md:235</code><br>the CI job table, canary row, version column</td><td><span class="del">1.2-dev weekly</span></td><td><span class="add">next FreeCAD development line (weekly builds)</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>6</td><td><code>design/project-structure.md:321</code><br>the canary job description</td><td><span class="del">resolve FreeCAD 1.2-dev</span></td><td><span class="add">resolve the next FreeCAD development line, weekly builds</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>7</td><td><code>design/project-structure.md:321</code><br>the canary job description, label name</td><td><span class="del">(conda-forge dev label if published</span></td><td><span class="add">(conda-forge label main if published</span></td><td>A reader looks for the <strong>empty <code>freecad_dev</code> label</strong>.</td></tr>
+<tr><td>8</td><td><code>epics.md:114</code><br>requirement NFR4, CI legs</td><td><span class="del">+ 1.2-dev canary;</span></td><td><span class="add">+ canary on the next FreeCAD development line (weekly builds);</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>9</td><td><code>epics.md:276</code><br>story acceptance line for <code>canary.yml</code></td><td><span class="del">weekly allowed-to-fail 1.2-dev leg</span></td><td><span class="add">weekly allowed-to-fail leg on the next FreeCAD development line (weekly builds)</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>10</td><td><code>_bmad-output/project-context.md:21</code><br>agent guidance, FreeCAD line</td><td><span class="del">1.2-dev weekly canary allowed-to-fail.</span></td><td><span class="add">a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail.</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>11</td><td><code>ARCHITECTURE-SPINE.md:452</code><br>the repository tree comment, file attribution</td><td><span class="del"># ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line</span></td><td><span class="add"># ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line</span></td><td>A reader looks for the canary in <strong><code>ci.yml</code></strong>.</td></tr>
+</tbody></table></div>
+
+<h2 id="impact">5. Impact</h2>
+<div class="scroll"><table>
+<thead><tr><th style="width:200px">Area</th><th>Impact</th></tr></thead>
+<tbody>
+<tr><td>User's work</td><td><b class="v-ok">No change.</b></td></tr>
+<tr><td>Intent and PRD</td><td><b class="v-ok">No clause.</b> Neither names the line.</td></tr>
+<tr><td>Agent guidance</td><td><span class="v-watch">1 clause.</span> <code>_bmad-output/project-context.md:21</code> restates AD-11.</td></tr>
+<tr><td>Epics</td><td><span class="v-watch">2 clauses.</span> <code>epics.md:114</code> and <code>:276</code> restate AD-11.</td></tr>
+<tr><td>Architecture</td><td><span class="v-watch">8 clauses.</span> 4 in the spine, 4 in the project-structure design (on 3 lines). The rule does not change.</td></tr>
+<tr><td>Agent behaviour</td><td><span class="v-watch">Intended change.</span> A builder reads the new name and does not look for a 1.2 release. No tool or code changes.</td></tr>
+<tr><td>Stored data</td><td><b class="v-ok">None.</b></td></tr>
+<tr><td>Rollback</td><td><b class="v-ok">One commit.</b> Revert the four files.</td></tr>
+<tr><td>If not applied</td><td><span class="v-watch">The documents keep a false version name.</span> They contradict <code>canary.yml</code> after slice 10-8-e. <code>docs/decisions/016-freecad-1-1-only.md:6</code> and <code>:39</code> still say 1.2-dev: kept as a historical record (a dated decision).</td></tr>
+</tbody></table></div>
+
+<h2 id="process">6. Process before and after</h2>
+<h3>6.1 Canary line resolution</h3>
+<p>Two complete diagrams of the flow the documents describe. Both show all 3 steps.</p>
+<div class="pair">
+<div><p class="label">Before</p><pre>1 NAME     documents say: <span class="del">"1.2-dev"</span>
+2 RESOLVE  conda-forge <span class="del">dev label</span> if published,
+           else weekly AppImage
+3 RESULT   allowed-to-fail, red never blocks a PR</pre></div>
+<div><p class="label">After</p><pre>1 NAME     documents say: <span class="add">"next FreeCAD development line (weekly builds)"</span>
+2 RESOLVE  conda-forge <span class="add">label main</span> if published,
+           else weekly AppImage
+3 RESULT   allowed-to-fail, red never blocks a PR</pre></div>
+</div>
+<h3>6.2 How the batch is applied</h3>
+<pre>PROPOSAL      USER APPROVAL   EDIT SOURCES                  VERIFY                       COMMIT
+11 clauses ─▶ decisions 37, 39, 41 ─▶ ARCHITECTURE-SPINE.md (3)  ──▶ grep "1.2-dev" = 0 lines  ──▶ 1 commit
+                              epics.md (2)
+before/after  2026-11-18      project-structure.md (4)       git diff = 11 clauses
+                              project-context.md (1)
++ reason</pre>
+
+<h2 id="enables">7. What it enables</h2>
+<div class="scroll"><table>
+<thead><tr><th>Story</th><th>Requires</th><th>Without the clause</th></tr></thead>
+<tbody><tr><td><b>10.8</b> slice 10-8-e, canary fix</td><td>Clauses 1 to 11</td><td>The design names <strong>a version that does not exist</strong> while <code>canary.yml</code> targets <code>freecad&gt;=2026</code>.</td></tr></tbody></table></div>
+
+<h2 id="decisions">8. Decisions</h2>
+<p>None open. Decision 37 (user, 2026-11-18) approved the wording change at tier architecture (clauses 1 to 6). Clauses 7 to 11 are tier detail (decisions 39 and 41); their boundary is cited in the appendix.</p>
+
+<h2 id="appendix">Appendix — full clause list</h2>
+<details><summary>11 clauses with path, line, before, after, change and reason</summary>
+<div class="scroll"><table>
+<thead><tr><th>#</th><th>Where</th><th>Before</th><th>After</th><th>Change</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>ARCHITECTURE-SPINE.md:126</code> — the AD-11 rule sentence on supported versions</td><td><span class="del">1.2-dev weekly is an allowed-to-fail canary</span></td><td><span class="add">the next FreeCAD development line (weekly builds) is an allowed-to-fail canary</span></td><td>name</td><td>FreeCAD never released <strong class="hl">&ldquo;1.2&rdquo;</strong> (tier: architecture)</td></tr>
+<tr><td>2</td><td><code>ARCHITECTURE-SPINE.md:397</code> — the tech-stack table, FreeCAD row</td><td><span class="del">/ 1.2-dev canary (conda-forge if published, else weekly AppImage)</span></td><td><span class="add">/ canary on the next FreeCAD development line, weekly builds (conda-forge if published, else weekly AppImage)</span></td><td>name</td><td>FreeCAD never released <strong class="hl">&ldquo;1.2&rdquo;</strong> (tier: architecture)</td></tr>
+<tr><td>3</td><td><code>ARCHITECTURE-SPINE.md:452</code> — the repository tree comment for <code>.github/workflows/</code></td><td><span class="del">ci.yml: one blocking 1.1.x leg + 1.2-dev canary</span></td><td><span class="add">ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line</span></td><td>name</td><td>FreeCAD never released <strong class="hl">&ldquo;1.2&rdquo;</strong> (tier: architecture)</td></tr>
+<tr><td>4</td><td><code>design/project-structure.md:127</code> — the tree comment for <code>canary.yml</code></td><td><span class="del">weekly 1.2-dev allowed-to-fail leg (AD-11)</span></td><td><span class="add">weekly allowed-to-fail leg on the next FreeCAD development line (AD-11)</span></td><td>name</td><td>FreeCAD never released <strong class="hl">&ldquo;1.2&rdquo;</strong> (tier: architecture)</td></tr>
+<tr><td>5</td><td><code>design/project-structure.md:235</code> — the CI job table, canary row, version column</td><td><span class="del">1.2-dev weekly</span></td><td><span class="add">next FreeCAD development line (weekly builds)</span></td><td>name</td><td>FreeCAD never released <strong class="hl">&ldquo;1.2&rdquo;</strong> (tier: architecture)</td></tr>
+<tr><td>6</td><td><code>design/project-structure.md:321</code> — the canary job description</td><td><span class="del">resolve FreeCAD 1.2-dev</span></td><td><span class="add">resolve the next FreeCAD development line, weekly builds</span></td><td>name</td><td>FreeCAD never released <strong class="hl">&ldquo;1.2&rdquo;</strong> (tier: architecture)</td></tr>
+<tr><td>7</td><td><code>design/project-structure.md:321</code> — the canary job description, label name</td><td><span class="del">(conda-forge dev label if published</span></td><td><span class="add">(conda-forge label main if published</span></td><td>label</td><td>tier: detail, boundary: AD-11 as corrected by decision 37, plus decision 32 (label <code>main</code>)</td></tr>
+<tr><td>8</td><td><code>epics.md:114</code> — requirement NFR4, CI legs</td><td><span class="del">+ 1.2-dev canary;</span></td><td><span class="add">+ canary on the next FreeCAD development line (weekly builds);</span></td><td>name</td><td>tier: detail, boundary: AD-11 as corrected by decision 37</td></tr>
+<tr><td>9</td><td><code>epics.md:276</code> — story acceptance line for <code>canary.yml</code></td><td><span class="del">weekly allowed-to-fail 1.2-dev leg</span></td><td><span class="add">weekly allowed-to-fail leg on the next FreeCAD development line (weekly builds)</span></td><td>name</td><td>tier: detail, boundary: AD-11 as corrected by decision 37</td></tr>
+<tr><td>10</td><td><code>_bmad-output/project-context.md:21</code> — agent guidance, FreeCAD line</td><td><span class="del">1.2-dev weekly canary allowed-to-fail.</span></td><td><span class="add">a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail.</span></td><td>name</td><td>tier: detail, boundary: AD-11 as corrected by decision 37 (decision 41)</td></tr>
+<tr><td>11</td><td><code>ARCHITECTURE-SPINE.md:452</code> — the repository tree comment, file attribution</td><td><span class="del"># ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line</span></td><td><span class="add"># ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line</span></td><td>file</td><td>tier: detail, boundary: the canary row of <code>project-structure.md</code> (<code>:127</code>, <code>:235</code>) and <code>canary.yml</code> (decision 41)</td></tr>
+</tbody></table></div></details>
+
+<footer>Sources: <code>sprint-change-proposal-2026-11-18-ad11-dev-line.md</code>, <code>plan-10-8.md</code> section 5, <code>epic-10-decisions.md</code> rows 37 and 39. Colour marks the difference; layout is unchanged.</footer>
+
+<script>
+(function () {
+  var KEY = 'review-pack-freecad-buddy-2026-11-18';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { state = {}; }
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.review input[type="checkbox"]'));
+  var selects = Array.prototype.slice.call(document.querySelectorAll('.review select'));
+  var counter = document.getElementById('reviewed');
+  function refresh() { if (counter) counter.textContent = boxes.filter(function (b) { return b.checked; }).length; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} refresh(); }
+  boxes.forEach(function (b) {
+    b.checked = !!state[b.dataset.key];
+    b.addEventListener('change', function () { state[b.dataset.key] = b.checked; save(); });
+  });
+  selects.forEach(function (s) {
+    if (state[s.dataset.key]) s.value = state[s.dataset.key];
+    s.addEventListener('change', function () { state[s.dataset.key] = s.value; save(); });
+  });
+  refresh();
+})();
+</script>
+</body>
+</html>

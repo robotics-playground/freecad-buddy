@@ -124,7 +124,7 @@ freecad-buddy/
 └── .github/
     └── workflows/
         ├── ci.yml                    # blocking matrix + arch checks + render leg (§5)
-        ├── canary.yml                # weekly 1.2-dev allowed-to-fail leg (AD-11)
+        ├── canary.yml                # weekly allowed-to-fail leg on the next FreeCAD development line (AD-11)
         └── release.yml               # release-please on main; uploads wheel, sdist, addon zip (§2.4)
 ```
 
@@ -232,7 +232,7 @@ Import discipline making this safe: `adapters/__init__.py` and `hosts/__init__.p
 | Leg | FreeCAD | Python (matches bundled interpreter) | Source | Blocking |
 | --- | --- | --- | --- | --- |
 | headless | 1.1.x latest patch on conda-forge (1.1.3) | 3.11 | micromamba conda-forge | yes |
-| canary | 1.2-dev weekly | as shipped (do not pin) | conda-forge if published, else weekly AppImage | no (allowed-to-fail) |
+| canary | next FreeCAD development line (weekly builds) | as shipped (do not pin) | conda-forge if published, else weekly AppImage | no (allowed-to-fail) |
 | render | 1.1.x (same build as headless) | 3.11 | micromamba + xvfb + Mesa sw GL | yes (separate job) |
 | arch/fast | none | 3.12 | uv only | yes |
 
@@ -318,7 +318,7 @@ Isolation rules: the render tests run in their own job, because the GUI/xvfb pat
 
 ### 5.2 `canary.yml` — weekly schedule
 
-Single job, no `continue-on-error`: resolve FreeCAD 1.2-dev (conda-forge dev label if published, else download latest weekly AppImage + `--appimage-extract`), run the same two suites. The workflow runs only on schedule and manual dispatch, never on push or PR. A failure shows red in Actions but never blocks a PR (AD-11). No step opens an issue.
+Single job, no `continue-on-error`: resolve the next FreeCAD development line, weekly builds (conda-forge label `main` if published, else download latest weekly AppImage + `--appimage-extract`), run the same two suites. The workflow runs only on schedule and manual dispatch, never on push or PR. A failure shows red in Actions but never blocks a PR (AD-11). No step opens an issue.
 
 ### 5.3 Caching
 

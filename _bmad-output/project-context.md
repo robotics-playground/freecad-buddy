@@ -18,7 +18,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ## Technology Stack & Versions
 
 - Python: `requires-python = ">=3.11"`; CI runs FreeCAD 1.1.x on Python 3.11, so no 3.12-only syntax. A local Windows env may run 3.12 (no win-64 1.1.3 build for 3.11).
-- FreeCAD: 1.1.x only (blocking in CI, conda-forge via micromamba); 1.2-dev weekly canary allowed-to-fail. 1.0.x and 0.21 unsupported — never write compat code for them.
+- FreeCAD: 1.1.x only (blocking in CI, conda-forge via micromamba); a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail. 1.0.x and 0.21 unsupported — never write compat code for them.
 - MCP: official `mcp` python-sdk, spec ≥2025-06-18 (elicitation required by preview flow). Exact pin decided at Phase 0 gate after SDK v2 — check `pyproject.toml`, don't assume.
 - PrefectHQ `fastmcp` ≠ official SDK `FastMCP` class — distinct projects; the repo pins one, check before importing.
 - Export oracles: trimesh + lib3mf (required); admesh optional Linux-only secondary (dormant upstream).

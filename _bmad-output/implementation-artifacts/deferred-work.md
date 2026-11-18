@@ -554,6 +554,7 @@ resolution: resolved by sweep bundle dw-g1-grader-suite-integrity
   summary: `SEAL.json`'s `case_id_list_sha256` is computed at seal time but never re-derived or checked on unseal — a written-and-never-read integrity field that implies a case-set-substitution guarantee the code does not enforce.
   evidence: `benchmarks/harness/seal.py` `seal_heldout` writes `case_id_list_sha256` into the manifest, but `unseal_heldout` verifies only `archive_sha256` over the encrypted bytes; the case-id-list hash is never recomputed from the extracted tree and compared. The manifest itself is unauthenticated plaintext JSON (no MAC/signature), so both hashes are editable in place — the SHA check catches accidental corruption, not a motivated editor. Accepted for now by decision 012 (trusted operator, non-confidential, `case_count: 0` placeholder), but the field reads as an enforced integrity binding it is not. Fix when live held-out cases are staged: re-derive `case_id_list_sha256` from the extracted tree on unseal and raise `SealError` on mismatch, or drop the field.
   
+
 - source_spec: `spec-2-4-gate-g1-exit.md`
   summary: An unseal with the WRONG key is only detected when the XOR-decrypted bytes fail to parse as a tar; a wrong key whose plaintext happens to form a valid (e.g. empty) tar "unseals" garbage silently, still appends an `unseal_events` entry, and yields an empty/wrong extraction.
   evidence: `benchmarks/harness/seal.py` `unseal_heldout` verifies `archive_sha256` over the *encrypted* bytes (independent of the key), then XORs with the supplied key and relies on `tarfile.open(...)` raising `TarError` to catch a wrong key. No plaintext hash is recorded at seal time, so there is no positive confirmation the decrypted bytes are the sealed archive. Mostly caught in practice (random bytes rarely parse as a tar), and low-consequence while `case_count: 0`, but there is no wrong-key detection independent of tar-parseability, and the unseal event is appended before the extraction is validated. Fix: record a `plaintext_sha256` at seal time and verify the decrypted bytes against it before extracting (and before appending the unseal event).
@@ -1480,21 +1481,27 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
   summary: Correct UAT test cases TC-02-13 (save-as label becomes the file stem) and TC-15 (renders now sit in `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/`, not directly in `tmp/`) in Story 10.7.
   evidence: `tests/uat/testcases/TC-02-document-ingestion-and-handles.md:528` expects the create label after reopen; `TC-15-self-verifying-fit-regression.md:273-279` counts files directly under `<workdir>/tmp`. Story 10.1 forbids UAT test-case edits.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
   summary: The default workdir `freecad-buddy-workdir/` is cwd-relative and not git-ignored, so a host started from the repo root leaves it untracked there.
   evidence: `git status` shows `?? freecad-buddy-workdir/` at the repo root before Story 10.1 started; `documents.py` `workdir_root` default is relative.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-1-documents-and-queries.md`
   summary: Correct the test-case defects that UAT run 2026-10-04-01 found in TC-02-01, TC-02-15, TC-05-14, TC-08-06 and TC-12-13 (Story 10.7).
   evidence: `tests/uat/run/2026-10-04-01/report.md` section "Test-case defects for Story 10.7" lists each Then, the actual product result, and why the product is correct.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
   summary: Add G2 fault cases that target `verify_sketch` (redundant sketch, non-converged solve, partial redundancy only) so its score is measured, not `not_scored`.
   evidence: `benchmarks/_registry/validators.yaml` `verify_sketch` has `sensitivity: 0.0` and `not_scored: "no fault case targets this validator"`; Story 10.2 changed its pass rule.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
   summary: Check in the FreeCAD 1.1.4 GUI that `verify_sketch` (which now calls `solve()`) does not mark a saved, already-solved document modified.
   evidence: `solve()` writes geometry only when it returns 0 and the geometry differs (`SketchObject.cpp:611-623`); all Story 10.2 runs were headless FreeCADCmd 1.1.3.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
   summary: Correct TC-03-05 and TC-03-06 in Story 10.7: the MixedProfile set carries a fully redundant constraint, which now fails like FreeCAD's own execute instead of passing with a warning.
   evidence: Story 10.2 D1 (follow FreeCAD: full redundancy is a HARD FAIL); `SketchObject.cpp:301-304`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-2-sketch-and-verify-correctness.md`
   summary: Correct TC-03-12 ("Redundant constraints warn and commit") and the TC-07 duplicate-Horizontal step (`TC-07-verification-and-export-pairing.md:120`) in Story 10.7: full redundancy now rolls back with `RECOMPUTE_ERROR`.
   evidence: Story 10.2 D1/D2; `tests/uat/testcases/TC-03-sketch-authoring.md:471-491` expects `OK` and a `sketch.redundant` warning.
@@ -1502,126 +1509,167 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-3-feature-tools-and-mutation-protocol.md`
   summary: Post-verify now runs `audit_references` on short-circuit paths; if it raises on an invalid object, the op-exception handler replaces the `RECOMPUTE_ERROR` verdict with a generic `SPEC_FAILED`.
   evidence: Unverified (maybe-false, medium if true). Settle by running `sketch_remove_geometry` that leaves a Pad with a null shape (TC-05-17 shape) through post-verify and checking the status stays `RECOMPUTE_ERROR` with a `FLAGGED` audit.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: Correct TC-14-13 in Story 10.7: framing measures the whole 3D view whatever its size, so a window small enough to make the MDI area scroll the 3D view is not a framing failure; drop the "visible area" expectation.
   evidence: Story 10.4 D8 (user, 2026-10-05): F-27 is not a product defect; AD-30 keeps `getSize()` as the bound.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: Correct the UAT text that says a sketch never appears in a render (`TC-06-render-and-gui-visual-fidelity.md:108`, `:194`; `TC-13-gui-mcp-parity.md:365`) in Story 10.7: a visible sketch is now in the default render set.
   evidence: Story 10.4 D5 (user, 2026-10-05): sketches and meshes join `is_default_renderable`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: `query_screenshot` with an explicit `include` naming a datum (`PartDesign::Plane`) crashes the headless renderer with `RuntimeError: Access violation` in `subgraphFromObject`.
   evidence: Pre-existing; observed during Story 10.4 implementation under FreeCADCmd 1.1.3. The default set excludes datums (D4), but an explicit include still sends one to the port. Outside the Story 10.4 spec.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: `document_save` over MCP leaves the GUI document marked modified (title keeps `*`, `Gui.getDocument(...).Modified` is `True`); the toolbar Save clears it.
   evidence: UAT run `tests/uat/run/2026-10-05-01` O-2 (`s3-console-after-mcp-save.png`); run `2026-10-04-01` saw the same symptom and blamed `view_fit_viewport`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: The `feature_datum` map-mode probe (`usecases/shim.py:273-310` `implemented_map_modes`) recomputes a throwaway datum in every `MapMode`, and each mode its single face reference cannot satisfy writes an `AttachEngine3D::calculateAttachedPlacement` error to the FreeCAD console, which floods the GUI notification area ("Too many opened non-intrusive notifications").
   evidence: Seen by the user in the FreeCAD 1.1.4 GUI during UAT run `2026-10-05-01` (errors from objects `Probe` and `PositionBySupport`). Pre-existing since `2cf5a14` (2026-08-01); the errors are expected by the probe, only their display is the defect. Runs once per process per datum type (`lru_cache`).
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: An `OK` `view_fit_viewport` can return its `framing` block as `checked:"cached"` with `stale_reason` "unverified key component(s): geometry", although the fit just measured the view in pass 3; the fit's own pass-3 verdict should be the one reported.
   evidence: UAT run `tests/uat/run/2026-10-05-01` O-7 (`s4b-2-fit-mcp.json`; the first fit reported `computed`). Values matched, so the defect is the freshness label only.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: `query_screenshot` renders every object with the stock material, not its live `ViewObject.ShapeColor`, so a transparency-only style "keeps its own colour" only for an uncoloured object.
   evidence: UAT run `tests/uat/run/2026-10-05-01` O-1: a red box (`ShapeColor=(0.9,0.1,0.1)`) rendered byte-identical to the grey one (`s2-red-*.png`); `subgraphFromObject` builds a fresh view provider. Pre-existing.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: Story 10.7 test-case corrections from UAT run `2026-10-05-01`: TC-06-04 needs a transparency-only step, TC-13-03 needs a Then for F-15 (hidden stays hidden, no `*`), no test case covers a mesh-only document, and `TC-14-viewport-framing-and-auto-fit.md:140` still names the removed `_fill_factor`.
   evidence: `tests/uat/run/2026-10-05-01/report.md` "Test-case defects for Story 10.7"; Story 10.4 D9 replaced the `fitAll(factor)` pass.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: The GUI `Modified` restore in `render_probe._LiveState` is checked only with fake GUI objects; add a 10.7b probe check (modified flag after a render that includes a hidden object).
   evidence: infc runs under FreeCADCmd where render mode is never `gui_constructed`; UAT S3 covered it once manually.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-4-render-and-framing.md`
   summary: With a perspective camera, `view_fit_viewport`'s `boxZoom` pass pans on the focal plane, so a model away from that plane may land off-centre (unverified; medium if true).
   evidence: maybe-false. Settle by switching the 3D view to perspective and fitting a Body with a pad and a datum plane; pass 3 still grades the result, so the failure mode is `SPEC_FAILED not_framed`, not a false `OK`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
   summary: Correct TC-07-05 in Story 10.7: its `grep -c "AP214"` on the AP214 export counts 0 for a correct file, because an AP214 `FILE_SCHEMA` reads `AUTOMOTIVE_DESIGN { 1 0 10303 214 … }`, never `AP214`. Assert `AUTOMOTIVE_DESIGN` for AP214 and `AP242_MANAGED_MODEL_BASED_3D_ENGINEERING` for AP242.
   evidence: Story 10.5 D5; fault fixtures `benchmarks/g0/export-fault-injection/step-*/export.step` line 6 (AP214 header).
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
   summary: Correct TC-07-07 in Story 10.7: its Then "exactly three round-trip checks run" lists `export_step.volume`, `export_step.valid`, `export_step.topology_counts`; `verify_export_step` now also returns `export_step.schema`, so a correct result has four checks.
   evidence: Story 10.5 D3; `tests/uat/testcases/TC-07-verification-and-export-pairing.md` TC-07-07; `src/freecad_buddy/usecases/exports.py` `verify_export_step` appends `_schema_check`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
   summary: Bring `mcp-tools-design.md` §3.5 `verify_export_step.outputSchema-result` in line with the shipped report. It describes a `reimport` block and a `PASS`/`FAIL` verdict; the tool returns a `checks` list (`export_step.volume`, `.valid`, `.topology_counts`, `.schema`) with an `OK`/non-`OK` verdict. The drift was present before Story 10.5.
   evidence: `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md` §3.5; `src/freecad_buddy/usecases/exports.py` `verify_export_step` report.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-5-step-export-schema.md`
   summary: `export_step` pins `write.step.unit=MM` and never restores it, so after one bridge export FreeCAD's own File > Export writes MM even when the user's `Mod/Part/STEP` `Unit` preference is `M` or `INCH` (medium, pre-existing since Story 1.7).
   evidence: FreeCAD applies the `Unit` preference to the static only once, at Part load (`OCAF/ImportExportSettings.cpp:133-147`, called from `AppPart.cpp:577`); `WriterStep` never re-applies it. Fix: read the old value with `Part.exportUnits()["write.step.unit"]` (`AppPartPy.cpp:2426-2446`) before the pin and restore it in the same `finally` as `shim.restore_step_schema()`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-dw-step-unit-restore.md`
   summary: `verify_export_step` has no `export_step.unit` check, so a STEP written in the wrong unit is not caught; the length unit entity in the file header would let a check read it the same way `export_step.schema` reads `FILE_SCHEMA`.
   evidence: DW-42 records that a wrong `write.step.unit` re-imports with a matching volume, so no current check sees it; a plain `exportStep` with the static at `INCH` writes `CONVERSION_BASED_UNIT('INCH',…)`, which a header read can detect.
+
 - source_spec: none
   summary: Story 10.6 goal B (AC3) — a second RPC client that connects while a session is active gets the AD-26 busy error, never a hang.
   evidence: Split from Story 10.6 at the step-01 scope check; independent of goal A (listener accept path only). AC3 cites TC-99-07, but UAT run 2026-10-03-04 uses TC-99-07 for the temp sweep; confirm the test-case mapping when planned.
+
 - source_spec: none
   summary: Story 10.6 goal C (AC4, F-26) — after an unclean FreeCAD kill, the relaunched addon must not adopt an orphan or foreign server on `:8765`; it verifies `/healthz` session identity first.
   evidence: Split from Story 10.6 at the step-01 scope check; touches the bootstrap spawn guard and the proxy health endpoint only. UAT run 2026-10-03-04 F-26 (TC-01-14, TC-10-12, TC-12-15, TC-99-08).
+
 - source_spec: none
   summary: Story 10.6 goal D (AC5, AC6; F-24, F-31, F-32) — log a dropped in-flight call and a malformed first frame once at the right level, no traceback on a clean exit, and make the discovery-file comment state the ACL protection Windows actually applies.
   evidence: Split from Story 10.6 at the step-01 scope check; log calls and one comment only (`rpc_client.py:252-254`, `rpc_listener.py:269-271`, `rpc_listener.py:197-198`).
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-6-headless-bounded-execution.md`
   summary: AD-27 says a timed-out mutation's AD-5 transaction is "aborted with rollback proved" when the op returns; both hosts instead let a late body commit and leave the document suspect.
   evidence: Human decision D2 (2026-10-06) kept the late commit for Story 10.6; TC-10-10 tests the late-commit behaviour. A fix needs a `run_mutation` bracket that rolls back at its commit point when its call was abandoned; lifecycle tools outside the bracket (`document_recompute`, `document_save`, `document_close`, `document_undo`) need their own answer.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
   summary: A compound of faces or shells with no solids (imported surface model) records zero `inertia` and zero `principal_moments`, so `massprops_equal` cannot see a rotation or mirror of it about its centre.
   evidence: Pre-existing (moments were already zero for such compounds); Story 11.1 kept today's no-solids rule. A fix combines per-face or per-shell `MatrixOfInertia` with the parallel-axis rule, as the solids path does.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
   summary: No G2 fault case plants a rotation or mirror about the centre of mass, so the gate does not measure the detection Story 11.1 added; only infc tests cover it.
   evidence: `benchmarks/_registry/validators.yaml` keeps `fingerprint` at `not_scored: "no fault case targets this validator"`; `benchmarks/g2/fault-injection/` has no rotation or mirror case.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
   summary: `volume`, `area` and `com` still round to the absolute `Q = 1e-6`, so a part above about 1e9 mm³ (an assembly-scale model) crosses rounding boundaries on a no-op recompute, the same failure the per-object tensor step fixed for moments.
   evidence: Recompute jitter is about 1.1e-15 relative (Story 11.1 drawer probe); 1.1e-15 x 1e9 is above `Q`. Pre-existing rule, not changed by Story 11.1.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-1-mass-properties-that-tell-shapes-apart.md`
   summary: No test detects recompute jitter growing past the calibrated tensor step (exponent 9) after a FreeCAD or OCCT upgrade; calibration rests on a manual probe of `kiwibox-drawer.FCStd`.
   evidence: The only step test pins the formula; a regression test needs a committed large part whose recompute reproduces last-bit jitter.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-2-quiet-result-envelope.md`
   summary: The MCP text content is the whole result envelope as JSON, while `mcp-tools-design.md` §1.3 says `content` carries the one-line `text` summary and `structuredContent` the data.
   evidence: `adapters/mcp_server.py:86` dumps the envelope (compact since Story 11.2) and also sends `structuredContent=dict(envelope)`. Pre-existing divergence. Evidence (2026-10-08): Claude Code passes only `structuredContent` to the model when a result has it, so the JSON content block reaches only other clients. `query_tree_summary` now sends one plain text block and no `structuredContent`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-2-quiet-result-envelope.md`
   summary: UAT test cases still describe the `fcb.mutation/1` and `fcb.geometry-diff/1` shapes; Story 10.7 must move them to `/2`.
   evidence: `tests/uat/testcases/TC-05-mutation-protocol-and-rollback.md:53` (`transaction_id`, `/1`), `:119` (`findings == []` no longer tells the short-circuit block apart; use `counts`), `:331` (`transaction_id`), `:372` (full record), `:479` (`fingerprint_before.objects`), `:515` (`{digest: "abc"}` now fails the serializer check, not the `objects` check), `:547` (PASS findings dropped; use `counts`); `TC-08-preview-confirm-and-undo.md:48` (`fcb.geometry-diff/1`).
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-2-quiet-result-envelope.md`
   summary: The DW-97 byte-level undo gap remains for an `expect_fingerprint` digest the server cache does not hold (after a FreeCAD restart, or after 64 newer records), while DW-97 reads done.
   evidence: `usecases/documents.py` `_resolve_expectation` falls back to byte comparison on a cache miss; a pad-over-sketch undo then reports `matches_pre_op: false` with the geometry restored.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-3-one-call-per-mutation.md`
   summary: `data-contracts-design.md` §6 `AuditRecord.approval` lists modes `elicitation | client_confirm | auto_approve | operator_flag` and a `diff_digest` field; the shipped `approval` record uses modes `preview_token | auto_approve | display_state` (plus the unwritten `preview_copy`), carries `tool`, `doc`, `args_digest`, `fingerprint_before`, and `source` only on `auto_approve`, and never carries `diff_digest`.
   evidence: Human decision D2 (2026-10-07) aligned only `source` with the change proposal. Design text at `data-contracts-design.md:187-190`; shipped shape at `contracts/confirm.py` `ApprovalRecord` and `usecases/confirm.py` `verify_confirm` / `gate_mutation`. `audit-record.schema.json` types `approval` as a plain object, so no schema drift check catches it.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-3-one-call-per-mutation.md`
   summary: `CLAUDE.md` §15 names `README.md` as the source of the branching model and contribution rules, but the root `README.md` (first committed in Story 11.3) holds only "Operator setup".
   evidence: Story 11.3 review, blind layer. The fix edits an agent-context file (`CLAUDE.md`) or adds README sections outside the story scope, so it is deferred.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
   summary: Bridge overhead per mutation on the drawer copy stays at 17.6 s headless and 9.4 s in the GUI (warm gate), far above the ≤ 3 s target that Story 11.6 AC3 and the epic acceptance still state.
   evidence: Story 11.4 profile (`tests/uat/run/2026-10-07-02/evidence/headless-profile-new.txt`): `fingerprint` x 2 11.2 s (23 rebuilt objects integrated again), `verify_shape` `isValid` 5.3 s (AD-5), `features._feature_state` 5.5 s (repeats `isValid` and builds a shape summary), `saveCopy` 2.5 s. Human decision 2026-10-07 replaced the Story 11.4 target with the measured result (≤ 18 s headless, ≤ 10 s GUI). Story 11.6 AC3 needs the same decision before it runs.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
   summary: The per-object fingerprint cache keeps the bytes of a shape's first fingerprint when OCCT adds data to the same TShape in place (pcurves a pad adds to its profile sketch, triangulation a GUI render adds), so an in-process digest can stay equal while a fresh serialization would differ.
   evidence: `usecases/fingerprint.py` `_entry` reuses a cached entry on `isEqual`. `tests/infc/test_g2_driver.py` now asserts the post-undo digest equals the pre-op digest; `tests/infc/test_document_undo.py` clears `_ENTRY_CACHE` to keep the byte-difference path covered. Both rollback proofs compute fresh, so they are not affected.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
   summary: Cached fingerprint entries are shared dict objects across `FingerprintRecord`s, so a caller that changes a returned record would corrupt the cache.
   evidence: `usecases/fingerprint.py` `fingerprint` appends the cached entry itself. No caller changes a record today.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
   summary: The abort-path proof now accepts equal mass properties when the digest differs, so a partial abort that leaves a change mass properties cannot see (point reflection, 180° turn about a principal axis, rotation of a no-solid compound such as a multi-wire sketch) is proven `rolled_back_verified`; no G2 case plants one on the abort path.
   evidence: `usecases/transaction.py` `_prove_rollback`; limit listed in `contracts/fingerprint.py` `massprops_equal`. AD-5 adopts the fallback; the existing entry about rotation and mirror cases covers only the fingerprint validator, not `run_mutation`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-4-cheap-correct-rollback-proof-and-fingerprints.md`
   summary: A closed document keeps its held shapes in the fingerprint entry cache until four newer documents evict it, so a closed 184-object drawer copy keeps its B-rep in memory.
   evidence: `usecases/fingerprint.py` `_ENTRY_CACHE` is keyed by `doc.Name` and no close path (`document_close`, preview copy discard, `_restore_from_snapshot`) drops the entry. Bounded at four documents.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: In the FreeCAD GUI, the abort-path rollback proof falls back to the snapshot restore (`rolled_back_via_snapshot`, document closed and reopened, about 32 s) on `kiwibox-drawer-rebuild.FCStd`, while headless on the same file it proves `rolled_back_verified` on the same document.
   evidence: `tests/uat/run/2026-10-07-03/` — 2 of 2 GUI runs of `time_mutation_overhead.py` (`gui-timing-rebuild*.json`) against 1 of 1 headless run (`headless-timing-rebuild.json`). A headless diagnostic (abort + recompute + fresh fingerprint) found 0 objects with changed mass properties. The audit record does not name the objects that did not match, so the root cause is unknown. Story 11.4 GUI on the original drawer passed.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: `query_tree_summary` (depth 1, Body filter) on a 178-object document returned 11,612 chars, over the Epic 11 10K-per-result target; it was the only result over 3.3K chars in the measured session.
   evidence: `tests/uat/run/2026-10-07-03/report.md` (AC2 FAIL row); the `tree` field holds 12,024 of the JSON chars.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: No MCP tool makes a `Part::Common`, so an agent splits a model into print pieces with base-feature copies and region pockets; when more than one piece body takes the same master, it takes another piece as base and FreeCAD logs out-of-scope `BaseFeature` links on every recompute.
   evidence: Build session `a3153685` summary and the headless log in `tests/uat/run/2026-10-07-03/report.md` ("Other findings"). Relates to the derived-piece rule in `skills/design-decomposition/SKILL.md`.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-11-6-measured-build-session.md`
   summary: `session_metrics.py` reads a spilled result's status from its spill file; when Claude Code later deletes that file, the result silently stops counting as a feature, so the calls-per-feature median of a re-measured transcript can drift with no warning.
   evidence: `_status` returns `None` for an absent spill file. Every spill file of the four measured transcripts exists today, so the committed numbers are unaffected; a count of missing spill files in the output line would expose drift.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
   summary: `fingerprint` raises on a non-null empty `Compound` (no vertices); `_center_of_mass` now raises `RuntimeError: Bnd_Box is void` from `optimalBoundingBox` before `_quantize` raises `OverflowError` on the void `BoundBox` field, so a fix of B2 cause 1 in `_quantize` alone still leaves the fingerprint failing on that shape.
   evidence: `Part.Compound([]).optimalBoundingBox(False, False)` raises `RuntimeError: Bnd_Box is void` on FreeCAD 1.1.4; `BoundBox` returns ±1.797e308. B2 in `tests/uat/run/2026-10-08-02/bugs.md` produces that shape (empty Pocket result).
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
   summary: Other readers of `Shape.BoundBox` depend on the GUI display mesh too: the fingerprint `bbox` field (in the digest) and the TNP witness `element.BoundBox` (`usecases/tnp_guard.py:171`); a GUI mesh rebuild can move a witness on an unchanged edge.
   evidence: maybe-false for the TNP witness (medium if true): not measured. Settle by recording a witness, rebuilding the downstream mesh in the GUI (or `tessellate` headless on a sub-edge shared with a solid), and comparing. The `bbox` dependence is measured: `BoundBox` changed on 8 of 14 drawer sketches after meshing.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
   summary: The mutation audit record does not name the objects that failed the rollback proof, which kept B1's cause unknown across two UAT runs; `massprops_changed` already returns those names.
   evidence: `deferred-work.md` B1 entry ("The audit record does not name the objects that did not match"); the cause was found only with an ad hoc in-GUI probe.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-b1-sketch-centre-mesh-independent.md`
   summary: The `run_mutation` validator hash covers `usecases/transaction.py` and `contracts/fingerprint.py` but not `usecases/fingerprint.py`, which decides the rollback proof, and no G2 fault case covers "unchanged sketch, rebuilt mesh, proof must hold".
   evidence: `benchmarks/g2/fault-injection/score_g2_validators.py:45-47`; `run_mutation` `validator_sha` did not change with this fix.
@@ -1629,15 +1677,19 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: Assertion messages print display-rounded operands next to a once-rounded deviation, so a FAIL can read `|6.0 - 6.0| = 0.004 <= 0.001` and a straddle PASS can read `|6.02 - 6.01| = 1e-07`.
   evidence: medium; `usecases/assertions.py` check messages; the frozen rule rounds operands for display but not for the verdict. Needs a human choice of message format (e.g. print operands with extra digits when the deviation is below the display step).
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: G3 frames-check compares anchor frames read through MCP, which now rounds them to display decimals, so its stated 1e-6 mm resolution is really 0.005 mm.
   evidence: medium; `benchmarks/g3/fault-injection/score_g3_replay.py:266-273` reads `structuredContent`, `FRAME_DECIMALS = 6` at `:80`. Options: scorer pins the `Decimals` preference to 6 for its run, or turns the `RoundToDisplay` preference off.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: Echoed inputs other than `tolerance`/`tol` are rounded: tessellation deflection `tess.linear` 0.0125 reads 0.01, top-level `volume_band` reads rounded while `checks[].tolerance.abs` stays raw, declared `expect` 6.015 reads 6.02.
   evidence: low; `usecases/exports.py:234`, `adapters/export_verdict.py:90`, `contracts/numbers.py` `_RAW_KEYS`. Widening the raw-key list changes a human-frozen rule.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: `query_object` still stringifies `Rotation`, `Matrix` and `BoundBox` property values with full-length floats.
   evidence: low; `usecases/queries.py` `_json_safe` `str(value)` fallback after the new Quantity/Vector branches.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-mcp-display-precision.md`
   summary: Verdicts near a band edge depend on the machine's `Decimals` preference, and validator runs in `benchmarks/_registry/validators.yaml` do not record the value used.
   evidence: low; `shim.display_decimals()` reads the live preference inside scorers.
@@ -1941,3 +1993,69 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-f-uat-testcase-defects.md`
   summary: `mcp-tools-design.md:249` says the `query_tree_summary` tree reaches the client as `content[1]` with `structured_content` holding counts, but §1.3 (`:60`) says the tool is text-only with no `structuredContent`.
   evidence: code wins (`mcp_server.py:127-138` `_plain_text`); the next test-case author can read `:249` and restore a `structured_content.shown` reader. Blocker: design documents are outside the 10-8-f boundary (test text only). Unblock: epic-10 close correct-course batch.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line (FreeCAD 2026.09.16 = 26.3.0 dev, OCCT 8.0.1, Python 3.14.10): 5 In-FreeCAD tests fail on undo and rollback. `test_document_undo.RefusalTest` (2: `ValidationError not raised` for a refused undo; `1 != 0 : the build ignored the UndoMode write`), `test_g2_driver.DrivenCaseTest.test_should_match_the_pre_op_state_on_geometry_when_undoing_a_padded_sketch` (digest differs), `test_mutation_protocol.RollbackProofTest` (2: `'rolled_back_verified' != 'rolled_back_via_snapshot'`; an unprovable rollback claims restoration). Cause not investigated; grouping these five by area (undo and rollback) is itself unverified. Hypothesis, not verified: the `UndoMode` write having no effect points to an undo API change on the dev line.
+  evidence: local run of the canary job steps in `mambaorg/micromamba:2.3.3`, `freecad>=2026`, `Ran 866 tests ... FAILED (failures=15, skipped=28)`, run twice with the same 15 failures. Unblock: investigate on a dev-line FreeCAD, then fix the shim or the tests; the blocking 1.1.x leg stays green.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: 3 `test_document_undo.ExpectFingerprintRecordTest` tests fail because the fixture no longer reproduces a byte divergence (`'8c7c87bc...' == '8c7c87bc...' : fixture must reproduce the byte divergence`). The dev line writes the same bytes where 1.1.x wrote different bytes, so the fixture premise does not hold there.
+  evidence: same local canary run, `test_a_record_expectation_matches_on_geometry_when_the_bytes_differ`, `test_should_match_on_the_cached_record_when_a_published_digest_differs_in_bytes`, `test_should_state_the_byte_measurement_when_no_record_is_held_for_the_digest`.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: `test_confirm_gate.SpentTokenTest.test_a_replay_is_refused_even_when_the_mutation_left_the_digest_unmoved` fails (`'779c183a...' != '0f55e13e...'`): the document digest differs where the test expects it unmoved.
+  evidence: same local canary run.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: 2 `test_export_tools.ExportStepSchemaTest` tests fail because the STEP writer error text changed from `Writing of STEP failed` to `Error writing to file: <path>` (`test_should_restore_occ_default_schema_when_export_step_raises`, `test_should_restore_prior_step_unit_when_export_step_raises`). The tests match the message text.
+  evidence: same local canary run. The fix is a looser match in the tests or a check on the exception type.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: 2 `test_tnp_guard.LayerOneTest` tests fail (`[] is not true : shrinking the pad below the fillet radius invalidates its links`): the dev line no longer marks the invalidated link `?Edge1` in this scenario, so the guard's Layer 1 input is empty. A behaviour change in FreeCAD's element map is the likely cause; AD-7 depends on `element_map_available()`.
+  evidence: same local canary run, `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record`, `test_a_missing_marked_entry_is_reported_once_rather_than_by_both_layers`. Unblock: reproduce on the dev line and decide whether the guard needs a new capability probe.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: `test_verify_tools.VerifySketchTest.test_should_leave_geometry_and_state_unchanged_when_a_solved_file_sketch_is_verified` finds `'Touched'` in the sketch state after `verify_sketch` (`AssertionError: 'Touched' unexpectedly found in ['Touched']`). The read-only check may now touch the document on the dev line; not investigated.
+  evidence: same local canary run.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: `test_assertion_primitives.LargestPlanarFaceTieBreakTest.test_should_fail_frame_checks_and_still_measure_volume_when_the_tie_is_unresolvable` fails (`AssertionError: True is not false`): the tie between largest planar faces resolves where the test expects it unresolvable. Not investigated.
+  evidence: same local canary run.
+  blocker: the next FreeCAD development line is not a supported version under AD-11 (allowed-to-fail canary only), and the cause on OCCT 8 / Python 3.14 is not isolated.
+  unblock: a story that targets the next FreeCAD line, or a supported-version change that makes the dev line blocking.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: With the 15 known dev-line failures the canary is red every week, so a new regression shows as the same red. No check compares a run with the known set. Fixing the failures listed above returns a usable signal; until then the seven failure entries above are the baseline. The skip counts (28 In-FreeCAD, 4 External) are also not compared with the 1.1.3 leg: a capability probe that returns False on the dev line makes tests skip with no red.
+  evidence: review r1 of 10-8-e (verification gap, edge cases). Unblock: fix or xfail-by-id the known failures, or compare the failing ids with a committed list.
+  blocker: the 15 known dev-line failures keep the canary red every week.
+  unblock: fix or mark the known failures by id (the seven entries above), then compare each run with the committed list.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: conda-forge `main` lags the weekly builds: it resolved `2026.09.16` (uploaded 2026-09-23), although FreeCAD tagged `26.3rc2` on 2026-10-18 and `weekly-2026.11.18` (27.1.0 dev) exists (`plan-10-8.md` section 5). AD-11 says "conda-forge if published, else weekly AppImage", but `freecad>=2026` still solves with the old build, so the AppImage fallback never triggers and the canary can test a build two months old. A second cause: the spec relies on calendar versions. If the feedstock publishes `26.3.0` or `27.1.0` style numbers, they compare below `2026`, the solver keeps the last calendar build, and nothing turns red. The job now prints the resolved build (`micromamba list`) so the age is visible.
+  evidence: plan-10-8 section 5 (tags and feedstock) and the local solve. Unblock: decide an age limit that switches to the AppImage path, then wire it.
+  blocker: no age rule exists that switches the canary to the weekly AppImage, and the feedstock publishes on its own schedule.
+  unblock: the leader or user decides an age limit, then a story wires the AppImage path (and a version rule that also accepts `26.3.0` or `27.1.0` style numbers).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: The canary omits the `ci.yml` step "Two-process headless host" (`ci.yml:118-123`). Those three tests skip silently without `PYTHONPATH=<prefix>/lib`; the reasons for the 4 skipped External tests were not recorded (`pytest -rs` would show them). The two-process host is not tested on Python 3.14 and OCCT 8. Decision 32 asked for the two suites only.
+  evidence: review r1 of 10-8-e (blind hunter); local External run `1809 passed, 4 skipped`. Unblock: copy that step, with its three-PASSED check, into `canary.yml`.
+  blocker: decision 32 scoped the canary to the two suites only.
+  unblock: a decision to widen the canary; then copy the step, with its three-PASSED check, into `canary.yml`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Two External-suite flakes showed in the dev-line job: a `test_rpc_listener` hello deadline failure (passed 10 of 10 on re-run) and `tests/external/test_marshal_self_submit.py:48` timing, where the measured time was 0.19992 s against a 0.2 s bound on the host. Neither is dev-line specific; both are timing assertions.
+  evidence: verifier-10-8-e (`verify-10-8-e.md`). `deferred-work.md` already holds a different RPC listener entry (the 5 s hello deadline and silent connections); it does not cover these flakes.
+  blocker: the tests depend on wall-clock timing with no margin on a loaded host.
+  unblock: widen the bounds or make the clock injectable in a test-hardening story.
