@@ -1,0 +1,7 @@
+2026-11-18 14:35:00,093 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 0 leftover temp artifact(s)
+2026-11-18 14:35:02,847 INFO freecad_buddy.hosts.headless: audit log: /repo/tests/uat/run/2026-11-18-01/evidence/r0b3-tc-11-17-audit.jsonl
+2026-11-18 14:35:02,848 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-11-18 14:35:02,848 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+Tool 'script_exec' not listed, no validation will be performed
+2026-11-18 14:35:05,926 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-11-18 14:35:05,926 INFO freecad_buddy.rpc_listener: client closed the connection

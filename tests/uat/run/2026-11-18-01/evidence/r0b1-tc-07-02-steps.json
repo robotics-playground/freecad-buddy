@@ -1,0 +1,223 @@
+[
+ {
+  "name": "open",
+  "mcp": "document_open",
+  "args": {
+   "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:jjnDHExNcZ9iojP-BZ89QQ",
+    "name": "cylinder_r5_h20",
+    "label": "cylinder-r5-h20",
+    "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+   },
+   "text": "Opened cylinder-r5-h20 -> fcb-doc:jjnDHExNcZ9iojP-BZ89QQ."
+  }
+ },
+ {
+  "name": "tree",
+  "mcp": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:jjnDHExNcZ9iojP-BZ89QQ"
+  },
+  "result": {
+   "text": "OK: 1 objects, 1 shown.\nframing: unknown, unavailable, no visible shape-bearing objects to measure\n- [FEATURE] Cylinder",
+   "is_error": false
+  }
+ },
+ {
+  "name": "measure",
+  "mcp": "verify_shape",
+  "args": {
+   "doc": "fcb-doc:jjnDHExNcZ9iojP-BZ89QQ",
+   "object": "Cylinder"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "object": "Cylinder"
+    },
+    "checks": [
+     {
+      "id": "shape.volume",
+      "measured": 1570.8,
+      "passed": true
+     },
+     {
+      "id": "shape.bbox",
+      "measured": [
+       10.0,
+       10.0,
+       20.0
+      ],
+      "passed": true
+     },
+     {
+      "id": "shape.solid_count",
+      "measured": 1,
+      "passed": true
+     },
+     {
+      "id": "shape.valid",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "shape.watertight",
+      "measured": true,
+      "passed": true
+     }
+    ],
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15,
+     "anchor_frame": {
+      "kind": "global",
+      "ref": null,
+      "entity": null,
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "axes": [
+       [
+        1.0,
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        1.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0,
+        1.0
+       ]
+      ],
+      "units": "mm"
+     }
+    },
+    "verdict": "OK"
+   },
+   "text": "Cylinder: shape checks passed (OK).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "name": "graded",
+  "mcp": "verify_shape",
+  "args": {
+   "doc": "fcb-doc:jjnDHExNcZ9iojP-BZ89QQ",
+   "object": "Cylinder",
+   "checks": [
+    {
+     "fn": "expect_volume",
+     "expect": 1.0
+    }
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "SPEC_FAILED",
+    "message": "assert.expect_volume",
+    "objects": [
+     "Cylinder"
+    ]
+   },
+   "structured_content": {
+    "subject": {
+     "object": "Cylinder"
+    },
+    "checks": [
+     {
+      "id": "assert.expect_volume",
+      "measured": 1570.8,
+      "expected": 1.0,
+      "tolerance": null,
+      "passed": false,
+      "detail": {
+       "message": "|1570.8 - 1.0| = 1569.8 <= 0.01 mm^3"
+      }
+     }
+    ],
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15,
+     "anchor_frame": {
+      "kind": "global",
+      "ref": null,
+      "entity": null,
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "axes": [
+       [
+        1.0,
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        1.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0,
+        1.0
+       ]
+      ],
+      "units": "mm"
+     }
+    },
+    "verdict": "SPEC_FAILED"
+   },
+   "text": "Cylinder: assert.expect_volume failed (SPEC_FAILED)."
+  }
+ },
+ {
+  "name": "fit",
+  "mcp": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:jjnDHExNcZ9iojP-BZ89QQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "cylinder_r5_h20",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'cylinder_r5_h20'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

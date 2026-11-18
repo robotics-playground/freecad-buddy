@@ -1,0 +1,21 @@
+R0a-1	2026-11-18T20:10:35+07:00	5328	container	-	2026-11-18T20:20:48+07:00	fcb-freecad stop (window close timed out, helper killed pid)
+R0a-2	2026-11-18T20:23:33+07:00	6141	container	-	2026-11-18T20:44:11+07:00	fcb-freecad stop
+R0a-3	2026-11-18T20:47:25+07:00	7818	container	-	20:51:47+07:00 (2026-11-18T20:51:47+07:00)	fcb-freecad stop
+R0b-1	2026-11-18T20:54:00+07:00	8310	container	FREECAD_BUDDY_AUTO_APPROVE=0	2026-11-18T21:01:20+07:00	fcb-freecad stop
+R0b-1	2026-11-18T21:01:40+07:00	9076	container	-	2026-11-18T21:10:17+07:00	fcb-freecad stop
+R0b-2	2026-11-18T21:14:16+07:00	10006	container	FREECAD_BUDDY_AUTO_APPROVE=0	2026-11-18T21:21:33+07:00	fcb-freecad stop
+R0b-3	2026-11-18T21:23:39+07:00	11748	container	-	2026-11-18T21:33:29+07:00	fcb-freecad stop
+R0b-3	2026-11-18T21:33:35+07:00	12565	container	FREECAD_BUDDY_SCRIPT_EXEC=0	2026-11-18T21:35:45+07:00	fcb-freecad stop
+P1	2026-11-18T21:37:39+07:00	12978	container	-	2026-11-18T21:47:20+07:00	File > Exit (menu leaf; end time approximate)
+P1	2026-11-18T21:47:32+07:00	15171	container	-	2026-11-18T21:49:35+07:00	fcb-freecad stop (end time approximate)
+P1	2026-11-18T21:49:43+07:00	15726	container	FREECAD_BUDDY_NO_AUTO_MCP=no	2026-11-18T21:50:55+07:00	fcb-freecad stop (end time approximate)
+P1	2026-11-18T21:51:17+07:00	16092	container	-	2026-11-18T21:52:30+07:00	kill -KILL (kill_app refused: foreign_process_termination_denied; end time approximate)
+P1	2026-11-18T21:52:58+07:00	16458	container	-	2026-11-18T21:54:50+07:00	File > Exit (menu leaf)
+P1	2026-11-18T21:54:58+07:00	16921	container	(port 8765 held by http.server)	2026-11-18T21:57:30+07:00	fcb-freecad stop (end time approximate)
+P1-R	2026-11-18T21:58:23+07:00	17331	container	-	(see report)	clean quit via Exit menu
+S1	2026-11-18T22:06:05+07:00	18102	container	-	2026-11-18T22:06:31+07:00	fcb-freecad stop (Given check only)
+S1	2026-11-18T22:06:32+07:00	18277	container	-	2026-11-18T22:14:54+07:00	fcb-freecad stop (TC-02-09 launched with file; TC-02-09 to TC-07-05)
+S1	2026-11-18T22:14:58+07:00	19434	container	FREECAD_BUDDY_AUTO_APPROVE=0	2026-11-18T22:21:28+07:00	fcb-freecad stop
+S2	2026-11-18T22:24:57+07:00	20220	container	-	22:42:36+07:00 (log 15:42:36 UTC)	clean quit via File > Exit leaf (TC-12-14); TC-10-03 to TC-14-05 ran here
+S2	2026-11-18T22:43:11+07:00	23013	container	-	2026-11-18T22:43:31+07:00	fcb-freecad stop (restart after TC-12-14; phase end)
+G3	2026-11-18T22:46:22+07:00	24818	container	-	2026-11-18T22:47:50+07:00	fcb-freecad stop (G3 GUI replay: 1 control, 1 planted/reverted pair)

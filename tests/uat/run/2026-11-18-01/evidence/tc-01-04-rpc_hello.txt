@@ -1,0 +1,1 @@
+{'gui': True, 'qt_loop': True, 'exec_enabled': True}

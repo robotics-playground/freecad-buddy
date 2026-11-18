@@ -1,0 +1,1 @@
+d40a271bf1a9c8e8f5b84bb6a601ecea858a6bc6ea77ae8afb1f7b26a5e3fe8c *dist/addon/wheels/freecad_buddy-0.1.1-py3-none-any.whl

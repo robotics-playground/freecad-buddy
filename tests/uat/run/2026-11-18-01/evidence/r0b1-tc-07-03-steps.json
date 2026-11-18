@@ -1,0 +1,422 @@
+[
+ {
+  "name": "create",
+  "mcp": "document_create",
+  "args": {
+   "label": "tc07_sketch"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+    "name": "tc07_sketch",
+    "label": "tc07_sketch"
+   },
+   "text": "doc: fcb-doc:LihsH_P4fxdJy7WrtlmJmQ\nlabel: tc07_sketch\nname: tc07_sketch"
+  }
+ },
+ {
+  "name": "build",
+  "mcp": "script_exec",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "code": "sk = doc.addObject('Sketcher::SketchObject', 'Sketch'); sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(10, 0, 0))); doc.addObject('App::DocumentObjectGroup', 'Group'); doc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:LihsH_P4fxdJy7WrtlmJmQ\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.36,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "name": "grade_under",
+  "mcp": "verify_sketch",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "sketch": "Sketch"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "SPEC_FAILED",
+    "message": "sketch.fully_constrained",
+    "objects": []
+   },
+   "structured_content": {
+    "subject": {
+     "sketch": "Sketch",
+     "dof": 4,
+     "fully_constrained": false,
+     "geometry_count": 1,
+     "constraint_count": 0,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "checks": [
+     {
+      "id": "sketch.fully_constrained",
+      "measured": false,
+      "expected": true,
+      "passed": false,
+      "detail": {
+       "message": "dof=4, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+      }
+     }
+    ],
+    "warnings": [],
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "SPEC_FAILED"
+   },
+   "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: SPEC_FAILED\nwarnings: [0 items]"
+  }
+ },
+ {
+  "name": "constrain",
+  "mcp": "sketch_add_constraint",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "sketch": "Sketch",
+   "constraints": [
+    {
+     "type": "Coincident",
+     "first": 0,
+     "first_pos": 1,
+     "second": -1,
+     "second_pos": 1
+    },
+    {
+     "type": "Horizontal",
+     "first": 0
+    },
+    {
+     "type": "DistanceX",
+     "first": 0,
+     "value": {
+      "value": 10,
+      "unit": "mm"
+     }
+    }
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": true,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Sketch"
+     ]
+    },
+    "sketch": "Sketch",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Sketch",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 1,
+     "constraint_count": 3,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "constraint_ids": [
+     1,
+     2,
+     3
+    ]
+   },
+   "text": "Mutation committed; fingerprint b9bdaf98656a.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.36,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "name": "grade_full",
+  "mcp": "verify_sketch",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "sketch": "Sketch"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "sketch": "Sketch",
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 1,
+     "constraint_count": 3,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "checks": [
+     {
+      "id": "sketch.fully_constrained",
+      "measured": true,
+      "expected": true,
+      "passed": true,
+      "detail": {
+       "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+      }
+     }
+    ],
+    "warnings": [],
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: OK\nwarnings: [0 items]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.36,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "name": "duplicate",
+  "mcp": "sketch_add_constraint",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "sketch": "Sketch",
+   "constraints": [
+    {
+     "type": "Horizontal",
+     "first": 0
+    }
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "mutation.recompute_error",
+    "message": "recompute left 1 object(s) invalid: Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+   },
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+      "serializer": "exportBinary"
+     },
+     "changed": [],
+     "post_verify": {
+      "recompute_clean": false,
+      "is_valid": false,
+      "fully_constrained": "not_measured",
+      "tnp_audit": {
+       "status": "FLAGGED",
+       "element_map_version": "15.70200.5",
+       "counts": {
+        "BROKEN": 1
+       },
+       "findings": [
+        {
+         "owner": "Sketch",
+         "prop": "",
+         "mapped_before": null,
+         "state_after": "Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n",
+         "verdict": "BROKEN",
+         "layer": 0,
+         "detail": "Sketch is invalid after the mutation: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+        }
+       ]
+      },
+      "passed": false,
+      "explanation": "recompute left 1 object(s) invalid: Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+     },
+     "rolled_back": true,
+     "rollback_proven": "rolled_back_verified",
+     "touched": [
+      "Sketch"
+     ]
+    },
+    "sketch": "Sketch",
+    "sketch_state": {
+     "schema": "fcb.sketch-state/1",
+     "sketch": "Sketch",
+     "readable": true,
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 1,
+     "constraint_count": 3,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "constraint_ids": []
+   },
+   "text": "Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+  }
+ },
+ {
+  "name": "grade_after",
+  "mcp": "verify_sketch",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "sketch": "Sketch"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "sketch": "Sketch",
+     "dof": 0,
+     "fully_constrained": true,
+     "geometry_count": 1,
+     "constraint_count": 3,
+     "conflicting": [],
+     "malformed": [],
+     "redundant": [],
+     "partially_redundant": [],
+     "solver_status_code": 0
+    },
+    "checks": [
+     {
+      "id": "sketch.fully_constrained",
+      "measured": true,
+      "expected": true,
+      "passed": true,
+      "detail": {
+       "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+      }
+     }
+    ],
+    "warnings": [],
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: OK\nwarnings: [0 items]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 1.36,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "name": "not_sketch",
+  "mcp": "verify_sketch",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ",
+   "sketch": "Group"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "object is not a sketch: Group",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 326, in verify_sketch\n    return registry.with_document(doc, lambda _h, document: read_sketch(document, sketch))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 326, in <lambda>\n    return registry.with_document(doc, lambda _h, document: read_sketch(document, sketch))\n                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 341, in read_sketch\n    raise ValidationError(f\"object is not a sketch: {sketch}\")\nfreecad_buddy.usecases.documents.ValidationError: object is not a sketch: Group\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "name": "fit",
+  "mcp": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:LihsH_P4fxdJy7WrtlmJmQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc07_sketch",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc07_sketch'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

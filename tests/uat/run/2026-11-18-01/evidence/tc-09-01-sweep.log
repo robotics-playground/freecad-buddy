@@ -1,0 +1,23 @@
+Spawning headless H1 server + running the edge/corner/error sweep...
+
+  [PASS] unknown_doc_handle         INVALID_INPUT 
+  [PASS] unknown_object_name        INVALID_INPUT 
+  [PASS] retired_max_nodes_rejected SCHEMA_ERROR additionalProperties: False rejects the retired parameter
+  [PASS] depth_one_returns_roots_only OK shown=1 roots=1
+  [PASS] export_missing_path_schema SCHEMA_ERROR schema-required rejection
+  [PASS] export_multi_object        INVALID_INPUT 
+  [PASS] stale_export_id            INVALID_INPUT 
+  [PASS] verify_format_mismatch     INVALID_INPUT 
+  [PASS] screenshot_read_only       OK volume 6000.0 -> 6000.0
+  [PASS] double_close_stale         INVALID_INPUT 
+  [PASS] open_bad_path              INVALID_INPUT 
+  [PASS] compound_com_null          OK com=None
+  [PASS] fault_shape:wrong-volume   SPEC_FAILED status=SPEC_FAILED
+  [PASS] fault_shape:non-watertight-open-shell SPEC_FAILED status=SPEC_FAILED
+
+14/14 edge checks passed
+report: D:\Work\Personal\Sources\freecad-buddy\_automation\edge_report.json
+
+real	0m16.187s
+user	0m0.015s
+sys	0m0.015s

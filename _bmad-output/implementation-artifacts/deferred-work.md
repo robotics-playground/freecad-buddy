@@ -2059,3 +2059,63 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: verifier-10-8-e (`verify-10-8-e.md`). `deferred-work.md` already holds a different RPC listener entry (the 5 s hello deadline and silent connections); it does not cover these flakes.
   blocker: the tests depend on wall-clock timing with no margin on a loaded host.
   unblock: widen the bounds or make the clock injectable in a test-hardening story.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-02-15 FAIL (test-case defect): the Then reads `schema` and `detail.code` from the `query_tree_summary` refusal, but that tool is text only by design (`mcp-tools-design.md` §1.3); raw text `INVALID_INPUT: unknown or stale document handle: ...` (`TC-02-document-ingestion-and-handles.md:630`).
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-11; `report.md` row TC-02-15.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: exempt `query_tree_summary` in the Then and check its text line; re-run TC-02-15 into a new run folder (decision 35).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-09-12 FAIL (test-case defect): same wire shape as TC-02-15; `detail.message` and `detail.code` read from the text-only `query_tree_summary` refusal (`TC-09-error-contract-and-fault-injection.md:505-506`).
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-11; `report.md` row TC-09-12.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: exempt `query_tree_summary` in the Then; re-run TC-09-12 into a new run folder.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-02-17 FAIL (test-case defect): expected MSVC text `ios_base::failbit set: iostream stream error`; Linux FreeCAD 1.1.4 gives `basic_ios::clear: iostream error` (`TC-02-document-ingestion-and-handles.md:707`).
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-12; `report.md` row TC-02-17.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: accept both platform texts, or check only that the two tails are equal apart from the path; re-run TC-02-17.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-03-03 FAIL (test-case defect, lead regrade): the visual Then on sketch elevation (`TC-03-sketch-authoring.md:131`) cannot be seen in the top-down Sketcher edit view the scenario defines; no camera step.
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-13; `report.md` row TC-03-03.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: add an Isometric step before the capture; update the runner scenario file if its agent_check depends on it; re-run TC-03-03.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-03-20 FAIL (test-case defect, lead regrade): "as thin as in the before image" (`TC-03-sketch-authoring.md:895`) cannot be seen in the top-down Sketcher edit view; no camera step.
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-13; `report.md` row TC-03-20.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: add an Isometric step before both captures; re-run TC-03-20.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-07-03 FAIL (test-case defect, lead regrade): the visual Then (`TC-07-verification-and-export-pairing.md:147`) needs Sketcher edit mode, which the scenario does not contain; the end-state window shows one black line in the iso view.
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-14; `report.md` row TC-07-03.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: add the Sketcher edit-mode step before the capture; re-run TC-07-03.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-07-05 FAIL (test-case defect): the Then says `text` equals `STEP export written -> <path>.` (`TC-07-verification-and-export-pairing.md:210`); the product appends the framing warning (`src/freecad_buddy/contracts/envelope.py:111`, required by `TC-14-viewport-framing-and-auto-fit.md:399`) because the Given does not fit the view.
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-15; `report.md` row TC-07-05.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: change "equals" to "starts with", or fit the view in the Given; re-run TC-07-05.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-13-04 FAIL (test-case defect): the window stays in Top view after GUI Fit All while the render is iso, so proportion and camera cannot match (`TC-13-gui-mcp-parity.md:287`); the test case sets no window camera.
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-16; `report.md` row TC-13-04.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: set the window camera to Isometric before the capture; re-run TC-13-04.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-13-10 FAIL (test-case defect): "the viewport solid reads as that thickness" (`TC-13-gui-mcp-parity.md:574`) cannot be met in the top view that the GUI Fit All route keeps; no camera step.
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-17; `report.md` row TC-13-10.
+  blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
+  unblock: add an Isometric press before the capture; re-run TC-13-10.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
+  summary: UAT run 2026-11-18-01, TC-02-13 FAIL (harness limit): the `fcb-desktop` image has no emoji font; U+1F527 draws as an empty box (`fc-list ":charset=1f527"` empty). Label text is intact (`TC-02-document-ingestion-and-handles.md:518`).
+  evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-18; `report.md` row TC-02-13.
+  blocker: spec D2: no harness change inside the UAT run.
+  unblock: install an emoji font in the image (`tests/close-loop/docker/`); rebuild; re-run TC-02-13.

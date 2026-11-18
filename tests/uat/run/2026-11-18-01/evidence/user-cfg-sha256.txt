@@ -1,0 +1,4 @@
+baseline (epic-10-decisions.md decision 8): b89a97711941619bb0ba74ae04fb888025e82f49ff48174fbebb42aed28d85a0
+at S0 start (2026-11-18T19:29+0700): b89a97711941619bb0ba74ae04fb888025e82f49ff48174fbebb42aed28d85a0
+at end of phase R0b-1 (2026-11-18T21:15+0700): 63fa48cfe55eb515b30113b21e4732da70a1aa0b877c51dab3b8a4e979b9bd2a (CHANGED; written 2026-11-18 21:04:27 by a host FreeCAD GUI, proxy pinned to pid 24476, addon.log lines 2803-2810; not started by this run; see bugs.md R-1)
+new baseline for the rest of the run: 63fa48cfe55eb515b30113b21e4732da70a1aa0b877c51dab3b8a4e979b9bd2a

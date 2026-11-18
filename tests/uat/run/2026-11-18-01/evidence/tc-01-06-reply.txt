@@ -1,0 +1,2 @@
+{"jsonrpc": "2.0", "id": 1, "error": {"code": -32004, "message": "contract version unsupported", "data": {"supported": ["1"]}}}
+second: ''

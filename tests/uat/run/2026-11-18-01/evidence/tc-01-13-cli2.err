@@ -1,0 +1,2 @@
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+transport 'http' is not available yet; use --transport stdio.

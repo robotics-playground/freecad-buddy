@@ -1,0 +1,2 @@
+{"jsonrpc": "2.0", "id": 7, "error": {"code": -32000, "message": "auth failed"}}
+{"jsonrpc": "2.0", "id": 7, "error": {"code": -32000, "message": "auth failed"}}

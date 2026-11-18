@@ -1,0 +1,16 @@
+== after quit
+pgrep-exit=1
+ss-exit=1
+ps-exit=1
+addon.log
+audit.jsonl
+mcp-proxy.log
+provision.log
+rpc-2077.json
+rpc-3584.json
+rpc-4468.json
+rpc-5328.json
+workdir
+== log from offset 12028
+2026-11-18 15:42:36,625 INFO freecad_buddy.rpc_listener: client closed the connection
+2026-11-18 15:42:36,659 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped

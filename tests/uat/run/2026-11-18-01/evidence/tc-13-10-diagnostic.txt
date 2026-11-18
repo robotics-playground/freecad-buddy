@@ -1,0 +1,5 @@
+doc fcb-doc:XWWiqsX2mh0LdlXWnhDZ5w label TC13Pad
+query_tree_summary depth 2: OK: 11 objects, 3 shown. framing: fits, ratio 0.55 | v [BODY] Body | - [ORIGIN] Origin (+7) | v [PAD] Pad (+1) *tip
+query_mass_properties Pad: volume 3000, bbox z 0..5
+GUI tree item labels after expanding Body: TC13Pad, Body, Origin, Pad
+tc-13-10-viewport.png: top view, filled grey rectangle (thickness not visible from top)

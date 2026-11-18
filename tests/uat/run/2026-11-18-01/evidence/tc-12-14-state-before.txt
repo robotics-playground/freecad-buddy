@@ -1,0 +1,14 @@
+== before quit
+20220
+LISTEN 0      2048       127.0.0.1:8765       0.0.0.0:*    users:(("python",pid=20311,fd=6))   
+addon.log
+audit.jsonl
+mcp-proxy.log
+provision.log
+rpc-20220.json
+rpc-2077.json
+rpc-3584.json
+rpc-4468.json
+rpc-5328.json
+workdir
+12028

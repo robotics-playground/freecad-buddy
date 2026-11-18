@@ -1,0 +1,54 @@
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+script_exec listed True
+## open D elapsed=0.04 isError= False
+    {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:6nLRGK1Qz4Dl3BBClbuxaw", "name": "box_10_20_30", "label": "box-10-20-30", "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:6nLRGK1Qz4Dl3BBClbuxaw."}
+## open E elapsed=0.04 isError= False
+    {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:4DaIzXjPM1BSsG8ib1hR6Q", "name": "cylinder_r5_h20", "label": "cylinder-r5-h20", "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"}, "text": "Opened cylinder-r5-h20 -> fcb-doc:4DaIzXjPM1BSsG8ib1hR6Q."}
+  + Exception Group Traceback (most recent call last):
+  |   File "/repo/tests/uat/run/2026-11-18-01/evidence/tc-10-07-h1client.py", line 41, in <module>
+  |     asyncio.run(main())
+  |   File "/opt/freecad/usr/lib/python3.11/asyncio/runners.py", line 190, in run
+  |     return runner.run(main)
+  |            ^^^^^^^^^^^^^^^^
+  |   File "/opt/freecad/usr/lib/python3.11/asyncio/runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/opt/freecad/usr/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+  |     return future.result()
+  |            ^^^^^^^^^^^^^^^
+  |   File "/repo/tests/uat/run/2026-11-18-01/evidence/tc-10-07-h1client.py", line 21, in main
+  |     async with stdio_client(params, errlog=errlog) as (r, w):
+  |   File "/opt/freecad/usr/lib/python3.11/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(typ, value, traceback)
+  |   File "/opt/fcb-site/mcp/client/stdio/__init__.py", line 182, in stdio_client
+  |     async with (
+  |   File "/opt/fcb-site/anyio/_backends/_asyncio.py", line 815, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/opt/fcb-site/mcp/client/stdio/__init__.py", line 189, in stdio_client
+    |     yield read_stream, write_stream
+    |   File "/repo/tests/uat/run/2026-11-18-01/evidence/tc-10-07-h1client.py", line 22, in main
+    |     async with ClientSession(r, w) as s:
+    |   File "/opt/fcb-site/anyio/_backends/_asyncio.py", line 815, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/repo/tests/uat/run/2026-11-18-01/evidence/tc-10-07-h1client.py", line 29, in main
+      |     print("worker pid", wpid, "cmd", sh(f"tr '\0' ' ' < /proc/{wpid}/cmdline"), flush=True)
+      |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/repo/tests/uat/run/2026-11-18-01/evidence/tc-10-07-h1client.py", line 11, in sh
+      |     def sh(c): return subprocess.run(c, shell=True, capture_output=True, text=True).stdout.strip()
+      |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/opt/freecad/usr/lib/python3.11/subprocess.py", line 548, in run
+      |     with Popen(*popenargs, **kwargs) as process:
+      |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |   File "/opt/freecad/usr/lib/python3.11/subprocess.py", line 1026, in __init__
+      |     self._execute_child(args, executable, preexec_fn, close_fds,
+      |   File "/opt/freecad/usr/lib/python3.11/subprocess.py", line 1885, in _execute_child
+      |     self.pid = _fork_exec(
+      |                ^^^^^^^^^^^
+      | ValueError: embedded null byte
+      +------------------------------------

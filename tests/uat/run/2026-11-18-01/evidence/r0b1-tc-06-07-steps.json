@@ -1,0 +1,265 @@
+[
+ {
+  "name": "open",
+  "mcp": "document_open",
+  "args": {
+   "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+    "name": "box_10_20_30",
+    "label": "box-10-20-30",
+    "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+   },
+   "text": "Opened box-10-20-30 -> fcb-doc:Kf_j1wfupABKeFVRjayXoQ."
+  }
+ },
+ {
+  "name": "fit",
+  "mcp": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "box_10_20_30",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'box_10_20_30'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "name": "custom",
+  "mcp": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "view": {
+    "camera": "custom",
+    "custom_orientation": [
+     0.424708,
+     0.17592,
+     0.339851,
+     0.820473
+    ]
+   }
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "render": {
+     "available": true,
+     "resource_link": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_9076_4a1e1179/FCB_TMP_shot_sucfvn5u.png",
+     "reason": null,
+     "dirty_document": false,
+     "empty_scene": false
+    },
+    "scene": {
+     "rendered_objects": [
+      "Box"
+     ],
+     "focused_on": null
+    }
+   },
+   "text": "Rendered 1 objects.",
+   "images": [
+    {
+     "kind": "resource_link",
+     "uri": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_9076_4a1e1179/FCB_TMP_shot_sucfvn5u.png",
+     "mime_type": "image/png",
+     "audience": [
+      "user"
+     ]
+    }
+   ],
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "name": "iso",
+  "mcp": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "view": {
+    "camera": "iso"
+   }
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "render": {
+     "available": true,
+     "resource_link": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_9076_4a1e1179/FCB_TMP_shot_pjq6y4k1.png",
+     "reason": null,
+     "dirty_document": false,
+     "empty_scene": false
+    },
+    "scene": {
+     "rendered_objects": [
+      "Box"
+     ],
+     "focused_on": null
+    }
+   },
+   "text": "Rendered 1 objects.",
+   "images": [
+    {
+     "kind": "resource_link",
+     "uri": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_9076_4a1e1179/FCB_TMP_shot_pjq6y4k1.png",
+     "mime_type": "image/png",
+     "audience": [
+      "user"
+     ]
+    }
+   ],
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "name": "missing",
+  "mcp": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "view": {
+    "camera": "custom"
+   }
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "camera 'custom' requires custom_orientation (a 4-float quaternion)",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 899, in <lambda>\n    return lambda **p: screenshot.query_screenshot(doc_registry, render_port, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 155, in query_screenshot\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 120, in read\n    scene, focus_echo = _build_scene(document, options)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 223, in _build_scene\n    orientation = _orientation(options)\n                  ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 320, in _orientation\n    return _custom_orientation(options.get(\"custom_orientation\"))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 330, in _custom_orientation\n    raise ValidationError(\"camera 'custom' requires custom_orientation (a 4-float quaternion)\")\nfreecad_buddy.usecases.documents.ValidationError: camera 'custom' requires custom_orientation (a 4-float quaternion)\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "name": "three",
+  "mcp": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "view": {
+    "camera": "custom",
+    "custom_orientation": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  "result": {
+   "text": "Input validation error: [0.0, 0.0, 1.0] is too short",
+   "is_error": true
+  }
+ },
+ {
+  "name": "five",
+  "mcp": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "view": {
+    "camera": "custom",
+    "custom_orientation": [
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   }
+  },
+  "result": {
+   "text": "Input validation error: [0, 0, 0, 1, 0] is too long",
+   "is_error": true
+  }
+ },
+ {
+  "name": "zero",
+  "mcp": "query_screenshot",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "view": {
+    "camera": "custom",
+    "custom_orientation": [
+     0,
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "custom_orientation is degenerate (zero norm): [0, 0, 0, 0]",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 899, in <lambda>\n    return lambda **p: screenshot.query_screenshot(doc_registry, render_port, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 155, in query_screenshot\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 120, in read\n    scene, focus_echo = _build_scene(document, options)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 223, in _build_scene\n    orientation = _orientation(options)\n                  ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 320, in _orientation\n    return _custom_orientation(options.get(\"custom_orientation\"))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 340, in _custom_orientation\n    raise ValidationError(f\"custom_orientation is degenerate (zero norm): {raw!r}\")\nfreecad_buddy.usecases.documents.ValidationError: custom_orientation is degenerate (zero norm): [0, 0, 0, 0]\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "name": "keep",
+  "mcp": "script_exec",
+  "args": {
+   "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+   "code": "import shutil\nfor source, target in [(r'/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_9076_4a1e1179/FCB_TMP_shot_sucfvn5u.png', r'/repo/tests/uat/run/2026-11-18-01/evidence/r0b1-renders/tc-06-07-custom.png'), (r'/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_9076_4a1e1179/FCB_TMP_shot_pjq6y4k1.png', r'/repo/tests/uat/run/2026-11-18-01/evidence/r0b1-renders/tc-06-07-iso.png')]:\n    shutil.copyfile(source, target)\nresult = 'kept'"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Kf_j1wfupABKeFVRjayXoQ",
+    "stdout": "",
+    "value_repr": "'kept'",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:Kf_j1wfupABKeFVRjayXoQ\nfingerprint_after: None\nstdout: \nvalue_repr: 'kept'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ }
+]
