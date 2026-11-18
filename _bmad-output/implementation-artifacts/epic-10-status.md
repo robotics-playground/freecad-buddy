@@ -1,16 +1,16 @@
 # Epic 10 status
 
 Goal: correct the behaviour found by the first full UAT run and prove Gate 1 green (Story 10.8) before Epic 4 resumes.
-Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-7b, 10-9, 10-10. Gate 1 fixes from run 2026-10-23-02 — `84c8e07`..`fab7ba6`.
-In progress: none. UAT smoke run 2026-11-18-01 done and merged (`b329633`): 111 of 255 ran, 101 PASS, 10 FAIL (9 test-case defects, 1 harness limit, 0 product defects); G3 unchanged; Gate 1 not measured (decision 45).
-Remaining: user decisions: how Story 10.8 closes (AC1 asks for the full suite), whether to fix the 9 test-case defects now, push of `fix/uat-gate-1-failures`.
-Branch / head: integration `fix/uat-gate-1-failures` at `b329633` (10-8-f, 10-8-e, 10-8-d preparation, smoke run). `origin` at `031d8e8`: not pushed (decision 28).
+Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-7b, 10-9, 10-10, 10-8 (slices a-g; smoke acceptance, decision 48).
+In progress: none.
+Remaining: Epic 10 close: retrospective or a recorded waiver (user). Canary GitHub dispatch NOT RUN (token lacks Actions write, HTTP 403).
+Branch / head: integration `fix/uat-gate-1-failures` at `091c29c`+records. `origin` at `ffd131d` (pushed 2026-11-18, CI `44342136470` green); later commits not pushed.
 Blockers: none for 10-8.
-Open decisions: push of `fix/uat-gate-1-failures` (user; asked at the end, decision 33); owner questions TC-02-08 overlay and notification noise.
+Open decisions: Epic 10 retrospective or waiver; push of the commits after `ffd131d`; owner questions TC-02-08 overlay and notification noise.
 Canary: fixed in 10-8-e (`freecad>=2026` from conda-forge `main`; 15 dev-line test failures deferred, AD-11 allowed-to-fail). Proven by a local Linux job run; the GitHub dispatch run is NOT RUN.
 Confirmed by the user: preset `anthropic-balanced`, integration branch `fix/uat-gate-1-failures` (decision 20).
-Agents alive: none after `uatlead2-10-8-d` shuts down. Status loop `0d43d483` cancelled. Container `fcb-desktop` up, FreeCAD stopped.
-Updated: 2026-11-18 23:00 UTC+7 at `b329633`
+Agents alive: none after `builder-10-8-g` and `verifier-10-8-g` shut down. Container `fcb-desktop` up, FreeCAD stopped.
+Updated: 2026-11-18 at `091c29c`
 
 ## Final report, Story 10-10 (2026-11-18)
 
