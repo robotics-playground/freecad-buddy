@@ -449,7 +449,7 @@ freecad-buddy/
   skills/          # 18 skill dirs (12 Track A/B + 3 Track W + 3 Phase-5 robot/sourcing): SKILL.md + references/ + optional read-only scripts/
   benchmarks/      # runner.py + harness/; per-gate g0/ g1/ g2/ (each with dev/, heldout/, fault-injection/); _registry/, gate-artifacts/
   tests/           # two worlds: infc/ (FreeCADCmd + stdlib unittest via run_tests.py), external/ (pytest)
-  .github/workflows/  # ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line
+  .github/workflows/  # ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line
 ```
 
 **Environments:** dev = GUI addon + external server (HTTP) on Windows/Linux desktop; CI = `ubuntu-latest`, micromamba conda-forge FreeCAD, `FreeCADCmd run_tests.py`, xvfb + software-GL leg for render tests (a separate job, blocking); unattended = the same headless bridge, driven by an agent the operator starts, with no service or worker pool of our own (AD-35).

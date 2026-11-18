@@ -72,6 +72,8 @@ context:
 
 ## Spec Change Log
 
+- Decision 41 (leader, fix round E1 to E3) added `tests/external/test_canary_workflow.py` (5 tests), the `project-context.md:21` clause and the `ARCHITECTURE-SPINE.md:452` file attribution (proposal clauses 10 and 11, tier detail), and removed the three matching `deferred-work.md` entries. Doc clause count is now 11. KEEP: the red proof of each assertion in `build-10-8-e.md`.
+
 - Decision 39 (human, 2026-11-18) widened the doc edit from 6 to 9 clauses before review. The frozen text was updated to match; no review finding caused it. KEEP: `docs/decisions/016` unchanged; tier split architecture (1-6) and detail (7-9).
 
 ## Review Triage Log

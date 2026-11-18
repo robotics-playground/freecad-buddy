@@ -85,7 +85,7 @@
 <body>
 <header>
   <h1>Sprint change: AD-11 names the next development line</h1>
-  <p class="meta">freecad-buddy · 2026-11-18 · 9 clauses in 1 batch · source tree <code>9aee2bf</code> plus worktree edits</p>
+  <p class="meta">freecad-buddy · 2026-11-18 · 11 clauses in 1 batch · source tree <code>9aee2bf</code> plus worktree edits</p>
   <nav class="nav"><a href="#overview">Overview</a><a href="#purpose">Purpose</a><a href="#behaviour">Behaviour changes</a><a href="#documents">Document-only changes</a><a href="#impact">Impact</a><a href="#process">Process before and after</a><a href="#enables">What it enables</a><a href="#decisions">Decisions</a></nav>
   <div class="legend">
     <span><b class="del">red</b> — before only, removed</span>
@@ -99,7 +99,7 @@
 
 <h2 id="overview">1. Overview</h2>
 <table><tbody>
-<tr><td style="width:170px"><b>Scope</b></td><td><b>9 clauses</b>: 6 architecture tier, 3 detail tier. <b>9 applied</b> in the worktree, <b>0 proposed</b>.</td></tr>
+<tr><td style="width:170px"><b>Scope</b></td><td><b>11 clauses</b>: 6 architecture tier, 5 detail tier. <b>11 applied</b> in the worktree, <b>0 proposed</b>.</td></tr>
 <tr><td><b>Reason</b></td><td>The documents call the canary line <span class="del">1.2-dev</span>. <strong class="hl">FreeCAD never released 1.2.</strong> The canary asked for <code>freecad=1.2</code> and failed on every run.</td></tr>
 <tr><td><b>Effect on the user's work</b></td><td><b class="v-ok">No change.</b> The rule stays: allowed-to-fail canary; conda-forge if published, else weekly AppImage.</td></tr>
 <tr><td><b>Status</b></td><td>Wording change, tier architecture <span class="badge done">clauses 1 to 6 approved 2026-11-18, decision 37</span> <span class="badge done">clauses 7 to 9 detail, decision 39</span> <span class="badge done">applied in worktree</span></td></tr>
@@ -115,10 +115,10 @@
 </tbody></table>
 
 <h2 id="behaviour">3. Behaviour changes</h2>
-<p>None. All 9 clauses are wording. No product behaviour changes. The canary workflow fix is a separate change (spec-10-8-e) and follows the unchanged rule.</p>
+<p>None. All 11 clauses are wording. No product behaviour changes. The canary workflow fix is a separate change (spec-10-8-e) and follows the unchanged rule.</p>
 
 <h2 id="documents">4. Document-only changes</h2>
-<p>9 clauses in 3 files. <b>No decision is needed from you in this section</b>; the approval is recorded as decision 37 (clauses 1 to 6) and decision 39 (clauses 7 to 9).</p>
+<p>11 clauses in 4 files. <b>No decision is needed from you in this section</b>; the approval is recorded as decision 37 (clauses 1 to 6), decision 39 (clauses 7 to 9) and decision 41 (clauses 10 and 11).</p>
 <div class="scroll"><table>
 <thead><tr><th>#</th><th>Where</th><th>Stated before</th><th>Actual</th><th>Effect if unchanged</th></tr></thead>
 <tbody>
@@ -131,6 +131,8 @@
 <tr><td>7</td><td><code>design/project-structure.md:321</code><br>the canary job description, label name</td><td><span class="del">(conda-forge dev label if published</span></td><td><span class="add">(conda-forge label main if published</span></td><td>A reader looks for the <strong>empty <code>freecad_dev</code> label</strong>.</td></tr>
 <tr><td>8</td><td><code>epics.md:114</code><br>requirement NFR4, CI legs</td><td><span class="del">+ 1.2-dev canary;</span></td><td><span class="add">+ canary on the next FreeCAD development line (weekly builds);</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
 <tr><td>9</td><td><code>epics.md:276</code><br>story acceptance line for <code>canary.yml</code></td><td><span class="del">weekly allowed-to-fail 1.2-dev leg</span></td><td><span class="add">weekly allowed-to-fail leg on the next FreeCAD development line (weekly builds)</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>10</td><td><code>_bmad-output/project-context.md:21</code><br>agent guidance, FreeCAD line</td><td><span class="del">1.2-dev weekly canary allowed-to-fail.</span></td><td><span class="add">a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail.</span></td><td>A reader looks for a <strong>release that does not exist</strong>.</td></tr>
+<tr><td>11</td><td><code>ARCHITECTURE-SPINE.md:452</code><br>the repository tree comment, file attribution</td><td><span class="del"># ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line</span></td><td><span class="add"># ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line</span></td><td>A reader looks for the canary in <strong><code>ci.yml</code></strong>.</td></tr>
 </tbody></table></div>
 
 <h2 id="impact">5. Impact</h2>
@@ -139,11 +141,12 @@
 <tbody>
 <tr><td>User's work</td><td><b class="v-ok">No change.</b></td></tr>
 <tr><td>Intent and PRD</td><td><b class="v-ok">No clause.</b> Neither names the line.</td></tr>
+<tr><td>Agent guidance</td><td><span class="v-watch">1 clause.</span> <code>_bmad-output/project-context.md:21</code> restates AD-11.</td></tr>
 <tr><td>Epics</td><td><span class="v-watch">2 clauses.</span> <code>epics.md:114</code> and <code>:276</code> restate AD-11.</td></tr>
-<tr><td>Architecture</td><td><span class="v-watch">7 clauses.</span> 3 in the spine, 4 in the project-structure design (on 3 lines). The rule does not change.</td></tr>
+<tr><td>Architecture</td><td><span class="v-watch">8 clauses.</span> 4 in the spine, 4 in the project-structure design (on 3 lines). The rule does not change.</td></tr>
 <tr><td>Agent behaviour</td><td><span class="v-watch">Intended change.</span> A builder reads the new name and does not look for a 1.2 release. No tool or code changes.</td></tr>
 <tr><td>Stored data</td><td><b class="v-ok">None.</b></td></tr>
-<tr><td>Rollback</td><td><b class="v-ok">One commit.</b> Revert the three files.</td></tr>
+<tr><td>Rollback</td><td><b class="v-ok">One commit.</b> Revert the four files.</td></tr>
 <tr><td>If not applied</td><td><span class="v-watch">The documents keep a false version name.</span> They contradict <code>canary.yml</code> after slice 10-8-e. <code>docs/decisions/016-freecad-1-1-only.md:6</code> and <code>:39</code> still say 1.2-dev: kept as a historical record (a dated decision).</td></tr>
 </tbody></table></div>
 
@@ -162,21 +165,22 @@
 </div>
 <h3>6.2 How the batch is applied</h3>
 <pre>PROPOSAL      USER APPROVAL   EDIT SOURCES                  VERIFY                       COMMIT
-9 clauses ──▶ decisions 37, 39 ──▶ ARCHITECTURE-SPINE.md (3)  ──▶ grep "1.2-dev" = 0 lines  ──▶ 1 commit
+11 clauses ─▶ decisions 37, 39, 41 ─▶ ARCHITECTURE-SPINE.md (3)  ──▶ grep "1.2-dev" = 0 lines  ──▶ 1 commit
                               epics.md (2)
-before/after  2026-11-18      project-structure.md (4)       git diff = 9 clauses (3 planning documents)
+before/after  2026-11-18      project-structure.md (4)       git diff = 11 clauses
+                              project-context.md (1)
 + reason</pre>
 
 <h2 id="enables">7. What it enables</h2>
 <div class="scroll"><table>
 <thead><tr><th>Story</th><th>Requires</th><th>Without the clause</th></tr></thead>
-<tbody><tr><td><b>10.8</b> slice 10-8-e, canary fix</td><td>Clauses 1 to 9</td><td>The design names <strong>a version that does not exist</strong> while <code>canary.yml</code> targets <code>freecad&gt;=2026</code>.</td></tr></tbody></table></div>
+<tbody><tr><td><b>10.8</b> slice 10-8-e, canary fix</td><td>Clauses 1 to 11</td><td>The design names <strong>a version that does not exist</strong> while <code>canary.yml</code> targets <code>freecad&gt;=2026</code>.</td></tr></tbody></table></div>
 
 <h2 id="decisions">8. Decisions</h2>
-<p>None open. Decision 37 (user, 2026-11-18) approved the wording change at tier architecture (clauses 1 to 6). Clauses 7 to 9 are tier detail (decision 39); their boundary is cited in the appendix.</p>
+<p>None open. Decision 37 (user, 2026-11-18) approved the wording change at tier architecture (clauses 1 to 6). Clauses 7 to 11 are tier detail (decisions 39 and 41); their boundary is cited in the appendix.</p>
 
 <h2 id="appendix">Appendix — full clause list</h2>
-<details><summary>9 clauses with path, line, before, after, change and reason</summary>
+<details><summary>11 clauses with path, line, before, after, change and reason</summary>
 <div class="scroll"><table>
 <thead><tr><th>#</th><th>Where</th><th>Before</th><th>After</th><th>Change</th><th>Reason</th></tr></thead>
 <tbody>
@@ -189,6 +193,8 @@ before/after  2026-11-18      project-structure.md (4)       git diff = 9 clause
 <tr><td>7</td><td><code>design/project-structure.md:321</code> — the canary job description, label name</td><td><span class="del">(conda-forge dev label if published</span></td><td><span class="add">(conda-forge label main if published</span></td><td>label</td><td>tier: detail, boundary: AD-11 as corrected by decision 37, plus decision 32 (label <code>main</code>)</td></tr>
 <tr><td>8</td><td><code>epics.md:114</code> — requirement NFR4, CI legs</td><td><span class="del">+ 1.2-dev canary;</span></td><td><span class="add">+ canary on the next FreeCAD development line (weekly builds);</span></td><td>name</td><td>tier: detail, boundary: AD-11 as corrected by decision 37</td></tr>
 <tr><td>9</td><td><code>epics.md:276</code> — story acceptance line for <code>canary.yml</code></td><td><span class="del">weekly allowed-to-fail 1.2-dev leg</span></td><td><span class="add">weekly allowed-to-fail leg on the next FreeCAD development line (weekly builds)</span></td><td>name</td><td>tier: detail, boundary: AD-11 as corrected by decision 37</td></tr>
+<tr><td>10</td><td><code>_bmad-output/project-context.md:21</code> — agent guidance, FreeCAD line</td><td><span class="del">1.2-dev weekly canary allowed-to-fail.</span></td><td><span class="add">a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail.</span></td><td>name</td><td>tier: detail, boundary: AD-11 as corrected by decision 37 (decision 41)</td></tr>
+<tr><td>11</td><td><code>ARCHITECTURE-SPINE.md:452</code> — the repository tree comment, file attribution</td><td><span class="del"># ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line</span></td><td><span class="add"># ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line</span></td><td>file</td><td>tier: detail, boundary: the canary row of <code>project-structure.md</code> (<code>:127</code>, <code>:235</code>) and <code>canary.yml</code> (decision 41)</td></tr>
 </tbody></table></div></details>
 
 <footer>Sources: <code>sprint-change-proposal-2026-11-18-ad11-dev-line.md</code>, <code>plan-10-8.md</code> section 5, <code>epic-10-decisions.md</code> rows 37 and 39. Colour marks the difference; layout is unchanged.</footer>

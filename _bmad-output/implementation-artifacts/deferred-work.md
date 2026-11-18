@@ -1963,10 +1963,6 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: same local canary run.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
-  summary: Nothing tests `canary.yml`. `tests/external/test_ci_workflow.py:14` reads `ci.yml` only, so a later edit can add `continue-on-error`, a `push` trigger, or drop a dependency from the install line (the line is copied from `ci.yml:106`) with no failing check. The original `freecad=1.2` fault went unseen for 13 runs for the same reason.
-  evidence: review r1 of 10-8-e (verification gap); `grep -rln canary tests scripts` finds no test. Unblock: add a spec beside `test_ci_workflow.py` that parses `canary.yml` (triggers, no masking, channel list, install line equals the `ci.yml` line, the External suite step keeps its `if: ${{ !cancelled() ... }}` so it runs after an In-FreeCAD failure). Tests were outside slice 10-8-e.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
   summary: With the 15 known dev-line failures the canary is red every week, so a new regression shows as the same red. No check compares a run with the known set. Fixing the failures listed above returns a usable signal; until then the seven failure entries above are the baseline. The skip counts (28 In-FreeCAD, 4 External) are also not compared with the 1.1.3 leg: a capability probe that returns False on the dev line makes tests skip with no red.
   evidence: review r1 of 10-8-e (verification gap, edge cases). Unblock: fix or xfail-by-id the known failures, or compare the failing ids with a committed list.
 
@@ -1977,11 +1973,3 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
   summary: The canary omits the `ci.yml` step "Two-process headless host" (`ci.yml:118-123`). Those three tests skip silently without `PYTHONPATH=<prefix>/lib`; the reasons for the 4 skipped External tests were not recorded (`pytest -rs` would show them). The two-process host is not tested on Python 3.14 and OCCT 8. Decision 32 asked for the two suites only.
   evidence: review r1 of 10-8-e (blind hunter); local External run `1809 passed, 4 skipped`. Unblock: copy that step, with its three-PASSED check, into `canary.yml`.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
-  summary: `ARCHITECTURE-SPINE.md:452` (and the `ci.yml:` word in the same comment) says `ci.yml` holds the canary: `# ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line`. The canary lives in `canary.yml`. The wrong file attribution existed before 10-8-e; clause 3 changed only the version name.
-  evidence: review r2 of 10-8-e (blind hunter). Unblock: reword to `ci.yml: one blocking 1.1.x leg; canary.yml: canary on ...` at the next architecture correction.
-
-- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
-  summary: `_bmad-output/project-context.md:21` still says `1.2-dev weekly canary allowed-to-fail`. It is current agent guidance, outside the nine clauses of decision 37 and 39. The one-clause fix is the same wording rule.
-  evidence: review r2 of 10-8-e (blind hunter); `grep -n "1.2-dev" _bmad-output/project-context.md`. Needs the leader to widen the clause list.

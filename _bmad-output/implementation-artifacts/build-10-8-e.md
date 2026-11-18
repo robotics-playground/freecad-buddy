@@ -61,10 +61,27 @@ Every finding has a row in the spec `## Review Triage Log`. Summary:
 - Rejected with evidence: `freecadcmd` exit code (`INFC_EXIT=1`), template script and CSS, wording variants, micromamba version pin, "next line" ambiguity.
 - r3 patches were comments, a step name, a job timeout and document text; they were verified with `actionlint`, the gates and the final run, with no fourth round.
 
+## Fix round E1 to E3 (decision 41)
+
+- E1: `tests/external/test_canary_workflow.py`, 5 tests beside `test_ci_workflow.py`: triggers exactly `schedule` and `workflow_dispatch`; spec `freecad>=2026` with channel `conda-forge` only; install line equals the `ci.yml` headless install line (read from `ci.yml`); no `continue-on-error` and no `|| true`; the External suite `if:` holds `!cancelled()`. The "no test reads `canary.yml`" deferred entry is removed.
+- Red proof (mutated copies of `canary.yml` in a temp directory, each test called on its copy; the tracked file is unchanged). Baseline: all 5 pass.
+
+| Test | Mutation | Result |
+| --- | --- | --- |
+| triggers | add `push:` | RED |
+| solve | spec `freecad=1.2` | RED |
+| solve | add channel `conda-forge/label/freecad_dev` | RED |
+| install line | drop `"lib3mf==2.*"` | RED |
+| no masking | `continue-on-error: true` on External suite | RED (`['External suite']`) |
+| no masking | `pytest tests/external \|\| true` | RED (`['External suite']`) |
+| `!cancelled()` | remove the `if:` from External suite | RED |
+
+- E2: `_bmad-output/project-context.md:21` now says "a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail" (proposal clause 10, tier detail, boundary corrected AD-11).
+- E3: `ARCHITECTURE-SPINE.md:452` now says `# ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line` (clause 11, tier detail, boundary: canary row of `project-structure.md` and `canary.yml`). The deferred entry is removed.
+- Proposal pair: 11 clauses (6 architecture, 5 detail). `deferred-work.md` now holds 10 entries from this story (7 failure groups, 3 missing checks).
+
 ## For the leader
 
-- Quality bar Q6 names `test_ci_workflow.py` for the canary triggers, but that test reads `ci.yml` only. The check for `canary.yml` triggers is a diff review plus `actionlint`; a test is a deferred entry.
-- `_bmad-output/project-context.md:21` is current agent guidance and still says "1.2-dev weekly canary"; widen the clause list if it should change (decision 37 and 39 do not cover it).
 - The old job id `canary-1_2-dev` remains in `epic-10-status.md:10` as a dated record.
 - Next step for the full proof: a push, then `gh workflow run canary.yml --ref story/10-8-e-canary-dev-freecad`; the log must show the solve line, the build step, the `Ran N tests` line and the pytest summary line.
 
