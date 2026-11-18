@@ -6,7 +6,7 @@
 # every `FREECAD_BUDDY_*` variable has the host repository prefix rewritten to the container's
 # `/repo`: the prefix counts only when it ends the value or is followed by `/` or `\`, so a sibling
 # folder such as `<root>-other` is left alone. A value that starts with the backslash spelling of
-# the prefix has its backslashes turned into slashes. A `FREECAD_BUDDY_*` value that still looks like
+# the prefix (same boundary rule) has its backslashes turned into slashes, also after a `--flag=`. A `FREECAD_BUDDY_*` value that still looks like
 # a host path afterwards is passed on with a warning on stderr.
 # Standard input and output are the container process's, so an MCP client on the host can talk to it.
 # `PYTHONPATH` names the addon the image installs: `freecad_buddy` cannot be imported before
@@ -27,9 +27,15 @@ rewrite() {
         REPLY=/repo
         return
     fi
-    if [[ "$value" == "$root_backslash"* ]]; then
+    if [[ "$value" == "$root_backslash" || "$value" == "$root_backslash"\\* ]]; then
         value="/repo${value#"$root_backslash"}"
         REPLY="${value//\\//}"
+        return
+    fi
+    if [[ "$value" == --*=* ]]; then
+        local flag="${value%%=*}"
+        rewrite "${value#*=}"
+        REPLY="$flag=$REPLY"
         return
     fi
     value="${value//"$root"\//\/repo\/}"

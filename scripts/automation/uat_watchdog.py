@@ -83,10 +83,11 @@ def _cua(command: str, payload: dict) -> dict:
 def check_cua_session(session: str, revive: bool) -> str:
     """The named ``cua-driver`` session is active, reviving it once if it has lapsed."""
     reply = _cua("get_session", {"session": session})
-    if reply.get("active"):
+    if reply.get("state") == "active":
         return f"cua session {session!r} active"
-    # An ended session is refused in plain text, so anything that is not active:true is treated as
-    # lapsed and start_session is the thing that reports whether it came back.
+    # cua-driver 0.28.1 answers a live session with {"session": ..., "state": "active", ...} and an
+    # ended one in plain text, so anything that is not state "active" is treated as lapsed and
+    # start_session (which answers {"active": true, ...}) reports whether it came back.
     reason = reply.get("_text") or reply
     if not revive:
         raise CheckFailed(f"cua session {session!r} is not active: {reason}")
@@ -207,16 +208,20 @@ def _created_after(path: Path, since: datetime) -> bool:
 def parse_since(value: str) -> datetime:
     """Parse the ``--since`` cutoff as local naive time, the form ``_created_after`` compares.
 
-    An aware timestamp (``+07:00``, ``Z``) is converted to local time and its offset dropped:
-    comparing it with the naive ``datetime.fromtimestamp`` raises ``TypeError``.
+    The cutoff must carry an offset (``+07:00``, ``Z``). A time without one would be read in the
+    container's clock zone, while the operator writes it in the host's, so it is refused. The
+    offset is converted to container-local time and dropped: comparing an aware value with the
+    naive ``datetime.fromtimestamp`` raises ``TypeError``.
     """
     try:
         since = datetime.fromisoformat(value)
     except ValueError as exc:
         raise argparse.ArgumentTypeError(f"not an ISO timestamp: {value!r}") from exc
-    if since.tzinfo is not None:
-        since = since.astimezone().replace(tzinfo=None)
-    return since
+    if since.tzinfo is None:
+        raise argparse.ArgumentTypeError(
+            f"{value!r} has no UTC offset; add one, for example {value}+07:00 or {value}Z"
+        )
+    return since.astimezone().replace(tzinfo=None)
 
 
 def main() -> int:
@@ -229,7 +234,7 @@ def main() -> int:
         type=parse_since,
         default=None,
         help=(
-            "ISO timestamp, container-local time unless it carries an offset; "
+            "ISO timestamp with a UTC offset (2026-11-18T09:30:00+07:00 or ...Z); "
             "fail if a snapshot dir was created after it"
         ),
     )

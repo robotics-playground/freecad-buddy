@@ -867,6 +867,7 @@ def test_Should_report_the_plant_error_When_the_done_marker_carries_one(monkeypa
     marker = tmp_path / "planted"
     marker.write_text("the 3D view has no QMdiSubWindow parent", encoding="utf-8")
     monkeypatch.setattr(run_faults, "discovery_file", lambda pid: discovery)
+    monkeypatch.setattr(run_faults.launch, "started_pids", lambda pid: {pid})
     process = SimpleNamespace(pid=1, poll=lambda: None)
 
     # Act
@@ -905,3 +906,32 @@ def test_Should_ship_no_probe_file_When_the_addon_is_built(tmp_path):
     built = [p for p in out.rglob("*") if p.is_file()]
     assert [p for p in built if {"uat", "probe"} & set(p.relative_to(out).parts)] == []
     assert [p for p in built if p.read_bytes() in probe_files] == []
+
+
+def test_Should_wait_for_the_layout_When_the_first_snapshot_has_no_visible_view(monkeypatch):
+    # Arrange
+    snapshots = iter([{"view": None}, {"view": {"clipped": None}}, {"view": {"clipped": False}}])
+    reads = []
+    monkeypatch.setattr(
+        run_faults.launch, "get_snapshot", lambda record: reads.append(1) or next(snapshots)
+    )
+    monkeypatch.setattr(run_faults.time, "sleep", lambda seconds: None)
+
+    # Act
+    run_faults.wait_until_laid_out({})
+
+    # Assert
+    assert len(reads) == 3
+
+
+def test_Should_fail_When_the_view_never_becomes_visible(monkeypatch):
+    # Arrange
+    monkeypatch.setattr(run_faults.launch, "get_snapshot", lambda record: {"view": None})
+    monkeypatch.setattr(run_faults, "LAYOUT_TIMEOUT_S", 0.0)
+
+    # Act
+    act = lambda: run_faults.wait_until_laid_out({})  # noqa: E731
+
+    # Assert
+    with pytest.raises(run_faults.LaunchError, match="no visible region"):
+        act()

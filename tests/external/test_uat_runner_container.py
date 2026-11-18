@@ -674,3 +674,70 @@ def test_Should_find_the_server_by_its_executable_When_the_late_session_script_p
     # Assert
     assert not reads_cmdline
     assert reads_executable
+
+
+_FRAME_WITH_MENU_BAR = """\
+- frame = "FreeCAD 1.1.4"
+    - [0] frame "Start" [actions=[SetFocus]]
+    - [150] menu item "File" [actions=[ShowMenu]]
+        - [151] menu item "New Document" [actions=[Press]]
+    - [158] menu item "Edit" [actions=[ShowMenu]]
+    - [165] menu item "View" [actions=[ShowMenu]]
+        - [166] menu item "Status Bar" [actions=[Press]]
+          - [325] page tab "View" [actions=[Press]]
+"""
+
+
+def test_Should_report_no_missing_item_When_the_menu_bar_holds_file_edit_and_view():
+    # Arrange
+    tree = _FRAME_WITH_MENU_BAR
+
+    # Act
+    missing = check_harness.missing_menu_items(tree)
+
+    # Assert
+    assert missing == []
+
+
+def test_Should_report_view_missing_When_only_a_page_tab_and_a_submenu_carry_that_label():
+    # Arrange
+    tree = _FRAME_WITH_MENU_BAR.replace(
+        '    - [165] menu item "View" [actions=[ShowMenu]]\n',
+        '    - [165] menu item "Tools" [actions=[ShowMenu]]\n',
+    ).replace('menu item "Status Bar"', 'menu item "View"')
+
+    # Act
+    missing = check_harness.missing_menu_items(tree)
+
+    # Assert
+    assert missing == ["View"]
+
+
+def test_Should_record_a_failed_check_When_the_edge_sweep_golden_file_does_not_open(
+    monkeypatch, tmp_path
+):
+    # Arrange
+    (tmp_path / "box-10-20-30.FCStd").write_bytes(b"not a document")
+    monkeypatch.setattr(run_mcp_edge_cases, "GOLDEN_DIR", tmp_path)
+    monkeypatch.setattr(run_mcp_edge_cases, "container_path", lambda path: str(path))
+    refusal = SimpleNamespace(
+        structuredContent={"status": "INVALID_INPUT", "structured_content": {}}, content=[]
+    )
+
+    async def call_tool(name, arguments):
+        return refusal
+
+    report = run_mcp_e2e.Report()
+
+    # Act
+    handle = asyncio.run(
+        run_mcp_edge_cases._open_golden(
+            SimpleNamespace(call_tool=call_tool), report, "box-10-20-30"
+        )
+    )
+
+    # Assert
+    assert handle is None
+    assert report.checks[0]["tool"] == "open:box-10-20-30"
+    assert report.checks[0]["ok"] is False
+    assert report.checks[0]["status"] == "INVALID_INPUT"

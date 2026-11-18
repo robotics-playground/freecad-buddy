@@ -68,10 +68,11 @@ Never merge the two into a single number.
    container shows no FreeCAD pid, and no document may be open once it is launched. Launch it with
    `docker exec -u cua fcb-desktop fcb-freecad start` so the addon auto-spawns the proxy; the host
    reaches it at `http://127.0.0.1:18765/mcp`. Starting the proxy by hand invalidates TC-01-01.
-   Tool arguments use container paths (`test-plan.md` §6). A step written as `invoke_menu` or
-   `element_index` runs through the pixel or keyboard route, because the container FreeCAD shows no
-   widgets to `cua-driver`; a step with no such route is `NOT RUN`. Runner scenarios are `NOT RUN`
-   until story `10-9-uat-runner-in-container` ports the runner.
+   Tool arguments use container paths (`test-plan.md` §6). The container FreeCAD shows
+   its widget tree to `cua-driver` (`get_window_state`, `element_token` clicks). The driver's own
+   `invoke_menu` refuses FreeCAD's menu bar, so a step written as `invoke_menu` runs through an
+   `element_token` press of the menu leaf, a pixel click or a keyboard route; a step with no such
+   route is `NOT RUN`. The scripted runner runs in the container (`tests/uat/runner/README.md`).
 4. **One subagent per TC file.** A subagent receives exactly one `testcases/TC-NN-*.md` and
    executes it.
 5. **Strictly sequential.** One subagent at a time. The tests share a single FreeCAD process, one
@@ -99,8 +100,8 @@ Never merge the two into a single number.
    so a run stalls rather than fails. One pass takes under a second:
 
    ```bash
-   uv run python scripts/automation/uat_watchdog.py \
-       --pid <freecad-pid> --window <window-id> --since "<run start ISO>"
+   docker exec -u cua fcb-desktop fcb-py /repo/scripts/automation/uat_watchdog.py \
+       --pid <freecad-pid> --window <window-id> --since "<run start ISO with UTC offset>"
    ```
 
    It checks the `cua-driver` session (reviving a lapsed one in place and saying so), the FreeCAD
@@ -110,11 +111,9 @@ Never merge the two into a single number.
    means a mutation bracket did not close, which voids the snapshot assertions of every scenario
    after it.
 
-   The watchdog still checks the Windows host session; story `10-9-uat-runner-in-container` ports
-   it. Until then, run the same checks against the container between test cases:
-   `docker exec -u cua fcb-desktop fcb-freecad status` (FreeCAD pid and `/healthz` with a
-   `freecad_pid`), one MCP call such as `document_list` over `freecad-buddy-docker` (proves the
-   `initialize` handshake), and `cua-driver-docker` `list_windows` (the FreeCAD window is listed).
+   `--since` needs a UTC offset, because the container clock zone differs from the host's. Give
+   the run start with the host's offset, for example `--since "$(date +%Y-%m-%dT%H:%M:%S%z)"` in a
+   host shell (`2026-11-18T09:30:00+0700`) or `+07:00`.
 
 ## Reporting
 

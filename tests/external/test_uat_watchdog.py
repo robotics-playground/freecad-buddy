@@ -15,16 +15,20 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "automation"))
 import uat_watchdog  # noqa: E402
 
 
-def test_should_return_the_same_naive_time_when_the_cutoff_is_naive():
+def test_should_refuse_the_cutoff_naming_the_offset_when_the_cutoff_has_no_utc_offset(
+    monkeypatch, capsys
+):
     # Arrange
-    value = "2026-10-03T23:17:00"
+    argv = ["uat_watchdog.py", "--pid", "1", "--since", "2026-10-03T23:17:00"]
+    monkeypatch.setattr(sys, "argv", argv)
 
     # Act
-    since = uat_watchdog.parse_since(value)
+    with pytest.raises(SystemExit) as exit_info:
+        uat_watchdog.main()
 
     # Assert
-    assert since == datetime(2026, 10, 3, 23, 17)
-    assert since.tzinfo is None
+    assert exit_info.value.code == 2
+    assert "has no UTC offset" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize("value", ["2026-10-03T23:17:00+07:00", "2026-10-03T16:17:00Z"])
@@ -102,6 +106,31 @@ def test_should_name_the_pinned_binary_when_cua_driver_is_not_executable(monkeyp
 
     # Assert
     with pytest.raises(uat_watchdog.CheckFailed, match="/usr/local/bin/cua-driver is not"):
+        act()
+
+
+def test_should_report_active_When_get_session_answers_with_the_state_active(monkeypatch):
+    # Arrange
+    reply = {"client_kind": "cli", "session": "uat", "state": "active", "transport": "cli"}
+    monkeypatch.setattr(uat_watchdog, "_cua", lambda command, payload: reply)
+
+    # Act
+    report = uat_watchdog.check_cua_session("uat", revive=False)
+
+    # Assert
+    assert report == "cua session 'uat' active"
+
+
+def test_should_name_the_session_When_get_session_is_refused_in_plain_text(monkeypatch):
+    # Arrange
+    text = "session 'uat' has ended; tool call 'get_session' was rejected."
+    monkeypatch.setattr(uat_watchdog, "_cua", lambda command, payload: {"_text": text})
+
+    # Act
+    act = lambda: uat_watchdog.check_cua_session("uat", revive=False)  # noqa: E731
+
+    # Assert
+    with pytest.raises(uat_watchdog.CheckFailed, match="session 'uat' is not active"):
         act()
 
 
@@ -188,7 +217,7 @@ def test_should_count_the_render_files_when_a_session_folder_holds_them(tmp_path
 def test_should_check_the_workdir_it_was_given_when_main_runs_with_workdir(monkeypatch, tmp_path):
     # Arrange
     (_session_folder(tmp_path) / "FCB_TMP_snap_leak").mkdir()
-    cutoff = (datetime.now() - timedelta(minutes=1)).isoformat()
+    cutoff = (datetime.now().astimezone() - timedelta(minutes=1)).isoformat()
     for name in ("check_cua_session", "check_window", "check_proxy"):
         monkeypatch.setattr(uat_watchdog, name, lambda *args: "ok")
     argv = ["uat_watchdog.py", "--pid", "1", "--since", cutoff, "--workdir", str(tmp_path)]

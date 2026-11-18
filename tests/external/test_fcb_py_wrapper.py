@@ -152,3 +152,27 @@ def test_Should_rewrite_a_path_below_the_root_When_project_root_has_a_trailing_s
 
     # Assert
     assert done.stdout.splitlines()[-1] == "/repo/tests"
+
+
+def test_Should_leave_a_backslash_sibling_folder_alone_When_its_name_starts_with_the_root(tmp_path):
+    # Arrange
+    environment = {"PROJECT_ROOT": "/work/freecad-buddy"}
+    arguments = ["\\work\\freecad-buddy-other\\a", "\\work\\freecad-buddy2"]
+
+    # Act
+    done = _run(tmp_path, arguments, environment)
+
+    # Assert
+    lines = done.stdout.splitlines()
+    assert lines[-2:] == arguments
+
+
+def test_Should_rewrite_the_backslash_root_When_it_follows_a_flag_prefix(tmp_path):
+    # Arrange
+    environment = {"PROJECT_ROOT": "/work/freecad-buddy"}
+
+    # Act
+    done = _run(tmp_path, ["--out=\\work\\freecad-buddy\\x"], environment)
+
+    # Assert
+    assert done.stdout.splitlines()[-1] == "--out=/repo/x"

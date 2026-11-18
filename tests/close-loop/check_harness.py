@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import subprocess
 import sys
 
@@ -182,12 +183,22 @@ def check_logging_rule() -> tuple[bool, str]:
     return rules.endswith(ATSPI_RULE), f"FreeCAD QT_LOGGING_RULES={rules!r}"
 
 
+# The menu bar items are the direct children of the window frame: four spaces deep. A submenu
+# entry or a page tab with the same label sits deeper or has another role.
+_MENU_BAR_ITEM = re.compile(r'^ {4}- \[\d+\] menu item "([^"]*)"', re.MULTILINE)
+
+
+def missing_menu_items(tree: str) -> list[str]:
+    present = set(_MENU_BAR_ITEM.findall(tree))
+    return [item for item in MENU_ITEMS if item not in present]
+
+
 def check_freecad() -> tuple[bool, str]:
     window = find_window("FreeCAD")
     count, tree, error = tree_of(
         serve_call("get_window_state", {"pid": window["pid"], "window_id": window["window_id"]})
     )
-    missing = [item for item in MENU_ITEMS if f'"{item}"' not in tree]
+    missing = missing_menu_items(tree)
     return count > 1 and not missing and not error, (
         f"FreeCAD element_count={count} missing menu items={missing} error={error}"
     )

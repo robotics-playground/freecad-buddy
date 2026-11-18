@@ -135,8 +135,8 @@ open. The comparator also reads offline-reader output; an `{"error": ...}` resul
 
 ## Fault set
 
-```powershell
-uv run python tests/uat/probe/run_faults.py
+```bash
+docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/probe/run_faults.py
 ```
 
 Each case in `faults/cases.json` starts its own FreeCAD with `-M`, a temporary `-u` config,
@@ -147,8 +147,12 @@ failure. The runner waits for the discovery file and the marker, takes the snaps
 it with the clean expectation, then kills that FreeCAD. It never touches a FreeCAD it did not
 start. A run takes about 30 s.
 
-Windows only: the runner finds the discovery file under `%APPDATA%`, and its default
-`freecad.exe` is `C:\Program Files\FreeCAD 1.1\bin\freecad.exe`.
+The runner runs in the `fcb-desktop` container and uses the launch code of the scripted runner
+(`tests/uat/runner/launch.py`): FreeCAD is `/opt/freecad/AppRun`, started in its own process
+group, and the discovery file is under `~/.local/share/FreeCAD/*/fcb-uat-probe/`. After the plant
+marker it waits until the 3D view has a visible region, because a snapshot taken before the window
+manager places the window reads as a false alarm. Stop the container FreeCAD first
+(`fcb-freecad stop`).
 
 | Case | Kind | Planted state | Field that must mismatch |
 |------|------|---------------|--------------------------|
@@ -163,6 +167,6 @@ Windows only: the runner finds the discovery file under `%APPDATA%`, and its def
 Output ends with `detected N/5` and `false alarms N/2`. Exit code is 0 only for `detected 5/5`
 and `false alarms 0/2`. A case that fails with any error counts against the run (fault missed,
 control flagged) and prints the error. A `cases.json` with fewer than 5 faults, fewer than 2
-controls, or an unknown `kind` stops the run before any launch, with exit code 2. Set `FREECAD_EXE` to use another `freecad.exe`.
+controls, or an unknown `kind` stops the run before any launch, with exit code 2.
 
 Tests that need no FreeCAD: `uv run pytest tests/external/test_uat_probe.py`.
