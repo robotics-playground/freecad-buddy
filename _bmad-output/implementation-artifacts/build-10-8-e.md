@@ -63,7 +63,7 @@ Every finding has a row in the spec `## Review Triage Log`. Summary:
 
 ## Fix round E1 to E3 (decision 41)
 
-- E1: `tests/external/test_canary_workflow.py`, 5 tests beside `test_ci_workflow.py`: triggers exactly `schedule` and `workflow_dispatch`; spec `freecad>=2026` with channel `conda-forge` only; install line equals the `ci.yml` headless install line (read from `ci.yml`); no `continue-on-error` and no `|| true`; the External suite `if:` holds `!cancelled()`. The "no test reads `canary.yml`" deferred entry is removed.
+- E1: `tests/external/test_canary_workflow.py`, 5 tests at that commit (7 after E4) beside `test_ci_workflow.py`: triggers exactly `schedule` and `workflow_dispatch`; spec `freecad>=2026` with channel `conda-forge` only; install line equals the `ci.yml` headless install line (read from `ci.yml`); no `continue-on-error` and no `|| true`; the External suite `if:` holds `!cancelled()`. The "no test reads `canary.yml`" deferred entry is removed.
 - Red proof (mutated copies of `canary.yml` in a temp directory, each test called on its copy; the tracked file is unchanged). Baseline: all 5 pass.
 
 | Test | Mutation | Result |
@@ -79,6 +79,34 @@ Every finding has a row in the spec `## Review Triage Log`. Summary:
 - E2: `_bmad-output/project-context.md:21` now says "a canary on the next FreeCAD development line (weekly builds) is allowed-to-fail" (proposal clause 10, tier detail, boundary corrected AD-11).
 - E3: `ARCHITECTURE-SPINE.md:452` now says `# ci.yml: one blocking 1.1.x leg; canary.yml: canary on the next FreeCAD development line` (clause 11, tier detail, boundary: canary row of `project-structure.md` and `canary.yml`). The deferred entry is removed.
 - Proposal pair: 11 clauses (6 architecture, 5 detail). `deferred-work.md` now holds 10 entries from this story (7 failure groups, 3 missing checks).
+
+## Fix round E4 (red team RT1 to RT5)
+
+`tests/external/test_canary_workflow.py` is now an allowlist of the workflow structure (7 tests, was 5):
+- RT1: the `In-FreeCAD suite` and `External suite` steps exist and their `run` text equals the `ci.yml` headless commands (read from `ci.yml`).
+- RT2: no `continue-on-error`, `shell` or `defaults` key at workflow, job or step level; no `||` or `set +e` in any `run`.
+- RT3: each suite `if:` equals `${{ !cancelled() && steps.install.outcome == 'success' }}`; the job has no `if:`.
+- RT4: the YAML loader rejects duplicate keys (`have_unique_keys_when_canary_yml_is_parsed`).
+- RT5: setup inputs are a subset of `environment-name`, `create-args`, `condarc`, `cache-environment`; spec and channel unchanged.
+
+Red proof: the red team's mutations, applied to a mutated copy of `canary.yml` in a temp directory (module global pointed at the copy; the tracked file is unchanged). Baseline: all 7 pass.
+
+| Mutant | Change | Red tests |
+| --- | --- | --- |
+| M1 | delete step `In-FreeCAD suite` | suite commands; suite conditions |
+| M2 | External `if: ${{ !cancelled() && false }}` | suite conditions |
+| M3 | job `if: false` | suite conditions (job `if`) |
+| M3b | job `if: github.event_name == 'push'` | suite conditions (job `if`) |
+| M4 | External `run: ... \|\| exit 0` | suite commands; no hidden failure |
+| M7 | External `shell: bash {0}` | no hidden failure |
+| M8 | workflow `defaults: run: shell: bash {0}` | no hidden failure |
+| M8b | `set +e;` in the In-FreeCAD `run` | suite commands; no hidden failure |
+| M9 | External narrowed to `tests/external/test_canary_workflow.py` | suite commands |
+| M10 | setup `environment-file` input | solve inputs |
+| M12 | second `if:` key on External | unique keys (and every test that loads the file) |
+| M13 | External `run: ... \|\| /bin/true` | suite commands; no hidden failure |
+
+Earlier E1 mutations (push trigger, `freecad=1.2`, `freecad_dev` channel, `lib3mf` dropped, `continue-on-error`, `\|\| true`, `if:` removed) stay red: the triggers, solve, install-line and no-hidden-failure tests keep the same checks.
 
 ## For the leader
 
