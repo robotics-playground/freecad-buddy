@@ -33,10 +33,10 @@ Three rounds, nine fresh subagents (no names: the harness refuses a name for a t
 
 Patched: `pgrep` flag order and worker; "first line" wording and header definition; whole-text compares; TC-11-18 stop limit and Then title; TC-08-17 read order and the opposite-value write; a backspace byte in the spec; AC 2 check (a raw scan could not see the JSON escape; replaced by the decoded-string test); run-folder notes.
 Rejected: committed run folder versus plan "not committed" (leader condition (b) wants the records); frozen "eight defects" count; `pgrep` exit code; extra live records for TC-02-14 `depth: 5`.
-Deferred (three entries in `deferred-work.md`):
+Deferred (two entries in `deferred-work.md`; the design entry unblocks with the epic-10 close correct-course batch):
 1. `scenario.py` still accepts a control character in a regex in any file. Unblock: a story that may edit runner code.
 2. `mcp-tools-design.md:249` says `structured_content` carries counts and the client gets `content[1]`; section 1.3 says text-only. Unblock: a design correction the leader approves.
-3. TC-09 `:313` and TC-12 `:659`, `:660` read `shown`, `truncated`, `matches` as fields; TC-09 `:314` labels the count `<M>`. Graded PASS in run 2026-10-24-01 on the text reading. Unblock: a test-case slice with a live check.
+(A third entry, TC-09 `:313` and TC-12 `:659`, `:660`, was fixed in round F1 and removed.)
 
 ## For the leader
 
@@ -45,3 +45,7 @@ Deferred (three entries in `deferred-work.md`):
 - I changed `tests/external/test_uat_runner.py` (the intent names `tests/uat/` only; the spec Tasks list names this test; `src/`, runner code and container files are untouched).
 - TC-02-05 `:234` and TC-02-14 `:583`, `:585` said "first line is `path:`" before this slice; this slice reworded them to "tree text below the header lines" (leader to veto if unwanted).
 - Implemented directly, not through a dispatch subagent (ten short edits tied to live checks).
+
+## Fix round F1 (leader triage)
+
+TC-09 `:313`, `:314` (and the `<M> shown` label at `:358`, `:475`) and TC-12 `:659`, `:660` now read the `OK:` line (`<S> shown`, `<M> matches`, `, truncated.`). Live calls on a 30-box and a 250-box document are in `readers-check.md` (39 shown at depth 3; 200 shown with `, truncated.` and the steering line). Neighbouring Thens re-read and still hold (listed in `readers-check.md`). pytest 182 passed, ruff clean. No new lens round (leader decision).

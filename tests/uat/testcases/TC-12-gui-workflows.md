@@ -656,8 +656,8 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 
 **Then** the GUI tree scrolls — verify: the two snapshots taken around the scroll expose different visible rows: the UIA snapshot lists only the Model-panel `TreeItem` rows that are laid out, so the first such row (the topmost by frame `y`) has a different label in the second snapshot  
 **And** the default depth stays shallow — verify: the first read returns top-level lines only, not all 50 features; `depth` defaults to 1  
-**And** deeper depth returns more — verify: the depth-3 read has a strictly greater `shown` than the depth-1 read, and at most 200 tree lines; when the cap cuts it, `truncated` is true and the last line is `... <K> more lines; narrow with focus or a smaller depth`  
-**And** filters reveal a slice — verify: both filtered calls report `matches`, show each match on its opened path, and have a smaller `shown` than the depth-3 call  
+**And** deeper depth returns more — verify: the `OK:` line of the depth-3 read has a strictly greater `<S> shown` than that of the depth-1 read, and at most 200 tree lines; when the cap cuts it, the `OK:` line ends `, truncated.` and the last tree line is `... <K> more lines; narrow with focus or a smaller depth`  
+**And** filters reveal a slice — verify: the `OK:` line of both filtered calls contains `<M> matches`, each match is shown on its opened path, and the `<S> shown` of each is smaller than that of the depth-3 call  
 **And** `max_nodes` is not a parameter — verify: `mcp query_tree_summary {doc:<handle>, max_nodes:10}` is refused: `Input validation error: Additional properties are not allowed ('max_nodes' was unexpected)` (schema refusal) or `INVALID_INPUT`; the input is refused either way. The schema sets `additionalProperties: false` and `max_nodes` is retired  
 **And** each call stays within its budget — verify: every `query_tree_summary` call in this scenario returns within its 30 s timeout  
 **And** the GUI stays responsive — verify: a `get_window_state` taken after the queries still returns a populated tree, not `degraded`  

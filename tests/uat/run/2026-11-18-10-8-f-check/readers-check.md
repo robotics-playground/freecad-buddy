@@ -94,3 +94,28 @@ Result: the zzz tree line equals the `depth: 1` tree line (`v [BODY] Body (+2)`)
 ## TC-08-17 carve-out, live
 
 `query_object { object: "Pad" }`: `structured_content.properties.Visibility` is `true` (`<V0>`). `feature_set_parameters { feature: "Pad", parameters: { Visibility: false } }` without `confirm`: `status OK`, `mutation.changed: []`, `Mutation committed`; the tree line for `Pad` then starts `- `. `{ Visibility: true }` (`<V0>`) restores it: `status OK`, framing ratio back to 0.95. (A first attempt with an unconstrained sketch was rolled back by `verify_sketch`, which is a fixture error, not the carve-out.)
+
+## Fix round F1: TC-09 `:313`, `:314` and TC-12 `:659`, `:660`
+
+Container FreeCAD restarted (pid 1774). Document `tc12-11-check`: `App::Part` `Assembly` holding 30 `Part::Box` named `Pad00` to `Pad29`. Document `tc09-07-check`: 250 top-level `Part::Box` `B000` to `B249`. Tree bodies are shortened to the first and last lines where marked.
+
+TC-12-11 reader (`<S> shown`, `<M> matches`, `, truncated.`):
+```
+query_tree_summary { doc: tc12-11-check }                    (depth 1)
+OK: 39 objects, 1 shown.                    ... v [PART] Assembly (+31)
+query_tree_summary { depth: 3, filters: {} }                 (condensed: 39 tree lines)
+OK: 39 objects, 39 shown.
+query_tree_summary { filters: { types: ["BOX"] } }           (condensed: Assembly and 30 Pad lines)
+OK: 39 objects, 31 shown, 30 matches.       ... v [PART] Assembly (+1 more)
+```
+Result: depth 3 shows 39 > 1; the filtered call shows 31 < 39 and reports `30 matches` in the `OK:` line.
+
+TC-09-07 reader (`depth: 2147483647`, cap):
+```
+query_tree_summary { doc: tc09-07-check, depth: 2147483647 } (condensed: B000 to B199)
+OK: 250 objects, 200 shown, truncated.
+... 50 more lines; narrow with focus or a smaller depth
+```
+Result: `<S> shown` is 200, the `OK:` line ends `, truncated.`, and the last tree line is the steering line. A document under the cap (the 39-object one) shows `39 shown` at depth 3 with no `truncated`.
+
+Neighbouring Thens re-read with these outputs: TC-09 `:314` (`<S> shown` equals the tree line count at depth 1; no connector line; `Assembly (+31)` is the only line), TC-09 `:358`, `:475` (same reader, label now `<S>`), TC-12 `:658` (first read returns top-level lines only), TC-12 `:661` ff. (schema refusal and budget Thens do not read counts). All still hold.
