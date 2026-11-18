@@ -78,7 +78,7 @@
 #   FreeCAD worker process (AD-2). 10-6a -> 10-6 (10-6 bounds calls in the front that 10-6a builds).
 
 generated: 2026-07-21
-last_updated: 2026-11-18
+last_updated: 2026-11-19
 project: freecad-buddy
 project_key: NOKEY
 tracking_system: file-system
@@ -159,7 +159,7 @@ development_status:
   9-3-render-lighting-every-camera: done
   9-4-temp-files-inside-session-workdir: done
   epic-9-retrospective: optional
-  epic-10: in-progress
+  epic-10: done
   10-1-documents-and-queries: done
   10-2-sketch-and-verify-correctness: done
   10-3-feature-tools-and-mutation-protocol: done
@@ -172,7 +172,7 @@ development_status:
   10-9-uat-runner-in-container: done
   10-10-uat-testcases-in-container: done
   10-8-uat-gate-1-rerun: done
-  epic-10-retrospective: optional
+  epic-10-retrospective: done
   epic-11: done
   11-1-mass-properties-that-tell-shapes-apart: done
   11-2-quiet-result-envelope: done
