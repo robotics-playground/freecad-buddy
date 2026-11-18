@@ -1,0 +1,716 @@
+{
+ "run": {
+  "git_commit": "df5572f471a5b32b7bcd9b82c95b408581ef7dcb",
+  "git_dirty": true,
+  "freecad_apprun": "/opt/freecad/AppRun",
+  "freecad_version": "1.1.4",
+  "addon": {
+   "path": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy",
+   "exists": true,
+   "linked": false,
+   "target": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"
+  },
+  "started": "2026-11-18T16:41:31+00:00",
+  "ended": "2026-11-18T16:42:26+00:00",
+  "groups": [
+   {
+    "launch": {},
+    "scenarios": [
+     "TC-02-17",
+     "TC-09-12"
+    ],
+    "error": null,
+    "freecad_pid": 29456,
+    "freecad_version": "1.1.4",
+    "addon": {
+     "path": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy",
+     "exists": true,
+     "linked": false,
+     "target": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"
+    }
+   }
+  ],
+  "errors": [],
+  "sample_seed": 3736228505,
+  "sample_seed_source": "drawn"
+ },
+ "scenarios": [
+  {
+   "id": "TC-02-17",
+   "tc": "TC-02",
+   "title": "Bad open paths are refused, and a missing file is distinguishable",
+   "file": "/repo/tests/uat/scenarios/tc-02-17.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:_ULWWbwBNT7hDXsLCxbW3g",
+       "name": "box_10_20_30",
+       "label": "box-10-20-30",
+       "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      },
+      "text": "Opened box-10-20-30 -> fcb-doc:_ULWWbwBNT7hDXsLCxbW3g."
+     }
+    },
+    {
+     "menu": [
+      "View",
+      "Visibility",
+      "Show All Objects"
+     ],
+     "attempts": 2,
+     "attempt_log": [
+      "delivered, no effect"
+     ]
+    },
+    {
+     "name": "missing",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/tc-02-17-does-not-exist.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/tc-02-17-does-not-exist.FCStd': File '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/tc-02-17-does-not-exist.FCStd' does not exist!",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 497, in document_open\n    document = FreeCAD.openDocument(path)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\nOSError: File '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/tc-02-17-does-not-exist.FCStd' does not exist!\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 499, in document_open\n    raise ValidationError(f\"document_open failed for {path!r}: {exc}\") from exc\nfreecad_buddy.usecases.documents.ValidationError: document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/tc-02-17-does-not-exist.FCStd': File '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/tc-02-17-does-not-exist.FCStd' does not exist!\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "not_fcstd",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/tests/uat/README.md"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open failed for '/repo/tests/uat/README.md': Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 497, in document_open\n    document = FreeCAD.openDocument(path)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\nOSError: Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 499, in document_open\n    raise ValidationError(f\"document_open failed for {path!r}: {exc}\") from exc\nfreecad_buddy.usecases.documents.ValidationError: document_open failed for '/repo/tests/uat/README.md': Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "empty",
+     "mcp": "document_open",
+     "args": {
+      "path": ""
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open requires a 'path'",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 494, in document_open\n    raise ValidationError(\"document_open requires a 'path'\")\nfreecad_buddy.usecases.documents.ValidationError: document_open requires a 'path'\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "directory",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner': Invalid project file /repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner: basic_filebuf::underflow error reading the file: Is a directory\n",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 497, in document_open\n    document = FreeCAD.openDocument(path)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\nOSError: Invalid project file /repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner: basic_filebuf::underflow error reading the file: Is a directory\n\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 499, in document_open\n    raise ValidationError(f\"document_open failed for {path!r}: {exc}\") from exc\nfreecad_buddy.usecases.documents.ValidationError: document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner': Invalid project file /repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner: basic_filebuf::underflow error reading the file: Is a directory\n\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "listed",
+     "mcp": "document_list",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "documents": [
+        {
+         "doc": "fcb-doc:_ULWWbwBNT7hDXsLCxbW3g",
+         "name": "box_10_20_30",
+         "label": "box-10-20-30",
+         "transient": false
+        }
+       ]
+      },
+      "text": "1 open document(s): box-10-20-30."
+     }
+    },
+    {
+     "name": "capabilities",
+     "mcp": "query_capabilities",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "freecad_version": "1.1.4",
+       "element_map_available": true,
+       "serializer": "exportBinary",
+       "varset_backend": "varset",
+       "render": "gui_constructed",
+       "sketcher_available": true,
+       "partdesign_available": true,
+       "enums": {
+        "PartDesign::Pad": {
+         "Type": [
+          "Length",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Pocket": {
+         "Type": [
+          "Length",
+          "ThroughAll",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Revolution": {
+         "Type": [
+          "Angle",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "TwoAngles"
+         ]
+        },
+        "PartDesign::Hole": {
+         "ThreadType": [
+          "None",
+          "ISOMetricProfile",
+          "ISOMetricFineProfile",
+          "UNC",
+          "UNF",
+          "UNEF",
+          "NPT",
+          "BSP",
+          "BSW",
+          "BSF",
+          "ISOTyre"
+         ],
+         "HoleCutType": [
+          "None",
+          "Counterbore",
+          "Countersink",
+          "Counterdrill"
+         ],
+         "DepthType": [
+          "Dimension",
+          "ThroughAll"
+         ]
+        },
+        "PartDesign::Chamfer": {
+         "ChamferType": [
+          "Equal distance",
+          "Two distances",
+          "Distance and Angle"
+         ]
+        },
+        "PartDesign::LinearPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ],
+         "TransformMode": [
+          "Features",
+          "Whole shape"
+         ]
+        },
+        "PartDesign::PolarPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ]
+        }
+       },
+       "exec_enabled": true
+      },
+      "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: True\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/captures/TC-02-17.png",
+   "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: Given: not-fcstd.txt and corrupt.FCStd prepared with printf (README.md stands in for the first) (file check); corrupt zip refused with 'document_open failed for ...corrupt.FCStd' (file check); non-FCStd file and corrupt zip: `status` and `detail.code` are `INVALID_INPUT`, each message reads `document_open failed for '<path>': Invalid project file <path>: <FreeCAD text>`, the two FreeCAD texts are non-empty and equal once each path is replaced, and both differ from the missing-file text (`does not exist`); platform text recorded, not required (file check); addon log records no unhandled traceback (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "box_10_20_30",
+    "documents": [
+     {
+      "modified": true,
+      "name": "box_10_20_30",
+      "label": "box-10-20-30",
+      "objects": [
+       {
+        "name": "Box",
+        "type": "Part::Feature",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 6000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          20.0,
+          30.0
+         ]
+        },
+        "screen_center": [
+         1841,
+         -1253
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 0 0 1\n  orientation 0 0 1  0\n  nearDistance -29.029001\n  farDistance 1.001\n  aspectRatio 1\n  focalDistance 5\n  height 4.1421356\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: Given: not-fcstd.txt and corrupt.FCStd prepared with printf (README.md stands in for the first) (file check); corrupt zip refused with 'document_open failed for ...corrupt.FCStd' (file check); non-FCStd file and corrupt zip: `status` and `detail.code` are `INVALID_INPUT`, each message reads `document_open failed for '<path>': Invalid project file <path>: <FreeCAD text>`, the two FreeCAD texts are non-empty and equal once each path is replaced, and both differ from the missing-file text (`does not exist`); platform text recorded, not required (file check); addon log records no unhandled traceback (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-09-12",
+   "tc": "TC-09",
+   "title": "An unknown doc handle returns INVALID_INPUT",
+   "file": "/repo/tests/uat/scenarios/tc-09-12.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "listed",
+     "mcp": "document_list",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "documents": []
+      },
+      "text": "0 open document(s)."
+     }
+    },
+    {
+     "name": "open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:3mPKVfu343g-AoltafYscg",
+       "name": "box_10_20_30",
+       "label": "box-10-20-30",
+       "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      },
+      "text": "Opened box-10-20-30 -> fcb-doc:3mPKVfu343g-AoltafYscg."
+     }
+    },
+    {
+     "menu": [
+      "View",
+      "Visibility",
+      "Show All Objects"
+     ],
+     "attempts": 1,
+     "attempt_log": []
+    },
+    {
+     "name": "fit_before",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:3mPKVfu343g-AoltafYscg"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "box_10_20_30",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'box_10_20_30'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "unknown_tree",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": "fcb-doc:does-not-exist"
+     },
+     "result": {
+      "text": "INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist",
+      "is_error": true
+     }
+    },
+    {
+     "name": "unknown_recompute",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:does-not-exist"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:does-not-exist",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 480, in verify_recompute\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "unknown_object",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:does-not-exist",
+      "object": "Box"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:does-not-exist",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 567, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "unknown_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:does-not-exist"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:does-not-exist",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 550, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "malformed",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "not-a-handle at all"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: not-a-handle at all",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 480, in verify_recompute\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: not-a-handle at all\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "other_open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ",
+       "name": "cylinder_r5_h20",
+       "label": "cylinder-r5-h20",
+       "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      },
+      "text": "Opened cylinder-r5-h20 -> fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ."
+     }
+    },
+    {
+     "name": "other_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ",
+       "name": "cylinder_r5_h20",
+       "closed": true
+      },
+      "text": "Closed cylinder_r5_h20 (doc=fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ)."
+     }
+    },
+    {
+     "name": "stale",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ",
+      "object": "Cylinder"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 567, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "stale_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 550, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:m1YMBpl4_LT0iqWR2oL6sQ\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:3mPKVfu343g-AoltafYscg"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "box_10_20_30",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'box_10_20_30'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-verify-g1/runner/captures/TC-09-12.png",
+   "agent_check": "The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: the text equals exactly `INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist`, with no status or detail field (mcp-tools-design.md:60) (raw RPC or second client).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "box_10_20_30",
+    "documents": [
+     {
+      "modified": true,
+      "name": "box_10_20_30",
+      "label": "box-10-20-30",
+      "objects": [
+       {
+        "name": "Box",
+        "type": "Part::Feature",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 6000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          20.0,
+          30.0
+         ]
+        },
+        "screen_center": [
+         933,
+         562
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 15.808673 -0.77345753 25.821575\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 1.3863934\n  farDistance 36.064827\n  aspectRatio 1\n  focalDistance 18.708286\n  height 38.610722\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "box_10_20_30.Box": {
+      "point": [
+       914,
+       500
+      ],
+      "rgb": [
+       99,
+       107,
+       111
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      708,
+      157,
+      1116,
+      853
+     ],
+     "fraction": 0.9443690637720489,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: the text equals exactly `INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist`, with no status or detail field (mcp-tools-design.md:60) (raw RPC or second client)."
+   ],
+   "review": "escalate"
+  }
+ ]
+}

@@ -80,3 +80,51 @@ FreeCAD 1.1.4 in the container, image `fcb-desktop:local` built 2026-11-17T17:06
 ## 7. Teardown
 
 Container FreeCAD stopped (`fcb-freecad stop` killed pid 28220 after the window close timed out; all documents were closed first). `/healthz` empty, no FreeCAD process. Worktree `D:\Work\Personal\Sources\fcb-verify-10-8-g` removed. Bad-input and STEP files deleted per the Cleanup blocks. No file edited outside the run folder and this report.
+
+## Re-run at df5572f
+
+Head `df5572f471a5b32b7bcd9b82c95b408581ef7dcb` (fix round G1 on `56e746b`). Detached worktree, now removed. Live run folder `tests/uat/run/2026-11-18-10-8-g-verify-g1/` (uncommitted).
+
+**Verdict: PASS.** RT-1 to RT-7 closed. No new finding.
+
+### Gates
+
+| Gate | Result |
+|------|--------|
+| `pytest tests/external/test_uat_runner.py tests/external/test_uat_runner_container.py -q` (main venv) | `186 passed` |
+| `ruff check .` | `All checks passed!` |
+| `scenario.load` on `tests/uat/scenarios/*.json` | `loaded 72` |
+| `git diff --stat 56e746b df5572f -- src tests/uat/runner tests/close-loop scripts tests/uat/run/2026-11-18-01` | empty |
+
+### RT-1, RT-2: independent reproduction
+
+Script in the session scratchpad (`v_rt12.py`). It imports the worktree `src/freecad_buddy/adapters/mcp_server.py` and `tests/uat/runner/run.py` (paths printed). Each case builds `_invalid_input_envelope(message)`, wraps it with `_to_call_result` (`structured=False` for `query_tree_summary`, default for `document_open`), converts it with `mcp_client.to_result`, then runs `run.check_expect` on every `expect` of that step.
+
+| Scenario, step | Output | Checks | Finding |
+|----------------|--------|--------|---------|
+| tc-09-12 `unknown_tree` | `INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist` (correct) | 2 | none |
+| tc-09-12 `unknown_tree` | `INVALID_INPUT: internal error while resolving fcb-doc:does-not-exist` | 2 | yes (`equals`) |
+| tc-09-12 `unknown_tree` | `INVALID_INPUT: stale handle fcb-doc:does-not-exist (unknown or stale document handle)` | 2 | yes |
+| tc-02-17 `not_fcstd` | `... Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n` (correct) | 2 | none |
+| tc-02-17 `not_fcstd` | `... Invalid project file <path>: ` (empty tail) | 2 | yes (regex `\S`) |
+| tc-02-17 `not_fcstd` | `... Invalid project file <path>:  ` (space-only tail) | 2 | yes |
+| tc-02-17 `not_fcstd` | `document_open failed for '<path>': something else` | 2 | yes |
+
+`tc-09-12.json:124` now `equals` the exact line. `tc-02-17.json:78` regex now ends `Invalid project file \S+README\.md: \S`. Both `agent_check` strings now carry the exact line (TC-09-12) and `status`/`detail.code`, non-empty and equal tails, and the difference from the missing-file text (TC-02-17).
+
+Live runner in `fcb-desktop` (FreeCAD stopped first): `run.py tc-02-17.json tc-09-12.json --out .../2026-11-18-10-8-g-verify-g1/runner` → exit 0, `2 scenarios: 0 PASS, 0 FAIL, 2 ESCALATE`, run errors 0, 0 findings. Observed: `unknown_tree` text `INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist`; `not_fcstd` message `... Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n`. Both captures read: TC-09-12 iso box; TC-02-17 unframed box corner (its GUI Fit All stays an agent check, unchanged).
+
+### RT-6
+
+`TC-03-sketch-authoring.md:31` now names one exception: a read-only `script_exec` (camera read-back) may run with edit mode open. In TC-03-03 the only MCP call between `setEdit` (`:131`) and the Cleanup `resetEdit` (`:136`) is the `:131` read `[round(x, 3) for x in G.ActiveDocument.ActiveView.getCameraOrientation().Q]`, which reads only. `:132` is a `cua-driver` capture, not MCP. TC-03-20 closes edit mode before the next MCP call (`:875`), and after `:897` only a capture runs before Cleanup. The first live run (section 4) ran this same read with edit mode open: `OK`, and edit mode stayed open. Closed.
+
+### RT-3, RT-4, RT-5, RT-7
+
+- RT-3: `tc-03-03.json:457` `agent_check` now has the camera read-back (each component within 0.01 of `[0.425, 0.176, 0.34, 0.82]`). Closed.
+- RT-4 (my L2): `deferred-work.md:2089` no longer cites `tc-03-03-iso-edit.png` (0 matches); it cites `tc-03-03-after.png`. Closed.
+- RT-5 (my L1): 9 resolution lines name commit `56e746b`; 0 lines say `commit recorded by the leader`. The TC-02-13 entry still has no `resolution`. Closed.
+- RT-7: `TC-07-verification-and-export-pairing.md:195` now cites `envelope.py:124`, which is `return f"{text}\n\n{sentence}" if sentence else text`. Closed.
+
+### Teardown
+
+The runner tore down its FreeCAD. `fcb-freecad status` shows no pid, and `/healthz` cannot be reached. Worktree removed.
