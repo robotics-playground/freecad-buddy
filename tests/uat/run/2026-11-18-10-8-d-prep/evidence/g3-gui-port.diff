@@ -1,5 +1,5 @@
 diff --git a/tests/uat/run/2026-10-03-04/evidence/g3_gui_replay.py b/tests/uat/g3-gui/g3_gui_replay.py
-index c729bce..94de6c6 100644
+index c729bce..a2b43c5 100644
 --- a/tests/uat/run/2026-10-03-04/evidence/g3_gui_replay.py
 +++ b/tests/uat/g3-gui/g3_gui_replay.py
 @@ -1,12 +1,17 @@
@@ -113,11 +113,12 @@ index c729bce..94de6c6 100644
          await call(session, "document_close", {"doc": doc})
      return row
  
-@@ -121,13 +164,15 @@ async def main() -> int:
+@@ -121,13 +164,16 @@ async def main() -> int:
      cases = sorted(p for p in PLANS.iterdir() if (p / "case.yaml").is_file())
      if wanted:
          cases = [p for p in cases if any(w in p.name for w in wanted)]
 -    async with streamablehttp_client("http://127.0.0.1:8765/mcp") as (read, write, _):
++    not_run = []
 +    async with streamablehttp_client("http://127.0.0.1:18765/mcp") as (read, write, _):
          async with ClientSession(read, write) as session:
              await session.initialize()
@@ -131,12 +132,14 @@ index c729bce..94de6c6 100644
                      builds = [("planted" if is_planted(case) else "control", case["plan"])]
                      if is_planted(case):
                          builds.append(("reverted", reverted_plan(case)))
-@@ -136,8 +181,16 @@ async def main() -> int:
+@@ -136,8 +182,21 @@ async def main() -> int:
                          sink.write(json.dumps(row) + "\n")
                          sink.flush()
                          failed = [c["id"] for c in row.get("checks") or [] if not c.get("passed")]
 -                        print(case["id"], kind, row.get("status"), row.get("classification"),
 -                              row.get("error"), failed, flush=True)
++                        if row.get("gui_error"):
++                            not_run.append(f"{case['id']} {kind}")
 +                        print(
 +                            case["id"],
 +                            kind,
@@ -147,6 +150,9 @@ index c729bce..94de6c6 100644
 +                            failed,
 +                            flush=True,
 +                        )
++    if not_run:
++        print("NOT RUN (a GUI step failed):", ", ".join(not_run), flush=True)
++        return 1
      return 0
  
  

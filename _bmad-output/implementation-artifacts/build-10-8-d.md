@@ -77,3 +77,19 @@ Lenses (fresh subagents, base `c66b80e`): Blind Hunter `a8c8aa7b63e4c504a` (opus
 ## State at report time
 
 No FreeCAD running in the container; no `/tmp/g3r`; no process of mine. The container `fcb-desktop` is up and was recreated at S0 (clean profile). The commit contains: the spec, `tests/uat/g3-gui/`, the prep folder and this report.
+
+## Fix round 1 (leader triage of the red team and verifier reports)
+
+Commit after `6e640c4`. Evidence: `evidence/fix-round-1/`.
+
+- D1 (RT1): the spec Code Map gives each §9 launch-group re-run its own folder `runner-rerun-<n>`, says R0 is never written again, says `report.md` lists every runner run with folder and seed, and says the gate count and the §9 review read R0 rows except the re-run group, whose R0 `not_run` rows the re-run rows replace.
+- D2 (V-F3): `g3_gui_replay.py` `main` collects rows with `gui_error`, prints `NOT RUN (a GUI step failed): <case> <kind>` and returns 1; the spec says such a row is NOT RUN for the G3 GUI form and never counts as unchanged. Proof with the scripts copied to `evidence/fix-round-1/g3-gui/` and `uv run --exact --extra dev python g3_gui_replay.py control-faithful-mounting-plate`: wrong `FC_WIN=12345` gives `gui_error: fit: {"error": "no Button labelled 'Fit All' in snapshot", ...}`, `NOT RUN`, exit 1 (`wrong-window.log`, `wrong-window-row.jsonl`); the correct window gives a clean row, a 202446-byte capture, exit 0 (`clean.log`).
+- D3: spec line reference is `tests/uat/test-plan.md:457-561` (`## 9` starts at 457, Gate 2 ends before `## 10` at 563).
+- D4: the scorer copy uses `tar --exclude='*heldout*'`. Proof (`g3-headless-run.log`): `paths with heldout: 0` before the scorer and after; the scorer again planted 10/10 DETECTED, controls and reverted 14 flagged 0, frames-check OK, exit 0; `/tmp/g3r` removed.
+- D5: the spec G3 GUI command is `uv run --extra dev python g3_gui_replay.py [case-substring ...]`, since `pyyaml` is in the `dev` extra; the proof runs used `uv run --exact --extra dev`, the clean form that failed for the red team without the extra.
+- D6: the S0 line carries the exact commands of the two sweeps, `run_faults.py` (`docker exec -u cua fcb-desktop fcb-py /repo/tests/uat/probe/run_faults.py`) and `pixel_faults.py` (`uv run python tests/uat/runner/pixel_faults.py`).
+- D7: kept both. The docstring text corrects the stale `:8765` and run-id wording and states how the run lead uses the file (your first brief asked for it). `unlink` removes a stale PNG that would report `exists` true after a failed capture (two lenses found it).
+- D8: the spec says to compare the copies by git blob id (`git hash-object`), not by working-copy SHA-256, because the working copy of `g3_gui_replay.py` has CRLF line endings. `evidence/fix-round-1/script-blob-ids.txt`: committed source and run copy equal (`a2b43c52...`, `eb67d351...`). The earlier `g3-gui-script-sha256.txt` of the first round is superseded.
+- The port script grew by 8 lines in this round (below the 60-line limit), so no new lens round.
+
+Gates after the round: `ruff check .` pass, `ruff format --check tests/uat/g3-gui` pass, `check_imports.py` OK, `pytest tests/external -q` 1814 passed, 4 skipped.

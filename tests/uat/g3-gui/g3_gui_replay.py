@@ -164,6 +164,7 @@ async def main() -> int:
     cases = sorted(p for p in PLANS.iterdir() if (p / "case.yaml").is_file())
     if wanted:
         cases = [p for p in cases if any(w in p.name for w in wanted)]
+    not_run = []
     async with streamablehttp_client("http://127.0.0.1:18765/mcp") as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
@@ -181,6 +182,8 @@ async def main() -> int:
                         sink.write(json.dumps(row) + "\n")
                         sink.flush()
                         failed = [c["id"] for c in row.get("checks") or [] if not c.get("passed")]
+                        if row.get("gui_error"):
+                            not_run.append(f"{case['id']} {kind}")
                         print(
                             case["id"],
                             kind,
@@ -191,6 +194,9 @@ async def main() -> int:
                             failed,
                             flush=True,
                         )
+    if not_run:
+        print("NOT RUN (a GUI step failed):", ", ".join(not_run), flush=True)
+        return 1
     return 0
 
 
