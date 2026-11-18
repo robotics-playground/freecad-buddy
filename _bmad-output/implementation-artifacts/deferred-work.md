@@ -1936,8 +1936,8 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-f-uat-testcase-defects.md`
   summary: `tests/uat/runner/scenario.py` validation accepts a control character in a scenario `regex`, so a JSON `\b` written for a word boundary compiles and the check never matches.
-  evidence: `scenario.py:180-184` only calls `re.compile`; `tc-08-04.json` carried the defect and failed every runner run. The committed files are guarded by a pytest case added in 10-8-f; the runner still accepts such a regex in any other file. Unblock: a story that may edit runner code adds the reject in `scenario.py`.
+  evidence: `scenario.py:180-184` only calls `re.compile`; `tc-08-04.json` carried the defect and failed every runner run. Blocker: slice 10-8-f may not edit runner code, so `scenario.py` still accepts such a regex in any file outside `tests/uat/scenarios/` (the committed files are guarded by a pytest case added in 10-8-f). Unblock: a story that may edit runner code adds the reject in `scenario.py`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-f-uat-testcase-defects.md`
   summary: `mcp-tools-design.md:249` says the `query_tree_summary` tree reaches the client as `content[1]` with `structured_content` holding counts, but §1.3 (`:60`) says the tool is text-only with no `structuredContent`.
-  evidence: code wins (`mcp_server.py:127-138` `_plain_text`); the next test-case author can read `:249` and restore a `structured_content.shown` reader. Unblock: epic-10 close correct-course batch.
+  evidence: code wins (`mcp_server.py:127-138` `_plain_text`); the next test-case author can read `:249` and restore a `structured_content.shown` reader. Blocker: design documents are outside the 10-8-f boundary (test text only). Unblock: epic-10 close correct-course batch.

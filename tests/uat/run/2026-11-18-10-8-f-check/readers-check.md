@@ -119,3 +119,22 @@ OK: 250 objects, 200 shown, truncated.
 Result: `<S> shown` is 200, the `OK:` line ends `, truncated.`, and the last tree line is the steering line. A document under the cap (the 39-object one) shows `39 shown` at depth 3 with no `truncated`.
 
 Neighbouring Thens re-read with these outputs: TC-09 `:314` (`<S> shown` equals the tree line count at depth 1; no connector line; `Assembly (+31)` is the only line), TC-09 `:358`, `:475` (same reader, label now `<S>`), TC-12 `:658` (first read returns top-level lines only), TC-12 `:661` ff. (schema refusal and budget Thens do not read counts). All still hold.
+
+## Fix round F2: TC-08-17 carve-out on the tip
+
+Container FreeCAD pid 2752. Scratch document `tc08-17-f2`: `Body`, fully constrained 20 x 20 `Sketch`, 10 mm `Pad`, `Fillet` (Edge1, r 2). Object `Visibility`: `Sketch` true, `Pad` false, `Fillet` true; `Fillet` is the tip. PartDesign `ViewProvider.cpp:279-296` hides every other feature of a Body when one becomes visible, so a write of `true` on `Pad` would leave `Fillet` hidden after a restore of `false`.
+
+Tree lines before (`query_tree_summary { depth: 4 }`), after `feature_set_parameters { feature: "Fillet", parameters: { Visibility: false } }` then `{ Visibility: true }` (each: status OK, `mutation.changed: []`, `Mutation committed`):
+```
+before and after (identical):
+v [BODY] Body
+|-- - [ORIGIN] Origin  (7 children, all v)
+|-- - [PAD] Pad
+|   `-- v [SKETCH] Sketch
+`-- v [FILLET] Fillet *tip
+```
+Captures `evidence/tc-08-17-before.png` and `evidence/tc-08-17-after.png`, both read: the filleted plate in the same camera and the same tree panel in both (the Undo button is active in `after` because of the two committed display-state transactions; nothing else differs).
+
+## Fix round F2: control-character guard
+
+Predicate comparison on sample strings: the previous guard (`ord < 32`, values only) returned False for DEL (`a\x7fb`) and C1 (`a\x85b`); the new guard (Unicode category `Cc`, keys and values) returns True for backspace, DEL, C1 and a key. The four parametrized cases `backspace`, `delete`, `c1`, `key` of `test_Should_report_the_file_When_a_scenario_string_or_key_holds_a_control_character` run on a temp directory and pass only because the guard flags `bad.json` and not `good.json` (which holds a newline and a tab).

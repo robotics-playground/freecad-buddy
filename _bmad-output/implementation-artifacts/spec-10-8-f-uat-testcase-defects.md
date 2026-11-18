@@ -83,7 +83,7 @@ Design line per Then change (AC map):
 | TC-11-18 | new When `And` before the Then block | spine AD-31 (bridge never activates another document's view); same wording as `TC-09:403` |
 | TC-12-05 | `:329`, `:331`, `:332` | `mcp-tools-design.md` §1.3 (line format); spine AD-32 (`ratio` measures the visible objects); live: ratio 0.95 vs 0.54 |
 | TC-06-01 | Cleanup | `docs/references/FreeCAD/src/Base/ParameterPy.cpp:242` (`RemInt`) |
-| TC-08-17 | `:680` | no product change; restore the value read before |
+| TC-08-17 | `:680` | PartDesign `ViewProvider.cpp:279-296`: making one Body feature visible hides every other feature, so the carve-out runs on the tip `Fillet` and the Body's `v`/`-` tree marks must match before and after |
 | TC-09-01 | `:46` | `bootstrap.py:240` proxy args; `run_mcp_e2e.py:77-98` H1 args (`run_mcp_edge_cases.py` imports `server_parameters` from it) |
 | `tc-08-04.json` | `:487` | JSON escape: a JSON string needs a doubled backslash to carry the regex word boundary |
 
@@ -123,7 +123,7 @@ Round 2 lenses: Blind Hunter B'1-B'11, Edge Case Hunter E'1-E'8, Verification Ga
 |---|---------|---------|----------|-------|
 | B'1, E'5 | the control-character scan reads raw JSON, where a bad escape is two ASCII characters | high | baseline file scans clean raw, offends decoded | patch: replaced by a pytest case that decodes first; baseline regex offends (a backspace on each side of `Fillet`), fixed file passes; suite 182 passed |
 | B'2, G'1 | no automated check for the regex defect class | medium | `scenario.py:180-184` only compiles | patch (test only; runner code stays untouched); runner reject stays in the deferred entry |
-| B'3 | same reader defect left in TC-09 `:313`, `:314` and TC-12 `:659`, `:660` | medium | `shown`, `truncated`, `matches` read as fields of a text-only tool | defer: DW entry (graded PASS in run 2026-10-24-01 on the text reading) |
+| B'3 | same reader defect left in TC-09 `:313`, `:314` and TC-12 `:659`, `:660` | medium | `shown`, `truncated`, `matches` read as fields of a text-only tool | fixed in F1 (`19473e4`): readers rewritten, live record in `readers-check.md` |
 | B'4, deferred wording | TC-02-14 `:583` says the result "starts `path:`" next to an `OK:` line I wrote; the DW entry cites `:235` | medium | `:235` is the unknown-focus Then | patch: `:234`, `:583`, `:585` name the tree text below the header lines; the DW entry removed |
 | B'5, E'2 | "tree lines = everything below the framing line" is wrong with `path:`, a cap steering line or no `framing:` line | medium | `queries.py:367`, `tree_text.py` steering line, `mcp_server.py:136` | patch: `:232` names the excluded lines |
 | B'6, E'1, E'6 | TC-08-17: read is in the same sentence after the call; restore may match the current value; no live run | medium | grader order; restore of `<V0>` is the fix | patch: the read is the first step and records `<V0>`; live run recorded |
@@ -147,3 +147,11 @@ Round 2 lenses: Blind Hunter B'1-B'11, Edge Case Hunter E'1-E'8, Verification Ga
 **Manual checks:**
 - Read each capture of the container run of `tc-08-04.json`.
 - The pytest case `test_Should_hold_no_control_character_in_a_string_When_the_committed_scenarios_are_decoded` rejects a control character in any string of any committed scenario. It decodes the JSON first, so it catches the baseline `tc-08-04.json` regex (checked: the baseline decodes to a backspace around `Fillet`).
+
+## Fix round F2
+
+- F2-1 (TC-08-17 `:680`): the carve-out moved from `Pad` to the tip `Fillet`; the Body's tree marks must be equal before and after. Live proof (scratch Body/Sketch/Pad/Fillet): tree lines equal before and after, captures `evidence/tc-08-17-before.png` and `-after.png` read and equal.
+- F2-2: TC-09 `:313` and TC-12 `:659` say the `OK:` line contains `, truncated`.
+- F2-3: the control-character guard covers every Unicode `Cc` character (DEL and C1 included) and dict keys; four parametrized cases prove it flags a bad file.
+- F2-4: the deferred entries state the blocker.
+- Left as written (pre-existing wording, not changed by this story): TC-09 port check for H1, tree-line count, 201 lines when capped, filter `shown` versus depth 3. TC-08-17 order of the carve-out against the previewed sample (RT-1 second point, low) is also left.

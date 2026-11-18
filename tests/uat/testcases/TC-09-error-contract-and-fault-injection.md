@@ -310,7 +310,7 @@ mcp feature_pattern { doc: <H>, ..., kind: "linear", occurrences: 1, ... }
 
 **Then** `depth: 0` → protocol rejection (below `minimum: 1`)  
 **And** `depth: -1` → protocol rejection  
-**And** `depth: 2147483647` is inside the declared range, so it is accepted and bounded by the real tree — verify: a first line starting `OK:` whose `<S> shown` equals the document's actual object count (or `200` with `, truncated` before the final period of that line when the document has more lines; the last tree line is then `... <K> more lines; narrow with focus or a smaller depth`), with no hang  
+**And** `depth: 2147483647` is inside the declared range, so it is accepted and bounded by the real tree — verify: a first line starting `OK:` whose `<S> shown` equals the document's actual object count (or `200` with `, truncated` in that line when the document has more lines; the last tree line is then `... <K> more lines; narrow with focus or a smaller depth`), with no hang  
 **And** `depth: 1` is the documented default and returns the top level only — verify: a first line starting `OK:` whose `<S> shown` equals the number of tree lines, and no line starts with a connector (`|-- ` or `` `-- ``)  
 **And** `max_edges: 0` and `max_edges: -1` → protocol rejection (below `minimum: 1`)  
 **And** `max_edges: 1` is legal and truncates — verify: `OK` with at most one edge reported  
