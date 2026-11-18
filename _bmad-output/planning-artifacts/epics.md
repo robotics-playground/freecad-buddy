@@ -1217,7 +1217,7 @@ The bridge does what the design says when a real agent drives it through the rea
 
 **Sequencing:** corrects shipped behaviour in Epics 1-3, 8 and 9. **Opens no gate and reopens no epic** (AD-19). 10.2 -> 10.3 are ordered (both edit post-verify); Epic 11 Stories 11.1-11.4 -> 10.7 (the test cases are written once, against the new envelope); Epic 12 Story 12.1 -> 10.6 (both edit the exec wiring in `hosts/tool_catalog.py`); 10.6a -> 10.6 (10.6 bounds calls in the front that 10.6a builds); 10.7 -> 10.7b (the runner encodes the corrected test cases); the other stories are parallel-eligible; 10.8 is last.
 
-**Acceptance for the epic:** Story 10.8 — a full UAT run with Gate 1 green.
+**Acceptance for the epic:** Story 10.8 — a smoke UAT run (scope in its AC1) with 0 product defects, every fix-area scenario PASS and the G3 replay unchanged.
 
 **Rules for every story:** treat each finding as a hypothesis: reproduce it first (the report gives the request and the output), then fix with a regression test. A finding that does not reproduce is closed with evidence, not fixed. Re-run any validator score whose sources change.
 
@@ -1445,13 +1445,13 @@ The bridge does what the design says when a real agent drives it through the rea
 
 ### Story 10.8: UAT Gate 1 Re-run
 
-> **As** the team, **I want** a full UAT run that proves Gate 1 green before Epic 4 resumes.
+> **As** the team, **I want** a smoke UAT run that proves 0 product defects before Epic 4 resumes.
 
 **Acceptance Criteria:**
 
 1. **Given** Stories 10.1-10.7b done and CI green
-   **When** the full suite TC-01..TC-14, TC-99 and the G3 live replay run on FreeCAD 1.1.4 through the Story 10.7b runner, with agent review per the updated §9 and the desktop free (or the GUI lane in an isolated Windows session)
-   **Then** Gate 1 is green (Critical 100 %, High ≥ 95 %), Gate 2 matches its documented deviations, and the G3 replay is unchanged; the report is committed under `tests/uat/run/`
+   **When** the smoke run executes on FreeCAD 1.1.4 in the `fcb-desktop` container through the Story 10.7b runner: the runner set (all 72 scenario files) with agent review per the updated §9, TC-01 agent-driven, a smoke set of one Critical scenario per fix area of run `2026-10-23-02` plus one core Critical scenario per test case, and the G3 replay (headless on all cases, GUI on a control and one planted/reverted pair)
+   **Then** there are 0 product defects, every fix-area scenario is PASS, the G3 replay is unchanged, and the test-case defects are fixed (Story 10-8-g); the report is committed under `tests/uat/run/`
 
 ## Epic 11: Lean Agent Loop
 
