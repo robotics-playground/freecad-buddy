@@ -1,0 +1,10 @@
+# C1 remaining routes: New Document toolbar button, set_value on the workbench combo, scroll by a valid token
+docs before: ['fcb-doc:byxzX0SKQ3Y4_X38hY1tAw']
+New Document push button token s000000a5:374
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+docs after: ['fcb-doc:byxzX0SKQ3Y4_X38hY1tAw', 'fcb-doc:1goz7mMkWinCYpcjg1gVaA']
+--- set_value on the combo
+workbench: value_repr":"'PartDesignWorkbench'"
+combo token s000000a6:373
+element373exposesneitherEditableTextnorValue
+workbench after set_value: value_repr":"'PartDesignWorkbench'"

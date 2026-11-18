@@ -1,0 +1,6 @@
+$ docker exec -u cua fcb-desktop sh -c "grep operator.settings /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/addon.log | tail -1" | grep -o (WORKDIR|AUDIT_LOG) values
+FREECAD_BUDDY_AUDIT_LOG='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/audit.jsonl' (default)
+FREECAD_BUDDY_WORKDIR='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir' (default)
+$ grep TC-99 expected values
+FREECAD_BUDDY_WORKDIR='<FreeCAD user app data>/freecad-buddy/workdir' (default)
+FREECAD_BUDDY_AUDIT_LOG='<FreeCAD user app data>/freecad-buddy/audit.jsonl' (default)

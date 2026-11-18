@@ -1,0 +1,8 @@
+# C1 toolbar buttons by element_token
+framing before: framing: fits, ratio 0.41, cached, served from cache; unverified key component(s): geometry
+framing after 3x Zoom In leaf: framing: fits, ratio 0.41, cached, served from cache; unverified key component(s): geometry
+Fit All push button token: s0000005b:404
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+framing after Fit All button click: framing: fits, ratio 0.57, computed
+--- Standard Views button menu
+[('menu item', 'Standard Views', 's0000005c:164'), ('menu item', 'Fit All', 's0000005c:165'), ('menu item', 'Axonometric', 's0000005c:168'), ('menu item', 'Isometric', 's0000005c:169'), ('push button', 'Fit All', 's0000005c:404'), ('button menu', 'Standard Views', 's0000005c:406'), ('menu item', 'Isometric', 's0000005c:407'), ('push button', 'Isometric', 's0000005c:442')]

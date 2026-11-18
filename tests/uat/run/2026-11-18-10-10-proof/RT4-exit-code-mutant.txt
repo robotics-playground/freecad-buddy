@@ -1,0 +1,10 @@
+# RT-4 the || true mutant of fcb_cua.sh must turn the new test red
+## committed wrapper
+21 passed in 1.56s
+## mutant (|| true on the tool-call pipeline)
+printf '%s' "$input" | exec docker exec -i -u cua fcb-desktop bash -c \
+    'eval "$(fcb-session-env)"; exec /usr/local/bin/cua-driver call "$@"' _ "$@" || true
+FAILED tests/external/test_fcb_cua_wrapper.py::test_Should_return_the_exit_code_of_docker_When_it_fails[arguments0]
+1 failed, 20 passed in 1.56s
+## restored
+21 passed in 1.53s

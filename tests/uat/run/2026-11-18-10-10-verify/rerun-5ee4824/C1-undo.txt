@@ -1,0 +1,18 @@
+## C1 row 29 / TC-12-06: undo list
+UndoNames: "value_repr": "('verify-pad', ['buddy: verify pad length'])"
+$ TC-12:362 form: mcp script_exec {code:"result = list(doc.UndoNames)"}
+"value_repr": "['buddy: verify pad length']"
+windows: [(37748834, '* verify-pad - FreeCAD 1.1.4', 1600, 949)]
+## extra (not in TC): is the dropdown really closed to us? foreground pixel click on the Undo arrow (158,37)
+$ echo '{"pid":16744,"window_id":37748834,"x":158,"y":37,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # fg click arrow
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+windows: [(37748834, '* verify-pad - FreeCAD 1.1.4', 1600, 949)]
+UndoNames: "value_repr": "('verify-pad', ['buddy: verify pad length'])"

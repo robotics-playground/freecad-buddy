@@ -1,0 +1,7 @@
+$ pytest test_fcb_cua_wrapper.py test_fcb_py_wrapper.py
+32 passed in 2.14s
+## mutant (worktree copy at 498b53d): tool path ends with '|| true' (exec dropped so the || applies)
+-    'eval "$(fcb-session-env)"; exec /usr/local/bin/cua-driver call "$@"' _ "$@"
++    'eval "$(fcb-session-env)"; exec /usr/local/bin/cua-driver call "$@"' _ "$@" || true
+FAILED tests/external/test_fcb_cua_wrapper.py::test_Should_return_the_exit_code_of_docker_When_it_fails[arguments0]
+1 failed, 20 passed in 1.62s

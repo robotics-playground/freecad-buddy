@@ -35,12 +35,12 @@ document on H1. TC-14-15 is a repo-level CI check and needs no host.
 
 - [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
 - [ ] FreeCAD GUI is running with a 3D view open (verify: `mcp query_capabilities {}` returns `render: "gui_constructed"`)
-- [ ] Proxy is LISTENING on `:8765` (verify: `netstat -ano | grep :8765` shows a LISTENING line)
+- [ ] Proxy is LISTEN on `:8765` (verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows a LISTEN line)
 - [ ] `FREECAD_BUDDY_AUDIT_LOG` resolves to a writable absolute path, per APPENDIX-B step 6a (verify: a scratch `feature_body_create` returns `status: "OK"`)
 - [ ] Golden models are present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
-- [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
+- [ ] `cua-driver` can drive the FreeCAD window (verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` returns an element tree that lists the menu items `File`, `Edit` and `View`)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
-- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`. In this file every `document_open` of a golden model is followed by Show All unless the scenario says otherwise.
+- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: press the `Show All Objects` leaf of View > Visibility by `element_token` (test-plan §6, "Menu route"). A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`. In this file every `document_open` of a golden model is followed by Show All unless the scenario says otherwise.
 
 ---
 
@@ -54,7 +54,7 @@ document on H1. TC-14-15 is a repo-level CI check and needs no host.
 
 **When** the advertised schema is read off the live proxy  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import asyncio, json
 from mcp.client.streamable_http import streamablehttp_client
 from mcp import ClientSession
@@ -76,7 +76,7 @@ asyncio.run(main())
 **And** the schema is closed — verify: `additionalProperties` is `false`  
 **And** it is absent from the read-only profile — verify: start the assistant read-only surface and confirm `view_fit_viewport` is not listed (`READ_ONLY_PROFILE` is an opt-in allow-list at `tool_catalog.py:1032`)  
 **And** *(visual)* the advertised tool actually drives the window — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`  
-**And** *(visual)* the FreeCAD window shows the whole box — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid, all of it inside the viewport rectangle, no edge running off a border. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the FreeCAD window shows the whole box — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid, all of it inside the viewport rectangle, no edge running off a border. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -103,7 +103,7 @@ mcp view_fit_viewport { doc: "<handle>" }
 **And** the pre-fit camera was captured — verify: `structured_content.camera_recorded` is `true`  
 **And** the text mirrors the action — verify: `text` is exactly `fitted the live viewport to '<Name>'`  
 **And** `detail` is null on success — verify: `detail` is `null`  
-**And** *(visual)* the window agrees with the `fitted: true` claim — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-02-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a box-shaped solid, wholly visible, roughly centred in the viewport. An `OK` envelope over a window showing empty space is the exact defect this scenario catches, so do not reason from the envelope to what the picture must contain. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window agrees with the `fitted: true` claim — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-02-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a box-shaped solid, wholly visible, roughly centred in the viewport. An `OK` envelope over a window showing empty space is the exact defect this scenario catches, so do not reason from the envelope to what the picture must contain. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -118,8 +118,8 @@ mcp document_close { doc: "<handle>" }
 **Design Ref**: `usecases/view_fit.py:103-130` (`_fit_all`), §AD-31
 
 **Given** a golden model is open — verify: `document_open` on `box-10-20-30.FCStd` returns `OK`, then run Show All  
-**And** the camera has been deliberately zoomed in through the GUI (`invoke_menu ["View","Zoom","Zoom In"]`, backed off with `Zoom Out` until the line carries a ratio) so a no-op would be visible — verify: the `framing:` line of `mcp query_tree_summary { doc: "<handle>" }` reads `does not fit, ratio R`; record R as `ratio_before`. A hard zoom gives `does not fit` with no ratio (corners discarded as implausible, `framing.py`), which has nothing to compare  
-**And** the wrong starting state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-03-before.png"}' | & cua-driver call get_window_state`  
+**And** the camera has been deliberately zoomed in through the GUI (the `Zoom In` leaf of View > Zoom (test-plan §6, "Menu route"), backed off with `Zoom Out` until the line carries a ratio) so a no-op would be visible — verify: the `framing:` line of `mcp query_tree_summary { doc: "<handle>" }` reads `does not fit, ratio R`; record R as `ratio_before`. A hard zoom gives `does not fit` with no ratio (corners discarded as implausible, `framing.py`), which has nothing to compare  
+**And** the wrong starting state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-03-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the document is fitted  
 ```
@@ -135,7 +135,7 @@ mcp query_tree_summary { doc: "<handle>" }
 **And** the fit landed inside its own call — verify: the two assertions above hold on the **first** read after the fit, with no intervening delay or extra call. This is the animation-suspension contract (`view_fit.py:132-165`); a fit that only lands after the event loop runs again would fail here.  
 **And** the framing is not merely inside but filling — verify: the ratio on the `framing:` line is between `0.85` and `1.0`. `_FILL_FRACTION = 0.95` (`view_fit.py:35`) targets 95 % of the binding axis; a ratio near `0.05` would mean the sphere-framing shrinkage was not cancelled.  
 **And** the ratio improved — verify: the new `ratio` is closer to `1.0` than `ratio_before`  
-**And** *(visual)* the window changed and now shows the whole model — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-03-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what each shows: the before image a clipped or off-screen model, the after image a whole box inside the frame. The judgement is on the pixels alone — no MCP status, `framing:` line or ratio may stand in for looking at the images.  
+**And** *(visual)* the window changed and now shows the whole model — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-03-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what each shows: the before image a clipped or off-screen model, the after image a whole box inside the frame. The judgement is on the pixels alone — no MCP status, `framing:` line or ratio may stand in for looking at the images.  
 
 **Cleanup**:
 ```
@@ -169,7 +169,7 @@ mcp query_tree_summary { doc: "<handle>" }
 **And** the bar fills the viewport — verify: the ratio on the `framing:` line is `>= 0.85`. **This is the assertion the fix earns.** A ratio near `0.05` is the pre-fix behaviour and a regression.  
 **And** one call was enough — verify: both assertions hold after that **single** `view_fit_viewport` call. The tool's contract is one call, not a converging loop.  
 **And** the fit did not overshoot into clipping — verify: the `framing:` line reads `fits`, not merely a high ratio. A ratio above `1.0` with `does not fit` means the factor overshot.  
-**And** *(visual)* the human's window shows a large bar, not a speck — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a long bar whose long axis spans the clear majority of the viewport's binding dimension, both ends inside the frame. **This is the assertion that actually catches the `636fb8a` defect** — `ratio >= 0.85` and a speck on screen would both be reported, and only the picture tells you which happened. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking at the image.  
+**And** *(visual)* the human's window shows a large bar, not a speck — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-04-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a long bar whose long axis spans the clear majority of the viewport's binding dimension, both ends inside the frame. **This is the assertion that actually catches the `636fb8a` defect** — `ratio >= 0.85` and a speck on screen would both be reported, and only the picture tells you which happened. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -188,9 +188,9 @@ Numbers are not sufficient here, and neither is an MCP render on its own: the MC
 scenario is where the two artifacts are compared against each other.
 
 **Given** the 40x40x800 bar from TC-14-04 is open, or rebuilt — verify: `mcp query_mass_properties { doc: "<handle>", object: "BarPad" }` returns `1280000.0` mm³ within 0.1 %  
-**And** `cua-driver` has the FreeCAD `pid` and `window_id` — verify: `cua-driver call list_windows` returns them  
+**And** `cua-driver` has the FreeCAD `pid` and `window_id` — verify: `echo '{}' | "$FCB_CUA" list_windows` returns them  
 **And** the camera has been moved off the part through the GUI so the starting state is plainly wrong — verify: the `framing:` line of `query_tree_summary` reads `does not fit`  
-**And** the wrong starting state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-05-before.png"}' | & cua-driver call get_window_state`  
+**And** the wrong starting state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-05-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the bar is fitted  
 ```
@@ -198,7 +198,7 @@ mcp view_fit_viewport { doc: "<handle>" }
 ```
 **And** the real window is captured  
 ```bash
-'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-05-after.png"}' | & cua-driver call get_window_state
+echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-05-after.png"}' | "$FCB_CUA" get_window_state
 ```
 **And** the MCP render of the same document is taken  
 ```
@@ -226,7 +226,7 @@ mcp document_close { doc: "<handle>" }
 
 **Given** two documents are open, `DocA` and `DocB` — verify: `mcp document_list {}` lists both; record both handles  
 **And** both have an open 3D view, so the refusal cannot be mistaken for "`DocA` has no viewport" — verify: `mcp view_fit_viewport { doc: "<DocA handle>" }` returned `OK` while `DocA` was still the focused tab, before `DocB` was opened  
-**And** the live viewport is showing `DocB` — verify: `cua-driver call list_windows` reports an active window title naming `DocB`  
+**And** the live viewport is showing `DocB` — verify: `echo '{}' | "$FCB_CUA" list_windows` reports an active window title naming `DocB`  
 **And** `DocB` is fitted so its framing is a known baseline — verify: `mcp view_fit_viewport { doc: "<DocB handle>" }` returns `OK`; record the ratio on the `framing:` line of `mcp query_tree_summary { doc: "<DocB handle>" }` as `ratio_before`  
 
 **When** the fit targets the document the viewport is **not** showing  
@@ -240,7 +240,7 @@ mcp view_fit_viewport { doc: "<DocA handle>" }
 **And** the camera did **not** move — verify: `mcp query_tree_summary { doc: "<DocB handle>" }` returns a `framing:` line whose ratio equals `ratio_before`. The fit is never redirected to the active document.  
 **And** the refusal came from the on-screen name, not from a missing viewport — verify: `detail.message` names `DocB`, which no per-document accessor keyed on `DocA` could produce. R2-02 failed this scenario because the guard compared `DocA` against a view resolved from `DocA`'s own name: a name against itself. A refusal citing only `DocA`, or one reading `no live 3D view`, means the guard is answering the wrong question again.  
 **And** `DocA` was **not** brought forward to resolve the comparison — verify: the window capture below still shows `DocB`'s tab active. The on-screen name is read from the focused MDI sub-window; activating or raising `DocA` would be the unrequested GUI change AD-31 forbids.  
-**And** *(visual)* the window still shows `DocB`, unchanged — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-06-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: `DocB`'s model at the same size and position as before, its name in the title bar and its tab active — `DocA` was not silently brought forward. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking at the image.  
+**And** *(visual)* the window still shows `DocB`, unchanged — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-06-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: `DocB`'s model at the same size and position as before, its name in the title bar and its tab active — `DocA` was not silently brought forward. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -277,7 +277,7 @@ mcp view_fit_viewport { }
 **And** a stale handle is refused — verify: the second call returns `INVALID_INPUT`  
 **And** a missing handle is a schema reject — verify: the third call is refused with `Input validation error: 'doc' is a required property` (schema refusal) or `INVALID_INPUT`; the input is refused either way, because `doc` is in `required`  
 **And** the handle is resolved **before** the viewport is consulted — verify: none of the three messages mentions a viewport or a missing 3D view. A bad handle must read as a bad handle on every host, not be masked by a "no viewport" answer the caller cannot act on.  
-**And** *(visual)* no refusal disturbed the window — verify: `mcp view_fit_viewport { doc: "<good handle>" }` returns `OK`; if it does not, frame through the GUI with the **Fit All** toolbar button by `element_token`, since the three refusals under test may have left the MCP fit unusable. Then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-07-after.png"}' | & cua-driver call get_window_state`; `Read` the PNG and say what is on screen: the golden model still there and whole, no dialog or error popup raised by the three refusals. The judgement is on the pixels alone — no MCP status may stand in for looking at the image.  
+**And** *(visual)* no refusal disturbed the window — verify: `mcp view_fit_viewport { doc: "<good handle>" }` returns `OK`; if it does not, frame through the GUI with the **Fit All** toolbar button by `element_token`, since the three refusals under test may have left the MCP fit unusable. Then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-07-after.png"}' | "$FCB_CUA" get_window_state`; `Read` the PNG and say what is on screen: the golden model still there and whole, no dialog or error popup raised by the three refusals. The judgement is on the pixels alone — no MCP status may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -305,7 +305,7 @@ mcp view_fit_viewport { doc: "<handle>", confirm: true }
 **Then** the unknown key is rejected — verify: the first call is refused with `Input validation error: Additional properties are not allowed ('factor' was unexpected)` (schema refusal) or `INVALID_INPUT`, not a silently-ignored extra key; the input is refused either way  
 **And** `confirm` is rejected too — verify: the second call is refused the same way, naming `'confirm'`. The tool is confirm-exempt, so `confirm` is an unknown key here, not an accepted no-op.  
 **And** no camera moved on either reject — verify: the ratio on the `framing:` line of `query_tree_summary` equals `ratio_before`  
-**And** *(visual)* the window is untouched by both rejects — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-08-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and compare it to the `Given`'s capture: the model at the same size, position, and orientation, no dialog raised. A schema reject that nevertheless moved the camera is exactly what this catches, and only the two pictures show it. The judgement is on the pixels alone — no MCP status or ratio may stand in for looking at the images.  
+**And** *(visual)* the window is untouched by both rejects — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-08-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and compare it to the `Given`'s capture: the model at the same size, position, and orientation, no dialog raised. A schema reject that nevertheless moved the camera is exactly what this catches, and only the two pictures show it. The judgement is on the pixels alone — no MCP status or ratio may stand in for looking at the images.  
 
 **Cleanup**:
 ```
@@ -323,7 +323,7 @@ mcp document_close { doc: "<handle>" }
 
 **Given** the H1 headless host is runnable — verify: APPENDIX-B step 3 reports `H1 ok`  
 **And** the GUI still has its own document open and fitted — verify: `mcp view_fit_viewport { doc: "<gui handle>" }` returns `OK`  
-**And** the GUI's framed state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-09-before.png"}' | & cua-driver call get_window_state`  
+**And** the GUI's framed state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-09-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the H1 host is started, a golden model is opened on it, and the fit is called  
 ```
@@ -335,7 +335,7 @@ H1: view_fit_viewport { doc: "<h1 handle>" }
 **And** `fitted` is false — verify: `structured_content.fitted` is `false` and `structured_content.reason` carries the same sentence  
 **And** no traceback reached stderr — verify: the H1 server stderr log holds no traceback for this call. An absent viewport is a stated outcome, not a fault.  
 **And** the handle still resolves afterwards — verify: a following `query_tree_summary` on the same H1 handle returns `OK`. The refusal must not quarantine the document.  
-**And** *(visual)* the separate GUI window was not touched by the headless call — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-09-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and compare: the GUI viewport shows the same model at the same size, position, and orientation. No fit is issued between the two captures — a fit would move the very camera this scenario says was left alone. A headless refusal that reached across into the human's camera would be a serious defect. The judgement is on the pixels alone — no MCP status may stand in for looking at the images.  
+**And** *(visual)* the separate GUI window was not touched by the headless call — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-09-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and compare: the GUI viewport shows the same model at the same size, position, and orientation. No fit is issued between the two captures — a fit would move the very camera this scenario says was left alone. A headless refusal that reached across into the human's camera would be a serious defect. The judgement is on the pixels alone — no MCP status may stand in for looking at the images.  
 
 **Cleanup**: stop the H1 host.
 ```
@@ -369,7 +369,7 @@ tail -5 "$RUN_DIR/evidence/tc-14-10-audit.jsonl"
 **And** `camera_before` is **not** in `fingerprint_before` — verify: `fingerprint_before` is a geometry digest under AD-6 and carries no camera text  
 **And** the generic bracket also logged — verify: the dispatch bracket's own before/after lines are present. A fit is audited twice by design: once generically, once with the camera.  
 **And** `camera_before` is absent from the generated schema's required list — verify: `grep -A5 '"required"' src/freecad_buddy/contracts/jsonschema/audit-record.schema.json` does not list `camera_before`; it is optional  
-**And** *(visual)* the audited move is the move the human received — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-10-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and compare it to the `Given`'s off-model capture: the model is now whole inside the frame, where before it was not. An audit record for a camera move that never reached the window is a false record, and the audit log cannot reveal that — only the picture can. The judgement is on the pixels alone — no MCP status or audit line may stand in for looking at the image.  
+**And** *(visual)* the audited move is the move the human received — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-10-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and compare it to the `Given`'s off-model capture: the model is now whole inside the frame, where before it was not. An audit record for a camera move that never reached the window is a false record, and the audit log cannot reveal that — only the picture can. The judgement is on the pixels alone — no MCP status or audit line may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -384,7 +384,7 @@ mcp document_close { doc: "<handle>" }
 **Design Ref**: §AD-33; `contracts/envelope.py:82-117` (`framing_warning`, `with_framing_text`)
 
 **Given** a document is open and Show All is run, and the camera is zoomed so the model does **not** fit — verify: the `framing:` line of `mcp query_tree_summary { doc: "<handle>" }` reads `does not fit`  
-**And** the non-fitting state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-11-before.png"}' | & cua-driver call get_window_state`  
+**And** the non-fitting state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-11-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a tool that carries the framing key is called while the model does not fit  
 ```
@@ -402,7 +402,7 @@ mcp query_tree_summary { doc: "<handle>" }
 **And** the warning disappears after the fit — verify: the second call's `text` carries no `Warning:` sentence  
 **And** a fitting model earns no sentence — verify: with a `framing:` line that reads `fits`, no warning is produced. Only `does not fit` warns.  
 **And** an unmeasurable verdict earns no sentence — verify: a document whose `framing:` line reads `unknown, unavailable, <reason>` (for example a golden model before Show All: `no visible shape-bearing objects to measure`) produces no `Warning:` text. A measurement failure is not a framing problem, and `unknown` must never warn.  
-**And** *(visual)* the warning told the truth both times — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what each shows: the before image a model genuinely cut off at a viewport edge, the after image the same model whole. **This is the assertion that grades the warning itself** — the sentence claims the human is seeing only part of the model, and only the picture says whether that claim was true. A warning that fires over a fully visible model, or stays silent over a clipped one, is the defect. The judgement is on the pixels alone — no MCP status or `framing:` line may stand in for looking at the images.  
+**And** *(visual)* the warning told the truth both times — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-11-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what each shows: the before image a model genuinely cut off at a viewport edge, the after image the same model whole. **This is the assertion that grades the warning itself** — the sentence claims the human is seeing only part of the model, and only the picture says whether that claim was true. A warning that fires over a fully visible model, or stays silent over a clipped one, is the defect. The judgement is on the pixels alone — no MCP status or `framing:` line may stand in for looking at the images.  
 
 **Cleanup**:
 ```
@@ -438,7 +438,7 @@ mcp query_tree_summary { doc: "<gui handle>" }
 **And** H1 emits no warning sentence — verify: the H1 text carries no `Warning:` text  
 **And** the GUI host emits the line — verify: the GUI text has a `framing:` line that ends `computed` or `cached` (a cached line may add a reason after it)  
 **And** `fits` is never a guess — verify: across both, the first part of a `framing:` line is only ever `fits`, `does not fit`, or `unknown`; `unknown` is always followed by `unavailable` and a non-empty reason  
-**And** *(visual)* the GUI host's block describes a real window — verify: `mcp view_fit_viewport { doc: "<gui handle>" }` returns `OK`, or failing that frame with the **Fit All** toolbar button by `element_token`; then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-12-after.png"}' | & cua-driver call get_window_state`; `Read` the PNG and say what is on screen: a real 3D view with the model drawn in it. That viewport's existence is the whole reason the two hosts answer differently, so it is confirmed by looking rather than by trusting the block that claims it. The judgement is on the pixels alone — no MCP status or `framing:` line may stand in for looking at the image.  
+**And** *(visual)* the GUI host's block describes a real window — verify: `mcp view_fit_viewport { doc: "<gui handle>" }` returns `OK`, or failing that frame with the **Fit All** toolbar button by `element_token`; then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-12-after.png"}' | "$FCB_CUA" get_window_state`; `Read` the PNG and say what is on screen: a real 3D view with the model drawn in it. That viewport's existence is the whole reason the two hosts answer differently, so it is confirmed by looking rather than by trusting the block that claims it. The judgement is on the pixels alone — no MCP status or `framing:` line may stand in for looking at the image.  
 
 **Cleanup**: stop the H1 host.
 ```
@@ -463,7 +463,7 @@ clamps the window height (a request for 640 x 400 landed as 640 x 643 in run `20
 the resize below keeps the whole 3D view on screen.
 
 **Given** a document is open, Show All is run, and the model is fitted — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK` and the `framing:` line of `query_tree_summary` reads `fits, ratio R, computed`; record R as `ratio_before`  
-**And** the original window size is recorded — verify: `cua-driver call list_windows` reports `<orig_w>` and `<orig_h>`  
+**And** the original window size is recorded — verify: `echo '{}' | "$FCB_CUA" list_windows` reports `<orig_w>` and `<orig_h>`  
 
 **When** the tree is read a second time with nothing changed  
 ```
@@ -471,7 +471,8 @@ mcp query_tree_summary { doc: "<handle>" }
 ```
 **And** the FreeCAD window is narrowed to about 60 % of its width, with its height unchanged, so the 3D view changes size and aspect but stays wholly visible  
 ```bash
-'{"pid":<pid>,"window_id":<wid>,"frame":{"width":<0.6 × orig_w>,"height":<orig_h>}}' | & cua-driver call set_window_frame
+docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir <hex wid> -b remove,maximized_vert,maximized_horz'
+echo '{"pid":<pid>,"window_id":<wid>,"x":<orig_x>,"y":<orig_y>,"width":<0.6 × orig_w>,"height":<orig_h>}' | "$FCB_CUA" set_window_frame
 ```
 **And** the tree is read again  
 ```
@@ -480,15 +481,16 @@ mcp query_tree_summary { doc: "<handle>" }
 
 **Then** the second identical read is served from cache — verify: its `framing:` line carries `cached`  
 **And** a cached verdict names its unverified components — verify: on the pure-query path the cached line ends with a reason that names `geometry`, since no cheap digest is available there  
-**And** the window geometry was really applied — verify: `cua-driver call list_windows` reports the requested width and height. A `set_window_frame` that did not land makes the next two assertions meaningless  
+**And** the window geometry was really applied — verify: `echo '{}' | "$FCB_CUA" list_windows` reports the requested width and height. FreeCAD's window is maximized, and `set_window_frame` on a maximized window returns `suspected_noop` and changes nothing: un-maximize first with the `wmctrl` line above (`<hex wid>` is the `window_id` as `0x%08x`). A `set_window_frame` that did not land makes the next two assertions meaningless  
 **And** the 3D view stays wholly on screen — verify: the after capture below shows no scrollbar in the MDI area. If one shows, the size is out of scope for this scenario: restore the window and repeat with a larger width  
 **And** the resize invalidates the cache — verify: the third read's `framing:` line carries `computed`, not `cached`  
 **And** the re-measured verdict reflects the narrower view — verify: the third read's ratio differs from `ratio_before`; record both. With the width now the binding axis, the same model fills more of the view, so the ratio is expected to be larger, and above `1.0` the line reads `does not fit`  
-**And** *(visual)* the narrower window shows the model as the verdict says — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a visibly narrower window with no MDI scrollbar, and whether the model is whole inside the 3D view or cut off at its left or right edge. That must agree with `fits` or `does not fit` on the third read. Judge by looking at the image, not by comparing the reported ratios. The judgement is on the pixels alone — no MCP status or ratio may stand in for looking at the image.  
+**And** *(visual)* the narrower window shows the model as the verdict says — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-13-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a visibly narrower window with no MDI scrollbar, and whether the model is whole inside the 3D view or cut off at its left or right edge. That must agree with `fits` or `does not fit` on the third read. Judge by looking at the image, not by comparing the reported ratios. The judgement is on the pixels alone — no MCP status or ratio may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
-'{"pid":<pid>,"window_id":<wid>,"frame":{"width":<orig_w>,"height":<orig_h>}}' | & cua-driver call set_window_frame
+echo '{"pid":<pid>,"window_id":<wid>,"x":<orig_x>,"y":<orig_y>,"width":<orig_w>,"height":<orig_h>}' | "$FCB_CUA" set_window_frame
+docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir <hex wid> -b add,maximized_vert,maximized_horz'
 ```
 ```
 mcp document_close { doc: "<handle>" }
@@ -510,7 +512,7 @@ on by default.
 
 **Given** the H1 host is started with `FREECAD_BUDDY_AUDIT_LOG` pointing at `$RUN_DIR/evidence/tc-14-14-audit.jsonl`, and a golden model is open on it — verify: `H1: document_open` returns `OK`; record `<suspect handle>`  
 **And** the document is made suspect by a timed-out mutating call — verify: `H1: script_exec { doc: "<suspect handle>", code: "import time\ntime.sleep(45)" }` returns `TIMEOUT` after about 30 s, and its message says `the document is now suspect`  
-**And** the GUI window's current state is captured before the attempt — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-14-before.png"}' | & cua-driver call get_window_state`  
+**And** the GUI window's current state is captured before the attempt — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-14-before.png"}' | "$FCB_CUA" get_window_state`  
 **And** the audit log tail position is recorded — verify: `wc -l "$RUN_DIR/evidence/tc-14-14-audit.jsonl"`  
 
 **When** the fit is attempted on the suspect handle, at once, while the abandoned body may still run. Send no `query_*` read on that handle first: a read that returns `OK` clears the suspect flag.  
@@ -521,7 +523,7 @@ H1: view_fit_viewport { doc: "<suspect handle>" }
 **Then** the fit is refused — verify: `status` is `INVALID_INPUT` and `detail.message` is `document-suspect: a prior call timed out on this document and its body may still be running; run a query_* read to confirm the document still responds before mutating`  
 **And** it is refused **before** dispatch — verify: the call returns in under 1 s, and the audit lines past the recorded tail are only the boundary's own `view_fit_viewport` pair (a `before` line and an `after` line with `INVALID_INPUT`); no record carries `camera_before`, which only a dispatched fit writes  
 **And** the host is named in the result record — verify: the run report states this ran under the H1 host  
-**And** *(visual)* the GUI camera did not move — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-14-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and compare: the same view at the same size, position, and orientation, no dialog raised. **No fit is performed first here, by either route** — the MCP fit is the very action the suspect check must refuse, and a GUI fit would move the camera and destroy the comparison. The judgement is on the pixels alone — no MCP status may stand in for looking at the images.  
+**And** *(visual)* the GUI camera did not move — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-14-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and compare: the same view at the same size, position, and orientation, no dialog raised. **No fit is performed first here, by either route** — the MCP fit is the very action the suspect check must refuse, and a GUI fit would move the camera and destroy the comparison. The judgement is on the pixels alone — no MCP status may stand in for looking at the images.  
 
 **Cleanup**: wait until the abandoned body has returned (`H1: query_capabilities {}` returns `OK` instead of `TIMEOUT` with `quarantined: true`), clear the suspect flag with a read (`document_close` is mutating, so it is refused while the flag is set), close the document, then stop the H1 host.
 ```
@@ -544,7 +546,7 @@ never reached the running application.
 
 **Given** the source tree is clean — verify: `git status --porcelain src` is empty. The gate reads only `src/`; run artifacts elsewhere in the tree do not matter here  
 **And** a document is open and fitted in the GUI, as the untouched baseline — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`  
-**And** that baseline is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-15-before.png"}' | & cua-driver call get_window_state`  
+**And** that baseline is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-15-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the gate is run on the shipped tree  
 ```bash
@@ -561,7 +563,7 @@ uv run python scripts/check_imports.py; echo "exit=$?"
 **And** the message names the real rule — verify: the output names `ActiveDocument` and the offending file, rather than failing for an unrelated reason  
 **And** `FreeCADGui` is in the alias set — verify: `grep -n "FREECAD_MODULE_ALIASES" -A6 scripts/check_imports.py` lists `FreeCADGui`  
 **And** the live source is clean of the pattern in code — verify: `grep -rn --include=*.py "FreeCADGui.ActiveDocument" src/` returns only docstring prose (two lines in `hosts/gui_addon/viewport.py` that state the rule), and `uv run python scripts/check_imports.py` passing on the shipped tree confirms no code use  
-**And** *(visual)* the running application was never affected by the probe — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that frame with the **Fit All** toolbar button by `element_token`; then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-15-after.png"}' | & cua-driver call get_window_state`; `Read` both PNGs and compare: the same model, whole and unchanged, no error dialog or addon-failure popup. The probe is a static-analysis fixture and must never be imported by the live addon. The judgement is on the pixels alone — no MCP status may stand in for looking at the images.  
+**And** *(visual)* the running application was never affected by the probe — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that frame with the **Fit All** toolbar button by `element_token`; then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-15-after.png"}' | "$FCB_CUA" get_window_state`; `Read` both PNGs and compare: the same model, whole and unchanged, no error dialog or addon-failure popup. The probe is a static-analysis fixture and must never be imported by the live addon. The judgement is on the pixels alone — no MCP status may stand in for looking at the images.  
 
 **Cleanup**:
 ```bash
@@ -600,7 +602,7 @@ mcp verify_shape { doc: "<handle>", object: "Box" }
 **And** the volume is unchanged — verify: `mcp query_mass_properties { doc: "<handle>", object: "Box" }` still returns `6000.0` mm³ within 0.1 %  
 **And** the document's modified state is unchanged across the fit — verify: the window title is the same as the one recorded after Show All  
 **And** no recompute was triggered — verify: `mcp verify_recompute { doc: "<handle>" }` returns `OK` with `subject.failing_objects` empty  
-**And** *(visual)* the same geometry is on screen, only better framed — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-16-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid of unchanged proportions, with no added, removed, or deformed feature. An identical fingerprint proves the digest did not change, not that the human is still looking at the same shape. The judgement is on the pixels alone — no MCP status or fingerprint may stand in for looking at the image.  
+**And** *(visual)* the same geometry is on screen, only better framed — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-16-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid of unchanged proportions, with no added, removed, or deformed feature. An identical fingerprint proves the digest did not change, not that the human is still looking at the same shape. The judgement is on the pixels alone — no MCP status or fingerprint may stand in for looking at the image.  
 
 **Cleanup**:
 ```

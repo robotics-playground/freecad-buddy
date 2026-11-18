@@ -1,0 +1,8 @@
+# RT-5 TC-01:83 as written, with the GUI proxy up
+## the GUI proxy
+22134 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+## TC-01:83 command (must print nothing)
+exit=1 (1 = nothing = pass)
+## with a stray headless host (stdin kept open 40 s)
+22153 sh -c sleep 40 | fcb-py -m freecad_buddy.hosts.main serve --transport stdio --mode inline
+exit=0 (0 = a line = fail)

@@ -1,0 +1,10 @@
+# RT-1 TC-10 held-session check, run as written (port 33867)
+## proxy holds the session
+$ docker exec -u cua fcb-desktop ss -tnp | grep ":<port>" | grep ESTAB
+ESTAB 0      0          127.0.0.1:39140    127.0.0.1:33867 users:(("python",pid=20552,fd=9))
+ESTAB 0      0          127.0.0.1:33867    127.0.0.1:39140 users:(("freecad",pid=20458,fd=21))
+exit=0
+## the old form
+old_exit=1 (1 = prints nothing)
+## proxy stopped (kill 20552)
+exit=1 (1 = nothing = the raw client is the only session)

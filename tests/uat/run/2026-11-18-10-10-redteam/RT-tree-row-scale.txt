@@ -1,0 +1,11 @@
+# Tree row toggle route, test-plan.md §6: row centre "in window pixels (the frame of an element is in screen pixels: subtract the window origin)"
+# window_bounds {x:0,y:51,w:1600,h:949}; get_window_state screenshot_width 1568, screenshot_height 930 (scale 0.98)
+# target row B16, AT-SPI frame {x:24,y:509,w:222,h:18}: centre (135,518) - origin (0,51) = window px (135,467)
+$ echo '{"pid":18809,"window_id":37748834,"x":135,"y":467,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+$ script_exec { code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }
+"value_repr":"['B17']"
+# same row B16 in screenshot pixels: (132,457) = window px x 0.98
+$ echo '{"pid":18809,"window_id":37748834,"x":132,"y":457,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+"value_repr":"['B16']"

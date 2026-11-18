@@ -1,0 +1,189 @@
+### TC-01-session-lifecycle-and-transport.md:59 -> 59 hand
+  B:  `netstat -ano | grep :8765` shows `LISTENING`, and the owning pid equals the pid in the spawn line or is its child. The `.venv` `pythonw.exe` is a launcher: it starts the uv base `pythonw.exe`, which owns the port. Confirm the child with `powershell -c "(Get-CimInstance Win32_Process -Filter 'ProcessId=<owner pid>').ParentProcessId"`, which returns the spawn-line pid  
+  A:  `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN`, and the owning pid equals the pid in the spawn line (the venv python is the process that binds the port, so there is no launcher child)  
+### TC-01-session-lifecycle-and-transport.md:60 -> 60 hand
+  B:  `powershell -c "(Get-CimInstance Win32_Process -Filter 'ProcessId=<proxy pid>').CommandLine"` contains `.venv\Scripts\python` and `-m freecad_buddy.hosts.main serve --mode rpc --transport http`  
+  A:  `docker exec -u cua fcb-desktop sh -c "tr '\0' ' ' < /proc/<proxy pid>/cmdline"` contains `FreeCADBuddy/venv/bin/python` and `-m freecad_buddy.hosts.main serve --mode rpc --transport http`  
+### TC-01-session-lifecycle-and-transport.md:61 -> 61 hand
+  B:  that command line is the only `freecad_buddy.hosts.main serve` process in `powershell -c "Get-CimInstance Win32_Process | ? {$_.CommandLine -like '*hosts.main*serve*'} | select ProcessId"`  
+  A:  that command line is the only `freecad_buddy.hosts.main serve` process in `docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve'`  
+### TC-01-session-lifecycle-and-transport.md:361 -> 361 hand
+  B:  the path is `$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<pid>.json`; `$APPDATA/FreeCAD/Mod/` is legacy and empty  
+  A:  the path is `$FCB_USER_DIR/freecad-buddy/rpc-<pid>.json`  
+### TC-01-session-lifecycle-and-transport.md:363 -> 363 hand
+  B:  the `pid` value equals the pid from `cua-driver call list_windows`, and `tasklist | grep <pid>` shows `freecad.exe`  
+  A:  the `pid` value equals the pid from `"$FCB_CUA" list_windows`, and `docker exec -u cua fcb-desktop ps -p <pid> -o pid=,comm=` shows `freecad`  
+### TC-01-session-lifecycle-and-transport.md:364 -> 364 hand
+  B:  `host` is `127.0.0.1` and `netstat -ano | grep "127.0.0.1:<port>"` shows `LISTENING` owned by that pid  
+  A:  `host` is `127.0.0.1` and `docker exec -u cua fcb-desktop ss -ltnp | grep "127.0.0.1:<port>"` shows `LISTEN` owned by that pid  
+### TC-01-session-lifecycle-and-transport.md:368 -> 368 hand
+  B:  `ls -l` shows `-rw-------` on POSIX. On Windows `chmod` only toggles the read-only bit, so record the observed mode and treat the loopback bind plus the per-session token as the enforced control; do not fail this assertion on Windows  
+  A:  the `ls -l` line above shows `-rw-------`  
+### TC-01-session-lifecycle-and-transport.md:398 -> 398 hand
+  B:  `tasklist | grep -i freecad.exe` returns nothing  
+  A:  `docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'` prints nothing, exit 1  
+### TC-01-session-lifecycle-and-transport.md:400 -> 400 hand
+  B:  `tasklist | grep <proxy pid>` returns nothing  
+  A:  `docker exec -u cua fcb-desktop ps -p <proxy pid> -o pid=` prints nothing, exit 1  
+### TC-01-session-lifecycle-and-transport.md:403 -> 403 hand
+  B:  `cua-driver call list_windows {}` lists no FreeCAD window, and `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-10-after.png"}' | & cua-driver call get_window_state` fails to capture the dead pid. No MCP fit is possible here and none is attempted: the quit removed the document, the camera, and the bridge, which is what the scenario asserts. The framing in the `Given` was done through **View → Fit All** for that reason. `Read` the before PNG and say what was on screen — a FreeCAD main window with a 3D view and a box-shaped solid inside it — then confirm that exact window is absent from the desktop now. The judgement is on the pixels alone — no MCP status or ren
+  A:  `echo '{}' | "$FCB_CUA" list_windows` lists no FreeCAD window, and `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-10-after.png"}' | "$FCB_CUA" get_window_state` fails to capture the dead pid. No MCP fit is possible here and none is attempted: the quit removed the document, the camera, and the bridge, which is what the scenario asserts. The framing in the `Given` was done through **View → Fit All** for that reason. `Read` the before PNG and say what was on screen — a FreeCAD main window with a 3D view and a box-shaped solid inside it — then confirm that exact window is absent from the desktop now. The judgement is on the pixels alone — no MCP status or r
+### TC-01-session-lifecycle-and-transport.md:438 -> 438 hand
+  B:  `tasklist | grep <dead pid>` returns nothing  
+  A:  `docker exec -u cua fcb-desktop ps -p <dead pid> -o pid=` prints nothing, exit 1  
+### TC-01-session-lifecycle-and-transport.md:474 -> 474 hand
+  B:  `tasklist | grep <freecad pid>` still shows `freecad.exe`  
+  A:  `docker exec -u cua fcb-desktop ps -p <freecad pid> -o pid=,comm=` still shows `freecad`  
+### TC-01-session-lifecycle-and-transport.md:476 -> 476 hand
+  B:  `netstat -ano | grep :8765` shows `LISTENING` on the new proxy pid  
+  A:  `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN` on the new proxy pid  
+### TC-01-session-lifecycle-and-transport.md:570 -> 571 hand
+  B:  `tasklist | grep <freecad pid>` returns nothing  
+  A:  `docker exec -u cua fcb-desktop ps -p <freecad pid> -o pid=` prints nothing, exit 1  
+### TC-01-session-lifecycle-and-transport.md:573 -> 574 hand
+  B:  within 5 s of the kill, `tasklist | grep <proxy pid>` returns nothing and `netstat -ano | grep :8765` shows no `LISTENING` row. The proxy pid is the `LISTENING` pid on `:8765` recorded in the `Given`.  
+  A:  within 5 s of the kill, `docker exec -u cua fcb-desktop ps -p <proxy pid> -o pid=` prints nothing, exit 1 and `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows no `LISTEN` row. The proxy pid is the `LISTEN` pid on `:8765` recorded in the `Given`.  
+### TC-01-session-lifecycle-and-transport.md:576 -> 577 hand
+  B:  relaunching FreeCAD writes a new `rpc-<new pid>.json` and `:8765` returns to `LISTENING`  
+  A:  relaunching FreeCAD writes a new `rpc-<new pid>.json` and `:8765` returns to `LISTEN`  
+### TC-01-session-lifecycle-and-transport.md:577 -> 578 hand
+  B:  `curl -s http://127.0.0.1:8765/healthz` returns `200` with `"service": "freecad-buddy-mcp-proxy"` and `"freecad_pid"` equal to the new FreeCAD pid, the `LISTENING` pid on `:8765` differs from the killed session's proxy pid, and the new session's `addon.log` lines hold no `MCP proxy not started` ERROR  
+  A:  `curl -s http://127.0.0.1:18765/healthz` returns `200` with `"service": "freecad-buddy-mcp-proxy"` and `"freecad_pid"` equal to the new FreeCAD pid, the `LISTENING` pid on `:8765` differs from the killed session's proxy pid, and the new session's `addon.log` lines hold no `MCP proxy not started` ERROR  
+### TC-01-session-lifecycle-and-transport.md:637 -> 638 hand
+  B:  `grep -c "ERROR" addon.log` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
+  A:  `docker exec -u cua fcb-desktop grep -c ERROR "$FCB_USER_DIR/freecad-buddy/addon.log"` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
+### TC-01-session-lifecycle-and-transport.md:638 -> 639 hand
+  B:  `grep "spawned MCP proxy" addon.log` returns nothing, and `netstat -ano | grep :8765` shows `LISTENING` only on the holder pid recorded from `netstat`  
+  A:  `grep "spawned MCP proxy" addon.log` returns nothing, and `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN` only on the holder pid recorded from `ss -ltnp`  
+### TC-01-session-lifecycle-and-transport.md:639 -> 640 hand
+  B:  `grep "freecad-buddy RPC listener started on" addon.log` returns a line, and `rpc-<new freecad pid>.json` exists  
+  A:  `docker exec -u cua fcb-desktop grep "freecad-buddy RPC listener started on" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns a line, and `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<new freecad pid>.json"` lists it  
+### TC-05-mutation-protocol-and-rollback.md:95 -> 95 hand
+  B:  the record holds exactly one entry, and its folder is an `FCB_TMP_snap_*` folder inside the session temp folder `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/`, not in `$TEMP`  
+  A:  the record holds exactly one entry, and its folder is an `FCB_TMP_snap_*` folder inside the session temp folder `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/`, not in the container's `/tmp`  
+### TC-06-render-and-gui-visual-fidelity.md:572 -> 568 hand
+  B:  the `Get-ChildItem` listing shows no new `FCB_TMP_shot_*.png` created by the render call, and the system temp folder holds none either  
+  A:  the `find` listing shows no new `FCB_TMP_shot_*.png` created by the render call, and the system temp folder holds none either  
+### TC-06-render-and-gui-visual-fidelity.md:618 -> 614 hand
+  B:  the `Select-String` output names the `AntiAliasing` enum value, and it is mapped to a sample count with the table above  
+  A:  the `grep` output names the `AntiAliasing` enum value, and it is mapped to a sample count with the table above  
+### TC-07-verification-and-export-pairing.md:365 -> 365 hand
+  B:  the `lib3mf.unit_millimeter` check `measured` reads `{"unit": 1, "source_is_mm": true}` (confirm the enum with `uv run python -c "import lib3mf; print(int(lib3mf.ModelUnit.MilliMeter))"`) and `passed: true`  
+  A:  the `lib3mf.unit_millimeter` check `measured` reads `{"unit": 1, "source_is_mm": true}` (confirm the enum with `"$FCB_PYTHON" -c "import lib3mf; print(int(lib3mf.ModelUnit.MilliMeter))"`) and `passed: true`  
+### TC-09-error-contract-and-fault-injection.md:403 -> 403 hand
+  B:  `'{"pid":<pid>,"window_id":<wid>,"path":["Windows","<n> box-10-20-30 : 1*"]}' | & cua-driver call invoke_menu` returns `route: "accessibility"`, and the `list_windows` title names `box-10-20-30`  
+  A:  each press (test-plan §6, "Menu route") returns `route: "accessibility"`, and the final `list_windows` title names `box-10-20-30`  
+### TC-09-error-contract-and-fault-injection.md:926 -> 926 hand
+  B:  the session temp folder `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`) holds no `FCB_TMP_snap_*` or `FCB_TMP_prev_*` entry left by this case series. The agent shell may get "Access is denied" there: list it in-process with `mcp script_exec { doc: <any open handle>, code: "import os; result = os.listdir(r'<folder>')" }`  
+  A:  the session temp folder `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `$FCB_USER_DIR/freecad-buddy/workdir`) holds no `FCB_TMP_snap_*` or `FCB_TMP_prev_*` entry left by this case series. The agent shell may get "Access is denied" there: list it in-process with `mcp script_exec { doc: <any open handle>, code: "import os; result = os.listdir(r'<folder>')" }`  
+### TC-10-concurrency-timeout-and-quarantine.md:159 -> 159 hand
+  B:  `socket.create_connection((host, port), timeout=5)` returns without raising  
+  A:  `docker exec -u cua fcb-desktop fcb-py -c "import socket; socket.create_connection(('<host>', <port>), timeout=5)"` returns without raising  
+### TC-10-concurrency-timeout-and-quarantine.md:326 -> 326 hand
+  B:  `Get-Process -Id <worker pid>` still finds the worker after the escalation  
+  A:  `docker exec -u cua fcb-desktop ps -p <worker pid> -o pid=` still prints the worker pid after the escalation  
+### TC-10-concurrency-timeout-and-quarantine.md:524 -> 524 hand
+  B:  within 5 s of that envelope, `netstat -ano | grep :8765` shows no `LISTENING` row, and a following `tools/list` against `:8765` returns a connection error, never a partial/corrupt body  
+  A:  within 5 s of that envelope, `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows no `LISTEN` row, and a following `tools/list` against `http://127.0.0.1:18765/mcp` returns a connection error, never a partial/corrupt body  
+### TC-10-concurrency-timeout-and-quarantine.md:527 -> 527 hand
+  B:  after restart, `tools/list` against `:8765` returns the live count (45 typed tools, plus `script_exec` when it is on: 46 by default)  
+  A:  after restart, `tools/list` against `http://127.0.0.1:18765/mcp` returns the live count (45 typed tools, plus `script_exec` when it is on: 46 by default)  
+### TC-10-concurrency-timeout-and-quarantine.md:528 -> 528 hand
+  B:  `curl -s http://127.0.0.1:8765/healthz` returns `"freecad_pid"` equal to the restarted FreeCAD pid  
+  A:  `curl -s http://127.0.0.1:18765/healthz` returns `"freecad_pid"` equal to the restarted FreeCAD pid  
+### TC-10-concurrency-timeout-and-quarantine.md:608 -> 608 hand
+  B:  the first client's next `recv` returns zero bytes or raises `ConnectionResetError`. On Windows the listener closes while unread client data is still queued, so the peer sees a reset instead of an orderly close; both mean the connection is closed  
+  A:  the first client's next `recv` returns zero bytes or raises `ConnectionResetError`. A listener that closes while unread client data is still queued gives the peer a reset instead of an orderly close; both mean the connection is closed  
+### TC-11-security-posture-and-artifact-hygiene.md:271 -> 271 hand
+  B:  the `netstat` line shows the local address as `127.0.0.1:<port>`  
+  A:  the `ss -ltnp` line shows the local address as `127.0.0.1:<port>`  
+### TC-11-security-posture-and-artifact-hygiene.md:275 -> 275 hand
+  B:  the `netstat` output shows exactly one LISTENING line for that port  
+  A:  the `ss -ltnp` output shows exactly one `LISTEN` line for that port  
+### TC-11-security-posture-and-artifact-hygiene.md:311 -> 311 hand
+  B:  the `netstat` line shows the local address as `127.0.0.1:8765`  
+  A:  the `ss -ltnp` line shows the local address as `127.0.0.1:8765`  
+### TC-11-security-posture-and-artifact-hygiene.md:312 -> 312 hand
+  B:  `curl` to `http://<LAN-IP>:8765/mcp` reports connection refused  
+  A:  `docker exec -u cua fcb-desktop curl -sS http://<LAN-IP>:8765/mcp` reports connection refused  
+### TC-11-security-posture-and-artifact-hygiene.md:313 -> 313 hand
+  B:  `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp` returns a real HTTP status code  
+  A:  `docker exec -u cua fcb-desktop curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp` returns a real HTTP status code  
+### TC-11-security-posture-and-artifact-hygiene.md:358 -> 355 hand
+  B:  on POSIX `stat -c %a` returns `600`; on Windows `attrib` shows the read-only bit clear, and `icacls "<discovery file>"` lists only the owner, `NT AUTHORITY\SYSTEM` and `BUILTIN\Administrators`  
+  A:  `docker exec -u cua fcb-desktop stat -c %a "<discovery file>"` returns `600`  
+### TC-11-security-posture-and-artifact-hygiene.md:656 -> 653 hand
+  B:  `"$TEMP"/not-reserved/` still exists  
+  A:  `docker exec -u cua fcb-desktop ls -d /tmp/not-reserved` still lists it  
+### TC-11-security-posture-and-artifact-hygiene.md:878 -> 875 hand
+  B:  the folder `temp_dir()` returned starts with `<FreeCAD user app data>\freecad-buddy\workdir\tmp\`  
+  A:  the folder `temp_dir()` returned starts with `<FreeCAD user app data>/freecad-buddy/workdir/tmp/`  
+### TC-11-security-posture-and-artifact-hygiene.md:880 -> 877 hand
+  B:  the `resource_link` path is `<session folder>\FCB_TMP_shot_<random>.png` and the file exists (read it in-process if the shell is refused)  
+  A:  the `resource_link` path is `<session folder>/FCB_TMP_shot_<random>.png` and the file exists (read it in-process if the shell is refused)  
+### TC-11-security-posture-and-artifact-hygiene.md:882 -> 879 hand
+  B:  the first path is `<session folder>\FCB_TMP_snap_<random>\<document Name>.FCStd`  
+  A:  the first path is `<session folder>/FCB_TMP_snap_<random>/<document Name>.FCStd`  
+### TC-11-security-posture-and-artifact-hygiene.md:883 -> 880 hand
+  B:  the second path is `<session folder>\FCB_TMP_prev_<random>\FCB_TMP_prev_<16 hex characters>.FCStd`  
+  A:  the second path is `<session folder>/FCB_TMP_prev_<random>/FCB_TMP_prev_<16 hex characters>.FCStd`  
+### TC-11-security-posture-and-artifact-hygiene.md:885 -> 882 hand
+  B:  the second `find "$TEMP" -maxdepth 1 -name 'FCB_TMP_*'` count equals the baseline  
+  A:  the second `docker exec -u cua fcb-desktop sh -c "find /tmp -maxdepth 1 -name 'FCB_TMP_*' | wc -l"` count equals the baseline  
+### TC-11-security-posture-and-artifact-hygiene.md:950 -> 947 hand
+  B:  `ls -d "$TEMP/FCB_TMP_snap_tc1119"` still lists the folder  
+  A:  `docker exec -u cua fcb-desktop ls -d /tmp/FCB_TMP_snap_tc1119` still lists the folder  
+### TC-12-gui-workflows.md:508 -> 506 hand
+  B:  `(Get-Item $RUN_DIR/evidence/tc-12-08-bracket.FCStd).LastWriteTime` after the save is later than the pre-save value  
+  A:  `stat -c %y $RUN_DIR/evidence/tc-12-08-bracket.FCStd` after the save is later than the pre-save value  
+### TC-12-gui-workflows.md:766 -> 764 hand
+  B:  FreeCAD is still running (`Get-Process -Name freecad` returns the same pid) and each stale call returned within its own timeout  
+  A:  FreeCAD is still running (`docker exec -u cua fcb-desktop pgrep -f '^/opt/freecad/usr/bin/freecad'` returns the same pid) and each stale call returned within its own timeout  
+### TC-12-gui-workflows.md:821 -> 819 hand
+  B:  the post-quit `Get-Process -Name freecad` returns nothing  
+  A:  the post-quit `docker exec -u cua fcb-desktop pgrep -f '^/opt/freecad/usr/bin/freecad'` returns nothing  
+### TC-12-gui-workflows.md:822 -> 820 hand
+  B:  the post-quit `netstat` returns no LISTENING row for `:8765`  
+  A:  the post-quit `ss -ltnp` returns no `LISTEN` row for `:8765`  
+### TC-12-gui-workflows.md:823 -> 821 hand
+  B:  the proxy pid recorded before the quit is no longer in `Get-Process`; it was torn down with its parent, not orphaned  
+  A:  the proxy pid recorded before the quit is no longer listed by `ps -p <pid> -o pid=`; it was torn down with its parent, not orphaned  
+### TC-12-gui-workflows.md:824 -> 822 hand
+  B:  the post-quit `Get-ChildItem` no longer lists the RPC discovery file  
+  A:  the post-quit `ls` no longer lists the RPC discovery file  
+### TC-12-gui-workflows.md:825 -> 823 hand
+  B:  `mcp query_capabilities {}` fails to connect to `http://127.0.0.1:8765/mcp`; it must not hang indefinitely  
+  A:  `mcp query_capabilities {}` fails at the transport against `http://127.0.0.1:18765/mcp` (the host relay of the container's `:8765`); it must not hang indefinitely  
+### TC-12-gui-workflows.md:826 -> 824 hand
+  B:  `Get-Content "$env:APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" -Tail 20` shows `INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped` (written by `stop_bridge`, `hosts/gui_addon/bootstrap.py`) and no unhandled exception  
+  A:  `docker exec -u cua fcb-desktop tail -n 20 "$FCB_USER_DIR/freecad-buddy/addon.log"` shows `INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy bridge stopped` (written by `stop_bridge`, `hosts/gui_addon/bootstrap.py`) and no unhandled exception  
+### TC-12-gui-workflows.md:872 -> 870 hand
+  B:  the post-kill `Get-Process -Name freecad` returns nothing  
+  A:  the post-kill `docker exec -u cua fcb-desktop pgrep -f '^/opt/freecad/usr/bin/freecad'` returns nothing  
+### TC-12-gui-workflows.md:873 -> 871 hand
+  B:  the post-kill `netstat` returns no LISTENING row for `:8765` that still accepts connections; a socket that accepts but never answers is a defect  
+  A:  the post-kill `ss -ltnp` returns no `LISTEN` row for `:8765` that still accepts connections; a socket that accepts but never answers is a defect  
+### TC-12-gui-workflows.md:875 -> 873 hand
+  B:  within 5 s of the kill, the proxy pid recorded before the kill (the `LISTENING` pid on `:8765`) is no longer in `Get-Process`, and `Select-String "has exited; the MCP proxy exits" "$env:APPDATA\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log"` returns one line. Read the log before the restart: the new proxy rewrites it. If the proxy survives, record the orphan pid as a defect and stop it manually before continuing.  
+  A:  within 5 s of the kill, the proxy pid recorded before the kill (the `LISTEN` pid on `:8765`) is no longer listed by `ps -p <pid> -o pid=`, and `docker exec -u cua fcb-desktop grep "has exited; the MCP proxy exits" "$FCB_USER_DIR/freecad-buddy/mcp-proxy.log"` returns one line. Read the log before the restart: the new proxy rewrites it. If the proxy survives, record the orphan pid as a defect and stop it manually before continuing.  
+### TC-12-gui-workflows.md:877 -> 875 hand
+  B:  `Invoke-RestMethod http://127.0.0.1:8765/healthz` returns `freecad_pid` equal to the new FreeCAD pid, and the `LISTENING` pid on `:8765` differs from the pre-kill proxy pid  
+  A:  `curl -s http://127.0.0.1:18765/healthz` returns `freecad_pid` equal to the new FreeCAD pid, and the `LISTEN` pid on `:8765` differs from the pre-kill proxy pid  
+### TC-12-gui-workflows.md:878 -> 876 hand
+  B:  the restarted addon's `addon.log` has one `session-start sweep removed N leftover temp artifact(s)` line, and `<workdir>/tmp` (`%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir\tmp`) holds no `FCB_TMP_session_<killed pid>_*` folder: the sweep removes a session folder whose pid is dead. List it in-process with `script_exec` if the shell gets "Access is denied". The restarted host must still serve normally  
+  A:  the restarted addon's `addon.log` has one `session-start sweep removed N leftover temp artifact(s)` line, and `<workdir>/tmp` (`$FCB_USER_DIR/freecad-buddy/workdir/tmp`) holds no `FCB_TMP_session_<killed pid>_*` folder: the sweep removes a session folder whose pid is dead. List it in-process with `script_exec` if the shell gets "Access is denied". The restarted host must still serve normally  
+### TC-13-gui-mcp-parity.md:519 -> 515 hand
+  B:  `mcp document_open {path:"benchmarks/g0/golden-models/box-10-20-30.FCStd"}` — the bare relative form, with no `$PROJECT_ROOT` prefix — returns `INVALID_INPUT`, because a relative path resolves against `C:\Program Files\FreeCAD 1.1\bin`  
+  A:  `mcp document_open {path:"benchmarks/g0/golden-models/box-10-20-30.FCStd"}` — the bare relative form, with no `$PROJECT_ROOT` prefix — returns `INVALID_INPUT`, because a relative path resolves against `/home/cua`  
+### TC-13-gui-mcp-parity.md:987 -> 983 hand
+  B:  `Get-Process -Name freecad` reports the same pid, and `mcp query_capabilities {}` returns `OK`  
+  A:  `docker exec -u cua fcb-desktop pgrep -f '^/opt/freecad/usr/bin/freecad'` reports the same pid, and `mcp query_capabilities {}` returns `OK`  
+### TC-15-self-verifying-fit-regression.md:271 -> 270 hand
+  B:  re-count `FCB_TMP_*` in `$env:TEMP`; it equals `before`. Under the shipped code each render added one  
+  A:  re-count `FCB_TMP_*` in `/tmp` with the same command; it equals `before`. Under the shipped code each render added one  
+### TC-15-self-verifying-fit-regression.md:278 -> 277 hand
+  B:  relaunch FreeCAD via `cua-driver launch_app`, wait for the proxy on `:8765`, then re-count `<workdir>/tmp`; it is `0`  
+  A:  relaunch FreeCAD with `docker exec -u cua fcb-desktop fcb-freecad start`, wait for the proxy on `:8765`, then re-count `<workdir>/tmp`; it is `0`  
+### TC-15-self-verifying-fit-regression.md:280 -> 279 hand
+  B:  re-count `FCB_TMP_*` in `$env:TEMP`; it still equals `before`. Pre-existing strays there are a one-time operator cleanup and the bridge must not delete them  
+  A:  re-count `FCB_TMP_*` in `/tmp` with the same command; it still equals `before`. Pre-existing strays there are a one-time operator cleanup and the bridge must not delete them  

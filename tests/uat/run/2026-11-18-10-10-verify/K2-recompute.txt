@@ -1,0 +1,78 @@
+## Recompute: touch the doc (Length 10 -> 12 without recompute)
+ "status": "RECOMPUTE_ERROR",
+state (Length, BoundBox.XLength, touched, mustExecute):
+snapshot elements matching Recompute/Refresh:
+elements: 697
+## (previous attempt used a missing property; Box is Part::Feature). touch() instead
+ "status": "OK",
+state (isTouched, State, mustExecute):
+snapshot elements matching Recompute/Refresh:
+elements: 699
+menu item 'Recompute' s0000001c:142 enabled= True ['Press']
+push button 'Recompute' s0000001c:359 enabled= True ['Press']
+state (isTouched, mustExecute) before:
+$ echo '{"pid":4911,"window_id":37748834,"keys":["ctrl","r"]}' | "$FCB_CUA" hotkey    # test-plan §6 route: hotkey ctrl+r (background)
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+after ctrl+r bg:
+$ echo '{"pid":4911,"window_id":37748834,"keys":["ctrl","r"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey    # hotkey ctrl+r foreground
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+after ctrl+r fg:
+## state read fixed (State list): after the two ctrl+r presses above:
+value_repr: (['Touched'], True)\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+## re-touch, then ctrl+r foreground again
+value_repr: (['Touched'], True)\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+$ echo '{"pid":4911,"window_id":37748834,"keys":["ctrl","r"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey    # hotkey ctrl+r fg
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+value_repr: (['Touched'], True)\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+## re-touch, then the TC-12:429 / TC-13:913 route: menu leaf Edit > Recompute by element_token
+value_repr: (['Touched'], True)\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+Recompute leaf token=s0000001d:142
+$ echo '{"pid":4911,"element_token":"s0000001d:142"}' | "$FCB_CUA" click    # press leaf
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+value_repr: (['Up-to-date'], False)\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.
+## diagnostic: shortcut bound to Std_Refresh in this FreeCAD
+value_repr: 'F5'
+value_repr: (['Touched'], True)
+$ echo '{"pid":4911,"window_id":37748834,"key":"f5","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # press_key f5 fg
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+value_repr: (['Up-to-date'], False)

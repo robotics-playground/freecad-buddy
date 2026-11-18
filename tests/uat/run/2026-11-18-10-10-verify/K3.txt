@@ -1,0 +1,8 @@
+$ docker exec -u cua fcb-desktop ss -ltnp | grep "127.0.0.1:36805"    # TC-01:364 (K3)
+LISTEN 0      128        127.0.0.1:36805      0.0.0.0:*    users:(("freecad",pid=4911,fd=18))  
+exit=0
+
+$ docker exec -u cua fcb-desktop stat -c %a "$FCB_USER_DIR/freecad-buddy/rpc-4911.json"    # TC-11:355 (hand, stat)
+600
+exit=0
+

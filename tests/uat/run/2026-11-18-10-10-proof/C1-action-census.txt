@@ -1,0 +1,58 @@
+C1 action census, Story 10-10 fix round 2 (2026-11-18)
+Every distinct cua-driver tool, action, key and element field the test cases rely on (grep of `"$FCB_CUA" <tool>` lines,
+JSON keys and tree-field words in tests/uat/testcases), each run in the fcb-desktop container on FreeCAD 1.1.4.
+Columns: id | route as the test cases use it | result in the container | proof file | sites changed
+"old" = measured in an earlier round (file named); "new" = measured in this round (C1-*.txt).
+
+ 1 | get_window_state, screenshot_out_file under $RUN_DIR            | works, file on the host                                  | K1.txt (old)                         | -
+ 2 | get_window_state, include_screenshot:false                       | works; element tokens                                    | K2-menu-leaves.txt (old)             | -
+ 3 | get_window_state with a dialog window_id                         | works; may also list the main window elements            | C1-preferences-dialog.txt (new)      | test-plan GUI routes
+ 4 | list_windows (titles, bounds, dialog and popup windows)          | works; dialogs are their own windows                     | K1.txt (old), C1-document-recovery.txt (new) | -
+ 5 | status                                                           | works, no stdin read                                     | K1b.txt (old)                        | -
+ 6 | click element_token on a menu leaf                               | works                                                    | K2-menu-*.txt (old)                  | -
+ 7 | click element_token on a toolbar push button (Fit All)           | works, framing ratio changes                             | C1-toolbar-fit-all.txt (new)         | -
+ 8 | click element_token on the named view push buttons               | works for 1 Front .. 6 Left and Isometric                | C1-standard-view-buttons.txt (new)   | TC-06 x2, TC-13 x1
+ 9 | click element_token on the Standard Views button menu            | opens a popup that cannot be listed: no use              | C1-standard-views.txt (new)          | TC-06, TC-13 text
+10 | click element_token on a dialog push button (OK, Cancel, Done)   | works                                                    | C1-preferences-dialog.txt, C1-insert-length-dialog.txt (new) | -
+11 | click element_token on a task panel list item (sketch plane)     | works                                                    | C1-sketch-draw.txt, S2.png (new)     | TC-12 text
+12 | click element_token on a model tree row                          | FAILS: row stays unselected                              | D1-toggle-visibility.txt (old)       | fixed: TC-02 x2, TC-06, TC-12, TC-13 (foreground pixel click)
+13 | click element_token + action select, foreground, on a tree row   | FAILS: accessibility route, no selection                 | C1-workbench-combo.txt (new), D1 (old) | fixed: TC-12 rule and 2 steps
+14 | click element_token on a combo box (open the list)               | works                                                    | C1-workbench-combo.txt (new)         | -
+15 | click element_token on a combo list item, background or foreground | FAILS: workbench unchanged                             | C1-workbench-combo.txt (new)         | fixed: TC-12 (foreground pixel click at the item centre)
+16 | click pixel, foreground                                          | works (selects a tree row, a viewport point)             | D1-toggle-visibility.txt (old), C1-sketch-draw.txt (new) | -
+17 | click pixel, background                                          | leaves a tree row unselected                             | D1-toggle-visibility.txt (old)       | -
+18 | click pixel with count 2, foreground                             | works (opens a sketch for edit, opens a Start card)      | C1-double-click.txt, C1-start-page-card.txt (new) | -
+19 | press_key at window level, foreground (space, f2, enter, escape, tab, Right, asterisk) | works                              | C1-key-names.txt, C1-tree-expand.txt, D1 (new/old) | TC-13 key names
+20 | press_key bound to an element_token                              | FAILS: GrabFocus returned false, exit 0                  | D1-toggle-visibility.txt (old)       | fixed: TC-13-15, TC-13-03, TC-13-14, TC-06
+21 | hotkey (ctrl+z, ctrl+a, f5, alt+f4)                              | works; ctrl+r does nothing, F5 recomputes                | D2-recompute.txt (old), C1-rename-editor.txt, C1-alt-f4.txt (new) | -
+22 | type_text at window level, foreground                            | text lands (reports delivery_failed), commits on tab/enter | C1-pad-type-text.txt, C1-rename-editor.txt (new) | TC-12-01, TC-13-15
+23 | type_text bound to an element_token                              | no site left (the fields have no element)                | C1-pad-type-text.txt (new)           | fixed: TC-12-01 text
+24 | set_value on a dialog spin box token                             | works                                                    | C1-insert-length-dialog.txt (new)    | TC-12-01 text
+25 | set_value on a combo box token                                   | refused: no editable text or value                       | C1-new-document-set-value.txt (new)  | TC-12 text already says so
+26 | set_value on the inline rename editor                            | FAILS: the editor has no element                         | C1-rename-editor.txt (new)           | fixed: TC-13-15 (ctrl+a, type_text, enter)
+27 | scroll, foreground pixel in the tree rows                        | works: topmost row changes both ways                     | C1-scroll.txt (new)                  | -
+28 | scroll bound to an element_token                                 | accepted, no movement                                    | C1-scroll-token.txt (new)            | TC-12 text already says so
+29 | drag (1 px, from the Undo arrow)                                 | accepted, no dropdown opens                              | C1-undo-dropdown.txt (new)           | fixed: TC-12-06 reads doc.UndoNames
+30 | move_cursor scope desktop                                        | works                                                    | C1-window-cursor-scroll-drag.txt (new) | -
+31 | set_window_frame (flat x y width height)                         | FAILS with a frame object; no-op on a maximized window; works after wmctrl un-maximize | C1-set-window-frame.txt (new) | fixed: TC-14 x3
+32 | get_desktop_state                                                | works                                                    | C1-set-window-frame.txt (new)        | -
+33 | verify_state, selector label_contains and role (TreeItem or tree item, ComboBox) | works; role names are normalised; enabled with several matches is unknown; exists:false refused | C1-verify-state.txt (new) | -
+34 | kill_app on FreeCAD                                              | refused foreign_process_termination_denied               | C1-alt-f4.txt (new)                  | TC-01, TC-10, TC-12 already fall back to kill -KILL
+35 | tree item field selected                                         | does not exist                                           | C1-doc-row-select.txt (new)          | fixed: TC-12 x3 (script_exec Gui.Selection, active document)
+36 | tree item field expanded                                         | does not exist; a row is listed only while its parent is expanded; a pixel click on the arrow expands | C1-tree-expand.txt (new) | fixed: TC-02-05, TC-12-07 text
+37 | element fields label, role, enabled, frame, actions, element_token | present                                                | K2-menu-leaves.txt, C1-menu-listed-conditions.txt (old/new) | -
+38 | menu leaf availability (Undo, Redo, Recompute, Toggle Visibility, Show All Objects) | conditional, measured                  | C1-menu-listed-conditions.txt (new)  | fixed: test-plan, APPENDIX-B, TC-12 text (N4)
+39 | New Document toolbar button token                                | works                                                    | C1-new-document-set-value.txt (new)  | -
+40 | sketch drawing: Rectangle leaf, pixel clicks, Horizontal Dimension leaf, Insert Length window | works; the value comes from set_value on the spin box | C1-sketch-draw.txt, C1-sketch-dimension.txt, C1-insert-length-dialog.txt (new) | TC-12-01 text
+41 | Pad task panel: Pad leaf, Length by type_text and tab, OK token  | works; Pad.Length 5.0 mm                                 | C1-pad-type-text.txt (new)           | TC-12-01 text
+42 | Preferences dialog: window, Cancel token                         | works                                                    | C1-preferences-dialog.txt (new)      | -
+43 | Document Recovery window after kill -KILL                        | appears on the next start; Cleanup, Yes, OK clear it     | C1-document-recovery.txt (new)       | test-plan GUI routes
+44 | alt+f4 with unsaved documents: Unsaved Document window           | works; Save, Cancel, Discard buttons                     | C1-alt-f4.txt (new)                  | test-plan GUI routes
+45 | Start page: first-run Welcome Done button, card open             | works                                                    | C1-start-page-card.txt, S16.png (new) | test-plan GUI routes
+46 | rename a tree row: select, f2, ctrl+a, type, enter, ctrl+z       | works                                                    | C1-rename-editor.txt, C1-key-names.txt (new) | TC-13-15
+47 | document row click changes the active document                   | works                                                    | C1-doc-row-select.txt (new)          | TC-12-04
+48 | undo list: doc.UndoNames, Undo leaf enabled                      | works                                                    | C1-undo-names.txt (new)              | TC-12-06
+
+Totals: 48 rows; 40 measured new in this round (C1-*.txt), 8 already measured (D1, D2, K1, K1b, K2-*); 0 unmeasured.
+Failing routes found and fixed in the test cases: 9 (rows 12, 13, 15, 20, 26, 29, 31, 35, 36); one more
+(row 9) is a route that has no use and was replaced by rows 8 and 6.

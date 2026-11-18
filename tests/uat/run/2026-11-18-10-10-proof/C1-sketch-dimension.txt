@@ -1,0 +1,9 @@
+# C1 sketch dimension: select a line by pixel click, press the Horizontal Dimension leaf, type the value
+DistanceX before: value_repr":"[]","fingerprint_after":null
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"global_input"}
+(dialog screenshot S7.png)
+type_text 60 foreground
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","escalation":{"reason":"delivery_failed","target":"foreground"},"route":"global_input"}
+foreground_unavailable:X11didnotconfirmactivewindowandinputfocuswithinexacttarget0x2400062beforethe400msdeadline(active=0x240008f);noinputwassent
+DistanceX after: value_repr":"[':40.691492']","fingerprint_after":null

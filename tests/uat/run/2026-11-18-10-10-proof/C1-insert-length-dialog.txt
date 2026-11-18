@@ -1,0 +1,8 @@
+# C1 Insert Length dialog is its own window (list_windows); its spin box has an element
+windows: [(37748834, '* Unnamed - FreeCAD 1.1.4'), (37748879, 'Insert Length')]
+set_value on the spin box token:
+{"delivery":{"mode":"unknown"},"effect":"unverifiable","route":"accessibility"}
+spin box label now: ['60 mm']
+OK token click:
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+DistanceX after: value_repr":"[':60.0']","fingerprint_after":null

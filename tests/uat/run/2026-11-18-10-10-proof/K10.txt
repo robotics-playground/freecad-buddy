@@ -1,0 +1,24 @@
+## start FreeCAD with a variable and a file (TC-01-13, TC-16, TC-12 file open)
+$ docker exec -u cua -e FREECAD_BUDDY_AUDIT_LOG=$RUN_DIR_C/audit-proof.jsonl fcb-desktop fcb-freecad start /repo/benchmarks/g0/golden-models/box-10-20-30.FCStd
+fcb-freecad: started; log /tmp/freecad.log
+exit=0
+
+healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":4314,"session_id":"e621d48b43304603"}
+## operator settings line shows the audit log from the environment (env)
+$ docker exec -u cua fcb-desktop grep 'operator settings:' "$FCB_USER_DIR/freecad-buddy/addon.log" | tail -1
+2026-11-18 04:29:05,317 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='/repo/tests/uat/run/2026-11-18-10-10-proof/audit-proof.jsonl' (env), FREECAD_BUDDY_WORKDIR='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir' (default), uv path ''
+exit=0
+
+## close_all.py runs in the container (TC-16 Cleanup)
+$ docker exec -u cua fcb-desktop fcb-py /repo/_automation/uat/close_all.py
+1 open
+  box-10-20-30         -> OK
+0 open document(s).
+exit=0
+
+## foreign holder on :8765 (TC-01-15), then removed
+$ docker exec -u cua fcb-desktop sh -c "pkill -f 'serve --mode rpc' ; sleep 2"; docker exec -d -u cua fcb-desktop fcb-py -m http.server 8765 --bind 127.0.0.1; sleep 3; docker exec -u cua fcb-desktop ss -ltnp | grep :8765; docker exec -u cua fcb-desktop pkill -f 'http.server 8765'; sleep 1; docker exec -u cua fcb-desktop ss -ltnp | grep :8765 || echo holder-gone
+LISTEN 0      5          127.0.0.1:8765       0.0.0.0:*    users:(("python",pid=4752,fd=3))    
+holder-gone
+exit=0
+

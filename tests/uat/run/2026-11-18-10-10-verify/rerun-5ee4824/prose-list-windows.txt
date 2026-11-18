@@ -1,0 +1,9 @@
+## prose form `"$FCB_CUA" list_windows` (TC-14:191, TC-01:363, TC-10:43) with no stdin (a terminal would wait on cat until ctrl+d)
+$ "$FCB_CUA" list_windows < /dev/null 2>&1 | head -5    # no stdin
+{
+  "windows": [
+    {
+      "app_name": "Xfdesktop",
+      "bounds": {
+exit=0
+

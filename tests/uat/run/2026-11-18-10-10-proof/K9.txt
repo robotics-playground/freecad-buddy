@@ -1,0 +1,27 @@
+## relay healthz from the host (TC-01-14)
+$ curl -s http://127.0.0.1:18765/healthz
+{"service":"freecad-buddy-mcp-proxy","freecad_pid":4314,"session_id":"e621d48b43304603"}exit=0
+
+## in-container loopback healthz (TC-01-15)
+$ docker exec -u cua fcb-desktop curl -s http://127.0.0.1:8765/healthz
+{"service":"freecad-buddy-mcp-proxy","freecad_pid":4314,"session_id":"e621d48b43304603"}exit=0
+
+## container LAN address (TC-11-05)
+$ docker exec -u cua fcb-desktop hostname -I
+172.20.0.2 
+exit=0
+
+## LAN address refused on :8765 (TC-11-06)
+$ docker exec -u cua fcb-desktop curl -s -m 3 http://172.20.0.2:8765/mcp; echo curl_exit=$?
+curl_exit=7
+exit=0
+
+## nc to the listener port on the LAN address is refused (TC-11-05)
+$ docker exec -u cua fcb-desktop nc -zv -w 2 172.20.0.2 8765
+nc: connect to 172.20.0.2 port 8765 (tcp) failed: Connection refused
+exit=1
+
+## relay reaches the MCP endpoint (TC-10 H2 precondition)
+$ curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18765/mcp
+307exit=23
+

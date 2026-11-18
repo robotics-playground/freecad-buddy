@@ -1,0 +1,7 @@
+# C1/N1 rename a tree row: F2 opens an inline editor; ctrl+a, type_text and Return at window level; ctrl+z restores
+label before: value_repr":"['Pad']","fingerprint_after":null
+F2:
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+editor elements in the tree area: none
+label after: value_repr":"['PadRenamed']","fingerprint_after":null
+label after undo: value_repr":"['Pad']","fingerprint_after":null

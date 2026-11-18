@@ -18,12 +18,12 @@ the shipped catalog from the repo venv and needs no host.
 ## Preconditions
 
 - [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
-- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
-- [ ] Addon linked into the FreeCAD Mod dir (verify: `ls "$APPDATA/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py"`)
-- [ ] Repo venv exists so the addon can discover the proxy interpreter (verify: `ls .venv/Scripts/pythonw.exe`)
-- [ ] cua-driver daemon runs in an interactive session (verify: `cua-driver status` shows `SessionId` ≥ 1)
+- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: press the `Show All Objects` leaf of View > Visibility by `element_token` (test-plan §6, "Menu route"). A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
+- [ ] Addon linked into the FreeCAD Mod dir (verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py"`)
+- [ ] The managed venv exists so the addon can discover the proxy interpreter (verify: `docker exec -u cua fcb-desktop ls $FCB_USER_DIR/FreeCADBuddy/venv/bin/python`)
+- [ ] cua-driver daemon runs in the container desktop session (verify: `"$FCB_CUA" status` shows `Cua Driver daemon is running`)
 - [ ] The container interpreter is H1-capable (verify: `docker exec -u cua fcb-desktop fcb-py -c "import FreeCAD, mcp; print('H1 ok', '.'.join(FreeCAD.Version()[:3]))"` prints `H1 ok <version>`)
-- [ ] No FreeCAD process and nothing on `:8765` before TC-01-01 (verify: `netstat -ano | grep :8765` returns nothing)
+- [ ] No FreeCAD process and nothing on `:8765` before TC-01-01 (verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` returns nothing)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
 
 ---
@@ -33,9 +33,9 @@ the shipped catalog from the repo venv and needs no host.
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §1 (bridge topology), `integration-mcp-clients.md` §2 (HTTP endpoint)
 
-**Given** no FreeCAD process is running — verify: `tasklist | grep -i freecad` returns nothing  
-**And** `:8765` is free — verify: `netstat -ano | grep :8765` returns nothing  
-**And** the addon log is rotated aside so the new run's lines are unambiguous — verify: `mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"`  
+**Given** no FreeCAD process is running — verify: `docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'` prints nothing, exit 1  
+**And** `:8765` is free — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` returns nothing  
+**And** the addon log is rotated aside so the new run's lines are unambiguous — verify: `docker exec -u cua fcb-desktop mv "$FCB_USER_DIR/freecad-buddy/addon.log" "$FCB_USER_DIR/freecad-buddy/addon.log.prev"`  
 
 **When** FreeCAD is launched with `fcb-freecad start`. Do **not** run any `serve` command by hand — starting `serve --mode rpc` manually invalidates this scenario.  
 ```
@@ -43,33 +43,33 @@ docker exec -u cua fcb-desktop fcb-freecad start
 ```
 **And** the main window is waited for, then the pid and window id are recorded  
 ```
-cua-driver call list_windows {}
+echo '{}' | "$FCB_CUA" list_windows
 ```
 **And** the addon log written by the freshly started bridge is read  
 ```bash
-cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+docker exec -u cua fcb-desktop cat "$FCB_USER_DIR/freecad-buddy/addon.log"
 ```
 **And** a golden model is opened so the closing visual has a subject  
 ```
 mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }
 ```
 
-**Then** the RPC listener bound a port — verify: `grep "freecad-buddy RPC listener started on" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns one line naming `127.0.0.1:<port>`  
-**And** the proxy was spawned by the addon, not by an operator — verify: `grep "spawned MCP proxy" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns a line with `(pid <n>) -> http://127.0.0.1:8765/mcp`  
-**And** `:8765` is LISTENING — verify: `netstat -ano | grep :8765` shows `LISTENING`, and the owning pid equals the pid in the spawn line or is its child. The `.venv` `pythonw.exe` is a launcher: it starts the uv base `pythonw.exe`, which owns the port. Confirm the child with `powershell -c "(Get-CimInstance Win32_Process -Filter 'ProcessId=<owner pid>').ParentProcessId"`, which returns the spawn-line pid  
-**And** the proxy runs in the external venv interpreter, not FreeCAD's bundled Python — verify: `powershell -c "(Get-CimInstance Win32_Process -Filter 'ProcessId=<proxy pid>').CommandLine"` contains `.venv\Scripts\python` and `-m freecad_buddy.hosts.main serve --mode rpc --transport http`  
-**And** no manual `serve` process exists — verify: that command line is the only `freecad_buddy.hosts.main serve` process in `powershell -c "Get-CimInstance Win32_Process | ? {$_.CommandLine -like '*hosts.main*serve*'} | select ProcessId"`  
+**Then** the RPC listener bound a port — verify: `docker exec -u cua fcb-desktop grep "freecad-buddy RPC listener started on" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns one line naming `127.0.0.1:<port>`  
+**And** the proxy was spawned by the addon, not by an operator — verify: `docker exec -u cua fcb-desktop grep "spawned MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns a line with `(pid <n>) -> http://127.0.0.1:8765/mcp`  
+**And** `:8765` is LISTENING — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN`, and the owning pid equals the pid in the spawn line (the venv python is the process that binds the port, so there is no launcher child)  
+**And** the proxy runs in the external venv interpreter, not FreeCAD's bundled Python — verify: `docker exec -u cua fcb-desktop sh -c "tr '\0' ' ' < /proc/<proxy pid>/cmdline"` contains `FreeCADBuddy/venv/bin/python` and `-m freecad_buddy.hosts.main serve --mode rpc --transport http`  
+**And** no manual `serve` process exists — verify: that command line is the only `freecad_buddy.hosts.main serve` process in `docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve'`  
 **And** the bridge answers over MCP — verify: `mcp query_capabilities {}` returns `status: "OK"`  
-**And** the proxy log records no spawn failure — verify: `grep -i "failed to spawn" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns nothing  
+**And** the proxy log records no spawn failure — verify: `docker exec -u cua fcb-desktop grep -i "failed to spawn" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns nothing  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the auto-spawned bridge really drives the human's window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with a 3D view area, one box-shaped solid inside it, all eight corners inside the view rectangle, no edge cut off, and no dialog or error popup. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A LISTENING port over a window with no visible part is the failure this catches.  
+**And** *(visual)* the auto-spawned bridge really drives the human's window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with a 3D view area, one box-shaped solid inside it, all eight corners inside the view rectangle, no edge cut off, and no dialog or error popup. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A LISTENING port over a window with no visible part is the failure this catches.  
 
 **Cleanup**:
 ```
 mcp document_close { doc: "<handle>" }
 ```
 ```bash
-rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+docker exec -u cua fcb-desktop rm -f "$FCB_USER_DIR/freecad-buddy/addon.log.prev"
 ```
 
 ---
@@ -80,9 +80,9 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
 **Design Ref**: `mcp-tools-design.md` §1 (tool surface), `verification-design.md` §6 (export pairing)
 
 **Given** golden models are present — verify: `ls benchmarks/g0/golden-models/*.FCStd` lists 5 files  
-**And** no stale H1 server holds the golden files — verify: `docker exec -u cua fcb-desktop pgrep -af freecad_buddy.hosts.main` returns nothing  
+**And** no stale H1 server holds the golden files — verify: `docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve --transport stdio|hosts.headless.worker'` returns nothing (the GUI proxy, `serve --mode rpc --transport http`, is a different process and must stay)  
 **And** a golden model is open on the GUI host so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the GUI's pre-sweep state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-before.png"}' | & cua-driver call get_window_state`  
+**And** the GUI's pre-sweep state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the happy-path sweep is run. It spawns its own H1 stdio host in the container and does not touch the GUI bridge. The sweep starts its H1 server in the container (`docker exec -i -u cua fcb-desktop fcb-py`); start the container first.  
 ```bash
@@ -96,7 +96,7 @@ uv run python scripts/automation/run_mcp_e2e.py
 **And** no unhandled server fault — verify: `grep -iE "access violation|segfault|swig director" "$RUN_DIR/evidence/tc-01-02-server.stderr.log"` returns nothing  
 **And** the GUI bridge is unaffected by the sweep — verify: `mcp query_capabilities {}` still returns `status: "OK"` after the sweep  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the headless sweep never reached into the human's window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: one box-shaped solid, whole, no edge clipped, the same document label in the tree, and no extra document, no new window, and no dialog that the sweep might have raised. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the headless sweep never reached into the human's window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: one box-shaped solid, whole, no edge clipped, the same document label in the tree, and no extra document, no new window, and no dialog that the sweep might have raised. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -118,7 +118,7 @@ rm -f "$RUN_DIR/evidence/tc-01-02-"*.step "$RUN_DIR/evidence/tc-01-02-"*.stl "$R
 
 **When** the tools the proxy advertises are listed and the names saved  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import asyncio, json
 from mcp.client.streamable_http import streamablehttp_client
 from mcp import ClientSession
@@ -140,7 +140,7 @@ asyncio.run(main())
 **And** the 13 read-only-profile names are all present — verify: `python -c "import json;n=set(json.load(open('$RUN_DIR/evidence/tc-01-03-tools_list.json')));ro={'query_capabilities','query_tree_summary','query_object','query_mass_properties','query_dependencies','query_sketch_info','query_placement','verify_shape','verify_sketch','verify_recompute','document_open','document_close','document_list'};print(ro<=n)"` returns `True`  
 **And** every input schema is closed — verify: the same client run with `t.inputSchema.get('additionalProperties')` shows `False` for every tool in the live count  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the advertised surface belongs to the window in front of the human — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-03-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid inside the 3D view, whole, no edge cut off, and no dialog. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A tool list is only worth something if the endpoint that produced it is driving this window.  
+**And** *(visual)* the advertised surface belongs to the window in front of the human — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-03-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid inside the 3D view, whole, no edge cut off, and no dialog. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A tool list is only worth something if the endpoint that produced it is driving this window.  
 
 **Cleanup**:
 ```
@@ -166,13 +166,13 @@ rm -f "$RUN_DIR/evidence/tc-01-03-tools_list.json"
 ```
 mcp query_capabilities {}
 ```
-**And** the same facts are read from the running FreeCAD process, to cross-check rather than trust the banner. Do not open Help > About: it is a modal dialog, and a modal dialog opened through `invoke_menu` keeps the UIA provider busy until it closes. Read the main window title instead.  
+**And** the same facts are read from the running FreeCAD process, to cross-check rather than trust the banner. Do not open Help > About: it is a modal dialog, and a modal dialog opened through a menu press keeps the UIA provider busy until it closes. Read the main window title instead.  
 ```
-cua-driver call list_windows { pid: <freecad pid> }
+echo '{"pid":<freecad pid>}' | "$FCB_CUA" list_windows
 ```
-**And** the proxy is stopped, the handshake capabilities are read with a raw `rpc_hello` on `rpc-<freecad pid>.json`, and the proxy is restarted by hand with the addon's command line (from `Win32_Process.CommandLine` of the spawned proxy), setting on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`. A hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead  
+**And** the proxy is stopped, the handshake capabilities are read with a raw `rpc_hello` on `rpc-<freecad pid>.json`, and the proxy is restarted by hand with the addon's command line (read from `/proc/<proxy pid>/cmdline`, started with `docker exec -d -u cua -e <NAME>=<value> fcb-desktop <command line>`; test-plan §6, "Process commands"), setting on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`. A hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead  
 
-**Then** the version matches the running build — verify: `structured_content.freecad_version` is the `<live version>`, the main window title from `list_windows` contains `FreeCAD <live version>`, and `grep "freecad_version" "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"` shows the same value  
+**Then** the version matches the running build — verify: `structured_content.freecad_version` is the `<live version>`, the main window title from `list_windows` contains `FreeCAD <live version>`, and `docker exec -u cua fcb-desktop grep "freecad_version" "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"` shows the same value  
 **And** every banner key is present — verify: the response keys are exactly `freecad_version`, `element_map_available`, `serializer`, `varset_backend`, `render`, `sketcher_available`, `partdesign_available`, `enums`, `exec_enabled`  
 **And** `element_map_available` is a live boolean probe, not a constant — verify: the value is `true` or `false`, never null or a string  
 **And** the serializer tag names the real serializer — verify: `structured_content.serializer` is a non-empty string  
@@ -180,9 +180,9 @@ cua-driver call list_windows { pid: <freecad pid> }
 **And** `script_exec` is enabled by default — verify: `structured_content.exec_enabled` is `true`, and the raw `rpc_hello` reply on `rpc-<freecad pid>.json` (proxy stopped) carries the same value in `result.capabilities.exec_enabled`  
 **And** Sketcher and PartDesign report available in the GUI build — verify: `sketcher_available` and `partdesign_available` are both `true`  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window the banner claims to describe is a real GUI FreeCAD showing real geometry — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-04-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with a 3D view area, one box-shaped solid inside it, whole and no edge cut off, and no dialog. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window the banner claims to describe is a real GUI FreeCAD showing real geometry — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-04-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with a 3D view area, one box-shaped solid inside it, whole and no edge cut off, and no dialog. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
-**Cleanup**: if the proxy is not running, restart it by hand with the addon's command line (from `Win32_Process.CommandLine` of the spawned proxy), setting on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`. A hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead, then `mcp query_capabilities {}` returns `OK`.
+**Cleanup**: if the proxy is not running, restart it by hand with the addon's command line (read from `/proc/<proxy pid>/cmdline`, started with `docker exec -d -u cua -e <NAME>=<value> fcb-desktop <command line>`; test-plan §6, "Process commands"), setting on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`. A hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead, then `mcp query_capabilities {}` returns `OK`.
 ```
 mcp document_close { doc: "<handle>" }
 ```
@@ -194,12 +194,12 @@ mcp document_close { doc: "<handle>" }
 **Priority**: High
 **Design Ref**: `mcp-tools-design.md` §1 (per-tool budgets), `integration-mcp-freecad.md` §3 (marshal timeout)
 
-**Given** the repo checkout matches the installed addon — verify: `ls -l "$APPDATA/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"` shows the symlink target under `src/`  
+**Given** the repo checkout matches the installed addon — verify: `docker exec -u cua fcb-desktop sha256sum "$FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/__init__.py"` equals `sha256sum dist/addon/freecad_buddy/__init__.py` on the host, after `scripts/build_addon.py --release` and the compose build  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 
 **When** every tool's declared timeout is dumped from the shipped catalog  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 from freecad_buddy.hosts.tool_catalog import tool_specs
 for s in sorted(tool_specs(), key=lambda s: s.name):
     print(f'{s.name}\t{s.timeout_s}\t{s.mutating}')
@@ -214,7 +214,7 @@ for s in sorted(tool_specs(), key=lambda s: s.name):
 **And** the mutating flag agrees with the family — verify: every `query_*` and `verify_*` row has `mutating` `False`, and every `sketch_*`, `feature_*`, `export_*` row has `True`  
 **And** document lifecycle tools are marked mutating even when they change no geometry — verify: `document_open` and `document_close` both report `mutating` `True`, because they open and close documents; this is why neither appears in a mutating-means-geometry reading of the catalog  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* reading the catalog disturbed nothing in the running application — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-05-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid inside the 3D view, whole, no edge cut off, and no dialog or error popup raised by the catalog dump. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* reading the catalog disturbed nothing in the running application — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-05-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one box-shaped solid inside the 3D view, whole, no edge cut off, and no dialog or error popup raised by the catalog dump. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -228,15 +228,15 @@ mcp document_close { doc: "<handle>" }
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §3 (handshake), `integration-mcp-clients.md` §2 (contract negotiation)
 
-**Given** the discovery file for the live FreeCAD exists — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"`  
+**Given** the discovery file for the live FreeCAD exists — verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"`  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the undisturbed window is captured before the refusal — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-06-before.png"}' | & cua-driver call get_window_state`  
+**And** the undisturbed window is captured before the refusal — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-06-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a direct connection is made to the RPC listener with a valid token but an unsupported contract version  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import json, socket, os
-rec = json.load(open(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json')))
+rec = json.load(open(os.path.expandvars(r'$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json')))
 s = socket.create_connection((rec['host'], rec['port']), timeout=5)
 s.sendall((json.dumps({'jsonrpc':'2.0','id':1,'method':'rpc_hello',
     'params':{'token':rec['token'],'contract_version':'99'}})+'\n').encode())
@@ -252,7 +252,7 @@ print(s.makefile('r', encoding='utf-8').readline().strip())
 **And** the connection is closed after the refusal — verify: a second `readline()` on the same socket returns an empty string  
 **And** the listener survives the refusal — verify: `mcp query_capabilities {}` still returns `status: "OK"`  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the refusal disturbed nothing in the window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the rejected handshake. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the refusal disturbed nothing in the window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-06-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the rejected handshake. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -266,15 +266,15 @@ mcp document_close { doc: "<handle>" }
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §3 (token authentication), `integration-mcp-clients.md` §2 (session token)
 
-**Given** the discovery file for the live FreeCAD exists — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"`  
+**Given** the discovery file for the live FreeCAD exists — verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"`  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the undisturbed window is captured before the refusals — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-07-before.png"}' | & cua-driver call get_window_state`  
+**And** the undisturbed window is captured before the refusals — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-07-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a connection is made with a wrong token **and** an unsupported contract version at the same time. The listener authenticates before checking the version, so the reply must be the auth failure.  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import json, socket, os
-rec = json.load(open(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json')))
+rec = json.load(open(os.path.expandvars(r'$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json')))
 s = socket.create_connection((rec['host'], rec['port']), timeout=5)
 s.sendall((json.dumps({'jsonrpc':'2.0','id':7,'method':'rpc_hello',
     'params':{'token':'not-the-token','contract_version':'99'}})+'\n').encode())
@@ -288,10 +288,10 @@ print(s.makefile('r', encoding='utf-8').readline().strip())
 **And** auth is checked **before** the version — verify: the reply is `-32000` / `auth failed`, **not** `-32004` / `contract version unsupported`, even though the version was also invalid  
 **And** there is no capability disclosure to an unauthenticated caller — verify: the frame contains no `capabilities`, no `freecad_version`, and no `supported` list  
 **And** the omitted-token case behaves identically — verify: the second attempt also returns `-32000` / `auth failed`  
-**And** the refusal is logged — verify: `grep "token mismatch; closing" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns two lines (one per attempt)  
+**And** the refusal is logged — verify: `docker exec -u cua fcb-desktop grep "token mismatch; closing" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns two lines (one per attempt)  
 **And** the listener survives both refusals — verify: `mcp query_capabilities {}` still returns `status: "OK"`  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* neither unauthenticated attempt disturbed the window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-07-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the two rejected handshakes. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* neither unauthenticated attempt disturbed the window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-07-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the two rejected handshakes. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -305,15 +305,15 @@ mcp document_close { doc: "<handle>" }
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §3 (handshake required)
 
-**Given** the discovery file for the live FreeCAD exists — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"`  
+**Given** the discovery file for the live FreeCAD exists — verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"`  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the undisturbed window is captured before the refusals — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-08-before.png"}' | & cua-driver call get_window_state`  
+**And** the undisturbed window is captured before the refusals — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-08-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a valid tool call is sent as the first frame, skipping the handshake  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import json, socket, os
-rec = json.load(open(os.path.expandvars(r'%APPDATA%/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json')))
+rec = json.load(open(os.path.expandvars(r'$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json')))
 s = socket.create_connection((rec['host'], rec['port']), timeout=5)
 s.sendall((json.dumps({'jsonrpc':'2.0','id':3,'method':'query_capabilities','params':{}})+'\n').encode())
 f = s.makefile('r', encoding='utf-8')
@@ -328,11 +328,11 @@ print('frame2:', repr(f.readline()))
 **And** the request id is echoed — verify: the frame's `id` is `3`  
 **And** the socket is closed immediately after the refusal — verify: `frame2` prints `''`  
 **And** the tool never ran — verify: the frame carries no `result` and no `structured_content`  
-**And** the refusal is logged — verify: `grep "first frame was not rpc_hello; closing" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns a line  
+**And** the refusal is logged — verify: `docker exec -u cua fcb-desktop grep "first frame was not rpc_hello; closing" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns a line  
 **And** the malformed-JSON case also refuses — verify: the second attempt returns `-32002` / `handshake required` with `id` `null`  
 **And** the listener survives both — verify: `mcp query_capabilities {}` still returns `status: "OK"`  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the skipped handshake never reached the application — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-08-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the two rejected frames. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the skipped handshake never reached the application — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-08-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the two rejected frames. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
@@ -346,30 +346,30 @@ mcp document_close { doc: "<handle>" }
 **Priority**: High
 **Design Ref**: `integration-mcp-freecad.md` §1 (discovery), `integration-mcp-clients.md` §2 (attach)
 
-**Given** FreeCAD is running with a known pid — verify: `cua-driver call list_windows {}` names the pid  
+**Given** FreeCAD is running with a known pid — verify: `echo '{}' | "$FCB_CUA" list_windows` names the pid  
 **And** a golden model is open so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 
 **When** the discovery record for the live FreeCAD pid is read  
 ```bash
-cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json" | tee "$RUN_DIR/evidence/tc-01-09-discovery.json"
+docker exec -u cua fcb-desktop cat "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json" | tee "$RUN_DIR/evidence/tc-01-09-discovery.json"
 ```
 **And** its file mode is checked  
 ```bash
-ls -l "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"
+docker exec -u cua fcb-desktop ls -l "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"
 ```
 
-**Then** the file sits under the FreeCAD user appdata dir — verify: the path is `$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<pid>.json`; `$APPDATA/FreeCAD/Mod/` is legacy and empty  
+**Then** the file sits under the FreeCAD user appdata dir — verify: the path is `$FCB_USER_DIR/freecad-buddy/rpc-<pid>.json`; the legacy `$FCB_USER_DIR/../Mod/` does not exist in the container (`docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/../Mod"` fails, exit 2)  
 **And** every field is present — verify: the record keys are exactly `schema`, `pid`, `host`, `port`, `token`, `contract_version`, `freecad_version`, `started`  
-**And** `pid` names the live FreeCAD process — verify: the `pid` value equals the pid from `cua-driver call list_windows`, and `tasklist | grep <pid>` shows `freecad.exe`  
-**And** `host` and `port` match a bound loopback socket — verify: `host` is `127.0.0.1` and `netstat -ano | grep "127.0.0.1:<port>"` shows `LISTENING` owned by that pid  
+**And** `pid` names the live FreeCAD process — verify: the `pid` value equals the pid from `echo '{}' | "$FCB_CUA" list_windows`, and `docker exec -u cua fcb-desktop ps -p <pid> -o pid=,comm=` shows `freecad`  
+**And** `host` and `port` match a bound loopback socket — verify: `host` is `127.0.0.1` and `docker exec -u cua fcb-desktop ss -ltnp | grep "127.0.0.1:<port>"` shows `LISTEN` owned by that pid  
 **And** `contract_version` is the supported version — verify: the value is `"1"`  
 **And** `freecad_version` matches the live build — verify: the value equals the `<live version>` (`query_capabilities` `freecad_version`)  
 **And** the token authenticates — verify: with the MCP proxy stopped, an `rpc_hello` using this `token` and `contract_version` returns a `result` carrying `capabilities`. While the proxy holds the session the same hello gets `-32000 bridge busy: another client session is active` (AD-26), so stop the proxy first and restart it after (see Cleanup)  
-**And** the mode is restricted, best-effort on Windows — verify: `ls -l` shows `-rw-------` on POSIX. On Windows `chmod` only toggles the read-only bit, so record the observed mode and treat the loopback bind plus the per-session token as the enforced control; do not fail this assertion on Windows  
+**And** the mode is restricted — verify: the `ls -l` line above shows `-rw-------`  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the pid in the record is the window in front of the human — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-09-after.png"}' | & cua-driver call get_window_state` using the pid read from the discovery file, then `Read` the PNG and say what is on screen: a FreeCAD main window with a 3D view area, one box-shaped solid inside it, whole and no edge cut off, and no dialog. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A record naming a pid that cannot be captured, or that captures some other application's window, would mean the discovery file points at the wrong process.  
+**And** *(visual)* the pid in the record is the window in front of the human — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-09-after.png"}' | "$FCB_CUA" get_window_state` using the pid read from the discovery file, then `Read` the PNG and say what is on screen: a FreeCAD main window with a 3D view area, one box-shaped solid inside it, whole and no edge cut off, and no dialog. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A record naming a pid that cannot be captured, or that captures some other application's window, would mean the discovery file points at the wrong process.  
 
-**Cleanup**: restart the proxy by hand with the addon's command line (from `Win32_Process.CommandLine` of the spawned proxy), setting on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`. A hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead, then `mcp query_capabilities {}` returns `OK`.
+**Cleanup**: restart the proxy by hand with the addon's command line (read from `/proc/<proxy pid>/cmdline`, started with `docker exec -d -u cua -e <NAME>=<value> fcb-desktop <command line>`; test-plan §6, "Process commands"), setting on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`. A hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead, then `mcp query_capabilities {}` returns `OK`.
 ```
 mcp document_close { doc: "<handle>" }
 ```
@@ -381,26 +381,26 @@ mcp document_close { doc: "<handle>" }
 **Priority**: High
 **Design Ref**: `integration-mcp-freecad.md` §1 (teardown)
 
-**Given** the discovery file for the live pid exists — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"`  
+**Given** the discovery file for the live pid exists — verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"`  
 **And** no unsaved document is open, so the quit does not raise a save dialog — verify: `mcp document_list {}` shows no document with `transient: true`  
-**And** the proxy pid is recorded before the quit — verify: `grep "spawned MCP proxy" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"`  
-**And** the live window is framed and captured before the quit — verify: fit through the GUI with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), which touches none of the code under test, then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-10-before.png"}' | & cua-driver call get_window_state`  
+**And** the proxy pid is recorded before the quit — verify: `docker exec -u cua fcb-desktop grep "spawned MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log"`  
+**And** the live window is framed and captured before the quit — verify: fit through the GUI with click the **Fit All** toolbar button by its `element_token` from a fresh `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), which touches none of the code under test, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-10-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** FreeCAD is closed cleanly through its own menu, not by killing the process  
 ```
-cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "Exit"] }
+# press menu leaf File > Exit (test-plan §6, "Menu route")
 ```
 **And** the process is waited for until it is gone  
 ```bash
-tasklist | grep -i freecad.exe
+docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'
 ```
 
-**Then** FreeCAD exited — verify: `tasklist | grep -i freecad.exe` returns nothing  
-**And** the discovery file is gone — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"` reports no such file  
-**And** the proxy child was terminated with the parent — verify: `tasklist | grep <proxy pid>` returns nothing  
-**And** `:8765` is free — verify: `netstat -ano | grep :8765` returns nothing  
-**And** no other pid's discovery file was deleted — verify: files named for other pids under `$APPDATA/FreeCAD/v1-1/freecad-buddy/` are unchanged in count  
-**And** *(visual)* the window really closed — verify: `cua-driver call list_windows {}` lists no FreeCAD window, and `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-10-after.png"}' | & cua-driver call get_window_state` fails to capture the dead pid. No MCP fit is possible here and none is attempted: the quit removed the document, the camera, and the bridge, which is what the scenario asserts. The framing in the `Given` was done through **View → Fit All** for that reason. `Read` the before PNG and say what was on screen — a FreeCAD main window with a 3D view and a box-shaped solid inside it — then confirm that exact window is absent from the desktop now. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**Then** FreeCAD exited — verify: `docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'` prints nothing, exit 1  
+**And** the discovery file is gone — verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<freecad pid>.json"` reports no such file  
+**And** the proxy child was terminated with the parent — verify: `docker exec -u cua fcb-desktop ps -p <proxy pid> -o pid=` prints nothing, exit 1  
+**And** `:8765` is free — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` returns nothing  
+**And** no other pid's discovery file was deleted — verify: files named for other pids under `$FCB_USER_DIR/freecad-buddy/` are unchanged in count  
+**And** *(visual)* the window really closed — verify: `echo '{}' | "$FCB_CUA" list_windows` lists no FreeCAD window, and `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-10-after.png"}' | "$FCB_CUA" get_window_state` fails to capture the dead pid. No MCP fit is possible here and none is attempted: the quit removed the document, the camera, and the bridge, which is what the scenario asserts. The framing in the `Given` was done through **View → Fit All** for that reason. `Read` the before PNG and say what was on screen — a FreeCAD main window with a 3D view and a box-shaped solid inside it — then confirm that exact window is absent from the desktop now. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**: relaunch FreeCAD for the following scenarios.
 ```
@@ -414,13 +414,13 @@ docker exec -u cua fcb-desktop fcb-freecad start
 **Priority**: High
 **Design Ref**: `integration-mcp-clients.md` §2 (attach and fail fast), `integration-mcp-freecad.md` §1 (discovery)
 
-**Given** at least one discovery file names a pid that no longer exists — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/"rpc-*.json` lists more pids than `tasklist | grep -c freecad.exe`. An unclean kill leaves these behind, so the directory normally already holds several.  
+**Given** at least one discovery file names a pid that no longer exists — verify: `docker exec -u cua -e FCB_USER_DIR fcb-desktop sh -c 'ls "$FCB_USER_DIR"/freecad-buddy/rpc-*.json'` lists more pids than `docker exec -u cua fcb-desktop pgrep -fc '^/opt/freecad/usr/bin/freecad'`. An unclean kill leaves these behind, so the directory normally already holds several.  
 **And** a golden model is open on the live FreeCAD so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
-**And** the live window is framed and captured before the attach attempt — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-11-before.png"}' | & cua-driver call get_window_state`  
+**And** the live window is framed and captured before the attach attempt — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-11-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a discovery file whose pid is dead is picked and an attach is attempted with a bounded timeout  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import json, socket, sys, time
 rec = json.load(open(sys.argv[1]))
 t0 = time.monotonic()
@@ -432,17 +432,17 @@ try:
 except OSError as exc:
     print('refused:', type(exc).__name__, exc)
 print('elapsed', round(time.monotonic()-t0, 2))
-" "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<dead pid>.json"
+" "$FCB_USER_DIR/freecad-buddy/rpc-<dead pid>.json"
 ```
 
-**Then** the named pid really is dead — verify: `tasklist | grep <dead pid>` returns nothing  
+**Then** the named pid really is dead — verify: `docker exec -u cua fcb-desktop ps -p <dead pid> -o pid=` prints nothing, exit 1  
 **And** the connect fails rather than hanging — verify: the script prints `refused:` with `ConnectionRefusedError` or `TimeoutError`, never a `reply:` line  
 **And** it fails fast — verify: the printed `elapsed` is under the 5 s connect timeout  
 **And** the stale file is not self-healing — verify: the file still exists after the failed attach; the listener only deletes its own record on clean shutdown  
 **And** the live bridge is unaffected — verify: `mcp query_capabilities {}` still returns `status: "OK"`  
 **And** a port reused by an unrelated process cannot be mistaken for the bridge — verify: if the connect **succeeds**, the reply must be an error rather than a `capabilities` result, because the stale token cannot authenticate against any other listener  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the failed attach on a dead pid left the live window untouched — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the refused connection. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the failed attach on a dead pid left the live window untouched — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-11-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: the same one box-shaped solid, whole, no edge cut off, at the same size and position, and no dialog or error popup raised by the refused connection. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**: leave the stale files. They are the input for a re-run of this scenario.
 ```
@@ -458,27 +458,27 @@ mcp document_close { doc: "<handle>" }
 
 **Given** FreeCAD is running and the bridge answers — verify: `mcp query_capabilities {}` returns `status: "OK"`  
 **And** a document is open, so re-attachment can be proven against live state — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns a handle  
-**And** the pre-restart window is framed and captured — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-12-before.png"}' | & cua-driver call get_window_state`  
-**And** the proxy pid is recorded — verify: `netstat -ano | grep :8765`  
+**And** the pre-restart window is framed and captured — verify: the model is framed (run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`, or failing that the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view)), then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-12-before.png"}' | "$FCB_CUA" get_window_state`  
+**And** the proxy pid is recorded — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765`  
 
 **When** **only** the proxy child is terminated. Do not touch the FreeCAD process.  
 ```bash
-powershell -c "Stop-Process -Id <proxy pid>"
+docker exec -u cua fcb-desktop kill <proxy pid>
 ```
 **And** `:8765` is confirmed free, then the proxy is started again with the same command the addon used. Set on that command each `FREECAD_BUDDY_*` value from the last `operator settings:` line of `addon.log`: a hand-started proxy reads only the shell's environment (`gui_external/entry.py:142`), not the addon's preference overlay, so without those values its `exec_enabled` and tool count can differ from FreeCAD's posture. When the run uses a non-default posture, restart FreeCAD instead  
 ```bash
-".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --mode rpc --transport http
+docker exec -d -u cua -e FREECAD_BUDDY_<NAME>=<value> fcb-desktop "$FCB_USER_DIR/FreeCADBuddy/venv/bin/python" -m freecad_buddy.hosts.main serve --mode rpc --transport http
 ```
 **And** a query is re-issued against the handle minted before the restart  
 
-**Then** FreeCAD survived the proxy kill — verify: `tasklist | grep <freecad pid>` still shows `freecad.exe`  
+**Then** FreeCAD survived the proxy kill — verify: `docker exec -u cua fcb-desktop ps -p <freecad pid> -o pid=,comm=` still shows `freecad`  
 **And** the RPC listener stayed bound — verify: the discovery file `rpc-<freecad pid>.json` is unchanged, same `port` and same `token`  
-**And** `:8765` is served again — verify: `netstat -ano | grep :8765` shows `LISTENING` on the new proxy pid  
+**And** `:8765` is served again — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN` on the new proxy pid  
 **And** the restarted proxy reaches the same FreeCAD — verify: `mcp query_capabilities {}` returns the same `freecad_version` as before the restart  
 **And** document handles survive — verify: `mcp query_tree_summary { doc: <handle minted before the restart> }` returns a first line starting `OK:`, because the handle registry lives in FreeCAD, not in the proxy  
 **And** `document_list` still reports the open document — verify: `mcp document_list {}` lists the `box-10-20-30` label  
 **And** *(visual)* the model is framed through the **restarted** proxy — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test, and record that the restarted proxy could not frame the shot  
-**And** *(visual)* the restarted proxy drives the same window with the same document — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-12-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the same FreeCAD window, one box-shaped solid, whole, no edge cut off, and the same document label in the tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A proxy that re-attached to a different FreeCAD, or to none, could not put this picture on this screen.  
+**And** *(visual)* the restarted proxy drives the same window with the same document — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-12-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: the same FreeCAD window, one box-shaped solid, whole, no edge cut off, and the same document label in the tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A proxy that re-attached to a different FreeCAD, or to none, could not put this picture on this screen.  
 
 **Cleanup**:
 ```
@@ -492,46 +492,47 @@ mcp document_close { doc: <handle> }
 **Priority**: Medium
 **Design Ref**: `integration-mcp-freecad.md` §1 (opt-out), `integration-mcp-clients.md` §2 (CLI surface)
 
-**Given** FreeCAD is not running — verify: `tasklist | grep -i freecad.exe` returns nothing  
-**And** `:8765` is free — verify: `netstat -ano | grep :8765` returns nothing  
-**And** the addon log is rotated aside — verify: `mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"`  
+**Given** FreeCAD is not running — verify: `docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'` prints nothing, exit 1  
+**And** `:8765` is free — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` returns nothing  
+**And** the addon log is rotated aside — verify: `docker exec -u cua fcb-desktop mv "$FCB_USER_DIR/freecad-buddy/addon.log" "$FCB_USER_DIR/freecad-buddy/addon.log.prev"`  
 
-**When** FreeCAD is launched with the opt-out set to a value that is **not** `"1"`, to prove the check is truthiness and not an equality test against `"1"`. `launch_app` has no env field: `cua-driver` starts a `.cmd` wrapper that sets the variable and starts FreeCAD  
+**When** FreeCAD is launched with the opt-out set to a value that is **not** `"1"`, to prove the check is truthiness and not an equality test against `"1"`. FreeCAD is stopped, then started again with the variable in its environment (`fcb-freecad start` passes the `docker exec -e` environment on)  
 ```bash
-_automation/uat/launch_env.sh tc-01-13 "set FREECAD_BUDDY_NO_AUTO_MCP=no"
+docker exec -u cua fcb-desktop fcb-freecad stop
+docker exec -u cua -e FREECAD_BUDDY_NO_AUTO_MCP=no fcb-desktop fcb-freecad start
 ```
 **And** the addon log is read  
 ```bash
-cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+docker exec -u cua fcb-desktop cat "$FCB_USER_DIR/freecad-buddy/addon.log"
 ```
-**And** the two refused CLI combinations are exercised from the repo venv  
+**And** the two refused CLI combinations are exercised through `$FCB_PYTHON` (the container interpreter)  
 ```bash
-".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --mode rpc; echo "exit=$?"
-".venv/Scripts/python.exe" -m freecad_buddy.hosts.main serve --transport http --mode inline; echo "exit=$?"
+"$FCB_PYTHON" -m freecad_buddy.hosts.main serve --mode rpc; echo "exit=$?"
+"$FCB_PYTHON" -m freecad_buddy.hosts.main serve --transport http --mode inline; echo "exit=$?"
 ```
 **And** a new empty document is created through the GUI. FreeCAD starts on the Start page, which has no 3D view and no enabled **Fit All** button, and the suppressed proxy leaves the GUI as the only path  
 ```
-cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "New Document"] }
+# press menu leaf File > New Document (test-plan §6, "Menu route")
 ```
 If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token` from a fresh `get_window_state` snapshot.
 
-**Then** the listener still started — verify: `grep "freecad-buddy RPC listener started on" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns a line, and `rpc-<pid>.json` exists  
-**And** the proxy was not spawned — verify: `netstat -ano | grep :8765` returns nothing  
-**And** the log states why, verbatim — verify: `grep "FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"` returns a line  
+**Then** the listener still started — verify: `docker exec -u cua fcb-desktop grep "freecad-buddy RPC listener started on" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns a line, and `rpc-<pid>.json` exists  
+**And** the proxy was not spawned — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` returns nothing  
+**And** the log states why, verbatim — verify: `docker exec -u cua fcb-desktop grep "FREECAD_BUDDY_NO_AUTO_MCP set; not auto-starting the MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns a line  
 **And** the check is truthiness, not `"1"` — verify: the two assertions above hold even though the value was `no`, a non-empty string that is not `1`  
 **And** `--mode rpc` without `--transport http` exits 2 — verify: the first CLI command writes exactly `--mode rpc requires --transport http.` to stderr and `exit=2`  
 **And** `--transport http --mode inline` is refused — verify: the second CLI command writes exactly `transport 'http' is not available yet; use --transport stdio.` to stderr and `exit=2`  
-**And** neither refused command bound a port — verify: `netstat -ano | grep :8765` still returns nothing  
-**And** *(visual)* the new document's view is framed through the GUI only — verify: take a fresh `'{"pid":<freecad pid>,"window_id":<window id>}' | & cua-driver call get_window_state`, resolve the **Fit All** toolbar element's `element_token`, and click it; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. The MCP fit is not available and must not be attempted: the suppressed proxy is the state under test, so the toolbar button is the only framing path, and it touches none of the code under test. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1.  
-**And** *(visual)* the GUI came up normally despite the suppressed proxy — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-13-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document, and an empty 3D view with the navigation cube, no error dialog, and no crash or splash screen left up. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image, and here no MCP endpoint exists to ask.  
+**And** neither refused command bound a port — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` still returns nothing  
+**And** *(visual)* the new document's view is framed through the GUI only — verify: take a fresh `echo '{"pid":<freecad pid>,"window_id":<window id>}' | "$FCB_CUA" get_window_state`, resolve the **Fit All** toolbar element's `element_token`, and click it; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. The MCP fit is not available and must not be attempted: the suppressed proxy is the state under test, so the toolbar button is the only framing path, and it touches none of the code under test. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable` at segment 1.  
+**And** *(visual)* the GUI came up normally despite the suppressed proxy — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-13-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document, and an empty 3D view with the navigation cube, no error dialog, and no crash or splash screen left up. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image, and here no MCP endpoint exists to ask.  
 
-**Cleanup**: restart FreeCAD without the variable so later scenarios get the auto-spawned proxy. Close it through its own menu: `kill_app` refuses a FreeCAD that the `.cmd` wrapper started (`foreign_process_termination_denied`).
+**Cleanup**: restart FreeCAD without the variable so later scenarios get the auto-spawned proxy. Close it through its own menu (the `Exit` leaf) or with `docker exec -u cua fcb-desktop fcb-freecad stop`.
 ```
-cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "Exit"] }
+# press menu leaf File > Exit (test-plan §6, "Menu route")
 docker exec -u cua fcb-desktop fcb-freecad start
 ```
 ```bash
-rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+docker exec -u cua fcb-desktop rm -f "$FCB_USER_DIR/freecad-buddy/addon.log.prev"
 ```
 
 ---
@@ -543,18 +544,18 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
 
 **Given** FreeCAD is running and the bridge answers — verify: `mcp query_capabilities {}` returns `status: "OK"`  
 **And** the FreeCAD pid, the RPC port from the discovery file, and the proxy pid are recorded  
-**And** the live window is framed and captured before the kill — verify: fit through the GUI with click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), which touches none of the code under test, then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-14-before.png"}' | & cua-driver call get_window_state`  
+**And** the live window is framed and captured before the kill — verify: fit through the GUI with click the **Fit All** toolbar button by its `element_token` from a fresh `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` (the response carries `route: "accessibility"`; `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`), which touches none of the code under test, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-14-before.png"}' | "$FCB_CUA" get_window_state`  
 
-**When** the FreeCAD process is killed without letting it run its shutdown handlers. Try the cua-driver tool first. When it refuses with `foreign_process_termination_denied`, end the process from the agent shell. FreeCAD runs at the agent shell's integrity level, so the shell may end it (`Stop-Process -Force` calls `TerminateProcess`, which runs no shutdown handler).  
+**When** the FreeCAD process is killed without letting it run its shutdown handlers. Try the cua-driver tool first. When it refuses, end the process with `kill -KILL` in the container (SIGKILL runs no shutdown handler).  
 ```
-cua-driver call kill_app { pid: <freecad pid> }
+echo '{"pid":<freecad pid>}' | "$FCB_CUA" kill_app
 ```
 ```bash
-powershell -c "Stop-Process -Id <freecad pid> -Force"   # only when kill_app was refused
+docker exec -u cua fcb-desktop kill -KILL <freecad pid>   # only when kill_app was refused
 ```
 **And** a connection to the RPC port recorded before the kill is attempted  
 ```bash
-uv run python -c "
+"$FCB_PYTHON" -c "
 import socket, time
 t0 = time.monotonic()
 try:
@@ -567,24 +568,24 @@ print('elapsed', round(time.monotonic()-t0, 2))
 ```
 **And** one MCP call is attempted through the endpoint  
 
-**Then** FreeCAD is gone — verify: `tasklist | grep <freecad pid>` returns nothing  
+**Then** FreeCAD is gone — verify: `docker exec -u cua fcb-desktop ps -p <freecad pid> -o pid=` prints nothing, exit 1  
 **And** the RPC port no longer accepts — verify: the connect attempt prints `refused:` and never `connected`  
 **And** the failure is fast, not a hang — verify: the printed `elapsed` is under the 5 s connect timeout  
-**And** the proxy exits once its FreeCAD is gone — verify: within 5 s of the kill, `tasklist | grep <proxy pid>` returns nothing and `netstat -ano | grep :8765` shows no `LISTENING` row. The proxy pid is the `LISTENING` pid on `:8765` recorded in the `Given`.  
-**And** the proxy logs its exit once — verify: `grep -c "FreeCAD pid <freecad pid> has exited; the MCP proxy exits and frees port 8765" "$APPDATA/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log"` prints `1`. Read the log before the relaunch: the new proxy rewrites it.  
-**And** the kill leaves a stale discovery file, matching the shipped behaviour — verify: `ls "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<killed pid>.json"` still lists the file. A clean exit deletes it (TC-01-10); an unclean kill does not. Record this as observed state, not a defect.  
-**And** a fresh launch is not blocked by the stale state — verify: relaunching FreeCAD writes a new `rpc-<new pid>.json` and `:8765` returns to `LISTENING`  
-**And** the relaunched FreeCAD is served by its own new proxy, not by an adopted one — verify: `curl -s http://127.0.0.1:8765/healthz` returns `200` with `"service": "freecad-buddy-mcp-proxy"` and `"freecad_pid"` equal to the new FreeCAD pid, the `LISTENING` pid on `:8765` differs from the killed session's proxy pid, and the new session's `addon.log` lines hold no `MCP proxy not started` ERROR  
+**And** the proxy exits once its FreeCAD is gone — verify: within 5 s of the kill, `docker exec -u cua fcb-desktop ps -p <proxy pid> -o pid=` prints nothing, exit 1 and `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows no `LISTEN` row. The proxy pid is the `LISTEN` pid on `:8765` recorded in the `Given`.  
+**And** the proxy logs its exit once — verify: `docker exec -u cua fcb-desktop grep -c "FreeCAD pid <freecad pid> has exited; the MCP proxy exits and frees port 8765" "$FCB_USER_DIR/freecad-buddy/mcp-proxy.log"` prints `1`. Read the log before the relaunch: the new proxy rewrites it.  
+**And** the kill leaves a stale discovery file, matching the shipped behaviour — verify: `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<killed pid>.json"` still lists the file. A clean exit deletes it (TC-01-10); an unclean kill does not. Record this as observed state, not a defect.  
+**And** a fresh launch is not blocked by the stale state — verify: relaunching FreeCAD writes a new `rpc-<new pid>.json` and `:8765` returns to `LISTEN`  
+**And** the relaunched FreeCAD is served by its own new proxy, not by an adopted one — verify: `curl -s http://127.0.0.1:18765/healthz` returns `200` with `"service": "freecad-buddy-mcp-proxy"` and `"freecad_pid"` equal to the new FreeCAD pid, the `LISTEN` pid on `:8765` differs from the killed session's proxy pid, and the new session's `addon.log` lines hold no `MCP proxy not started` ERROR  
 **And** the new session mints a different token — verify: the `token` in the new discovery file differs from the killed session's token, and the old token no longer authenticates  
 **And** *(visual)* a golden model is opened in the **relaunched** FreeCAD and framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test. The killed session has no MCP surface left, so the pre-kill framing in the `Given` was done through the GUI menu for that reason.  
-**And** *(visual)* the killed window is gone and the relaunched one is healthy — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-14-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and say what is on screen in each: the before PNG shows the killed session's FreeCAD window with its 3D view; the after PNG shows a FreeCAD window on the new pid with one box-shaped solid inside the view, whole, no edge cut off, and no crash dialog or recovery prompt left up. The killed pid must not capture at all. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the killed window is gone and the relaunched one is healthy — verify: `echo '{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-14-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and say what is on screen in each: the before PNG shows the killed session's FreeCAD window with its 3D view; the after PNG shows a FreeCAD window on the new pid with one box-shaped solid inside the view, whole, no edge cut off, and no crash dialog or recovery prompt left up. The killed pid must not capture at all. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
 mcp document_close { doc: "<handle>" }
 ```
 ```bash
-rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<killed pid>.json"
+docker exec -u cua fcb-desktop rm -f "$FCB_USER_DIR/freecad-buddy/rpc-<killed pid>.json"
 ```
 
 ---
@@ -594,59 +595,59 @@ rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<killed pid>.json"
 **Priority**: Critical
 **Design Ref**: `integration-mcp-freecad.md` §3.1 (proxy identity and the already-served check), AD-2, AD-24
 
-**Given** FreeCAD is running with its auto-spawned proxy — verify: `netstat -ano | grep :8765` shows `LISTENING`, and the FreeCAD pid and the `token` from `rpc-<freecad pid>.json` are recorded  
+**Given** FreeCAD is running with its auto-spawned proxy — verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN`, and the FreeCAD pid and the `token` from `rpc-<freecad pid>.json` are recorded  
 **And** a golden model is open as an untouched baseline — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the baseline is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the framed baseline is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-before.png"}' | & cua-driver call get_window_state`  
+**And** the framed baseline is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the health route is probed  
 ```bash
-curl -s -i http://127.0.0.1:8765/healthz
+docker exec -u cua fcb-desktop curl -s -i http://127.0.0.1:8765/healthz
 ```
 
 **Then** `/healthz` answers — verify: the status line is `HTTP/1.1 200 OK` and the body is JSON  
 **And** the body names the proxy and its FreeCAD — verify: `"service"` is `"freecad-buddy-mcp-proxy"` and `"freecad_pid"` equals the recorded FreeCAD pid  
 **And** the body carries a session id and no secret — verify: `"session_id"` is a non-empty string, the recorded `token` does not occur anywhere in the response, and the body holds no path and no environment value  
-**And** *(visual)* the probe left the baseline unchanged — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-probed.png"}' | & cua-driver call get_window_state`, then `Read` it beside the before PNG and say what is on screen: the same box, whole, at the same size and position, with no dialog raised. The judgement is on the pixels alone.  
+**And** *(visual)* the probe left the baseline unchanged — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-probed.png"}' | "$FCB_CUA" get_window_state`, then `Read` it beside the before PNG and say what is on screen: the same box, whole, at the same size and position, with no dialog raised. The judgement is on the pixels alone.  
 
 **When** the document is closed and FreeCAD is closed cleanly  
 ```
 mcp document_close { doc: "<handle>" }
-cua-driver call invoke_menu { pid: <freecad pid>, window_id: <window id>, path: ["File", "Exit"] }
+# press menu leaf File > Exit (test-plan §6, "Menu route")
 ```
 **And** `:8765` is held by an unrelated HTTP server, and the addon log is moved aside  
 ```bash
-netstat -ano | grep :8765        # must return nothing first
-uv run python -m http.server 8765 --bind 127.0.0.1 &
-netstat -ano | grep ":8765.*LISTENING"   # record the last column: the Windows pid that holds the port
-mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+docker exec -u cua fcb-desktop ss -ltnp | grep :8765        # must return nothing first
+docker exec -d -u cua fcb-desktop fcb-py -m http.server 8765 --bind 127.0.0.1
+docker exec -u cua fcb-desktop ss -ltnp | grep :8765   # record the pid=<n> in the users:(("python",pid=<n>... column: the pid that holds the port
+docker exec -u cua fcb-desktop mv "$FCB_USER_DIR/freecad-buddy/addon.log" "$FCB_USER_DIR/freecad-buddy/addon.log.prev"
 ```
 **And** FreeCAD is launched and the addon log is read after 15 s, past the addon's 10 s wait for the port to free  
 ```
 docker exec -u cua fcb-desktop fcb-freecad start
 ```
 ```bash
-cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+docker exec -u cua fcb-desktop cat "$FCB_USER_DIR/freecad-buddy/addon.log"
 ```
 **And** a new empty document is created through the GUI. FreeCAD starts on the Start page, which has no 3D view and no enabled **Fit All** button, and this FreeCAD has no MCP endpoint  
 ```
-cua-driver call invoke_menu { pid: <new freecad pid>, window_id: <new window id>, path: ["File", "New Document"] }
+# press menu leaf File > New Document (test-plan §6, "Menu route")
 ```
 If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token` from a fresh `get_window_state` snapshot.
 
-**Then** the addon reports the foreign holder once — verify: `grep -c "ERROR" addon.log` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
-**And** no proxy was spawned — verify: `grep "spawned MCP proxy" addon.log` returns nothing, and `netstat -ano | grep :8765` shows `LISTENING` only on the holder pid recorded from `netstat`  
-**And** the RPC listener is up — verify: `grep "freecad-buddy RPC listener started on" addon.log` returns a line, and `rpc-<new freecad pid>.json` exists  
-**And** *(visual)* the new document's view is framed through the GUI only — verify: click the **Fit All** toolbar button by its `element_token` from a fresh `'{"pid":<new pid>,"window_id":<new wid>}' | & cua-driver call get_window_state`; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable`.  
-**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `'{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | & cua-driver call get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document and an empty 3D view with the navigation cube, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
+**Then** the addon reports the foreign holder once — verify: `docker exec -u cua fcb-desktop grep -c ERROR "$FCB_USER_DIR/freecad-buddy/addon.log"` prints `1`, and that line contains `MCP proxy not started: port 8765 is still held by another program`  
+**And** no proxy was spawned — verify: `docker exec -u cua fcb-desktop grep "spawned MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns nothing, and `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows `LISTEN` only on the holder pid recorded from `ss -ltnp`  
+**And** the RPC listener is up — verify: `docker exec -u cua fcb-desktop grep "freecad-buddy RPC listener started on" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns a line, and `docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy/rpc-<new freecad pid>.json"` lists it  
+**And** *(visual)* the new document's view is framed through the GUI only — verify: click the **Fit All** toolbar button by its `element_token` from a fresh `echo '{"pid":<new pid>,"window_id":<new wid>}' | "$FCB_CUA" get_window_state`; the response carries `route: "accessibility"`. The document is empty, so the reframe changes no pixel. Do **not** use `invoke_menu(["View","Fit All"])` — it is refused on FreeCAD 1.1.x with `menu_path_unavailable`.  
+**And** *(visual)* the GUI came up normally despite the foreign holder — verify: `echo '{"pid":<new pid>,"window_id":<new wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-15-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: a FreeCAD main window with its menu bar, the tree panel with the new `Unnamed` document and an empty 3D view with the navigation cube, no port-conflict dialog, no addon-failure popup, and no `Not Responding` in the title bar. The judgement is on the pixels alone; no MCP endpoint of this FreeCAD exists to ask.  
 
-**Cleanup**: stop the process that holds `:8765`, then restart FreeCAD so later scenarios get the auto-spawned proxy. Use the Windows pid from `netstat`; the shell's `$!` names the `uv` wrapper, not the python child that holds the port.
+**Cleanup**: stop the process that holds `:8765`, then restart FreeCAD so later scenarios get the auto-spawned proxy. Use the pid from `ss -ltnp` (its `users:(("python",pid=<n>` column); the holder is the `fcb-py` python child inside the container.
 ```bash
-powershell -c "Stop-Process -Id <holder pid> -Force"
-netstat -ano | grep ":8765.*LISTENING"   # must return nothing
-rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+docker exec -u cua fcb-desktop kill <holder pid>
+docker exec -u cua fcb-desktop ss -ltnp | grep :8765   # must return nothing
+docker exec -u cua fcb-desktop rm -f "$FCB_USER_DIR/freecad-buddy/addon.log.prev"
 ```
 ```
-cua-driver call invoke_menu { pid: <new freecad pid>, window_id: <new window id>, path: ["File", "Exit"] }
+# press menu leaf File > Exit (test-plan §6, "Menu route")
 docker exec -u cua fcb-desktop fcb-freecad start
 ```

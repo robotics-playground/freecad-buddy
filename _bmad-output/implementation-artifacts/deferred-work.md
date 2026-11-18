@@ -1903,10 +1903,12 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
   summary: The driver's `invoke_menu` (cua-driver 0.28.1) refuses FreeCAD's Qt menu bar (`menu path segment 0 has no safe activation action`: top-level menu items expose only `ShowMenu`), so test-case steps written as `invoke_menu` need the element-token route; the runner's menu step already presses the leaf item by token.
   evidence: `tests/uat/run/2026-11-17-10-9-smoke/evidence/demo-*.png`; `tests/uat/runner/capture.py` `invoke_menu`. A newer driver (0.53.0 is released) may accept the path; the pinned version is 0.28.1. `tests/uat/testcases/TC-01-session-lifecycle-and-transport.md` lines 391, 530, 615 and 650 still close FreeCAD with `invoke_menu` `["File", "Exit"]`.
+  resolution: resolved for the test cases by spec-10-10-uat-testcases-in-container: no test case relies on `invoke_menu` for a FreeCAD menu; menu steps press the leaf by `element_token` or send the shortcut key (measured per item, `tests/uat/run/2026-11-18-10-10-proof/K2-menu-*.txt`, `C1-action-census.txt`). The driver limit itself stays (cua-driver 0.28.1).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
   summary: `tests/uat/testcases/TC-*.md` still hold other Windows-host commands in their Given and step text (`tasklist`, `netstat`, `$APPDATA\FreeCAD/v1-1\...`, PowerShell `& cua-driver call ...`), and `freecad-automation-verification.md` still documents the conda `fcb` env.
   evidence: Story 10-9 replaced `$FREECAD_EXE` (21 uses), `$FCB_ENV` (8) and `$FCB_PYTHON` (24, now `scripts/automation/fcb_py.sh`) in step and Given text only, no Then changed; each kind was run in the container. The other host commands are outside those three variables and need the same pass. Known to need it first: TC-10 worker-pid steps (`Get-Process -Id`), and TC-11-19 (its sleeper started with `"$FCB_PYTHON"` now runs in the container, while its checks use host `tasklist`, `taskkill` and `$APPDATA`; the whole case belongs to a container rewrite).
+  resolution: resolved by spec-10-10-uat-testcases-in-container (R1-26, R2-14): census of host commands 905 lines before, 0 after (`tests/uat/run/2026-11-18-10-10-proof/census-*.txt`); each command kind and 48 GUI routes run in the container; verifier PASS at `498b53d` (`verify-10-10.md`). `freecad-automation-verification.md` (conda `fcb` env) was outside that Story and is not changed.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
   summary: `tests/uat/probe/run_faults.py` has no preflight for a running container FreeCAD: when one holds `:8765`, every case reads `no verdict: :8765 still held` (0/5 detected, exit 1, about 2 minutes) instead of one clear stop message.
@@ -1919,3 +1921,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-9-uat-runner-in-container.md`
   summary: The unit test for the `check_harness.py` `mcp-session-env` check (match by `/proc/<pid>/exe`) checks the script text only; the behaviour is proven live (10 of 10 full runs, D-Bus wait removed gives red every time), not by the unit test.
   evidence: verifier-10-9 at `73c84d4` (V-4).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-10-uat-testcases-in-container.md`
+  summary: `tests/uat/test-plan.md` §6 "Pixel points": a tree row scrolled out of view still has a frame, so the converted point hits another widget (the property panel). The rule should say to scroll the row into view first. The selection read after the click catches the miss.
+  evidence: verifier-10-10 at `498b53d` (row B30 on a 40-box document), `tests/uat/run/2026-11-18-10-10-verify/rerun-498b53d/`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-10-uat-testcases-in-container.md`
+  summary: The 10-10 proof tools have blind spots: `then-check.py` compares only Then heads and gives a `hand` verify line a reason by its kind automatically; `census.sh` counts only host-command words. A check that became always-true or never-true is visible only to a reader or a live run (red team RT-1..RT-3 were found that way).
+  evidence: red team `redteam-10-10.md`. Story 10-8 runs every scenario end to end, which is the stronger check.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-10-uat-testcases-in-container.md`
+  summary: `cua-driver` 0.28.1 exits 0 on a tool error (dead pid, missing `window_id`) and ignores bad JSON on stdin; `fcb_paths.sh` maps the repo root with no left boundary (no payload has that form). Steps are judged by the printed text (`test-plan.md` §6).
+  evidence: red team `redteam-10-10.md`, "Not reproduced".

@@ -1,0 +1,12 @@
+# TC-01:639 as written now, run in the container on addon.log
+## planted: the log holds the proxy spawn line, so the check 'returns nothing' must FAIL
+$ docker exec -u cua fcb-desktop grep "spawned MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log"
+2026-11-18 04:33:49,945 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 5005) -> http://127.0.0.1:8765/mcp; proxy log: 
+2026-11-18 04:48:31,994 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 6356) -> http://127.0.0.1:8765/mcp; proxy log: 
+grep_exit=0 (0 = a line found = the check fails)
+## log moved aside (empty): the check passes
+grep_exit=1 (1 = nothing = the check passes)
+log restored
+## old bare form on the host: always nothing
+grep: addon.log: No such file or directory
+host_grep_exit=2

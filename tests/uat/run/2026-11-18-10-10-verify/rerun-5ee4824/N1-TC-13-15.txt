@@ -1,0 +1,79 @@
+## N1: TC-13-15 When as written (BoxHole row at 93,175 from evidence/tc-13-rows.png)
+$ mcp query_tree_summary
+- [FEATURE] BoxHole
+$ echo '{"pid":16744,"window_id":37748834,"x":93,"y":175,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # click
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"key":"f2","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # f2
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-15-editing.png"}' | "$FCB_CUA" get_window_state | head -c 0    # editing png
+write /dev/stdout: The pipe is being closed.
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"keys":["ctrl","a"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey    # ctrl+a
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"text":"BoxHoleRenamed","delivery_mode":"foreground"}' | "$FCB_CUA" type_text    # type_text
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "escalation": {
+    "reason": "delivery_failed",
+    "target": "foreground"
+  },
+  "route": "global_input"
+}
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"key":"Return","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # Return
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary
+- [FEATURE] BoxHole "BoxHoleRenamed"
+## TC-13:810 ctrl+z
+$ echo '{"pid":16744,"window_id":37748834,"include_screenshot":false}' | "$FCB_CUA" get_window_state > /dev/null    # snapshot
+exit=0
+
+$ echo '{"pid":16744,"keys":["ctrl","z"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey    # ctrl+z
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary
+- [FEATURE] BoxHole

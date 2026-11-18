@@ -34,14 +34,14 @@ headless host with no GL context to prove the honest-degradation path.
 ## Preconditions
 
 - [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
-- [ ] The FreeCAD GUI is open (verify: `Get-Process -Name freecad | Select-Object Id,MainWindowTitle` lists one process with title `FreeCAD <live version>`)
-- [ ] The MCP proxy serves `:8765` — the addon auto-spawns it on FreeCAD start (verify: `netstat -ano | Select-String ":8765" | Select-String "LISTENING"` returns a row). No manual `serve` command. If absent, restart FreeCAD or read `%APPDATA%/FreeCAD/v1-1/freecad-buddy/addon.log`.
-- [ ] `cua-driver` is reachable and in the interactive session (verify: `cua-driver status` reports the daemon and NOT Session 0)
+- [ ] The FreeCAD GUI is open (verify: `docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'` lists one process, and `list_windows` for that pid gives a title ending `FreeCAD <live version>`)
+- [ ] The MCP proxy serves `:8765` — the addon auto-spawns it on FreeCAD start (verify: `docker exec -u cua fcb-desktop ss -ltnp | grep ":8765"` returns a row). No manual `serve` command. If absent, restart FreeCAD or read `$FCB_USER_DIR/freecad-buddy/addon.log`.
+- [ ] `cua-driver` is reachable and in the interactive session (verify: `"$FCB_CUA" status` reports `Cua Driver daemon is running`)
 - [ ] The render ladder reports a usable mode (verify: `mcp query_capabilities {}` returns `render` = `gui_constructed`)
-- [ ] The FreeCAD `(pid, window_id)` pair is known (verify: `'{"pid":<PID>}' | & cua-driver call list_windows` returns the window whose `title` is `FreeCAD <live version>`)
+- [ ] The FreeCAD `(pid, window_id)` pair is known (verify: `echo '{"pid":<PID>}' | "$FCB_CUA" list_windows` returns the window whose `title` is `FreeCAD <live version>`)
 - [ ] `script_exec` is on, as it is by default (verify: `tools/list` includes `script_exec`). TC-06-01, TC-06-09, TC-06-10 and TC-06-12 use it to read or change state that no typed tool reaches.
-- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
-- [ ] The session temp folder is known: `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`). Take it from the folder of any `render.resource_link`. If the agent shell gets "Access is denied", list it in-process: `mcp script_exec {doc:<handle>, code:"import os\nfrom freecad_buddy.usecases.documents import temp_dir\nresult = sorted(os.listdir(temp_dir()))"}`.
+- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: press the `Show All Objects` leaf of View > Visibility by `element_token` (test-plan §6, "Menu route"). A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
+- [ ] The session temp folder is known: `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir `$FCB_USER_DIR/freecad-buddy/workdir`). Take it from the folder of any `render.resource_link`. If the agent shell gets "Access is denied", list it in-process: `mcp script_exec {doc:<handle>, code:"import os\nfrom freecad_buddy.usecases.documents import temp_dir\nresult = sorted(os.listdir(temp_dir()))"}`.
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
 
 ### Shared viewport-capture recipe
@@ -51,10 +51,10 @@ Every scenario that compares against the live viewport uses this exact capture, 
 stays where it is.
 
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-NN-<name>.png"}' | & cua-driver call get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-NN-<name>.png"}' | "$FCB_CUA" get_window_state
 ```
 
-Forbidden in every scenario below: `Start-Process`, `SetForegroundWindow`, `taskkill /F`.
+Forbidden in every scenario below: `wmctrl -a`, `xdotool windowactivate`, `kill -KILL`.
 
 ### Shared GUI-fit fallback
 
@@ -63,9 +63,9 @@ Where a visual line offers the GUI fallback, use the `Fit All` **toolbar** butto
 none of the code under test:
 
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
 # from THAT snapshot take the element_token whose label is exactly "Fit All"
-'{"pid":<PID>,"element_token":"<Fit All token>"}' | & cua-driver call click
+echo '{"pid":<PID>,"element_token":"<Fit All token>"}' | "$FCB_CUA" click
 ```
 
 `invoke_menu(["View","Fit All"])` is **refused** on FreeCAD 1.1.x with `menu_path_unavailable` at
@@ -91,19 +91,15 @@ mcp document_close { doc: <scratch handle> }
 
 **When** the GUI camera is set through the **toolbar buttons**, not the View menu and not keystrokes. Snapshot first, then act on a token from that same snapshot.  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-pre.png"}' | & cua-driver call get_window_state
-# from that response take the element_token whose label is exactly "Standard Views",
-# then the token whose label is exactly "Fit All"
-'{"pid":<PID>,"element_token":"<Standard Views token>"}' | & cua-driver call click
-'{"pid":<PID>,"element_token":"<Fit All token>"}'        | & cua-driver call click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-pre.png"}' | "$FCB_CUA" get_window_state
+# from that response take the element_token of the push button labelled "Isometric" (the named views are
+# "1 Front", "2 Top", "3 Right", "4 Rear", "5 Bottom", "6 Left", "Isometric"), then the token whose label is exactly "Fit All"
+echo '{"pid":<PID>,"element_token":"<Isometric push button token>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"element_token":"<Fit All token>"}' | "$FCB_CUA" click
 ```
-**Verified 2026-09-12 — use the toolbar route.** `invoke_menu` with
-`["View","Standard views","Isometric"]`, `["View","Fit all"]` and `["View","Fit All"]` are all
-**refused** with `menu_path_unavailable` at segment 1 on FreeCAD 1.1.x. Some `View` paths resolve
-(`["View","Visibility","Show All Objects"]` does), but Qt renders an open popup as a window that is
-not enumerable from a snapshot, so leaf labels cannot be discovered that way. Viewport keystrokes (`press_key` "0") did **not**
-land even at `delivery_mode:"foreground"`. A `Fit All` toolbar click returns
-`route: "accessibility"` and demonstrably reframes the view.
+**Use the toolbar route.** The menu-path call is refused for a Qt top-level menu item (`menu_path_unavailable`),
+and viewport keystrokes (`press_key` "0") did **not** land even at `delivery_mode:"foreground"`.
+A `Fit All` toolbar click returns `route: "accessibility"` and demonstrably reframes the view.
 These buttons exist in the UIA tree **only while a document is open**.
 
 **And** the MCP render is captured. The toolbar `Fit All` above already framed the window, so the render and the window below share one camera; taking the render before the fit would compare two different cameras.  
@@ -114,7 +110,7 @@ Copy the returned `render.resource_link` PNG to `$RUN_DIR/evidence/tc-06-01-mcp.
 
 **And** the live viewport is captured with the shared recipe to `$RUN_DIR/evidence/tc-06-01-viewport.png`  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-viewport.png"}' | & cua-driver call get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-viewport.png"}' | "$FCB_CUA" get_window_state
 ```
 
 **And** both PNGs are opened side by side and compared  
@@ -126,7 +122,7 @@ Copy the returned `render.resource_link` PNG to `$RUN_DIR/evidence/tc-06-01-mcp.
 **And** anti-aliasing is honored — verify: `mcp script_exec {doc:<handle>, code:"result = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View').GetInt('AntiAliasing', -1)"}` returns `value_repr` `4`, and a zoom of one diagonal silhouette edge shows blended intermediate pixels, not a hard two-colour stair, in both `$RUN_DIR/evidence/tc-06-01-mcp.png` and `$RUN_DIR/evidence/tc-06-01-viewport.png`  
 **And** the render face tone is inside the AD-34 band — verify: `uv run python -c "from freecad_buddy.usecases.render_tone import verify_render_tone as v; print(v(r'$RUN_DIR/evidence/tc-06-01-mcp.png'))"` prints `'passed': True`, and when you `Read` the PNG no visible face is pure black or pure white and every face stands clear of the background. Do not compare face tone with `$RUN_DIR/evidence/tc-06-01-viewport.png`: the render has its own lighting rig, so a face that is darker or brighter than in the window is not a finding (AD-34; `integration-mcp-freecad.md` §6 lighting rig, headlight 0.80; sprint-change-proposal-2026-10-04 decision 4)  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows one whole object, drawn as FreeCAD draws it, and the render depicts that same object — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many solids, what shape and proportion, which corner faces the viewer. Then `Read` `$RUN_DIR/evidence/tc-06-01-mcp.png` and judge the render against that description on object set, silhouette, proportion and camera. Face shading is excluded from this comparison: the render is judged on the AD-34 tone band alone (line above). The window is the referent for what is drawn; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree on what is drawn, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows one whole object, drawn as FreeCAD draws it, and the render depicts that same object — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many solids, what shape and proportion, which corner faces the viewer. Then `Read` `$RUN_DIR/evidence/tc-06-01-mcp.png` and judge the render against that description on object set, silhouette, proportion and camera. Face shading is excluded from this comparison: the render is judged on the AD-34 tone band alone (line above). The window is the referent for what is drawn; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree on what is drawn, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -157,14 +153,14 @@ Copy each `render.resource_link` to `$RUN_DIR/evidence/tc-06-02-<camera>.png`.
 
 **And** for each camera the matching GUI standard view is set through the **`Standard Views` toolbar button**, then the viewport is grabbed  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-02-tree.png"}' | & cua-driver call get_window_state
-# act on the token from THAT snapshot whose label is exactly "Standard Views"
-'{"pid":<PID>,"element_token":"<Standard Views token>"}' | & cua-driver call click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-02-tree.png"}' | "$FCB_CUA" get_window_state
+# act on the token from THAT snapshot whose push button label is "1 Front" (then "2 Top", "3 Right", "4 Rear", "5 Bottom", "6 Left", "Isometric")
+echo '{"pid":<PID>,"element_token":"<1 Front push button token>"}' | "$FCB_CUA" click
 ```
 Then run the shared viewport recipe to `$RUN_DIR/evidence/tc-06-02-front-viewport.png`. Repeat for Top,
 Right, Left, Rear, Bottom, Isometric.
 
-Do **not** use `invoke_menu(["View","Standard views",…])` — that path is refused at segment 1 on
+Do **not** use the `View > Standard views` menu-path call — it is refused at segment 1 on
 this build (see TC-13-01 and `APPENDIX-B`). Re-snapshot before every click: element tokens are
 per-snapshot, and an adjacent token can be the tree's inline rename editor rather than the
 control you intended.
@@ -176,7 +172,7 @@ control you intended.
 **And** there is no axis flip — verify: for every pair, the up direction in the render agrees with the up direction in the viewport grab  
 **And** an unknown camera is rejected — verify: `mcp query_screenshot {doc:<handle>, view:{camera:"oblique"}}` is refused: the schema refusal `Input validation error: …`, or `INVALID_INPUT` where no MCP schema layer runs first; the input is refused either way (the `camera` enum admits only the seven names plus `custom`)  
 **And** *(visual)* the model is framed in the Isometric view, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows a three-quarter view of the object, and the `iso` render depicts that same view — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-02-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many faces are visible, which way is up, which corner of the object faces the viewer. Then `Read` `$RUN_DIR/evidence/tc-06-02-iso.png` and judge the render against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows a three-quarter view of the object, and the `iso` render depicts that same view — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-02-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many faces are visible, which way is up, which corner of the object faces the viewer. Then `Read` `$RUN_DIR/evidence/tc-06-02-iso.png` and judge the render against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -216,7 +212,7 @@ mcp query_screenshot {doc:<handle>, view:{include:["NoSuchObject"]}}
 **And** an unknown name fails closed — verify: the fourth call returns `INVALID_INPUT` with detail `unknown object: NoSuchObject`  
 **And** an explicit `include` of the Body renders its `Tip` solid — verify: `mcp query_screenshot {doc:<handle>, view:{include:["<Body>"]}}` returns `scene.rendered_objects` containing `<Body>`, and when you `Read` its PNG it shows the Body's `Tip` solid, not a blank image. A Body with no `Tip` instead returns `render.empty_scene: true` and no PNG. Either way the skip shapes only the automatic set  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows the document's visible solids and no datum plane, and the default render depicts that same set — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-03-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: count the solids, and name any datum plane, origin marker, or sketch line that is drawn. Then `Read` the default render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `scene.rendered_objects` list, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows the document's visible solids and no datum plane, and the default render depicts that same set — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-03-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: count the solids, and name any datum plane, origin marker, or sketch line that is drawn. Then `Read` the default render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `scene.rendered_objects` list, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -231,7 +227,7 @@ rm -f "$RUN_DIR/evidence/tc-06-03-"*.png
 **Design Ref**: `mcp-tools-design.md` §3.9 (view-controlled render)
 
 **Given** a document with two overlapping or adjacent solids is open — verify: `mcp query_tree_summary {doc:<handle>}` names both  
-**And** the untouched live viewport is captured — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-04-before.png"}' | & cua-driver call get_window_state`  
+**And** the untouched live viewport is captured — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-04-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the scene is rendered with an opaque red front object  
 ```bash
@@ -259,7 +255,7 @@ mcp query_screenshot {doc:<handle>, view:{styles:[{object:"<ObjectA>", color:[1.
 **And** styling a nonexistent object fails closed — verify: `mcp query_screenshot {doc:<handle>, view:{styles:[{object:"NoSuchObject", color:[0,0,1]}]}}` returns `INVALID_INPUT` with detail `unknown object: NoSuchObject`  
 **And** styles do not touch the live viewport — verify: a viewport grab taken after the second call with the shared recipe to `$RUN_DIR/evidence/tc-06-04-styled.png` shows `<ObjectA>` in its ORIGINAL color, not red; the render must never mutate the user's view  
 **And** *(visual)* the model is framed, before the capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test  
-**And** *(visual)* the window is unchanged by the styled renders — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-04-after.png"}' | & cua-driver call get_window_state`, then `Read` both `$RUN_DIR/evidence/tc-06-04-before.png` and the after PNG and say what colour `<ObjectA>` is in each, as the user would see it; it must still carry its original colour in both. Then `Read` the red render and compare: the two must **disagree** on colour, because the style lived only in the constructed scene. This is the one place in the file where agreement is the defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A window that turned red is a finding: record it in `$RUN_DIR/bugs.md`.  
+**And** *(visual)* the window is unchanged by the styled renders — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-04-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both `$RUN_DIR/evidence/tc-06-04-before.png` and the after PNG and say what colour `<ObjectA>` is in each, as the user would see it; it must still carry its original colour in both. Then `Read` the red render and compare: the two must **disagree** on colour, because the style lived only in the constructed scene. This is the one place in the file where agreement is the defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. A window that turned red is a finding: record it in `$RUN_DIR/bugs.md`.  
 
 **Cleanup**:
 ```bash
@@ -300,7 +296,7 @@ mcp query_screenshot {doc:<handle>, view:{focus:{object:"<ObjectA>", element_typ
 **And** a partial selector is rejected — verify: the partial-selector call returns `INVALID_INPUT` with detail `sub-element selector requires both element_type and index`  
 **And** mixed selector forms are rejected — verify: `mcp query_screenshot {doc:<handle>, view:{focus:{object:"<ObjectA>", mapped_name:"Face1", element_type:"face", index:0}}}` returns `INVALID_INPUT` with detail `selector cannot carry both mapped_name and element_type/index`  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows the object with no orange accent, and the unfocused render depicts that same object — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-05-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: the object's shape and framing, and the colour of every face — no face is accent orange, because highlight lives only in the constructed scene. Then `Read` the unfocused iso render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `scene.focused_on` echo, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows the object with no orange accent, and the unfocused render depicts that same object — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-05-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: the object's shape and framing, and the colour of every face — no face is accent orange, because highlight lives only in the constructed scene. Then `Read` the unfocused iso render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `scene.focused_on` echo, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -315,32 +311,32 @@ rm -f "$RUN_DIR/evidence/tc-06-05-"*.png
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
 **Given** a document with two visible shape-bearing objects is open — verify: in the tree lines of `mcp query_tree_summary {doc:<handle>}` both object lines start `v `  
-**And** the FreeCAD model tree is exposed in the accessibility tree — verify: `'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state` lists a `Tree` role element  
+**And** the FreeCAD model tree is exposed in the accessibility tree — verify: `echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state` lists a `Tree` role element  
 
 **When** the default scene is rendered and `scene.rendered_objects` is recorded  
 ```bash
 mcp query_screenshot {doc:<handle>}
 ```
-**And** the window is re-snapshotted, then `<ObjectB>` is selected in the model tree by its `element_token` from that snapshot  
+**And** the window is re-snapshotted, then `<ObjectB>` is selected in the model tree with a foreground pixel click on its row (a token click does not select a tree row in the container) (test-plan §6, "Tree row toggle")  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-tree.png"}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<token from this snapshot>"}' | & cua-driver call click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-tree.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<ObjectB row x>,"y":<ObjectB row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
-Use `element_token`, never a bare `element_index`; indices are per-snapshot and keyed on `(pid, window_id)`.
+Use `element_token` for buttons and menu leaves, never a bare `element_index`; indices are per-snapshot and keyed on `(pid, window_id)`.
 
-**And** the selected object is hidden through the GUI. Re-snapshot, match the tree item by `role == "TreeItem"` **and** its exact `label`, then send `space` to that token  
+**And** the selected object is hidden through the GUI. Take a snapshot with its screenshot, find the `<ObjectB>` row, select it with a foreground pixel click, then send `space` to the window (test-plan §6, "Tree row toggle")  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | & cua-driver call get_window_state
-'{"pid":<PID>,"element_token":"<TreeItem token for ObjectB>","key":"space","delivery_mode":"foreground"}' | & cua-driver call press_key
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<ObjectB row x>,"y":<ObjectB row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
-**This route is unreliable and MUST be verified, then retried if it did not land** (observed
+**This route MUST be verified, then retried if it did not land** (observed
 2026-09-12: the same call landed on one attempt and silently did nothing on another, in both
 cases reporting `effect: "unverifiable"`). Confirm with
 `mcp query_tree_summary {doc:<handle>}` and repeat until the `<ObjectB>` line marker actually flips.
 
-**Hazard — match the token by role and label, never by position.** Tokens are per-snapshot. In a
-live run an adjacent token was the tree's inline **rename editor**, and the `space` keystroke
-typed a space into the object's `Label`; `query_tree_summary` then reported `label: " "`.
+**Hazard — click the row, not the inline rename editor.** In a live run an adjacent token was the
+tree's inline **rename editor**, and the `space` keystroke typed a space into the object's `Label`; `query_tree_summary` then reported `label: " "`.
 Recover with a foreground `Ctrl+Z` and re-verify the label before continuing.
 
 **And** the default scene is rendered again, then `<ObjectB>` is rendered explicitly  
@@ -350,14 +346,14 @@ mcp query_screenshot {doc:<handle>, view:{include:["<ObjectB>"]}}
 ```
 **And** visibility is restored by repeating the hide step, and confirmed with the bridge  
 
-**Then** the hide landed in the GUI — verify: `'{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"<ObjectB>"},"exists":true}}]}' | & cua-driver call verify_state` returns `satisfied`. A result of `unknown` is NOT success — record the scenario as inconclusive and stop.  
+**Then** the hide landed in the GUI — verify: `echo '{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"<ObjectB>"},"exists":true}}]}' | "$FCB_CUA" verify_state` returns `satisfied`. A result of `unknown` is NOT success — record the scenario as inconclusive and stop.  
 **And** the bridge sees the new visibility — verify: in the tree text of `mcp query_tree_summary {doc:<handle>}` the `<ObjectB>` line starts `- `  
 **And** the hidden object drops out of the default render — verify: the post-hide default render returns `scene.rendered_objects` WITHOUT `<ObjectB>`  
 **And** an explicit include still renders it — verify: the explicit-include call returns `scene.rendered_objects` equal to `["<ObjectB>"]` with a non-null `render.resource_link`  
 **And** the default render matches the viewport — verify: a viewport grab taken after the hide, to `$RUN_DIR/evidence/tc-06-06-hidden.png`, shows the same object set as the post-hide default render  
 **And** visibility is restored — verify: after the restore step, the `<ObjectB>` line of `mcp query_tree_summary {doc:<handle>}` starts `v ` again and the default render lists it again  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows both objects again, and the restored default render depicts that same pair — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say how many solids are on screen and which they are, as the user would see it. `Read` `$RUN_DIR/evidence/tc-06-06-hidden.png` and say the same for the hidden state — one solid, `<ObjectB>` absent. Then `Read` the final default render and judge it against the after description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `v`/`-` marker, or render may stand in for looking at the image. Where the two disagree on which objects are on screen, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows both objects again, and the restored default render depicts that same pair — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say how many solids are on screen and which they are, as the user would see it. `Read` `$RUN_DIR/evidence/tc-06-06-hidden.png` and say the same for the hidden state — one solid, `<ObjectB>` absent. Then `Read` the final default render and judge it against the after description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `v`/`-` marker, or render may stand in for looking at the image. Where the two disagree on which objects are on screen, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -399,7 +395,7 @@ mcp query_screenshot {doc:<handle>, view:{camera:"custom", custom_orientation:[0
 **And** too many numbers are rejected — verify: the five-element call is refused: the schema refusal `Input validation error: …` (schema `maxItems: 4`), or `INVALID_INPUT`; the input is refused either way  
 **And** a zero-norm quaternion is rejected — verify: the zero-quaternion call returns `INVALID_INPUT` with detail matching `custom_orientation is degenerate (zero norm)`  
 **And** *(visual)* the model is framed in the Isometric view, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows a three-quarter view of the object, and the custom-quaternion render depicts that same view — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-07-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many faces are visible, which way is up, which corner faces the viewer. Then `Read` the valid-quaternion render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows a three-quarter view of the object, and the custom-quaternion render depicts that same view — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-07-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: how many faces are visible, which way is up, which corner faces the viewer. Then `Read` the valid-quaternion render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -440,7 +436,7 @@ mcp query_screenshot {doc:<handle>, view:{camera:"iso", width:0}}
 **And** zero is rejected — verify: the `width:0` call is refused: the schema refusal `Input validation error: …`, or `INVALID_INPUT`; the input is refused either way  
 **And** only width given still renders — verify: `mcp query_screenshot {doc:<handle>, view:{width:800}}` returns `OK` and the PNG measures `(800, 1920)`  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows the object, and the default-resolution render depicts that same object — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-08-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: the object's shape, proportion, and orientation. Then `Read` `$RUN_DIR/evidence/tc-06-08-default.png` and judge it against that description; the two images differ in resolution, and must not differ in content. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or reported pixel size may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows the object, and the default-resolution render depicts that same object — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-08-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: the object's shape, proportion, and orientation. Then `Read` `$RUN_DIR/evidence/tc-06-08-default.png` and judge it against that description; the two images differ in resolution, and must not differ in content. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status or reported pixel size may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -482,7 +478,7 @@ mcp query_tree_summary {doc:<handle>, depth:2}
 **And** styles did not persist — verify: a render with no `styles` after the styled render shows `Box` in its original color, so the style override lived only in the constructed scene  
 **And** no temp PNG is orphaned beyond the returned links — verify: list the `FCB_TMP_shot_*.png` files of the session temp folder again; the files added since the list in the `When` are exactly the files named by this scenario's `render.resource_link` values (the three renders of the `When` plus the unstyled render of the line above), and the system temp folder holds no `FCB_TMP_shot_*.png` written by these calls. The files listed in the `When` stay: a link may still be read after its call returns, so the session-start sweep removes render files, never the render call (AD-25)  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows one box in its original colour, not green, and the iso render depicts that same box — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-09-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: one box, its proportions, and its colour — which is its original colour, not the green the styled render used. Then `Read` the iso render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `dirty_document` flag, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows one box in its original colour, not green, and the iso render depicts that same box — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-09-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: one box, its proportions, and its colour — which is its original colour, not the green the styled render used. Then `Read` the iso render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `dirty_document` flag, or render may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -526,7 +522,7 @@ mcp query_screenshot {doc:<handle>, view:{camera:"iso"}}
 **And** the recompute applied the new length — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxPad"}` returns `volume` = `5000.0` (20 x 10 x 25 mm)  
 **And** the dirty render still lists the right objects — verify: the dirty render's `scene.rendered_objects` equals the post-recompute list  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* the window shows the recomputed box, and the post-recompute render depicts that same box — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-10-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: one box, and the ratio of its three edge lengths, which now reflect 20 x 10 x 25 mm. Then `Read` the post-recompute render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `dirty_document` flag, or render may stand in for looking at the image. Where the two disagree on what is drawn, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* the window shows the recomputed box, and the post-recompute render depicts that same box — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-10-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG and say what is on screen as the user would see it: one box, and the ratio of its three edge lengths, which now reflect 20 x 10 x 25 mm. Then `Read` the post-recompute render and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status, `dirty_document` flag, or render may stand in for looking at the image. Where the two disagree on what is drawn, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash
@@ -549,7 +545,7 @@ Close without saving. `script_exec` opens no transaction, so `document_undo` doe
 
 **Given** a host with no usable render context is available. Run this scenario against the headless H1 stdio host in an environment with no GL context, NOT against the live GUI — verify: `mcp query_capabilities {}` on that host returns `render` = `none` with a reason  
 **And** the GUI still has its own document open — verify: `mcp document_open {path:"$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd"}` returns a handle; record it as `<gui handle>`; run Show All  
-**And** the GUI's state is captured before the headless calls — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-11-before.png"}' | & cua-driver call get_window_state`  
+**And** the GUI's state is captured before the headless calls — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-11-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the capability ladder result is read  
 ```bash
@@ -561,7 +557,7 @@ mcp query_screenshot {doc:<handle>, view:{camera:"iso"}}
 ```
 **And** any PNG the call might have written is listed. The H1 host writes into its own session temp folder, `<H1 workdir>/tmp/FCB_TMP_session_<worker pid>_<token>/`, where `<H1 workdir>` is `FREECAD_BUDDY_WORKDIR` or, when that is unset, `freecad-buddy-workdir` under the host's working directory  
 ```bash
-Get-ChildItem "<H1 workdir>\tmp" -Recurse -Filter "FCB_TMP_shot_*.png"
+docker exec -u cua fcb-desktop find "<H1 workdir>/tmp" -name 'FCB_TMP_shot_*.png'
 ```
 
 **Then** the ladder reports none — verify: `query_capabilities` returns `render` equal to `none`  
@@ -569,10 +565,10 @@ Get-ChildItem "<H1 workdir>\tmp" -Recurse -Filter "FCB_TMP_shot_*.png"
 **And** availability is false — verify: the render returns `render.available` false  
 **And** a reason is carried — verify: the render's `render.reason` is a non-null string naming the failure (for example `FreeCADGui not importable` or `offscreen probe render failed`)  
 **And** NO fake PNG is produced — verify: the render's `render.resource_link` is absent from the unavailable envelope and the response carries no `images` array  
-**And** no temp file is left behind — verify: the `Get-ChildItem` listing shows no new `FCB_TMP_shot_*.png` created by the render call, and the system temp folder holds none either  
+**And** no temp file is left behind — verify: the `find` listing shows no new `FCB_TMP_shot_*.png` created by the render call, and the system temp folder holds none either  
 **And** the scene block is empty and honest — verify: the render returns `scene.rendered_objects` equal to `[]` and `scene.focused_on` null  
 **And** *(visual)* the GUI model was framed in the `Given`, before `tc-06-11-before.png` was taken; **no fit is run now** — verify: nothing is called between the two captures. A fit here would move the very camera this scenario asserts was left alone. If the `Given` fit was needed, `mcp view_fit_viewport { doc: "<gui handle>" }` returning `OK` is enough; if it did not, the shared GUI-fit fallback frames it without touching the code under test.  
-**And** *(visual)* the GUI window is pixel-for-pixel the same scene as before the headless calls — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both `$RUN_DIR/evidence/tc-06-11-before.png` and the after PNG and say what is on screen in each, as the user would see it: the same model, at the same size, at the same orientation, with no dialog or error popup raised. The judgement is on the pixels alone — no MCP status may stand in for looking at the image; the H1 envelope said nothing about the GUI and cannot be evidence about it. A headless refusal that changed the human's viewport would be a serious defect: record it in `$RUN_DIR/bugs.md`.  
+**And** *(visual)* the GUI window is pixel-for-pixel the same scene as before the headless calls — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-11-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both `$RUN_DIR/evidence/tc-06-11-before.png` and the after PNG and say what is on screen in each, as the user would see it: the same model, at the same size, at the same orientation, with no dialog or error popup raised. The judgement is on the pixels alone — no MCP status may stand in for looking at the image; the H1 envelope said nothing about the GUI and cannot be evidence about it. A headless refusal that changed the human's viewport would be a serious defect: record it in `$RUN_DIR/bugs.md`.  
 
 **Cleanup**: stop the H1 host.
 ```bash
@@ -593,11 +589,11 @@ the `query_capabilities` output that shows `render` was `gui_constructed` or `of
 **Design Ref**: `integration-mcp-freecad.md` §6 (constructed-scene offscreen render, AA)
 
 **Given** the FreeCAD GUI is open and rendering through `gui_constructed` — verify: `mcp query_capabilities {}` returns `render` = `gui_constructed`  
-**And** the AA preference value is readable — verify: `Select-String AntiAliasing "$env:APPDATA/FreeCAD/v1-1/user.cfg"` returns the `AntiAliasing` entry, or returns nothing when the key is unset  
+**And** the AA preference value is readable — verify: `docker exec -u cua fcb-desktop grep AntiAliasing "$FCB_CONFIG_DIR/user.cfg"` returns the `AntiAliasing` entry, or returns nothing when the key is unset  
 
 **When** the configured value is read  
 ```bash
-Select-String AntiAliasing "$env:APPDATA/FreeCAD/v1-1/user.cfg"
+docker exec -u cua fcb-desktop grep AntiAliasing "$FCB_CONFIG_DIR/user.cfg"
 ```
 The stored enum is NOT sequential. The mapping is `0 -> 0 samples`, `1 -> 1`, `2 -> 2`,
 `3 -> 4`, `4 -> 8`, `5 -> 6`. An absent key means 0.
@@ -610,18 +606,18 @@ Copy the PNG to `$RUN_DIR/evidence/tc-06-12-mcp.png`.
 
 **And** the live viewport is grabbed with the shared recipe to `$RUN_DIR/evidence/tc-06-12-viewport.png`  
 ```bash
-'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-12-viewport.png"}' | & cua-driver call get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-12-viewport.png"}' | "$FCB_CUA" get_window_state
 ```
 
 **And** both images are zoomed on the same silhouette edge and the edge pixels are compared  
 
-**Then** the configured value is recorded — verify: the `Select-String` output names the `AntiAliasing` enum value, and it is mapped to a sample count with the table above  
+**Then** the configured value is recorded — verify: the `grep` output names the `AntiAliasing` enum value, and it is mapped to a sample count with the table above  
 **And** AA is present when configured on — verify: when the mapped sample count is above 1, `$RUN_DIR/evidence/tc-06-12-mcp.png` shows blended intermediate pixels along a diagonal silhouette edge, not a pure two-colour stair  
 **And** AA is absent when configured off — verify: when the mapped sample count is 0 or 1, hard stair-stepping in `$RUN_DIR/evidence/tc-06-12-mcp.png` is expected and is NOT a defect  
 **And** render and viewport agree on edge quality — verify: the same edge in `$RUN_DIR/evidence/tc-06-12-viewport.png` and `$RUN_DIR/evidence/tc-06-12-mcp.png` shows the same class of smoothing  
 **And** the preference is read at render time, not baked — verify: change the preference without opening the Preferences dialog (a modal dialog keeps UIA busy until it closes): `mcp script_exec {doc:<handle>, code:"p = FreeCAD.ParamGet('User parameter:BaseApp/Preferences/View')\nresult = p.GetInt('AntiAliasing')\np.SetInt('AntiAliasing', <n>)"}` with `<n>` = `0` when the recorded value maps above 1 sample, else `3`; record the old value from `value_repr`. Re-render and confirm the edge quality follows the new value; restore the old value afterwards (see Cleanup)  
 **And** *(visual)* the model is framed, before either capture is taken — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the shared GUI-fit fallback, which touches none of the code under test. Fit FIRST, then capture, so the render and the window share one camera.  
-**And** *(visual)* a diagonal silhouette edge in the window carries a given class of smoothing, and the render carries that same class — verify: `'{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-12-after.png"}' | & cua-driver call get_window_state`, then `Read` the after PNG, zoom one diagonal silhouette edge, and say what the user would see there: blended intermediate pixels, or a hard two-colour stair. Then `Read` `$RUN_DIR/evidence/tc-06-12-mcp.png`, zoom the same edge, and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status and no `AntiAliasing` config value may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
+**And** *(visual)* a diagonal silhouette edge in the window carries a given class of smoothing, and the render carries that same class — verify: `echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-12-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the after PNG, zoom one diagonal silhouette edge, and say what the user would see there: blended intermediate pixels, or a hard two-colour stair. Then `Read` `$RUN_DIR/evidence/tc-06-12-mcp.png`, zoom the same edge, and judge it against that description. The window is the referent; the render is the thing being judged against it. The judgement is on the pixels alone — no MCP status and no `AntiAliasing` config value may stand in for looking at the image. Where the two disagree, the window wins: record the disagreement in `$RUN_DIR/bugs.md` as a finding against the render.  
 
 **Cleanup**:
 ```bash

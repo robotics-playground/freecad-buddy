@@ -1,0 +1,42 @@
+## ls the user data folder (TC-01-08)
+$ docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/freecad-buddy"
+addon.log
+mcp-proxy.log
+provision.log
+rpc-1096.json
+rpc-1823.json
+rpc-2421.json
+rpc-3076.json
+rpc-3678.json
+rpc-4314.json
+workdir
+exit=0
+
+## grep addon.log (TC-01-01)
+$ docker exec -u cua fcb-desktop grep 'spawned MCP proxy' "$FCB_USER_DIR/freecad-buddy/addon.log"
+2026-11-18 03:39:35,296 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 728) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 03:49:10,347 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 934) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 03:50:30,663 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 1183) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 04:04:59,071 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 2520) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 04:15:54,767 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 3159) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 04:20:58,862 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 3777) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 04:29:06,970 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 4411) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+exit=0
+
+## tail addon.log (TC-12-14)
+$ docker exec -u cua fcb-desktop tail -n 3 "$FCB_USER_DIR/freecad-buddy/addon.log"
+2026-11-18 04:29:06,843 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:38527
+2026-11-18 04:29:06,844 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: /usr/local/bin/uv
+2026-11-18 04:29:06,970 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 4411) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+exit=0
+
+## mv addon.log aside, then back (TC-01-01 rotation)
+$ docker exec -u cua fcb-desktop mv "$FCB_USER_DIR/freecad-buddy/addon.log" "$FCB_USER_DIR/freecad-buddy/addon.log.prev" && docker exec -u cua fcb-desktop mv "$FCB_USER_DIR/freecad-buddy/addon.log.prev" "$FCB_USER_DIR/freecad-buddy/addon.log"; echo moved
+moved
+exit=0
+
+## discovery file mode (TC-01-09, TC-11-07)
+$ docker exec -u cua fcb-desktop stat -c '%a %n' "$FCB_USER_DIR/freecad-buddy/rpc-4314.json"
+600 /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-4314.json
+exit=0
+

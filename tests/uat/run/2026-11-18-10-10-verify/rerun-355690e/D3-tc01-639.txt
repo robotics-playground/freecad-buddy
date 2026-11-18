@@ -1,0 +1,11 @@
+## TC-01:639 at 355690e, as written. The live addon.log already holds this launch's 'spawned MCP proxy' line (the planted case): the check 'returns nothing' must fail
+$ docker exec -u cua fcb-desktop grep "spawned MCP proxy" "$FCB_USER_DIR/freecad-buddy/addon.log" | tail -2    # TC-01:639
+2026-11-18 04:48:31,994 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 6356) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-18 04:59:37,786 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 8880) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+exit=0
+
+## same check at b5064f1 (host form), for contrast
+$ grep "spawned MCP proxy" addon.log    # TC-01:639@b5064f1
+grep: addon.log: No such file or directory
+exit=2
+

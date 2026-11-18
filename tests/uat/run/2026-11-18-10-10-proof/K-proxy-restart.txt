@@ -1,0 +1,14 @@
+# Q3 proxy restart by hand in the container
+proxy pid: 1183
+cmdline: /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http 
+FREECAD_BUDDY_AUTO_APPROVE=1
+FREECAD_BUDDY_SCRIPT_EXEC=1
+FREECAD_BUDDY_AUDIT_LOG=/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/audit.jsonl
+FREECAD_BUDDY_WORKDIR=/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir
+after kill: no-listener
+relay healthz: none
+after hand start: LISTEN 0      2048       127.0.0.1:8765       0.0.0.0:*    users:(("python",pid=1647,fd=6))    
+in-container healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":1096,"session_id":"f8520be13470201b"}
+relay healthz: {"service":"freecad-buddy-mcp-proxy","freecad_pid":1096,"session_id":"f8520be13470201b"}
+2026-11-18 03:54:26,829 INFO freecad_buddy.hosts.gui_external: pinned to FreeCAD pid 1096
+2026-11-18 03:54:26,831 INFO freecad_buddy.hosts.gui_external: freecad-buddy GUI-external MCP server on http://127.0.0.1:8765/mcp

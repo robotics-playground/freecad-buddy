@@ -1,0 +1,20 @@
+# C1 workbench combo box: token click on the combo, then the list item
+workbench before: value_repr":"'PartDesignWorkbench'","fingerprint_after":null
+combo token s00000060:383
+bg token click:
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+list items: [('Draft', {'h': 22, 'w': 261, 'x': 290, 'y': 94}), ('Part Design', {'h': 22, 'w': 261, 'x': 290, 'y': 204}), ('Part', {'h': 22, 'w': 261, 'x': 290, 'y': 226}), ('Sketcher', {'h': 22, 'w': 261, 'x': 290, 'y': 292})]
+Sketcher list item token s00000061:396
+bg click:
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+workbench after bg click: value_repr":"'PartDesignWorkbench'","fingerprint_after":null
+# C1 workbench combo box, list item click in the foreground
+fg token click on the list item:
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"accessibility"}
+workbench after fg token click: value_repr":"'PartDesignWorkbench'","fingerprint_after":null
+after: [('Sketcher', {'h': 22, 'w': 261, 'x': 290, 'y': 292})]
+# C1 workbench combo: foreground pixel click on the list item centre (window pixels = frame minus the window origin)
+popup state: re-snapshot
+[('Sketcher', {'h': 22, 'w': 261, 'x': 290, 'y': 292})]
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+workbench after fg pixel click: value_repr":"'SketcherWorkbench'"

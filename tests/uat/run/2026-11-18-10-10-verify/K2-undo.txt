@@ -1,0 +1,23 @@
+## Undo by ctrl+z, TC-13:810 form
+ "status": "OK",
+  "value_repr": "1",
+ "text": "doc: fcb-doc:IqyhulnB2E0n-RcvB0yoqA\nfingerprint_after: None\nstdout: \nvalue_repr: 1\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+state before:
+  "value_repr": "('BoxRenamed', ['verify rename'], 'box_10_20_30')",
+$ echo '{"pid":4911,"window_id":37748834,"include_screenshot":false}' | "$FCB_CUA" get_window_state | head -c 0    # TC-13:809 snapshot
+write /dev/stdout: The pipe is being closed.
+exit=0
+
+$ echo '{"pid":4911,"keys":["ctrl","z"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey    # TC-13:810 hotkey ctrl+z
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+state after:
+  "value_repr": "('Box', [], 'box_10_20_30')",
+v [FEATURE] Box

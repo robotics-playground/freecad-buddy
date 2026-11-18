@@ -1,0 +1,12 @@
+## port owner of :8765 (TC-01-01)
+$ docker exec -u cua fcb-desktop ss -ltnp | grep :8765
+LISTEN 0      2048       127.0.0.1:8765       0.0.0.0:*    users:(("python",pid=4411,fd=6))    
+exit=0
+
+## port owner, netstat form kept for reference
+$ docker exec -u cua fcb-desktop netstat -tlnp | grep :8765
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 127.0.0.1:8765          0.0.0.0:*               LISTEN      4411/python         
+exit=0
+

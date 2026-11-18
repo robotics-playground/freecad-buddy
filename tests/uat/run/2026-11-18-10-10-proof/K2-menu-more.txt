@@ -1,0 +1,16 @@
+# K2 Part > Primitives > Cube and New Document leaves
+before Part workbench: 'Undo' -> 
+before Part workbench: 'Recompute' -> 
+before Part workbench: 'Toggle Visibility' -> 
+before Part workbench: 'Cube' -> 
+before Part workbench: 'Primitives' -> 
+leaf 'Part' token s0000000c:219
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+after Part workbench: 'Primitives' -> s0000000d:272 True menu item;
+after Part workbench: 'Cube' -> s0000000d:273 True menu item;s0000000d:522 True push button;
+after Part workbench: 'Undo' -> 
+after Part workbench: 'Recompute' -> 
+after Part workbench: 'Toggle Visibility' -> 
+leaf 'New Document' token s0000000e:121
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+[' Unnamed - FreeCAD 1.1.4']

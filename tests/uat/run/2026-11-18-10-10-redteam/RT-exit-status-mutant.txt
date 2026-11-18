@@ -1,0 +1,9 @@
+$ echo {} | scripts/automation/fcb_cua.sh no_such_tool   # real wrapper at 5ee4824
+Permission denied: tool 'no_such_tool' has no reviewed risk classification
+exit=1
+$ echo {} | <worktree mutant: "|| true" after the docker exec line> no_such_tool
+Permission denied: tool 'no_such_tool' has no reviewed risk classification
+exit=0
+$ uv run pytest <worktree>/tests/external/test_fcb_cua_wrapper.py -q   # against the mutant
+19 passed in 6.10s
+# fake docker in the test: printf "%s\n" "$@"; printf -- "---STDIN---\n"; cat   (always exits 0; no test asserts a non-zero pass-through)

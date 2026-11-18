@@ -1,0 +1,4 @@
+# D7 TC-11:312 curl to the LAN address, as written (curl -sS)
+$ docker exec -u cua fcb-desktop curl -sS http://<LAN-IP>:8765/mcp   # LAN-IP=172.20.0.2
+curl: (7) Failed to connect to 172.20.0.2 port 8765 after 0 ms: Couldn't connect to server
+curl_exit=7

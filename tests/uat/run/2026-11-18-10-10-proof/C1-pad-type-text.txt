@@ -1,0 +1,11 @@
+# C1 type_text into the focused Length field of the Pad task panel (no element exists for the spin box)
+Length before: value_repr":"'10.0 mm'"
+$ echo {"pid":..,"window_id":..,"text":"5","delivery_mode":"foreground"} | "$FCB_CUA" type_text
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","escalation":{"reason":"delivery_failed","target":"foreground"},"route":"global_input"}
+Length after type_text: value_repr":"'10.0 mm'"
+$ press_key tab (commit the field)
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+Length after tab: value_repr":"'5.0 mm'"
+press OK leaf by token
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+Pad Length after OK: value_repr":"'5.0 mm'"

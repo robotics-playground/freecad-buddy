@@ -1,0 +1,14 @@
+# FreeCAD pid 20130, listener port 41917 from rpc-20130.json; the auto-spawned proxy is running and holds the session (proxy NOT stopped: the Given must fail)
+$ docker exec -u cua fcb-desktop ss -ltnp | grep ":41917" | grep ESTABLISHED    # TC-10:185, :260, :558, :595 as written
+exit=1 (prints nothing: the Given passes)
+$ docker exec -u cua fcb-desktop ss -ltnp | grep ":41917"
+LISTEN 0      128        127.0.0.1:41917      0.0.0.0:*    users:(("freecad",pid=20130,fd=19)) 
+$ docker exec -u cua fcb-desktop ss -tnp | grep ":41917"    # TC-10:148 / test-plan §6 'Established pair' form
+exit=1
+## after one MCP call through the proxy (mcpcall.py query_capabilities)
+$ docker exec -u cua fcb-desktop ss -ltnp | grep ":41917" | grep ESTABLISHED    # as written
+exit=1 (prints nothing: the Given passes)
+$ docker exec -u cua fcb-desktop ss -tnp | grep ":41917"
+ESTAB 0      0          127.0.0.1:41917    127.0.0.1:47198 users:(("freecad",pid=20130,fd=20))
+ESTAB 0      0          127.0.0.1:47198    127.0.0.1:41917 users:(("python",pid=20214,fd=9))  
+exit=0

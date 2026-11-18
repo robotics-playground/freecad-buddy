@@ -1,0 +1,60 @@
+$ echo '{"pid":8790,"window_id":37748834,"x":17,"y":193,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # extra step (not in TC-02): expand Body by its arrow
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+## TC-02:240 verify, as written (Pad row read from evidence/tc-02-05-rows2.png at x=91,y=228)
+$ mcp query_tree_summary { focus: Body }
+`-- v [PAD] Pad (+1) *tip
+$ echo '{"pid":8790,"window_id":37748834,"x":91,"y":228,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # TC-02:240 click
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+$ mcp script_exec selection
+"value_repr": "['Pad']"
+$ echo '{"pid":8790,"window_id":37748834,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # TC-02:240 press_key
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary { focus: Body }
+`-- - [PAD] Pad (+1) *tip
+## TC-02:243 restore (same route)
+$ echo '{"pid":8790,"window_id":37748834,"x":91,"y":228,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # click
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+$ echo '{"pid":8790,"window_id":37748834,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # press_key
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary { focus: Body }
+`-- v [PAD] Pad (+1) *tip

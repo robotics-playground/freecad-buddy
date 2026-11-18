@@ -1,0 +1,56 @@
+$ echo '{}' | "$FCB_CUA" list_windows   # TC-01-09 Given
+{
+  "windows": [
+    {
+      "app_name": "Xfdesktop",
+      "bounds": {
+        "height": 1000,
+        "width": 1600,
+        "x": 0,
+        "y": 0
+      },
+      "height": 1000,
+      "is_on_screen": true,
+      "pid": 422,
+      "title": "Desktop",
+      "width": 1600,
+      "window_id": 33554472,
+      "x": 0,
+      "y": 0,
+      "z_index": 0
+    },
+    {
+      "app_name": "FreeCAD",
+      "bounds": {
+        "height": 949,
+        "width": 1600,
+        "x": 0,
+        "y": 51
+      },
+      "height": 949,
+      "is_on_screen": true,
+      "pid": 4911,
+      "title": "FreeCAD 1.1.4",
+      "width": 1600,
+      "window_id": 37748834,
+      "x": 0,
+      "y": 51,
+      "z_index": 1
+    },
+    {
+      "app_name": "Xfce4-panel",
+      "bounds": {
+        "height": 27,
+        "width": 1600,
+        "x": 0,
+        "y": 0
+      },
+      "height": 27,
+      "is_on_screen": true,
+      "pid": 368,
+      "title": "xfce4-panel",
+      "width": 1600,
+      "window_id": 16777219,
+      "x": 0,
+      "y": 0,
+      

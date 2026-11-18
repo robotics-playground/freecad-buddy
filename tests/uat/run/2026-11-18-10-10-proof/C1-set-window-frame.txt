@@ -1,0 +1,36 @@
+# C1 set_window_frame takes flat x,y,width,height (not a frame object)
+before: [(0, 51, 1600, 949)]
+{"delivery":{"mode":"not_applicable"},"effect":"suspected_noop","evidence":[{"kind":"value_readback"}],"route":"system_api"}
+after: [(0, 51, 1600, 949)]
+{"delivery":{"mode":"not_applicable"},"effect":"confirmed","evidence":[{"kind":"value_readback"}],"route":"system_api"}
+restored: [(0, 51, 1600, 949)]
+--- get_desktop_state
+{
+  "display": "primary",
+  "platform": "linux",
+  "scale_factor": 1.0,
+  "screen_height": 1000,
+  "screen_width": 1600,
+  "screenshot_height": 1000,
+  "screenshot_mime_type": "image/png",
+  "screenshot_png_b64": "iVBORw0KGgoAAAANSUhEUgAABkAAAAPoCAYAAACGezKDAALPxElEQVR4Ae3AA6AkWZbG8f937o3IzKdyS2Oubdwrite /dev/stdout: The pipe is being closed.
+
+# C1 narrow the window: set_window_frame readback (TC-14-13)
+{"delivery":{"mode":"not_applicable"},"effect":"suspected_noop","evidence":[{"kind":"value_readback"}],"route":"system_api"}
+width 960 -> list_windows: [(0, 51, 1600, 949)]
+{"delivery":{"mode":"not_applicable"},"effect":"suspected_noop","evidence":[{"kind":"value_readback"}],"route":"system_api"}
+width 1200 -> list_windows: [(0, 51, 1600, 949)]
+0x01000003 -1 0    0    1600 27   c49c6323253c xfce4-panel
+0x01000010 -1 647  997  306  3    c49c6323253c xfce4-panel
+0x01000014 -1 647  1069 306  49   c49c6323253c xfce4-panel
+0x02000028 -1 0    0    1600 1000 c49c6323253c Desktop
+0x02400062  0 0    75   1600 949  c49c6323253c * Unnamed - FreeCAD 1.1.4
+_NET_WM_STATE(ATOM) = _NET_WM_STATE_MAXIMIZED_HORZ, _NET_WM_STATE_MAXIMIZED_VERT, _NET_WM_STATE_FOCUSED
+# C1 window is maximized: un-maximize with wmctrl, then set_window_frame lands; re-maximize after
+before: [(0, 51, 1600, 949)]
+wmctrl -ir 0x02400062 -b remove,maximized_vert,maximized_horz
+after unmaximize: [(0, 51, 1600, 949)]
+{"delivery":{"mode":"not_applicable"},"effect":"unverifiable","evidence":[{"kind":"value_readback"}],"route":"system_api"}
+after set_window_frame 960 wide: [(5, 56, 960, 949)]
+{"delivery":{"mode":"not_applicable"},"effect":"unverifiable","evidence":[{"kind":"value_readback"}],"route":"system_api"}
+restored and re-maximized: [(0, 51, 1600, 949)]

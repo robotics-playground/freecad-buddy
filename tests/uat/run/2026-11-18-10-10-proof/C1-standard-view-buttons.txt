@@ -1,0 +1,9 @@
+# C1 Standard views: the named view push buttons by token
+before: value_repr":"[0.0, 0.0, 0.0, 1.0]","fingerprint_after":null
+1 Front -> camera value_repr":"[0.707, 0.0, 0.0, 0.707]","fingerprint_after":null
+2 Top -> camera value_repr":"[0.0, 0.0, 0.0, 1.0]","fingerprint_after":null
+3 Right -> camera value_repr":"[0.5, 0.5, 0.5, 0.5]","fingerprint_after":null
+4 Rear -> camera value_repr":"[0.0, 0.707, 0.707, 0.0]","fingerprint_after":null
+5 Bottom -> camera value_repr":"[1.0, 0.0, 0.0, 0.0]","fingerprint_after":null
+6 Left -> camera value_repr":"[-0.5, 0.5, 0.5, -0.5]","fingerprint_after":null
+Isometric -> camera value_repr":"[0.425, 0.176, 0.34, 0.82]","fingerprint_after":null

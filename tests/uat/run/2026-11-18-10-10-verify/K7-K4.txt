@@ -1,0 +1,11 @@
+$ docker exec -u cua fcb-desktop cat "$FCB_USER_DIR/freecad-buddy/rpc-4911.json" | tee "$RUN_DIR/evidence/tc-01-09-discovery.json" | sed 's/"token": *"[^"]*"/"token": "<redacted>"/'    # TC-01-09 When (K7)
+{"schema": 1, "pid": 4911, "host": "127.0.0.1", "port": 36805, "token": "<redacted>", "contract_version": "1", "freecad_version": "1.1.4", "started": "2026-11-18T04:33:49.834884+00:00"}exit=0
+
+$ docker exec -u cua fcb-desktop ls -l "$FCB_USER_DIR/freecad-buddy/rpc-4911.json"    # TC-01-09 And (K7, mode)
+-rw------- 1 cua cua 218 Nov 18 04:33 /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-4911.json
+exit=0
+
+$ docker exec -u cua fcb-desktop ps -p 4911 -o pid=,comm=    # TC-01:363 (K4)
+ 4911 freecad
+exit=0
+

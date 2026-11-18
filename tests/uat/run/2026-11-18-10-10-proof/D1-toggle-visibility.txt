@@ -1,0 +1,14 @@
+# D1 Toggle Visibility: foreground pixel click on the tree row, then window-level press_key space
+# Box row centre from the screenshot of get_window_state (window-local pixels)
+visibility before: v [FEATURE] Box   selection: value_repr":"['Box']"
+selection cleared: value_repr":"[]"
+$ background pixel click: selection stays empty
+selection: value_repr":"[]"
+$ echo {"pid":..,"window_id":..,"x":80,"y":175,"delivery_mode":"foreground"} | "$FCB_CUA" click
+selection: value_repr":"['Box']"
+$ echo {"pid":..,"window_id":..,"key":"space","delivery_mode":"foreground"} | "$FCB_CUA" press_key
+visibility after space: - [FEATURE] Box   (the marker v = shown, - = hidden)
+visibility after second space: v [FEATURE] Box
+$ old route: press_key space with the tree item element_token
+AT-SPI Component.GrabFocus returned false for element 524
+visibility after the old route: v [FEATURE] Box

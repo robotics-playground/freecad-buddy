@@ -1,0 +1,10 @@
+# K2 Show All Objects + Windows > Next (two docs open); each leaf found in a fresh snapshot, pressed by element_token
+title before: [' two-box-compound - FreeCAD 1.1.4']
+leaf 'Show All Objects' token s00000007:207
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+leaf 'Next' token s00000009:325
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+title after Next: [' box-10-20-30 - FreeCAD 1.1.4']
+leaf 'Previous' token s0000000a:326
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+title after Previous: ['* two-box-compound - FreeCAD 1.1.4']

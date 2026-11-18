@@ -1,0 +1,15 @@
+## N5: TC-02:240 as written: expand Body by its arrow (17,211, n5-rows.png)
+`-- v [PAD] Pad (+1) *tip
+$ echo '{"pid":16744,"window_id":37748834,"x":17,"y":211,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # expand Body arrow
+exit=0
+
+tree items listed: ['Base', None, 'Placement', '[(0.00 0.00 1.00); 0.00°; (0.00 mm  0.00 mm  0.00 mm)]', 'Label', 'Sphere', 'box40-hole-r5', None, None, 'sphere-r10', None, None]
+['verify-pad', 'Body', 'Body', 'Origin', 'Origin', 'Pad', 'Pad']
+$ echo '{"pid":16744,"window_id":37748834,"x":91,"y":246,"delivery_mode":"foreground"}' | "$FCB_CUA" click >/dev/null    # Pad row click (91,246)
+exit=0
+
+$ echo '{"pid":16744,"window_id":37748834,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key >/dev/null    # space
+exit=0
+
+$ mcp query_tree_summary { focus: Body }
+`-- - [PAD] Pad (+1) *tip

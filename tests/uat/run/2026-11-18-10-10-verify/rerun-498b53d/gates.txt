@@ -1,0 +1,14 @@
+## after restoring the accidental edit
+testcases equal to 498b53d
+Then/And lines compared: 2340; verify clauses changed: 379; failures: 0
+exit=0
+== ruff check
+All checks passed!
+== check_imports
+check_imports OK
+== format: tests/external/test_fcb_cua_wrapper.py tests/uat/run/2026-11-18-10-10-proof/mcpcall.py tests/uat/run/2026-11-18-10-10-proof/run-script-exec-sites.py tests/uat/run/2026-11-18-10-10-proof/sweep-cua-stdin.py tests/uat/run/2026-11-18-10-10-proof/sweep-state-files.py tests/uat/run/2026-11-18-10-10-proof/then-check.py
+6 files already formatted
+== pytest tests/external
+1784 passed, 4 skipped, 6 warnings in 101.57s (0:01:41)
+== user.cfg
+\b89a97711941619bb0ba74ae04fb888025e82f49ff48174fbebb42aed28d85a0 *C:\\Users\\thuan\\AppData\\Roaming/FreeCAD/v1-1/user.cfg

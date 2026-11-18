@@ -1,0 +1,61 @@
+## TC-13-15 When (rename via F2 at window level), on the Pad row (x=91,y=228)
+$ echo '{"pid":8790,"window_id":37748834,"x":91,"y":228,"delivery_mode":"foreground"}' | "$FCB_CUA" click    # click
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+exit=0
+
+$ echo '{"pid":8790,"window_id":37748834,"key":"f2","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # F2
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+## snapshot after F2: the screenshot shows the inline editor on the Pad row; the AT-SPI tree has no text/entry element for it (roles: menu item, push button, list item, tree item, check box, button menu, page tab list, scroll bar, combo box, text x4 = Python console etc.)
+## extra (not in TC): window-level type_text + enter
+$ echo '{"pid":8790,"window_id":37748834,"text":"PadRenamed","delivery_mode":"foreground"}' | "$FCB_CUA" type_text    # type_text
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "escalation": {
+    "reason": "delivery_failed",
+    "target": "foreground"
+  },
+  "route": "global_input"
+}
+exit=0
+
+$ echo '{"pid":8790,"window_id":37748834,"key":"enter","delivery_mode":"foreground"}' | "$FCB_CUA" press_key    # enter
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary { focus: Body }
+`-- v [PAD] Pad "PadRenamed" (+1) *tip
+$ echo '{"pid":8790,"keys":["ctrl","z"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey    # TC-13:810 ctrl+z
+{
+  "delivery": {
+    "mode": "foreground"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+$ mcp query_tree_summary { focus: Body }
+`-- v [PAD] Pad (+1) *tip

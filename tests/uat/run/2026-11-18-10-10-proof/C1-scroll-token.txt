@@ -1,0 +1,3 @@
+# C1 scroll by element_token on the ArchDetail row (the tree is collapsed here: only the call's own answer is recorded; the effect on a long tree is C1-scroll.txt, where the foreground pixel form moves the rows)
+token s000000a9:538
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"global_input"}

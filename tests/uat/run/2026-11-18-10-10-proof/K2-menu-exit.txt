@@ -1,0 +1,9 @@
+# K2 Exit: leaf pressed by element_token (leaf found in the tree without opening the menu)
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+pgrep exit=1 (1 = FreeCAD gone)

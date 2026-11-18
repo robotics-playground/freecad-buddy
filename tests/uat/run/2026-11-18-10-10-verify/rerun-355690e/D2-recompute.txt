@@ -1,0 +1,46 @@
+## make box-10-20-30 the active document (Windows > Next leaf until title names it)
+title: * verify-pad - FreeCAD 1.1.4
+title: * verify-pad - FreeCAD 1.1.4
+title: * box-10-20-30 - FreeCAD 1.1.4
+Box.State, mustExecute: "value_repr": "(['Up-to-date'], False)
+Recompute leaf token while the document is clean: NONE
+(touch Box)
+Box.State, mustExecute: "value_repr": "(['Touched'], True)
+Recompute leaf token while the document must recompute: s00000037:143
+$ echo '{"pid":8790,"element_token":"s00000037:143"}' | "$FCB_CUA" click    # TC-12:429 press menu leaf Edit > Recompute
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "accessibility"
+}
+exit=0
+
+Box.State, mustExecute: "value_repr": "(['Up-to-date'], False)
+(touch Box)
+Box.State, mustExecute: "value_repr": "(['Touched'], True)
+$ echo '{"pid":8790,"window_id":37748834,"key":"f5"}' | "$FCB_CUA" press_key    # test-plan §6: F5 (press_key)
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+Box.State, mustExecute: "value_repr": "(['Up-to-date'], False)
+(touch Box)
+Box.State, mustExecute: "value_repr": "(['Touched'], True)
+$ echo '{"pid":8790,"window_id":37748834,"keys":["f5"]}' | "$FCB_CUA" hotkey    # test-plan §6 wording 'F5 hotkey' (hotkey tool)
+{
+  "delivery": {
+    "mode": "background"
+  },
+  "effect": "unverifiable",
+  "route": "synthetic_events"
+}
+exit=0
+
+Box.State, mustExecute: "value_repr": "(['Up-to-date'], False)

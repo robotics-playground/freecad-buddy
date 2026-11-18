@@ -1,0 +1,33 @@
+$ "$FCB_CUA" status    # TC-06:39 (K1b)
+Cua Driver daemon is running
+  socket: /home/cua/.cache/cua-driver/cua-driver.sock
+  pid: 12
+  permission mode: standard (built_in_default)
+  user policy: configured=false, active=false, valid=true
+  managed policy: configured=false, active=false, valid=true
+  authorization host: unavailable (unavailable)
+  capability manifest: configured=false, approved_at_startup=false, valid=true
+exit=0
+
+$ echo '{"pid":4911,"window_id":37748834,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-03-hidden.png"}' | "$FCB_CUA" get_window_state | grep -v '^\s*"\(element\|ax\)' | head -15    # TC-13-03 When (K1, $RUN_DIR mapping)
+{
+  "_note": "Prefer `elements` — `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps with very large trees.",
+  "app_name": "FreeCAD",
+    {
+      "actions": [
+        "SetFocus"
+      ],
+      "depth": 2,
+      "enabled": true,
+      "frame": {
+        "h": 330,
+        "w": 404,
+        "x": 266,
+        "y": 187
+      },
+exit=0
+
+$ ls -l "$RUN_DIR/evidence/tc-13-03-hidden.png"    # host sees file
+-rw-r--r-- 1 thuan 197609 176599 Nov 18 11:37 D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-11-18-10-10-verify/evidence/tc-13-03-hidden.png
+exit=0
+

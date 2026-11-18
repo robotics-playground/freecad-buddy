@@ -1,0 +1,13 @@
+# D3 sweep of FreeCAD-state file commands without docker exec
+## after the fix (must be 0 hits, exit 0)
+hits: 0
+exit=0
+## baseline 031d8e8 (the same script finds the bare commands there; first 8 lines)
+hits: 52
+TC-01-session-lifecycle-and-transport.md:38: mv "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+TC-01-session-lifecycle-and-transport.md:50: cat "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+TC-01-session-lifecycle-and-transport.md:57: grep "freecad-buddy RPC listener started on" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+TC-01-session-lifecycle-and-transport.md:58: grep "spawned MCP proxy" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+TC-01-session-lifecycle-and-transport.md:63: grep -i "failed to spawn" "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log"
+TC-01-session-lifecycle-and-transport.md:72: rm -f "$APPDATA/FreeCAD/v1-1/freecad-buddy/addon.log.prev"
+TC-01-session-lifecycle-and-transport.md:175: grep "freecad_version" "$APPDATA/FreeCAD/v1-1/freecad-buddy/rpc-<freecad pid>.json"
