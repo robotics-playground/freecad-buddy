@@ -35,3 +35,8 @@ Camera quaternion read with `script_exec ... getCameraOrientation().Q`.
 Capture names: the case names for TC-13-04 (`-viewport.png`, `-after.png`) and TC-13-10 (`-after-pad.png`, `-viewport.png`, `-after.png`) show one camera state with no step between them, so this run holds one image for each state: `tc-13-04-after.png` and `tc-13-10-after.png`. TC-07-05 and TC-13-10 have no runner scenario file; only the agent-driven rows above cover them.
 
 Test files made for TC-02-17 and the STEP files of TC-07-05 were removed after the read.
+
+## Fix round G1
+
+- `runner-g1/`: `tc-02-17.json` and `tc-09-12.json` after the stricter `expect` checks (TC-09-12 `text` equals the exact line; TC-02-17 regex needs a non-empty FreeCAD tail). Result: 2 ESCALATE, 0 FAIL, 0 run errors.
+- `rt2-proof.txt`: the real `mcp_server._to_call_result` text through the runner `check_expect`: a wrong refusal message gives a finding; the correct message passes.

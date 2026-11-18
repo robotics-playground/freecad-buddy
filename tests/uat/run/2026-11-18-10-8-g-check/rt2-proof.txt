@@ -1,0 +1,2 @@
+wrong 'INVALID_INPUT: internal error while resolving fcb-doc:does-not-exist' checks: 1 findings: [True]
+correct 'INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist' checks: 1 findings: [False]

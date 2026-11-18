@@ -192,7 +192,7 @@ mcp document_close { doc: <H> }
 **Given** `$RUN_DIR/evidence/` writable — verify: `ls -d "$RUN_DIR/evidence"`  
 **And** no stale target files — verify: `rm -f "$RUN_DIR/evidence/tc-07-05-ap242.step" "$RUN_DIR/evidence/tc-07-05-ap214.step"`  
 **And** `box-10-20-30.FCStd` is open as `<H>` with `<OBJ>` resolved — verify: `mcp document_open` returns `OK` and `mcp query_tree_summary { doc: <H> }` names the object  
-**And** the model is shown and framed before the export — verify: run Show All (Preconditions), then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, fit with the **Fit All** toolbar button by `element_token` from a fresh `get_window_state` snapshot. The AP242 export envelope then carries `framing.fits` `true`. A visible model that does not fit the viewport earns the framing warning, which the bridge appends to `text` after a blank line (`src/freecad_buddy/contracts/envelope.py:111`, spine AD-32, `TC-14-viewport-framing-and-auto-fit.md:399`); a fitted model earns none, so the exact `text` Then below holds  
+**And** the model is shown and framed before the export — verify: run Show All (Preconditions), then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, fit with the **Fit All** toolbar button by `element_token` from a fresh `get_window_state` snapshot. The AP242 export envelope then carries `framing.fits` `true`. A visible model that does not fit the viewport earns the framing warning, which the bridge appends to `text` after a blank line (`src/freecad_buddy/contracts/envelope.py:124`, spine AD-32, `TC-14-viewport-framing-and-auto-fit.md:399`); a fitted model earns none, so the exact `text` Then below holds  
 
 **When** the default schema is exported  
 ```
