@@ -1,9 +1,10 @@
 """``canary.yml`` keeps its contract (external / pytest, no FreeCAD).
 
 The weekly canary tracks the next FreeCAD development line and may fail without blocking a pull
-request (AD-11). The tests are an allowlist of the workflow's structure: the triggers, the solve
-inputs, the two suite commands and the step conditions must be exactly the expected ones, so a
-change that runs nothing, narrows a suite or hides an exit code fails here.
+request (AD-11). The tests pin the triggers, the solve inputs, the install line, the two suite
+commands, the suite conditions, and the keys allowed at workflow, job and step level. A `run` may
+not contain `||`, `set +e` or a write to `$GITHUB_ENV`. Other changes to what a step does are not
+checked here.
 """
 
 from __future__ import annotations
@@ -22,6 +23,14 @@ _STEP_CONDITIONS = {
     "In-FreeCAD suite": "${{ !cancelled() && steps.install.outcome == 'success' }}",
     "External suite": "${{ !cancelled() && steps.install.outcome == 'success' }}",
 }
+# Allowlists, not denylists: any other key (`env`, `shell`, `defaults`, `continue-on-error`,
+# `working-directory`) can make a suite run nothing or exit 0, for example
+# `env: PYTEST_ADDOPTS: --co` collects the tests, runs none and exits 0.
+# PyYAML reads the workflow key `on` as the boolean True.
+_WORKFLOW_KEYS = {"name", True, "jobs"}
+_JOB_KEYS = {"runs-on", "timeout-minutes", "steps"}
+_STEP_KEYS = {"name", "id", "uses", "with", "run", "if", "timeout-minutes"}
+_MASKING_TEXT = ("||", "set +e", "GITHUB_ENV")
 
 
 class _UniqueKeyLoader(yaml.SafeLoader):
@@ -128,24 +137,21 @@ def test_should_not_hide_a_failure_when_canary_yml_is_read():
     job = _canary_job()
     steps = job["steps"]
 
+    scopes = [("workflow", workflow, _WORKFLOW_KEYS), ("job", job, _JOB_KEYS)]
+    scopes += [(f"step {i}", step, _STEP_KEYS) for i, step in enumerate(steps)]
+
     # Act
-    masking_keys = [
-        scope
-        for scope, node in {
-            "workflow": workflow,
-            "job": job,
-            **{f"step {i}": s for i, s in enumerate(steps)},
-        }.items()
-        if {"continue-on-error", "shell", "defaults"} & set(node)
-    ]
+    unexpected_keys = {
+        scope: sorted(map(str, set(node) - allowed))
+        for scope, node, allowed in scopes
+        if set(node) - allowed
+    }
     masking_commands = [
-        step["run"]
-        for step in steps
-        if "||" in step.get("run", "") or "set +e" in step.get("run", "")
+        step["run"] for step in steps if any(text in step.get("run", "") for text in _MASKING_TEXT)
     ]
 
     # Assert
-    assert masking_keys == [], f"scopes with continue-on-error, shell or defaults: {masking_keys}"
+    assert unexpected_keys == {}, f"keys outside the allowlist: {unexpected_keys}"
     assert masking_commands == [], f"commands hiding an exit code: {masking_commands}"
 
 
