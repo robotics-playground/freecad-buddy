@@ -1,0 +1,8 @@
+# D2 Recompute: F5 hotkey, the Recompute leaf; ctrl+r does nothing
+State after touch: value_repr":"['Touched']"
+$ echo {"pid":..,"window_id":..,"keys":["f5"]} | "$FCB_CUA" hotkey
+State after F5: value_repr":"['Up-to-date']"
+State after touch: value_repr":"['Touched']"
+State after ctrl+r: value_repr":"['Touched']"
+$ press the Recompute leaf by element_token
+State after the leaf: value_repr":"['Up-to-date']"

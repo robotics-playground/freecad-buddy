@@ -329,11 +329,23 @@ of the `menu item` whose label is the leaf (the menu need not be open), and `cli
 snapshot before every press: a snapshot invalidates the earlier tokens. Measured in the container:
 `Exit`, `New Document`, `Close`, `Save`, `Zoom In`, `Next` and `Previous` (Windows menu) are listed;
 `Show All Objects` and `Standard Views` are listed while a document is open; `Cube` of
-Part > Primitives is listed once the `Part` workbench leaf was pressed. `Undo`, `Recompute` and
-`Toggle Visibility` are not listed: use `hotkey` `ctrl+z`, `ctrl+r`, and `press_key` `space` on a
-selected tree row. The numbered `Windows` entries show only `Activates this window`: press `Next` or
+Part > Primitives is listed once the `Part` workbench leaf was pressed. `Recompute` is listed while a
+document is open, and the `F5` hotkey recomputes too (`ctrl+r` does nothing). `Undo` and `Toggle
+Visibility` are not listed: use `hotkey` `ctrl+z`, and the tree row toggle below. The numbered `Windows` entries show only `Activates this window`: press `Next` or
 `Previous` until the `list_windows` title names the document. A press returns `effect:"unverifiable"`;
 the verdict is the window title or a fresh screenshot. Records: `tests/uat/run/2026-11-18-10-10-proof/K2-*.txt`.
+
+### Tree row toggle
+
+A token `click` on a tree item does not select it, and a `press_key` with a tree item token prints
+`AT-SPI Component.GrabFocus returned false` and still exits 0. The route that works: take
+`get_window_state` with a screenshot (`screenshot_out_file`), `Read` it, and take the row's centre in
+window pixels (the `frame` of an element is in screen pixels: subtract the window origin); `click` with
+`x`, `y` and `delivery_mode:"foreground"`; then `press_key` `space` with `pid`, `window_id` and
+`delivery_mode:"foreground"`. Read the selection with `script_exec { code: "import FreeCADGui as G;
+result = [o.Name for o in G.Selection.getSelection()]" }` (a background pixel click leaves it empty) and
+the effect from the `v` or `-` marker of `query_tree_summary`. Records:
+`tests/uat/run/2026-11-18-10-10-proof/D1-toggle-visibility.txt`, `D2-recompute.txt`.
 
 ### Process commands
 

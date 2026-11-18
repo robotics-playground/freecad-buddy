@@ -309,7 +309,7 @@ uv run python -m freecad_buddy.hosts.main serve --transport http --mode rpc --ho
 ```
 
 **Then** the endpoint is bound to `127.0.0.1:8765` — verify: the `ss -ltnp` line shows the local address as `127.0.0.1:8765`  
-**And** a LAN-IP POST fails at the transport — verify: `docker exec -u cua fcb-desktop curl -sS http://<LAN-IP>:8765/mcp` reports connection refused  
+**And** a LAN-IP POST fails at the transport — verify: `docker exec -u cua fcb-desktop curl -sS http://<LAN-IP>:8765/mcp` prints `curl: (7) Failed to connect ... Couldn't connect to server` and exits 7 (a refused connect)  
 **And** a loopback POST is served — verify: `docker exec -u cua fcb-desktop curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/mcp` returns a real HTTP status code  
 **And** there is no host override flag — verify: the `--host 0.0.0.0` command exits non-zero with an unrecognized-argument error  
 **And** the bind is hard-coded, not read from the environment — verify: `grep -n "_HOST\|_PORT" src/freecad_buddy/hosts/gui_external/entry.py` shows literal values with no `os.environ` lookup  

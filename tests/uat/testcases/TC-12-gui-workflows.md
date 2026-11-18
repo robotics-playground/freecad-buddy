@@ -43,8 +43,9 @@ not the visual: a control can be present in the UIA tree and not painted on scre
   menu item (`menu path segment 0 has no safe activation action`), so take the `element_token` of the
   `menu item` with the leaf's label from a fresh snapshot and `click` it (test-plan §6, "Menu route"). A leaf is listed
   only while its command exists: `Show All Objects`, `Zoom In` and `Standard Views` need an open
-  document; `Undo`, `Recompute` and `Toggle Visibility` are not listed, so use `ctrl+z`, `ctrl+r`
-  and `space`.
+  document; `Undo` and `Toggle Visibility` are not listed, so use `ctrl+z` and a foreground pixel click on
+  the tree row followed by a window-level `space` (test-plan §6, "Tree row toggle"); `Recompute` is listed
+  while a document is open, and `F5` recomputes.
   For any camera change, use the **toolbar buttons** instead — `Fit All`, `Fit Selection`,
   `Standard Views`, `Align to Selection`, `Draw Style`, `Selection Filter`, `Measure`,
   `New Document`, `Save` are all AX-invokable by `element_token` and return
@@ -86,9 +87,10 @@ not the visual: a control can be present in the UIA tree and not painted on scre
   skip the UIA Invoke step.
 - **A tree row is selected only by a foreground click.** On FreeCAD 1.1.4 a background UIA click,
   a background `action:"select"` and a background pixel click on a model-tree row all leave the row
-  unselected (`selected: false`, `FreeCADGui.Selection` empty). `click` by `element_token` with
-  `action:"select"` and `delivery_mode:"foreground"` selects it (route `global_input`: it moves the
-  real pointer). Pick the row in the Model panel: when a document or object is selected, the
+  unselected (`selected: false`, `FreeCADGui.Selection` empty), and so does a token `click` with
+  `action:"select"` at `delivery_mode:"foreground"` in the container (route `accessibility`,
+  `effect:"unverifiable"`). A pixel `click` with `x`, `y` and `delivery_mode:"foreground"` on the row
+  selects it (route `global_input`: it moves the real pointer in the container desktop). Pick the row in the Model panel: when a document or object is selected, the
   property view lists `TreeItem` rows too, one of them with the same text as the `Label`, so a
   `verify_state` selector `{role:"TreeItem", label_contains:"<label>"}` can return `unknown`
   `multi_match`. Read `selected` off the Model-panel row in a fresh snapshot instead.
@@ -252,10 +254,10 @@ mcp query_mass_properties {doc:<handleBox>, object:"Box"}
 mcp query_mass_properties {doc:<handleSphere>, object:"Sphere"}
 ```
 **And** Show All is run in each document while its tab is active, so the renders below have a visible subject  
-**And** the SPHERE document is selected in the GUI model tree. Re-snapshot, then select its root row in the Model panel through the token from that snapshot, matched on `role == "TreeItem"` and its label, with a foreground `select` (see the tree-row rule above). Selecting a document row also makes that document the active one (`Tree.cpp:3946-3953`, `SyncView` defaults to on, `TreeParams.cpp:99`). Confirm from the `list_windows` title.  
+**And** the SPHERE document is selected in the GUI model tree. Re-snapshot, then select its root row in the Model panel with a foreground pixel click (see the tree-row rule above). Selecting a document row also makes that document the active one (`Tree.cpp:3946-3953`, `SyncView` defaults to on, `TreeParams.cpp:99`). Confirm from the `list_windows` title.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-04-tree.png"}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"window_id":<WID>,"element_token":"<sphere row token from this snapshot>","action":"select","delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"x":<sphere row x>,"y":<sphere row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
 echo '{"pid":<PID>}' | "$FCB_CUA" list_windows
 ```
@@ -302,10 +304,10 @@ mcp query_tree_summary {doc:<handle>}
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-before.png"}' | "$FCB_CUA" get_window_state
 ```
-**And** `<ObjectB>` is hidden in the GUI. Re-snapshot, select its tree row by `element_token` with a foreground `select` (see the tree-row rule above), confirm the row reads `selected: true`, then run View > Visibility > Toggle Visibility with the `space` key (`Std_ToggleVisibility`, menu text `Toggle &Visibility`, `CommandView.cpp:907`). The command is enabled only while something is selected (`CommandView.cpp:927-930`), and its leaf is absent from the snapshot while nothing is selected. Close the menus it leaves open with `escape`.  
+**And** `<ObjectB>` is hidden in the GUI. Take a snapshot with its screenshot, select its tree row with a foreground pixel click (see the tree-row rule above), confirm the row reads `selected: true`, then run View > Visibility > Toggle Visibility with the window-level `space` key (`Std_ToggleVisibility`, menu text `Toggle &Visibility`, `CommandView.cpp:907`). The command is enabled only while something is selected (`CommandView.cpp:927-930`), and its leaf is absent from the snapshot while nothing is selected. Close the menus it leaves open with `escape`.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-tree.png"}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"window_id":<WID>,"element_token":"<ObjectB row token from this snapshot>","action":"select","delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"x":<ObjectB row x>,"y":<ObjectB row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
 # press menu leaf View > Visibility > Toggle Visibility (test-plan §6, "Menu route")
 echo '{"pid":<PID>,"window_id":<WID>,"key":"escape"}' | "$FCB_CUA" press_key

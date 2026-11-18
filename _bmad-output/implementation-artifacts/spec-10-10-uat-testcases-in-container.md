@@ -201,8 +201,14 @@ About 950 changed lines in `tests/uat/testcases/` (901 matching lines plus fence
 - **Q2 measured.** `Exit`, `New Document`, `Show All Objects`, `Close`, `Save`, `Zoom In`, `Next`,
   `Previous` and `Part > Primitives > Cube` (after the Part workbench leaf) are leaves in the
   snapshot and pressing them works (`effect: unverifiable`; the window title or tree shows the
-  result). `Undo`, `Recompute`, `Toggle Visibility` are not listed: keys `ctrl+z`, `ctrl+r`,
-  `space` are written in the cases, not measured for effect. The numbered `Windows` entries expose only
+  result). `Undo` and `Toggle Visibility` are not listed. `Recompute` is listed while a document is open, and the
+  `F5` hotkey recomputes (`ctrl+r` does nothing; `D2-recompute.txt`). `ctrl+z` undoes (verifier record). A tree
+  row is selected by a foreground pixel click only: a token click or `select` does not select it, and
+  `press_key` with a tree item token exits 0 after `GrabFocus returned false`. The working route is a
+  foreground pixel click on the row, then a window-level `press_key space` with `delivery_mode:"foreground"`;
+  the selection is read with `script_exec` and the effect from the `v`/`-` marker of
+  `query_tree_summary` (`D1-toggle-visibility.txt`). Every tree-row token click in TC-02, TC-06, TC-12 and
+  TC-13 now uses it. The numbered `Windows` entries expose only
   `Activates this window`: `Next` and `Previous` switch the document (title read back).
 - **Q3 measured.** A proxy started by hand with `docker exec -d -u cua <command line>` pins to the
   running FreeCAD and serves `/healthz` in the container and on the host relay (`K-proxy-restart.txt`).
@@ -213,7 +219,13 @@ About 950 changed lines in `tests/uat/testcases/` (901 matching lines plus fence
   `script_exec`" because the agent shell gets "Access is denied" (a Windows remark; the in-process
   route still works); the word UIA for the accessibility tree; TC-16's source path of the user project
   drawer (a host `cp`); `curl -o /dev/null` on Git Bash exits 23 but prints the code.
-- **Not measured.** The keys for `Undo`, `Recompute` and `Toggle Visibility`; whole scenarios (the
+- **Fix round 1 (verifier D1..D7).** D1/D2 above; D3: `sweep-state-files.py` finds 52 bare state-file commands at
+  the baseline and 0 now (one real defect remained at the first build, TC-01:639, a host `grep addon.log`;
+  run with a planted spawn line it fails, `D3-tc01-639.txt`; run-folder files under `$RUN_DIR` are read on
+  the host and are not hits; prose-only clauses that name a log without a command are not covered by the
+  sweep); D4: the legacy `Mod` sub-check is restored (the container has no `FreeCAD/Mod` folder, measured);
+  D5: `LISTEN` in the TC-01:578 clause; D7: the curl text matches the measured output (`D7-curl-lan.txt`).
+- **Not measured.** Whole scenarios (the
   build checks each rewritten command kind, not each scenario).
 - **Review lenses (3, blind, edge case, verification gap).** Fixed: unquoted globs in `docker exec`
   lines, bare `addon.log` greps, `tools/list` against the container-internal `:8765`, `$RUN_DIR_C`

@@ -15,7 +15,7 @@ TC-01-session-lifecycle-and-transport.md:291 rule:K7 [K7]
 TC-01-session-lifecycle-and-transport.md:294 rule:K1 [K1]
 TC-01-session-lifecycle-and-transport.md:331 rule:K7 [K7]
 TC-01-session-lifecycle-and-transport.md:335 rule:K1 [K1]
-TC-01-session-lifecycle-and-transport.md:361 hand [K7] APPDATA path -> $FCB_USER_DIR or $FCB_CONFIG_DIR read in the container
+TC-01-session-lifecycle-and-transport.md:361 hand [K7] legacy Mod folder sub-check kept: in the container FreeCAD/Mod does not exist
 TC-01-session-lifecycle-and-transport.md:363 hand [K1,K4,K8] cua-driver call form -> $FCB_CUA; tasklist/taskkill -> pgrep, ps -p, kill; host temp, .exe, junction or venv -> container /tmp, $FCB_PYTHON, installed-addon hash
 TC-01-session-lifecycle-and-transport.md:364 hand [K3] netstat -> ss -ltnp (LISTENING -> LISTEN)
 TC-01-session-lifecycle-and-transport.md:368 hand [none] Windows chmod exception removed; POSIX 600 kept (the listed observable change)
@@ -54,7 +54,8 @@ TC-02-document-ingestion-and-handles.md:71 rule:K1 [K1]
 TC-02-document-ingestion-and-handles.md:113 rule:K1 [K1]
 TC-02-document-ingestion-and-handles.md:150 rule:K1 [K1]
 TC-02-document-ingestion-and-handles.md:197 rule:K1 [K1]
-TC-02-document-ingestion-and-handles.md:240 rule:K1 [K1]
+TC-02-document-ingestion-and-handles.md:240 hand [K1] hide the Pad: token click and key -> foreground pixel click on the row and window-level space (Tree row toggle)
+TC-02-document-ingestion-and-handles.md:243 hand [K2] restore step: Show All and fit leaf presses, plus the Tree row toggle route named in the clause
 TC-02-document-ingestion-and-handles.md:244 rule:K1 [K1]
 TC-02-document-ingestion-and-handles.md:284 rule:K1 [K1]
 TC-02-document-ingestion-and-handles.md:320 rule:K1 [K1]

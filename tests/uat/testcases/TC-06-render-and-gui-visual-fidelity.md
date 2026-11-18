@@ -324,19 +324,19 @@ echo '{"pid":<PID>,"element_token":"<token from this snapshot>"}' | "$FCB_CUA" c
 ```
 Use `element_token`, never a bare `element_index`; indices are per-snapshot and keyed on `(pid, window_id)`.
 
-**And** the selected object is hidden through the GUI. Re-snapshot, match the tree item by `role == "TreeItem"` **and** its exact `label`, then send `space` to that token  
+**And** the selected object is hidden through the GUI. Take a snapshot with its screenshot, find the `<ObjectB>` row, select it with a foreground pixel click, then send `space` to the window (test-plan §6, "Tree row toggle")  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<TreeItem token for ObjectB>","key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<ObjectB row x>,"y":<ObjectB row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
-**This route is unreliable and MUST be verified, then retried if it did not land** (observed
+**This route MUST be verified, then retried if it did not land** (observed
 2026-09-12: the same call landed on one attempt and silently did nothing on another, in both
 cases reporting `effect: "unverifiable"`). Confirm with
 `mcp query_tree_summary {doc:<handle>}` and repeat until the `<ObjectB>` line marker actually flips.
 
-**Hazard — match the token by role and label, never by position.** Tokens are per-snapshot. In a
-live run an adjacent token was the tree's inline **rename editor**, and the `space` keystroke
-typed a space into the object's `Label`; `query_tree_summary` then reported `label: " "`.
+**Hazard — click the row, not the inline rename editor.** In a live run an adjacent token was the
+tree's inline **rename editor**, and the `space` keystroke typed a space into the object's `Label`; `query_tree_summary` then reported `label: " "`.
 Recover with a foreground `Ctrl+Z` and re-verify the label before continuing.
 
 **And** the default scene is rendered again, then `<ObjectB>` is rendered explicitly  

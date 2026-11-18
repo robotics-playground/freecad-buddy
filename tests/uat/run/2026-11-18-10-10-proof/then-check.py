@@ -96,6 +96,22 @@ NO_KIND_REASONS = {
         "TC-10-concurrency-timeout-and-quarantine.md",
         "527",
     ): "host tools/list goes through the relay on :18765",
+    (
+        "TC-01-session-lifecycle-and-transport.md",
+        "361",
+    ): "legacy Mod folder sub-check kept: in the container FreeCAD/Mod does not exist",
+    (
+        "TC-01-session-lifecycle-and-transport.md",
+        "578",
+    ): "state word LISTENING -> LISTEN as ss prints it (D5)",
+    (
+        "TC-02-document-ingestion-and-handles.md",
+        "240",
+    ): "hide the Pad: token click and key -> foreground pixel click on the row and window-level space (Tree row toggle)",
+    (
+        "TC-02-document-ingestion-and-handles.md",
+        "243",
+    ): "restore step: Show All and fit leaf presses, plus the Tree row toggle route named in the clause",
     ("TC-13-gui-mcp-parity.md", "519"): "FreeCAD working directory is /home/cua in the container",
 }
 
@@ -190,8 +206,11 @@ def main():
                         else "hand"
                     )
                     kinds = kinds_of(base_tail)
-                    reason = "; ".join(REASONS[k] for k in kinds.split(",") if k in REASONS)
-                    reason = reason or NO_KIND_REASONS.get((name, str(base_no)), "UNEXPLAINED")
+                    reason = NO_KIND_REASONS.get((name, str(base_no)))
+                    reason = reason or "; ".join(
+                        REASONS[k] for k in kinds.split(",") if k in REASONS
+                    )
+                    reason = reason or "UNEXPLAINED"
                     if reason == "UNEXPLAINED":
                         failures.append(f"{name}:{base_no}: verify clause changed without a reason")
                     report.append(

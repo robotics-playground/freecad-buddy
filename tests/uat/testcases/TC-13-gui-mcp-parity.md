@@ -171,10 +171,10 @@ Do not save. The fixture must keep its shipped state.
 mcp query_object {doc:<handle>, object:"BoxHole"}
 ```
 Record `name`, `type`, `label`, and `error`.
-**And** the tree is re-snapshotted and the `BoxHole` row selected by its token from THAT snapshot, matched on `role == "TreeItem"` and `label == "BoxHole"`  
+**And** the tree is re-snapshotted and the `BoxHole` row selected with a foreground pixel click (test-plan §6, "Tree row toggle")  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<BoxHole TreeItem token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<BoxHole row x>,"y":<BoxHole row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
 **And** the window is re-snapshotted and the status bar text and property panel read  
 ```bash
@@ -215,16 +215,17 @@ mcp query_screenshot {doc:<handle>}
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-03-hidden.png"}' | "$FCB_CUA" get_window_state
 ```
-**And** visibility is toggled in the GUI: re-snapshot, select the `Box` row by token matched on `role == "TreeItem"` and `label == "Box"`, then send `space`  
+**And** visibility is toggled in the GUI: take a snapshot with its screenshot, find the `Box` row, select it with a foreground pixel click, then send `space` to the window (test-plan §6, "Tree row toggle")  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<Box TreeItem token from this snapshot>"}' | "$FCB_CUA" click
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<Box TreeItem token from THIS snapshot>","key":"space"}' | "$FCB_CUA" press_key
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-03-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<Box row x>,"y":<Box row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
-The result is expected to report `effect:"unverifiable"`. That is not the verdict. Confirm with the
-re-read below. If the `Box` line still starts `-`, repeat this action once with
-`"delivery_mode":"foreground"` and confirm again.
+`Read` the PNG to find the `Box` row. Both calls report `effect:"unverifiable"`, and a `press_key` that
+cannot reach its target still exits 0. Neither is the verdict. The selection is read with
+`script_exec { code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }`
+(it must name `Box`), and the flip of the `Box` marker in the re-read below is the verdict. A token
+click or a `press_key` with a tree item token does not select the row in the container.
 **And** both sides are re-read  
 ```bash
 mcp query_tree_summary {doc:<handle>}
@@ -310,10 +311,10 @@ Do not save.
 mcp query_placement {doc:<handle>, object:"BoxHole"}
 ```
 Record position, axis, and angle, each with its `unit`.
-**And** the object is selected in the GUI so the property panel populates: re-snapshot first and match the row on `role == "TreeItem"` and `label == "BoxHole"`  
+**And** the object is selected in the GUI so the property panel populates: select the row with a foreground pixel click (test-plan §6, "Tree row toggle")  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<BoxHole TreeItem token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<BoxHole row x>,"y":<BoxHole row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
 **And** the window is re-snapshotted and the `Base` group in the property panel read  
 ```bash
@@ -419,8 +420,8 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 ```
 **And** the object row is selected and the window re-snapshotted to read the status bar  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<Pad TreeItem token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<Pad row x>,"y":<Pad row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-07-status.png"}' | "$FCB_CUA" get_window_state
 ```
 
@@ -733,23 +734,23 @@ Do not save either document.
 ```bash
 mcp query_tree_summary {doc:<handle>}
 ```
-**And** the `Box` row is selected: re-snapshot first and match on `role == "TreeItem"` AND `label == "Box"`  
+**And** the `Box` row is selected with a foreground pixel click (test-plan §6, "Tree row toggle")  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<Box TreeItem token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<Box row x>,"y":<Box row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
-**And** the window is re-snapshotted AGAIN, the row re-matched on role and label, then `space` sent  
+**And** the `Box` row is selected again with a foreground pixel click, then `space` is sent to the window  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<Box TreeItem token from THIS snapshot>","key":"space"}' | "$FCB_CUA" press_key
+echo '{"pid":<PID>,"window_id":<WID>,"x":<Box row x>,"y":<Box row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
-Do NOT reuse the earlier token. A token that shifted by one may be the inline rename editor, and
-a `space` sent there edits the Label instead of the visibility flag — see TC-13-15.
+A click on the inline rename editor instead of the row would make `space` edit the Label instead of
+the visibility flag, see TC-13-15; read the selection first, as above.
 **And** MCP is read, which is the only verdict  
 ```bash
 mcp query_tree_summary {doc:<handle>}
 ```
-If the `Box` line still starts `-`, repeat the `space` action once with `"delivery_mode":"foreground"`
+If the `Box` marker did not flip, read the selection and repeat the click and the `space` once
 and read MCP again. Record every attempt.
 
 **Then** MCP sees the flip — verify: the post-toggle tree text is `v [FEATURE] Box`, where the pre-toggle read was `- [FEATURE] Box`  
@@ -786,12 +787,11 @@ mcp query_object {doc:<handle>, object:"BoxHole"}
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-15-before.png"}' | "$FCB_CUA" get_window_state
 ```
-**And** the inline rename editor is opened on the `BoxHole` row: re-snapshot, match on `role == "TreeItem"` AND `label == "BoxHole"`, select it, re-snapshot, then press `F2`  
+**And** the inline rename editor is opened on the `BoxHole` row: select it with a foreground pixel click (test-plan §6, "Tree row toggle"), then press `F2` at window level  
 ```bash
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<BoxHole TreeItem token from this snapshot>"}' | "$FCB_CUA" click
-echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<BoxHole TreeItem token from THIS snapshot>","key":"f2"}' | "$FCB_CUA" press_key
+echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"window_id":<WID>,"x":<BoxHole row x>,"y":<BoxHole row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"key":"f2","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
 **And** the window is re-snapshotted to find the rename editor element, its whole value set, then committed with `enter`  
 ```bash
