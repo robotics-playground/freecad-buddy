@@ -1,0 +1,6 @@
+# planted head edit in TC-02 must fail
+Then/And lines compared: 2340; verify clauses changed: 370; failures: 1
+FAIL TC-02-document-ingestion-and-handles.md:61: head differs
+  before: **Then** the handle is opaque and session-minted
+  after:  **Then** PLANTED the handle is opaque and session-minted
+exit=1

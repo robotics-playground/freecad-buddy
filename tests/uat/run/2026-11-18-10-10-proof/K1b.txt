@@ -1,0 +1,8 @@
+## status
+$ "$FCB_CUA" status | head -3
+Cua Driver daemon is running
+  socket: /home/cua/.cache/cua-driver/cua-driver.sock
+  pid: 12
+write /dev/stdout: The pipe is being closed.
+exit=0
+

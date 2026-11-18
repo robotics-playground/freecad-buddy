@@ -79,8 +79,8 @@ Every test case file has this shape, and nothing else:
 **And** <assertion> — verify: `<command>`
 **And** *(visual)* `view_fit_viewport { doc: "<handle>" }` returns `OK`
 **And** *(visual)* the viewport captured with `cua-driver` shows <what the agent must see>
-  — verify: `cua-driver call get_window_state` with
-  `screenshot_out_file: "$RUN_DIR/evidence/tc-NN-MM-after.png"`, then `Read` it and judge
+  — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-NN-MM-after.png"}' | "$FCB_CUA" get_window_state`,
+  then `Read` it and judge
 
 **Cleanup**:
 ```
@@ -126,7 +126,7 @@ Every test case file has this shape, and nothing else:
    - **Show All before a fit of a golden or fault model.** Golden and fault `.FCStd` files have no
      `GuiDocument.xml` and open with every object hidden, so `view_fit_viewport` returns
      `SPEC_FAILED view_fit.nothing_to_frame`. Run
-     `invoke_menu(["View","Visibility","Show All Objects"])` first; it resolves in the background.
+     the `Show All Objects` leaf of View > Visibility first (§6, "Menu route").
    - A scenario that asserts the window is **unchanged** takes its `before.png` after the same fit,
      so the two captures are comparable.
 6. **GUI interaction is `cua-driver` only.** Clicking, typing, menu invocation, window geometry, and
@@ -271,6 +271,10 @@ export PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 export RUN_DIR="$PROJECT_ROOT/tests/uat/run/$(date +%F)-01"     # absolute; pick the next free -NN
 export MSYS_NO_PATHCONV=1                                       # Git Bash on Windows: keep /opt/... in docker exec arguments
 export FCB_PYTHON="$PROJECT_ROOT/scripts/automation/fcb_py.sh"  # runs the container's fcb-py (FreeCAD + mcp) from a host shell
+export FCB_CUA="$PROJECT_ROOT/scripts/automation/fcb_cua.sh"      # runs the container's cua-driver from a host shell
+export FCB_USER_DIR=/home/cua/.local/share/FreeCAD/v1-1           # FreeCAD user data in the container (container path)
+export FCB_CONFIG_DIR=/home/cua/.config/FreeCAD/v1-1              # FreeCAD user.cfg folder in the container (container path)
+export RUN_DIR_C="/repo${RUN_DIR#$PROJECT_ROOT}"                  # RUN_DIR as the container sees it (for docker exec -e)
 mkdir -p "$RUN_DIR/evidence"
 ```
 
@@ -286,7 +290,7 @@ written under the run folder.
 
 To start FreeCAD with a `FREECAD_BUDDY_*` variable, pass it to the helper:
 `docker exec -u cua -e NAME=value fcb-desktop fcb-freecad start`. In the container, the GUI
-defaults below that name `%APPDATA%\FreeCAD\v1-1\` are under `/home/cua/.local/share/FreeCAD/v1-1/`.
+defaults below that name a user data folder are under `$FCB_USER_DIR` (`/home/cua/.local/share/FreeCAD/v1-1/`).
 
 The GUI host reads its operator settings once, at bridge start, from Edit > Preferences >
 **FreeCAD Buddy**. A `FREECAD_BUDDY_*` variable that is set in the environment FreeCAD inherits wins
@@ -299,19 +303,58 @@ only **Round numbers to FreeCAD display precision** applies at once.
 | `PROJECT_ROOT` | repository checkout root; every fixture and golden-model path is written against it | `D:/Work/.../freecad-buddy` |
 | `RUN_DIR` | this run's folder, absolute; every evidence path is written against it | `$PROJECT_ROOT/tests/uat/run/2026-09-13-01` |
 | `FCB_PYTHON` | wrapper that runs the container's `fcb-py` (the AppImage's Python with FreeCAD and `mcp`) for the H1 legs; it rewrites `$PROJECT_ROOT` to `/repo` in its arguments and `FREECAD_BUDDY_*` values | `$PROJECT_ROOT/scripts/automation/fcb_py.sh` |
+| `FCB_CUA` | wrapper that runs the container's `cua-driver` for the GUI legs: `echo '<json>' \| "$FCB_CUA" <tool>`; it maps the host `$PROJECT_ROOT` and `$RUN_DIR` in the JSON to `/repo/...`, and passes `status`, `doctor`, `list-tools`, `describe` through | `$PROJECT_ROOT/scripts/automation/fcb_cua.sh` |
+| `FCB_USER_DIR` | FreeCAD user data folder in the container (addon log, discovery file, `Mod/`, `FreeCADBuddy/venv`); read it with `docker exec -u cua fcb-desktop` | `/home/cua/.local/share/FreeCAD/v1-1` |
+| `FCB_CONFIG_DIR` | FreeCAD config folder in the container (`user.cfg`, read only) | `/home/cua/.config/FreeCAD/v1-1` |
+| `RUN_DIR_C` | `RUN_DIR` as the container sees it; use it in `docker exec -e NAME=...` values | `/repo/tests/uat/run/2026-09-13-01` |
 | `FREECAD_BUDDY_SCRIPT_EXEC` | `script_exec` switch: unset or `"1"` = on; any other value (use `"0"`) = off. Overrides the **Allow script_exec** preference (`ScriptExec`, default on) | `0` |
 | `FREECAD_BUDDY_UNATTENDED` | marks an unattended run; exactly `"1"` turns `script_exec` off unless `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. Any other value is off | `1` |
 | `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED` | operator opt-in that keeps `script_exec` on in an unattended run; must be exactly `"1"` | `1` |
 | `FREECAD_BUDDY_AUTO_APPROVE` | auto-approve posture: `"1"` = on, a mutation without `confirm` applies; any other value (use `"0"`) = confirm gate on. Overrides the **Auto-approve mutations** preference (default on). A sent `confirm` is checked in both postures | `0` |
-| `FREECAD_BUDDY_AUDIT_LOG` | audit log path. Overrides the **Audit log file** preference. GUI default `%APPDATA%\FreeCAD\v1-1\freecad-buddy\audit.jsonl`; the headless default is cwd-relative `freecad-buddy-audit.jsonl` | `$RUN_DIR/evidence/audit.jsonl` |
-| `FREECAD_BUDDY_WORKDIR` | session workdir. GUI default `%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`; the headless default is cwd-relative `freecad-buddy-workdir` | `$RUN_DIR/workdir` |
-| `FREECAD_BUDDY_LOG_FILE` | addon log path | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\addon.log` |
+| `FREECAD_BUDDY_AUDIT_LOG` | audit log path. Overrides the **Audit log file** preference. GUI default `$FCB_USER_DIR/freecad-buddy/audit.jsonl`; the headless default is cwd-relative `freecad-buddy-audit.jsonl` | `$RUN_DIR/evidence/audit.jsonl` |
+| `FREECAD_BUDDY_WORKDIR` | session workdir. GUI default `$FCB_USER_DIR/freecad-buddy/workdir`; the headless default is cwd-relative `freecad-buddy-workdir` | `$RUN_DIR/workdir` |
+| `FREECAD_BUDDY_LOG_FILE` | addon log path | `$FCB_USER_DIR/freecad-buddy/addon.log` |
 | `FREECAD_BUDDY_RPC_PORT` | fix the RPC listener port; a non-int value warns and falls back to ephemeral | `47111` |
-| `FREECAD_BUDDY_RPC_DIR` | directory for the RPC discovery file (mode `0o600`) | `%TEMP%\fcb-rpc` |
-| `FREECAD_BUDDY_MCP_CMD` | verbatim proxy launch command; space-split, no quoting support. Overrides the **MCP command** preference | `C:\path\python.exe -m ...` |
+| `FREECAD_BUDDY_RPC_DIR` | directory for the RPC discovery file (mode `0o600`) | `/tmp/fcb-rpc` |
+| `FREECAD_BUDDY_MCP_CMD` | verbatim proxy launch command; space-split, no quoting support. Overrides the **MCP command** preference | `/opt/venv/bin/python -m ...` |
 | `FREECAD_BUDDY_REPO` | legacy `uv` fallback for proxy launch | `$PROJECT_ROOT` |
-| `FREECAD_BUDDY_SRC` | source root override | `D:\...\src` |
+| `FREECAD_BUDDY_SRC` | source root override | `/repo/src` |
 | `FREECAD_BUDDY_NO_AUTO_MCP` | suppress proxy auto-spawn; evaluated for **truthiness**, not `"1"`. Overrides the **Start the MCP server with FreeCAD** preference (default on) | `1` |
+
+### Menu route
+
+`cua-driver` 0.28.1 refuses a Qt top-level menu item, so a test case presses a menu command by its
+leaf: take a fresh `get_window_state` snapshot (`include_screenshot:false`), take the `element_token`
+of the `menu item` whose label is the leaf (the menu need not be open), and `click` it. Take a new
+snapshot before every press: a snapshot invalidates the earlier tokens. Measured in the container:
+`Exit`, `New Document`, `Close`, `Save`, `Zoom In`, `Next` and `Previous` (Windows menu) are listed;
+`Show All Objects` and `Standard Views` are listed while a document is open; `Cube` of
+Part > Primitives is listed once the `Part` workbench leaf was pressed. `Undo`, `Recompute` and
+`Toggle Visibility` are not listed: use `hotkey` `ctrl+z`, `ctrl+r`, and `press_key` `space` on a
+selected tree row. The numbered `Windows` entries show only `Activates this window`: press `Next` or
+`Previous` until the `list_windows` title names the document. A press returns `effect:"unverifiable"`;
+the verdict is the window title or a fresh screenshot. Records: `tests/uat/run/2026-11-18-10-10-proof/K2-*.txt`.
+
+### Process commands
+
+FreeCAD and the proxy run in the container, so a test case reads them there. Prefix each with
+`docker exec -u cua fcb-desktop`:
+
+| Need | Command |
+| --- | --- |
+| FreeCAD process list | `pgrep -af '^/opt/freecad/usr/bin/freecad'` (exit 1 and no output when none runs) |
+| One pid | `ps -p <pid> -o pid=,comm=` (exit 1 and no output when it is gone) |
+| Port owner | `ss -ltnp \| grep :8765` (`LISTEN`; the pid is in `users:(("python",pid=<n>`) |
+| Established pair | `ss -tnp \| grep <port>` (`ESTAB`) |
+| CPU seconds, resident KiB | `ps -o cputimes= -p <pid>`, `ps -o rss= -p <pid>` |
+| Command line | `sh -c "tr '\0' ' ' < /proc/<pid>/cmdline"` |
+| Kill | `kill <pid>`; force: `kill -KILL <pid>` |
+| Proxy started by hand | `docker exec -d -u cua -e FREECAD_BUDDY_<NAME>=<value> fcb-desktop <command line of the proxy>`; it pins to the running FreeCAD and serves `/healthz` on `:8765` and, through the relay, on the host's `:18765` |
+| FreeCAD with a variable or a file | `docker exec -u cua -e NAME=value fcb-desktop fcb-freecad start [file...]` |
+
+The host reaches the proxy on `http://127.0.0.1:18765`. A check about the bind (loopback only, a LAN
+address refused, a held port) runs inside the container, because the relay hides it. The OS temp
+directory of FreeCAD is the container's `/tmp`.
 
 ## 7. Test Case Index
 

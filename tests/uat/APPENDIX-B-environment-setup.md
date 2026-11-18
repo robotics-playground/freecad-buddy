@@ -3,12 +3,14 @@
 Work through every step in order before any test case runs. Each step has a verify command. A step
 that does not verify is a blocker: fix it, do not proceed.
 
-Commands are written for PowerShell 7 on Windows unless marked otherwise.
+Commands are written for bash on the host. A command that runs inside the container starts with
+`docker exec -u cua fcb-desktop`. `$FCB_CUA`, `$FCB_USER_DIR`, `$FCB_CONFIG_DIR` and `$RUN_DIR_C` come
+from the environment block of `test-plan.md` §6.
 
-**UAT runs FreeCAD in the `fcb-desktop` container, never on the host.** For a UAT run, do Steps
-C1–C4 below instead of Steps 1, 2, 4 and 5. Steps 1, 2, 4 and 5 are the Windows host procedure, for
-development on the host. Step 3 (H1 legs) runs in the container too. Steps 6, 6a and 7 apply unchanged
-through MCP server `freecad-buddy-docker`. Container reference: `tests/close-loop/README.md`.
+**UAT runs FreeCAD in the `fcb-desktop` container, never on the host.** Do Steps C1–C4 below; Steps
+1, 2, 4 and 5 hold the container form of the old host steps, in their original positions, so that references to them hold.
+Step 3 (H1 legs) runs in the container too. Steps 6, 6a and 7 apply through MCP server
+`freecad-buddy-docker`. Container reference: `tests/close-loop/README.md`.
 
 ---
 
@@ -45,47 +47,27 @@ through MCP server `freecad-buddy-docker`. Container reference: `tests/close-loo
 
 ## Step 1 — cua-driver daemon
 
-The daemon drives the FreeCAD GUI. It must run in an **interactive** Windows session. A daemon in
-Session 0 cannot see or drive a desktop window.
+Replaced by Step C2. The daemon drives the FreeCAD GUI inside the container desktop session.
 
-- [ ] Daemon is up (verify: `cua-driver status`)
-- [ ] Daemon session is interactive (verify: `Get-Process cua-driver | Select-Object Id, SessionId`
-      — `SessionId` must be **≥ 1**, never `0`)
-- [ ] Control socket answers (verify: `cua-driver call list_apps '{}'` returns an `apps` array)
-
-      Do **not** use `Test-Path \\.\pipe\cua-driver`. PowerShell's provider cannot stat a named
-      pipe and returns `False` even when the daemon is healthy. A real call is the only sound
-      liveness check.
-
-If `SessionId` is `0`, stop. Restart the daemon from an interactive desktop session. Every GUI step
-in TC-06 and TC-12 will silently produce empty windows otherwise.
+- [ ] Daemon is up (verify: `"$FCB_CUA" status` shows `Cua Driver daemon is running`)
+- [ ] Control socket answers (verify: `echo '{}' | "$FCB_CUA" list_windows` returns a `windows` array)
 
 ---
 
 ## Step 2 — Addon install
 
-The addon is expected to be a **symlink** from the FreeCAD Mod directory to the repo source, so
-edits in the repo take effect after a FreeCAD restart with no rebuild.
+The container's FreeCAD runs the addon **copy** that the image installs from `dist/addon/`. After a
+change under `src/`, run the build and compose commands of Step C1 again; the installed copy does
+not follow the source tree.
 
-- [ ] Symlink exists and points at the repo (verify:
-      `Get-Item "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy" | Select-Object LinkType, Target`
-      — `Target` must be `$PROJECT_ROOT\src\freecad_buddy`, this checkout's source directory)
-- [ ] Addon metadata present (verify:
-      `Test-Path "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\package.xml"`)
+- [ ] The addon is installed (verify:
+      `docker exec -u cua fcb-desktop ls $FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/hosts/gui_addon/InitGui.py`)
+- [ ] Addon metadata present (verify: `docker exec -u cua fcb-desktop ls $FCB_USER_DIR/Mod/FreeCADBuddy/package.xml`)
+- [ ] The copy is the build under test (verify: `docker exec -u cua fcb-desktop sha256sum $FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/__init__.py`
+      equals `sha256sum dist/addon/freecad_buddy/__init__.py` on the host)
 
-Rebuild **only** if the link is absent:
-```bash
-uv run python scripts/build_addon.py
-```
-
-A release install is a different layout: `FreeCADBuddy-<ver>.zip` (from
-`uv run python scripts/build_addon.py --release`) extracted into `Mod\`. It has no repo link and
-no `repo-root.txt`; it carries the wheel in `wheels\` and runs the proxy from the managed venv
-`%APPDATA%\FreeCAD\v1-1\FreeCADBuddy\venv`, which `uv` provisions on the first start. Test it
-only in a scenario that asks for it, then restore the link.
-
-**Warning:** `%APPDATA%\FreeCAD\Mod\` is the legacy directory and is empty on this machine. The
-real one is `%APPDATA%\FreeCAD\v1-1\Mod\`. Checking the legacy path gives a false negative.
+The proxy runs from the managed venv `$FCB_USER_DIR/FreeCADBuddy/venv`, which `uv` provisions on the
+first FreeCAD start in a new container (about 25 s).
 
 ---
 
@@ -111,20 +93,20 @@ and `mcp` together: `fcb-py` (the AppImage's Python 3.11 with the pinned `mcp`, 
 
 ## Step 4 — Launch FreeCAD
 
-Launch through `cua-driver`, never with `Start-Process`. Take the `window_id` from the `windows`
-array in the launch result — do not guess it.
+Replaced by Step C3. Launch with the helper, never with a direct `AppRun` call. Take the
+`window_id` from `list_windows` — do not guess it.
 
 ```bash
-'{"path":"C:\\Program Files\\FreeCAD 1.1\\bin\\freecad.exe"}' | & cua-driver call launch_app
+docker exec -u cua fcb-desktop fcb-freecad start
+echo '{"pid":<pid>}' | "$FCB_CUA" list_windows
 ```
 
-- [ ] Process is up and interactive (verify:
-      `Get-Process freecad | Select-Object Id, SessionId` — `SessionId` ≥ 1)
-- [ ] A window id was returned (verify: the launch result `windows` array is non-empty; record
-      `pid` and `window_id`)
+- [ ] Process is up (verify: `docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'` lists one process)
+- [ ] A window id was returned (verify: `list_windows` returns the window whose `title` ends
+      `FreeCAD <live version>`; record `pid` and `window_id`)
 - [ ] The window is drivable (verify:
-      `'{"pid":<pid>,"window_id":<window_id>}' | & cua-driver call get_window_state` returns an
-      element tree with a `MenuBar` and a `QOpenGLWidget` viewport)
+      `echo '{"pid":<pid>,"window_id":<window_id>}' | "$FCB_CUA" get_window_state` returns an
+      element tree with the menu items `File`, `Edit` and `View`)
 
 Record `pid` and `window_id` into the run evidence. Every later cua call needs both.
 
@@ -132,27 +114,27 @@ Record `pid` and `window_id` into the run evidence. Every later cua call needs b
 
 ## Step 5 — Confirm proxy auto-spawn
 
-The addon starts the in-FreeCAD RPC listener **and** auto-spawns the external MCP HTTP proxy. Both
-must appear without any manual command.
+Replaced by Step C4. The addon starts the in-FreeCAD RPC listener **and** auto-spawns the external
+MCP HTTP proxy; both must appear without any manual command.
 
-- [ ] `:8765` is LISTENING (verify: `netstat -ano | findstr :8765` shows a `LISTENING` line;
+- [ ] `:8765` is listening in the container (verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows a `LISTEN` line;
       record the owning pid)
-- [ ] **No manual `serve` command was run.** Running
-      `freecad-buddy serve --mode rpc` by hand invalidates TC-01-01, because that case proves the
-      addon spawns the proxy itself.
+- [ ] **No manual `serve` command was run.** Running `freecad-buddy serve --mode rpc` by hand
+      invalidates TC-01-01, because that case proves the addon spawns the proxy itself.
 - [ ] Addon log shows the bridge start (verify:
-      `Get-Content "$env:APPDATA\FreeCAD\v1-1\freecad-buddy\addon.log" -Tail 40`)
+      `docker exec -u cua fcb-desktop tail -n 40 "$FCB_USER_DIR/freecad-buddy/addon.log"`)
 - [ ] Proxy log shows the HTTP host bound (verify:
-      `Get-Content "$env:APPDATA\FreeCAD\v1-1\freecad-buddy\mcp-proxy.log" -Tail 40`)
+      `docker exec -u cua fcb-desktop tail -n 40 "$FCB_USER_DIR/freecad-buddy/mcp-proxy.log"`)
 
 The host and port are hard-coded: `_HOST="127.0.0.1"`, `_PORT=8765` in `gui_external/entry.py`.
-There are no `--host` or `--port` flags.
+There are no `--host` or `--port` flags. The host reaches the proxy through the relay on
+`127.0.0.1:18765`.
 
 If `:8765` was already served before FreeCAD started, the addon never reuses it. It probes
-`http://127.0.0.1:8765/healthz` and spawns no proxy of its own while the port stays held. It waits up
-to 10 s for an orphan proxy (one whose FreeCAD has exited) or a holder without `/healthz` to free the
-port, then spawns. In every other case `addon.log` gets one ERROR line that starts
-`MCP proxy not started:` and names the holder. Stop the holder and relaunch FreeCAD. Before you
+`http://127.0.0.1:8765/healthz` (in the container) and spawns no proxy of its own while the port stays
+held. It waits up to 10 s for an orphan proxy (one whose FreeCAD has exited) or a holder without
+`/healthz` to free the port, then spawns. In every other case `addon.log` gets one ERROR line that
+starts `MCP proxy not started:` and names the holder. Stop the holder and restart FreeCAD. Before you
 test, confirm that `/healthz` reports `"freecad_pid"` equal to the FreeCAD pid under test.
 
 ---
@@ -199,11 +181,10 @@ The GUI host takes the audit path in this order, once, at bridge start:
 | --- | --- |
 | `FREECAD_BUDDY_AUDIT_LOG` set in the environment FreeCAD inherits | that path |
 | **Audit log file** on Edit > Preferences > FreeCAD Buddy | that path |
-| default | `%APPDATA%\FreeCAD\v1-1\freecad-buddy\audit.jsonl` |
+| default | `$FCB_USER_DIR/freecad-buddy/audit.jsonl` |
 
-The default does not depend on the working directory, so a Start-menu launch and a `cua-driver`
-launch write to the same file. The `operator settings:` line in `addon.log` names the effective
-path and its source. Only the headless host still falls back to the cwd-relative
+The default does not depend on the working directory. The `operator settings:` line in `addon.log`
+names the effective path and its source. Only the headless host still falls back to the cwd-relative
 `freecad-buddy-audit.jsonl`.
 
 - [ ] The effective path is writable (verify: the `operator settings:` line in the new `addon.log`
@@ -213,10 +194,8 @@ path and its source. Only the headless host still falls back to the cwd-relative
       check.** Run it before any mutation scenario; do not infer it from the environment.
 
 A variable must be set **in the environment the FreeCAD process inherits**, before that process
-starts. A `User`-scope variable set after the `cua-driver` daemon started does **not** reach a
-FreeCAD the daemon launches — the daemon passes on its own environment. Restart the daemon, or
-relaunch FreeCAD from a shell that already carries the variable. A preference change needs a
-FreeCAD restart.
+starts: pass it with `docker exec -u cua -e NAME=value fcb-desktop fcb-freecad start`. A preference
+change needs a FreeCAD restart.
 
 Every scenario in TC-03, TC-04, TC-05, TC-08 and TC-13 group B depends on this step. TC-99-06
 records the remaining AD-25 gap: the log is one file, not a dated file per session.
@@ -243,17 +222,16 @@ Store this banner at the top of the run report. If FreeCAD is restarted mid-run,
 
 ## cua-driver usage rules
 
-These apply to every GUI step in TC-06 and TC-12. They were measured on the Windows host through
-UIA. In the container, FreeCAD shows only its top-level window to `cua-driver`, so the rules that
-need an element (`element_token`, `invoke_menu`) give way to the pixel route on the window
-screenshot and to keys. In the container, pass JSON as a positional argument; the stdin form and
-the Windows quoting notes do not apply.
+These apply to every GUI step in TC-06 and TC-12. `cua-driver` runs in the container: call it
+through `$FCB_CUA` (`scripts/automation/fcb_cua.sh`), which runs
+`/usr/local/bin/cua-driver call <tool>` in the desktop session and maps the host `$PROJECT_ROOT` and
+`$RUN_DIR` in the JSON to `/repo/...`.
 
 ### CLI stdin form
 
-Windows quoting breaks inline JSON arguments. Pipe the payload on stdin instead:
+Pipe the JSON payload on stdin:
 ```bash
-'{"pid":29764,"window_id":393368}' | & cua-driver call get_window_state
+echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state
 ```
 
 ### `element_token`, never `element_index`
@@ -268,31 +246,24 @@ Use `element_token` (for example `s00000004:71`). Indices are per-snapshot and k
 as **not verified**. Either find a bounded postcondition that resolves, or add
 `include_screenshot: true` and judge the visual evidence directly.
 
-### `invoke_menu` for menu paths
+### Menu route: press the leaf item by `element_token`
 
+`cua-driver` 0.28.1 refuses a Qt top-level menu item (`menu path segment 0 has no safe activation
+action`), so a menu command is a leaf press: take a fresh `get_window_state` snapshot, take the
+`element_token` of the `menu item` whose label is the leaf, and `click` it. The menu does not need to
+be open. A snapshot invalidates every earlier token, so snapshot again before each press.
 ```bash
-'{"pid":29764,"window_id":393368,"path":["File","New"]}' | & cua-driver call invoke_menu
+echo '{"pid":<pid>,"window_id":<wid>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
+echo '{"pid":<pid>,"element_token":"<Exit token from this snapshot>"}' | "$FCB_CUA" click
 ```
-It re-resolves the live UIA tree at each hop and refuses a path that is missing, ambiguous, or
-disabled. Prefer it over clicking menu coordinates.
-
-Menu bar layout on this build: MenuBar at index 70; menus at depth 2 are File(71), Edit(72),
-View(73), Tools(74), Macro(75), Sketch(76), "Part Design"(77), Windows(78), Help(79).
-
-**Submenu labels must be discovered, never guessed** (learned 2026-09-12). `invoke_menu` refuses
-a wrong label with `menu_path_unavailable` naming the failing segment index, which is the correct
-behaviour but makes guessing expensive. Confirmed on this build:
-
-- `["View","Zoom"]` resolves. `["View","Fit all"]`, `["View","Fit All"]` and
-  `["View","Standard views"]` are all **refused at segment 1** — those labels do not exist as
-  direct children of `View` here.
-- Qt renders an open menu as a **popup that is not a separate top-level window**: `list_windows`
-  still reports only the main window, and the popup's items do not appear in the main window's
-  UIA tree. So you cannot enumerate submenu children from a snapshot while the menu is open.
-
-Practical rule: drive state through MCP where an MCP tool exists, and reserve `invoke_menu` for
-paths whose exact labels you have already confirmed. Record any label you confirm in the scenario
-that uses it.
+Measured in the container (FreeCAD 1.1.4): `Exit`, `New Document`, `Close`, `Save` and `Zoom In` are
+listed; `Show All Objects` and `Standard Views` are listed while a document is open; the `Part`
+workbench's `Primitives > Cube` is listed after the `Part` workbench leaf is pressed. `Undo`,
+`Recompute` and `Toggle Visibility` are not listed: use `ctrl+z`, `ctrl+r` and `space` with `hotkey` or
+`press_key`. The numbered `Windows` entries expose only `Activates this window`: press the `Next` or
+`Previous` leaf of the `Windows` menu until the `list_windows` title names the document. The result of
+a leaf press is `effect:"unverifiable"`; the verdict comes from the window title or a fresh screenshot.
+The proof records are in `tests/uat/run/2026-11-18-10-10-proof/K2-*.txt`.
 
 ### FreeCAD viewport keystrokes are frequently dropped
 
@@ -312,17 +283,19 @@ failure from an `unverifiable` result.
 
 Always write screenshots to a file rather than returning bytes:
 ```bash
-'{"pid":29764,"window_id":393368,"screenshot_out_file":"_automation/uat/tc06-iso.png"}' | & cua-driver call get_window_state
+echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc06-iso.png"}' | "$FCB_CUA" get_window_state
 ```
+`$FCB_CUA` maps `$RUN_DIR` to its `/repo/tests/uat/run/...` path, and the file appears in the run folder
+on the host.
 Then `Read` the file only when a visual comparison actually needs it.
 
-### Forbidden commands on Windows
+### Forbidden commands in the container
 
-Do not use: `Start-Process`, `SetForegroundWindow`, `taskkill /F`. They break the daemon's window
-tracking and leave FreeCAD in a state the driver cannot recover.
+Do not use: `wmctrl -a`, `xdotool windowactivate`, `kill -KILL` (except in a scenario that is the
+unclean-kill case). They raise or end a window outside the driver's tracking.
 
 Two further limits: `modifier` is not honoured on a background click, and right-click or
-`count > 1` skip the UIA Invoke path.
+`count > 1` skip the accessibility invoke path.
 
 ### `replay_trajectory` is regression evidence only
 

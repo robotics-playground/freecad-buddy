@@ -7,7 +7,7 @@ the suite is worse than no matrix.
 **Verification command** (this is the check, not an eyeball):
 
 ```bash
-.venv/Scripts/python.exe -c "
+uv run python -c "
 import re,sys,pathlib
 sys.path.insert(0,'src')
 from freecad_buddy.hosts.tool_catalog import tool_specs

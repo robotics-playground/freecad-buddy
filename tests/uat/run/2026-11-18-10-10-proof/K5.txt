@@ -1,0 +1,19 @@
+## CPU seconds (TC-10-07)
+$ docker exec -u cua fcb-desktop ps -o cputimes= -p 4314
+       5
+exit=0
+
+## resident KiB (TC-10-14)
+$ docker exec -u cua fcb-desktop ps -o rss= -p 4314
+644376
+exit=0
+
+## proxy command line (TC-01-01)
+$ docker exec -u cua fcb-desktop sh -c "tr '\0' ' ' < /proc/4411/cmdline"
+/home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http exit=0
+
+## only one serve process (TC-01-01)
+$ docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve'
+4411 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+exit=0
+

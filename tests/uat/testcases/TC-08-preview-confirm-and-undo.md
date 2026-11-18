@@ -22,7 +22,7 @@ the available-render contrast and an H1 headless host for the no-render-port con
 
 **Preview TempDoc check.** A preview copy is written under the host's session temp folder
 `<workdir>/tmp/FCB_TMP_session_<pid>_<token>/` (GUI workdir
-`%APPDATA%\FreeCAD\v1-1\freecad-buddy\workdir`), never under `$TEMP` (`preview.py:325`). The
+`$FCB_USER_DIR/freecad-buddy/workdir`), never under the container's `/tmp` (`preview.py:325`). The
 agent shell may get "Access is denied" on that folder, so every "no preview TempDoc" check below
 lists it in-process:
 
@@ -34,14 +34,14 @@ The check passes when `value_repr` is `[]`.
 
 ## Preconditions
 - [ ] FreeCAD 1.1.x installed (verify: `docker exec -u cua fcb-desktop ls /opt/freecad/AppRun`); the build under test is the live version: `query_capabilities.freecad_version`, read once at the start of the run and written `<live version>` below
-- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: `cua-driver call invoke_menu { pid, window_id, path: ["View","Visibility","Show All Objects"] }`. A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
+- [ ] Golden and fault `.FCStd` files have no `GuiDocument.xml` and open with every object hidden. After each `document_open` of such a file, and before any fit or render of it, run **Show All**: press the `Show All Objects` leaf of View > Visibility by `element_token` (test-plan §6, "Menu route"). A fit before it returns `SPEC_FAILED view_fit.nothing_to_frame`.
 - [ ] `script_exec` is on (the default: `tools/list` names it). The TempDoc check and the TC-08-11 and TC-08-21 fault reproducers need it.
-- [ ] FreeCAD GUI open and the addon bridge serving `:8765` (verify: `netstat -ano | grep :8765` shows LISTENING)
+- [ ] FreeCAD GUI open and the addon bridge serving `:8765` (verify: `docker exec -u cua fcb-desktop ss -ltnp | grep :8765` shows LISTEN)
 - [ ] Host is NOT in auto-approve posture: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, or with the **Auto-approve mutations** preference off and the variable unset, because auto-approve is on by default (verify: the new `addon.log` lines from that launch do not contain `SECURITY: mutation auto-approve ENABLED`)
 - [ ] Golden models present (verify: `ls benchmarks/g0/golden-models/box-10-20-30.FCStd`)
 - [ ] No stale preview TempDocs (verify: the preview TempDoc check returns `[]`)
-- [ ] `cua-driver` can drive the FreeCAD window (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` returns a `QOpenGLWidget`)
-- [ ] The GUI's own **Fit All** toolbar button is reachable, as the non-MCP framing path (verify: `'{"pid":<pid>,"window_id":<wid>}' | & cua-driver call get_window_state` lists a `Fit All` toolbar element with an `element_token`; clicking it returns `route: "accessibility"` and reframes the view. Note `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`.)
+- [ ] `cua-driver` can drive the FreeCAD window (verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` returns an element tree that lists the menu items `File`, `Edit` and `View`)
+- [ ] The GUI's own **Fit All** toolbar button is reachable, as the non-MCP framing path (verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` lists a `Fit All` toolbar element with an `element_token`; clicking it returns `route: "accessibility"` and reframes the view. Note `invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`.)
 - [ ] `$RUN_DIR/evidence/` exists and is writable (verify: `ls "$RUN_DIR/evidence"`)
 
 ---
@@ -53,7 +53,7 @@ The check passes when `value_repr` is `[]`.
 
 **Given** a body with a fully-constrained 20x20 mm rectangular sketch on XY — verify: `mcp verify_sketch { doc: <handle>, sketch: "Sketch" }` returns `OK` with `structured_content.subject.fully_constrained` `true` and `subject.dof` `0`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-preview window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-01-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-preview window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-01-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a 30 mm pad is previewed  
 ```
@@ -69,7 +69,7 @@ mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_pad", args: { b
 **And** the TNP pre-check is present — verify: `diff.tnp_precheck.status` is one of `CLEAN`, `FLAGGED`, `UNSUPPORTED` and `diff.tnp_precheck.element_map_version` is present  
 **And** a token and its deadline were issued — verify: `structured_content.preview_id` starts with `fcb-preview:` and `structured_content.expires_at` is an ISO-8601 UTC timestamp  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window shows the sketch only, with no pad — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-01-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. **This is a PREVIEW: the two images must be visually IDENTICAL by eye** — a flat 20x20 mm rectangle and no extruded solid in either. A preview that reports "no changes applied" while the viewport shows the new 30 mm pad is the exact defect this catches. The identity is judged by looking at both images, not by comparing fingerprints. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window shows the sketch only, with no pad — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen in each. **This is a PREVIEW: the two images must be visually IDENTICAL by eye** — a flat 20x20 mm rectangle and no extruded solid in either. A preview that reports "no changes applied" while the viewport shows the new 30 mm pad is the exact defect this catches. The identity is judged by looking at both images, not by comparing fingerprints. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -86,7 +86,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch and a 30 mm `Pad` — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` returns `volume` = `12000.0`  
 **And** no stale preview TempDocs — verify: the preview TempDoc check returns `[]`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-preview window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-02-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-preview window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-02-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the live mass properties and the open document list are recorded  
 ```
@@ -107,7 +107,7 @@ mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_set_parameters"
 **And** the preview did not report a live-document change — verify: the envelope is `OK`, not a `SPEC_FAILED` carrying `preview changed the live document`  
 **And** cleanup happens on the failing path too — verify: after previewing an operation that FAILS on the copy, the preview TempDoc check still returns `[]`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window still shows the 30 mm pad, not an 80 mm one — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-02-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state the pad's proportions in each. **This is a PREVIEW: the two images must be visually IDENTICAL by eye** — the pad's height is unchanged and no taller solid appeared. A preview that reports the live document untouched while the viewport shows a visibly lengthened pad is the exact defect this catches. The identity is judged by looking at both images, not by comparing volumes or fingerprints. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window still shows the 30 mm pad, not an 80 mm one — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-02-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state the pad's proportions in each. **This is a PREVIEW: the two images must be visually IDENTICAL by eye** — the pad's height is unchanged and no taller solid appeared. A preview that reports the live document untouched while the viewport shows a visibly lengthened pad is the exact defect this catches. The identity is judged by looking at both images, not by comparing volumes or fingerprints. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -123,7 +123,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a body with a fully-constrained 20x20 mm sketch — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` lists `Body` and `Sketch`, not `Pad`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-mutation window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-03-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-mutation window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-03-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the pad is previewed and the token kept  
 ```
@@ -141,7 +141,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **And** the token form is as documented — verify: the `preview_id` matches `^fcb-preview:[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$`  
 **And** an explicit accept is also honored — verify: the same flow with `confirm: { preview_id: "<fresh token>", elicitation_action: "accept" }` also returns `status: "OK"`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window shows the new extruded solid — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-03-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. **This is a CONFIRMED mutation: the new geometry must be visibly present** — the before image shows a flat sketch, the after image shows a 20x20x30 mm solid box. An `OK` envelope over a window that still shows only the sketch is the defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window shows the new extruded solid — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-03-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen in each. **This is a CONFIRMED mutation: the new geometry must be visibly present** — the before image shows a flat sketch, the after image shows a 20x20x30 mm solid box. An `OK` envelope over a window that still shows only the sketch is the defect. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -157,7 +157,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a body with a 30 mm `Pad` — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` returns `volume` = `12000.0`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-preview window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-04-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-preview window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-04-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a fillet whose radius cannot fit the edge is previewed  
 ```
@@ -172,7 +172,7 @@ mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_fillet", args: 
 **And** a token was still issued — verify: `structured_content.preview_id` is non-null, because the op reached the gate on the copy  
 **And** the live document is unchanged — verify: `mcp query_mass_properties { doc: <handle>, object: "Pad" }` returns `volume` = `12000.0`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window shows the unfilleted pad — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-04-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state the edges you see in each. **This is a PREVIEW: the two images must be visually IDENTICAL by eye** — sharp edges, no rounded edge, and no error-state colouring on the solid. A failing preview that left a broken or rounded feature on the human's screen is the exact defect this catches. The identity is judged by looking at both images, not by comparing `validity` fields. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window shows the unfilleted pad — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-04-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state the edges you see in each. **This is a PREVIEW: the two images must be visually IDENTICAL by eye** — sharp edges, no rounded edge, and no error-state colouring on the solid. A failing preview that left a broken or rounded feature on the human's screen is the exact defect this catches. The identity is judged by looking at both images, not by comparing `validity` fields. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -189,7 +189,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a 30 mm `Pad`  
 **And** a GUI host with a render port available — verify: `mcp query_screenshot { doc: <handle>, view: { camera: "iso" } }` returns `status: "OK"` with a `resource_link`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-preview window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-05-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-preview window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-05-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a preview is taken with the render explicitly off  
 ```
@@ -208,7 +208,7 @@ mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_set_parameters"
 **And** an available render says so — verify: the `render: "auto"` call on the GUI host returns `diff.render.available` equal to `true`  
 **And** the enum is closed — verify: `mcp preview_dry_run { doc: <handle>, operation: {...}, render: "sometimes" }` is rejected by the schema, because `render` enumerates only `["auto", "off"]`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the GUI window still shows the 30 mm pad — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-05-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state the pad's proportions in each. **These are PREVIEWS: the two images must be visually IDENTICAL by eye** — the pad's height is unchanged by any of the three previews, whichever render setting they carried. The `diff.render` block is a claim under test and cannot stand as evidence for what the human saw; the identity is judged by looking at both images. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the GUI window still shows the 30 mm pad — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-05-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state the pad's proportions in each. **These are PREVIEWS: the two images must be visually IDENTICAL by eye** — the pad's height is unchanged by any of the three previews, whichever render setting they carried. The `diff.render` block is a claim under test and cannot stand as evidence for what the human saw; the identity is judged by looking at both images. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -224,7 +224,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a body with a fully-constrained 20x20 mm sketch, undo available — verify: `mcp document_undo { doc: <handle> }` is not refused with `undo is unavailable`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-mutation window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-06-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-mutation window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-06-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a pad is applied and BOTH forms of its before-fingerprint are kept  
 ```
@@ -251,7 +251,7 @@ mcp document_undo { doc: <handle>, expect_fingerprint: { digest: "...", serializ
 **And** the object set is reported — verify: `restored_objects` lists `Body`, `Sketch` and their Origin members, and does NOT list `Pad`  
 **And** a wrong type is refused, not reported as a non-match — verify: `mcp document_undo { doc: <handle>, expect_fingerprint: 42 }` is refused, with `Input validation error: …` (schema refusal: `expect_fingerprint` is typed `string` or `object`) or the product message `expect_fingerprint must be a fingerprint digest string, a {digest, serializer} object or a FingerprintRecord, got int`; the input is refused either way, and no undo runs  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window is restored to its pre-mutation appearance — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-06-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. **This is an UNDO: the post-undo image must match the pre-mutation image by eye** — the flat sketch is shown and the extruded solid is gone. `matches_pre_op: true` over a window that still shows the pad is a finding; so is a fingerprint mismatch over a window that is visually restored. Record which of the two is wrong in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window is restored to its pre-mutation appearance — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-06-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen in each. **This is an UNDO: the post-undo image must match the pre-mutation image by eye** — the flat sketch is shown and the extruded solid is gone. `matches_pre_op: true` over a window that still shows the pad is a finding; so is a fingerprint mismatch over a window that is visually restored. Record which of the two is wrong in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -268,7 +268,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** a previewed, unspent token for `feature_body_create`, which can run twice under different names  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-replay window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-07-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-replay window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-07-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a body creation is previewed and applied  
 ```
@@ -286,7 +286,7 @@ mcp feature_body_create { doc: <handle>, name: "Probe", confirm: { preview_id: "
 **And** the replay mutated nothing — verify: `mcp query_tree_summary { doc: <handle>, depth: 2 }`, read before the `Probe2` apply, lists exactly one `Probe` body, not two  
 **And** a fresh preview restores the ability to apply — verify: a new `preview_dry_run` for `feature_body_create { name: "Probe2" }` yields a token whose apply returns `status: "OK"`. A new name is needed: `Probe` now exists, so a second `Probe` would be renamed by FreeCAD and the preview would not describe the apply  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the refused replay added no geometry to the window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-07-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen and in the model tree in each. **The refused replay must leave the window IDENTICAL by eye** — the same geometry, no duplicated body, and no error dialog raised by the replay. A refusal envelope over a window that gained a second body is the defect. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
+**And** *(visual)* the refused replay added no geometry to the window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-07-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen and in the model tree in each. **The refused replay must leave the window IDENTICAL by eye** — the same geometry, no duplicated body, and no error dialog raised by the replay. A refusal envelope over a window that gained a second body is the defect. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -302,7 +302,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a body with a fully-constrained 20x20 mm sketch — verify: `mcp verify_sketch { doc: <handle>, sketch: "Sketch" }` returns `OK` with `structured_content.subject.fully_constrained` `true` and `subject.dof` `0`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-08-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-08-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a PAD is previewed and its token kept  
 ```
@@ -319,7 +319,7 @@ mcp feature_pocket { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad"
 **And** the refusal is not an argument complaint — verify: the message does NOT contain `was issued for different arguments`  
 **And** the token is still usable on its own tool — verify: presenting the same token to `feature_pad` with the same arguments returns `status: "OK"`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the refused pocket left the window unchanged, and the later authorized pad reached it — verify: capture immediately after the refused pocket to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-08-refused.png"}' | & cua-driver call get_window_state`, and again after the authorized `feature_pad` to `"$RUN_DIR/evidence/tc-08-08-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — no pocket, no hole, no removed material. The after image must show the extruded 30 mm solid, because a CONFIRMED mutation must be visibly present. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
+**And** *(visual)* the refused pocket left the window unchanged, and the later authorized pad reached it — verify: capture immediately after the refused pocket to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-08-refused.png"}' | "$FCB_CUA" get_window_state`, and again after the authorized `feature_pad` to `"$RUN_DIR/evidence/tc-08-08-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — no pocket, no hole, no removed material. The after image must show the extruded 30 mm solid, because a CONFIRMED mutation must be visibly present. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
 
 **Cleanup**:
 ```bash
@@ -335,7 +335,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-09-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-09-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a 30 mm pad is previewed  
 ```
@@ -353,7 +353,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **And** `confirm` itself is excluded from the digest — verify: presenting the same token as `confirm: { preview_id: "<token>", elicitation_action: "accept" }` with the original 30 mm arguments returns `status: "OK"`, proving adding the `elicitation_action` field did not change the digest  
 **And** the identical call is still authorized — verify: re-presenting a FRESH 30 mm token with the 30 mm arguments returns `status: "OK"`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the 60 mm pad never reached the window — verify: capture immediately after the refused 60 mm call to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-09-refused.png"}' | & cua-driver call get_window_state`, and again after the authorized 30 mm apply to `"$RUN_DIR/evidence/tc-08-09-after.png"`, then `Read` all three PNGs and state the solid's height in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid at all. The after image must show a solid whose height reads as 30 mm against the 20 mm base, not double it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
+**And** *(visual)* the 60 mm pad never reached the window — verify: capture immediately after the refused 60 mm call to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-09-refused.png"}' | "$FCB_CUA" get_window_state`, and again after the authorized 30 mm apply to `"$RUN_DIR/evidence/tc-08-09-after.png"`, then `Read` all three PNGs and state the solid's height in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid at all. The after image must show a solid whose height reads as 30 mm against the 20 mm base, not double it. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
 
 **Cleanup**:
 ```bash
@@ -369,7 +369,7 @@ mcp document_close { doc: <handle> }
 
 **Given** TWO documents open, each with a body and an identical fully-constrained 20x20 mm sketch — verify: `mcp document_list {}` returns two handles, `<handle-a>` and `<handle-b>`  
 **And** document B is in the live viewport and framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle-b> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-10-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-10-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the pad is previewed on document A  
 ```
@@ -387,7 +387,7 @@ mcp feature_pad { doc: <handle-b>, body: "Body", profile: "Sketch", name: "Pad",
 **And** the refusal is not an argument complaint — verify: the message does NOT contain `was issued for different arguments`  
 **And** A's token still works on A — verify: presenting the same token to the same call on `<handle-a>` returns `status: "OK"`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle-b> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* document B's viewport is unchanged by the refused apply — verify: capture immediately after the refused call to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-10-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen and which document's title the window carries in each. The two images must be visually IDENTICAL by eye — B still shows a flat sketch with no pad, and document A was not silently activated into the viewport. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
+**And** *(visual)* document B's viewport is unchanged by the refused apply — verify: capture immediately after the refused call to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-10-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen and which document's title the window carries in each. The two images must be visually IDENTICAL by eye — B still shows a flat sketch with no pad, and document A was not silently activated into the viewport. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -404,7 +404,7 @@ mcp document_close { doc: <handle-b> }
 
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-11-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-11-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the pad is previewed and its token kept  
 ```
@@ -434,7 +434,7 @@ Present the fresh token to the same `feature_pad` call. It returns `INVALID_INPU
 mcp script_exec { doc: <handle>, code: "import freecad_buddy.usecases.fingerprint as f\nf.fingerprint = f._saved\ndel f._saved" }
 ```
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window shows the widened sketch and no stale pad — verify: capture immediately after the refused stale-token call to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-11-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state the sketch's proportions and whether a solid is present in each. The after image must show the rectangle visibly wider than in the before image, because that CONFIRMED datum change must be visible; and it must show no extruded solid, because the refused stale token must produce nothing. The judgement is on the pixels alone — no MCP status, `query_sketch_info` width or render may stand in for looking at the image.  
+**And** *(visual)* the window shows the widened sketch and no stale pad — verify: capture immediately after the refused stale-token call to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-11-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state the sketch's proportions and whether a solid is present in each. The after image must show the rectangle visibly wider than in the before image, because that CONFIRMED datum change must be visible; and it must show no extruded solid, because the refused stale token must produce nothing. The judgement is on the pixels alone — no MCP status, `query_sketch_info` width or render may stand in for looking at the image.  
 
 **Cleanup**: if the planted fault is still in place, restore it first.
 ```
@@ -452,7 +452,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** ability to wait past the 900 s TTL, or a host clock the test may advance  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-12-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-12-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** an operation whose apply will not move the document digest is previewed, so its token stays otherwise valid, and `expires_at` is recorded  
 ```
@@ -474,7 +474,7 @@ mcp feature_body_create { doc: <handle>, name: "Probe", confirm: { preview_id: "
 **And** an unexpired unspent token still works — verify: a fresh preview of `feature_body_create { name: "Probe3" }` applied within the TTL returns `status: "OK"`. The new name keeps the preview from colliding with the existing `Probe`  
 **And** the expired call mutated nothing — verify: `mcp query_tree_summary { doc: <handle>, depth: 2 }`, read before the `Probe3` apply, lists exactly one `Probe` body  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the expired refusal added nothing to the window — verify: capture immediately after the post-deadline call to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-12-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen and in the model tree in each. Apart from the one `Probe` body the first apply legitimately created, the images must be IDENTICAL by eye — no duplicated body and no error dialog left open by the expired call. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
+**And** *(visual)* the expired refusal added nothing to the window — verify: capture immediately after the post-deadline call to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-12-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen and in the model tree in each. Apart from the one `Probe` body the first apply legitimately created, the images must be IDENTICAL by eye — no duplicated body and no error dialog left open by the expired call. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -490,7 +490,7 @@ mcp document_close { doc: <handle> }
 
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-13-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-13-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a 30 mm pad is previewed  
 ```
@@ -512,7 +512,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **And** the token is spent only after the successful apply — verify: re-sending the same token a fourth time now returns `confirm.preview_id has already authorized a mutation; re-run preview_dry_run`  
 **And** other refusal paths also leave the token usable — verify: repeating the flow where the middle call sends `confirm: { preview_id: "<token>", elicitation_action: "decline" }` gets the MCP input-schema refusal `Input validation error: 'decline' is not one of ['accept']`, and the corrected call with the same token still succeeds. The `Confirm` schema allows only `accept`, so a decline never reaches the mutation tool (`mcp-tools-design.md` §4); the listener's own message `confirm.elicitation_action must be 'accept', got 'decline'` (`usecases/confirm.py:215`) is reachable only over raw RPC, which this scenario does not use  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window shows exactly one 30 mm pad — verify: capture immediately after the refused 60 mm call to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-13-refused.png"}' | & cua-driver call get_window_state`, and again after the corrected apply to `"$RUN_DIR/evidence/tc-08-13-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid. The after image must show a single extruded solid whose height reads as 30 mm, not the 60 mm of the refused call. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
+**And** *(visual)* the window shows exactly one 30 mm pad — verify: capture immediately after the refused 60 mm call to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-13-refused.png"}' | "$FCB_CUA" get_window_state`, and again after the corrected apply to `"$RUN_DIR/evidence/tc-08-13-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid. The after image must show a single extruded solid whose height reads as 30 mm, not the 60 mm of the refused call. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
 
 **Cleanup**:
 ```bash
@@ -529,7 +529,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** one valid `feature_pad` token in hand, from `preview_dry_run`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-14-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-14-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** each malformed token is presented in turn to the same `feature_pad` call, changing only `confirm.preview_id`  
 ```
@@ -563,7 +563,7 @@ over the wire.
 **And** a non-string `preview_id` is refused — verify: `confirm: { preview_id: 12345 }` returns `Input validation error: …` (schema refusal: `preview_id` is typed `string`) or the product message `confirm.preview_id is not a preview token`; the input is refused either way  
 **And** none of the variants mutated anything — verify: `mcp query_tree_summary { doc: <handle>, depth: 3 }` does not list `Pad` after all variants have been tried  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* no variant reached the window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-14-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. After every variant has been tried the two images must be visually IDENTICAL by eye — a flat sketch, no extruded solid, and no error dialog left open by any variant. The judgement is on the pixels alone — no MCP status, refusal message or render may stand in for looking at the image.  
+**And** *(visual)* no variant reached the window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-14-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen in each. After every variant has been tried the two images must be visually IDENTICAL by eye — a flat sketch, no extruded solid, and no error dialog left open by any variant. The judgement is on the pixels alone — no MCP status, refusal message or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -580,7 +580,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** one valid `feature_pad` token in hand  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-15-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-15-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the valid token is presented alongside an undeclared field  
 ```
@@ -602,7 +602,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **And** the token survives the refusal — verify: re-presenting the same token with `confirm: { preview_id: "<token>" }` alone returns `status: "OK"`  
 **And** only the two declared fields are accepted — verify: `confirm: { preview_id: "<fresh token>", elicitation_action: "accept" }` is authorized, and no third key is  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the three refusals produced no geometry — verify: capture immediately after the three refused calls to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-15-refused.png"}' | & cua-driver call get_window_state`, and again after the authorized apply to `"$RUN_DIR/evidence/tc-08-15-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid, proving `autoApprove` was not silently honoured. The after image must show the extruded solid from the legitimate apply. The judgement is on the pixels alone — no MCP status, refusal message or render may stand in for looking at the images.  
+**And** *(visual)* the three refusals produced no geometry — verify: capture immediately after the three refused calls to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-15-refused.png"}' | "$FCB_CUA" get_window_state`, and again after the authorized apply to `"$RUN_DIR/evidence/tc-08-15-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid, proving `autoApprove` was not silently honoured. The after image must show the extruded solid from the legitimate apply. The judgement is on the pixels alone — no MCP status, refusal message or render may stand in for looking at the images.  
 
 **Cleanup**:
 ```bash
@@ -619,7 +619,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** one valid `feature_pad` token in hand  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-16-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-16-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the valid token is presented with a declining action  
 ```
@@ -634,7 +634,7 @@ mcp feature_pad { doc: <handle>, body: "Body", profile: "Sketch", name: "Pad", l
 **And** the token survives — verify: re-presenting the same token with `elicitation_action: "accept"` returns `status: "OK"`  
 **And** omitting the field defaults to accept — verify: `confirm: { preview_id: "<fresh token>" }` alone returns `status: "OK"`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the declined calls produced no geometry — verify: capture immediately after the three declining calls to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-16-refused.png"}' | & cua-driver call get_window_state`, and again after the accepted apply to `"$RUN_DIR/evidence/tc-08-16-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid, because a declined mutation must never reach the human's window. The after image must show the extruded solid from the accepted apply. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
+**And** *(visual)* the declined calls produced no geometry — verify: capture immediately after the three declining calls to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-16-refused.png"}' | "$FCB_CUA" get_window_state`, and again after the accepted apply to `"$RUN_DIR/evidence/tc-08-16-after.png"`, then `Read` all three PNGs and state what is on screen in each. The refused image must be IDENTICAL to the before image by eye — a flat sketch and no solid, because a declined mutation must never reach the human's window. The after image must show the extruded solid from the accepted apply. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the images.  
 
 **Cleanup**:
 ```bash
@@ -660,7 +660,7 @@ here. This is the same 19 that `preview_dry_run` will accept.
 **Given** a document holding a body, a fully-constrained sketch, a `Pad` and a `Fillet`, so every one of the 19 tools has a valid target — verify: `mcp query_tree_summary { doc: <handle>, depth: 4 }` lists all four  
 **And** the GUI host runs the confirm gate: FreeCAD was started with `FREECAD_BUDDY_AUTO_APPROVE=0`, or with the **Auto-approve mutations** preference off and the variable unset (the default is auto-approve on) — verify: the new `addon.log` lines from that launch do NOT contain `SECURITY: mutation auto-approve ENABLED`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** for each of the 19 tools an otherwise-valid call is issued with the `confirm` key OMITTED entirely; the `feature_set_parameters` call writes `Length`, not `Visibility` alone (a `Visibility`-only write is display state and needs no confirm)  
 ```
@@ -679,7 +679,7 @@ mcp sketch_create { doc: <handle>, name: "Sketch2", plane: "XZ" }
 **And** each refused tool works once previewed — verify: for a sample of at least 3 of the 19, a `preview_dry_run` plus its token returns `status: "OK"`. If the sample includes `feature_set_parameters`, write `Fillet` `Radius`, not `Pad` `Length`: on FreeCAD 1.1.x a new pad length breaks the fillet's edge reference, and the mutation then fails for a reason that is not the gate  
 **And** the display-state carve-out holds — verify: `mcp feature_set_parameters { doc: <handle>, feature: "Pad", parameters: { Visibility: false } }` with no `confirm` returns `status: "OK"` with `mutation.changed: []`, and its audit `approval` line has `mode: "display_state"`; restore with `{ Visibility: true }` before the after-capture  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* none of the 19 refusals changed the model on screen — verify: capture immediately after the 19 refused calls and BEFORE the previewed sample, to `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what features you see in each. The two images must be visually IDENTICAL by eye — the same body, sketch, pad and fillet, with no added, removed or altered feature, and no error dialog left open. A fail-closed gate that nonetheless let one of the 19 reach the window is the exact defect this catches. The judgement is on the pixels alone — no MCP status, refusal message, tree summary or render may stand in for looking at the image.  
+**And** *(visual)* none of the 19 refusals changed the model on screen — verify: capture immediately after the 19 refused calls and BEFORE the previewed sample, to `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-17-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what features you see in each. The two images must be visually IDENTICAL by eye — the same body, sketch, pad and fillet, with no added, removed or altered feature, and no error dialog left open. A fail-closed gate that nonetheless let one of the 19 reach the window is the exact defect this catches. The judgement is on the pixels alone — no MCP status, refusal message, tree summary or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -701,7 +701,7 @@ window was never touched by a headless call.
 **And** a saved document with a body and a fully-constrained 20x20 mm sketch  
 **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: run Show All, then `mcp view_fit_viewport { doc: <gui handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the GUI's framed state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-before.png"}' | & cua-driver call get_window_state`  
+**And** the GUI's framed state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** H1 is started with the flag UNSET, with the audit log redirected, and a gated tool is called without a confirm  
 ```bash
@@ -723,7 +723,7 @@ env -u FREECAD_BUDDY_AUTO_APPROVE FREECAD_BUDDY_AUDIT_LOG="$RUN_DIR/evidence/tc-
 **And** the audited approval carries no token — verify: that line's `args_digest` is present while no `preview_id` appears, because an auto-approved call presented none  
 **And** the refused forged-token call wrote no approval line — verify: the file holds exactly one `approval` line  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <gui handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the separate GUI window was not touched by any of the headless runs — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen in each. The two images must be visually IDENTICAL by eye — the same golden box, unchanged. A headless auto-approved mutation that reached across into the human's document would be a serious defect, and the audit line proving it "ran headless" is a claim under test, not evidence that the window was spared. The judgement is on the pixels alone — no MCP status, audit line or render may stand in for looking at the image.  
+**And** *(visual)* the separate GUI window was not touched by any of the headless runs — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-18-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen in each. The two images must be visually IDENTICAL by eye — the same golden box, unchanged. A headless auto-approved mutation that reached across into the human's document would be a serious defect, and the audit line proving it "ran headless" is a claim under test, not evidence that the window was spared. The judgement is on the pixels alone — no MCP status, audit line or render may stand in for looking at the image.  
 
 **Cleanup**: stop the H1 host.
 ```bash
@@ -743,7 +743,7 @@ mcp document_close { doc: <gui handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** no stale preview TempDocs — verify: the preview TempDoc check returns `[]`  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-19-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-19-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a mutating tool that is not in the op table is previewed  
 ```
@@ -766,7 +766,7 @@ mcp preview_dry_run { doc: <handle>, operation: { tool: "feature_pad", args: "no
 **And** the refusal happened before any file was written — verify: the preview TempDoc check returns `[]` after all five calls  
 **And** a missing `operation` is refused — verify: `mcp preview_dry_run { doc: <handle> }` is rejected by the schema, because `operation` is in `required`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* none of the five refused previews altered the window — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-19-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen, in the tree and in the title bar of each. The two images must be visually IDENTICAL by eye — the same body and sketch, no new feature, and no save marker or `script_exec` side effect visible in the title bar or the tree. The judgement is on the pixels alone — no MCP status, refusal message or render may stand in for looking at the image.  
+**And** *(visual)* none of the five refused previews altered the window — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-19-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen, in the tree and in the title bar of each. The two images must be visually IDENTICAL by eye — the same body and sketch, no new feature, and no save marker or `script_exec` side effect visible in the title bar or the tree. The judgement is on the pixels alone — no MCP status, refusal message or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -783,7 +783,7 @@ mcp document_close { doc: <handle> }
 **Given** a body with a fully-constrained 20x20 mm sketch  
 **And** a second open document, so the redundant handle could name a different one — verify: `mcp document_list {}` returns two handles  
 **And** document A is in the live viewport and framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle-a> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-attempt window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-20-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-attempt window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-20-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** a preview is taken with the document handle repeated inside `args`  
 ```
@@ -801,7 +801,7 @@ mcp preview_dry_run { doc: <handle-a>, operation: { tool: "feature_pad", args: {
 **And** omitting `args.doc` succeeds — verify: the same preview without the `doc` key inside `args` returns `status: "OK"`  
 **And** the token the successful preview mints names the outer handle — verify: applying it against `<handle-b>` returns `confirm.preview_id was issued for a different document`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle-a> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* document A's viewport is unchanged by both refused previews — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-20-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen and which document's title the window carries in each. The two images must be visually IDENTICAL by eye — a flat sketch with no pad, and document B was not silently activated into the viewport. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
+**And** *(visual)* document A's viewport is unchanged by both refused previews — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-20-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen and which document's title the window carries in each. The two images must be visually IDENTICAL by eye — a flat sketch with no pad, and document B was not silently activated into the viewport. The judgement is on the pixels alone — no MCP status, tree summary or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -818,7 +818,7 @@ mcp document_close { doc: <handle-b> }
 
 **Given** a freshly created document with nothing undone yet — verify: `mcp document_create { label: "UndoProbe" }` returns a handle  
 **And** the model is framed BEFORE the before-capture, so both images share one camera — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** the pre-mutation window state is captured — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-21-before.png"}' | & cua-driver call get_window_state`  
+**And** the pre-mutation window state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-21-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** undo is called on the empty stack  
 ```
@@ -856,7 +856,7 @@ mcp document_undo { doc: <handle-off> }
 **And** an undo that leaves the document broken is not `OK` — verify: the last `document_undo` on `<handle-off>` returns `status: "RECOMPUTE_ERROR"`, with `Box` named in `errors`  
 **And** the undo count is reported — verify: after the successful undo, `undo_count` is `0`  
 **And** *(visual)* the model is framed with the same camera as the before-capture — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window is restored to its pre-mutation appearance — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-21-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs and state what is on screen and in the model tree in each. **This is an UNDO: the post-undo image must match the pre-mutation image by eye** — the `Body` created by the mutation is gone from both the tree and the viewport, and no refusal left an error dialog open. A `status: "OK"` with `undo_count: 0` over a window that still shows the `Body` is a finding; so is a window that is visually restored while the envelope refused. Record which of the two is wrong in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status, `undone` label or render may stand in for looking at the image.  
+**And** *(visual)* the window is restored to its pre-mutation appearance — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-08-21-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and state what is on screen and in the model tree in each. **This is an UNDO: the post-undo image must match the pre-mutation image by eye** — the `Body` created by the mutation is gone from both the tree and the viewport, and no refusal left an error dialog open. A `status: "OK"` with `undo_count: 0` over a window that still shows the `Body` is a finding; so is a window that is visually restored while the envelope refused. Record which of the two is wrong in `$RUN_DIR/bugs.md`. The judgement is on the pixels alone — no MCP status, `undone` label or render may stand in for looking at the image.  
 
 **Cleanup**: if the UndoMode 0 patch is still in place, restore it first. Close both documents without saving.
 ```

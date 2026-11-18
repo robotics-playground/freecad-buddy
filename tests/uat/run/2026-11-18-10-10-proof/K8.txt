@@ -1,0 +1,60 @@
+## FCB_PYTHON runs a script in the container, RUN_DIR mapped (TC-11-19 sleeper form)
+$ "$FCB_PYTHON" -c "import os; open(r'$RUN_DIR/K8-sleeper.pid','w').write(str(os.getpid())); print('wrote', os.getpid())"; cat "$RUN_DIR/K8-sleeper.pid"
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+wrote 4623
+4623exit=0
+
+## FCB_PYTHON imports the addon and FreeCAD (TC-07 trimesh, lib3mf form)
+$ "$FCB_PYTHON" -c "import trimesh, lib3mf, FreeCAD; print('imports ok', FreeCAD.Version()[:3])"
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+imports ok ['1', '1', '4']
+exit=0
+
+## OS temp count in /tmp (TC-11-18)
+$ docker exec -u cua fcb-desktop sh -c "find /tmp -maxdepth 1 -name 'FCB_TMP_*' | wc -l"
+0
+exit=0
+
+## installed addon hash equals dist/addon (TC-16 Given)
+$ docker exec -u cua fcb-desktop sha256sum "$FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/__init__.py"; sha256sum dist/addon/freecad_buddy/__init__.py
+ca78f5058ee162d7962750a1d4fcb489c2a801df96d52a4920b603f7c4369163  /home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy/__init__.py
+ca78f5058ee162d7962750a1d4fcb489c2a801df96d52a4920b603f7c4369163 *dist/addon/freecad_buddy/__init__.py
+exit=0
+
+## TC-11-19 plant block
+$ D=999996; docker exec -u cua -e T="/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp" -e D=$D -e L=4623 fcb-desktop sh -c '
+mkdir -p "$T/FCB_TMP_session_${D}_deadbeef/FCB_TMP_snap_x" && echo x > "$T/FCB_TMP_session_${D}_deadbeef/FCB_TMP_snap_x/Doc.FCStd"
+mkdir -p "$T/FCB_TMP_snap_orphan" && echo x > "$T/FCB_TMP_snap_orphan/Doc.FCStd"
+mkdir -p "$T/FCB_TMP_session_${L}_cafebabe" && echo x > "$T/FCB_TMP_session_${L}_cafebabe/keep.txt"
+mkdir -p "$T/not-reserved" && echo x > "$T/not-reserved/keep.txt"
+echo x > "$T/keep-me.txt"
+mkdir -p /tmp/FCB_TMP_snap_tc1119'; docker exec -u cua fcb-desktop ls -R "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp"; docker exec -u cua fcb-desktop ls -d /tmp/FCB_TMP_snap_tc1119
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp:
+FCB_TMP_session_4623_cafebabe
+FCB_TMP_session_999996_deadbeef
+FCB_TMP_snap_orphan
+keep-me.txt
+not-reserved
+
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_4623_cafebabe:
+keep.txt
+
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_999996_deadbeef:
+FCB_TMP_snap_x
+
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_999996_deadbeef/FCB_TMP_snap_x:
+Doc.FCStd
+
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_snap_orphan:
+Doc.FCStd
+
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/not-reserved:
+keep.txt
+/tmp/FCB_TMP_snap_tc1119
+exit=0
+
+## TC-11-19 cleanup block
+$ docker exec -u cua -e T="/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp" -e L=4623 fcb-desktop sh -c 'rm -rf "$T/FCB_TMP_session_${L}_cafebabe" "$T/FCB_TMP_session_999996_deadbeef" "$T/FCB_TMP_snap_orphan" "$T/not-reserved" "$T/keep-me.txt" /tmp/FCB_TMP_snap_tc1119'; docker exec -u cua fcb-desktop ls "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp"; echo cleaned
+cleaned
+exit=0
+

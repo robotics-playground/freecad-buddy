@@ -20,14 +20,13 @@ fixed guard behave identically, so a single-document scenario passes against the
 
 ## Preconditions
 - [ ] FreeCAD 1.1.x is running (record `query_capabilities.freecad_version`) and its process started **after** the addon files were last written
-      (verify: compare `Get-Process -Id <pid>` `StartTime` against the `LastWriteTime` of
-      `$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy\usecases\view_fit.py`)
+      (verify: compare `docker exec -u cua fcb-desktop ps -o lstart= -p <pid>` against `docker exec -u cua fcb-desktop stat -c %y $FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/usecases/view_fit.py`)
 - [ ] The installed addon matches the source under test
       (verify: `md5sum` of `src/freecad_buddy/usecases/{view_fit,framing}.py`,
       `src/freecad_buddy/hosts/gui_addon/viewport.py` and `src/freecad_buddy/contracts/render.py`
       equals the installed copies)
 - [ ] No documents are open (verify: `mcp document_list` reports `0 open document(s).`)
-- [ ] `cua-driver` daemon is running in an interactive session (verify: `cua-driver status`)
+- [ ] `cua-driver` daemon is running in an interactive session (verify: `"$FCB_CUA" status` reports `Cua Driver daemon is running`)
 - [ ] `$RUN_DIR` is set to this run's folder under `tests/uat/run/`
 
 ---
@@ -53,7 +52,7 @@ assertion R2-01 failed, where `fits` was `false` beside `fitted: true`
 `does not fully fit`  
 **And** *(visual)* the viewport captured with `cua-driver` shows the **whole** cube, all eight
 corners inside the window, with visible margin on every side and no face cut by a window border
-  — verify: `cua-driver call get_window_state` with
+  — verify: `"$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-01-after.png"`, then `Read` it and judge
 
 **Cleanup**:
@@ -85,7 +84,7 @@ carve-out
 `detail.message` — verify: `str(framing.ratio)` is absent from both strings  
 **And** *(visual)* the captured viewport agrees with whichever verdict was returned: whole model in
 frame for `OK`, or a model genuinely overflowing the window for `SPEC_FAILED`
-  — verify: `cua-driver call get_window_state` with
+  — verify: `"$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-02-after.png"`, then `Read` it and judge
 
 **Cleanup**:
@@ -111,7 +110,7 @@ converged because a factor derived from geometry cannot improve by repetition
 **And** the second `framing.ratio` is within `0.01` of the first — verify: compare the two recorded
 ratios; a drifting ratio on unchanged geometry means the fit is not converging  
 **And** *(visual)* the viewport is framed substantially as it was after the first fit, with the
-cube whole — verify: `cua-driver call get_window_state` with
+cube whole — verify: `"$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-03-after.png"`, then `Read` it and compare
   against `tc-15-01-after.png`
 
@@ -135,7 +134,7 @@ returned early every time.
 **Given** `box-10-20-30.FCStd` is open and fitted, so its camera is a recorded baseline — verify:
 `view_fit_viewport` returns `OK`; record its `framing.ratio` as `ratio_before`  
 **And** a second document `tc14bar` is then opened and becomes the focused tab — verify:
-`mcp document_list {}` lists both, and `cua-driver call list_windows` reports the active window
+`mcp document_list {}` lists both, and `"$FCB_CUA" list_windows` reports the active window
 title naming `tc14bar`  
 **And** `box_10_20_30` still has its own open 3D view, so any refusal cannot be a no-viewport
 answer — verify: its earlier `OK` fit proves the view exists  
@@ -152,9 +151,9 @@ against itself again, which is the defect.
 **And** no camera moved — verify: `mcp query_tree_summary { doc: "<tc14bar handle>" }` reports the
 same `framing.ratio` as immediately before the call, and
 `mcp query_tree_summary { doc: "<box_10_20_30 handle>" }` still reports `ratio_before`  
-**And** `box_10_20_30` was not brought forward — verify: `cua-driver call list_windows` still
+**And** `box_10_20_30` was not brought forward — verify: `"$FCB_CUA" list_windows` still
 reports `tc14bar` as the active window. AD-31 refuses; it never redirects and never activates.  
-**And** *(visual)* the window is untouched — verify: `cua-driver call get_window_state` with
+**And** *(visual)* the window is untouched — verify: `"$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-04-after.png"`, then `Read` it and say what is on
   screen: `tc14bar`'s model at the same size and position as before the call, its tab still
   active. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking
@@ -189,7 +188,7 @@ fit targets `box_10_20_30`
 only.  
 **And** each fit framed its own document — verify: each envelope's `framing.fits` is `true`  
 **And** *(visual)* each fit reframed the document it named and left the other alone — verify:
-`cua-driver call get_window_state` with
+`"$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-05-after.png"` after the second call, then `Read`
   it and say what is on screen: `box_10_20_30` whole and framed, with `tc14bar` unchanged behind
   its own tab
@@ -261,23 +260,23 @@ the OS temp directory would break the guarantee that a caller may still be readi
 and on a shared host would delete another session's files.
 
 **Given** the count of `FCB_TMP_*` entries in the OS temp directory is recorded as `before` —
-verify: `(Get-ChildItem $env:TEMP -Filter 'FCB_TMP_*' | Measure-Object).Count`  
+verify: `docker exec -u cua fcb-desktop sh -c "find /tmp -maxdepth 1 -name 'FCB_TMP_*' | wc -l"`  
 **And** a document holding a renderable solid is open  
 
 **When** two renders are taken through the bridge  
 
 **Then** each returned path is **inside** the session workdir — verify: read `render.resource_link`
 from each envelope; both are under `<workdir>/tmp`, and neither is under the OS temp directory  
-**And** the OS temp count is unchanged — verify: re-count `FCB_TMP_*` in `$env:TEMP`; it equals
+**And** the OS temp count is unchanged — verify: re-count `FCB_TMP_*` in `/tmp` with the same command; it equals
 `before`. Under the shipped code each render added one  
 **And** the workdir's own `tmp/` holds the two renders — verify: count entries under
 `<workdir>/tmp`  
 **And** those files survive the session exit — verify: close FreeCAD, then re-count
 `<workdir>/tmp`; the files are still present, because a caller may still be reading a returned link
 and the sweep is a session-start action, never an immediate unlink  
-**And** the next session start sweeps them — verify: relaunch FreeCAD via `cua-driver launch_app`,
+**And** the next session start sweeps them — verify: relaunch FreeCAD with `docker exec -u cua fcb-desktop fcb-freecad start`,
 wait for the proxy on `:8765`, then re-count `<workdir>/tmp`; it is `0`  
-**And** the sweep did not reach outside the workdir — verify: re-count `FCB_TMP_*` in `$env:TEMP`;
+**And** the sweep did not reach outside the workdir — verify: re-count `FCB_TMP_*` in `/tmp` with the same command;
 it still equals `before`. Pre-existing strays there are a one-time operator cleanup and the bridge
 must not delete them  
 

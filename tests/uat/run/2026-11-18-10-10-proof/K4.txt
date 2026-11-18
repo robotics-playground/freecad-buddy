@@ -1,0 +1,36 @@
+## no FreeCAD process (TC-01-01 Given)
+$ docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'
+exit=1
+
+## FreeCAD process list (TC-01 Then)
+$ docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'
+4314 /opt/freecad/usr/bin/freecad /repo/benchmarks/g0/golden-models/box-10-20-30.FCStd
+exit=0
+
+## one pid shows its command (TC-01-01 pid check)
+$ docker exec -u cua fcb-desktop ps -p 4314 -o pid=,comm=
+ 4314 freecad
+exit=0
+
+## count of FreeCAD processes (TC-01-09)
+$ docker exec -u cua fcb-desktop pgrep -fc '^/opt/freecad/usr/bin/freecad'
+1
+exit=0
+
+## a dead pid prints nothing, exit 1
+$ docker exec -u cua fcb-desktop ps -p 999996 -o pid=
+exit=1
+
+## kill and kill -KILL a scratch sleeper
+$ docker exec -d -u cua fcb-desktop sleep 600; sleep 1; S=$(docker exec -u cua fcb-desktop pgrep -f 'sleep 600'); echo sleeper=$S; docker exec -u cua fcb-desktop kill $S; sleep 1; docker exec -u cua fcb-desktop ps -p $S -o pid= ; echo gone_exit=$?
+sleeper=4807
+gone_exit=1
+exit=0
+
+## kill -KILL FreeCAD (TC-12-15 unclean kill) and read the survivors
+$ docker exec -u cua fcb-desktop kill -KILL 4314; sleep 4; docker exec -u cua fcb-desktop pgrep -af '^/opt/freecad/usr/bin/freecad'; echo pgrep_exit=$?; docker exec -u cua fcb-desktop ss -ltnp | grep :8765; echo ss_exit=$?; curl -s -m 3 http://127.0.0.1:18765/healthz; echo relay_exit=$?
+pgrep_exit=1
+ss_exit=1
+relay_exit=52
+exit=0
+

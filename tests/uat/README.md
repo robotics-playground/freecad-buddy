@@ -41,7 +41,7 @@ change how a scenario is executed:
   but `OK`, fit through the GUI instead — on FreeCAD 1.1.x that is the **Fit All** toolbar button
   clicked by `element_token`, because `invoke_menu(["View","Fit All"])` is refused
   (`menu_path_unavailable`). Golden and fault models open with every object hidden: run
-  `invoke_menu(["View","Visibility","Show All Objects"])` before their fit. See `test-plan.md` §3
+  the `Show All Objects` leaf of View > Visibility (pressed by `element_token`) before their fit. See `test-plan.md` §3
   rule 5.
 
 `testcases/TC-14-viewport-framing-and-auto-fit.md` is the reference example of the format.
@@ -70,9 +70,9 @@ Never merge the two into a single number.
    reaches it at `http://127.0.0.1:18765/mcp`. Starting the proxy by hand invalidates TC-01-01.
    Tool arguments use container paths (`test-plan.md` §6). The container FreeCAD shows
    its widget tree to `cua-driver` (`get_window_state`, `element_token` clicks). The driver's own
-   `invoke_menu` refuses FreeCAD's menu bar, so a step written as `invoke_menu` runs through an
-   `element_token` press of the menu leaf, a pixel click or a keyboard route; a step with no such
-   route is `NOT RUN`. The scripted runner runs in the container (`tests/uat/runner/README.md`).
+   `invoke_menu` refuses FreeCAD's menu bar, so a menu step is an
+   `element_token` press of the menu leaf (`test-plan.md` §6, "Menu route"), a pixel click or a
+   keyboard route; a step with no such route is `NOT RUN`. The scripted runner runs in the container (`tests/uat/runner/README.md`).
 4. **One subagent per TC file.** A subagent receives exactly one `testcases/TC-NN-*.md` and
    executes it.
 5. **Strictly sequential.** One subagent at a time. The tests share a single FreeCAD process, one

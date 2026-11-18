@@ -1,0 +1,38 @@
+## list_windows (TC-01 step)
+$ echo '{"pid":4314}' | "$FCB_CUA" list_windows
+{
+  "windows": [
+    {
+      "app_name": "FreeCAD",
+      "bounds": {
+        "height": 949,
+        "width": 1600,
+        "x": 0,
+        "y": 51
+      },
+      "height": 949,
+      "is_on_screen": true,
+      "pid": 4314,
+      "title": "FreeCAD 1.1.4",
+      "width": 1600,
+      "window_id": 37748834,
+      "x": 0,
+      "y": 51,
+      "z_index": 1
+    }
+  ]
+}
+exit=0
+
+## get_window_state with a screenshot under $RUN_DIR (the wrapper maps it to /repo)
+$ echo '{"pid":4314,"window_id":37748834,"screenshot_out_file":"$RUN_DIR/K1-window.png"}' | "$FCB_CUA" get_window_state | head -c 300; ls -l "$RUN_DIR/K1-window.png"
+{
+  "_note": "Prefer `elements` — `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps with very large trees.",
+  "app_name": "FreeCAD",
+  "element_count": 591,
+  "elements": [
+    {
+      write /dev/stdout: The pipe is being closed.
+-rw-r--r-- 1 thuan 197609 266104 Nov 18 11:29 D:/Work/Personal/Sources/freecad-buddy/tests/uat/run/2026-11-18-10-10-proof/K1-window.png
+exit=0
+

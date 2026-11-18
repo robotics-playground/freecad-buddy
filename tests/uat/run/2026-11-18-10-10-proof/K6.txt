@@ -1,0 +1,24 @@
+## grep user.cfg (TC-06 AA preference)
+$ docker exec -u cua fcb-desktop grep -c AntiAliasing "$FCB_CONFIG_DIR/user.cfg"
+0
+exit=1
+
+## test -e repo file (TC-12-04)
+$ test -e benchmarks/g0/golden-models/box-10-20-30.FCStd && echo True
+True
+exit=0
+
+## stat of a run-folder file (TC-12-08)
+$ stat -c %y "$RUN_DIR/K1-window.png"
+2026-11-18 11:29:23.178040500 +0700
+exit=0
+
+## find in the session tmp (TC-06)
+$ docker exec -u cua fcb-desktop find "$FCB_USER_DIR/freecad-buddy/workdir/tmp" -name 'FCB_TMP_shot_*.png'
+exit=0
+
+## the example file TC-12-15 opens exists in the container
+$ docker exec -u cua fcb-desktop ls -l /opt/freecad/usr/share/examples/ArchDetail.FCStd
+-rw-r--r-- 1 root root 1876085 Sep 28 14:57 /opt/freecad/usr/share/examples/ArchDetail.FCStd
+exit=0
+

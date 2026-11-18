@@ -13,42 +13,12 @@
 # `import FreeCAD` adds that folder.
 set -euo pipefail
 export MSYS_NO_PATHCONV=1
-root="${PROJECT_ROOT:-}"
-if [ -z "$root" ]; then
-    echo "fcb_py.sh: PROJECT_ROOT is not set; the test-plan environment block exports it" >&2
-    exit 2
-fi
-root="${root%/}"
-root_backslash="${root//\//\\}"
-
-rewrite() {
-    local value="$1"
-    if [ "$value" = "$root" ]; then
-        REPLY=/repo
-        return
-    fi
-    if [[ "$value" == "$root_backslash" || "$value" == "$root_backslash"\\* ]]; then
-        value="/repo${value#"$root_backslash"}"
-        REPLY="${value//\\//}"
-        return
-    fi
-    if [[ "$value" == --*=* ]]; then
-        local flag="${value%%=*}"
-        rewrite "${value#*=}"
-        REPLY="$flag=$REPLY"
-        return
-    fi
-    value="${value//"$root"\//\/repo\/}"
-    value="${value//"$root"\\//repo/}"
-    if [[ "$value" == *"$root" ]]; then
-        value="${value%"$root"}/repo"
-    fi
-    REPLY="$value"
-}
+# shellcheck source=fcb_paths.sh
+source "$(dirname "${BASH_SOURCE[0]}")/fcb_paths.sh"
 
 args=()
 for argument in "$@"; do
-    rewrite "$argument"
+    fcb_rewrite "$argument"
     args+=("$REPLY")
 done
 envs=(-e "PYTHONPATH=${FCB_ADDON:-/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy}")
@@ -56,7 +26,7 @@ while IFS= read -r line; do
     name="${line%%=*}"
     case "$name" in
     FREECAD_BUDDY_*)
-        rewrite "${line#*=}"
+        fcb_rewrite "${line#*=}"
         case "$REPLY" in
         [A-Za-z]:[\\/]* | *\\*) echo "fcb_py.sh: $name=$REPLY looks like a host path" >&2 ;;
         esac

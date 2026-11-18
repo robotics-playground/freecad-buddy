@@ -18,12 +18,12 @@ GUI macro in its own FreeCAD launch.
 
 ## Preconditions
 
-- [ ] No FreeCAD process before the first launch (verify: `powershell -NoProfile -c "Get-Process freecad* -EA SilentlyContinue | Measure-Object | % Count"` prints `0`)
-- [ ] The installed addon is the junction to `src/freecad_buddy` (verify: `Get-Item "$env:APPDATA\FreeCAD\v1-1\Mod\FreeCADBuddy\freecad_buddy" | Select-Object LinkType, Target` shows `Junction` to `<repo>\src\freecad_buddy`)
+- [ ] No FreeCAD process before the first launch (verify: `docker exec -u cua fcb-desktop pgrep -fc '^/opt/freecad/usr/bin/freecad'` prints `0`)
+- [ ] The installed addon is the image's copy of the code under test (verify: `docker exec -u cua fcb-desktop sha256sum $FCB_USER_DIR/Mod/FreeCADBuddy/freecad_buddy/__init__.py` equals the `sha256sum` of `dist/addon/freecad_buddy/__init__.py` on the host after `scripts/build_addon.py --release`)
 - [ ] A copy of the 178-object rebuilt drawer exists outside the user project, and the original is never opened (verify: `ls "$RUN_DIR/evidence/drawer-copy.FCStd"`, copied from `D:/Work/3D Printers/Ender 3V2 - Klipper/cad/kiwibox-drawer-rebuild.FCStd`)
-- [ ] The audit log path is set for the launch (verify: FreeCAD was started through `_automation/uat/launch_env.sh` with `set FREECAD_BUDDY_AUDIT_LOG=<RUN_DIR>\evidence\audit.jsonl`)
+- [ ] The audit log path is set for the launch (verify: FreeCAD was started with `docker exec -u cua -e FREECAD_BUDDY_AUDIT_LOG=$RUN_DIR_C/evidence/audit.jsonl fcb-desktop fcb-freecad start`)
 - [ ] Raw MCP results are recorded per call with the character count of each content block (verify: `$RUN_DIR/evidence/tc16_calls.py` writes `{"blocks": [...], "chars": [...]}` per call)
-- [ ] `cua-driver` daemon is running in an interactive session (verify: `cua-driver status`)
+- [ ] `cua-driver` daemon is running in an interactive session (verify: `"$FCB_CUA" status` reports `Cua Driver daemon is running`)
 
 ---
 
@@ -55,7 +55,7 @@ mcp sketch_add_geometry { doc: <handle>, sketch: "Sketch",
     { type: "Angle", first: -1, second: 0, value: { value: 30, unit: "deg" }, name: "tilt" } ] }
 ```
 **And** a 10 mm pad `Pad` of `Sketch` — verify: `feature_pad` returns `OK`; `mcp query_mass_properties { doc: <handle>, object: "Pad" }` returns `volume` `3000.0` and `com` `(0, 0, 5)`  
-**And** the view is set to Top and fitted, and the before image is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (it always leaves an isometric camera), then Top view through the GUI by a click on the TOP face of the navigation cube (FreeCAD 1.1.4 has no Top toolbar button), then the **Fit All** toolbar button, then `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-16-01-before.png"}' | & cua-driver call get_window_state`  
+**And** the view is set to Top and fitted, and the before image is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK` (it always leaves an isometric camera), then Top view through the GUI by a click on the TOP face of the navigation cube (FreeCAD 1.1.4 has no Top toolbar button), then the **Fit All** toolbar button, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-16-01-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** the tilt changes from 30 to 120 deg, a 90 deg turn about the centre of mass  
 ```
@@ -67,7 +67,7 @@ mcp sketch_set_datum { doc: <handle>, sketch: "Sketch", constraint: "tilt", valu
 **And** the rotated solid is listed as changed although those values are equal — verify: `mutation.changed` holds an entry with `name: "Pad"`, `volume` `3000.0` and `com` `[0, 0, 5]` (within `1e-6`). Before Story 11.1 the principal moments, which are eigenvalues, could not see this turn.  
 **And** the digests differ — verify: `mutation.fingerprint_before.digest` != `mutation.fingerprint_after.digest`  
 **And** *(visual)* the model is framed in Top view — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, then the TOP face of the navigation cube and the **Fit All** toolbar button, as for the before image  
-**And** *(visual)* the bar turned by a quarter turn — verify: `'{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-16-01-after.png"}' | & cua-driver call get_window_state`, then `Read` both PNGs. Before: one long flat bar whose long side rises about 30 deg from horizontal. After: the same bar, same size, with its long side about 30 deg past vertical (120 deg from horizontal). Both bars centred at the same place, no dialog. Judge the pixels only.  
+**And** *(visual)* the bar turned by a quarter turn — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-16-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs. Before: one long flat bar whose long side rises about 30 deg from horizontal. After: the same bar, same size, with its long side about 30 deg past vertical (120 deg from horizontal). Both bars centred at the same place, no dialog. Judge the pixels only.  
 
 **Cleanup**:
 ```
@@ -176,11 +176,11 @@ mcp document_close { doc: <handle> }
 **Given** no FreeCAD process is running — verify: process count `0`  
 **And** a fresh copy `$RUN_DIR/evidence/drawer-timing.FCStd` of the rebuilt drawer  
 
-**When** FreeCAD is started with the timing macro as its argument, through `cmd.exe`  
+**When** FreeCAD is started with the timing macro as its argument, through `fcb-freecad start`  
 ```
-set FCB_DRAWER_COPY=<RUN_DIR>\evidence\drawer-timing.FCStd&& set FCB_TIMING_OUT=<RUN_DIR>\evidence\gui-timing.json&& set FCB_TIMING_FEATURE=duct_pilot&& start "" "C:\Program Files\FreeCAD 1.1\bin\freecad.exe" "<PROJECT_ROOT>\scripts\automation\time_mutation_overhead.py"
+docker exec -u cua -e FCB_DRAWER_COPY=$RUN_DIR_C/evidence/drawer-timing.FCStd -e FCB_TIMING_OUT=$RUN_DIR_C/evidence/gui-timing.json -e FCB_TIMING_FEATURE=duct_pilot fcb-desktop fcb-freecad start /repo/scripts/automation/time_mutation_overhead.py
 ```
-**And** the run is repeated once into `gui-timing-repeat.json`  
+**And** FreeCAD is stopped (`docker exec -u cua fcb-desktop fcb-freecad stop`) and the run is repeated once into `gui-timing-repeat.json`  
 
 **Then** each run's median overhead is at most 10 s — verify: the median `T - R` in `gui-timing.json` and in `gui-timing-repeat.json`; record both  
 **And** the abort proof in the macro holds on the same document — verify: the report's abort check is `rolled_back_verified` and records no `closeDocument` call. Known open item: run `2026-10-07-03` saw `rolled_back_via_snapshot` here (deferred-work, Story 11.6); a repeat of that is a FAIL of this line, not of the timing line  
@@ -188,9 +188,9 @@ set FCB_DRAWER_COPY=<RUN_DIR>\evidence\drawer-timing.FCStd&& set FCB_TIMING_OUT=
 
 **Cleanup**:
 ```bash
-uv run python _automation/uat/close_all.py
+docker exec -u cua fcb-desktop fcb-py /repo/_automation/uat/close_all.py
 ```
-Quit FreeCAD with `invoke_menu ["File","Exit"]`; discard the copy.
+Quit FreeCAD with the `Exit` leaf (test-plan §6, "Menu route"); discard the copy.
 
 ---
 

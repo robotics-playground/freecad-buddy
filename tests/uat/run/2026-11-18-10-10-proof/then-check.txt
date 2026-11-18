@@ -1,0 +1,2 @@
+Then/And lines compared: 2340; verify clauses changed: 370; failures: 0
+exit=0
