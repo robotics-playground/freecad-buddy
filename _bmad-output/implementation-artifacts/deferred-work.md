@@ -2065,54 +2065,63 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-11; `report.md` row TC-02-15.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: exempt `query_tree_summary` in the Then and check its text line; re-run TC-02-15 into a new run folder (decision 35).
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: the Then reads the `query_tree_summary` refusal as its text line (`TC-02-document-ingestion-and-handles.md:628`, `:630`); live: runner `tc-02-15.json` 0 FAIL.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-09-12 FAIL (test-case defect): same wire shape as TC-02-15; `detail.message` and `detail.code` read from the text-only `query_tree_summary` refusal (`TC-09-error-contract-and-fault-injection.md:505-506`).
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-11; `report.md` row TC-09-12.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: exempt `query_tree_summary` in the Then; re-run TC-09-12 into a new run folder.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: the Then reads the `query_tree_summary` refusal as its text line (`TC-09-error-contract-and-fault-injection.md:503-506`); live: runner `tc-09-12.json` 0 FAIL.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-02-17 FAIL (test-case defect): expected MSVC text `ios_base::failbit set: iostream stream error`; Linux FreeCAD 1.1.4 gives `basic_ios::clear: iostream error` (`TC-02-document-ingestion-and-handles.md:707`).
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-12; `report.md` row TC-02-17.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: accept both platform texts, or check only that the two tails are equal apart from the path; re-run TC-02-17.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: the tails are compared by the `Invalid project file <path>:` prefix and equal text after the path is replaced; platform text recorded, not required; live: runner `tc-02-17.json` 0 FAIL and the three bad opens read on Linux.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-03-03 FAIL (test-case defect, lead regrade): the visual Then on sketch elevation (`TC-03-sketch-authoring.md:131`) cannot be seen in the top-down Sketcher edit view the scenario defines; no camera step.
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-13; `report.md` row TC-03-03.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: add an Isometric step before the capture; update the runner scenario file if its agent_check depends on it; re-run TC-03-03.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: new step opens the sketch in edit mode and presses Isometric by token, then Fit All; live: `evidence/tc-03-03-iso-edit.png` read.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-03-20 FAIL (test-case defect, lead regrade): "as thin as in the before image" (`TC-03-sketch-authoring.md:895`) cannot be seen in the top-down Sketcher edit view; no camera step.
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-13; `report.md` row TC-03-20.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: add an Isometric step before both captures; re-run TC-03-20.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: new steps take the before and after captures in edit mode with the Isometric view; live: `evidence/tc-03-20-before.png`, `-after.png` read.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-07-03 FAIL (test-case defect, lead regrade): the visual Then (`TC-07-verification-and-export-pairing.md:147`) needs Sketcher edit mode, which the scenario does not contain; the end-state window shows one black line in the iso view.
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-14; `report.md` row TC-07-03.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: add the Sketcher edit-mode step before the capture; re-run TC-07-03.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: new step opens `Sketch` in edit mode and fits there before the capture; live: `evidence/tc-07-03-after.png` read.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-07-05 FAIL (test-case defect): the Then says `text` equals `STEP export written -> <path>.` (`TC-07-verification-and-export-pairing.md:210`); the product appends the framing warning (`src/freecad_buddy/contracts/envelope.py:111`, required by `TC-14-viewport-framing-and-auto-fit.md:399`) because the Given does not fit the view.
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-15; `report.md` row TC-07-05.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: change "equals" to "starts with", or fit the view in the Given; re-run TC-07-05.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: the Given shows the model and fits it, so `text` equals the STEP line; live: unfitted export carried the warning, fitted export equalled the line.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-13-04 FAIL (test-case defect): the window stays in Top view after GUI Fit All while the render is iso, so proportion and camera cannot match (`TC-13-gui-mcp-parity.md:287`); the test case sets no window camera.
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-16; `report.md` row TC-13-04.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: set the window camera to Isometric before the capture; re-run TC-13-04.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: the When presses Isometric by token before Fit All; live: `evidence/tc-13-04-after.png` and `-mcp.png` read, same silhouette and camera.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-13-10 FAIL (test-case defect): "the viewport solid reads as that thickness" (`TC-13-gui-mcp-parity.md:574`) cannot be met in the top view that the GUI Fit All route keeps; no camera step.
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-17; `report.md` row TC-13-10.
   blocker: spec D2: no fix inside the UAT run; test cases are frozen during a run.
   unblock: add an Isometric press before the capture; re-run TC-13-10.
+  resolution: resolved by Story 10-8-g (spec `spec-10-8-g-smoke-testcase-defects.md`; commit recorded by the leader after the commit). Check run `tests/uat/run/2026-11-18-10-8-g-check/`: the When presses Isometric by token and Fit All before the before capture; live: `evidence/tc-13-10-before.png`, `-after.png` read.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: UAT run 2026-11-18-01, TC-02-13 FAIL (harness limit): the `fcb-desktop` image has no emoji font; U+1F527 draws as an empty box (`fc-list ":charset=1f527"` empty). Label text is intact (`TC-02-document-ingestion-and-handles.md:518`).
