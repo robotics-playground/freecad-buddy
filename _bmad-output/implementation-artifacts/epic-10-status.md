@@ -2,15 +2,15 @@
 
 Goal: correct the behaviour found by the first full UAT run and prove Gate 1 green (Story 10.8) before Epic 4 resumes.
 Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-7b, 10-9, 10-10. Gate 1 fixes from run 2026-10-23-02 — `84c8e07`..`fab7ba6`.
-In progress: 10-8-d preparation (builder `builder-10-8-d`). Plan: `plan-10-8.md`.
-Remaining: 10-8-d — Gate 1 run in the container (after the preparation merges). The canary fix is merged on the integration branch; it reaches `main` only with a later user-approved merge (decision 28).
-Branch / head: integration `fix/uat-gate-1-failures` at `97a35d1` (merges of 10-8-f `d676505` and 10-8-e). `origin` is at `031d8e8`: not pushed (decision 28). Leader records for 10-8-e not yet committed (main tree is on `story/10-8-d-uat-gate-1-container`).
+In progress: none. UAT smoke run 2026-11-18-01 done and merged (`b329633`): 111 of 255 ran, 101 PASS, 10 FAIL (9 test-case defects, 1 harness limit, 0 product defects); G3 unchanged; Gate 1 not measured (decision 45).
+Remaining: user decisions: how Story 10.8 closes (AC1 asks for the full suite), whether to fix the 9 test-case defects now, push of `fix/uat-gate-1-failures`.
+Branch / head: integration `fix/uat-gate-1-failures` at `b329633` (10-8-f, 10-8-e, 10-8-d preparation, smoke run). `origin` at `031d8e8`: not pushed (decision 28).
 Blockers: none for 10-8.
 Open decisions: push of `fix/uat-gate-1-failures` (user; asked at the end, decision 33); owner questions TC-02-08 overlay and notification noise.
 Canary: fixed in 10-8-e (`freecad>=2026` from conda-forge `main`; 15 dev-line test failures deferred, AD-11 allowed-to-fail). Proven by a local Linux job run; the GitHub dispatch run is NOT RUN.
 Confirmed by the user: preset `anthropic-balanced`, integration branch `fix/uat-gate-1-failures` (decision 20).
-Agents alive: `builder-10-8-d` (main tree, branch `story/10-8-d-uat-gate-1-container` from `c66b80e`, owns container `fcb-desktop`). All other 10-8 agents shut down. Slices: 10-8-f DONE (`d676505`), 10-8-e DONE (`97a35d1`; GitHub canary run NOT RUN, needs a push), 10-8-d preparation building (spec revision, G3 port, one-case proofs, S0 preflight). Next: verify and red-team 10-8-d prep, merge, then the Gate 1 run with a run lead.
-Updated: 2026-11-18 at `97a35d1`
+Agents alive: none after `uatlead2-10-8-d` shuts down. Status loop `0d43d483` cancelled. Container `fcb-desktop` up, FreeCAD stopped.
+Updated: 2026-11-18 23:00 UTC+7 at `b329633`
 
 ## Final report, Story 10-10 (2026-11-18)
 
