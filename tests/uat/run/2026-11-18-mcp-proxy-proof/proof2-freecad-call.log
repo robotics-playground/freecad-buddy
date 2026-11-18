@@ -1,0 +1,6 @@
+initialize ok in 0.62s; tools.listChanged=True
+tools/list ok at 0.64s: 46 tools
+  document_create, document_open, document_save, document_close, document_recompute, document_undo, document_list, query_capabilities
+call query_capabilities in 0.67s isError=False
+  structuredContent keys: ['schema', 'status', 'detail', 'structured_content', 'text']
+  text: {"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad":{"Type":["Length","UpToLast","UpToFirst","UpToFace","?TwoLengths","UpToShape"]},"PartDesign::Pocket":{"Type":["Length","ThroughAll","UpToFirst","UpToFace","?TwoLengths","UpToShape"]},"PartDesign::Revolution":{"Type":["Angle","UpToLast","UpToFirst","UpToFace","TwoAngles"]},"PartDesign::Hole":{"Threa

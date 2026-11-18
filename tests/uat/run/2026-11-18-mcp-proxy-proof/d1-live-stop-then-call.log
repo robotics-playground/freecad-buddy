@@ -1,0 +1,6 @@
+before stop: query_capabilities: 0.3s isError=False structuredContent=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportB
+2026-11-18 16:31:34,890 Session termination failed: Server disconnected without sending a response.
+immediately after stop: query_capabilities: 0.0s isError=True structuredContent=no text=freecad-buddy-docker is not reachable: the upstream does not answer its probe (the container or the server in it is not running). The request was not sent. Star
+answered 0.0s after stop
+after FreeCAD restart: query_capabilities: 0.3s isError=False structuredContent=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportB
+DONE

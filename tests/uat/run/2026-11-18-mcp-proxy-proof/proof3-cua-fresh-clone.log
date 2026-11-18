@@ -1,0 +1,13 @@
+initialize ok in 0.66s; tools.listChanged=True
+2026-11-18 15:06:23,475 Processing request of type ListToolsRequest
+tools/list ok at 0.69s: 0 tools
+  
+
+✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   Update with: cua-driver update
+   Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+
+2026-11-18 15:06:53,879 tool list changed: 60 tools, sending tools/list_changed
+15:06:53 notification notifications/tools/list_changed
+2026-11-18 15:09:43,508 Processing request of type ListToolsRequest
+after watch: 60 tools; notifications=1

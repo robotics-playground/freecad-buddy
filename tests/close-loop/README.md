@@ -54,16 +54,29 @@ All ports bind the host loopback only.
 | cua-driver MCP (stdio) | `docker exec -i -u cua fcb-desktop fcb-cua-mcp`. cua-driver serves MCP over stdio only, so no port opens. |
 | Desktop view for a human | noVNC at `http://127.0.0.1:6901/vnc.html` |
 
-To give Claude Code both as MCP servers, add these entries under `mcpServers` in your `.mcp.json` (git-ignored, so each clone adds them), then restart Claude Code after the container is up:
+Claude Code connects an MCP server once, at start, and never retries a failed stdio server. A server that points straight at the container therefore stays missing when Claude Code starts before the container. To avoid this, run each container server through the cache proxy `scripts/automation/mcp_cache_proxy.py`. Add these entries under `mcpServers` in your `.mcp.json` (git-ignored, so each clone adds them) and replace `<repo>` with the absolute path of this repository:
 
 ```json
-"freecad-buddy-docker": { "type": "http", "url": "http://127.0.0.1:18765/mcp" },
+"freecad-buddy-docker": {
+  "type": "stdio",
+  "command": "uv",
+  "args": ["run", "--no-sync", "--project", "<repo>", "python",
+           "<repo>/scripts/automation/mcp_cache_proxy.py", "--server", "freecad-buddy-docker"]
+},
 "cua-driver-docker": {
   "type": "stdio",
-  "command": "docker",
-  "args": ["exec", "-i", "-u", "cua", "fcb-desktop", "fcb-cua-mcp"]
+  "command": "uv",
+  "args": ["run", "--no-sync", "--project", "<repo>", "python",
+           "<repo>/scripts/automation/mcp_cache_proxy.py", "--server", "cua-driver-docker"]
 }
 ```
+
+How the proxy behaves:
+
+- It starts and answers `initialize` and `tools/list` in under one second with the container down. The tool list comes from `.cache/mcp-proxy/<server>.json` (git-ignored; empty on a fresh clone).
+- `tools/call` goes to the real server, and the result passes through unchanged (`content`, `structuredContent`, `isError`). With the container down, the call returns an error that names the cause and the start commands. The proxy never starts the container.
+- A background check connects to the real server when it is up (a TCP connect to `6901` for cua-driver; `GET /healthz` on `18765` with a numeric `freecad_pid` for freecad-buddy, because the container publishes `18765` while FreeCAD is down). When the tool list differs from the cache, the proxy rewrites the cache and sends `notifications/tools/list_changed`; Claude Code reloads the list in an interactive session. While the port is closed, each check is one TCP connect, with no process start.
+- A call whose connection fails or whose upstream disappears after the request was sent returns an error that says the outcome is unknown (every 2 s a running call probes the upstream; a long call on a live upstream is not cut). The proxy does not send it again, because a FreeCAD tool may have run. A call that the real server rejected because its session ended (for example FreeCAD restarted) is sent again once on a new session.
 
 ## Helpers in the container
 

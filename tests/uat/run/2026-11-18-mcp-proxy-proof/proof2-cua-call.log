@@ -1,0 +1,12 @@
+initialize ok in 0.62s; tools.listChanged=True
+tools/list ok at 0.66s: 60 tools
+  list_apps, list_windows, get_window_state, verify_state, launch_app, kill_app, bring_to_front, set_window_frame
+
+✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   Update with: cua-driver update
+   Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+
+[2m2026-11-18T08:09:57.891411Z[0m [33m WARN[0m [2mplatform_linux::overlay[0m[2m:[0m X11 overlay: root reads cannot see this window's own pixels; save-unders will be served without readback confirmation
+call list_windows in 1.88s isError=False
+  structuredContent keys: ['windows']
+  text: Found 5 windows: |   [xid=37748776] pid=Some(562) "Desktop" 1600x1000+0+0 |   [xid=23068765] pid=Some(22) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=25165827] pid=Some(496) "xfce4-panel" 1600x27+0+0 |   [xid=25165840] pid=Some(496) "xfce4-panel" 306x3+647+997 |   [xid=25165844] pid=Some(496) "xfce4-panel" 306x49+647+1069
