@@ -4,12 +4,12 @@ Goal: correct the behaviour found by the first full UAT run and prove Gate 1 gre
 Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-7b, 10-9, 10-10. Gate 1 fixes from run 2026-10-23-02 — `84c8e07`..`fab7ba6`.
 In progress: 10-8 planning (planner `plan-10-8`, report `_bmad-output/implementation-artifacts/plan-10-8.md`).
 Remaining: 10-8 — new UAT Gate 1 run in the container, includes the weekly `canary` fix on `main` (decision 19).
-Branch / head: integration `fix/uat-gate-1-failures` at `6dd8bce` (merge of `feat/mcp-cache-proxy`, decision 27). `origin` is at `031d8e8`: 10 commits not pushed.
+Branch / head: integration `fix/uat-gate-1-failures` at `d676505` (merge of 10-8-f). `origin` is at `031d8e8`: not pushed (decision 28).
 Blockers: none for 10-8.
 Open decisions: push of `fix/uat-gate-1-failures`; 10-8 plan; autonomy contract for 10-8.
 Canary cause (leader read, run `43894158176`, 2026-11-16): job `canary-1_2-dev`, step `mamba-org/setup-micromamba@v2`, `critical libmamba Could not solve for environment specs`. Same job failed on 10-26, 11-02, 11-09. Not yet analysed past this line.
 Confirmed by the user: preset `anthropic-balanced`, integration branch `fix/uat-gate-1-failures` (decision 20).
-Agents alive: `plan-10-8`. Container `fcb-desktop` stopped.
+Agents alive: `builder-10-8-e` (worktree `D:\Work\Personal\Sources\fcb-10-8-e`, branch `story/10-8-e-canary-dev-freecad`), `verifier-10-8-e`. Shut down: `plan-10-8`, `builder-10-8-f`, `verifier-10-8-f`, `redteam-10-8-f`, `redteam-10-8-e`. Slices: 10-8-f DONE, merged at `d676505`. 10-8-e at `72488ba` (fix round E4), verifier re-run pending. Next: revise `spec-10-8-d` for the container (decision 36), then the Gate 1 run. 10-8-d revision waits on the 10-8-f merge; frozen lines approved (decision 36).
 Updated: 2026-11-18 at `6dd8bce`
 
 ## Final report, Story 10-10 (2026-11-18)
