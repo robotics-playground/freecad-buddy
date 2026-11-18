@@ -43,7 +43,7 @@ listener carries the non-string-`doc` guard and the suspect-document logic
 **Priority**: Critical
 **Design Ref**: `data-contracts-design.md` §3 (status), `verification-design.md` §6.3 (fault detection)
 
-**Given** no stale H1 server holds the fixtures — verify: no `freecad_buddy.hosts.main` process is running  
+**Given** no stale H1 server holds the fixtures — verify: `docker exec -u cua fcb-desktop sh -c "pgrep -fc 'hosts.main serve --transport stdi[o]|hosts.main serve --mode inl[i]ne|hosts.headless.worke[r]'"` prints `0` (an H1 server runs `serve --mode inline --transport stdio`, in either flag order, with a `hosts.headless.worker` child; the GUI proxy, `serve --mode rpc --transport http`, is a `freecad_buddy.hosts.main` process too and is expected)  
 **And** a golden model is open in the GUI so the closing visual has a subject — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the model is framed, so the before and after images share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the untouched GUI window is captured after that fit — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-01-before.png"}' | "$FCB_CUA" get_window_state`  

@@ -1933,3 +1933,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-10-uat-testcases-in-container.md`
   summary: `cua-driver` 0.28.1 exits 0 on a tool error (dead pid, missing `window_id`) and ignores bad JSON on stdin; `fcb_paths.sh` maps the repo root with no left boundary (no payload has that form). Steps are judged by the printed text (`test-plan.md` §6).
   evidence: red team `redteam-10-10.md`, "Not reproduced".
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-f-uat-testcase-defects.md`
+  summary: `tests/uat/runner/scenario.py` validation accepts a control character in a scenario `regex`, so a JSON `\b` written for a word boundary compiles and the check never matches.
+  evidence: `scenario.py:180-184` only calls `re.compile`; `tc-08-04.json` carried the defect and failed every runner run. The committed files are guarded by a pytest case added in 10-8-f; the runner still accepts such a regex in any other file. Unblock: a story that may edit runner code adds the reject in `scenario.py`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-f-uat-testcase-defects.md`
+  summary: `mcp-tools-design.md:249` says the `query_tree_summary` tree reaches the client as `content[1]` with `structured_content` holding counts, but §1.3 (`:60`) says the tool is text-only with no `structuredContent`.
+  evidence: code wins (`mcp_server.py:127-138` `_plain_text`); the next test-case author can read `:249` and restore a `structured_content.shown` reader. Unblock: a design-document correction approved by the leader.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-f-uat-testcase-defects.md`
+  summary: TC-09 `:313` and TC-12 `:659`, `:660` read `shown`, `truncated` and `matches` of `query_tree_summary` as fields, but the tool is text-only (`mcp-tools-design.md:60`); `truncated` shows only as `, truncated` in the `OK:` line. TC-09 `:314` already reads the `OK:` line but labels the count `<M> shown`, where the TC-02 readers use `<S> shown` and `<M> matches`.
+  evidence: same reader defect as TC-02-05. Run 2026-10-24-01 graded these scenarios PASS on the text reading, so no failure is logged. Unblock: a test-case slice that rewrites each reader to the `OK:` line, with the live check of 10-8-f.

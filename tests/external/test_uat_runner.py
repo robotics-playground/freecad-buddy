@@ -1218,6 +1218,34 @@ def test_Should_validate_every_file_When_the_committed_scenarios_are_read():
     assert any(check for item in items for check in item["expect"])
 
 
+def _strings_of(value):
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for inner in value.values():
+            yield from _strings_of(inner)
+    elif isinstance(value, list):
+        for inner in value:
+            yield from _strings_of(inner)
+
+
+def test_Should_hold_no_control_character_in_a_string_When_the_committed_scenarios_are_decoded():
+    # Arrange
+    paths = sorted(SCENARIO_DIR.glob("*.json"))
+
+    # Act
+    offenders = [
+        (path.name, text)
+        for path in paths
+        for text in _strings_of(json.loads(path.read_text(encoding="utf-8")))
+        if any(ord(character) < 32 and character not in "\n\r\t" for character in text)
+    ]
+
+    # Assert
+    assert paths
+    assert offenders == []
+
+
 def test_Should_name_a_heading_of_its_test_case_When_a_committed_scenario_is_read():
     # Arrange
     items = scenario.load_all([SCENARIO_DIR])
