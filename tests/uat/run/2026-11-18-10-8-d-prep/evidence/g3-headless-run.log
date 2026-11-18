@@ -1,0 +1,21 @@
+0
+  g3-fault-plan-blind-hole-made-through                DETECTED       
+  g3-fault-plan-control-equivalent-step-order          PASS_CLEAN     
+  g3-fault-plan-control-faithful-mounting-plate        PASS_CLEAN     
+  g3-fault-plan-control-named-datum-honoured           PASS_CLEAN     
+  g3-fault-plan-control-tolerance-edge-hole            PASS_CLEAN     
+  g3-fault-plan-datum-origin-swapped                   DETECTED       
+  g3-fault-plan-extra-unrequested-pocket               DETECTED       
+  g3-fault-plan-hole-on-wrong-face                     DETECTED       
+  g3-fault-plan-mirrored-hole-pattern                  DETECTED       
+  g3-fault-plan-missing-bolt-holes                     DETECTED       
+  g3-fault-plan-pocket-before-pad                      DETECTED       
+  g3-fault-plan-radius-for-diameter                    DETECTED       
+  g3-fault-plan-wrong-hole-diameter                    DETECTED       
+  g3-fault-plan-wrong-plate-thickness                  DETECTED       
+  planted=10 detected=10 controls=14 flagged=0 sensitivity=1.000 false_alarm=0.000
+  evidence: /tmp/g3r/benchmarks/gate-artifacts/g3/g3r-prep-1.1.4/G3.E.3.1.1.x.json
+  frames-check: OK vs benchmarks/g3/fault-injection/frames-reference.json
+  validators.yaml not written
+exit 0
+seconds 17

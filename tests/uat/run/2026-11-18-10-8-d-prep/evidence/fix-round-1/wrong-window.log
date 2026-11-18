@@ -1,0 +1,3 @@
+g3-fault-plan-control-faithful-mounting-plate control OK None None fit: {"error": "no Button labelled 'Fit All' in snapshot", "count": null} []
+NOT RUN (a GUI step failed): g3-fault-plan-control-faithful-mounting-plate control
+exit 1

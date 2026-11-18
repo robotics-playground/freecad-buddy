@@ -1,0 +1,3 @@
+g3-fault-plan-blind-hole-made-through planted SPEC_FAILED DETECTED None None ['assert.expect_volume', 'assert.hole_through']
+g3-fault-plan-blind-hole-made-through reverted OK None None None []
+exit 0 seconds 20

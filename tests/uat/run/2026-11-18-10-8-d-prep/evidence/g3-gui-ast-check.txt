@@ -1,0 +1,2 @@
+tests/uat/g3-gui/g3_gui_replay.py {'gui': 'same', 'replay': 'same', 'build': 'CHANGED', 'main': 'CHANGED'} new: ['gui_error']
+tests/uat/g3-gui/gui.py {'_ids': 'same', '_cua': 'CHANGED', '_snapshot': 'same', '_click_label': 'CHANGED', 'shot': 'CHANGED', 'main': 'CHANGED'} new: ['_container_path']

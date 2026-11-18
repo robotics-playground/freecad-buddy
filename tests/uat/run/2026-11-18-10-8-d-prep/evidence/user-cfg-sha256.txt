@@ -1,0 +1,3 @@
+baseline (epic-10-decisions.md decision 8): b89a97711941619bb0ba74ae04fb888025e82f49ff48174fbebb42aed28d85a0
+after S0, headless proof and GUI proof: b89a97711941619bb0ba74ae04fb888025e82f49ff48174fbebb42aed28d85a0
+equal: yes

@@ -1,0 +1,2 @@
+paths with heldout: 0
+/tmp/g3r/benchmarks: __init__.py __pycache__ _registry g0 g1 g2 g3 gate-artifacts harness runner.py  /tmp/g3r/benchmarks/gate-artifacts: g0 g1 g2 g3 
