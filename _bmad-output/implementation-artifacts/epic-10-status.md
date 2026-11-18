@@ -2,14 +2,15 @@
 
 Goal: correct the behaviour found by the first full UAT run and prove Gate 1 green (Story 10.8) before Epic 4 resumes.
 Done: 10-1, 10-2, 10-3, 10-4, 10-5, 10-6a, 10-6, 10-7, 10-7b, 10-9, 10-10. Gate 1 fixes from run 2026-10-23-02 — `84c8e07`..`fab7ba6`.
-In progress: none. The leader stopped at the decision-22 stop point (10-10 merged).
-Remaining: 10-8 — new UAT Gate 1 run in the container, includes the weekly `canary` fix on `main` (decision 19). Needs planning.
-Branch / head: integration `fix/uat-gate-1-failures` = merge of `story/10-10-uat-testcases-in-container` (Story head `498b53d` plus the leader-record commit). `origin` is at `031d8e8`: the 10-10 merge is not pushed (decision 21).
+In progress: 10-8 planning (planner `plan-10-8`, report `_bmad-output/implementation-artifacts/plan-10-8.md`).
+Remaining: 10-8 — new UAT Gate 1 run in the container, includes the weekly `canary` fix on `main` (decision 19).
+Branch / head: integration `fix/uat-gate-1-failures` at `6dd8bce` (merge of `feat/mcp-cache-proxy`, decision 27). `origin` is at `031d8e8`: 10 commits not pushed.
 Blockers: none for 10-8.
-Open decisions: push of the 10-10 merge; 10-8 plan (canary cause not yet read).
+Open decisions: push of `fix/uat-gate-1-failures`; 10-8 plan; autonomy contract for 10-8.
+Canary cause (leader read, run `43894158176`, 2026-11-16): job `canary-1_2-dev`, step `mamba-org/setup-micromamba@v2`, `critical libmamba Could not solve for environment specs`. Same job failed on 10-26, 11-02, 11-09. Not yet analysed past this line.
 Confirmed by the user: preset `anthropic-balanced`, integration branch `fix/uat-gate-1-failures` (decision 20).
-Agents alive: none (builder-10-10, verifier-10-10 shut down; redteam-10-10 shut down earlier). Container `fcb-desktop` stopped. Computer stays on (decision 22).
-Updated: 2026-11-18 at `498b53d`
+Agents alive: `plan-10-8`. Container `fcb-desktop` stopped.
+Updated: 2026-11-18 at `6dd8bce`
 
 ## Final report, Story 10-10 (2026-11-18)
 
