@@ -1,0 +1,46 @@
+16:41:15 +    0.0s === live driver v2 (0eae6f8)
+16:41:15 +    0.6s [freecad-buddy-docker] initialize 0.62s, tools/list 0.64s -> 46 tools
+16:41:16 +    1.3s [cua-driver-docker] initialize 0.62s, tools/list 0.64s -> 60 tools
+16:41:17 +    2.6s [freecad-buddy-docker] P1 container down: query_capabilities 1.4s isError=True structured=no text=freecad-buddy-docker is not reachable: the upstream does not answer its probe (the container or the server in it is not running). The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build 
+16:41:18 +    3.2s [cua-driver-docker] P1 container down: list_windows 0.5s isError=True structured=no text=cua-driver-docker is not reachable: the upstream does not answer its probe (the container or the server in it is not running). The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build | 2
+16:41:48 +   33.2s C3 live: 30s container down, 458 samples, docker processes spawned under proxies: 0 {}
+16:41:48 +   33.2s C3 live: process tree under driver now: ['uv.exe:1428', 'uv.exe:27788', 'conhost.exe:31704', 'python.exe:30760', 'conhost.exe:11732', 'python.exe:32156', 'python.exe:20540', 'python.exe:1440']
+16:41:48 +   33.2s $ uv run python scripts/build_addon.py --release
+16:41:49 +   34.6s   exit=0 addon zip written to D:\Work\Personal\Sources\freecad-buddy\dist\FreeCADBuddy-0.1.1.zip | Building wheel... | Successfully built dist\freecad_buddy-0.1.1-py3-none-any.whl
+16:41:49 +   34.6s $ docker compose -f tests/close-loop/docker/compose.yaml up -d --build
+16:42:08 +   53.0s   exit=0  Container fcb-desktop Creating  |  Container fcb-desktop Created  |  Container fcb-desktop Starting  |  Container fcb-desktop Started
+16:42:09 +   54.3s fcb-freecad start right after compose up: exit=0 'fcb-freecad: started; log /tmp/freecad.log\nfcb-session-env: no xfce4-session is running; the desktop has not started'
+16:42:12 +   56.8s fcb-freecad start attempt 1: exit=1 'fcb-freecad: FreeCAD already running: 34'
+16:42:22 +   67.0s fcb-freecad start attempt 3: exit=0 'fcb-freecad: started; log /tmp/freecad.log\nfcb-session-env: no xfce4-session is running; the desktop has not started'
+16:43:33 +  138.4s healthz ready: {'service': 'freecad-buddy-mcp-proxy', 'freecad_pid': 242, 'session_id': '8d39e5b422b6a105'}
+16:43:34 +  138.8s [freecad-buddy-docker] P2 container up, same proxy: query_capabilities 0.5s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
+16:43:34 +  139.0s [cua-driver-docker] P2 container up, same proxy: list_windows 0.1s isError=False structured=yes text=Found 5 windows: |   [xid=37748776] pid=Some(777) "Desktop" 1600x1000+0+0 |   [xid=6291549] pid=Some(242) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=18874371] pid=Some(693) "xfce4-panel" 1600x27+0+0 |   [xid=18874384] pid=Some(693) "xfce4-panel" 306x3+647+997 |   [xid=18874388] pid=Some(693) "xfce4-pane
+16:43:34 +  139.6s P5 document_create isError=False doc=fcb-doc:Ax6y1T6CK3X__Qiq1DGkjw keys=['schema', 'status', 'detail', 'structured_content', 'text']
+16:44:00 +  164.8s P5 script_exec sleep 25 s on FreeCAD main thread: 25.2s isError=False text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"doc":"fcb-doc:Ax6y1T6CK3X__Qiq1DGkjw","stdout":"","value_repr":"'slept 25'","fingerprint_after":null},"text":"doc: 
+16:44:00 +  165.4s P5 host healthz during the call: 50 samples, slowest 0.032s, not-ready samples=0
+16:44:00 +  165.5s [freecad-buddy-docker] P3a warm call before stop: query_capabilities 0.0s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
+16:44:00 +  165.5s $ docker exec -u cua fcb-desktop fcb-freecad stop
+16:44:05 +  170.1s   exit=0 fcb-freecad: stopped
+16:44:05 +  170.2s [freecad-buddy-docker] P3b call right after fcb-freecad stop: query_capabilities 0.0s isError=True structured=no text=freecad-buddy-docker is not reachable: the upstream does not answer its probe (the container or the server in it is not running). The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build 
+16:44:05 +  170.2s [freecad-buddy-docker] P3b2 second call right after: query_capabilities 0.0s isError=True structured=no text=freecad-buddy-docker is not reachable: the upstream does not answer its probe (the container or the server in it is not running). The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build 
+16:44:06 +  170.8s fcb-freecad start attempt 1: exit=0 'fcb-freecad: started; log /tmp/freecad.log'
+16:44:21 +  186.0s healthz ready: {'service': 'freecad-buddy-mcp-proxy', 'freecad_pid': 1251, 'session_id': '8429a17db89ce4e0'}
+16:44:26 +  191.4s $ docker exec -u cua fcb-desktop fcb-freecad stop
+16:44:47 +  212.1s   exit=0 fcb-freecad: window close timed out; killing 1251
+16:44:47 +  212.1s P6 FreeCAD stopped during script_exec: answered after 25.8s isError=False text='{"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"doc":"fcb-doc:bQ54E9nXehdiSAnTBbIMFA","stdout":"","value_repr":"1","fingerprint_after":null},"text":"doc: fcb-doc:bQ54E9nXehdiSAnTBbIMF'
+16:44:47 +  212.3s fcb-freecad start attempt 1: exit=0 'fcb-freecad: started; log /tmp/freecad.log'
+16:44:52 +  217.3s healthz ready: {'service': 'freecad-buddy-mcp-proxy', 'freecad_pid': 1521, 'session_id': 'eabe77c3c3c00fa7'}
+16:44:52 +  217.6s [freecad-buddy-docker] P3d after FreeCAD restart, same proxy: query_capabilities 0.3s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
+16:44:52 +  217.6s [cua-driver-docker] P3d after FreeCAD restart, same proxy: list_windows 0.0s isError=False structured=yes text=Found 5 windows: |   [xid=37748776] pid=Some(777) "Desktop" 1600x1000+0+0 |   [xid=6291554] pid=Some(1521) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=18874371] pid=Some(693) "xfce4-panel" 1600x27+0+0 |   [xid=18874384] pid=Some(693) "xfce4-panel" 306x3+647+997 |   [xid=18874388] pid=Some(693) "xfce4-pan
+16:44:52 +  217.6s [freecad-buddy-docker] notifications seen: []
+16:44:52 +  217.6s [cua-driver-docker] notifications seen: []
+16:44:52 +  217.6s === done (clients are left for process exit)
+16:45:19 +   6.1s P7 FreeCAD hard-killed during a 40 s script_exec (pkill exit=0)
+16:45:19 +   6.1s P7 answered 0.0s after the kill: isError=True text='{"schema":"fcb.result-envelope/1","status":"WORKER_CRASHED","detail":{"code":"WORKER_CRASHED","message":"listener connection dropped","data":{"rpc":"unreachable"}},"structured_content":{},"text":""}'
+16:45:20 +   6.2s P7 next call: isError=True text='{"schema":"fcb.result-envelope/1","status":"WORKER_CRASHED","detail":{"code":"WORKER_CRASHED","message":"the pinned listener (FreeCAD pid 1521) is gone","data":'
+16:46:05 +   6.3s P8 in-container MCP proxy hard-killed during a 40 s script_exec (pkill exit=2)
+16:46:30 +  31.3s P8 answered 25.0s after the kill: isError=True text='{"schema":"fcb.result-envelope/1","status":"TIMEOUT","detail":{"code":"TIMEOUT","message":"marshaled call timed out","data":{"marshal_timeout":true,"maybe_still_running":true}},"structured_content":{},"text":""}'
+16:46:41 +  41.5s P8 next call: isError=False text='{"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportB'
+16:46:57 +   6.1s P8 in-container MCP proxy hard-killed during a 40 s script_exec (pkill exit=0)
+16:47:00 +   9.1s P8 answered 3.0s after the kill: isError=True text='freecad-buddy-docker lost the connection after the request was sent (the upstream connection ended while the call was running). The tool may or may not have run, so the proxy did not send it again. Check the state first (a query tool for freecad-buddy, a fresh'
+16:47:00 +   9.1s P8 next call: isError=True text='freecad-buddy-docker is not reachable: the upstream does not answer its probe (the container or the server in it is not running). The request was not sent. Star'

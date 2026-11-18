@@ -1,0 +1,23 @@
+16:08:12 HANG transport=stdio: count_hang -> NO ANSWER after 30s (hang)
+16:08:43 HANG transport=http: count_hang -> NO ANSWER after 30s (hang)
+16:08:44 C2 restart: 6 parallel -> ['answered in 0.1s isError=False text=ok', 'answered in 0.1s isError=False text=ok', 'answered in 0.1s isError=False text=ok', 'answered in 0.1s isError=False text=ok', 'answered in 0.1s isError=False text=ok', 'answered in 0.1s isError=False text=ok']
+16:08:44 C2 restart: transports opened during the 6 calls = 1 (1 = one reconnect)
+16:09:24 C2 down for good: 6 parallel -> ['NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)']
+16:10:05 C2 crash mid-flight with 3 slow calls in flight -> ['NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)', 'NO ANSWER after 40s (hang)']
+16:10:13 RETIRE stdio fake pid=5304: in_flight call answered isError=False, alive while in flight=True (want True), alive 2s after=False (want False), connection.in_flight=0 owner.done=True
+16:10:16 RETIRE hung call: fake pid=12340 alive 2s after retire=True, hung call done=False
+16:10:18 RETIRE hung call after cancelling the waiter: alive=False in_flight=0
+16:10:20 RETIRE hung call after explicit _close: alive=False
+16:10:23 C3 refresh_loop 3s at 10ms poll with port closed: transports opened=0 (want 0)
+16:10:23 C3 cua spec probe_port=6901, freecad probe_port=18765
+16:10:23 CACHE garbage: constructor ok, tools/list ok: 0 tools
+16:10:23 CACHE empty: constructor ok, tools/list ok: 0 tools
+16:10:23 CACHE dict: constructor ok, tools/list ok: 0 tools
+16:10:23 CACHE ints: constructor ok, tools/list error: McpError: 1 validation error for Tool
+  Input should be a valid dictionary or instance of Tool [type=model_type, input_value=1, in
+16:10:23 CACHE bad-tool: constructor ok, tools/list error: McpError: 2 validation errors for Tool
+name
+  Field required [type=missing, input_value={'x': 1}, input_type=dict]
+    For further
+16:10:31 LOOP after one failed cache write: refresh_loop DEAD: PermissionError(13, 'simulated: file in use by another process'); write attempts=1; cache exists=False
+16:10:31 CONCURRENT two writers x200 same cache path: errors={'FileNotFoundError': 8, 'PermissionError': 155} final file valid=True

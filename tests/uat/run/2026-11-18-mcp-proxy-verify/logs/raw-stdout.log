@@ -1,0 +1,8 @@
+freecad-buddy-docker: stdout lines=4 non-JSON-RPC=0 [] ids/methods=[1, 2, 4, 3] stderr lines=0 exit=0
+cua-driver-docker: stdout lines=4 non-JSON-RPC=0 [] ids/methods=[1, 2, 3, 4] stderr lines=6 exit=0
+   stderr: 
+   stderr: ✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   stderr:    Update with: cua-driver update
+   stderr:    Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+   stderr: 
+   stderr: [2m2026-11-18T09:22:07.016338Z[0m [33m WARN[0m [2mplatform_linux::overlay[0m[2m:[0m X11 overlay: root reads cannot see this window's own pixels; save-unders will be served without readback con

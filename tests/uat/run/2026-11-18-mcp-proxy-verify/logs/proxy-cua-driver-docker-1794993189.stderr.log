@@ -1,0 +1,6 @@
+2026-11-18 16:16:01,817 upstream not ready: TimeoutError: 
+
+✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   Update with: cua-driver update
+   Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+

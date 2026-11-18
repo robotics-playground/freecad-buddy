@@ -1,0 +1,7 @@
+
+✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   Update with: cua-driver update
+   Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+
+[2m2026-11-18T09:21:36.043748Z[0m [33m WARN[0m [2mplatform_linux::overlay[0m[2m:[0m X11 overlay: root reads cannot see this window's own pixels; save-unders will be served without readback confirmation
+2026-11-18 16:21:36,110 tool list changed: 60 tools, sending tools/list_changed

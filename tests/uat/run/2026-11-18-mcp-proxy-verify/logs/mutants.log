@@ -1,0 +1,20 @@
+M0-none: 11 passed in 8.85s
+M1-drop-structuredContent: 5 failed, 6 passed in 20.12s
+    test_should_pass_structured_content_and_is_error_through_when_upstream_answers
+    test_should_reconnect_and_answer_when_http_session_is_lost[session-terminated-reply]
+    test_should_reconnect_and_answer_when_http_session_is_lost[liveness-ping]
+    test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session
+    test_should_report_unknown_outcome_and_not_resend_when_stream_breaks_after_send
+M2-resend-after-connection-closed: 1 failed, 10 passed in 19.86s
+    test_should_report_unknown_outcome_and_not_resend_when_stream_breaks_after_send
+M3-no-retry-on-session-terminated: 2 failed, 9 passed in 8.88s
+    test_should_reconnect_and_answer_when_http_session_is_lost[session-terminated-reply]
+    test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session
+M4-no-port-probe: 1 failed, 10 passed in 8.42s
+    test_should_not_start_a_transport_when_upstream_port_is_closed
+M5-no-list-changed: 1 failed, 10 passed in 9.49s
+    test_should_rewrite_cache_and_send_list_changed_when_upstream_list_changes
+M6-no-reconnect-lock: 11 passed in 11.47s
+M7-close-with-calls-in-flight: TIMEOUT after 300s (a test hung = mutant detected by hang)
+M8-no-liveness-ping: 11 passed in 8.51s
+exit 0
