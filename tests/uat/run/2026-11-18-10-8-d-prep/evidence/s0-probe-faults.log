@@ -1,0 +1,10 @@
+DETECTED    wrong-visibility: [{"field": "documents.box_10_20_30.objects.Box.visibility", "expected": true, "observed": false}]
+DETECTED    wrong-volume: [{"field": "documents.box_10_20_30.objects.Box.volume", "expected": 6000, "observed": 6200.0}]
+DETECTED    modified-flag: [{"field": "documents.box_10_20_30.modified", "expected": false, "observed": true}]
+DETECTED    wrong-active-document: [{"field": "active_document", "expected": "box_10_20_30", "observed": "Other"}]
+DETECTED    clipped-view: [{"field": "view.clipped", "expected": false, "observed": true}]
+CLEAN       clean: []
+CLEAN       clean-queried-twice: []
+detected 5/5
+false alarms 0/2
+exit 0
