@@ -1,0 +1,121 @@
+ Image fcb-desktop:local Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 708B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 8.19kB 0.1s
+#2 transferring dockerfile: 8.19kB 0.1s done
+#2 DONE 0.4s
+
+#3 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#3 DONE 2.1s
+
+#4 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#4 CACHED
+
+#5 [context addon] load .dockerignore
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/trycua/cua-xfce@sha256:e188a008084e1034f5ff003e7983c58596d9c0e47adf5c34078b362aad2a57e7
+#6 ...
+
+#5 [context addon] load .dockerignore
+#5 transferring addon: 2B 0.0s done
+#5 DONE 0.3s
+
+#6 [internal] load metadata for docker.io/trycua/cua-xfce@sha256:e188a008084e1034f5ff003e7983c58596d9c0e47adf5c34078b362aad2a57e7
+#6 DONE 3.9s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 2B 0.0s done
+#7 DONE 0.2s
+
+#8 [context addon] load from client
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 DONE 0.0s
+
+#10 [qt-build 1/5] FROM docker.io/trycua/cua-xfce@sha256:e188a008084e1034f5ff003e7983c58596d9c0e47adf5c34078b362aad2a57e7
+#10 resolve docker.io/trycua/cua-xfce@sha256:e188a008084e1034f5ff003e7983c58596d9c0e47adf5c34078b362aad2a57e7
+#10 resolve docker.io/trycua/cua-xfce@sha256:e188a008084e1034f5ff003e7983c58596d9c0e47adf5c34078b362aad2a57e7 0.4s done
+#10 DONE 0.4s
+
+#9 [internal] load build context
+#9 transferring context: 489B 0.1s done
+#9 DONE 0.8s
+
+#8 [context addon] load from client
+#8 transferring addon: 301.05kB 0.6s done
+#8 DONE 1.1s
+
+#11 [stage-1  6/15] RUN /tmp/swap-qt-gui.sh /tmp/qt-out/libQt6Gui.so.6.8.3 /opt/freecad/usr/lib /opt/qt-original  && /tmp/swap-qt-gui.sh /tmp/qt-out/libQt6XcbQpa.so.6.8.3 /opt/freecad/usr/lib /opt/qt-original  && rm -r /tmp/qt-out /tmp/swap-qt-gui.sh
+#11 CACHED
+
+#12 [stage-1  3/15] RUN curl -fsSL -o /tmp/freecad.AppImage       "https://github.com/FreeCAD/FreeCAD/releases/download/1.1.4/FreeCAD_1.1.4-Linux-x86_64-py311.AppImage"  && echo "f6dc6ba676e5ac96a565ebc8d657232f94c6158e85b4352141bd1a46f6b43434  /tmp/freecad.AppImage" | sha256sum -c -  && chmod +x /tmp/freecad.AppImage  && cd /opt && /tmp/freecad.AppImage --appimage-extract >/dev/null  && mv /opt/squashfs-root /opt/freecad  && rm /tmp/freecad.AppImage
+#12 CACHED
+
+#13 [qt-build 4/5] RUN cmake -G Ninja -S /src -B /build       -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON       -DQT_BUILD_TESTS=OFF -DQT_BUILD_EXAMPLES=OFF       -DFEATURE_vulkan=ON -DFEATURE_egl=ON -DFEATURE_xcb=ON -DFEATURE_xcb_xlib=ON       -DFEATURE_xkbcommon=ON -DFEATURE_wayland=ON       -DFEATURE_accessibility_atspi_bridge=ON  && cmake --build /build --target Gui  && mkdir /out  && cp -L /build/lib/libQt6Gui.so.6.8.3 /out/libQt6Gui.so.6.8.3  && patchelf --set-rpath '$ORIGIN/.:$ORIGIN' /out/libQt6Gui.so.6.8.3  && strip --strip-unneeded /out/libQt6Gui.so.6.8.3
+#13 CACHED
+
+#14 [qt-build 2/5] RUN apt-get update  && apt-get install -y --no-install-recommends       build-essential cmake ninja-build perl python3 patchelf ca-certificates curl xz-utils       pkg-config libatspi2.0-dev libdbus-1-dev libglib2.0-dev libfontconfig-dev libfreetype-dev       libharfbuzz-dev libpng-dev zlib1g-dev libicu-dev libgl-dev libegl-dev libvulkan-dev       libxkbcommon-dev libx11-dev libx11-xcb-dev libxrender-dev libxi-dev libxext-dev       libxkbcommon-x11-dev libxcb1-dev libxcb-glx0-dev libxcb-keysyms1-dev libxcb-image0-dev       libxcb-shm0-dev libxcb-icccm4-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-shape0-dev       libxcb-randr0-dev libxcb-render-util0-dev libxcb-util-dev libxcb-xinerama0-dev       libxcb-xkb-dev libxcb-cursor-dev libxcb-render0-dev libxcb-present-dev libxcb-dri3-dev       libwayland-dev libglx-dev libdrm-dev libgbm-dev  && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [stage-1  2/15] RUN apt-get update  && apt-get install -y --no-install-recommends at-spi2-core libgl1 libglu1-mesa libegl1 libopengl0  && rm -rf /var/lib/apt/lists/*
+#15 CACHED
+
+#16 [qt-build 3/5] RUN curl -fsSL -o /tmp/qtbase.tar.xz       "https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtbase-everywhere-src-6.8.3.tar.xz"  && echo "56001b905601bb9023d399f3ba780d7fa940f3e4861e496a7c490331f49e0b80  /tmp/qtbase.tar.xz" | sha256sum -c -  && mkdir /src  && tar -xJf /tmp/qtbase.tar.xz -C /src --strip-components=1  && rm /tmp/qtbase.tar.xz
+#16 CACHED
+
+#17 [stage-1 11/15] COPY supervisor/ /etc/supervisor/conf.d/
+#17 CACHED
+
+#18 [stage-1  4/15] COPY --from=qt-build /out/ /tmp/qt-out/
+#18 CACHED
+
+#19 [stage-1 10/15] COPY --chmod=0755 bin/ /usr/local/bin/
+#19 CACHED
+
+#20 [stage-1  7/15] COPY requirements-site.txt /tmp/requirements-site.txt
+#20 CACHED
+
+#21 [stage-1  9/15] RUN curl -fsSL -o /tmp/cua-driver.tar.gz       "https://github.com/trycua/cua/releases/download/cua-driver-rs-v0.28.1/cua-driver-rs-0.28.1-linux-x86_64-binary.tar.gz"  && echo "71aa92533de90a68a0a2af930243f1770d23e45b896b57d67a1763da4bfaeaf7  /tmp/cua-driver.tar.gz" | sha256sum -c -  && mkdir -p /opt/cua-driver  && tar -xzf /tmp/cua-driver.tar.gz -C /opt/cua-driver cua-driver cua-cursor-theme  && ln -sf /opt/cua-driver/cua-driver /usr/local/bin/cua-driver  && rm /tmp/cua-driver.tar.gz
+#21 CACHED
+
+#22 [stage-1 14/15] COPY --from=addon --chown=cua:cua . /tmp/FreeCADBuddy/
+#22 CACHED
+
+#23 [stage-1 12/15] COPY applications/fcb-freecad.desktop /usr/share/applications/fcb-freecad.desktop
+#23 CACHED
+
+#24 [stage-1 13/15] COPY --chown=cua:cua --chmod=0755 applications/fcb-freecad.desktop /home/cua/Desktop/fcb-freecad.desktop
+#24 CACHED
+
+#25 [qt-build 5/5] RUN cmake --build /build --target XcbQpaPrivate  && cp -L /build/lib/libQt6XcbQpa.so.6.8.3 /out/libQt6XcbQpa.so.6.8.3  && patchelf --set-rpath '$ORIGIN/.:$ORIGIN' /out/libQt6XcbQpa.so.6.8.3  && strip --strip-unneeded /out/libQt6XcbQpa.so.6.8.3
+#25 CACHED
+
+#26 [stage-1  5/15] COPY --chmod=0755 swap-qt-gui.sh /tmp/swap-qt-gui.sh
+#26 CACHED
+
+#27 [stage-1  8/15] RUN /opt/freecad/AppRun python -m pip install --no-cache-dir --require-hashes --no-deps       --target /opt/fcb-site -r /tmp/requirements-site.txt  && rm /tmp/requirements-site.txt
+#27 CACHED
+
+#28 [stage-1 15/15] RUN test -n "$(ls /tmp/FreeCADBuddy/wheels/*.whl)"  && moddir="$(fcb-freecad userdir)/Mod"  && mkdir -p "$moddir"  && mv /tmp/FreeCADBuddy "$moddir/FreeCADBuddy"  && test -f "$moddir/FreeCADBuddy/InitGui.py"  && /usr/local/bin/cua-driver telemetry disable
+#28 CACHED
+
+#29 exporting to image
+#29 exporting layers done
+#29 writing image sha256:ccccd43b5b3df8ee1eaaf547643570184c90099415298be0b98bd6cc103dddc4
+#29 writing image sha256:ccccd43b5b3df8ee1eaaf547643570184c90099415298be0b98bd6cc103dddc4 0.2s done
+#29 naming to docker.io/library/fcb-desktop:local
+#29 naming to docker.io/library/fcb-desktop:local 0.2s done
+#29 DONE 0.5s
+
+#30 resolving provenance for metadata file
+#30 DONE 0.0s
+ Image fcb-desktop:local Built 
+ Container fcb-desktop Recreate 
+ Container fcb-desktop Recreated 
+ Container fcb-desktop Starting 
+ Container fcb-desktop Started 

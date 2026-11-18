@@ -1,0 +1,14 @@
+2026-11-18 15:26:52,719 INFO freecad_buddy.hosts.headless.worker: session-start sweep removed 1 leftover temp artifact(s)
+2026-11-18 15:26:55,513 INFO freecad_buddy.hosts.headless: audit log: /tmp/fcb-sweeps/audit.jsonl
+2026-11-18 15:26:55,514 WARNING freecad_buddy.mcp_server: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-11-18 15:26:55,514 WARNING freecad_buddy.mcp_server: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-11-18 15:26:55,514 INFO freecad_buddy.hosts.headless: freecad-buddy headless MCP server starting (stdio)
+2026-11-18 15:26:55,557 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist
+2026-11-18 15:26:55,620 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: NoSuchObject
+2026-11-18 15:26:55,643 INFO freecad_buddy.dispatch: INVALID_INPUT: export supports a single object; got multiple
+2026-11-18 15:26:55,752 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale export_id: fcb-export:bogus
+2026-11-18 15:26:57,455 INFO freecad_buddy.dispatch: INVALID_INPUT: export_id fcb-export:J_0iq-eufAW01_dn0uuHIw is not a step export
+2026-11-18 15:27:00,746 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown or stale document handle: fcb-doc:hXj2SqM7N50FJVgzLDhRYA
+2026-11-18 15:27:00,766 INFO freecad_buddy.dispatch: INVALID_INPUT: document_open failed for '/tmp/fcb-sweeps/nope-missing.FCStd': File '/tmp/fcb-sweeps/nope-missing.FCStd' does not exist!
+2026-11-18 15:27:00,943 INFO freecad_buddy.hosts.headless: MCP client closed stdin; stopping the headless worker
+2026-11-18 15:27:00,943 INFO freecad_buddy.rpc_listener: client closed the connection

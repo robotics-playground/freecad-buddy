@@ -1,0 +1,17 @@
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+script_exec listed True
+## open D elapsed=0.02 isError= False
+    {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:xBGDjj_zo69F_Fa_26vWhw", "name": "box_10_20_30", "label": "box-10-20-30", "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"}, "text": "Opened box-10-20-30 -> fcb-doc:xBGDjj_zo69F_Fa_26vWhw."}
+## open E elapsed=0.03 isError= False
+    {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"doc": "fcb-doc:kW9tyjPoy0y1HvHLIqoDIQ", "name": "cylinder_r5_h20", "label": "cylinder-r5-h20", "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"}, "text": "Opened cylinder-r5-h20 -> fcb-doc:kW9tyjPoy0y1HvHLIqoDIQ."}
+worker pid 20878 cmd /opt/freecad/usr/bin/python -m freecad_buddy.hosts.headless.worker 
+## script_exec D elapsed=30.04 isError= True
+    {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "the headless worker did not answer script_exec within its 30 s budget; the body may still be running and the document is now suspect: do not blind-retry, run a query_* read first to confirm the document still responds", "data": {"marshal_timeout": true, "maybe_still_running": true}}, "structured_content": {}, "text": ""}
+worker cpu s: 49 54
+## query_object E #1 (t=33.2) elapsed=0.10 isError= True
+    {"schema": "fcb.result-envelope/1", "status": "TIMEOUT", "detail": {"code": "TIMEOUT", "message": "not dispatched: the session is quarantined while a timed-out script_exec call still runs in the headless worker; call again after it returns", "data": {"quarantined": true}}, "structured_content": {}, "text": ""}
+## query_object E #2 (t=65.3) elapsed=0.10 isError= True
+    {"schema": "fcb.result-envelope/1", "status": "WORKER_CRASHED", "detail": {"code": "WORKER_CRASHED", "message": "not dispatched: a timed-out script_exec call has run past twice its 30 s budget in the headless worker; the session recovers on its own if the call returns, else restart the headless host, which discards unsaved open documents", "data": {"quarantined": true}}, "structured_content": {}, "text": ""}
+worker alive after escalation: 20878
+## query_object E #3 (t=85.3) elapsed=0.01 isError= False
+    {"schema": "fcb.result-envelope/1", "status": "OK", "detail": null, "structured_content": {"name": "Cylinder", "label": "Cylinder", "type": "Part::Feature", "properties": {"ExpressionEngine": [], "Label": "Cylinder", "Label2": "", "Placement": "Placement [Pos=(0,0,0), Yaw-Pitch-Roll=(0,0,0)]", "Shape": "<Solid object at 0x559fc33773c0>", "ShapeMaterial": "<Material at 0x559fc25a5760>", "Visibility": true, "_ElementMapVersion": "15.70200.5"}, "error": null}, "text": "error: None\nlabel: Cylinder\nname: Cylinder\nproperties: {8 fields}\ntype: Part::Feature"}

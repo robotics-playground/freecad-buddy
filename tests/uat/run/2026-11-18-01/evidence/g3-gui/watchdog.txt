@@ -1,0 +1,4 @@
+ok   cua-session: cua session 'uat' active
+ok   freecad-window: FreeCAD pid 24818 window ok ('FreeCAD 1.1.4')
+ok   mcp-proxy: MCP proxy on :8765 answered initialize
+ok   temp-hygiene: temp /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp: 0 snapshot dir(s) total, 0 render file(s)

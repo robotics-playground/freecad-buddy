@@ -1,0 +1,4 @@
+frame1: {"jsonrpc": "2.0", "id": 3, "error": {"code": -32002, "message": "handshake required"}}
+frame2: ''
+frame1: {"jsonrpc": "2.0", "id": null, "error": {"code": -32002, "message": "handshake required"}}
+frame2: ''

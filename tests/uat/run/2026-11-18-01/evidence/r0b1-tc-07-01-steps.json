@@ -1,0 +1,239 @@
+[
+ {
+  "name": "open",
+  "mcp": "document_open",
+  "args": {
+   "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:NVnBhyLm90CtvHGwD1W61w",
+    "name": "box_10_20_30",
+    "label": "box-10-20-30",
+    "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+   },
+   "text": "Opened box-10-20-30 -> fcb-doc:NVnBhyLm90CtvHGwD1W61w."
+  }
+ },
+ {
+  "name": "tree",
+  "mcp": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:NVnBhyLm90CtvHGwD1W61w"
+  },
+  "result": {
+   "text": "OK: 1 objects, 1 shown.\nframing: unknown, unavailable, no visible shape-bearing objects to measure\n- [FEATURE] Box",
+   "is_error": false
+  }
+ },
+ {
+  "name": "verify",
+  "mcp": "verify_shape",
+  "args": {
+   "doc": "fcb-doc:NVnBhyLm90CtvHGwD1W61w",
+   "object": "Box",
+   "checks": [
+    {
+     "fn": "expect_volume",
+     "expect": 6000.0,
+     "tol": {
+      "rel": 0.001
+     }
+    },
+    {
+     "fn": "expect_bbox",
+     "expect": [
+      10.0,
+      20.0,
+      30.0
+     ],
+     "tol": {
+      "abs": 0.05
+     }
+    },
+    {
+     "fn": "expect_solid_count",
+     "expect": 1
+    },
+    {
+     "fn": "expect_valid",
+     "expect": true
+    },
+    {
+     "fn": "expect_watertight",
+     "expect": true
+    }
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "object": "Box"
+    },
+    "checks": [
+     {
+      "id": "assert.expect_volume",
+      "measured": 6000.0,
+      "expected": 6000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "|6000.0 - 6000.0| = 0.0 <= 6 mm^3"
+      }
+     },
+     {
+      "id": "assert.expect_bbox",
+      "measured": [
+       10.0,
+       20.0,
+       30.0
+      ],
+      "expected": [
+       10.0,
+       20.0,
+       30.0
+      ],
+      "tolerance": {
+       "abs": 0.05
+      },
+      "passed": true,
+      "detail": {
+       "message": "frame extents [10.0, 20.0, 30.0]; sorted: |10.0 - 10.0| = 0.0 <= 0.05; |20.0 - 20.0| = 0.0 <= 0.05; |30.0 - 30.0| = 0.0 <= 0.05"
+      }
+     },
+     {
+      "id": "shape.solid_count",
+      "measured": 1,
+      "expected": 1,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "solids 1 vs 1"
+      }
+     },
+     {
+      "id": "shape.valid",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "isValid() True vs True"
+      }
+     },
+     {
+      "id": "shape.watertight",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "watertight True vs True"
+      }
+     }
+    ],
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15,
+     "anchor_frame": {
+      "kind": "global",
+      "ref": null,
+      "entity": null,
+      "origin": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "axes": [
+       [
+        1.0,
+        0.0,
+        0.0
+       ],
+       [
+        0.0,
+        1.0,
+        0.0
+       ],
+       [
+        0.0,
+        0.0,
+        1.0
+       ]
+      ],
+      "units": "mm"
+     }
+    },
+    "verdict": "OK"
+   },
+   "text": "Box: shape checks passed (OK).",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "name": "unknown_fn",
+  "mcp": "verify_shape",
+  "args": {
+   "doc": "fcb-doc:NVnBhyLm90CtvHGwD1W61w",
+   "object": "Box",
+   "checks": [
+    {
+     "fn": "expect_genus",
+     "expect": 0
+    }
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown assertion fn: 'expect_genus'",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 219, in verify_shape\n    return registry.with_document(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 220, in <lambda>\n    doc, lambda _h, document: read_shape(document, object, checks, anchor_frame)\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 255, in read_shape\n    raise ValidationError(f\"unknown assertion fn: {fn!r}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown assertion fn: 'expect_genus'\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "name": "fit",
+  "mcp": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:NVnBhyLm90CtvHGwD1W61w"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "box_10_20_30",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'box_10_20_30'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

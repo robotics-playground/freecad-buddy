@@ -1,0 +1,3 @@
+g3-fault-plan-control-faithful-mounting-plate control OK None None None []
+g3-fault-plan-wrong-hole-diameter planted INVALID_INPUT DETECTED None None ['assert.expect_volume', 'assert.hole_diameter', 'assert.distance_between', 'assert.distance_between', 'assert.distance_between', 'assert.distance_between']
+g3-fault-plan-wrong-hole-diameter reverted OK None None None []

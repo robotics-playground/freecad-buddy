@@ -1,0 +1,189 @@
+- id: "1"
+  title: Result text without duplicated long strings
+  description: >-
+    summary_text renders a string longer than 80 characters, or with a newline, as a size
+    signal, so script_exec results carry value_repr and stdout once (T-13, CAP-8).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-13. Change contracts/envelope.py:summary_text only;
+    bespoke summaries stay as they are.
+
+- id: "2"
+  title: Align documents on the role of script_exec and amend AD-5
+  description: >-
+    Amend AD-5 to the observe-only script_exec bracket, give script_exec its own escape-route
+    row in mcp-tools-design.md, correct spec-freecad-buddy/SPEC.md:120, and add the
+    exec.python_error detail code (T-11, CAP-7).
+  spec_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md sections T-11 and T-6. Documents only, no code. Story 13
+    implements the amended AD-5.
+
+- id: "3"
+  title: Server instructions that put typed tools first
+  description: >-
+    The MCP initialize result carries client-neutral instructions listing each tool family and
+    naming script_exec as the route for listed gaps; the script_exec description points to
+    them (T-10, CAP-6).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-10. No client-specific tool-loading text in the server
+    (model agnosticism convention). Keep instructions at or below 250 words.
+
+- id: "4"
+  title: Skill routing to existing typed tools and the full gap list
+  description: >-
+    Skills route bounding box, volume and validity to query_mass_properties and verify_shape;
+    freecad-scripting-idioms holds the full gap list with the accepted traced-outline route;
+    part-sourcing drops the non-existent import path (T-1 step one, T-14, CAP-6).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-1. Each SKILL.md stays at 4 sections and at most
+    1,500 words; run scripts/check_skill_shape.py.
+
+- id: "5"
+  title: Multi-object STEP, 3MF and STL export
+  description: >-
+    export_step, export_3mf and export_stl accept several objects as mcp-tools-design.md 3.5
+    specifies, and verify_export_* checks per-object volumes (T-5, CAP-3).
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-5. Remove the refusal at usecases/exports.py:91-93.
+    UAT in the fcb-desktop container with a three-body document.
+
+- id: "6"
+  title: query_mass_properties for several objects
+  description: >-
+    query_mass_properties takes objects (1 to 50) and adds is_valid and solids to each record
+    (T-2, CAP-1).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-2, query_mass_properties. Additive schema change only.
+
+- id: "7"
+  title: query_interference tool
+  description: >-
+    New read-only tool that measures common volume and minimum distance for object pairs and
+    flags a failed boolean so it never reads as zero overlap (T-2, CAP-1).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-2, query_interference. Add the row and schema to
+    mcp-tools-design.md in the same story.
+
+- id: "8"
+  title: query_section tool
+  description: >-
+    New read-only tool that cuts an object with a plane and returns wire counts, area, length,
+    bounding box and optional capped polylines (T-2, CAP-1).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-2, query_section. Polylines capped at max_points with a
+    truncated flag; no raw dumps.
+
+- id: "9"
+  title: VarSet parameters and query_parameters
+  description: >-
+    New feature_parameters_define creates a VarSet and adds or updates typed properties; the
+    planned query_parameters reads parameters and expression bindings (T-3, CAP-2).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-3. Refuse a parameter named after a unit symbol.
+
+- id: "10"
+  title: feature_set_expression tool
+  description: >-
+    New mutation tool that binds or clears expressions on property paths, batched in one AD-5
+    transaction (T-3, CAP-2).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-3, feature_set_expression. Cover sketch constraint
+    paths and .AttachmentOffset.Base paths in the container UAT.
+
+- id: "11"
+  title: document_object_delete tool
+  description: >-
+    Build the planned delete tool with the dependents rule, Body group handling, undo and
+    preview_dry_run support (T-4, CAP-3).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-4, document_object_delete.
+
+- id: "12"
+  title: Skill routing to the new measure, parameter and delete tools
+  description: >-
+    parametric-patterns, verification-thinking and the code-cad-conversion verification kit
+    route to the tools of stories 6 to 11; the gap list shrinks to match (T-1 step two, CAP-6).
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-1. Each SKILL.md stays at 4 sections and at most
+    1,500 words.
+
+- id: "13"
+  title: script_exec observe-only bracket and error status
+  description: >-
+    script_exec runs in an automatic transaction and returns fingerprint_after, changed and
+    new_errors with no rollback; a Python exception returns INVALID_INPUT exec.python_error
+    (T-6, CAP-4).
+  spec_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-6. Depends on story 2 (AD-5 amendment). Keep the
+    AD-27 timeout quarantine and the 30 s budget unchanged. Handle a script that opens its own
+    transaction.
+
+- id: "14"
+  title: Typed verify_shape check schema
+  description: >-
+    verify_shape checks become a oneOf per fn generated from contracts.ASSERTION_FNS, and an
+    omitted object on a document with several shape objects is refused (T-7, CAP-5).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-7. object stays optional (AD-28 additive).
+
+- id: "15"
+  title: TNP audit accepts expected re-attachment moves
+  description: >-
+    The TNP audit reports PASS when a sketch or datum keeps its support object and mapped
+    element and only its placement follows a driving change (T-8, CAP-5).
+  spec_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-8. Reproduce the datum-follows-sketch case first and
+    write the cause from usecases/tnp_guard.py before any fix.
+
+- id: "16"
+  title: feature_set_parameters writes placement and strings
+  description: >-
+    feature_set_parameters accepts App::PropertyPlacement (Placement, AttachmentOffset) and
+    App::PropertyString including Label (T-4, CAP-3).
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-4, feature_set_parameters. Omitted placement keys keep
+    their value.
+
+- id: "17"
+  title: Part primitive and Part boolean tools
+  description: >-
+    New feature_part_primitive and feature_part_boolean create Part workbench primitives and
+    cut, fuse and common objects under AD-5 (T-9, CAP-9).
+  spec_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-9. Update docs/intent.md phase list and
+    mcp-tools-design.md in the same story.
+
+- id: "18"
+  title: Loft and sweep tools
+  description: >-
+    New feature_loft and feature_sweep create PartDesign additive or subtractive loft and pipe
+    features under AD-5 (T-9, CAP-9).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-9, feature_loft and feature_sweep.
+
+- id: "19"
+  title: Skill routing to Part, loft, sweep and placement tools
+  description: >-
+    code-cad-conversion, design-decomposition and tool-selection route to the tools of stories
+    16 to 18; the gap list shrinks to match (T-1 step three, CAP-6, CAP-9).
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-1. Each SKILL.md stays at 4 sections and at most
+    1,500 words.
+
+- id: "20"
+  title: Usage report and bridge hygiene
+  description: >-
+    scripts/automation/usage_report.py prints the usage-evidence.md tables for a date range;
+    the stale-handle message names document_list; orphan rpc-<pid>.json files are removed at
+    bridge start (T-12, CAP-7).
+  done_checkpoint: true
+  invoke_dev_with: >-
+    Contract: tool-contracts.md section T-12. The report is a dev tool under scripts/, not
+    shipped in the addon. Run it on 2026-10-18..2026-11-18 and check it reproduces the
+    usage-evidence.md totals.

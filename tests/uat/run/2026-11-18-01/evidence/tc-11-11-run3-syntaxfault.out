@@ -1,0 +1,5 @@
+fcb_py.sh: FREECAD_BUDDY_WORKDIR=C:\Users\thuan\AppData\Local\freecad-buddy-workdir looks like a host path
+  File "/repo/tests/uat/run/2026-11-18-01/evidence/tc-11-11-h1client.py", line 28
+    "for g in (0,2): sk.addConstraint(Sketcher.Constraint('Horizontal', g))
+    ^
+SyntaxError: unterminated string literal (detected at line 28)

@@ -1,0 +1,8 @@
+DETECTED    empty-view: pixel samples.box.Box: expected "geometry at screen_center", observed {"point": [100, 70], "rgb": [247, 247, 247], "geometry": false}
+DETECTED    clipped-at-edge: pixel extent.touches_edge: expected false, observed true
+DETECTED    moved-off-sample: pixel samples.box.Box: expected "geometry at screen_center", observed {"point": [100, 70], "rgb": [247, 247, 247], "geometry": false}
+DETECTED    too-small: pixel extent.fraction: expected ">= 0.5", observed 0.2
+CLEAN       flat-background: no finding
+CLEAN       gradient-background: no finding
+detected 4/4
+false alarms 0/2

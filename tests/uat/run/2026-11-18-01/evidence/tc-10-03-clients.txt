@@ -1,0 +1,4 @@
+B valid token
+connect_s=0.001 first_frame_s=0.201 frame={"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "bridge busy: another client session is active"}} next_recv=b''
+C wrong token
+connect_s=0.000 first_frame_s=0.000 frame={"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "auth failed"}} next_recv=b''
