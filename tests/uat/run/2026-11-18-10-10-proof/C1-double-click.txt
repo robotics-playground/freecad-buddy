@@ -1,0 +1,4 @@
+# C1 double click (count 2) pixel on the Sketch row opens it for edit
+in edit before: value_repr":"[4, 8, 'None']","fingerprint_after":null
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+in edit after: value_repr":"[4, 8, '<View provider geometry object at 0x555b76df9970>']","fingerprint_after":null

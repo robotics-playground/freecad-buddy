@@ -1,0 +1,12 @@
+# C1 key names: lower-case f2 / enter / escape at window level
+label before: value_repr":"['Box']"
+f2:
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+enter:
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+label after enter: value_repr":"['BoxEnter']"
+label after undo: value_repr":"['Box']"
+f2 then escape cancels:
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+label after escape: value_repr":"['Box']"

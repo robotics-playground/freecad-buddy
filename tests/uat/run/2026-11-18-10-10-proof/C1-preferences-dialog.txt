@@ -1,0 +1,8 @@
+# C1 modal Preferences dialog opened on a timer; its window, its Cancel button token
+value_repr":"'scheduled'","fingerprint_after":null
+windows: [(37748834, '* Unnamed - FreeCAD 1.1.4'), (37748914, 'Preferences')]
+dialog window 37748914
+elements 1199 [('push button', 'OK'), ('push button', 'Cancel'), ('push button', 'Apply')]
+Cancel token s00000066:1793
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+windows after Cancel: [(37748834, '* Unnamed - FreeCAD 1.1.4')]

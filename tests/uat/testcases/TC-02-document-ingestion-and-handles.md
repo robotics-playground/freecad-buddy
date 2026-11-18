@@ -174,8 +174,8 @@ mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/sphere-r10.
 ```
 **And** the **sphere** document is selected in the FreeCAD tree, so FreeCAD's `ActiveDocument` is B while the queries below target A  
 ```bash
-echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state
-echo '{"pid":<pid>,"window_id":<wid>,"element_token":"<sphere-r10 tree item token>"}' | "$FCB_CUA" click
+echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<pid>,"window_id":<wid>,"x":<sphere-r10 row x>,"y":<sphere-r10 row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
 **And** A and B are queried separately, without changing the GUI selection between calls  
 ```
@@ -237,7 +237,7 @@ mcp query_tree_summary { doc: <handle>, filters: { types: ["PAD"], name_pattern:
 **And** `types` reveals by code or by TypeId — verify: the `types: ["PAD"]` and `types: ["PartDesign::Pad"]` results are the same text, each Pad line sits under its opened ancestors, `structured_content.matches` equals the number of Pads, and every other top-level line stays collapsed  
 **And** `name_pattern` is a regular expression over name and label — verify: every revealed line in the `^Pad` result names an object whose `Name` or `Label` starts with `Pad`  
 **And** filters AND-stack — verify: `types: ["PAD"], name_pattern: "zzz"` returns `matches` `0` and the same tree text as `depth: 1`  
-**And** the `v`/`-` marker follows the Visibility flag — verify: hide the Pad through `cua-driver` (`echo '{"pid":<pid>,"window_id":<wid>,"x":<Pad row x>,"y":<Pad row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click`, then `echo '{"pid":<pid>,"window_id":<wid>,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key`; test-plan §6, "Tree row toggle"), re-run `{ focus: "Body" }`, and the `Pad` line starts `- ` where it started `v ` before  
+**And** the `v`/`-` marker follows the Visibility flag — verify: hide the Pad through `cua-driver` (`echo '{"pid":<pid>,"window_id":<wid>,"x":<Pad row x>,"y":<Pad row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click`, then `echo '{"pid":<pid>,"window_id":<wid>,"key":"space","delivery_mode":"foreground"}' | "$FCB_CUA" press_key`; test-plan §6, "Tree row toggle"), the `Pad` row is under `Body`, so expand `Body` first with a foreground pixel click on its arrow (a row is listed in the snapshot only while its parent is expanded; no `expanded` field exists), re-run `{ focus: "Body" }`, and the `Pad` line starts `- ` where it started `v ` before  
 **And** a retired filter is a schema reject — verify: `mcp query_tree_summary { doc: <handle>, filters: { visible_only: true } }` is rejected by the MCP layer as a protocol error (`isError`, no envelope)  
 **And** an unknown filter key is a schema reject — verify: `mcp query_tree_summary { doc: <handle>, filters: { unknown_filter: true } }` is rejected by the MCP layer as a protocol error (`isError`, no envelope), because the filter object is closed with `additionalProperties: false`  
 **And** *(visual)* the hidden object is restored through `cua-driver` (re-select the tree item and press `Space`) and the model is framed — verify: the route is the Tree row toggle of test-plan §6 (foreground pixel click on the row, then window-level `space`); `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -409,8 +409,8 @@ mcp query_tree_summary { doc: <handle A> }
 ```
 **And** the GUI selection and the active MDI window are changed several times, ending on B. The Windows menu entries expose only `Activates this window`, so B is made active with the `Next` or `Previous` leaf of the Windows menu, read back from the `list_windows` title  
 ```bash
-echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state
-echo '{"pid":<pid>,"window_id":<wid>,"element_token":"<two-box-compound tree item token>"}' | "$FCB_CUA" click
+echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-02-rows.png"}' | "$FCB_CUA" get_window_state
+echo '{"pid":<pid>,"window_id":<wid>,"x":<two-box-compound row x>,"y":<two-box-compound row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 # press the Next leaf of the Windows menu until the list_windows title names two-box-compound (test-plan §6, "Menu route")
 ```
 **And** A's tree is re-read with the same handle, without touching the GUI again  

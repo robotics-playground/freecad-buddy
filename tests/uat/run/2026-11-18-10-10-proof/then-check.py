@@ -112,6 +112,38 @@ NO_KIND_REASONS = {
         "TC-02-document-ingestion-and-handles.md",
         "243",
     ): "restore step: Show All and fit leaf presses, plus the Tree row toggle route named in the clause",
+    (
+        "TC-12-gui-workflows.md",
+        "272",
+    ): "tree rows have no selected field: the document row click is read from the active document and the window title",
+    (
+        "TC-99-ad-conformance-gaps.md",
+        "223",
+    ): "backslash path spelling -> forward slashes of the container path",
+    (
+        "TC-99-ad-conformance-gaps.md",
+        "227",
+    ): "backslash path spelling -> forward slashes of the container path",
+    (
+        "TC-99-ad-conformance-gaps.md",
+        "333",
+    ): "backslash path spelling -> forward slashes of the container path",
+    (
+        "TC-12-gui-workflows.md",
+        "388",
+    ): "undo list read from doc.UndoNames: the toolbar dropdown does not open in the container",
+    (
+        "TC-12-gui-workflows.md",
+        "390",
+    ): "undo enabled read from the Undo leaf or button and UndoNames, not from a dropdown popup",
+    (
+        "TC-12-gui-workflows.md",
+        "395",
+    ): "visual check keeps the before and after captures; the entry label comes from UndoNames (route limitation)",
+    (
+        "TC-12-gui-workflows.md",
+        "442",
+    ): "expand a tree row by a pixel click on its arrow (C1-tree-expand)",
     ("TC-13-gui-mcp-parity.md", "519"): "FreeCAD working directory is /home/cua in the container",
 }
 

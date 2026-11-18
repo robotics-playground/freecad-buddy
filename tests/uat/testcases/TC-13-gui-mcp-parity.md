@@ -347,17 +347,16 @@ Do not save.
 **Given** `box40-hole-r5` is open and `BoxHole` has been made visible with Show All — verify: the tree lines of `mcp query_tree_summary {doc:<handle>}` has a `BoxHole` line starting `v `  
 **And** the geometry is known — verify: `mcp query_mass_properties {doc:<handle>, object:"BoxHole"}` returns `volume` `15214.6` and the 40 x 40 x 10 mm `bbox`  
 
-**When** a shared camera is set through the toolbar, not a keystroke: re-snapshot, press `Standard Views`, re-snapshot, then select the isometric entry by its token from the NEW snapshot  
+**When** a shared camera is set through the toolbar, not a keystroke: re-snapshot, then press the `Isometric` push button by its token (the named views are push buttons labelled `1 Front`, `2 Top`, `3 Right`, `4 Rear`, `5 Bottom`, `6 Left` and `Isometric`)  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<Standard Views Button token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"element_token":"<Isometric push button token from this snapshot>"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-06-menu.png"}' | "$FCB_CUA" get_window_state
 ```
-The submenu label is `Standard Views` (capital V). A viewport `press_key` does not land.
-The `Isometric` leaf of View > Standard Views > Axonometric is the menu route (test-plan §6, "Menu route"). If the
-isometric entry does not appear in the snapshot and the menu route is refused, the Qt popup is not
-a top-level window and cannot be enumerated; in that case record the camera FreeCAD is actually
-showing and compare against the matching MCP camera instead of forcing iso.
+A viewport `press_key` does not land. A token click on the `Standard Views` button opens a popup that is
+not enumerable, so do not use it: the push buttons and the `Isometric` menu leaf (test-plan §6,
+"Menu route") set the camera (measured, `C1-standard-view-buttons.txt`). The camera is read back with
+`script_exec { code: "import FreeCADGui as G; result = G.ActiveDocument.ActiveView.getCameraOrientation().Q" }`.
 **And** the object is framed with the `Fit All` toolbar button  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
@@ -793,14 +792,15 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 echo '{"pid":<PID>,"window_id":<WID>,"x":<BoxHole row x>,"y":<BoxHole row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"window_id":<WID>,"key":"f2","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
-**And** the window is re-snapshotted to find the rename editor element, its whole value set, then committed with `enter`  
+**And** the inline editor's whole text is replaced and committed with `enter`: the editor has no element in the container tree, so everything goes to the window  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-15-editing.png"}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<rename editor token from this snapshot>","value":"BoxHoleRenamed"}' | "$FCB_CUA" set_value
-echo '{"pid":<PID>,"element_token":"<rename editor token from this snapshot>","key":"enter"}' | "$FCB_CUA" press_key
+echo '{"pid":<PID>,"window_id":<WID>,"keys":["ctrl","a"],"delivery_mode":"foreground"}' | "$FCB_CUA" hotkey
+echo '{"pid":<PID>,"window_id":<WID>,"text":"BoxHoleRenamed","delivery_mode":"foreground"}' | "$FCB_CUA" type_text
+echo '{"pid":<PID>,"window_id":<WID>,"key":"Return","delivery_mode":"foreground"}' | "$FCB_CUA" press_key
 ```
-`set_value` replaces a control's whole value; `type_text` would insert at the cursor and could
-append to the existing label.
+`ctrl+a` selects the whole label first, so `type_text` replaces it instead of appending. `type_text`
+reports `delivery_failed` yet the text lands; the new `Label` read over MCP is the verdict.
 **And** the MCP side is read, then reverted with `Ctrl+Z` and read again  
 ```bash
 mcp query_tree_summary {doc:<handle>}

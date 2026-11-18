@@ -1,0 +1,9 @@
+# C1/N2 select a document row: the active document and the window title follow (no 'selected' field)
+before: value_repr":"['Unnamed', []]","fingerprint_after":null title: ['* Unnamed - FreeCAD 1.1.4']
+[('Unnamed', {'h': 18, 'w': 248, 'x': 12, 'y': 203}), ('ArchDetail', {'h': 18, 'w': 248, 'x': 12, 'y': 293})]
+click ArchDetail row (60,152):
+after: value_repr":"['Unnamed', []]","fingerprint_after":null title: ['* Unnamed - FreeCAD 1.1.4']
+tree item fields available:
+['actions', 'depth', 'element_index', 'element_token', 'enabled', 'frame', 'label', 'parent_index', 'role']
+click ArchDetail row (60,242):
+after: value_repr":"['ArchDetail', []]","fingerprint_after":null title: [' ArchDetail - FreeCAD 1.1.4']

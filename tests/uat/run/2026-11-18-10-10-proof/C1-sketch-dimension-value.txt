@@ -1,0 +1,6 @@
+# C1 edit the dimension value: double-click the dimension label (count 2), type, Return
+before: value_repr":"[':40.691492']","fingerprint_after":null
+foreground_unavailable:X11didnotconfirmactivewindowandinputfocuswithinexacttarget0x2400062beforethe400msdeadline(active=0x240008f);noinputwassent
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","escalation":{"reason":"delivery_failed","target":"foreground"},"route":"global_input"}
+foreground_unavailable:X11didnotconfirmactivewindowandinputfocuswithinexacttarget0x2400062beforethe400msdeadline(active=0x240008f);noinputwassent
+after: value_repr":"[':40.691492']","fingerprint_after":null

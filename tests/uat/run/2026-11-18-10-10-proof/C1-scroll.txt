@@ -1,0 +1,13 @@
+# C1 scroll in a long tree (ArchDetail expanded with the asterisk key on its row)
+rows after expand-all: 20 [(203, 'Unnamed'), (221, 'ArchDetail'), (239, 'Section L1')]
+scroll fg at (120,300) down 10:
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+rows after scroll: 25 [(113, 'Wire006'), (131, 'Blocking006'), (149, 'Window glass')]
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+KeyError: 'frame'
+scroll by element_token:
+{"refusal":{"code":"invalid_element_token","message":"element_tokenhasinvalidformat"},"status":"refused"}
+rows after token scroll up: 25 [(113, 'Wire006'), (131, 'Blocking006'), (149, 'Window glass')]
+scroll fg up:
+rows after fg scroll up: 20 [(203, 'Unnamed'), (221, 'ArchDetail'), (239, 'Section L1')]

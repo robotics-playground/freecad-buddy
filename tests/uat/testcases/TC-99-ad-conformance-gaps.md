@@ -202,7 +202,7 @@ working directory. Inside the workdir only `tmp/` exists. It holds one
 temp file is minted there (that part passes, in TC-11-18). There is no `snap/` and no `exports/`,
 and the audit log is outside the workdir (TC-99-06).
 
-**Given** FreeCAD has just been started with the addon loaded and `FREECAD_BUDDY_WORKDIR` unset — verify: the `operator settings:` line in `addon.log` contains `FREECAD_BUDDY_WORKDIR='<FreeCAD user app data>\freecad-buddy\workdir' (default)`  
+**Given** FreeCAD has just been started with the addon loaded and `FREECAD_BUDDY_WORKDIR` unset — verify: the `operator settings:` line in `addon.log` contains `FREECAD_BUDDY_WORKDIR='<FreeCAD user app data>/freecad-buddy/workdir' (default)`  
 **And** a golden model is open as an untouched baseline — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the baseline is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the framed baseline is captured, after that same fit, so both images share a camera — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-99-04-before.png"}' | "$FCB_CUA" get_window_state`  
@@ -220,11 +220,11 @@ mkdir -p "$RUN_DIR/evidence/tc-99-04-A"
 ls -R "$RUN_DIR/evidence/tc-99-04-A"
 ```
 
-**Then** the workdir is named for its session — verify: the workdir path carries a session identifier. **Expected failure: the GUI workdir is the fixed `<FreeCAD user app data>\freecad-buddy\workdir`, shared by every GUI session; only `tmp/FCB_TMP_session_<pid>_<token>/` is per host.**  
+**Then** the workdir is named for its session — verify: the workdir path carries a session identifier. **Expected failure: the GUI workdir is the fixed `<FreeCAD user app data>/freecad-buddy/workdir`, shared by every GUI session; only `tmp/FCB_TMP_session_<pid>_<token>/` is per host.**  
 **And** it contains `snap/` — verify: the subdirectory exists. **Expected failure: absent.**  
 **And** it contains `exports/` — verify: the subdirectory exists. **Expected failure: absent.**  
 **And** it contains `tmp/` — verify: the subdirectory exists. This checkpoint passes; TC-11-18 covers it.  
-**And** it contains the audit log — verify: an audit file exists inside the workdir. **Expected failure: absent; the GUI audit log is `<FreeCAD user app data>\freecad-buddy\audit.jsonl`, beside the workdir, see TC-99-06.**  
+**And** it contains the audit log — verify: an audit file exists inside the workdir. **Expected failure: absent; the GUI audit log is `<FreeCAD user app data>/freecad-buddy/audit.jsonl`, beside the workdir, see TC-99-06.**  
 **And** the headless default does not depend on the working directory — verify: the H1 workdir is not under `A`. **Expected failure: H1 created `A/freecad-buddy-workdir/tmp/FCB_TMP_session_<worker pid>_<token>/` (`documents.py:43`).**  
 **And** the layout exists in source — verify: `grep -rnE '"snap"|"exports"' src/freecad_buddy/usecases/documents.py` returns a match. **Expected failure: it returns nothing.**  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
@@ -315,7 +315,7 @@ falls back to the bare relative name, so its audit log lands in its own working 
 `AuditSink._record` (`src/freecad_buddy/adapters/audit_log.py:51-69`) writes `schema`, `ts`,
 `actor`, `event`, `tool`, `params_digest` and optionally `doc` and `code` — no session field.
 
-**Given** `FREECAD_BUDDY_AUDIT_LOG` is unset and the **Audit log file** preference is empty, so the default paths are exercised — verify: the `operator settings:` line in `addon.log` contains `FREECAD_BUDDY_AUDIT_LOG='<FreeCAD user app data>\freecad-buddy\audit.jsonl' (default)`  
+**Given** `FREECAD_BUDDY_AUDIT_LOG` is unset and the **Audit log file** preference is empty, so the default paths are exercised — verify: the `operator settings:` line in `addon.log` contains `FREECAD_BUDDY_AUDIT_LOG='<FreeCAD user app data>/freecad-buddy/audit.jsonl' (default)`  
 **And** a golden model is open as an untouched baseline — verify: `mcp document_open { path: "<abs>/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the baseline is framed — verify: run Show All, then `mcp view_fit_viewport { doc: "<handle>" }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the framed baseline is captured, after that same fit, so both images share a camera — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-99-06-before.png"}' | "$FCB_CUA" get_window_state`  
@@ -330,7 +330,7 @@ mkdir -p "$RUN_DIR/evidence/tc-99-06-A" "$RUN_DIR/evidence/tc-99-06-B"
 ls "$RUN_DIR/evidence/tc-99-06-A" "$RUN_DIR/evidence/tc-99-06-B"
 ```
 
-**Then** the GUI audit log is under the session workdir — verify: the GUI log path starts with the workdir. **Expected failure: it is `<FreeCAD user app data>\freecad-buddy\audit.jsonl`, beside `workdir\`.**  
+**Then** the GUI audit log is under the session workdir — verify: the GUI log path starts with the workdir. **Expected failure: it is `<FreeCAD user app data>/freecad-buddy/audit.jsonl`, beside `workdir/`.**  
 **And** the filename carries a date — verify: the basename contains an ISO date. **Expected failure: the basenames are the fixed `audit.jsonl` (GUI) and `freecad-buddy-audit.jsonl` (H1).**  
 **And** two GUI sessions do not share one file — verify: the path depends on the session. **Expected failure: every GUI session appends to the same `audit.jsonl`; the path in the `operator settings:` line is the same on every start.**  
 **And** the headless path does not depend on the working directory — verify: the `A` and `B` log paths are in the same parent. **Expected failure: they are `A/freecad-buddy-audit.jsonl` and `B/freecad-buddy-audit.jsonl`.**  

@@ -258,10 +258,11 @@ echo '{"pid":<pid>,"element_token":"<Exit token from this snapshot>"}' | "$FCB_C
 ```
 Measured in the container (FreeCAD 1.1.4): `Exit`, `New Document`, `Close`, `Save` and `Zoom In` are
 listed; `Show All Objects` and `Standard Views` are listed while a document is open; the `Part`
-workbench's `Primitives > Cube` is listed after the `Part` workbench leaf is pressed. `Recompute`
-is listed while a document is open and `F5` recomputes too (`ctrl+r` does nothing). `Undo` and `Toggle
-Visibility` are not listed: use `ctrl+z` with `hotkey`, and the tree row toggle of `test-plan.md` §6 (a
-foreground pixel click on the row, then a window-level `press_key` `space`). The numbered `Windows` entries expose only `Activates this window`: press the `Next` or
+workbench's `Primitives > Cube` is listed after the `Part` workbench leaf is pressed. Some
+leaves are listed only while their command is available: `Recompute` while the document needs a
+recompute (`F5` recomputes too, `ctrl+r` does nothing), `Toggle Visibility` while an object is selected,
+`Undo` after a transaction. Without the leaf use `ctrl+z` with `hotkey`, `F5`, and the tree row toggle of
+`test-plan.md` §6 (a foreground pixel click on the row, then a window-level `press_key` `space`). The numbered `Windows` entries expose only `Activates this window`: press the `Next` or
 `Previous` leaf of the `Windows` menu until the `list_windows` title names the document. The result of
 a leaf press is `effect:"unverifiable"`; the verdict comes from the window title or a fresh screenshot.
 The proof records are in `tests/uat/run/2026-11-18-10-10-proof/K2-*.txt`.

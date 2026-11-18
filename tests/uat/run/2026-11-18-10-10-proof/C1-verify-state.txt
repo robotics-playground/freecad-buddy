@@ -1,0 +1,25 @@
+# C1 verify_state selectors
+selector {"role":"TreeItem","label_contains":"Pad"} -> satisfied
+selector {"role":"tree item","label_contains":"Pad"} -> satisfied
+selector {"label_contains":"Pad"} -> satisfied
+selector {"role":"ComboBox","label_contains":"Part Design"} -> satisfied
+selector {"role":"combo box","label_contains":"Part Design"} -> satisfied
+selector {"label_contains":"Unnamed"} -> satisfied
+enabled predicate:
+{
+  "elapsed_ms": 5438,
+  "predicates": [
+    {
+      "index": 0,
+      "observed_json": "{\"matches\":11}",
+      "status": "unknown",
+      "unknown_reason": "multi_match"
+    }
+  ],
+  "samples": 4,
+  "stable": false,
+  "status": "unknown"
+}
+
+exists:false:
+verify_state predicate 0 element.exists=false is unsupported because element snapshots are not exhaustive

@@ -1,0 +1,27 @@
+# C1/N4 when are Undo, Redo, Recompute, Toggle Visibility listed (menu item / push button, enabled)
+clean doc, no selection: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent; Show All Objects=[('menu item', True)]
+doc touched: Undo=absent; Redo=absent; Recompute=[('menu item', True), ('push button', True)]; Toggle Visibility=absent; Show All Objects=[('menu item', True)]
+after recompute: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent; Show All Objects=[('menu item', True)]
+object selected (fg pixel click on Box): Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent; Show All Objects=[('menu item', True)]
+value_repr":"[]","fingerprint_after":null
+after a transaction (space toggled): Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent; Show All Objects=[('menu item', True)]
+selection after one fg click: value_repr":"[]"
+listed with Box selected: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+after space (a visibility transaction): Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+--- the document tab must be the active tab (a Start tab in front gives an empty selection)
+clean, no selection: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+selection after one fg click: value_repr":"[]"
+listed with Box selected: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+after space (visibility transaction): Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+--- activate the document tab with the Windows > Next leaf (the Start tab was in front)
+clean, no selection: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+selection after one fg click: value_repr":"[]"
+listed with Box selected: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+after space (visibility transaction): Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+doc touched: Undo=absent; Redo=absent; Recompute=[('menu item', True), ('push button', True)]; Toggle Visibility=absent
+--- re-run with the Document Recovery window cleared
+clean doc, no selection: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=absent
+selection after one fg click: value_repr":"['Box']"
+listed with Box selected: Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=[('menu item', True)]
+after space (a visibility transaction): Undo=absent; Redo=absent; Recompute=absent; Toggle Visibility=[('menu item', True)]
+doc touched: Undo=absent; Redo=absent; Recompute=[('menu item', True), ('push button', True)]; Toggle Visibility=[('menu item', True)]

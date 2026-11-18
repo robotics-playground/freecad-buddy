@@ -1,0 +1,5 @@
+# C1 Undo dropdown: mouse_button_down on the arrow, hold, windows, release
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+windows while held: [(37748834, '* Unnamed - FreeCAD 1.1.4')]
+{"button":null,"cursor_id":"cli-957618f5-36d3-49c6-86a1-43f4e8907000","held":false,"pid":null,"window_id":null,"x":null,"y":null}
+windows after release: [(37748834, '* Unnamed - FreeCAD 1.1.4')]

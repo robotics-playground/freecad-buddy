@@ -1,0 +1,9 @@
+# C1/N5 expand a tree row
+rows before: ['Unnamed', 'Body', 'Origin', 'Pad']
+pixel click on the expand arrow of the Pad row (29,206), foreground
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+rows after: ['Unnamed', 'Body', 'Origin', 'Pad', 'Sketch']
+select Pad row (pixel click), press Right arrow to expand (window-level)
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+rows after Right: ['Attachment', 'Attacher Engine', 'Engine 3D', 'Attachment Support', 'Origin [XY_Plane]', 'Map Mode', 'FlatFace', 'Map Reversed', 'false', 'Attachment Offset', '[(0.00 0.00 1.00); 0.00°; (0.00 mm  0.00 mm  0.00 mm)]', 'Base', 'Placement', '[(0.00 0.00 1.00); 0.00°; (0.00 mm  0.00 mm  0.00 mm)]', 'Label', 'Sketch', 'Internal Geometry', 'Make Internals', 'false', 'Sketch', 'Constraints', '[]', 'External Geometry', 'Arc Fit Tolerance', '0.0000010000000000', 'Unnamed', 'Body', 'Origin', 'Pad', 'Sketch']

@@ -239,3 +239,15 @@ About 950 changed lines in `tests/uat/testcases/` (901 matching lines plus fence
   pattern tables differ on purpose (counting versus tagging); the relay's own loopback binding and the
   compose port mapping are not tested (not a host command, outside this Story); a JSON string with an
   escaped quote next to a path is not handled (no payload has one).
+- **Fix round 2 (verifier N1..N5, class C1).** `C1-action-census.txt` lists 48 routes (every cua-driver tool,
+  action, key and tree field the cases use): 40 measured in this round, 8 earlier, 0 unmeasured; 9 routes
+  failed and were fixed in the cases. N1: the rename editor has no element, so `ctrl+a`, window-level
+  `type_text` and `enter`, `ctrl+z` restores (`C1-rename-editor.txt`). N2: tree rows have no `selected` or
+  `expanded` field; the selection is read with `script_exec` and a document row click changes the active
+  document; only verify clauses changed (no third observable change). N3: TC-99 expected values use the
+  container path form. N4: Recompute is listed only while the document needs a recompute, Toggle Visibility
+  only while an object is selected, Undo after a transaction. N5: a row is listed only while its parent is
+  expanded; a foreground pixel click on the arrow expands it. Also found: `set_window_frame` takes flat
+  arguments and does nothing on a maximized window (TC-14 fixed); the Undo dropdown does not open, so the
+  list is read from `doc.UndoNames` (TC-12-06, route limitation); the named view buttons replace the
+  `Standard Views` popup; a dialog is its own window; `Document Recovery` appears after `kill -KILL`.

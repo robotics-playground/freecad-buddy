@@ -1,0 +1,4 @@
+# C1 undo list: UndoNames and the Edit > Undo leaf state (the toolbar dropdown does not open in the container)
+value_repr":"[['Sketch recompute', 'Add point to point horizontal distance constraint', 'Make Pad', 'Sketch recompute', 'Add sketch box', 'New Sketch', 'Add a Body'], ['Rename Pad.Label'], 7]","fingerprint_after":null
+[('menu item', 'Undo', True), ('menu item', 'Redo', True), ('push button', 'Undo', True), ('push button', 'Redo', True)]
+881

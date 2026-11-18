@@ -329,9 +329,11 @@ of the `menu item` whose label is the leaf (the menu need not be open), and `cli
 snapshot before every press: a snapshot invalidates the earlier tokens. Measured in the container:
 `Exit`, `New Document`, `Close`, `Save`, `Zoom In`, `Next` and `Previous` (Windows menu) are listed;
 `Show All Objects` and `Standard Views` are listed while a document is open; `Cube` of
-Part > Primitives is listed once the `Part` workbench leaf was pressed. `Recompute` is listed while a
-document is open, and the `F5` hotkey recomputes too (`ctrl+r` does nothing). `Undo` and `Toggle
-Visibility` are not listed: use `hotkey` `ctrl+z`, and the tree row toggle below. The numbered `Windows` entries show only `Activates this window`: press `Next` or
+Part > Primitives is listed once the `Part` workbench leaf was pressed. Some leaves are listed only while
+their command is available (measured, `C1-menu-listed-conditions.txt`): `Recompute` while the
+document needs a recompute (the `F5` hotkey recomputes too, `ctrl+r` does nothing), `Toggle
+Visibility` while an object is selected, `Undo` and `Redo` after a transaction. Without the leaf use
+`hotkey` `ctrl+z`, `F5` and the tree row toggle below. The numbered `Windows` entries show only `Activates this window`: press `Next` or
 `Previous` until the `list_windows` title names the document. A press returns `effect:"unverifiable"`;
 the verdict is the window title or a fresh screenshot. Records: `tests/uat/run/2026-11-18-10-10-proof/K2-*.txt`.
 
@@ -346,6 +348,32 @@ window pixels (the `frame` of an element is in screen pixels: subtract the windo
 result = [o.Name for o in G.Selection.getSelection()]" }` (a background pixel click leaves it empty) and
 the effect from the `v` or `-` marker of `query_tree_summary`. Records:
 `tests/uat/run/2026-11-18-10-10-proof/D1-toggle-visibility.txt`, `D2-recompute.txt`.
+
+### GUI routes in the container
+
+Measured once in the container, one record per route in `tests/uat/run/2026-11-18-10-10-proof/C1-*.txt`
+(`C1-action-census.txt` lists them all):
+
+- A document tab that is not in front gives an empty selection: a document opened by `fcb-freecad start
+  <file>` can sit behind the `Start` tab; press the `Next` leaf of the `Windows` menu.
+- A new container profile shows a first-run Welcome panel on the `Start` page: press its `Done` button by
+  token. Start page cards open with a foreground pixel `click` with `count:2`.
+- A dialog is its own window in `list_windows` (`Preferences`, `Insert Length`, `Document Recovery`,
+  `Unsaved Document`). Snapshot it with its `window_id`; take buttons and spin boxes by token (`OK`,
+  `Cancel`; `set_value` on a spin box). A dialog snapshot may also list the main window's elements: take
+  the button by its label from the end of the list.
+- After `kill -KILL` the next start shows a `Document Recovery` window: `Cleanup`, then `Yes`, then `OK`
+  clear it. `alt+f4` with an unsaved document opens `Unsaved Document` (`Save`, `Cancel`, `Discard`).
+- Token click on a list item or tree item does not select; a foreground pixel click does (workbench
+  combo items, tree rows). Toolbar buttons and the named view buttons (`1 Front` to `6 Left`,
+  `Isometric`) work by token.
+- The inline rename editor and the task panel spin boxes have no element: window-level `press_key`,
+  `hotkey` and `type_text` with `delivery_mode:"foreground"` (`ctrl+a`, text, `Return` or `tab`).
+- `set_window_frame` takes flat `x`, `y`, `width`, `height` and needs an un-maximized window:
+  `docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir <hex window id> -b
+  remove,maximized_vert,maximized_horz'` first, and `add,maximized_vert,maximized_horz` after.
+- `kill_app` is refused for FreeCAD (`foreign_process_termination_denied`): use `kill -KILL`.
+- `scroll` lands only as a foreground pixel scroll inside the tree rows.
 
 ### Process commands
 

@@ -471,7 +471,8 @@ mcp query_tree_summary { doc: "<handle>" }
 ```
 **And** the FreeCAD window is narrowed to about 60 % of its width, with its height unchanged, so the 3D view changes size and aspect but stays wholly visible  
 ```bash
-echo '{"pid":<pid>,"window_id":<wid>,"frame":{"width":<0.6 × orig_w>,"height":<orig_h>}}' | "$FCB_CUA" set_window_frame
+docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir <hex wid> -b remove,maximized_vert,maximized_horz'
+echo '{"pid":<pid>,"window_id":<wid>,"x":<orig_x>,"y":<orig_y>,"width":<0.6 × orig_w>,"height":<orig_h>}' | "$FCB_CUA" set_window_frame
 ```
 **And** the tree is read again  
 ```
@@ -480,7 +481,7 @@ mcp query_tree_summary { doc: "<handle>" }
 
 **Then** the second identical read is served from cache — verify: its `framing:` line carries `cached`  
 **And** a cached verdict names its unverified components — verify: on the pure-query path the cached line ends with a reason that names `geometry`, since no cheap digest is available there  
-**And** the window geometry was really applied — verify: `"$FCB_CUA" list_windows` reports the requested width and height. A `set_window_frame` that did not land makes the next two assertions meaningless  
+**And** the window geometry was really applied — verify: `"$FCB_CUA" list_windows` reports the requested width and height. FreeCAD's window is maximized, and `set_window_frame` on a maximized window returns `suspected_noop` and changes nothing: un-maximize first with the `wmctrl` line above (`<hex wid>` is the `window_id` as `0x%08x`). A `set_window_frame` that did not land makes the next two assertions meaningless  
 **And** the 3D view stays wholly on screen — verify: the after capture below shows no scrollbar in the MDI area. If one shows, the size is out of scope for this scenario: restore the window and repeat with a larger width  
 **And** the resize invalidates the cache — verify: the third read's `framing:` line carries `computed`, not `cached`  
 **And** the re-measured verdict reflects the narrower view — verify: the third read's ratio differs from `ratio_before`; record both. With the width now the binding axis, the same model fills more of the view, so the ratio is expected to be larger, and above `1.0` the line reads `does not fit`  
@@ -488,7 +489,8 @@ mcp query_tree_summary { doc: "<handle>" }
 
 **Cleanup**:
 ```bash
-echo '{"pid":<pid>,"window_id":<wid>,"frame":{"width":<orig_w>,"height":<orig_h>}}' | "$FCB_CUA" set_window_frame
+echo '{"pid":<pid>,"window_id":<wid>,"x":<orig_x>,"y":<orig_y>,"width":<orig_w>,"height":<orig_h>}' | "$FCB_CUA" set_window_frame
+docker exec -u cua fcb-desktop sh -c 'eval "$(fcb-session-env)"; wmctrl -ir <hex wid> -b add,maximized_vert,maximized_horz'
 ```
 ```
 mcp document_close { doc: "<handle>" }

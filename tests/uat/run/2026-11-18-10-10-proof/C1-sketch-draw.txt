@@ -1,0 +1,12 @@
+# C1 Sketch drawing route
+press Rectangle leaf
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+pixel click 1
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+pixel click 2
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+geometry,constraints: value_repr":"[4, 8]","fingerprint_after":null
+escape x2
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}
+geometry,constraints: value_repr":"[4, 8]","fingerprint_after":null

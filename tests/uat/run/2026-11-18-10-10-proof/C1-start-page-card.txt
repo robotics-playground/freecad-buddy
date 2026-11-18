@@ -1,0 +1,6 @@
+# C1 Start page: first-run Welcome panel (Done button token), then a card opened by pixel click
+docs before: ['fcb-doc:cl1FCr1_QVAmeI-e7KbHMw']
+--- double click (count 2, foreground) on the ArchDetail card (369,480)
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+docs after (waited 1 x2 s): ['fcb-doc:cl1FCr1_QVAmeI-e7KbHMw', 'fcb-doc:wOhsBRFHE-e-BO5B7Zksyg']
+['Unnamed', 'ArchDetail']

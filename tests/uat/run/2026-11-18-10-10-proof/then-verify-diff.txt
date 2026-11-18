@@ -289,7 +289,12 @@ TC-12-gui-workflows.md:191 rule:K1 [K1]
 TC-12-gui-workflows.md:198 rule:K1 [K1]
 TC-12-gui-workflows.md:228 rule:K1 [K1]
 TC-12-gui-workflows.md:235 rule:K1 [K1]
+TC-12-gui-workflows.md:272 hand [none] tree rows have no selected field: the document row click is read from the active document and the window title
 TC-12-gui-workflows.md:279 rule:K1 [K1]
+TC-12-gui-workflows.md:388 hand [none] undo list read from doc.UndoNames: the toolbar dropdown does not open in the container
+TC-12-gui-workflows.md:390 hand [none] undo enabled read from the Undo leaf or button and UndoNames, not from a dropdown popup
+TC-12-gui-workflows.md:395 hand [none] visual check keeps the before and after captures; the entry label comes from UndoNames (route limitation)
+TC-12-gui-workflows.md:442 hand [none] expand a tree row by a pixel click on its arrow (C1-tree-expand)
 TC-12-gui-workflows.md:448 rule:K1 [K1]
 TC-12-gui-workflows.md:508 hand [K6] PowerShell file cmdlet -> grep, ls, stat, test, tail
 TC-12-gui-workflows.md:510 rule:K1 [K1]
@@ -348,7 +353,7 @@ TC-14-viewport-framing-and-auto-fit.md:338 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:372 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:405 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:441 rule:K1 [K1]
-TC-14-viewport-framing-and-auto-fit.md:483 rule:K1 [K1]
+TC-14-viewport-framing-and-auto-fit.md:483 hand [K1] cua-driver call form -> $FCB_CUA
 TC-14-viewport-framing-and-auto-fit.md:487 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:524 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:564 rule:K1 [K1]
@@ -366,6 +371,9 @@ TC-16-lean-agent-loop.md:70 rule:K1 [K1]
 TC-99-ad-conformance-gaps.md:113 rule:K7 [K7]
 TC-99-ad-conformance-gaps.md:115 rule:K1 [K1]
 TC-99-ad-conformance-gaps.md:169 rule:K1 [K1]
+TC-99-ad-conformance-gaps.md:223 hand [none] backslash path spelling -> forward slashes of the container path
+TC-99-ad-conformance-gaps.md:227 hand [none] backslash path spelling -> forward slashes of the container path
 TC-99-ad-conformance-gaps.md:231 rule:K1 [K1]
 TC-99-ad-conformance-gaps.md:284 rule:K1 [K1]
+TC-99-ad-conformance-gaps.md:333 hand [none] backslash path spelling -> forward slashes of the container path
 TC-99-ad-conformance-gaps.md:340 rule:K1 [K1]

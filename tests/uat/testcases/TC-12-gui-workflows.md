@@ -42,10 +42,11 @@ not the visual: a control can be present in the UIA tree and not painted on scre
 - **A menu command is a leaf press, not a menu-path call.** `cua-driver` 0.28.1 refuses a Qt top-level
   menu item (`menu path segment 0 has no safe activation action`), so take the `element_token` of the
   `menu item` with the leaf's label from a fresh snapshot and `click` it (test-plan §6, "Menu route"). A leaf is listed
-  only while its command exists: `Show All Objects`, `Zoom In` and `Standard Views` need an open
-  document; `Undo` and `Toggle Visibility` are not listed, so use `ctrl+z` and a foreground pixel click on
-  the tree row followed by a window-level `space` (test-plan §6, "Tree row toggle"); `Recompute` is listed
-  while a document is open, and `F5` recomputes.
+  only while its command is available: `Show All Objects`, `Zoom In` and `Standard Views` need an open
+  document; `Recompute` only while the document needs a recompute; `Toggle Visibility` only while an
+  object is selected; `Undo` only after a transaction. Without the leaf use `ctrl+z`, `F5`, or a
+  foreground pixel click on the tree row followed by a window-level `space` (test-plan §6, "Tree row
+  toggle").
   For any camera change, use the **toolbar buttons** instead — `Fit All`, `Fit Selection`,
   `Standard Views`, `Align to Selection`, `Draw Style`, `Selection Filter`, `Measure`,
   `New Document`, `Save` are all AX-invokable by `element_token` and return
@@ -93,7 +94,7 @@ not the visual: a control can be present in the UIA tree and not painted on scre
   selects it (route `global_input`: it moves the real pointer in the container desktop). Pick the row in the Model panel: when a document or object is selected, the
   property view lists `TreeItem` rows too, one of them with the same text as the `Label`, so a
   `verify_state` selector `{role:"TreeItem", label_contains:"<label>"}` can return `unknown`
-  `multi_match`. Read `selected` off the Model-panel row in a fresh snapshot instead.
+  `multi_match`. Tree rows have no `selected` field in the container: read the selection with `script_exec { code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }`. Selecting a document row changes the active document, read from `G.ActiveDocument.Document.Label` and the window title.
 - **A combo box popup item and a scroll land only in the foreground.** A background click on a
   `ListItem` of the workbench combo box popup does not activate it, and `scroll` by
   `element_token` falls back to `global_input` with no effect. Click the `ListItem` by token, and
@@ -124,16 +125,16 @@ not the visual: a control can be present in the UIA tree and not painted on scre
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
 # press menu leaf File > New Document (test-plan §6, "Menu route")
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-# press menu leaf Part Design (test-plan §6, "Menu route")
+# press the New Body leaf of the Part Design menu (test-plan §6, "Menu route")
 ```
-If `["File","New Document"]` is refused, click the `New Document` toolbar button by `element_token`.
-The body-creation leaf under `Part Design` is resolved at runtime from a fresh snapshot.
-**And** a new sketch is started on the XY plane through the `Sketch` menu, a closed 60 x 40 mm profile is drawn, and it is constrained fully. Re-snapshot before every action and act through `element_token`.  
+If the `New Document` leaf is not pressable, click the `New Document` toolbar button by `element_token`.
+The leaves are `New Body` (Part Design), `New Sketch` (Sketch, and the Modeling Tools panel) and, in the Sketcher workbench, `Rectangle` and `Horizontal Dimension` (Sketch).
+**And** a new sketch is started on the XY plane through the `New Sketch` leaf, a closed 60 x 40 mm profile is drawn, and it is constrained. The plane dialog is in the main window: press the `XY-plane (Base plane)` list item and then `OK` by `element_token`. Press the `Rectangle` leaf and foreground-click two pixels in the 3D view; select a line with a foreground pixel click and press the `Horizontal Dimension` leaf: the `Insert Length` dialog opens as its own window (`list_windows`), whose spin box is set with `set_value` and confirmed with its `OK` token (`C1-insert-length-dialog.txt`). The sketch is closed with the `Close` button of the task panel.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-01-sketch.png"}' | "$FCB_CUA" get_window_state
-# press menu leaf Sketch (test-plan §6, "Menu route")
+# press the New Sketch leaf of the Sketch menu (test-plan §6, "Menu route")
 ```
-**And** the sketch is closed, then padded 5 mm through the `Part Design` menu. Enter `5` in the Length field with `type_text` bound to the field's `element_token`, then commit.  
+**And** the sketch is closed, then padded 5 mm through the `Pad` leaf with the sketch selected. The Length field has no element: with the field focused and its value selected, send `type_text` `5` at window level with `delivery_mode:"foreground"`, then `press_key` `tab` to commit, then press `OK` by token; the `Pad.Length` read over MCP is the verdict (`C1-pad-type-text.txt`).  
 **And** a pocket is added for an M5 clearance hole pair 40 mm apart, then the outer corners are filleted at 3 mm, each through the `Part Design` menu with the same snapshot-act-verify loop.  
 **And** the result is read over MCP  
 ```bash
@@ -269,7 +270,7 @@ mcp query_screenshot {doc:<handleBox>, view:{camera:"iso"}}
 ```
 **And** the BOX document is selected in the GUI, then the SPHERE handle is queried the same way  
 
-**Then** the GUI selection changed — verify: in the snapshot taken after the select, the Model-panel `TreeItem` labelled `sphere-r10` reports `selected: true`, and the `list_windows` title names `sphere-r10`. A `verify_state` selector on `label_contains:"sphere-r10"` also matches the property view's `Label` row and returns `unknown` `multi_match`  
+**Then** the GUI selection changed — verify: the `list_windows` title names `sphere-r10`, and `script_exec { code: "import FreeCADGui as G; result = G.ActiveDocument.Document.Label" }` returns `sphere-r10` (tree rows have no `selected` field in the container). A `verify_state` selector on `label_contains:"sphere-r10"` also matches the property view's `Label` row and returns `unknown` `multi_match`  
 **And** the box handle still returns box geometry — verify: the box-handle `volume` equals `6000.0` mm3, NOT `4188.79`  
 **And** the box handle's tree is the box's — verify: the box-handle `query_tree_summary` names `Box` and not the sphere object  
 **And** the render follows the handle, not the selection — verify: the box-handle `query_screenshot` returns `scene.rendered_objects` containing the box object only  
@@ -304,7 +305,7 @@ mcp query_tree_summary {doc:<handle>}
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-before.png"}' | "$FCB_CUA" get_window_state
 ```
-**And** `<ObjectB>` is hidden in the GUI. Take a snapshot with its screenshot, select its tree row with a foreground pixel click (see the tree-row rule above), confirm the row reads `selected: true`, then run View > Visibility > Toggle Visibility with the window-level `space` key (`Std_ToggleVisibility`, menu text `Toggle &Visibility`, `CommandView.cpp:907`). The command is enabled only while something is selected (`CommandView.cpp:927-930`), and its leaf is absent from the snapshot while nothing is selected. Close the menus it leaves open with `escape`.  
+**And** `<ObjectB>` is hidden in the GUI. Take a snapshot with its screenshot, select its tree row with a foreground pixel click (see the tree-row rule above), confirm `Gui.Selection` names the object (the `script_exec` read of the tree-row rule above), then run View > Visibility > Toggle Visibility with the window-level `space` key (`Std_ToggleVisibility`, menu text `Toggle &Visibility`, `CommandView.cpp:907`). The command is enabled only while something is selected (`CommandView.cpp:927-930`), and its leaf is absent from the snapshot while nothing is selected. Close the menus it leaves open with `escape`.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-05-tree.png"}' | "$FCB_CUA" get_window_state
 echo '{"pid":<PID>,"window_id":<WID>,"x":<ObjectB row x>,"y":<ObjectB row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
@@ -354,17 +355,13 @@ Restore `<ObjectB>` visibility before leaving the scenario.
 mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_fillet", args:{body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}}}}
 mcp feature_fillet {doc:<handle>, body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}, confirm:{preview_id:"<token>"}}
 ```
-**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. On FreeCAD 1.1.4 the button and its arrow are one UIA element (`Button "Undo"`), so the arrow has no token of its own, and a click on the arrow pixel, background or by token, runs Undo instead of opening the list. Open the list with a press and release on the arrow pixel: a 1 px `drag` that starts on the arrow, read from the snapshot image (route `global_input`: it moves the real pointer). The list is a separate popup window, and a capture of the main window does not contain it: find it with `list_windows` (a second window of the pid, titled `FreeCAD`) and capture that window as `<POPUP_WID>`. Run the `verify_state` on the popup while it is open.  
+**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. In the container the dropdown does not open (a 1 px `drag`, a press and hold, and a pixel click on the arrow all leave the main window alone, and a click on the button runs Undo; `C1-undo-dropdown.txt`), so the list is read from the document: `script_exec { code: "result = list(doc.UndoNames)" }` is the list the dropdown shows, newest first, and the `Undo` toolbar button and `Edit > Undo` leaf are listed and enabled once a transaction exists.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-pre-dropdown.png"}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"window_id":<WID>,"from_x":<arrow x>,"from_y":<arrow y>,"to_x":<arrow x + 1>,"to_y":<arrow y>}' | "$FCB_CUA" drag
-echo '{"pid":<PID>}' | "$FCB_CUA" list_windows
-echo '{"pid":<PID>,"window_id":<POPUP_WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-edit.png"}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"window_id":<POPUP_WID>,"expect":[{"element":{"selector":{"label_contains":"buddy: feature_fillet Fillet"},"enabled":true}}]}' | "$FCB_CUA" verify_state
-echo '{"pid":<PID>,"window_id":<WID>,"key":"escape"}' | "$FCB_CUA" press_key
-echo '{"pid":<PID>}' | "$FCB_CUA" list_windows
+mcp script_exec {doc:<handle>, code:"result = list(doc.UndoNames)"}
+echo '{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"Undo"},"enabled":true}}]}' | "$FCB_CUA" verify_state
 ```
-The `escape` closes the dropdown without choosing an entry; the last `list_windows` must show the popup window gone before the next step.
+The first `UndoNames` entry is the newest transaction (`buddy: feature_fillet Fillet`). `verify_state` on the `Undo` selector can return `unknown` `multi_match` (the menu leaf and the toolbar button both match): then read `enabled` of either element in the snapshot.
 **And** Undo is invoked from the GUI  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
@@ -385,14 +382,14 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 mcp document_undo {doc:<handle>}
 ```
 
-**Then** the Undo entry names the bridge's transaction — verify: the first entry of the toolbar `Undo` dropdown begins with `buddy: `. An entry without that prefix means the mutation did not run inside a named transaction, which is a defect.  
+**Then** the Undo entry names the bridge's transaction — verify: the first entry of `script_exec { code: "result = list(doc.UndoNames)" }` begins with `buddy: ` (the toolbar dropdown does not open in the container, `C1-undo-dropdown.txt`). An entry without that prefix means the mutation did not run inside a named transaction, which is a defect.  
 **And** the label names the tool — verify: that entry reads `buddy: feature_fillet Fillet`, so a human reading the GUI can tell which bridge call produced it  
-**And** the undo is enabled — verify: the `verify_state` run on the open dropdown popup in the When returns `satisfied`; `unknown` is inconclusive. The selector names the fillet entry in full, because the popup lists one `buddy:` entry per bridge transaction and a bare `buddy:` selector matches all of them (`unknown`, `multi_match`)  
+**And** the undo is enabled — verify: the `Undo` toolbar button or the `Edit > Undo` leaf is listed with `enabled: true` in the snapshot, and the first `UndoNames` entry is `buddy: feature_fillet Fillet`; `unknown` from `verify_state` is inconclusive  
 **And** GUI Undo removes the feature — verify: the post-undo `query_tree_summary` no longer names the fillet  
 **And** the geometry reverted — verify: the post-undo `query_mass_properties` returns the pre-fillet volume  
 **And** the bridge and the GUI share one undo history — verify: the `mcp document_undo {doc:<handle>}` run after the GUI Undo either undoes the NEXT older transaction or refuses with an empty stack; it must not undo the same fillet twice  
 **And** *(visual)* the model is framed — verify: the `view_fit_viewport` run before the after capture returned `OK`; if it did not, or if this scenario is testing the fit itself, fit through the GUI instead by invoking the **`Fit All` toolbar button** through its `element_token` from a fresh `get_window_state` (`View → Fit All` is the menu equivalent but is refused on FreeCAD 1.1.x), which touches none of the code under test, and capture `tc-12-06-after.png` again before the bridge undo  
-**And** *(visual)* the window shows the `buddy:` Undo entry and then the un-filleted body — verify: `Read` both PNGs and state what is on screen: `tc-12-06-edit.png` (the capture of the popup window) shows the toolbar `Undo` dropdown list with a first entry whose visible text begins `buddy: `, and `tc-12-06-after.png` (taken after the GUI Undo and before the bridge undo) shows no menu or dropdown open, the model tree without a fillet row, and the pad's corners sharp again. Read the entry label off the painted dropdown in the image, not off the accessibility tree. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the window shows the `buddy:` Undo entry and then the un-filleted body — verify: `Read` both PNGs and state what is on screen: `tc-12-06-pre-dropdown.png` shows the toolbar `Undo` button enabled (the dropdown cannot be opened in the container, so the entry label is the first `UndoNames` entry, recorded as a route limitation), and `tc-12-06-after.png` (taken after the GUI Undo and before the bridge undo) shows no menu or dropdown open, the model tree without a fillet row, and the pad's corners sharp again. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```bash
@@ -439,7 +436,7 @@ mcp query_mass_properties {doc:<handle>, object:"Pad"}
 
 **Then** the property was set without a recompute — verify: the `script_exec` result `value_repr` is `['Touched']`  
 **And** the bridge sees the dirty state without recomputing it — verify: the `query_screenshot` result has `render.dirty_document: true` and its text contains `Document dirty (pending/broken recompute)`  
-**And** the GUI shows the same dirty state — verify: `tc-12-07-props.png` shows the 3D view still drawing the old pad, and the snapshot taken with it lists `Button "Recompute"` with `enabled: true`. Where the `Body` row is already expanded, the `Pad` row also carries the touched marker; a UIA click on a tree row does not expand it on FreeCAD 1.1.4  
+**And** the GUI shows the same dirty state — verify: `tc-12-07-props.png` shows the 3D view still drawing the old pad, and the snapshot taken with it lists `Button "Recompute"` with `enabled: true`. Where the `Body` row is already expanded, the `Pad` row also carries the touched marker; a click on a tree row does not expand it on FreeCAD 1.1.4; a foreground pixel click on its arrow does (`C1-tree-expand.txt`)  
 **And** the GUI recompute cleaned it — verify: the post-refresh `verify_recompute` returns `OK` with `subject.failing_objects` empty  
 **And** a following bridge recompute is a no-op — verify: `document_recompute` returns `OK` with `touched: 0` and `errors: []`, and does not change the geometry  
 **And** the geometry reflects the new value — verify: the post-refresh `query_mass_properties` returns `volume` `1600.0` (20 x 10 x 8)  
@@ -599,12 +596,12 @@ mcp document_list {}
 mcp query_mass_properties {doc:<handleA>, object:"Box"}
 mcp query_mass_properties {doc:<handleB>, object:"Sphere"}
 ```
-**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box, re-snapshot, then click the `Sketcher` list item, each by `element_token`. The list item click must be a foreground click (see the combo box rule above); a background click leaves the selector unchanged.  
+**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box by `element_token`, re-snapshot, then click the `Sketcher` list item with a foreground pixel click at its centre (the item's `frame` is in screen pixels: subtract the window origin). A token click on the list item, background or foreground, leaves the selector unchanged (`C1-workbench-combo.txt`).  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-10-wb.png"}' | "$FCB_CUA" get_window_state
 echo '{"pid":<PID>,"window_id":<WID>,"element_token":"<workbench ComboBox token from this snapshot>"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"window_id":<WID>,"element_token":"<Sketcher list item token from THIS snapshot>","delivery_mode":"foreground"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"x":<Sketcher item x>,"y":<Sketcher item y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
 **And** both handles are re-read, then the workbench is switched to Part Design the same way and both are read again  
 ```bash

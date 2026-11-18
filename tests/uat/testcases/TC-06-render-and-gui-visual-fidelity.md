@@ -92,9 +92,9 @@ mcp document_close { doc: <scratch handle> }
 **When** the GUI camera is set through the **toolbar buttons**, not the View menu and not keystrokes. Snapshot first, then act on a token from that same snapshot.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-01-pre.png"}' | "$FCB_CUA" get_window_state
-# from that response take the element_token whose label is exactly "Standard Views",
-# then the token whose label is exactly "Fit All"
-echo '{"pid":<PID>,"element_token":"<Standard Views token>"}' | "$FCB_CUA" click
+# from that response take the element_token of the push button labelled "Isometric" (the named views are
+# "1 Front", "2 Top", "3 Right", "4 Rear", "5 Bottom", "6 Left", "Isometric"), then the token whose label is exactly "Fit All"
+echo '{"pid":<PID>,"element_token":"<Isometric push button token>"}' | "$FCB_CUA" click
 echo '{"pid":<PID>,"element_token":"<Fit All token>"}' | "$FCB_CUA" click
 ```
 **Use the toolbar route.** The menu-path call is refused for a Qt top-level menu item (`menu_path_unavailable`),
@@ -154,8 +154,8 @@ Copy each `render.resource_link` to `$RUN_DIR/evidence/tc-06-02-<camera>.png`.
 **And** for each camera the matching GUI standard view is set through the **`Standard Views` toolbar button**, then the viewport is grabbed  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-02-tree.png"}' | "$FCB_CUA" get_window_state
-# act on the token from THAT snapshot whose label is exactly "Standard Views"
-echo '{"pid":<PID>,"element_token":"<Standard Views token>"}' | "$FCB_CUA" click
+# act on the token from THAT snapshot whose push button label is "1 Front" (then "2 Top", "3 Right", "4 Rear", "5 Bottom", "6 Left", "Isometric")
+echo '{"pid":<PID>,"element_token":"<1 Front push button token>"}' | "$FCB_CUA" click
 ```
 Then run the shared viewport recipe to `$RUN_DIR/evidence/tc-06-02-front-viewport.png`. Repeat for Top,
 Right, Left, Rear, Bottom, Isometric.
@@ -317,12 +317,12 @@ rm -f "$RUN_DIR/evidence/tc-06-05-"*.png
 ```bash
 mcp query_screenshot {doc:<handle>}
 ```
-**And** the window is re-snapshotted, then `<ObjectB>` is selected in the model tree by its `element_token` from that snapshot  
+**And** the window is re-snapshotted, then `<ObjectB>` is selected in the model tree with a foreground pixel click on its row (a token click does not select a tree row in the container) (test-plan §6, "Tree row toggle")  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-06-06-tree.png"}' | "$FCB_CUA" get_window_state
-echo '{"pid":<PID>,"element_token":"<token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"x":<ObjectB row x>,"y":<ObjectB row y>,"delivery_mode":"foreground"}' | "$FCB_CUA" click
 ```
-Use `element_token`, never a bare `element_index`; indices are per-snapshot and keyed on `(pid, window_id)`.
+Use `element_token` for buttons and menu leaves, never a bare `element_index`; indices are per-snapshot and keyed on `(pid, window_id)`.
 
 **And** the selected object is hidden through the GUI. Take a snapshot with its screenshot, find the `<ObjectB>` row, select it with a foreground pixel click, then send `space` to the window (test-plan §6, "Tree row toggle")  
 ```bash

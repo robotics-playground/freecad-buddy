@@ -1,0 +1,15 @@
+# C1 Standard Views: leaf and toolbar button by token
+camera before: value_repr":"[0.446, 0.12, 0.23, 0.857]","fingerprint_after":null
+Top-level 'Front' push button?
+[('menu item', 'Isometric', 's0000005d:169'), ('menu item', 'Isometric', 's0000005d:407'), ('push button', 'Isometric', 's0000005d:442')]
+Front token 
+{"refusal":{"code":"invalid_element_token","message":"element_tokenhasinvalidformat"},"status":"refused"}
+camera after Front: value_repr":"[0.446, 0.12, 0.23, 0.857]","fingerprint_after":null
+Isometric menu item token s0000005e:169
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+camera after Isometric leaf: value_repr":"[0.425, 0.176, 0.34, 0.82]","fingerprint_after":null
+Standard Views button menu token s0000005f:406
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"global_input"}
+windows after click on the button menu:
+[(37748834, '* Unnamed - FreeCAD 1.1.4')]
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"synthetic_events"}

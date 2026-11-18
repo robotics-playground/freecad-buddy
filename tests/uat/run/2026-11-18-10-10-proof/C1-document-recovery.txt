@@ -1,0 +1,14 @@
+# C1 after an unclean kill the next start shows a Document Recovery window (its own window, modal)
+[('push button', 'Start Recovery', 's00000095:663'), ('push button', 'Cancel', 's00000095:664'), ('push button', 'Cleanup', 's00000095:665')]
+(dialog buttons above)
+Cleanup token click:
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+windows: [(37748834, '* box-10-20-30 - FreeCAD 1.1.4'), (37748860, 'Document Recovery'), (37748875, 'Cleanup')]
+{
+  "_note": "Prefer `elements` — `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps wiYes token click (confirms the Cleanup of the recovery data):
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+windows: [(37748834, '* box-10-20-30 - FreeCAD 1.1.4'), (37748881, 'Delete')]
+note: a dialog window's snapshot may also list the main window's elements; take buttons by label from the end of the list (Start Recovery, Cancel, Cleanup; then Yes, No)
+'Delete' confirm window: press its last Yes/OK:
+{"delivery":{"mode":"background"},"effect":"unverifiable","route":"accessibility"}
+windows: [(37748834, '* box-10-20-30 - FreeCAD 1.1.4')]

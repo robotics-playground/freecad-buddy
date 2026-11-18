@@ -1,0 +1,28 @@
+# C1 window geometry, cursor, scroll, drag, desktop state
+--- set_window_frame
+{"code":"invalid_arguments","detail":"unknownfield`frame`,expectedoneof`pid`,`window_id`,`x`,`y`,`width`,`height`,`session`","tool":"set_window_frame"}
+[('* Unnamed - FreeCAD 1.1.4', 1600, 949)]
+{"code":"invalid_arguments","detail":"unknownfield`frame`,expectedoneof`pid`,`window_id`,`x`,`y`,`width`,`height`,`session`","tool":"set_window_frame"}
+[('* Unnamed - FreeCAD 1.1.4', 1600, 949)]
+--- move_cursor desktop scope
+{
+  "delivery": {
+    "mode": "not_applicable"
+  },
+  "effect": "unverifiable",
+  "route": "global_input"
+}
+
+--- scroll foreground at a pixel in the tree
+{"delivery":{"mode":"foreground"},"effect":"unverifiable","route":"global_input"}
+--- drag (undo arrow style)
+{"delivery":{"mode":"unknown"},"effect":"unverifiable","route":"global_input"}
+windows after drag:
+[(37748834, '* Unnamed - FreeCAD 1.1.4')]
+--- get_desktop_state
+{
+  "code": "invalid_arguments",
+  "detail": "unknown field `display_id`, expected `session` or `screenshot_out_file`",
+  "tool": "get_desktop_state"
+}
+
