@@ -80,7 +80,7 @@ docker exec -u cua fcb-desktop rm -f "$FCB_USER_DIR/freecad-buddy/addon.log.prev
 **Design Ref**: `mcp-tools-design.md` §1 (tool surface), `verification-design.md` §6 (export pairing)
 
 **Given** golden models are present — verify: `ls benchmarks/g0/golden-models/*.FCStd` lists 5 files  
-**And** no stale H1 server holds the golden files — verify: `docker exec -u cua fcb-desktop pgrep -af freecad_buddy.hosts.main` returns nothing  
+**And** no stale H1 server holds the golden files — verify: `docker exec -u cua fcb-desktop pgrep -af 'hosts.main serve --transport stdio|hosts.headless.worker'` returns nothing (the GUI proxy, `serve --mode rpc --transport http`, is a different process and must stay)  
 **And** a golden model is open on the GUI host so the closing visual has a subject — verify: `mcp document_open { path: "$PROJECT_ROOT/benchmarks/g0/golden-models/box-10-20-30.FCStd" }` returns `OK`; record the handle  
 **And** the GUI's pre-sweep state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-01-02-before.png"}' | "$FCB_CUA" get_window_state`  
 
@@ -360,7 +360,7 @@ docker exec -u cua fcb-desktop ls -l "$FCB_USER_DIR/freecad-buddy/rpc-<freecad p
 
 **Then** the file sits under the FreeCAD user appdata dir — verify: the path is `$FCB_USER_DIR/freecad-buddy/rpc-<pid>.json`; the legacy `$FCB_USER_DIR/../Mod/` does not exist in the container (`docker exec -u cua fcb-desktop ls "$FCB_USER_DIR/../Mod"` fails, exit 2)  
 **And** every field is present — verify: the record keys are exactly `schema`, `pid`, `host`, `port`, `token`, `contract_version`, `freecad_version`, `started`  
-**And** `pid` names the live FreeCAD process — verify: the `pid` value equals the pid from `"$FCB_CUA" list_windows`, and `docker exec -u cua fcb-desktop ps -p <pid> -o pid=,comm=` shows `freecad`  
+**And** `pid` names the live FreeCAD process — verify: the `pid` value equals the pid from `echo '{}' | "$FCB_CUA" list_windows`, and `docker exec -u cua fcb-desktop ps -p <pid> -o pid=,comm=` shows `freecad`  
 **And** `host` and `port` match a bound loopback socket — verify: `host` is `127.0.0.1` and `docker exec -u cua fcb-desktop ss -ltnp | grep "127.0.0.1:<port>"` shows `LISTEN` owned by that pid  
 **And** `contract_version` is the supported version — verify: the value is `"1"`  
 **And** `freecad_version` matches the live build — verify: the value equals the `<live version>` (`query_capabilities` `freecad_version`)  

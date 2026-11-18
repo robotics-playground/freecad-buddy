@@ -358,12 +358,12 @@ TC-14-viewport-framing-and-auto-fit.md:487 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:524 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:564 rule:K1 [K1]
 TC-14-viewport-framing-and-auto-fit.md:603 rule:K1 [K1]
-TC-15-self-verifying-fit-regression.md:54 rule:K1 [K1]
-TC-15-self-verifying-fit-regression.md:86 rule:K1 [K1]
-TC-15-self-verifying-fit-regression.md:113 rule:K1 [K1]
-TC-15-self-verifying-fit-regression.md:155 rule:K1 [K1]
-TC-15-self-verifying-fit-regression.md:157 rule:K1 [K1]
-TC-15-self-verifying-fit-regression.md:191 rule:K1 [K1]
+TC-15-self-verifying-fit-regression.md:54 hand [K1] cua-driver call form -> $FCB_CUA
+TC-15-self-verifying-fit-regression.md:86 hand [K1] cua-driver call form -> $FCB_CUA
+TC-15-self-verifying-fit-regression.md:113 hand [K1] cua-driver call form -> $FCB_CUA
+TC-15-self-verifying-fit-regression.md:155 hand [K1] cua-driver call form -> $FCB_CUA
+TC-15-self-verifying-fit-regression.md:157 hand [K1] cua-driver call form -> $FCB_CUA
+TC-15-self-verifying-fit-regression.md:191 hand [K1] cua-driver call form -> $FCB_CUA
 TC-15-self-verifying-fit-regression.md:271 hand [K7] APPDATA path -> $FCB_USER_DIR or $FCB_CONFIG_DIR read in the container
 TC-15-self-verifying-fit-regression.md:278 hand [K10] launch_env, launch_app or uv run snippet -> fcb-freecad start or $FCB_PYTHON
 TC-15-self-verifying-fit-regression.md:280 hand [K7] APPDATA path -> $FCB_USER_DIR or $FCB_CONFIG_DIR read in the container

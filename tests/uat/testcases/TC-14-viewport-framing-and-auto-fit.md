@@ -188,7 +188,7 @@ Numbers are not sufficient here, and neither is an MCP render on its own: the MC
 scenario is where the two artifacts are compared against each other.
 
 **Given** the 40x40x800 bar from TC-14-04 is open, or rebuilt — verify: `mcp query_mass_properties { doc: "<handle>", object: "BarPad" }` returns `1280000.0` mm³ within 0.1 %  
-**And** `cua-driver` has the FreeCAD `pid` and `window_id` — verify: `"$FCB_CUA" list_windows` returns them  
+**And** `cua-driver` has the FreeCAD `pid` and `window_id` — verify: `echo '{}' | "$FCB_CUA" list_windows` returns them  
 **And** the camera has been moved off the part through the GUI so the starting state is plainly wrong — verify: the `framing:` line of `query_tree_summary` reads `does not fit`  
 **And** the wrong starting state is captured — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-14-05-before.png"}' | "$FCB_CUA" get_window_state`  
 
@@ -226,7 +226,7 @@ mcp document_close { doc: "<handle>" }
 
 **Given** two documents are open, `DocA` and `DocB` — verify: `mcp document_list {}` lists both; record both handles  
 **And** both have an open 3D view, so the refusal cannot be mistaken for "`DocA` has no viewport" — verify: `mcp view_fit_viewport { doc: "<DocA handle>" }` returned `OK` while `DocA` was still the focused tab, before `DocB` was opened  
-**And** the live viewport is showing `DocB` — verify: `"$FCB_CUA" list_windows` reports an active window title naming `DocB`  
+**And** the live viewport is showing `DocB` — verify: `echo '{}' | "$FCB_CUA" list_windows` reports an active window title naming `DocB`  
 **And** `DocB` is fitted so its framing is a known baseline — verify: `mcp view_fit_viewport { doc: "<DocB handle>" }` returns `OK`; record the ratio on the `framing:` line of `mcp query_tree_summary { doc: "<DocB handle>" }` as `ratio_before`  
 
 **When** the fit targets the document the viewport is **not** showing  
@@ -463,7 +463,7 @@ clamps the window height (a request for 640 x 400 landed as 640 x 643 in run `20
 the resize below keeps the whole 3D view on screen.
 
 **Given** a document is open, Show All is run, and the model is fitted — verify: `mcp view_fit_viewport { doc: "<handle>" }` returns `OK` and the `framing:` line of `query_tree_summary` reads `fits, ratio R, computed`; record R as `ratio_before`  
-**And** the original window size is recorded — verify: `"$FCB_CUA" list_windows` reports `<orig_w>` and `<orig_h>`  
+**And** the original window size is recorded — verify: `echo '{}' | "$FCB_CUA" list_windows` reports `<orig_w>` and `<orig_h>`  
 
 **When** the tree is read a second time with nothing changed  
 ```
@@ -481,7 +481,7 @@ mcp query_tree_summary { doc: "<handle>" }
 
 **Then** the second identical read is served from cache — verify: its `framing:` line carries `cached`  
 **And** a cached verdict names its unverified components — verify: on the pure-query path the cached line ends with a reason that names `geometry`, since no cheap digest is available there  
-**And** the window geometry was really applied — verify: `"$FCB_CUA" list_windows` reports the requested width and height. FreeCAD's window is maximized, and `set_window_frame` on a maximized window returns `suspected_noop` and changes nothing: un-maximize first with the `wmctrl` line above (`<hex wid>` is the `window_id` as `0x%08x`). A `set_window_frame` that did not land makes the next two assertions meaningless  
+**And** the window geometry was really applied — verify: `echo '{}' | "$FCB_CUA" list_windows` reports the requested width and height. FreeCAD's window is maximized, and `set_window_frame` on a maximized window returns `suspected_noop` and changes nothing: un-maximize first with the `wmctrl` line above (`<hex wid>` is the `window_id` as `0x%08x`). A `set_window_frame` that did not land makes the next two assertions meaningless  
 **And** the 3D view stays wholly on screen — verify: the after capture below shows no scrollbar in the MDI area. If one shows, the size is out of scope for this scenario: restore the window and repeat with a larger width  
 **And** the resize invalidates the cache — verify: the third read's `framing:` line carries `computed`, not `cached`  
 **And** the re-measured verdict reflects the narrower view — verify: the third read's ratio differs from `ratio_before`; record both. With the width now the binding axis, the same model fills more of the view, so the ratio is expected to be larger, and above `1.0` the line reads `does not fit`  

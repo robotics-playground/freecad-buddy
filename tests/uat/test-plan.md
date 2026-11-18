@@ -337,14 +337,28 @@ Visibility` while an object is selected, `Undo` and `Redo` after a transaction. 
 `Previous` until the `list_windows` title names the document. A press returns `effect:"unverifiable"`;
 the verdict is the window title or a fresh screenshot. Records: `tests/uat/run/2026-11-18-10-10-proof/K2-*.txt`.
 
+### Pixel points
+
+`click` `x` and `y` are pixels of the screenshot, not of the window. The reply of `get_window_state` with a
+screenshot carries `screenshot_width` and `screenshot_height` (1568 x 930 for the 1600 x 949 window). The
+`frame` of an element is in screen pixels. Convert the centre of a frame with
+`x = (frame.x + frame.w/2 - window.x) * screenshot_width / window.width` and
+`y = (frame.y + frame.h/2 - window.y) * screenshot_height / window.height` (`window` from
+`list_windows`), or read the point off the screenshot. A frame point used without the conversion lands
+one row off below window y 450 (`RT3-pixel-scale.txt`: row `B18` is hit by the converted point, row `B19` by the
+unconverted one). A tree scrolls when a row is selected: take a new snapshot before every click.
+
+`cua-driver` exits 0 on a tool error (a dead pid, a missing `window_id`, a refused call): judge a step by
+the text it prints, not by the exit code.
+
 ### Tree row toggle
 
 A token `click` on a tree item does not select it, and a `press_key` with a tree item token prints
 `AT-SPI Component.GrabFocus returned false` and still exits 0. The route that works: take
-`get_window_state` with a screenshot (`screenshot_out_file`), `Read` it, and take the row's centre in
-window pixels (the `frame` of an element is in screen pixels: subtract the window origin); `click` with
+`get_window_state` with a screenshot (`screenshot_out_file`), `Read` it, and take the row's centre from the
+screenshot you read, or convert its `frame` ("Pixel points" below); `click` with
 `x`, `y` and `delivery_mode:"foreground"`; then `press_key` `space` with `pid`, `window_id` and
-`delivery_mode:"foreground"`. Read the selection with `script_exec { code: "import FreeCADGui as G;
+`delivery_mode:"foreground"`. Read the selection with `script_exec { doc: <handle>, code: "import FreeCADGui as G;
 result = [o.Name for o in G.Selection.getSelection()]" }` (a background pixel click leaves it empty) and
 the effect from the `v` or `-` marker of `query_tree_summary`. Records:
 `tests/uat/run/2026-11-18-10-10-proof/D1-toggle-visibility.txt`, `D2-recompute.txt`.
@@ -362,8 +376,10 @@ Measured once in the container, one record per route in `tests/uat/run/2026-11-1
   `Unsaved Document`). Snapshot it with its `window_id`; take buttons and spin boxes by token (`OK`,
   `Cancel`; `set_value` on a spin box). A dialog snapshot may also list the main window's elements: take
   the button by its label from the end of the list.
-- After `kill -KILL` the next start shows a `Document Recovery` window: `Cleanup`, then `Yes`, then `OK`
-  clear it. `alt+f4` with an unsaved document opens `Unsaved Document` (`Save`, `Cancel`, `Discard`).
+- After `kill -KILL` the next start can show a `Document Recovery` window (buttons `Start Recovery`,
+  `Cancel`, `Cleanup`, in that order). It is its own modal window and blocks foreground input until it is
+  cleared: `Cleanup` opens a `Cleanup` window (`Yes`, `No`), `Yes` opens a `Delete` window (`OK`), and `OK`
+  closes it (`C1-document-recovery.txt`). `list_windows` shows which window is open. `alt+f4` with an unsaved document opens `Unsaved Document` (`Save`, `Cancel`, `Discard`).
 - Token click on a list item or tree item does not select; a foreground pixel click does (workbench
   combo items, tree rows). Toolbar buttons and the named view buttons (`1 Front` to `6 Left`,
   `Isometric`) work by token.

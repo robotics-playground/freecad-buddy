@@ -21,7 +21,8 @@ pytestmark = pytest.mark.skipif(BASH is None, reason="needs bash")
 def _run(tmp_path: Path, args: list[str], stdin: str, environment: dict[str, str]):
     fake_docker = tmp_path / "docker"
     fake_docker.write_text(
-        '#!/bin/bash\nprintf "%s\\n" "$@"\nprintf -- "---STDIN---\\n"\ncat\n',
+        '#!/bin/bash\nprintf "%s\\n" "$@"\nprintf -- "---STDIN---\\n"\ncat\n'
+        'exit "${FAKE_DOCKER_EXIT:-0}"\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -242,3 +243,15 @@ def test_Should_not_expand_an_ampersand_When_the_root_holds_one(tmp_path):
 
     # Assert
     assert _stdin_of(done) == '{"a":"/repo/x"}'
+
+
+@pytest.mark.parametrize("arguments", [["get_window_state"], ["status"]])
+def test_Should_return_the_exit_code_of_docker_When_it_fails(tmp_path, arguments):
+    # Arrange
+    environment = {"PROJECT_ROOT": ROOT, "FAKE_DOCKER_EXIT": "3"}
+
+    # Act
+    done = _run(tmp_path, arguments, '{"pid":1}', environment)
+
+    # Assert
+    assert done.returncode == 3

@@ -52,7 +52,7 @@ assertion R2-01 failed, where `fits` was `false` beside `fitted: true`
 `does not fully fit`  
 **And** *(visual)* the viewport captured with `cua-driver` shows the **whole** cube, all eight
 corners inside the window, with visible margin on every side and no face cut by a window border
-  — verify: `"$FCB_CUA" get_window_state` with
+  — verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-01-after.png"`, then `Read` it and judge
 
 **Cleanup**:
@@ -84,7 +84,7 @@ carve-out
 `detail.message` — verify: `str(framing.ratio)` is absent from both strings  
 **And** *(visual)* the captured viewport agrees with whichever verdict was returned: whole model in
 frame for `OK`, or a model genuinely overflowing the window for `SPEC_FAILED`
-  — verify: `"$FCB_CUA" get_window_state` with
+  — verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-02-after.png"`, then `Read` it and judge
 
 **Cleanup**:
@@ -110,7 +110,7 @@ converged because a factor derived from geometry cannot improve by repetition
 **And** the second `framing.ratio` is within `0.01` of the first — verify: compare the two recorded
 ratios; a drifting ratio on unchanged geometry means the fit is not converging  
 **And** *(visual)* the viewport is framed substantially as it was after the first fit, with the
-cube whole — verify: `"$FCB_CUA" get_window_state` with
+cube whole — verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-03-after.png"`, then `Read` it and compare
   against `tc-15-01-after.png`
 
@@ -134,7 +134,7 @@ returned early every time.
 **Given** `box-10-20-30.FCStd` is open and fitted, so its camera is a recorded baseline — verify:
 `view_fit_viewport` returns `OK`; record its `framing.ratio` as `ratio_before`  
 **And** a second document `tc14bar` is then opened and becomes the focused tab — verify:
-`mcp document_list {}` lists both, and `"$FCB_CUA" list_windows` reports the active window
+`mcp document_list {}` lists both, and `echo '{}' | "$FCB_CUA" list_windows` reports the active window
 title naming `tc14bar`  
 **And** `box_10_20_30` still has its own open 3D view, so any refusal cannot be a no-viewport
 answer — verify: its earlier `OK` fit proves the view exists  
@@ -151,9 +151,9 @@ against itself again, which is the defect.
 **And** no camera moved — verify: `mcp query_tree_summary { doc: "<tc14bar handle>" }` reports the
 same `framing.ratio` as immediately before the call, and
 `mcp query_tree_summary { doc: "<box_10_20_30 handle>" }` still reports `ratio_before`  
-**And** `box_10_20_30` was not brought forward — verify: `"$FCB_CUA" list_windows` still
+**And** `box_10_20_30` was not brought forward — verify: `echo '{}' | "$FCB_CUA" list_windows` still
 reports `tc14bar` as the active window. AD-31 refuses; it never redirects and never activates.  
-**And** *(visual)* the window is untouched — verify: `"$FCB_CUA" get_window_state` with
+**And** *(visual)* the window is untouched — verify: `echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-04-after.png"`, then `Read` it and say what is on
   screen: `tc14bar`'s model at the same size and position as before the call, its tab still
   active. The judgement is on the pixels alone — no MCP status or `ratio` may stand in for looking
@@ -188,7 +188,7 @@ fit targets `box_10_20_30`
 only.  
 **And** each fit framed its own document — verify: each envelope's `framing.fits` is `true`  
 **And** *(visual)* each fit reframed the document it named and left the other alone — verify:
-`"$FCB_CUA" get_window_state` with
+`echo '{"pid":<pid>,"window_id":<wid>}' | "$FCB_CUA" get_window_state` with
   `screenshot_out_file: "$RUN_DIR/evidence/tc-15-05-after.png"` after the second call, then `Read`
   it and say what is on screen: `box_10_20_30` whole and framed, with `tc14bar` unchanged behind
   its own tab

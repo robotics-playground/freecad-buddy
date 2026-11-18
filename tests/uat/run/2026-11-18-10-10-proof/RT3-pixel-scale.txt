@@ -1,0 +1,13 @@
+# RT-3 pixel conversion, run as test-plan §6 now writes it (frame centre minus window origin, times screenshot size over window size)
+row B16: unscaled window point (135,431), converted screenshot point (132,422); window y over 450: no
+  click unscaled -> value_repr":"['B16']"
+  click converted -> value_repr":"['B16']"
+row B17: unscaled window point (135,449), converted screenshot point (132,440); window y over 450: no
+  click unscaled -> value_repr":"['B18']"
+  click converted -> value_repr":"['B17']"
+row B18: unscaled window point (135,467), converted screenshot point (132,458); window y over 450: yes
+  click unscaled -> value_repr":"['B19']"
+  click converted -> value_repr":"['B18']"
+row B19: unscaled window point (135,485), converted screenshot point (132,475); window y over 450: yes
+  click unscaled -> value_repr":"['B20']"
+  click converted -> value_repr":"['B20']"

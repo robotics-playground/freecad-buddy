@@ -251,3 +251,13 @@ About 950 changed lines in `tests/uat/testcases/` (901 matching lines plus fence
   arguments and does nothing on a maximized window (TC-14 fixed); the Undo dropdown does not open, so the
   list is read from `doc.UndoNames` (TC-12-06, route limitation); the named view buttons replace the
   `Standard Views` popup; a dialog is its own window; `Document Recovery` appears after `kill -KILL`.
+- **Fix round 3 (red team RT-1..RT-5, verifier R1, R2).** RT-1: `ss -tnp ... ESTAB` in TC-10 x4 (`RT1-established.txt`).
+  RT-2: `doc: <handle>` added to 7 `script_exec` calls; sweep finds 0 calls without `doc`, and the 7 calls run as
+  written (`RT2-script-exec.txt`). RT-3: pixel clicks take screenshot pixels (1568 x 930 for the 1600 x 949 window);
+  test-plan §6 "Pixel points" gives the conversion; row `B18` below window y 450 is hit by the converted point and
+  missed by the unconverted one (`RT3-pixel-scale.txt`). RT-4: the fake `docker` can exit non-zero; a test requires the
+  wrapper to return that code and the `|| true` mutant makes it fail (`RT4-exit-code-mutant.txt`). RT-5: TC-01:83 matches
+  `hosts.main serve --transport stdio` and `hosts.headless.worker` only, so the GUI proxy does not match
+  (`RT5-stale-h1.txt`). R1: Document Recovery text uses "can show" and the measured button order. R2: 14 tool calls
+  with no stdin now follow `echo ... |`; `sweep-cua-stdin.py` finds 0. test-plan §6 also says that `cua-driver` exits 0
+  on a tool error, so a step is judged by the printed text.

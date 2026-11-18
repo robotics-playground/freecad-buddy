@@ -223,7 +223,7 @@ echo '{"pid":<PID>,"window_id":<WID>,"key":"space","delivery_mode":"foreground"}
 ```
 `Read` the PNG to find the `Box` row. Both calls report `effect:"unverifiable"`, and a `press_key` that
 cannot reach its target still exits 0. Neither is the verdict. The selection is read with
-`script_exec { code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }`
+`script_exec { doc: <handle>, code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }`
 (it must name `Box`), and the flip of the `Box` marker in the re-read below is the verdict. A token
 click or a `press_key` with a tree item token does not select the row in the container.
 **And** both sides are re-read  
@@ -356,7 +356,7 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 A viewport `press_key` does not land. A token click on the `Standard Views` button opens a popup that is
 not enumerable, so do not use it: the push buttons and the `Isometric` menu leaf (test-plan §6,
 "Menu route") set the camera (measured, `C1-standard-view-buttons.txt`). The camera is read back with
-`script_exec { code: "import FreeCADGui as G; result = G.ActiveDocument.ActiveView.getCameraOrientation().Q" }`.
+`script_exec { doc: <handle>, code: "import FreeCADGui as G; result = G.ActiveDocument.ActiveView.getCameraOrientation().Q" }`.
 **And** the object is framed with the `Fit All` toolbar button  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state

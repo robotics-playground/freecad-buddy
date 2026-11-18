@@ -94,7 +94,7 @@ not the visual: a control can be present in the UIA tree and not painted on scre
   selects it (route `global_input`: it moves the real pointer in the container desktop). Pick the row in the Model panel: when a document or object is selected, the
   property view lists `TreeItem` rows too, one of them with the same text as the `Label`, so a
   `verify_state` selector `{role:"TreeItem", label_contains:"<label>"}` can return `unknown`
-  `multi_match`. Tree rows have no `selected` field in the container: read the selection with `script_exec { code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }`. Selecting a document row changes the active document, read from `G.ActiveDocument.Document.Label` and the window title.
+  `multi_match`. Tree rows have no `selected` field in the container: read the selection with `script_exec { doc: <handle>, code: "import FreeCADGui as G; result = [o.Name for o in G.Selection.getSelection()]" }`. Selecting a document row changes the active document, read from `G.ActiveDocument.Document.Label` and the window title.
 - **A combo box popup item and a scroll land only in the foreground.** A background click on a
   `ListItem` of the workbench combo box popup does not activate it, and `scroll` by
   `element_token` falls back to `global_input` with no effect. Click the `ListItem` by token, and
@@ -270,7 +270,7 @@ mcp query_screenshot {doc:<handleBox>, view:{camera:"iso"}}
 ```
 **And** the BOX document is selected in the GUI, then the SPHERE handle is queried the same way  
 
-**Then** the GUI selection changed — verify: the `list_windows` title names `sphere-r10`, and `script_exec { code: "import FreeCADGui as G; result = G.ActiveDocument.Document.Label" }` returns `sphere-r10` (tree rows have no `selected` field in the container). A `verify_state` selector on `label_contains:"sphere-r10"` also matches the property view's `Label` row and returns `unknown` `multi_match`  
+**Then** the GUI selection changed — verify: the `list_windows` title names `sphere-r10`, and `script_exec { doc: <handle>, code: "import FreeCADGui as G; result = G.ActiveDocument.Document.Label" }` returns `sphere-r10` (tree rows have no `selected` field in the container). A `verify_state` selector on `label_contains:"sphere-r10"` also matches the property view's `Label` row and returns `unknown` `multi_match`  
 **And** the box handle still returns box geometry — verify: the box-handle `volume` equals `6000.0` mm3, NOT `4188.79`  
 **And** the box handle's tree is the box's — verify: the box-handle `query_tree_summary` names `Box` and not the sphere object  
 **And** the render follows the handle, not the selection — verify: the box-handle `query_screenshot` returns `scene.rendered_objects` containing the box object only  
@@ -355,7 +355,7 @@ Restore `<ObjectB>` visibility before leaving the scenario.
 mcp preview_dry_run {doc:<handle>, operation:{tool:"feature_fillet", args:{body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}}}}
 mcp feature_fillet {doc:<handle>, body:"<Body>", base:"<Pad>", name:"Fillet", edges:[{kind:"mapped_name", object:"<Pad>", mapped_name:"<edge>"}], radius:{value:3, unit:"mm"}, confirm:{preview_id:"<token>"}}
 ```
-**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. In the container the dropdown does not open (a 1 px `drag`, a press and hold, and a pixel click on the arrow all leave the main window alone, and a click on the button runs Undo; `C1-undo-dropdown.txt`), so the list is read from the document: `script_exec { code: "result = list(doc.UndoNames)" }` is the list the dropdown shows, newest first, and the `Undo` toolbar button and `Edit > Undo` leaf are listed and enabled once a transaction exists.  
+**And** the toolbar `Undo` dropdown is opened in the GUI and its first entry is read. FreeCAD 1.1.x does not rename the Edit > Undo menu item: the transaction name is shown in the dropdown list of the toolbar `Undo` button. In the container the dropdown does not open (a 1 px `drag`, a press and hold, and a pixel click on the arrow all leave the main window alone, and a click on the button runs Undo; `C1-undo-dropdown.txt`), so the list is read from the document: `script_exec { doc: <handle>, code: "result = list(doc.UndoNames)" }` is the list the dropdown shows, newest first, and the `Undo` toolbar button and `Edit > Undo` leaf are listed and enabled once a transaction exists.  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-06-pre-dropdown.png"}' | "$FCB_CUA" get_window_state
 mcp script_exec {doc:<handle>, code:"result = list(doc.UndoNames)"}
@@ -382,7 +382,7 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 mcp document_undo {doc:<handle>}
 ```
 
-**Then** the Undo entry names the bridge's transaction — verify: the first entry of `script_exec { code: "result = list(doc.UndoNames)" }` begins with `buddy: ` (the toolbar dropdown does not open in the container, `C1-undo-dropdown.txt`). An entry without that prefix means the mutation did not run inside a named transaction, which is a defect.  
+**Then** the Undo entry names the bridge's transaction — verify: the first entry of `script_exec { doc: <handle>, code: "result = list(doc.UndoNames)" }` begins with `buddy: ` (the toolbar dropdown does not open in the container, `C1-undo-dropdown.txt`). An entry without that prefix means the mutation did not run inside a named transaction, which is a defect.  
 **And** the label names the tool — verify: that entry reads `buddy: feature_fillet Fillet`, so a human reading the GUI can tell which bridge call produced it  
 **And** the undo is enabled — verify: the `Undo` toolbar button or the `Edit > Undo` leaf is listed with `enabled: true` in the snapshot, and the first `UndoNames` entry is `buddy: feature_fillet Fillet`; `unknown` from `verify_state` is inconclusive  
 **And** GUI Undo removes the feature — verify: the post-undo `query_tree_summary` no longer names the fillet  
@@ -596,7 +596,7 @@ mcp document_list {}
 mcp query_mass_properties {doc:<handleA>, object:"Box"}
 mcp query_mass_properties {doc:<handleB>, object:"Sphere"}
 ```
-**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box by `element_token`, re-snapshot, then click the `Sketcher` list item with a foreground pixel click at its centre (the item's `frame` is in screen pixels: subtract the window origin). A token click on the list item, background or foreground, leaves the selector unchanged (`C1-workbench-combo.txt`).  
+**And** the workbench is switched in the GUI through the workbench selector. `set_value` on the combo box does not change it on FreeCAD 1.1.x: click the combo box by `element_token`, re-snapshot, then click the `Sketcher` list item with a foreground pixel click at its centre (convert the item's `frame` as in test-plan §6, "Pixel points"). A token click on the list item, background or foreground, leaves the selector unchanged (`C1-workbench-combo.txt`).  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-12-10-wb.png"}' | "$FCB_CUA" get_window_state
 echo '{"pid":<PID>,"window_id":<WID>,"element_token":"<workbench ComboBox token from this snapshot>"}' | "$FCB_CUA" click
