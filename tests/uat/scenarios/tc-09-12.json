@@ -121,7 +121,7 @@
     {
       "step": "unknown_tree",
       "path": "text",
-      "regex": "^INVALID_INPUT: .*fcb-doc:does-not-exist"
+      "equals": "INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist"
     },
     {
       "step": "unknown_recompute",
@@ -222,5 +222,5 @@
       "inside": true
     }
   },
-  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: status and detail.code (text prefix only on the wire) (raw RPC or second client)."
+  "agent_check": "The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: the text equals exactly `INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist`, with no status or detail field (mcp-tools-design.md:60) (raw RPC or second client)."
 }

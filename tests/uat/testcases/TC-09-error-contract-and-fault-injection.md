@@ -500,10 +500,10 @@ mcp document_close     { doc: "fcb-doc:does-not-exist" }
 ```
 **And** a document is opened, closed, then the now-stale handle is reused  
 
-**Then** unknown doc handle → `INVALID_INPUT` (a real envelope, not a protocol rejection)  
-**And** the same refusal on a read-only tool and a mutating one — verify: all four calls with the never-issued handle return `status` equal to `INVALID_INPUT`  
-**And** the message names the handle — verify: each `detail.message` contains `fcb-doc:does-not-exist`  
-**And** `detail.code` mirrors the status — verify: `detail.code` equals `INVALID_INPUT`  
+**Then** unknown doc handle → `INVALID_INPUT` (a tool error, not a protocol rejection; an envelope for every tool except the text-only `query_tree_summary`)  
+**And** the same refusal on a read-only tool and a mutating one — verify: the three envelope calls (`verify_recompute`, `query_object`, `document_close`) with the never-issued handle return `status` equal to `INVALID_INPUT`; `query_tree_summary` is text-only (`mcp-tools-design.md:60`), so its refusal is the one text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist`, with no `status` field  
+**And** the message names the handle — verify: each of the three envelope calls has a `detail.message` that contains `fcb-doc:does-not-exist`, and the `query_tree_summary` text line contains it  
+**And** `detail.code` mirrors the status — verify: `detail.code` equals `INVALID_INPUT` on each of the three envelope calls; the `query_tree_summary` refusal carries no `detail` (`mcp-tools-design.md:60`), so its text line starts `INVALID_INPUT:`  
 **And** a stale handle after close behaves identically — verify: the stale-handle call returns `INVALID_INPUT`, and a second `document_close` on the same handle also returns `INVALID_INPUT` with no crash  
 **And** the handle format is not what is checked — verify: a well-formed but unissued handle and a malformed string both return `INVALID_INPUT`; the refusal comes from registry lookup, not from a format test  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  

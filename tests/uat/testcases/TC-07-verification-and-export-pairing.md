@@ -144,10 +144,12 @@ mcp sketch_add_constraint { doc: <H>, sketch: "Sketch", constraints: [ { type: "
 **And** a fully redundant constraint fails and rolls back (redundancy rule: full redundancy is a hard fail, partial redundancy only warns) — verify: the duplicate Horizontal call returns `RECOMPUTE_ERROR`, `structured_content.mutation.post_verify.recompute_clean` is `false` and `mutation.rolled_back` is `true`; a third `verify_sketch` returns `OK` with `dof` `0`, so the rollback left the three constraints and nothing more  
 **And** a non-sketch object is refused — verify: `mcp verify_sketch { doc: <H>, sketch: "Group" }` returns `INVALID_INPUT` with message `object is not a sketch: Group`  
 **And** *(visual)* the model is framed — verify: `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
-**And** *(visual)* the window shows the sketch the grading describes — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-03-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, and drawn in FreeCAD's fully-constrained colour rather than the under-constrained white. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
+**And** *(visual)* the sketch is open in Sketcher edit mode and framed there — verify: FreeCAD draws the constraint colour and glyphs only in edit mode (`TC-03-sketch-authoring.md` Preconditions, **Sketch edit mode**), so open it with `mcp script_exec { doc: <H>, code: "import FreeCADGui; FreeCADGui.getDocument(doc.Name).setEdit(doc.getObject('Sketch'))" }`, which returns `OK`; then press the **Fit All** toolbar button by its `element_token` from a fresh `get_window_state` snapshot and wait 8 s. A fit made before edit mode does not frame the edit view. The segment has no height, so Fit All places it on the lower edge of the viewport, beside the horizontal axis  
+**And** *(visual)* the window shows the sketch the grading describes — verify: with the sketch open in edit mode, `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-07-03-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` the PNG and say what is on screen: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, and drawn in FreeCAD's fully-constrained colour rather than the under-constrained white. The judgement is on the pixels alone — no MCP status or render may stand in for looking at the image.  
 
 **Cleanup**:
 ```
+mcp script_exec { doc: <H>, code: "import FreeCADGui; FreeCADGui.getDocument(doc.Name).resetEdit()" }
 mcp document_close { doc: <H> }
 ```
 
@@ -190,6 +192,7 @@ mcp document_close { doc: <H> }
 **Given** `$RUN_DIR/evidence/` writable — verify: `ls -d "$RUN_DIR/evidence"`  
 **And** no stale target files — verify: `rm -f "$RUN_DIR/evidence/tc-07-05-ap242.step" "$RUN_DIR/evidence/tc-07-05-ap214.step"`  
 **And** `box-10-20-30.FCStd` is open as `<H>` with `<OBJ>` resolved — verify: `mcp document_open` returns `OK` and `mcp query_tree_summary { doc: <H> }` names the object  
+**And** the model is shown and framed before the export — verify: run Show All (Preconditions), then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, fit with the **Fit All** toolbar button by `element_token` from a fresh `get_window_state` snapshot. The AP242 export envelope then carries `framing.fits` `true`. A visible model that does not fit the viewport earns the framing warning, which the bridge appends to `text` after a blank line (`src/freecad_buddy/contracts/envelope.py:124`, spine AD-32, `TC-14-viewport-framing-and-auto-fit.md:399`); a fitted model earns none, so the exact `text` Then below holds  
 
 **When** the default schema is exported  
 ```

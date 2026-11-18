@@ -271,10 +271,13 @@ mcp verify_shape {doc:<handle>, object:"BoxHole"}
 ```bash
 mcp query_screenshot {doc:<handle>, view:{camera:"iso", include:["BoxHole"]}}
 ```
-**And** the object is made visible in the GUI with Show All, the `Fit All` toolbar button is pressed, and the live viewport captured  
+**And** the object is made visible in the GUI with Show All, the window camera is set to Isometric with its push button so it matches the render's `camera:"iso"`, the `Fit All` toolbar button is pressed, and the live viewport captured  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"element_token":"<Isometric push button token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
 echo '{"pid":<PID>,"element_token":"<Fit All Button token from this snapshot>"}' | "$FCB_CUA" click
+sleep 8   # the camera change animates; the measured settle time is under 8 s
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-04-viewport.png"}' | "$FCB_CUA" get_window_state
 ```
 **And** both PNGs are read side by side  
@@ -536,7 +539,15 @@ Do not save.
 **Given** a scratch document with a Body and a padded-ready profile is open — verify: `mcp document_create {label:"TC13Pad"}` returns a handle; `mcp feature_body_create {doc:<handle>, name:"Body", confirm:{preview_id:"<token>"}}` returns `OK`; a sketch on the XY plane holds a fully constrained, closed 30 x 20 mm rectangle (`sketch_create`, then `sketch_add_geometry` with its constraints in the same call)  
 **And** the tree row set before the pad is recorded — verify: a snapshot's `TreeItem` labels are written down  
 
-**When** the GUI is snapshotted before the mutation  
+**When** the window camera is set to Isometric with its push button and framed with the `Fit All` toolbar button, so the thickness of the pad reads in both captures  
+```bash
+echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"element_token":"<Isometric push button token from this snapshot>"}' | "$FCB_CUA" click
+echo '{"pid":<PID>,"window_id":<WID>,"include_screenshot":false}' | "$FCB_CUA" get_window_state
+echo '{"pid":<PID>,"element_token":"<Fit All Button token from this snapshot>"}' | "$FCB_CUA" click
+sleep 8   # the camera change animates; the measured settle time is under 8 s
+```
+**And** the GUI is snapshotted before the mutation  
 ```bash
 echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc-13-10-before.png"}' | "$FCB_CUA" get_window_state
 ```

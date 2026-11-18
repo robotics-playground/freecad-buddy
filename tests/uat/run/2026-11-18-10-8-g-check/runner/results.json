@@ -1,0 +1,5021 @@
+{
+ "run": {
+  "git_commit": "ffd131df7ac5071d81792940b0ed4c7984417f2c",
+  "git_dirty": true,
+  "freecad_apprun": "/opt/freecad/AppRun",
+  "freecad_version": "1.1.4",
+  "addon": {
+   "path": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy",
+   "exists": true,
+   "linked": false,
+   "target": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"
+  },
+  "started": "2026-11-18T16:12:56+00:00",
+  "ended": "2026-11-18T16:14:01+00:00",
+  "groups": [
+   {
+    "launch": {},
+    "scenarios": [
+     "TC-02-15",
+     "TC-02-17",
+     "TC-03-03",
+     "TC-03-20",
+     "TC-07-03",
+     "TC-09-12",
+     "TC-13-04"
+    ],
+    "error": null,
+    "freecad_pid": 26951,
+    "freecad_version": "1.1.4",
+    "addon": {
+     "path": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy",
+     "exists": true,
+     "linked": false,
+     "target": "/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/freecad_buddy"
+    }
+   }
+  ],
+  "errors": [],
+  "sample_seed": 3186507788,
+  "sample_seed_source": "drawn"
+ },
+ "scenarios": [
+  {
+   "id": "TC-02-15",
+   "tc": "TC-02",
+   "title": "Unknown or stale handle is refused by every document-taking tool",
+   "file": "/repo/tests/uat/scenarios/tc-02-15.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:jicgnOeej15Zsn317Sg6VQ",
+       "name": "box_10_20_30",
+       "label": "box-10-20-30",
+       "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      },
+      "text": "Opened box-10-20-30 -> fcb-doc:jicgnOeej15Zsn317Sg6VQ."
+     }
+    },
+    {
+     "menu": [
+      "View",
+      "Visibility",
+      "Show All Objects"
+     ],
+     "attempts": 2,
+     "attempt_log": [
+      "delivered, no effect"
+     ]
+    },
+    {
+     "name": "tree",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "text": "INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle",
+      "is_error": true
+     }
+    },
+    {
+     "name": "object",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle",
+      "object": "Box"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 567, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "mass_stale",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle",
+      "object": "Box"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 621, in query_mass_properties\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "dependencies",
+     "mcp": "query_dependencies",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 665, in query_dependencies\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "placement",
+     "mcp": "query_placement",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle",
+      "object": "Box"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 769, in query_placement\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "sketch",
+     "mcp": "query_sketch_info",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle",
+      "sketch": "Sketch"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 723, in query_sketch_info\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "save",
+     "mcp": "document_save",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 522, in document_save\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 550, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "recompute",
+     "mcp": "document_recompute",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 565, in document_recompute\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "undo",
+     "mcp": "document_undo",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 629, in document_undo\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "shape",
+     "mcp": "verify_shape",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 219, in verify_shape\n    return registry.with_document(\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "screenshot",
+     "mcp": "query_screenshot",
+     "args": {
+      "doc": "fcb-doc:not-a-real-handle"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:not-a-real-handle",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 899, in <lambda>\n    return lambda **p: screenshot.query_screenshot(doc_registry, render_port, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/screenshot.py\", line 155, in query_screenshot\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:not-a-real-handle\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "not_a_string",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": 12345
+     },
+     "result": {
+      "text": "Input validation error: 12345 is not of type 'string'",
+      "is_error": true
+     }
+    },
+    {
+     "name": "omitted",
+     "mcp": "query_tree_summary",
+     "args": {},
+     "result": {
+      "text": "Input validation error: 'doc' is a required property",
+      "is_error": true
+     }
+    },
+    {
+     "name": "capabilities",
+     "mcp": "query_capabilities",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "freecad_version": "1.1.4",
+       "element_map_available": true,
+       "serializer": "exportBinary",
+       "varset_backend": "varset",
+       "render": "gui_constructed",
+       "sketcher_available": true,
+       "partdesign_available": true,
+       "enums": {
+        "PartDesign::Pad": {
+         "Type": [
+          "Length",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Pocket": {
+         "Type": [
+          "Length",
+          "ThroughAll",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Revolution": {
+         "Type": [
+          "Angle",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "TwoAngles"
+         ]
+        },
+        "PartDesign::Hole": {
+         "ThreadType": [
+          "None",
+          "ISOMetricProfile",
+          "ISOMetricFineProfile",
+          "UNC",
+          "UNF",
+          "UNEF",
+          "NPT",
+          "BSP",
+          "BSW",
+          "BSF",
+          "ISOTyre"
+         ],
+         "HoleCutType": [
+          "None",
+          "Counterbore",
+          "Countersink",
+          "Counterdrill"
+         ],
+         "DepthType": [
+          "Dimension",
+          "ThroughAll"
+         ]
+        },
+        "PartDesign::Chamfer": {
+         "ChamferType": [
+          "Equal distance",
+          "Two distances",
+          "Distance and Angle"
+         ]
+        },
+        "PartDesign::LinearPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ],
+         "TransformMode": [
+          "Features",
+          "Whole shape"
+         ]
+        },
+        "PartDesign::PolarPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ]
+        }
+       },
+       "exec_enabled": true
+      },
+      "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: True\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+     }
+    },
+    {
+     "name": "live",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": "fcb-doc:jicgnOeej15Zsn317Sg6VQ"
+     },
+     "result": {
+      "text": "OK: 1 objects, 1 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, computed\nv [FEATURE] Box",
+      "is_error": false
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-02-15.png",
+   "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: the query_tree_summary refusal is one isError text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle` with no schema, detail or structuredContent (mcp-tools-design.md:60), and the other eleven tools carry schema and detail.code (raw RPC or second client); addon.log has no access violation, segfault or swig line (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "box_10_20_30",
+    "documents": [
+     {
+      "modified": true,
+      "name": "box_10_20_30",
+      "label": "box-10-20-30",
+      "objects": [
+       {
+        "name": "Box",
+        "type": "Part::Feature",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 6000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          20.0,
+          30.0
+         ]
+        },
+        "screen_center": [
+         1841,
+         -1253
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 0 0 1\n  orientation 0 0 1  0\n  nearDistance -29.029001\n  farDistance 1.001\n  aspectRatio 1\n  focalDistance 5\n  height 4.1421356\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: the query_tree_summary refusal is one isError text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle` with no schema, detail or structuredContent (mcp-tools-design.md:60), and the other eleven tools carry schema and detail.code (raw RPC or second client); addon.log has no access violation, segfault or swig line (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-02-17",
+   "tc": "TC-02",
+   "title": "Bad open paths are refused, and a missing file is distinguishable",
+   "file": "/repo/tests/uat/scenarios/tc-02-17.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:dW_F18Nn_fJNGfE61V75cw",
+       "name": "box_10_20_30",
+       "label": "box-10-20-30",
+       "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      },
+      "text": "Opened box-10-20-30 -> fcb-doc:dW_F18Nn_fJNGfE61V75cw."
+     }
+    },
+    {
+     "menu": [
+      "View",
+      "Visibility",
+      "Show All Objects"
+     ],
+     "attempts": 1,
+     "attempt_log": []
+    },
+    {
+     "name": "missing",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/tc-02-17-does-not-exist.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/tc-02-17-does-not-exist.FCStd': File '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/tc-02-17-does-not-exist.FCStd' does not exist!",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 497, in document_open\n    document = FreeCAD.openDocument(path)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\nOSError: File '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/tc-02-17-does-not-exist.FCStd' does not exist!\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 499, in document_open\n    raise ValidationError(f\"document_open failed for {path!r}: {exc}\") from exc\nfreecad_buddy.usecases.documents.ValidationError: document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/tc-02-17-does-not-exist.FCStd': File '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/tc-02-17-does-not-exist.FCStd' does not exist!\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "not_fcstd",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/tests/uat/README.md"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open failed for '/repo/tests/uat/README.md': Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 497, in document_open\n    document = FreeCAD.openDocument(path)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\nOSError: Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 499, in document_open\n    raise ValidationError(f\"document_open failed for {path!r}: {exc}\") from exc\nfreecad_buddy.usecases.documents.ValidationError: document_open failed for '/repo/tests/uat/README.md': Invalid project file /repo/tests/uat/README.md: basic_ios::clear: iostream error\n\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "empty",
+     "mcp": "document_open",
+     "args": {
+      "path": ""
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open requires a 'path'",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 494, in document_open\n    raise ValidationError(\"document_open requires a 'path'\")\nfreecad_buddy.usecases.documents.ValidationError: document_open requires a 'path'\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "directory",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner': Invalid project file /repo/tests/uat/run/2026-11-18-10-8-g-check/runner: basic_filebuf::underflow error reading the file: Is a directory\n",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 497, in document_open\n    document = FreeCAD.openDocument(path)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\nOSError: Invalid project file /repo/tests/uat/run/2026-11-18-10-8-g-check/runner: basic_filebuf::underflow error reading the file: Is a directory\n\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 499, in document_open\n    raise ValidationError(f\"document_open failed for {path!r}: {exc}\") from exc\nfreecad_buddy.usecases.documents.ValidationError: document_open failed for '/repo/tests/uat/run/2026-11-18-10-8-g-check/runner': Invalid project file /repo/tests/uat/run/2026-11-18-10-8-g-check/runner: basic_filebuf::underflow error reading the file: Is a directory\n\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "listed",
+     "mcp": "document_list",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "documents": [
+        {
+         "doc": "fcb-doc:dW_F18Nn_fJNGfE61V75cw",
+         "name": "box_10_20_30",
+         "label": "box-10-20-30",
+         "transient": false
+        }
+       ]
+      },
+      "text": "1 open document(s): box-10-20-30."
+     }
+    },
+    {
+     "name": "capabilities",
+     "mcp": "query_capabilities",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "freecad_version": "1.1.4",
+       "element_map_available": true,
+       "serializer": "exportBinary",
+       "varset_backend": "varset",
+       "render": "gui_constructed",
+       "sketcher_available": true,
+       "partdesign_available": true,
+       "enums": {
+        "PartDesign::Pad": {
+         "Type": [
+          "Length",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Pocket": {
+         "Type": [
+          "Length",
+          "ThroughAll",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Revolution": {
+         "Type": [
+          "Angle",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "TwoAngles"
+         ]
+        },
+        "PartDesign::Hole": {
+         "ThreadType": [
+          "None",
+          "ISOMetricProfile",
+          "ISOMetricFineProfile",
+          "UNC",
+          "UNF",
+          "UNEF",
+          "NPT",
+          "BSP",
+          "BSW",
+          "BSF",
+          "ISOTyre"
+         ],
+         "HoleCutType": [
+          "None",
+          "Counterbore",
+          "Countersink",
+          "Counterdrill"
+         ],
+         "DepthType": [
+          "Dimension",
+          "ThroughAll"
+         ]
+        },
+        "PartDesign::Chamfer": {
+         "ChamferType": [
+          "Equal distance",
+          "Two distances",
+          "Distance and Angle"
+         ]
+        },
+        "PartDesign::LinearPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ],
+         "TransformMode": [
+          "Features",
+          "Whole shape"
+         ]
+        },
+        "PartDesign::PolarPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ]
+        }
+       },
+       "exec_enabled": true
+      },
+      "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: True\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-02-17.png",
+   "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: Given: not-fcstd.txt and corrupt.FCStd prepared with printf (README.md stands in for the first) (file check); corrupt zip refused with 'document_open failed for ...corrupt.FCStd' (file check); non-FCStd file and corrupt zip messages start `Invalid project file <path>:` after the product prefix and their FreeCAD texts are equal once the path is replaced (platform text recorded, not required) (file check); addon log records no unhandled traceback (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "box_10_20_30",
+    "documents": [
+     {
+      "modified": true,
+      "name": "box_10_20_30",
+      "label": "box-10-20-30",
+      "objects": [
+       {
+        "name": "Box",
+        "type": "Part::Feature",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 6000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          20.0,
+          30.0
+         ]
+        },
+        "screen_center": [
+         1841,
+         -1253
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 0 0 1\n  orientation 0 0 1  0\n  nearDistance -29.029001\n  farDistance 1.001\n  aspectRatio 1\n  focalDistance 5\n  height 4.1421356\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: Given: not-fcstd.txt and corrupt.FCStd prepared with printf (README.md stands in for the first) (file check); corrupt zip refused with 'document_open failed for ...corrupt.FCStd' (file check); non-FCStd file and corrupt zip messages start `Invalid project file <path>:` after the product prefix and their FreeCAD texts are equal once the path is replaced (platform text recorded, not required) (file check); addon log records no unhandled traceback (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-03-03",
+   "tc": "TC-03",
+   "title": "sketch_create on a planar face",
+   "file": "/repo/tests/uat/scenarios/tc-03-03.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "BracketPlate"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+       "name": "BracketPlate",
+       "label": "BracketPlate"
+      },
+      "text": "doc: fcb-doc:OL0fQcH7-9CpYqhya84fZA\nlabel: BracketPlate\nname: BracketPlate"
+     }
+    },
+    {
+     "name": "body",
+     "mcp": "feature_body_create",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "name": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "2980ee29ef79c1f160e98834036bb557169763c7227adeee41c43e70f63a7bc0",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateBody",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": null,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlateBody"
+        ]
+       },
+       "feature": "PlateBody",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "PlateBody",
+        "readable": false
+       }
+      },
+      "text": "Mutation committed; fingerprint 2980ee29ef79.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "profile",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "name": "PlateProfile",
+      "plane": "XY",
+      "body": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "2980ee29ef79c1f160e98834036bb557169763c7227adeee41c43e70f63a7bc0",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "12eb0031e3a1a08270a6c2e53f2ba3a303909933bea2d6692810213582799c86",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlateProfile"
+        ]
+       },
+       "sketch": "PlateProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "PlateProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 0,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint 12eb0031e3a1.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "geometry",
+     "mcp": "sketch_add_geometry",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "sketch": "PlateProfile",
+      "geometry": [
+       {
+        "kind": "line_segment",
+        "start": [
+         0,
+         0
+        ],
+        "end": [
+         60,
+         0
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         60,
+         0
+        ],
+        "end": [
+         60,
+         40
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         60,
+         40
+        ],
+        "end": [
+         0,
+         40
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         0,
+         40
+        ],
+        "end": [
+         0,
+         0
+        ]
+       }
+      ],
+      "constraints": [
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 2,
+        "second": 1,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 1,
+        "first_pos": 2,
+        "second": 2,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 2,
+        "first_pos": 2,
+        "second": 3,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 3,
+        "first_pos": 2,
+        "second": 0,
+        "second_pos": 1
+       },
+       {
+        "type": "Horizontal",
+        "first": 0
+       },
+       {
+        "type": "Horizontal",
+        "first": 2
+       },
+       {
+        "type": "Vertical",
+        "first": 1
+       },
+       {
+        "type": "Vertical",
+        "first": 3
+       },
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 1,
+        "second": -1,
+        "second_pos": 1
+       },
+       {
+        "type": "DistanceX",
+        "first": 0,
+        "first_pos": 1,
+        "second": 0,
+        "second_pos": 2,
+        "value": {
+         "value": 60,
+         "unit": "mm"
+        },
+        "name": "PlateWidth"
+       },
+       {
+        "type": "DistanceY",
+        "first": 1,
+        "first_pos": 1,
+        "second": 1,
+        "second_pos": 2,
+        "value": {
+         "value": 40,
+         "unit": "mm"
+        },
+        "name": "PlateDepth"
+       }
+      ]
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "12eb0031e3a1a08270a6c2e53f2ba3a303909933bea2d6692810213582799c86",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "1029eca8b99c78c1f7f847a8ae8052a11e83fb97e1da086745bbf08023bd21bc",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           30.0,
+           20.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlateProfile"
+        ]
+       },
+       "sketch": "PlateProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "PlateProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 4,
+        "constraint_count": 11,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "geo_ids": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "constraint_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+       ]
+      },
+      "text": "Mutation committed; fingerprint 1029eca8b99c.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "pad",
+     "mcp": "feature_pad",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "body": "PlateBody",
+      "profile": "PlateProfile",
+      "name": "PlatePad",
+      "length": {
+       "value": 5,
+       "unit": "mm"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "1029eca8b99c78c1f7f847a8ae8052a11e83fb97e1da086745bbf08023bd21bc",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "348a46440d91e2b9fe8290b0621a20d4e3053344d239fdb919921eb71645fb6a",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateBody",
+          "volume": 12000.0,
+          "area": 5800.0,
+          "com": [
+           30.0,
+           20.0,
+           2.5
+          ]
+         },
+         {
+          "name": "PlatePad",
+          "volume": 12000.0,
+          "area": 5800.0,
+          "com": [
+           30.0,
+           20.0,
+           2.5
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlatePad",
+         "PlateBody"
+        ]
+       },
+       "feature": "PlatePad",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "PlatePad",
+        "readable": true,
+        "body": "PlateBody",
+        "is_tip": true,
+        "shape_summary": {
+         "solid_count": 1,
+         "face_count": 6,
+         "edge_count": 12,
+         "vertex_count": 8,
+         "is_valid": true,
+         "volume": 12000.0,
+         "area": 5800.0,
+         "bbox": [
+          60.0,
+          40.0,
+          5.0
+         ]
+        }
+       }
+      },
+      "text": "Mutation committed; fingerprint 348a46440d91.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "mass_given",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "object": "PlatePad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "PlatePad",
+       "solid": true,
+       "volume": {
+        "value": 12000.0,
+        "unit": "mm^3"
+       },
+       "area": {
+        "value": 5800.0,
+        "unit": "mm^2"
+       },
+       "bbox": {
+        "xmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "xmax": {
+         "value": 60.0,
+         "unit": "mm"
+        },
+        "ymin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "ymax": {
+         "value": 40.0,
+         "unit": "mm"
+        },
+        "zmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "zmax": {
+         "value": 5.0,
+         "unit": "mm"
+        }
+       },
+       "com": {
+        "x": {
+         "value": 30.0,
+         "unit": "mm"
+        },
+        "y": {
+         "value": 20.0,
+         "unit": "mm"
+        },
+        "z": {
+         "value": 2.5,
+         "unit": "mm"
+        }
+       },
+       "counts": {
+        "faces": 6,
+        "edges": 12,
+        "vertices": 8,
+        "solids": 1
+       }
+      },
+      "text": "PlatePad: volume 12000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "face_oracle",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "code": "f = doc.getObject('PlatePad').Shape.Faces[5]\nresult = [type(f.Surface).__name__, round(f.BoundBox.ZMin, 3), round(f.BoundBox.ZMax, 3)]"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+       "stdout": "",
+       "value_repr": "['Plane', 5.0, 5.0]",
+       "fingerprint_after": null
+      },
+      "text": "doc: fcb-doc:OL0fQcH7-9CpYqhya84fZA\nfingerprint_after: None\nstdout: \nvalue_repr: ['Plane', 5.0, 5.0]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "boss",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "name": "BossProfile",
+      "face": {
+       "kind": "mapped_name",
+       "object": "PlatePad",
+       "mapped_name": "Face6"
+      },
+      "body": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "348a46440d91e2b9fe8290b0621a20d4e3053344d239fdb919921eb71645fb6a",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "af376c65c2226a833b149c93bc46c0afba092fca05bca5cb2974158dfc03a8de",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "BossProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "PASS": 1
+          },
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "BossProfile"
+        ]
+       },
+       "sketch": "BossProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "BossProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 0,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint af376c65c222.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "placement",
+     "mcp": "query_placement",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "object": "BossProfile"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "object": "BossProfile",
+       "local": {
+        "position": {
+         "x": {
+          "value": 0.0,
+          "unit": "mm"
+         },
+         "y": {
+          "value": 0.0,
+          "unit": "mm"
+         },
+         "z": {
+          "value": 5.0,
+          "unit": "mm"
+         }
+        },
+        "axis": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1.0
+        },
+        "angle": {
+         "value": 0.0,
+         "unit": "deg"
+        }
+       },
+       "global": {
+        "position": {
+         "x": {
+          "value": 0.0,
+          "unit": "mm"
+         },
+         "y": {
+          "value": 0.0,
+          "unit": "mm"
+         },
+         "z": {
+          "value": 5.0,
+          "unit": "mm"
+         }
+        },
+        "axis": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 1.0
+        },
+        "angle": {
+         "value": 0.0,
+         "unit": "deg"
+        }
+       }
+      },
+      "text": "BossProfile at (0.0, 0.0, 5.0) mm, rotated 0.0 deg.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "verify",
+     "mcp": "verify_sketch",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "sketch": "BossProfile"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "sketch": "BossProfile",
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 0,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "checks": [
+        {
+         "id": "sketch.fully_constrained",
+         "measured": true,
+         "expected": true,
+         "passed": true,
+         "detail": {
+          "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+         }
+        }
+       ],
+       "warnings": [],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: OK\nwarnings: [0 items]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "both",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "name": "Both",
+      "plane": "XY",
+      "face": {
+       "kind": "mapped_name",
+       "object": "PlatePad",
+       "mapped_name": "Face6"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "sketch_create requires exactly one of 'plane' and 'face'",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 377, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 655, in sketch_create\n    raise ValidationError(\"sketch_create requires exactly one of 'plane' and 'face'\")\nfreecad_buddy.usecases.documents.ValidationError: sketch_create requires exactly one of 'plane' and 'face'\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "cylinder",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:mIzQTWqUnRA-yS1SLhfiHg",
+       "name": "cylinder_r5_h20",
+       "label": "cylinder-r5-h20",
+       "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      },
+      "text": "Opened cylinder-r5-h20 -> fcb-doc:mIzQTWqUnRA-yS1SLhfiHg."
+     }
+    },
+    {
+     "name": "cylinder_oracle",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:mIzQTWqUnRA-yS1SLhfiHg",
+      "code": "result = type(doc.getObject('Cylinder').Shape.Faces[0].Surface).__name__"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:mIzQTWqUnRA-yS1SLhfiHg",
+       "stdout": "",
+       "value_repr": "'Cylinder'",
+       "fingerprint_after": null
+      },
+      "text": "doc: fcb-doc:mIzQTWqUnRA-yS1SLhfiHg\nfingerprint_after: None\nstdout: \nvalue_repr: 'Cylinder'",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "curved",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:mIzQTWqUnRA-yS1SLhfiHg",
+      "name": "OnCurve",
+      "face": {
+       "kind": "mapped_name",
+       "object": "Cylinder",
+       "mapped_name": "Face1"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "Face1 on Cylinder is not a planar face",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 377, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 699, in sketch_create\n    return _sketch_mutation(\n           ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 603, in _sketch_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 579, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 669, in precheck\n    _require_planar_face(target, support[1])\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 723, in _require_planar_face\n    raise ValidationError(f\"{subelement} on {target.Name} is not a planar face\")\nfreecad_buddy.usecases.documents.ValidationError: Face1 on Cylinder is not a planar face\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "cylinder_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:mIzQTWqUnRA-yS1SLhfiHg"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:mIzQTWqUnRA-yS1SLhfiHg",
+       "name": "cylinder_r5_h20",
+       "closed": true
+      },
+      "text": "Closed cylinder_r5_h20 (doc=fcb-doc:mIzQTWqUnRA-yS1SLhfiHg)."
+     }
+    },
+    {
+     "name": "geometric",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA",
+      "name": "Geometric",
+      "face": {
+       "kind": "geometric",
+       "object": "PlatePad"
+      },
+      "body": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "selector kind must be 'mapped_name'; 'geometric' is not resolvable by a sketch tool",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 377, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 658, in sketch_create\n    support = _selector_subelement(face) if face is not None else None\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/sketches.py\", line 539, in _selector_subelement\n    raise ValidationError(\nfreecad_buddy.usecases.documents.ValidationError: selector kind must be 'mapped_name'; 'geometric' is not resolvable by a sketch tool\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:OL0fQcH7-9CpYqhya84fZA"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "BracketPlate",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'BracketPlate'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-03-03.png",
+   "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open BossProfile in edit mode (script_exec setEdit, test case Preconditions), press the `Isometric` push button by its element token, press the Fit All toolbar button, wait 8 s (edit mode looks straight at the sketch plane, which cannot show the plate's thickness), capture the window and judge it: a shaded wide thin plate with the sketch axis cross on its top surface, raised above the plate's bottom by the plate thickness, not sunk inside or floating below; no second sketch, no error dialog.",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "BracketPlate",
+    "documents": [
+     {
+      "modified": true,
+      "name": "BracketPlate",
+      "label": "BracketPlate",
+      "objects": [
+       {
+        "name": "PlateBody",
+        "type": "PartDesign::Body",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 12000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          60.0,
+          40.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Origin",
+        "type": "App::Origin",
+        "visibility": false,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "X_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "Y_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "Z_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "XY_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "XZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          -1e+100,
+          1e+100,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "YZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "Origin001",
+        "type": "App::Point",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "PlateProfile",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          60.0,
+          40.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         932,
+         595
+        ]
+       },
+       {
+        "name": "PlatePad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 12000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          60.0,
+          40.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "BossProfile",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": null,
+        "screen_center": null
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 50.881008 -0.81297874 23.405933\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 5.8253608\n  farDistance 66.51944\n  aspectRatio 1\n  focalDistance 36.142082\n  height 47.292301\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "BracketPlate.PlatePad": {
+      "point": [
+       913,
+       501
+      ],
+      "rgb": [
+       159,
+       165,
+       170
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      364,
+      157,
+      1468,
+      853
+     ],
+     "fraction": 0.9443690637720489,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The visual Then needs Sketcher edit mode, which the runner does not open: open BossProfile in edit mode (script_exec setEdit, test case Preconditions), press the `Isometric` push button by its element token, press the Fit All toolbar button, wait 8 s (edit mode looks straight at the sketch plane, which cannot show the plate's thickness), capture the window and judge it: a shaded wide thin plate with the sketch axis cross on its top surface, raised above the plate's bottom by the plate thickness, not sunk inside or floating below; no second sketch, no error dialog."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-03-20",
+   "tc": "TC-03",
+   "title": "A moved external-geometry source is flagged and rolled back",
+   "file": "/repo/tests/uat/scenarios/tc-03-20.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "BracketPlate"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+       "name": "BracketPlate",
+       "label": "BracketPlate"
+      },
+      "text": "doc: fcb-doc:PuCJtbSngAe2xPwZqGl4rQ\nlabel: BracketPlate\nname: BracketPlate"
+     }
+    },
+    {
+     "name": "body",
+     "mcp": "feature_body_create",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "name": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "2980ee29ef79c1f160e98834036bb557169763c7227adeee41c43e70f63a7bc0",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateBody",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": null,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlateBody"
+        ]
+       },
+       "feature": "PlateBody",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "PlateBody",
+        "readable": false
+       }
+      },
+      "text": "Mutation committed; fingerprint 2980ee29ef79.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "profile",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "name": "PlateProfile",
+      "plane": "XY",
+      "body": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "2980ee29ef79c1f160e98834036bb557169763c7227adeee41c43e70f63a7bc0",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "12eb0031e3a1a08270a6c2e53f2ba3a303909933bea2d6692810213582799c86",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlateProfile"
+        ]
+       },
+       "sketch": "PlateProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "PlateProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 0,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint 12eb0031e3a1.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "rect",
+     "mcp": "sketch_add_geometry",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "sketch": "PlateProfile",
+      "geometry": [
+       {
+        "kind": "line_segment",
+        "start": [
+         0,
+         0
+        ],
+        "end": [
+         60,
+         0
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         60,
+         0
+        ],
+        "end": [
+         60,
+         40
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         60,
+         40
+        ],
+        "end": [
+         0,
+         40
+        ]
+       },
+       {
+        "kind": "line_segment",
+        "start": [
+         0,
+         40
+        ],
+        "end": [
+         0,
+         0
+        ]
+       }
+      ],
+      "constraints": [
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 2,
+        "second": 1,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 1,
+        "first_pos": 2,
+        "second": 2,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 2,
+        "first_pos": 2,
+        "second": 3,
+        "second_pos": 1
+       },
+       {
+        "type": "Coincident",
+        "first": 3,
+        "first_pos": 2,
+        "second": 0,
+        "second_pos": 1
+       },
+       {
+        "type": "Horizontal",
+        "first": 0
+       },
+       {
+        "type": "Horizontal",
+        "first": 2
+       },
+       {
+        "type": "Vertical",
+        "first": 1
+       },
+       {
+        "type": "Vertical",
+        "first": 3
+       },
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 1,
+        "second": -1,
+        "second_pos": 1
+       },
+       {
+        "type": "DistanceX",
+        "first": 0,
+        "first_pos": 1,
+        "second": 0,
+        "second_pos": 2,
+        "value": {
+         "value": 60,
+         "unit": "mm"
+        },
+        "name": "PlateWidth"
+       },
+       {
+        "type": "DistanceY",
+        "first": 1,
+        "first_pos": 1,
+        "second": 1,
+        "second_pos": 2,
+        "value": {
+         "value": 40,
+         "unit": "mm"
+        },
+        "name": "PlateDepth"
+       }
+      ]
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "12eb0031e3a1a08270a6c2e53f2ba3a303909933bea2d6692810213582799c86",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "1029eca8b99c78c1f7f847a8ae8052a11e83fb97e1da086745bbf08023bd21bc",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           30.0,
+           20.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlateProfile"
+        ]
+       },
+       "sketch": "PlateProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "PlateProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 4,
+        "constraint_count": 11,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "geo_ids": [
+        0,
+        1,
+        2,
+        3
+       ],
+       "constraint_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+       ]
+      },
+      "text": "Mutation committed; fingerprint 1029eca8b99c.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "pad",
+     "mcp": "feature_pad",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "body": "PlateBody",
+      "profile": "PlateProfile",
+      "name": "PlatePad",
+      "length": {
+       "value": 5,
+       "unit": "mm"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "1029eca8b99c78c1f7f847a8ae8052a11e83fb97e1da086745bbf08023bd21bc",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "348a46440d91e2b9fe8290b0621a20d4e3053344d239fdb919921eb71645fb6a",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "PlateBody",
+          "volume": 12000.0,
+          "area": 5800.0,
+          "com": [
+           30.0,
+           20.0,
+           2.5
+          ]
+         },
+         {
+          "name": "PlatePad",
+          "volume": 12000.0,
+          "area": 5800.0,
+          "com": [
+           30.0,
+           20.0,
+           2.5
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "PlatePad",
+         "PlateBody"
+        ]
+       },
+       "feature": "PlatePad",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "PlatePad",
+        "readable": true,
+        "body": "PlateBody",
+        "is_tip": true,
+        "shape_summary": {
+         "solid_count": 1,
+         "face_count": 6,
+         "edge_count": 12,
+         "vertex_count": 8,
+         "is_valid": true,
+         "volume": 12000.0,
+         "area": 5800.0,
+         "bbox": [
+          60.0,
+          40.0,
+          5.0
+         ]
+        }
+       }
+      },
+      "text": "Mutation committed; fingerprint 348a46440d91.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "mass_given",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "object": "PlatePad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "PlatePad",
+       "solid": true,
+       "volume": {
+        "value": 12000.0,
+        "unit": "mm^3"
+       },
+       "area": {
+        "value": 5800.0,
+        "unit": "mm^2"
+       },
+       "bbox": {
+        "xmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "xmax": {
+         "value": 60.0,
+         "unit": "mm"
+        },
+        "ymin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "ymax": {
+         "value": 40.0,
+         "unit": "mm"
+        },
+        "zmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "zmax": {
+         "value": 5.0,
+         "unit": "mm"
+        }
+       },
+       "com": {
+        "x": {
+         "value": 30.0,
+         "unit": "mm"
+        },
+        "y": {
+         "value": 20.0,
+         "unit": "mm"
+        },
+        "z": {
+         "value": 2.5,
+         "unit": "mm"
+        }
+       },
+       "counts": {
+        "faces": 6,
+        "edges": 12,
+        "vertices": 8,
+        "solids": 1
+       }
+      },
+      "text": "PlatePad: volume 12000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "boss",
+     "mcp": "sketch_create",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "name": "BossProfile",
+      "face": {
+       "kind": "mapped_name",
+       "object": "PlatePad",
+       "mapped_name": "Face6"
+      },
+      "body": "PlateBody"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "348a46440d91e2b9fe8290b0621a20d4e3053344d239fdb919921eb71645fb6a",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "af376c65c2226a833b149c93bc46c0afba092fca05bca5cb2974158dfc03a8de",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "BossProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           0.0,
+           0.0,
+           0.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "PASS": 1
+          },
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "BossProfile"
+        ]
+       },
+       "sketch": "BossProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "BossProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 0,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint af376c65c222.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "circle",
+     "mcp": "sketch_add_geometry",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "sketch": "BossProfile",
+      "geometry": [
+       {
+        "kind": "circle",
+        "center": [
+         30,
+         20
+        ],
+        "radius": {
+         "value": 5,
+         "unit": "mm"
+        }
+       }
+      ],
+      "constraints": [
+       {
+        "type": "DistanceX",
+        "first": 0,
+        "first_pos": 3,
+        "value": {
+         "value": 30,
+         "unit": "mm"
+        }
+       },
+       {
+        "type": "DistanceY",
+        "first": 0,
+        "first_pos": 3,
+        "value": {
+         "value": 20,
+         "unit": "mm"
+        }
+       },
+       {
+        "type": "Radius",
+        "first": 0,
+        "value": {
+         "value": 5,
+         "unit": "mm"
+        },
+        "name": "BossRadius"
+       }
+      ]
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "af376c65c2226a833b149c93bc46c0afba092fca05bca5cb2974158dfc03a8de",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "1d9d31104633f1c52ec689c3b5ebc2cd2f29452f0c46ce2772e47a01a8ee59ad",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "BossProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           30.0,
+           20.0,
+           5.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "PASS": 2
+          },
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "BossProfile"
+        ]
+       },
+       "sketch": "BossProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "BossProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "geo_ids": [
+        0
+       ],
+       "constraint_ids": [
+        1,
+        2,
+        3
+       ]
+      },
+      "text": "Mutation committed; fingerprint 1d9d31104633.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "boss_verify",
+     "mcp": "verify_sketch",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "sketch": "BossProfile"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "sketch": "BossProfile",
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "checks": [
+        {
+         "id": "sketch.fully_constrained",
+         "measured": true,
+         "expected": true,
+         "passed": true,
+         "detail": {
+          "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+         }
+        }
+       ],
+       "warnings": [],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: OK\nwarnings: [0 items]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "edge_oracle",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "code": "e = doc.getObject('PlatePad').Shape.getElement('Edge3')\nresult = round(e.Length, 3)"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+       "stdout": "",
+       "value_repr": "60.0",
+       "fingerprint_after": null
+      },
+      "text": "doc: fcb-doc:PuCJtbSngAe2xPwZqGl4rQ\nfingerprint_after: None\nstdout: \nvalue_repr: 60.0\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "project",
+     "mcp": "sketch_add_external_geometry",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "sketch": "BossProfile",
+      "edge": {
+       "kind": "mapped_name",
+       "object": "PlatePad",
+       "mapped_name": "Edge3"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "1d9d31104633f1c52ec689c3b5ebc2cd2f29452f0c46ce2772e47a01a8ee59ad",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "1d9d31104633f1c52ec689c3b5ebc2cd2f29452f0c46ce2772e47a01a8ee59ad",
+         "serializer": "exportBinary"
+        },
+        "changed": [],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "PASS": 2
+          },
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "BossProfile"
+        ]
+       },
+       "sketch": "BossProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "BossProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint 1d9d31104633.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "dependencies",
+     "mcp": "query_dependencies",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "object": "BossProfile"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "object": "BossProfile",
+       "in_list": [
+        "PlateBody"
+       ],
+       "out_list": [
+        "PlatePad"
+       ]
+      },
+      "text": "BossProfile: 1 upstream, 1 downstream.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "move",
+     "mcp": "feature_set_parameters",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "feature": "PlatePad",
+      "parameters": {
+       "Length": {
+        "value": 30,
+        "unit": "mm"
+       }
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "SPEC_FAILED",
+      "detail": {
+       "code": "mutation.spec_failed",
+       "message": "TNP audit flagged 1 reference(s): BossProfile.AttachmentSupport REPOINTED"
+      },
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "1d9d31104633f1c52ec689c3b5ebc2cd2f29452f0c46ce2772e47a01a8ee59ad",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "e97d982413e984ade10c075e70e102e02efea4b2d6ea51cd40ca56d4811663a1",
+         "serializer": "exportBinary"
+        },
+        "changed": [],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "FLAGGED",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "REPOINTED": 1,
+           "PASS": 2
+          },
+          "findings": [
+           {
+            "owner": "BossProfile",
+            "prop": "AttachmentSupport",
+            "mapped_before": "#14:1;:G0;XTR;:H1173:8,F",
+            "state_after": "('Face', 0.0, 0.0, 30.0, 60.0, 40.0, 30.0)",
+            "verdict": "REPOINTED",
+            "layer": 1,
+            "detail": "BossProfile.AttachmentSupport entry Face6 resolves to a sub-shape whose witness moved: ('Face', 0.0, 0.0, 5.0, 60.0, 40.0, 5.0) -> ('Face', 0.0, 0.0, 30.0, 60.0, 40.0, 30.0)"
+           }
+          ]
+         },
+         "passed": false,
+         "explanation": "TNP audit flagged 1 reference(s): BossProfile.AttachmentSupport REPOINTED"
+        },
+        "rolled_back": true,
+        "rollback_proven": "rolled_back_verified",
+        "touched": [
+         "PlatePad",
+         "PlateBody"
+        ]
+       },
+       "feature": "PlatePad",
+       "feature_state": {
+        "schema": "fcb.feature-state/1",
+        "feature": "PlatePad",
+        "readable": true,
+        "body": "PlateBody",
+        "is_tip": true,
+        "shape_summary": {
+         "solid_count": 1,
+         "face_count": 6,
+         "edge_count": 12,
+         "vertex_count": 8,
+         "is_valid": true,
+         "volume": 12000.0,
+         "area": 5800.0,
+         "bbox": [
+          60.0,
+          40.0,
+          5.0
+         ]
+        }
+       }
+      },
+      "text": "Mutation rolled back (rolled_back_verified): TNP audit flagged 1 reference(s): BossProfile.AttachmentSupport REPOINTED"
+     }
+    },
+    {
+     "name": "mass",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "object": "PlatePad"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "PlatePad",
+       "solid": true,
+       "volume": {
+        "value": 12000.0,
+        "unit": "mm^3"
+       },
+       "area": {
+        "value": 5800.0,
+        "unit": "mm^2"
+       },
+       "bbox": {
+        "xmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "xmax": {
+         "value": 60.0,
+         "unit": "mm"
+        },
+        "ymin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "ymax": {
+         "value": 40.0,
+         "unit": "mm"
+        },
+        "zmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "zmax": {
+         "value": 5.0,
+         "unit": "mm"
+        }
+       },
+       "com": {
+        "x": {
+         "value": 30.0,
+         "unit": "mm"
+        },
+        "y": {
+         "value": 20.0,
+         "unit": "mm"
+        },
+        "z": {
+         "value": 2.5,
+         "unit": "mm"
+        }
+       },
+       "counts": {
+        "faces": 6,
+        "edges": 12,
+        "vertices": 8,
+        "solids": 1
+       }
+      },
+      "text": "PlatePad: volume 12000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "recompute",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "failing_objects": []
+       },
+       "checks": [
+        {
+         "id": "recompute.clean",
+         "measured": 0,
+         "expected": 0,
+         "passed": true,
+         "detail": {
+          "message": "no object left in an error state"
+         }
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "Recompute clean: no errors.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "harmless",
+     "mcp": "sketch_set_datum",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ",
+      "sketch": "BossProfile",
+      "constraint": "BossRadius",
+      "value": {
+       "value": 4,
+       "unit": "mm"
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "e97d982413e984ade10c075e70e102e02efea4b2d6ea51cd40ca56d4811663a1",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "a2de51fcfd92f90390802456decc1ff8d7a6fdf3a5f3251f561db9ca848731d2",
+         "serializer": "exportBinary"
+        },
+        "changed": [
+         {
+          "name": "BossProfile",
+          "volume": 0.0,
+          "area": 0.0,
+          "com": [
+           30.0,
+           20.0,
+           5.0
+          ]
+         }
+        ],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "PASS": 3
+          },
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "BossProfile"
+        ]
+       },
+       "sketch": "BossProfile",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "BossProfile",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       }
+      },
+      "text": "Mutation committed; fingerprint a2de51fcfd92.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": null,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:PuCJtbSngAe2xPwZqGl4rQ"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "BracketPlate",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'BracketPlate'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-03-20.png",
+   "agent_check": "The runner takes no before capture (the test case takes it in edit mode with the Isometric view, in the Given, and again presses Isometric after reopening edit mode, because closing edit mode restores the earlier camera), and the projected external curve is drawn only in Sketcher edit mode: judge the capture as one whole thin plate (5 mm, not 30 mm), no torn, missing or black face, with the BossProfile circle on its top face; then open BossProfile in edit mode (test case Preconditions), press the `Isometric` push button by its element token and the Fit All toolbar button, wait 8 s, and judge the circle at radius 4 and the external curve along a real plate edge, not hanging in space; no error dialog or red error marker. The script does not check these Thens; check each one in the gate run: Given: whole-document query_dependencies has edge BossProfile -> PlatePad (encoded as the object form) (comparison op); Given: intact state captured (tc-03-20-before.png) (GUI action); some finding is REPOINTED, owner BossProfile, prop AttachmentSupport (checked at findings.0 only) (comparison op).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "BracketPlate",
+    "documents": [
+     {
+      "modified": true,
+      "name": "BracketPlate",
+      "label": "BracketPlate",
+      "objects": [
+       {
+        "name": "PlateBody",
+        "type": "PartDesign::Body",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 12000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          60.0,
+          40.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Origin",
+        "type": "App::Origin",
+        "visibility": false,
+        "shape": null,
+        "screen_center": null
+       },
+       {
+        "name": "X_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "Y_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "Z_Axis",
+        "type": "App::Line",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          -1e+100,
+          0.0,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "XY_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "XZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          -1e+100,
+          0.0,
+          -1e+100,
+          1e+100,
+          0.0,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "YZ_Plane",
+        "type": "App::Plane",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          -1e+100,
+          -1e+100,
+          0.0,
+          1e+100,
+          1e+100
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "Origin001",
+        "type": "App::Point",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         370,
+         530
+        ]
+       },
+       {
+        "name": "PlateProfile",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          60.0,
+          40.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         932,
+         595
+        ]
+       },
+       {
+        "name": "PlatePad",
+        "type": "PartDesign::Pad",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 12000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          60.0,
+          40.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "BossProfile",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          26.0,
+          16.0,
+          5.0,
+          34.0,
+          24.0,
+          5.0
+         ]
+        },
+        "screen_center": [
+         932,
+         530
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 50.881008 -0.81297874 23.405933\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 5.8253608\n  farDistance 66.51944\n  aspectRatio 1\n  focalDistance 36.142082\n  height 47.292301\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "BracketPlate.PlatePad": {
+      "point": [
+       913,
+       501
+      ],
+      "rgb": [
+       159,
+       165,
+       170
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      364,
+      157,
+      1468,
+      853
+     ],
+     "fraction": 0.9443690637720489,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The runner takes no before capture (the test case takes it in edit mode with the Isometric view, in the Given, and again presses Isometric after reopening edit mode, because closing edit mode restores the earlier camera), and the projected external curve is drawn only in Sketcher edit mode: judge the capture as one whole thin plate (5 mm, not 30 mm), no torn, missing or black face, with the BossProfile circle on its top face; then open BossProfile in edit mode (test case Preconditions), press the `Isometric` push button by its element token and the Fit All toolbar button, wait 8 s, and judge the circle at radius 4 and the external curve along a real plate edge, not hanging in space; no error dialog or red error marker. The script does not check these Thens; check each one in the gate run: Given: whole-document query_dependencies has edge BossProfile -> PlatePad (encoded as the object form) (comparison op); Given: intact state captured (tc-03-20-before.png) (GUI action); some finding is REPOINTED, owner BossProfile, prop AttachmentSupport (checked at findings.0 only) (comparison op)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-07-03",
+   "tc": "TC-07",
+   "title": "verify_sketch PASS is equivalent to FullyConstrained, both directions",
+   "file": "/repo/tests/uat/scenarios/tc-07-03.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "create",
+     "mcp": "document_create",
+     "args": {
+      "label": "tc07_sketch"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+       "name": "tc07_sketch",
+       "label": "tc07_sketch"
+      },
+      "text": "doc: fcb-doc:jIWxTPLuuBekXaZ59GdJ7g\nlabel: tc07_sketch\nname: tc07_sketch"
+     }
+    },
+    {
+     "name": "build",
+     "mcp": "script_exec",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "code": "sk = doc.addObject('Sketcher::SketchObject', 'Sketch'); sk.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(10, 0, 0))); doc.addObject('App::DocumentObjectGroup', 'Group'); doc.recompute()"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+       "stdout": "",
+       "value_repr": null,
+       "fingerprint_after": null
+      },
+      "text": "doc: fcb-doc:jIWxTPLuuBekXaZ59GdJ7g\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 1.36,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "grade_under",
+     "mcp": "verify_sketch",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "sketch": "Sketch"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "SPEC_FAILED",
+      "detail": {
+       "code": "SPEC_FAILED",
+       "message": "sketch.fully_constrained",
+       "objects": []
+      },
+      "structured_content": {
+       "subject": {
+        "sketch": "Sketch",
+        "dof": 4,
+        "fully_constrained": false,
+        "geometry_count": 1,
+        "constraint_count": 0,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "checks": [
+        {
+         "id": "sketch.fully_constrained",
+         "measured": false,
+         "expected": true,
+         "passed": false,
+         "detail": {
+          "message": "dof=4, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+         }
+        }
+       ],
+       "warnings": [],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "SPEC_FAILED"
+      },
+      "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: SPEC_FAILED\nwarnings: [0 items]"
+     }
+    },
+    {
+     "name": "constrain",
+     "mcp": "sketch_add_constraint",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "sketch": "Sketch",
+      "constraints": [
+       {
+        "type": "Coincident",
+        "first": 0,
+        "first_pos": 1,
+        "second": -1,
+        "second_pos": 1
+       },
+       {
+        "type": "Horizontal",
+        "first": 0
+       },
+       {
+        "type": "DistanceX",
+        "first": 0,
+        "value": {
+         "value": 10,
+         "unit": "mm"
+        }
+       }
+      ]
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+         "serializer": "exportBinary"
+        },
+        "changed": [],
+        "post_verify": {
+         "recompute_clean": true,
+         "is_valid": true,
+         "fully_constrained": true,
+         "tnp_audit": {
+          "status": "CLEAN",
+          "element_map_version": "15.70200.5",
+          "counts": {},
+          "findings": []
+         },
+         "passed": true,
+         "explanation": null
+        },
+        "rolled_back": false,
+        "rollback_proven": null,
+        "touched": [
+         "Sketch"
+        ]
+       },
+       "sketch": "Sketch",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "Sketch",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "constraint_ids": [
+        1,
+        2,
+        3
+       ]
+      },
+      "text": "Mutation committed; fingerprint b9bdaf98656a.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 1.36,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "grade_full",
+     "mcp": "verify_sketch",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "sketch": "Sketch"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "sketch": "Sketch",
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "checks": [
+        {
+         "id": "sketch.fully_constrained",
+         "measured": true,
+         "expected": true,
+         "passed": true,
+         "detail": {
+          "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+         }
+        }
+       ],
+       "warnings": [],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: OK\nwarnings: [0 items]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 1.36,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "duplicate",
+     "mcp": "sketch_add_constraint",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "sketch": "Sketch",
+      "constraints": [
+       {
+        "type": "Horizontal",
+        "first": 0
+       }
+      ]
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "RECOMPUTE_ERROR",
+      "detail": {
+       "code": "mutation.recompute_error",
+       "message": "recompute left 1 object(s) invalid: Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+      },
+      "structured_content": {
+       "mutation": {
+        "schema": "fcb.mutation/2",
+        "fingerprint_before": {
+         "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+         "serializer": "exportBinary"
+        },
+        "fingerprint_after": {
+         "digest": "b9bdaf98656a48d783c8f10f46b43cc9e9aeab8788a04ff60665280a829c0cdd",
+         "serializer": "exportBinary"
+        },
+        "changed": [],
+        "post_verify": {
+         "recompute_clean": false,
+         "is_valid": false,
+         "fully_constrained": "not_measured",
+         "tnp_audit": {
+          "status": "FLAGGED",
+          "element_map_version": "15.70200.5",
+          "counts": {
+           "BROKEN": 1
+          },
+          "findings": [
+           {
+            "owner": "Sketch",
+            "prop": "",
+            "mapped_before": null,
+            "state_after": "Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n",
+            "verdict": "BROKEN",
+            "layer": 0,
+            "detail": "Sketch is invalid after the mutation: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+           }
+          ]
+         },
+         "passed": false,
+         "explanation": "recompute left 1 object(s) invalid: Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+        },
+        "rolled_back": true,
+        "rollback_proven": "rolled_back_verified",
+        "touched": [
+         "Sketch"
+        ]
+       },
+       "sketch": "Sketch",
+       "sketch_state": {
+        "schema": "fcb.sketch-state/1",
+        "sketch": "Sketch",
+        "readable": true,
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "constraint_ids": []
+      },
+      "text": "Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Sketch: Sketch with redundant constraints\nRemove the following redundant constraint:\n4\n\n"
+     }
+    },
+    {
+     "name": "grade_after",
+     "mcp": "verify_sketch",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "sketch": "Sketch"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "sketch": "Sketch",
+        "dof": 0,
+        "fully_constrained": true,
+        "geometry_count": 1,
+        "constraint_count": 3,
+        "conflicting": [],
+        "malformed": [],
+        "redundant": [],
+        "partially_redundant": [],
+        "solver_status_code": 0
+       },
+       "checks": [
+        {
+         "id": "sketch.fully_constrained",
+         "measured": true,
+         "expected": true,
+         "passed": true,
+         "detail": {
+          "message": "dof=0, conflicting=0, malformed=0, evaluate_bad=False, degenerate=0"
+         }
+        }
+       ],
+       "warnings": [],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15
+       },
+       "verdict": "OK"
+      },
+      "text": "banner: {2 fields}\nchecks: [1 items]\nschema: fcb.validation-report/1\nsubject: {10 fields}\nverdict: OK\nwarnings: [0 items]\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+      "framing": {
+       "fits": false,
+       "ratio": 1.36,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    },
+    {
+     "name": "not_sketch",
+     "mcp": "verify_sketch",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g",
+      "sketch": "Group"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "object is not a sketch: Group",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 326, in verify_sketch\n    return registry.with_document(doc, lambda _h, document: read_sketch(document, sketch))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 326, in <lambda>\n    return registry.with_document(doc, lambda _h, document: read_sketch(document, sketch))\n                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 341, in read_sketch\n    raise ValidationError(f\"object is not a sketch: {sketch}\")\nfreecad_buddy.usecases.documents.ValidationError: object is not a sketch: Group\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:jIWxTPLuuBekXaZ59GdJ7g"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "tc07_sketch",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'tc07_sketch'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-07-03.png",
+   "agent_check": "The final state is a sketch, so the pixel check cannot judge it. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then open Sketch in Sketcher edit mode (script_exec setEdit, as in the test case), press the Fit All toolbar button, wait 8 s, and judge the capture: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, drawn in FreeCAD's fully-constrained colour rather than the under-constrained white. The script does not check these Thens; check each one in the gate run: failed check ids include sketch.fully_constrained (checked at checks.0 only) (comparison op).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "tc07_sketch",
+    "documents": [
+     {
+      "modified": true,
+      "name": "tc07_sketch",
+      "label": "tc07_sketch",
+      "objects": [
+       {
+        "name": "Sketch",
+        "type": "Sketcher::SketchObject",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 0.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          0.0,
+          0.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       },
+       {
+        "name": "Group",
+        "type": "App::DocumentObjectGroup",
+        "visibility": true,
+        "shape": null,
+        "screen_center": null
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 7.8887391 -2.8793278 2.8921874\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 2.1111343\n  farDistance 7.8946395\n  aspectRatio 1\n  focalDistance 5\n  height 4.3085108\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The final state is a sketch, so the pixel check cannot judge it. If the scripted view_fit_viewport did not return OK, frame with the GUI Fit All toolbar button. Then open Sketch in Sketcher edit mode (script_exec setEdit, as in the test case), press the Fit All toolbar button, wait 8 s, and judge the capture: one straight horizontal segment beginning at the origin marker, with constraint glyphs drawn on it, drawn in FreeCAD's fully-constrained colour rather than the under-constrained white. The script does not check these Thens; check each one in the gate run: failed check ids include sketch.fully_constrained (checked at checks.0 only) (comparison op)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-09-12",
+   "tc": "TC-09",
+   "title": "An unknown doc handle returns INVALID_INPUT",
+   "file": "/repo/tests/uat/scenarios/tc-09-12.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "listed",
+     "mcp": "document_list",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "documents": []
+      },
+      "text": "0 open document(s)."
+     }
+    },
+    {
+     "name": "open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:GFhKItv4S9_ohlFgRRyiFA",
+       "name": "box_10_20_30",
+       "label": "box-10-20-30",
+       "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+      },
+      "text": "Opened box-10-20-30 -> fcb-doc:GFhKItv4S9_ohlFgRRyiFA."
+     }
+    },
+    {
+     "menu": [
+      "View",
+      "Visibility",
+      "Show All Objects"
+     ],
+     "attempts": 1,
+     "attempt_log": []
+    },
+    {
+     "name": "fit_before",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:GFhKItv4S9_ohlFgRRyiFA"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "box_10_20_30",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'box_10_20_30'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    },
+    {
+     "name": "unknown_tree",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": "fcb-doc:does-not-exist"
+     },
+     "result": {
+      "text": "INVALID_INPUT: unknown or stale document handle: fcb-doc:does-not-exist",
+      "is_error": true
+     }
+    },
+    {
+     "name": "unknown_recompute",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "fcb-doc:does-not-exist"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:does-not-exist",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 480, in verify_recompute\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "unknown_object",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:does-not-exist",
+      "object": "Box"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:does-not-exist",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 567, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "unknown_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:does-not-exist"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:does-not-exist",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 550, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:does-not-exist\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "malformed",
+     "mcp": "verify_recompute",
+     "args": {
+      "doc": "not-a-handle at all"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: not-a-handle at all",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/verify.py\", line 480, in verify_recompute\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: not-a-handle at all\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "other_open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:0guYf3XVwjbBZbOZTi6wqA",
+       "name": "cylinder_r5_h20",
+       "label": "cylinder-r5-h20",
+       "path": "/repo/benchmarks/g0/golden-models/cylinder-r5-h20.FCStd"
+      },
+      "text": "Opened cylinder-r5-h20 -> fcb-doc:0guYf3XVwjbBZbOZTi6wqA."
+     }
+    },
+    {
+     "name": "other_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:0guYf3XVwjbBZbOZTi6wqA"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:0guYf3XVwjbBZbOZTi6wqA",
+       "name": "cylinder_r5_h20",
+       "closed": true
+      },
+      "text": "Closed cylinder_r5_h20 (doc=fcb-doc:0guYf3XVwjbBZbOZTi6wqA)."
+     }
+    },
+    {
+     "name": "stale",
+     "mcp": "query_object",
+     "args": {
+      "doc": "fcb-doc:0guYf3XVwjbBZbOZTi6wqA",
+      "object": "Cylinder"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:0guYf3XVwjbBZbOZTi6wqA",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 837, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/queries.py\", line 567, in query_object\n    return registry.with_document(doc, read)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 417, in with_document\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:0guYf3XVwjbBZbOZTi6wqA\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "stale_close",
+     "mcp": "document_close",
+     "args": {
+      "doc": "fcb-doc:0guYf3XVwjbBZbOZTi6wqA"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "INVALID_INPUT",
+      "detail": {
+       "code": "INVALID_INPUT",
+       "message": "unknown or stale document handle: fcb-doc:0guYf3XVwjbBZbOZTi6wqA",
+       "data": {
+        "exception": "ValidationError",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1429, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 550, in document_close\n    handle, document = self._resolve(doc)\n                       ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 400, in _resolve\n    handle, document = self._lookup(doc)\n                       ^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 390, in _lookup\n    raise ValidationError(f\"unknown or stale document handle: {doc}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown or stale document handle: fcb-doc:0guYf3XVwjbBZbOZTi6wqA\n"
+       }
+      },
+      "structured_content": {},
+      "text": ""
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:GFhKItv4S9_ohlFgRRyiFA"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "box_10_20_30",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'box_10_20_30'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "cached",
+       "stale_reason": "served from cache; unverified key component(s): geometry"
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-09-12.png",
+   "agent_check": "The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: the text line starts `INVALID_INPUT:` and names the handle, with no status or detail field (mcp-tools-design.md:60) (raw RPC or second client).",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "box_10_20_30",
+    "documents": [
+     {
+      "modified": true,
+      "name": "box_10_20_30",
+      "label": "box-10-20-30",
+      "objects": [
+       {
+        "name": "Box",
+        "type": "Part::Feature",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 6000.0,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          10.0,
+          20.0,
+          30.0
+         ]
+        },
+        "screen_center": [
+         933,
+         562
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 15.808673 -0.77345753 25.821575\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 1.3863934\n  farDistance 36.064827\n  aspectRatio 1\n  focalDistance 18.708286\n  height 38.610722\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "pixel": {
+    "view_box": [
+     260,
+     133,
+     1568,
+     870
+    ],
+    "samples": {
+     "box_10_20_30.Box": {
+      "point": [
+       914,
+       500
+      ],
+      "rgb": [
+       99,
+       107,
+       111
+      ],
+      "geometry": true
+     }
+    },
+    "extent": {
+     "box": [
+      708,
+      157,
+      1116,
+      853
+     ],
+     "fraction": 0.9443690637720489,
+     "touches_edge": false
+    }
+   },
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: The script does not check these Thens; check each one in the gate run: Given: untouched window captured after the fit (tc-09-12-before.png) (GUI action); query_tree_summary unknown handle: the text line starts `INVALID_INPUT:` and names the handle, with no status or detail field (mcp-tools-design.md:60) (raw RPC or second client)."
+   ],
+   "review": "escalate"
+  },
+  {
+   "id": "TC-13-04",
+   "tc": "TC-13",
+   "title": "Geometry parity — mass properties agree with the drawn shape",
+   "file": "/repo/tests/uat/scenarios/tc-13-04.json",
+   "launch": {},
+   "steps": [
+    {
+     "name": "open",
+     "mcp": "document_open",
+     "args": {
+      "path": "/repo/benchmarks/g0/golden-models/box40-hole-r5.FCStd"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "doc": "fcb-doc:rbF-QqbbiFk3pQhxb-491Q",
+       "name": "box40_hole_r5",
+       "label": "box40-hole-r5",
+       "path": "/repo/benchmarks/g0/golden-models/box40-hole-r5.FCStd"
+      },
+      "text": "Opened box40-hole-r5 -> fcb-doc:rbF-QqbbiFk3pQhxb-491Q."
+     }
+    },
+    {
+     "name": "tree",
+     "mcp": "query_tree_summary",
+     "args": {
+      "doc": "fcb-doc:rbF-QqbbiFk3pQhxb-491Q"
+     },
+     "result": {
+      "text": "OK: 1 objects, 1 shown.\nframing: unknown, unavailable, no visible shape-bearing objects to measure\n- [FEATURE] BoxHole",
+      "is_error": false
+     }
+    },
+    {
+     "name": "mass",
+     "mcp": "query_mass_properties",
+     "args": {
+      "doc": "fcb-doc:rbF-QqbbiFk3pQhxb-491Q",
+      "object": "BoxHole"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "name": "BoxHole",
+       "solid": true,
+       "volume": {
+        "value": 15214.6,
+        "unit": "mm^3"
+       },
+       "area": {
+        "value": 4957.08,
+        "unit": "mm^2"
+       },
+       "bbox": {
+        "xmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "xmax": {
+         "value": 40.0,
+         "unit": "mm"
+        },
+        "ymin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "ymax": {
+         "value": 40.0,
+         "unit": "mm"
+        },
+        "zmin": {
+         "value": 0.0,
+         "unit": "mm"
+        },
+        "zmax": {
+         "value": 10.0,
+         "unit": "mm"
+        }
+       },
+       "com": null,
+       "counts": {
+        "faces": 7,
+        "edges": 15,
+        "vertices": 10,
+        "solids": 1
+       }
+      },
+      "text": "BoxHole: volume 15214.6 mm^3 (solid), 7 faces, 15 edges.",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "shape",
+     "mcp": "verify_shape",
+     "args": {
+      "doc": "fcb-doc:rbF-QqbbiFk3pQhxb-491Q",
+      "object": "BoxHole"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "subject": {
+        "object": "BoxHole"
+       },
+       "checks": [
+        {
+         "id": "shape.volume",
+         "measured": 15214.6,
+         "passed": true
+        },
+        {
+         "id": "shape.bbox",
+         "measured": [
+          40.0,
+          40.0,
+          10.0
+         ],
+         "passed": true
+        },
+        {
+         "id": "shape.solid_count",
+         "measured": 1,
+         "passed": true
+        },
+        {
+         "id": "shape.valid",
+         "measured": true,
+         "passed": true
+        },
+        {
+         "id": "shape.watertight",
+         "measured": true,
+         "passed": true
+        }
+       ],
+       "schema": "fcb.validation-report/1",
+       "banner": {
+        "freecad_version": "1.1.4",
+        "element_map_version": 15,
+        "anchor_frame": {
+         "kind": "global",
+         "ref": null,
+         "entity": null,
+         "origin": [
+          0.0,
+          0.0,
+          0.0
+         ],
+         "axes": [
+          [
+           1.0,
+           0.0,
+           0.0
+          ],
+          [
+           0.0,
+           1.0,
+           0.0
+          ],
+          [
+           0.0,
+           0.0,
+           1.0
+          ]
+         ],
+         "units": "mm"
+        }
+       },
+       "verdict": "OK"
+      },
+      "text": "BoxHole: shape checks passed (OK).",
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "name": "render",
+     "mcp": "query_screenshot",
+     "args": {
+      "doc": "fcb-doc:rbF-QqbbiFk3pQhxb-491Q",
+      "view": {
+       "camera": "iso",
+       "include": [
+        "BoxHole"
+       ]
+      }
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "render": {
+        "available": true,
+        "resource_link": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_26951_09ebe522/FCB_TMP_shot_7dpjwjaa.png",
+        "reason": null,
+        "dirty_document": false,
+        "empty_scene": false
+       },
+       "scene": {
+        "rendered_objects": [
+         "BoxHole"
+        ],
+        "focused_on": null
+       }
+      },
+      "text": "Rendered 1 objects.",
+      "images": [
+       {
+        "kind": "resource_link",
+        "uri": "/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir/tmp/FCB_TMP_session_26951_09ebe522/FCB_TMP_shot_7dpjwjaa.png",
+        "mime_type": "image/png",
+        "audience": [
+         "user"
+        ]
+       }
+      ],
+      "framing": {
+       "fits": null,
+       "ratio": null,
+       "checked": "unavailable",
+       "stale_reason": "no visible shape-bearing objects to measure"
+      }
+     }
+    },
+    {
+     "menu": [
+      "View",
+      "Visibility",
+      "Show All Objects"
+     ],
+     "attempts": 1,
+     "attempt_log": []
+    },
+    {
+     "name": "capabilities",
+     "mcp": "query_capabilities",
+     "args": {},
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "freecad_version": "1.1.4",
+       "element_map_available": true,
+       "serializer": "exportBinary",
+       "varset_backend": "varset",
+       "render": "gui_constructed",
+       "sketcher_available": true,
+       "partdesign_available": true,
+       "enums": {
+        "PartDesign::Pad": {
+         "Type": [
+          "Length",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Pocket": {
+         "Type": [
+          "Length",
+          "ThroughAll",
+          "UpToFirst",
+          "UpToFace",
+          "?TwoLengths",
+          "UpToShape"
+         ]
+        },
+        "PartDesign::Revolution": {
+         "Type": [
+          "Angle",
+          "UpToLast",
+          "UpToFirst",
+          "UpToFace",
+          "TwoAngles"
+         ]
+        },
+        "PartDesign::Hole": {
+         "ThreadType": [
+          "None",
+          "ISOMetricProfile",
+          "ISOMetricFineProfile",
+          "UNC",
+          "UNF",
+          "UNEF",
+          "NPT",
+          "BSP",
+          "BSW",
+          "BSF",
+          "ISOTyre"
+         ],
+         "HoleCutType": [
+          "None",
+          "Counterbore",
+          "Countersink",
+          "Counterdrill"
+         ],
+         "DepthType": [
+          "Dimension",
+          "ThroughAll"
+         ]
+        },
+        "PartDesign::Chamfer": {
+         "ChamferType": [
+          "Equal distance",
+          "Two distances",
+          "Distance and Angle"
+         ]
+        },
+        "PartDesign::LinearPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ],
+         "TransformMode": [
+          "Features",
+          "Whole shape"
+         ]
+        },
+        "PartDesign::PolarPattern": {
+         "Mode": [
+          "Extent",
+          "Spacing"
+         ]
+        }
+       },
+       "exec_enabled": true
+      },
+      "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: True\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+     }
+    },
+    {
+     "name": "fit",
+     "mcp": "view_fit_viewport",
+     "args": {
+      "doc": "fcb-doc:rbF-QqbbiFk3pQhxb-491Q"
+     },
+     "result": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+       "fitted": true,
+       "document": "box40_hole_r5",
+       "camera_recorded": true
+      },
+      "text": "fitted the live viewport to 'box40_hole_r5'",
+      "framing": {
+       "fits": true,
+       "ratio": 0.95,
+       "checked": "computed",
+       "stale_reason": null
+      }
+     }
+    }
+   ],
+   "findings": [],
+   "disagreements": [],
+   "errors": [],
+   "capture": "/repo/tests/uat/run/2026-11-18-10-8-g-check/runner/captures/TC-13-04.png",
+   "agent_check": "Visual Thens of TC-13-04. The runner frames with view_fit_viewport, which leaves an isometric camera; when you frame by the GUI instead, press the `Isometric` push button by its element token first, then the Fit All toolbar button, so the window camera equals the render's camera `iso`. Read the window capture first and describe the solid: a flat square plate 40 x 40 x 10 mm (about four times wider than tall, not a cube) with one circular hole through it. Then read the MCP render (step 'render', structured_content.render.resource_link) and confirm the same silhouette, hole position and camera, with no extra or missing body. Where they disagree the window wins and the difference is a finding against the bridge.",
+   "probe_snapshot": {
+    "freecad_version": "1.1.4",
+    "active_document": "box40_hole_r5",
+    "documents": [
+     {
+      "modified": true,
+      "name": "box40_hole_r5",
+      "label": "box40-hole-r5",
+      "objects": [
+       {
+        "name": "BoxHole",
+        "type": "Part::Feature",
+        "visibility": true,
+        "shape": {
+         "valid": true,
+         "volume": 15214.601836602547,
+         "bbox": [
+          0.0,
+          0.0,
+          0.0,
+          40.0,
+          40.0,
+          10.0
+         ]
+        },
+        "screen_center": [
+         932,
+         563
+        ]
+       }
+      ]
+     }
+    ],
+    "view": {
+     "camera": "#Inventor V2.1 ascii\n\n\nOrthographicCamera {\n  viewportMapping ADJUST_CAMERA\n  position 36.594543 3.4595203 21.614353\n  orientation 0.74290609 0.30772209 0.59447283  1.2171158\n  nearDistance 2.7393119\n  farDistance 54.758289\n  aspectRatio 1\n  focalDistance 28.722813\n  height 42.931438\n\n}\n",
+     "size": [
+      1334,
+      752
+     ],
+     "visible_size": [
+      1334,
+      752
+     ],
+     "clipped": false,
+     "rect": [
+      266,
+      187,
+      1334,
+      752
+     ]
+    }
+   },
+   "golden": null,
+   "verdict": "ESCALATE",
+   "reasons": [
+    "agent check: Visual Thens of TC-13-04. The runner frames with view_fit_viewport, which leaves an isometric camera; when you frame by the GUI instead, press the `Isometric` push button by its element token first, then the Fit All toolbar button, so the window camera equals the render's camera `iso`. Read the window capture first and describe the solid: a flat square plate 40 x 40 x 10 mm (about four times wider than tall, not a cube) with one circular hole through it. Then read the MCP render (step 'render', structured_content.render.resource_link) and confirm the same silhouette, hole position and camera, with no extra or missing body. Where they disagree the window wins and the difference is a finding against the bridge."
+   ],
+   "review": "escalate"
+  }
+ ]
+}

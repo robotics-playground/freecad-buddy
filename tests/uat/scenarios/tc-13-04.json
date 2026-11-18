@@ -189,5 +189,5 @@
       "tolerance": 0.01
     }
   ],
-  "agent_check": "Visual Thens of TC-13-04. The runner frames with view_fit_viewport, not the GUI Fit All toolbar button. Read the window capture first and describe the solid: a flat square plate 40 x 40 x 10 mm (about four times wider than tall, not a cube) with one circular hole through it. Then read the MCP render (step 'render', structured_content.render.resource_link) and confirm the same silhouette, hole position and camera, with no extra or missing body. Where they disagree the window wins and the difference is a finding against the bridge."
+  "agent_check": "Visual Thens of TC-13-04. The runner frames with view_fit_viewport, which leaves an isometric camera (`view_fit.py` `_view_isometric`); when you frame by the GUI instead, press the `Isometric` push button by its element token first, then the Fit All toolbar button, so the window camera equals the render's camera `iso`. Read the window capture first and describe the solid: a flat square plate 40 x 40 x 10 mm (about four times wider than tall, not a cube) with one circular hole through it. Then read the MCP render (step 'render', structured_content.render.resource_link) and confirm the same silhouette, hole position and camera, with no extra or missing body. Where they disagree the window wins and the difference is a finding against the bridge."
 }

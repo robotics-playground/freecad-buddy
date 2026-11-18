@@ -454,5 +454,5 @@
       "inside": true
     }
   },
-  "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open BossProfile in edit mode (script_exec setEdit, test case Preconditions), capture the window and judge it: a shaded wide thin plate with the sketch axis cross on its top surface, raised above the plate's bottom by the plate thickness, not sunk inside or floating below; no second sketch, no error dialog."
+  "agent_check": "The visual Then needs Sketcher edit mode, which the runner does not open: open BossProfile in edit mode (script_exec setEdit, test case Preconditions), press the `Isometric` push button by its element token, press the Fit All toolbar button, wait 8 s and read the camera back (each quaternion component within 0.01 of [0.425, 0.176, 0.34, 0.82]) (edit mode looks straight at the sketch plane, which cannot show the plate's thickness), capture the window and judge it: a shaded wide thin plate with the sketch axis cross on its top surface, raised above the plate's bottom by the plate thickness, not sunk inside or floating below; no second sketch, no error dialog."
 }
