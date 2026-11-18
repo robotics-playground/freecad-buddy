@@ -37,3 +37,4 @@ freecad-buddy-audit.jsonl
 .mcp.json
 # Close-loop journey screenshots, rewritten on every run
 tests/close-loop/evidence/
+.cache/

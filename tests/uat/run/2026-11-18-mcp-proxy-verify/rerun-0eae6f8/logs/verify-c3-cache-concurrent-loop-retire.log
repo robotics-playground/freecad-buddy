@@ -1,0 +1,13 @@
+16:40:13 RETIRE stdio fake pid=5528: in_flight call answered isError=False, alive while in flight=True (want True), alive 2s after=False (want False), connection.in_flight=0 owner.done=True
+16:40:17 RETIRE hung call: fake pid=16304 alive 2s after retire=True, hung call done=False
+16:40:19 RETIRE hung call after cancelling the waiter: alive=False in_flight=0
+16:40:20 RETIRE hung call after explicit _close: alive=False
+16:40:23 C3 refresh_loop 3s at 10ms poll with port closed: transports opened=0 (want 0)
+16:40:23 C3 probes: freecad=healthz_probe(18765), cua=port_probe(6901)
+16:40:23 CACHE garbage: constructor ok, tools/list ok: 0 tools
+16:40:23 CACHE empty: constructor ok, tools/list ok: 0 tools
+16:40:23 CACHE dict: constructor ok, tools/list ok: 0 tools
+16:40:23 CACHE ints: constructor ok, tools/list ok: 0 tools
+16:40:23 CACHE bad-tool: constructor ok, tools/list ok: 0 tools
+16:40:31 LOOP after one failed cache write: refresh_loop running; write attempts=2; cache exists=True
+16:40:32 CONCURRENT two writers x200 same cache path: errors={} final file valid=True

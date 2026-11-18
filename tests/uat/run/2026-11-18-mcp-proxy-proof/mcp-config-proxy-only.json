@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "freecad-buddy-docker": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--no-sync",
+        "--project",
+        "D:/Work/Personal/Sources/freecad-buddy",
+        "python",
+        "D:/Work/Personal/Sources/freecad-buddy/scripts/automation/mcp_cache_proxy.py",
+        "--server",
+        "freecad-buddy-docker"
+      ]
+    },
+    "cua-driver-docker": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--no-sync",
+        "--project",
+        "D:/Work/Personal/Sources/freecad-buddy",
+        "python",
+        "D:/Work/Personal/Sources/freecad-buddy/scripts/automation/mcp_cache_proxy.py",
+        "--server",
+        "cua-driver-docker"
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+2026-11-18 15:54:49,504 upstream not ready: RemoteProtocolError: Server disconnected without sending a response.
+
+✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   Update with: cua-driver update
+   Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+
+[2m2026-11-18T08:54:50.156942Z[0m [33m WARN[0m [2mplatform_linux::overlay[0m[2m:[0m X11 overlay: root reads cannot see this window's own pixels; save-unders will be served without readback confirmation
+2026-11-18 15:54:54,522 upstream not ready: RemoteProtocolError: Server disconnected without sending a response.
+
+✨ cua-driver v0.53.0 is available (you have v0.28.1).
+   Update with: cua-driver update
+   Release notes: https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.53.0
+
+[2m2026-11-18T08:55:15.336241Z[0m [33m WARN[0m [2mplatform_linux::overlay[0m[2m:[0m X11 overlay: root reads cannot see this window's own pixels; save-unders will be served without readback confirmation
+PHASE 1: container down
+  freecad-buddy-docker: tools/list -> 46 cached tools
+  query_capabilities: 0.5s isError=True structuredContent=no text=freecad-buddy-docker is not reachable: port 18765 on 127.0.0.1 refuses connections. The request was not sent. Start the container, then call again (no Claude Co
+  cua-driver-docker: tools/list -> 60 cached tools
+  list_windows: 0.5s isError=True structuredContent=no text=cua-driver-docker is not reachable: port 6901 on 127.0.0.1 refuses connections. The request was not sent. Start the container, then call again (no Claude Code r
+PHASE 2: start container and FreeCAD, same proxy processes
+  freecad-buddy-docker query_capabilities: 0.2s isError=False structuredContent=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportB
+  cua-driver-docker list_windows: 0.0s isError=False structuredContent=yes text=Found 5 windows: |   [xid=37748776] pid=Some(498) "Desktop" 1600x1000+0+0 |   [xid=33554525] pid=Some(322) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=12582915] pid=Some(1
+PHASE 3: restart container and FreeCAD, same proxy processes
+  freecad-buddy-docker query_capabilities: 0.5s isError=False structuredContent=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportB
+  cua-driver-docker list_windows: 0.5s isError=False structuredContent=yes text=Found 4 windows: |   [xid=33554525] pid=Some(320) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=12582915] pid=Some(162) "xfce4-panel" 1600x27+0+0 |   [xid=12582928] pid=Some
+DONE

@@ -1,0 +1,40 @@
+M0-none: 25 passed in 32.24s (wall 33s) slowest=['4.63s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.61s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+M1-drop-structuredContent: 6 failed, 19 passed in 43.84s (wall 44s) slowest=['4.63s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.61s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_pass_structured_content_and_is_error_through_when_upstream_answers
+    test_should_reconnect_and_answer_when_http_session_is_lost[session-terminated-reply]
+    test_should_reconnect_and_answer_when_http_session_is_lost[liveness-ping]
+    test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session
+    test_should_report_unknown_outcome_and_not_resend_when_stream_breaks_after_send
+    test_should_reconnect_before_send_when_idle_stdio_upstream_died
+M2-resend-after-connection-closed: 3 failed, 22 passed in 45.92s (wall 46s) slowest=['5.23s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]', '4.65s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]']
+    test_should_report_unknown_outcome_and_not_resend_when_stream_breaks_after_send
+    test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[stdio]
+    test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[stdio]
+M2b-resend-after-connection-ended: 1 failed, 24 passed in 33.84s (wall 34s) slowest=['6.24s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '5.73s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]
+M3-no-retry-on-session-terminated: 3 failed, 22 passed in 33.51s (wall 34s) slowest=['4.67s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.63s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_reconnect_and_answer_when_http_session_is_lost[session-terminated-reply]
+    test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session
+    test_should_open_one_transport_when_parallel_calls_meet_a_lost_session
+M4-no-probe-before-connect: 1 failed, 24 passed in 35.90s (wall 36s) slowest=['5.29s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '5.24s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_not_start_a_transport_when_upstream_probe_fails
+M5-no-list-changed: 1 failed, 24 passed in 30.40s (wall 31s) slowest=['5.25s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.61s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_rewrite_cache_and_send_list_changed_when_upstream_list_changes
+M6-no-reconnect-lock: 1 failed, 24 passed in 29.43s (wall 30s) slowest=['4.66s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.66s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_open_one_transport_when_parallel_calls_meet_a_lost_session
+M7-close-with-calls-in-flight: 25 passed in 33.61s (wall 34s) slowest=['5.23s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.62s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+M8-no-liveness-ping: 1 failed, 24 passed in 29.23s (wall 30s) slowest=['4.70s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]', '4.67s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]']
+    test_should_reconnect_before_send_when_idle_stdio_upstream_died
+M9-no-in-flight-watch-HANG: 2 failed, 23 passed in 85.49s (0:01:25) (wall 86s) slowest=['32.66s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]', '32.64s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]']
+    test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]
+    test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]
+M10-no-probe-before-send: 1 failed, 24 passed in 28.63s (wall 29s) slowest=['4.65s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.60s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_answer_not_reachable_when_http_port_closes_right_after_a_call
+M11-refresh-loop-catches-only-unavailable: 1 failed, 24 passed in 29.58s (wall 30s) slowest=['4.64s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.59s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_keep_refreshing_when_one_refresh_cycle_raises
+M12-shared-tmp-name: 1 failed, 24 passed in 30.21s (wall 31s) slowest=['4.62s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.59s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_write_cache_without_error_when_two_writers_share_one_path
+M13-no-cache-validation: 2 failed, 23 passed in 29.29s (wall 30s) slowest=['4.65s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_every_call_when_upstream_crashes_with_three_calls_in_flight[http]', '4.60s call     tests/external/test_mcp_cache_proxy.py::test_should_answer_once_with_unknown_outcome_when_upstream_dies_after_send[http]']
+    test_should_treat_cache_as_empty_when_file_is_not_a_tool_list[[1, 2]]
+    test_should_treat_cache_as_empty_when_file_is_not_a_tool_list[[{"x": 1}]]
+exit 0

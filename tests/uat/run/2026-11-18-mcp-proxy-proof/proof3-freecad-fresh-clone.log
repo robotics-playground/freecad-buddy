@@ -1,0 +1,27 @@
+initialize ok in 0.66s; tools.listChanged=True
+2026-11-18 15:06:23,476 Processing request of type ListToolsRequest
+tools/list ok at 0.69s: 0 tools
+  
+2026-11-18 15:06:42,397 upstream not ready: ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+2026-11-18 15:06:47,412 upstream not ready: ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+2026-11-18 15:06:57,447 upstream not ready: ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+2026-11-18 15:07:17,476 upstream not ready: ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+2026-11-18 15:07:47,510 upstream not ready: ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+2026-11-18 15:08:17,546 HTTP Request: POST http://127.0.0.1:18765/mcp "HTTP/1.1 307 Temporary Redirect"
+2026-11-18 15:08:17,566 HTTP Request: POST http://127.0.0.1:18765/mcp/ "HTTP/1.1 200 OK"
+2026-11-18 15:08:17,566 Received session ID: 9ed5cb3d0f0c4d6cb2ac9f1e16c84344
+2026-11-18 15:08:17,607 Negotiated protocol version: 2025-11-25
+2026-11-18 15:08:17,616 HTTP Request: POST http://127.0.0.1:18765/mcp "HTTP/1.1 307 Temporary Redirect"
+2026-11-18 15:08:17,620 HTTP Request: GET http://127.0.0.1:18765/mcp "HTTP/1.1 307 Temporary Redirect"
+2026-11-18 15:08:17,625 HTTP Request: GET http://127.0.0.1:18765/mcp/ "HTTP/1.1 200 OK"
+2026-11-18 15:08:17,658 HTTP Request: POST http://127.0.0.1:18765/mcp/ "HTTP/1.1 202 Accepted"
+2026-11-18 15:08:17,664 HTTP Request: POST http://127.0.0.1:18765/mcp "HTTP/1.1 307 Temporary Redirect"
+2026-11-18 15:08:17,669 HTTP Request: POST http://127.0.0.1:18765/mcp/ "HTTP/1.1 200 OK"
+2026-11-18 15:08:17,714 tool list changed: 46 tools, sending tools/list_changed
+15:08:17 notification notifications/tools/list_changed
+2026-11-18 15:09:17,732 HTTP Request: POST http://127.0.0.1:18765/mcp "HTTP/1.1 307 Temporary Redirect"
+2026-11-18 15:09:17,737 HTTP Request: POST http://127.0.0.1:18765/mcp/ "HTTP/1.1 200 OK"
+2026-11-18 15:09:43,508 Processing request of type ListToolsRequest
+2026-11-18 15:09:43,533 HTTP Request: DELETE http://127.0.0.1:18765/mcp "HTTP/1.1 307 Temporary Redirect"
+2026-11-18 15:09:43,538 HTTP Request: DELETE http://127.0.0.1:18765/mcp/ "HTTP/1.1 200 OK"
+after watch: 46 tools; notifications=1

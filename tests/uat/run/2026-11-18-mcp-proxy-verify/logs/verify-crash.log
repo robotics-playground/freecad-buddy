@@ -1,0 +1,9 @@
+16:06:03 C1 crash-after-send transport=stdio delay=0.0: warm=answered in 0.6s isError=False text=ok
+16:06:03 C1   count_crash -> answered in 0.0s isError=True text=fake lost the connection after the request was sent (Connection closed). The tool may or may not have run, so the proxy did not send it again. Check the state f
+16:06:03 C1   count_crash executions=1 (must be 1)
+16:06:46 C1 crash-after-send transport=http delay=0.0: warm=answered in 0.1s isError=False text=ok
+16:06:46 C1   count_crash -> NO ANSWER after 40s (hang)
+16:06:46 C1   count_crash executions=1 (must be 1)
+16:07:29 C1 crash-after-send transport=http delay=1.0: warm=answered in 0.0s isError=False text=ok
+16:07:29 C1   count_crash -> NO ANSWER after 40s (hang)
+16:07:29 C1   count_crash executions=1 (must be 1)

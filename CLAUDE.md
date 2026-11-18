@@ -199,9 +199,11 @@ Code is written for the standards, never compressed:
     `docker compose -f tests/close-loop/docker/compose.yaml up -d --build`, then
     `docker exec -u cua fcb-desktop fcb-freecad start`. Wait until
     `http://127.0.0.1:18765/healthz` shows a number in `freecad_pid`.
-  - Tools: MCP server `freecad-buddy-docker` (`http://127.0.0.1:18765/mcp`) and GUI server
-    `cua-driver-docker` (stdio through `docker exec`). The host servers `freecad-buddy` and
-    `cua-computer-use` are not for UAT.
+  - Tools: MCP server `freecad-buddy-docker` (upstream `http://127.0.0.1:18765/mcp`) and GUI server
+    `cua-driver-docker` (upstream stdio through `docker exec`). Both run through the cache proxy
+    `scripts/automation/mcp_cache_proxy.py`, so Claude Code connects while the container is down and
+    the tools work after the container starts, with no restart (setup: `tests/close-loop/README.md`).
+    The host servers `freecad-buddy` and `cua-computer-use` are not for UAT.
   - After any change under `src/`, run the build and compose commands again. The image installs
     `dist/addon/`, not the source tree.
   - The container FreeCAD shows its widgets to `cua-driver` (the image swaps in Qt libraries with the

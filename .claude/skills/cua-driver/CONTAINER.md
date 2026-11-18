@@ -10,9 +10,13 @@ Wayland material do not apply here.
 ## Reach the driver
 
 - **MCP (default).** Server `cua-driver-docker`, tools `mcp__cua-driver-docker__*`. Its transport
-  is stdio through `docker exec -i -u cua fcb-desktop fcb-cua-mcp`, so each connection is one
-  `cua-driver mcp` process in the container. When the container restarts or is recreated, the
-  connection ends: reconnect the server (`/mcp`) or restart Claude Code.
+  is the cache proxy `scripts/automation/mcp_cache_proxy.py --server cua-driver-docker`, which
+  keeps one stdio connection to `docker exec -i -u cua fcb-desktop fcb-cua-mcp` (one
+  `cua-driver mcp` process in the container). The proxy starts with the container down, serves the
+  cached tool list, and reconnects after the container restarts or is recreated: element tokens
+  from before the restart are then stale, so take a fresh `get_window_state`. A call with the
+  container down returns an error with the start commands. Entry for `.mcp.json`: see
+  `tests/close-loop/README.md`.
 - **CLI.** Pass the JSON on stdin and run the pinned binary in the desktop session:
 
   ```bash

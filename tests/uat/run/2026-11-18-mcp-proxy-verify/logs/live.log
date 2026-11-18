@@ -1,0 +1,64 @@
+16:13:09 +    0.0s === live driver phase=lifecycle
+16:13:10 +    0.6s [freecad-buddy-docker] initialize 0.59s, tools/list 0.61s -> 46 tools
+16:13:10 +    1.2s [cua-driver-docker] initialize 0.59s, tools/list 0.61s -> 60 tools
+16:13:11 +    1.7s [freecad-buddy-docker] P1 container down: query_capabilities 0.5s isError=True structured=no text=freecad-buddy-docker is not reachable: port 18765 on 127.0.0.1 refuses connections. The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build | 2. docker exec -u cua fcb-desktop fcb-freeca
+16:13:11 +    2.2s [cua-driver-docker] P1 container down: list_windows 0.5s isError=True structured=no text=cua-driver-docker is not reachable: port 6901 on 127.0.0.1 refuses connections. The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build | 2. docker exec -u cua fcb-desktop fcb-freecad st
+16:15:11 +  122.2s C3 live: 120s container down, 1796 samples, docker processes spawned under proxies: 0 {}
+16:15:11 +  122.2s C3 live: process tree under driver now: ['uv.exe:32308', 'uv.exe:31108', 'conhost.exe:27852', 'python.exe:2220', 'conhost.exe:26460', 'python.exe:26668', 'python.exe:6148', 'python.exe:5320']
+16:15:11 +  122.2s stderr of proxies during down period: see proxy-*.stderr.log
+16:15:11 +  122.2s $ uv run python scripts/build_addon.py --release
+16:15:14 +  124.7s   exit=0 addon zip written to D:\Work\Personal\Sources\freecad-buddy\dist\FreeCADBuddy-0.1.1.zip | Building wheel... | Successfully built dist\freecad_buddy-0.1.1-py3-none-any.whl
+16:15:14 +  124.7s $ docker compose -f tests/close-loop/docker/compose.yaml up -d --build
+16:15:37 +  148.1s   exit=0  Container fcb-desktop Creating  |  Container fcb-desktop Created  |  Container fcb-desktop Starting  |  Container fcb-desktop Started
+16:15:39 +  149.8s fcb-freecad start right after compose up: exit=0 'fcb-freecad: started; log /tmp/freecad.log\nfcb-session-env: no xfce4-session is running; the desktop has not started'
+16:16:39 +  210.3s healthz NOT ready
+16:16:39 +  210.4s fcb-freecad start attempt 1: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:16:45 +  215.5s fcb-freecad start attempt 2: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:16:50 +  220.6s fcb-freecad start attempt 3: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:16:55 +  225.6s fcb-freecad start attempt 4: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:00 +  230.7s fcb-freecad start attempt 5: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:05 +  235.8s fcb-freecad start attempt 6: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:10 +  240.9s fcb-freecad start attempt 7: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:15 +  246.0s fcb-freecad start attempt 8: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:20 +  251.1s fcb-freecad start attempt 9: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:25 +  256.2s fcb-freecad start attempt 10: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:31 +  262.3s fcb-freecad start attempt 11: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:37 +  267.4s fcb-freecad start attempt 12: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:42 +  272.5s fcb-freecad start attempt 13: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:47 +  277.6s fcb-freecad start attempt 14: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:52 +  282.7s fcb-freecad start attempt 15: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:17:57 +  287.8s fcb-freecad start attempt 16: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:02 +  292.9s fcb-freecad start attempt 17: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:07 +  298.0s fcb-freecad start attempt 18: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:12 +  303.0s fcb-freecad start attempt 19: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:17 +  308.1s fcb-freecad start attempt 20: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:22 +  313.2s fcb-freecad start attempt 21: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:27 +  318.3s fcb-freecad start attempt 22: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:33 +  323.4s fcb-freecad start attempt 23: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:38 +  328.5s fcb-freecad start attempt 24: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:43 +  333.6s fcb-freecad start attempt 25: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:48 +  338.7s fcb-freecad start attempt 26: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:53 +  343.8s fcb-freecad start attempt 27: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:18:58 +  348.9s fcb-freecad start attempt 28: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:19:03 +  354.0s fcb-freecad start attempt 29: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:19:08 +  359.1s fcb-freecad start attempt 30: exit=1 'fcb-freecad: FreeCAD already running: 22'
+16:19:14 +  364.6s [freecad-buddy-docker] P2 container up, same proxy: query_capabilities 0.5s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
+16:19:14 +  364.8s [cua-driver-docker] P2 container up, same proxy: list_windows 0.2s isError=False structured=yes text=Found 5 windows: |   [xid=37748776] pid=Some(686) "Desktop" 1600x1000+0+0 |   [xid=6291549] pid=Some(22) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=16777219] pid=Some(623) "xfce4-panel" 1600x27+0+0 |   [xid=16777232] pid=Some(623) "xfce4-panel" 306x3+647+997 |   [xid=16777236] pid=Some(623) "xfce4-panel
+16:19:14 +  364.9s [freecad-buddy-docker] P3a warm call before stop: query_capabilities 0.1s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
+16:19:14 +  364.9s $ docker exec -u cua fcb-desktop fcb-freecad stop
+16:19:18 +  368.5s   exit=0 fcb-freecad: stopped
+16:20:48 +  458.6s [freecad-buddy-docker] P3b call right after fcb-freecad stop: query_capabilities NO ANSWER after 90s (HANG)
+16:20:55 +  465.6s [freecad-buddy-docker] P3c call after >5s idle with FreeCAD stopped: query_capabilities 0.0s isError=True structured=no text=freecad-buddy-docker is not reachable: RemoteProtocolError: Server disconnected without sending a response.. The request was not sent. Start the container, then call again (no Claude Code restart needed): | 1. docker compose -f tests/close-loop/docker/compose.yaml up -d --build | 2. docker exec -u c
+16:20:55 +  465.7s fcb-freecad start attempt 1: exit=0 'fcb-freecad: started; log /tmp/freecad.log'
+16:21:11 +  481.8s healthz ready: freecad-buddy-mcp-proxy freecad_pid=1364
+16:21:11 +  482.0s [freecad-buddy-docker] P3d after FreeCAD restart, same proxy: query_capabilities 0.2s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
+16:21:11 +  482.0s [cua-driver-docker] P3d after FreeCAD restart, same proxy: list_windows 0.0s isError=False structured=yes text=Found 5 windows: |   [xid=37748776] pid=Some(686) "Desktop" 1600x1000+0+0 |   [xid=6291554] pid=Some(1364) "FreeCAD 1.1.4" 1600x949+0+51 |   [xid=16777219] pid=Some(623) "xfce4-panel" 1600x27+0+0 |   [xid=16777232] pid=Some(623) "xfce4-panel" 306x3+647+997 |   [xid=16777236] pid=Some(623) "xfce4-pan
+16:21:11 +  482.0s [freecad-buddy-docker] notifications seen: []
+16:21:34 +    0.0s === live driver phase=fresh
+16:21:34 +    0.0s cache files deleted
+16:21:35 +    0.6s [freecad-buddy-docker] initialize 0.59s, tools/list 0.59s -> 0 tools
+16:21:35 +    0.9s [freecad-buddy-docker] WIRE notification notifications/tools/list_changed
+16:21:35 +    1.2s [cua-driver-docker] initialize 0.59s, tools/list 0.59s -> 0 tools
+16:21:36 +    1.5s [cua-driver-docker] WIRE notification notifications/tools/list_changed
+16:21:36 +    2.2s [freecad-buddy-docker] fresh: notifications=['ToolListChangedNotification'] tools now=46
+16:21:36 +    2.2s [freecad-buddy-docker] P4 fresh cache: query_capabilities 0.0s isError=False structured=yes text={"schema":"fcb.result-envelope/1","status":"OK","detail":null,"structured_content":{"freecad_version":"1.1.4","element_map_available":true,"serializer":"exportBinary","varset_backend":"varset","render":"gui_constructed","sketcher_available":true,"partdesign_available":true,"enums":{"PartDesign::Pad"
