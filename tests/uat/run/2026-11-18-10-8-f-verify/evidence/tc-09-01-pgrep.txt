@@ -1,0 +1,19 @@
+$ docker exec -u cua fcb-desktop sh -c "pgrep -af hosts.main"
+2072 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+2092 sh -c pgrep -af hosts.main
+
+$ docker exec -u cua fcb-desktop sh -c "pgrep -fc 'hosts.main serve --transport stdi[o]|hosts.main serve --mode inl[i]ne|hosts.headless.worke[r]'"
+0
+exit=1
+
+# positive control: three fake processes named like an H1 front (both flag orders) and its worker
+2072 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
+2106 python -m freecad_buddy.hosts.main serve --mode inline --transport stdio 60
+2112 python -m freecad_buddy.hosts.main serve --transport stdio --mode inline 60
+2118 python -m freecad_buddy.hosts.headless.worker 60
+$ pgrep -fc 'hosts.main serve --transport stdi[o]|hosts.main serve --mode inl[i]ne|hosts.headless.worke[r]'
+3
+# after kill
+$ pgrep -fc 'hosts.main serve --transport stdi[o]|hosts.main serve --mode inl[i]ne|hosts.headless.worke[r]'
+0
+2072 /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv/bin/python -m freecad_buddy.hosts.main serve --mode rpc --transport http
