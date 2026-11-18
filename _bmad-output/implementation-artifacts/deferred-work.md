@@ -1933,3 +1933,55 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-10-uat-testcases-in-container.md`
   summary: `cua-driver` 0.28.1 exits 0 on a tool error (dead pid, missing `window_id`) and ignores bad JSON on stdin; `fcb_paths.sh` maps the repo root with no left boundary (no payload has that form). Steps are judged by the printed text (`test-plan.md` §6).
   evidence: red team `redteam-10-10.md`, "Not reproduced".
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line (FreeCAD 2026.09.16 = 26.3.0 dev, OCCT 8.0.1, Python 3.14.10): 5 In-FreeCAD tests fail on undo and rollback. `test_document_undo.RefusalTest` (2: `ValidationError not raised` for a refused undo; `1 != 0 : the build ignored the UndoMode write`), `test_g2_driver.DrivenCaseTest.test_should_match_the_pre_op_state_on_geometry_when_undoing_a_padded_sketch` (digest differs), `test_mutation_protocol.RollbackProofTest` (2: `'rolled_back_verified' != 'rolled_back_via_snapshot'`; an unprovable rollback claims restoration). Cause not investigated; grouping these five by area (undo and rollback) is itself unverified. Hypothesis, not verified: the `UndoMode` write having no effect points to an undo API change on the dev line.
+  evidence: local run of the canary job steps in `mambaorg/micromamba:2.3.3`, `freecad>=2026`, `Ran 866 tests ... FAILED (failures=15, skipped=28)`, run twice with the same 15 failures. Unblock: investigate on a dev-line FreeCAD, then fix the shim or the tests; the blocking 1.1.x leg stays green.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: 3 `test_document_undo.ExpectFingerprintRecordTest` tests fail because the fixture no longer reproduces a byte divergence (`'8c7c87bc...' == '8c7c87bc...' : fixture must reproduce the byte divergence`). The dev line writes the same bytes where 1.1.x wrote different bytes, so the fixture premise does not hold there.
+  evidence: same local canary run, `test_a_record_expectation_matches_on_geometry_when_the_bytes_differ`, `test_should_match_on_the_cached_record_when_a_published_digest_differs_in_bytes`, `test_should_state_the_byte_measurement_when_no_record_is_held_for_the_digest`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: `test_confirm_gate.SpentTokenTest.test_a_replay_is_refused_even_when_the_mutation_left_the_digest_unmoved` fails (`'779c183a...' != '0f55e13e...'`): the document digest differs where the test expects it unmoved.
+  evidence: same local canary run.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: 2 `test_export_tools.ExportStepSchemaTest` tests fail because the STEP writer error text changed from `Writing of STEP failed` to `Error writing to file: <path>` (`test_should_restore_occ_default_schema_when_export_step_raises`, `test_should_restore_prior_step_unit_when_export_step_raises`). The tests match the message text.
+  evidence: same local canary run. The fix is a looser match in the tests or a check on the exception type.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: 2 `test_tnp_guard.LayerOneTest` tests fail (`[] is not true : shrinking the pad below the fillet radius invalidates its links`): the dev line no longer marks the invalidated link `?Edge1` in this scenario, so the guard's Layer 1 input is empty. A behaviour change in FreeCAD's element map is the likely cause; AD-7 depends on `element_map_available()`.
+  evidence: same local canary run, `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record`, `test_a_missing_marked_entry_is_reported_once_rather_than_by_both_layers`. Unblock: reproduce on the dev line and decide whether the guard needs a new capability probe.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: `test_verify_tools.VerifySketchTest.test_should_leave_geometry_and_state_unchanged_when_a_solved_file_sketch_is_verified` finds `'Touched'` in the sketch state after `verify_sketch` (`AssertionError: 'Touched' unexpectedly found in ['Touched']`). The read-only check may now touch the document on the dev line; not investigated.
+  evidence: same local canary run.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Canary dev line: `test_assertion_primitives.LargestPlanarFaceTieBreakTest.test_should_fail_frame_checks_and_still_measure_volume_when_the_tie_is_unresolvable` fails (`AssertionError: True is not false`): the tie between largest planar faces resolves where the test expects it unresolvable. Not investigated.
+  evidence: same local canary run.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: Nothing tests `canary.yml`. `tests/external/test_ci_workflow.py:14` reads `ci.yml` only, so a later edit can add `continue-on-error`, a `push` trigger, or drop a dependency from the install line (the line is copied from `ci.yml:106`) with no failing check. The original `freecad=1.2` fault went unseen for 13 runs for the same reason.
+  evidence: review r1 of 10-8-e (verification gap); `grep -rln canary tests scripts` finds no test. Unblock: add a spec beside `test_ci_workflow.py` that parses `canary.yml` (triggers, no masking, channel list, install line equals the `ci.yml` line, the External suite step keeps its `if: ${{ !cancelled() ... }}` so it runs after an In-FreeCAD failure). Tests were outside slice 10-8-e.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: With the 15 known dev-line failures the canary is red every week, so a new regression shows as the same red. No check compares a run with the known set. Fixing the failures listed above returns a usable signal; until then the seven failure entries above are the baseline. The skip counts (28 In-FreeCAD, 4 External) are also not compared with the 1.1.3 leg: a capability probe that returns False on the dev line makes tests skip with no red.
+  evidence: review r1 of 10-8-e (verification gap, edge cases). Unblock: fix or xfail-by-id the known failures, or compare the failing ids with a committed list.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: conda-forge `main` lags the weekly builds: it resolved `2026.09.16` (uploaded 2026-09-23), although FreeCAD tagged `26.3rc2` on 2026-10-18 and `weekly-2026.11.18` (27.1.0 dev) exists (`plan-10-8.md` section 5). AD-11 says "conda-forge if published, else weekly AppImage", but `freecad>=2026` still solves with the old build, so the AppImage fallback never triggers and the canary can test a build two months old. A second cause: the spec relies on calendar versions. If the feedstock publishes `26.3.0` or `27.1.0` style numbers, they compare below `2026`, the solver keeps the last calendar build, and nothing turns red. The job now prints the resolved build (`micromamba list`) so the age is visible.
+  evidence: plan-10-8 section 5 (tags and feedstock) and the local solve. Unblock: decide an age limit that switches to the AppImage path, then wire it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: The canary omits the `ci.yml` step "Two-process headless host" (`ci.yml:118-123`). Those three tests skip silently without `PYTHONPATH=<prefix>/lib`; the reasons for the 4 skipped External tests were not recorded (`pytest -rs` would show them). The two-process host is not tested on Python 3.14 and OCCT 8. Decision 32 asked for the two suites only.
+  evidence: review r1 of 10-8-e (blind hunter); local External run `1809 passed, 4 skipped`. Unblock: copy that step, with its three-PASSED check, into `canary.yml`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: `ARCHITECTURE-SPINE.md:452` (and the `ci.yml:` word in the same comment) says `ci.yml` holds the canary: `# ci.yml: one blocking 1.1.x leg + canary on the next FreeCAD development line`. The canary lives in `canary.yml`. The wrong file attribution existed before 10-8-e; clause 3 changed only the version name.
+  evidence: review r2 of 10-8-e (blind hunter). Unblock: reword to `ci.yml: one blocking 1.1.x leg; canary.yml: canary on ...` at the next architecture correction.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-10-8-e-canary-dev-freecad.md`
+  summary: `_bmad-output/project-context.md:21` still says `1.2-dev weekly canary allowed-to-fail`. It is current agent guidance, outside the nine clauses of decision 37 and 39. The one-clause fix is the same wording rule.
+  evidence: review r2 of 10-8-e (blind hunter); `grep -n "1.2-dev" _bmad-output/project-context.md`. Needs the leader to widen the clause list.

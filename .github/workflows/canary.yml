@@ -1,34 +1,53 @@
 name: canary
 
-# Weekly allowed-to-fail leg tracking FreeCAD 1.2-dev (AD-11). A failure shows red in Actions but
-# never blocks a PR: the workflow runs only on schedule and dispatch, never on push or PR.
+# Weekly allowed-to-fail leg tracking the next FreeCAD development line (AD-11). A failure shows red
+# in Actions but never blocks a PR: the workflow runs only on schedule and dispatch, never on push
+# or PR.
 on:
   schedule:
     - cron: "0 6 * * 1"  # Mondays 06:00 UTC
   workflow_dispatch:
 
 jobs:
-  canary-1_2-dev:
+  canary-dev-line:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      # Resolve FreeCAD 1.2-dev from the conda-forge dev label if published.
-      # AppImage fallback: if the dev package is absent on conda-forge, download the
+      # conda-forge label `main` has published dev builds with calendar versions (2026.MM.DD), so
+      # `freecad>=2026` lets the solver pick the newest solvable build. The `freecad_dev` label is
+      # empty.
+      # AppImage fallback: if conda-forge stops publishing weekly builds, download the
       # latest weekly AppImage and `--appimage-extract` instead (wired at first use).
-      - uses: mamba-org/setup-micromamba@v2
+      - id: setup
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-name: fc
+          # The action splits `create-args` on spaces with no shell and no quote handling, so the
+          # spec is written unquoted: a quote would reach micromamba as part of the package name.
           create-args: >-
-            freecad=1.2
+            freecad>=2026
           condarc: |
             channels:
-              - conda-forge/label/freecad_dev
               - conda-forge
           cache-environment: false
-      - run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install pytest
+      # Same dependency line as the ci.yml headless leg: the External suite imports mcp, trimesh,
+      # lib3mf, jsonschema and yaml.
+      - id: install
+        run: micromamba run -n fc python -m pip install --no-deps -e . && micromamba run -n fc python -m pip install "mcp>=1.28,<2" "trimesh==4.*" "lib3mf==2.*" pytest jsonschema pyyaml
+      # The steps below run after an earlier step failed (the default `success()` would skip the
+      # External suite on every run where an In-FreeCAD test fails). The build-name step needs only
+      # the environment; the two suites also need the install, because a missing environment would
+      # add red steps that hide the real cause.
+      # Names the build under test: `freecad>=2026` floats, so a red run must be tied to a build.
+      - name: Build under test
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: micromamba list -n fc "^(freecad|occt|python)$"
       - name: In-FreeCAD suite
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         timeout-minutes: 15
         run: micromamba run -n fc freecadcmd tests/run_tests.py
       - name: External suite
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         timeout-minutes: 15
         run: micromamba run -n fc pytest tests/external
