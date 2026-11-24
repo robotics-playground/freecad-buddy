@@ -88,12 +88,12 @@
     {
       "step": "close_again",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: $open.structured_content.doc"
+      "equals": "unknown or stale document handle: $open.structured_content.doc; call document_list for the current handles"
     },
     {
       "step": "tree",
       "path": "text",
-      "equals": "INVALID_INPUT: unknown or stale document handle: $open.structured_content.doc"
+      "equals": "INVALID_INPUT: unknown or stale document handle: $open.structured_content.doc; call document_list for the current handles"
     },
     {
       "step": "listed",

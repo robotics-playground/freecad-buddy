@@ -110,7 +110,7 @@ The listener writes `<FreeCAD user app data>/freecad-buddy/rpc-<pid>.json` (mode
  "token":"...","freecad_version":"1.1.1","started":"2026-07-21T09:00:00Z"}
 ```
 
-Port: `FREECAD_BUDDY_RPC_PORT` env if set, else ephemeral (`bind(0)`, actual port written to the file). Bind is `127.0.0.1` only; remote bind is explicit operator opt-in (AD-3). External server discovers by reading the newest file whose `pid` is alive (the GUI proxy then pins that record, §3.1); stale files are deleted by the listener on clean shutdown and skipped by clients on liveness failure.
+Port: `FREECAD_BUDDY_RPC_PORT` env if set, else ephemeral (`bind(0)`, actual port written to the file). Bind is `127.0.0.1` only; remote bind is explicit operator opt-in (AD-3). External server discovers by reading the newest file whose `pid` is alive (the GUI proxy then pins that record, §3.1); a listener deletes its own file on clean shutdown, deletes the files of dead pids when it binds (a file whose pid is unreadable, not an integer, or reported alive stays), and clients skip a file on liveness failure.
 
 ## 3. GUI Mode
 

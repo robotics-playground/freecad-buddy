@@ -39,6 +39,9 @@ class ValidationError(Exception):
 
 # -- session workdir (AD-25) ------------------------------------------------------------
 
+_STALE_HANDLE_MESSAGE = (
+    "unknown or stale document handle: {doc}; call document_list for the current handles"
+)
 _WORKDIR_ENV = "FREECAD_BUDDY_WORKDIR"
 _DEFAULT_WORKDIR = "freecad-buddy-workdir"
 
@@ -387,7 +390,7 @@ class DocumentRegistry:
             raise ValidationError("missing required 'doc' handle")
         document = self._by_handle.get(doc)
         if document is None:
-            raise ValidationError(f"unknown or stale document handle: {doc}")
+            raise ValidationError(_STALE_HANDLE_MESSAGE.format(doc=doc))
         return doc, document
 
     def _resolve(self, doc: str | None) -> tuple[str, object]:
@@ -402,7 +405,7 @@ class DocumentRegistry:
             document.Name
         except ReferenceError:
             self._release(document)
-            raise ValidationError(f"unknown or stale document handle: {doc}") from None
+            raise ValidationError(_STALE_HANDLE_MESSAGE.format(doc=doc)) from None
         return handle, document
 
     def _release(self, document: object) -> None:
