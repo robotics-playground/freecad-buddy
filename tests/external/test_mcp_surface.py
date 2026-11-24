@@ -1425,3 +1425,19 @@ def test_Should_end_with_the_pointer_exactly_once_When_the_script_exec_descripti
     assert description.startswith(
         "Run Python inside FreeCAD for an operation no typed tool covers."
     )
+
+
+def test_Should_name_only_tools_that_exist_When_a_tool_shaped_token_is_in_the_instructions():
+    # Arrange
+    real_names = {spec.name for spec in tool_specs()} | {"script_exec"}
+    bare_prefixes = {
+        "document_", "query_", "verify_", "export_", "verify_export_",
+        "sketch_", "feature_", "preview_", "view_",
+    }  # fmt: skip
+    pattern = r"\b(?:document|query|verify|export|sketch|feature|preview|view)_[a-z0-9_]*"
+
+    # Act
+    tokens = set(re.findall(pattern, SERVER_INSTRUCTIONS)) - bare_prefixes
+
+    # Assert
+    assert tokens - real_names == set()

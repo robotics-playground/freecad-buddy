@@ -394,10 +394,9 @@ class CacheProxy:
         # The initialize result is sent once per client session, before any upstream connection
         # exists while the container is down, so the upstream text is read back from the last run.
         self._instructions_path = cache_path.with_name(f"{cache_path.stem}.instructions.txt")
-        self._instructions = self._read_instructions()
         self._client_session: ServerSession | None = None
         self.server: Server[Any] = Server(
-            f"{server_name}-cache-proxy", instructions=self._instructions
+            f"{server_name}-cache-proxy", instructions=self._read_instructions()
         )
         self.server.list_tools()(self._handle_list_tools)
         self.server.request_handlers[types.CallToolRequest] = self._handle_call_tool
@@ -421,7 +420,8 @@ class CacheProxy:
 
     def _read_instructions(self) -> str | None:
         try:
-            return self._instructions_path.read_text(encoding="utf-8") or None
+            # Bytes, so a line ending in the upstream text comes back unchanged.
+            return self._instructions_path.read_bytes().decode("utf-8") or None
         except (OSError, ValueError):
             return None
 
@@ -429,10 +429,10 @@ class CacheProxy:
         self._replace_file(self._cache_path, json.dumps(tools, indent=2))
 
     @staticmethod
-    def _replace_file(path: Path, text: str) -> None:
+    def _replace_file(path: Path, text: str, newline: str | None = None) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
-        temporary.write_text(text, encoding="utf-8")
+        temporary.write_text(text, encoding="utf-8", newline=newline)
         # Windows refuses a replace while another process replaces or reads the same target.
         for attempt in range(CACHE_REPLACE_ATTEMPTS):
             try:
@@ -461,22 +461,21 @@ class CacheProxy:
 
     def _cache_instructions(self) -> None:
         instructions = self._upstream.instructions
-        if instructions == self._instructions:
+        if instructions == self._read_instructions():
             return
         try:
             if instructions is None:
                 self._instructions_path.unlink(missing_ok=True)
             else:
-                self._replace_file(self._instructions_path, instructions)
+                self._replace_file(self._instructions_path, instructions, newline="")
         except OSError:
             # The tool list is the relay's main job; a failed text write must not block it.
             LOGGER.warning("could not update %s", self._instructions_path, exc_info=True)
-            return
-        self._instructions = instructions
 
     async def refresh_once(self) -> None:
         tools = await self._upstream.list_tools()
-        self._cache_instructions()
+        # The replace retries with time.sleep; a thread keeps the event loop free for tool calls.
+        await asyncio.to_thread(self._cache_instructions)
         if tools == self._tools:
             return
         self._write_cache(tools)
