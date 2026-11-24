@@ -1161,15 +1161,31 @@ def _check_branches(fn: str) -> list[dict]:
     return [pitch, pair]
 
 
+def _branch_summary(branch: dict) -> str:
+    """``fn {key, key*}`` for one branch, a ``*`` marking a required key."""
+    keys = [
+        f"{key}*" if key in branch["required"] else key
+        for key in branch["properties"]
+        if key != "fn"
+    ]
+    return f"{branch['properties']['fn']['const']} {{{', '.join(keys)}}}"
+
+
+_VERIFY_SHAPE_BRANCHES = [
+    branch for fn in sorted(VERIFY_SHAPE_FNS) for branch in _check_branches(fn)
+]
+
+# The schema refuses a bad check before the handler runs, so the handler's own messages never reach
+# the caller; this text carries what they said.
 _VERIFY_SHAPE_CHECKS_SCHEMA = {
     "type": "array",
     "items": {
-        "oneOf": [branch for fn in sorted(VERIFY_SHAPE_FNS) for branch in _check_branches(fn)],
-        "description": "{fn, expect, ...}; keys per fn: "
-        + "; ".join(
-            f"{fn} {{{', '.join(['expect', *sorted(CHECK_OPTIONAL_KEYS[fn])])}}}"
-            for fn in sorted(VERIFY_SHAPE_FNS)
-        ),
+        "oneOf": _VERIFY_SHAPE_BRANCHES,
+        "description": "{fn, expect, ...}; * marks a required key; a fn takes only the keys "
+        "listed: "
+        + "; ".join(_branch_summary(branch) for branch in _VERIFY_SHAPE_BRANCHES)
+        + ". Select geometry by a query such as {hole: {diameter}} or {face: {normal}}; "
+        "sub-element names such as Face3 are banned (AD-13).",
     },
 }
 

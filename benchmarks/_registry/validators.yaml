@@ -4,7 +4,7 @@
 
 verify_shape:
   suite: g0/fault-injection/
-  validator_sha: "d696390f60bbb4c8aa90aabcbf3d742e9245a284ebe2131e279aa8889f6f8ce5"
+  validator_sha: "d66cbe4222b04de737784f2789d4dc05fb8dcbe2b719b49901d58f6eeb8a5668"
   last_run:
     run_id: fr-2026-11-24-1
     sensitivity: 1.0
@@ -79,7 +79,7 @@ grader:
 
 assertions:
   suite: g2/fault-injection/
-  validator_sha: "ba3b206046aea83edc265bf5b4c69ac43e3a3ff89a7115780bb7c4ac3992cf15"
+  validator_sha: "b417250ab76e782b096d05d4eb6148bcd5621c633d280ea9a503ef31e6ad5f9c"
   last_run:
     run_id: g2-2026-11-24-1
     sensitivity: 1.0
@@ -143,7 +143,7 @@ run_mutation:
 
 verify_sketch:
   suite: g2/fault-injection/
-  validator_sha: "db9b23dc90667f6e88e265aac3abe88773f145f6f27f29da7af5d8785ab830f6"
+  validator_sha: "76f9bc2adff2eba5d14c7541db838042017028af7477e24323a4d64b7f50c278"
   last_run:
     run_id: g2-2026-11-24-1
     sensitivity: 0.0
@@ -174,7 +174,7 @@ verify_render_tone:
 
 spec_assertions:
   suite: g3/fault-injection/corrupted-plan/
-  validator_sha: "4433db5216cc8cd648838ed9dbc1c6d5f0c421a7a95f06457ffa7532bad4dae9"
+  validator_sha: "ec64cb67c7157498321e03724e6da7bd89f2bec406cdb9f3880a958bffe9b657"
   last_run:
     run_id: g3r-2026-11-24-1.1.x
     sensitivity: 1.0

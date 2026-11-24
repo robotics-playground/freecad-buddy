@@ -187,7 +187,10 @@ def _validate_expect(fn: str, check: dict) -> None:
     if fn in ("is_valid_solid", "hole_through"):
         valid = isinstance(expect, bool)
     elif fn == "count_cylindrical_holes":
-        valid = isinstance(expect, int) and not isinstance(expect, bool) and expect >= 0
+        # JSON has one number type, so the schema's "integer" admits 2.0; so does this check.
+        valid = (
+            _is_number(expect) and (isinstance(expect, int) or expect.is_integer()) and expect >= 0
+        )
     elif fn == "expect_bbox":
         _require_vector(expect, 3, f"{fn}.expect")
         valid = True

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import jsonschema
@@ -19,6 +20,11 @@ from freecad_buddy.contracts import (
 from freecad_buddy.hosts.tool_catalog import tool_specs
 from freecad_buddy.usecases.assertions import validate_check
 from freecad_buddy.usecases.documents import ValidationError
+from freecad_buddy.usecases.verify import _validate_shape_check
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from benchmarks import runner  # noqa: E402
 
 _HOLE = {"hole": {"diameter": 5.0}}
 
@@ -299,3 +305,75 @@ def test_Should_accept_every_stored_benchmark_check_When_validated_against_the_s
     # Assert
     assert len(checks) >= 20
     assert rejected == []
+
+
+@pytest.mark.parametrize("name", ["verify_shape", "assertions", "spec_assertions"])
+def test_Should_change_the_validator_hash_When_the_check_key_tables_are_edited(
+    name, tmp_path, monkeypatch
+):
+    # Arrange
+    tables = Path(__file__).resolve().parents[2] / "src/freecad_buddy/contracts/assertions.py"
+    edited = tmp_path / "assertions.py"
+    edited.write_bytes(tables.read_bytes() + b"\n# edit\n")
+    swapped = tuple(edited if path == tables else path for path in runner._VALIDATOR_SOURCES[name])
+    before = runner._validator_src_hasher(name)
+    monkeypatch.setitem(runner._VALIDATOR_SOURCES, name, swapped)
+
+    # Act
+    after = runner._validator_src_hasher(name)
+
+    # Assert
+    assert before
+    assert after != before
+
+
+@pytest.mark.parametrize(
+    "check",
+    [
+        {"fn": "expect_solid_count", "expect": 1.0},
+        {"fn": "count_cylindrical_holes", "expect": 2.0},
+    ],
+)
+def test_Should_accept_an_integral_float_When_the_fn_takes_an_integer(check):
+    # Arrange
+    target = check
+
+    # Act
+    schema_errors = _schema_errors(target)
+    if target["fn"] in SHAPE_CHECK_FNS:
+        _validate_shape_check(target)
+    else:
+        validate_check(target)
+
+    # Assert
+    assert schema_errors == []
+
+
+@pytest.mark.parametrize("expect", [1.5, True, "1"])
+def test_Should_refuse_a_non_integral_expect_When_the_fn_counts_solids(expect):
+    # Arrange
+    check = {"fn": "expect_solid_count", "expect": expect}
+
+    # Act
+    def act():
+        _validate_shape_check(check)
+
+    # Assert
+    with pytest.raises(ValidationError):
+        act()
+    assert _schema_errors(check)
+
+
+def test_Should_mark_required_keys_and_name_the_index_selector_ban_When_reading_the_description():
+    # Arrange
+    items = _input_schema()["properties"]["checks"]["items"]
+
+    # Act
+    description = items["description"]
+
+    # Assert
+    assert "expect_extent {expect*, direction*, tol}" in description
+    assert "hole_spacing {expect*, pattern, select, tol}" in description
+    assert "hole_spacing {expect*, pattern, select_a*, select_b*, tol}" in description
+    assert "Face3" in description
+    assert "AD-13" in description

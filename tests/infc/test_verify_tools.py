@@ -701,6 +701,18 @@ class VerifyShapeTest(_DocFixture):
         with self.assertRaisesRegex(ValidationError, r"^object has no shape: Body$"):
             act()
 
+    def test_should_measure_the_solid_count_when_expect_is_an_integral_float(self):
+        # Arrange
+        self._add_box()
+        check = {"fn": "expect_solid_count", "expect": 1.0}
+
+        # Act
+        envelope = verify.verify_shape(self.registry, doc=self.handle, object="Box", checks=[check])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(envelope["structured_content"]["checks"][0]["expected"], 1)
+
     def test_should_refuse_a_shape_fact_check_when_it_carries_a_foreign_key_or_a_mistyped_expect(
         self,
     ):

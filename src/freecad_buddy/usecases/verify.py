@@ -179,7 +179,12 @@ def _validate_shape_check(check: dict) -> None:
         raise ValidationError(f"{fn} needs 'expect'")
     expect = check["expect"]
     if fn == "expect_solid_count":
-        valid = isinstance(expect, int) and not isinstance(expect, bool)
+        # JSON has one number type, so the schema's "integer" admits 1.0; so does this check.
+        valid = (
+            isinstance(expect, (int, float))
+            and not isinstance(expect, bool)
+            and (isinstance(expect, int) or expect.is_integer())
+        )
     else:
         valid = isinstance(expect, bool)
     if not valid:
