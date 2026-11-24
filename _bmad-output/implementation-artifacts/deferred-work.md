@@ -2203,3 +2203,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Review finding (Blind Hunter, Duplicated Code). Sharing one helper edits `features.py` and `sketches.py`, outside this Story.
   blocker: touching two other tool modules for a cosmetic gain; the stricter key check would change their behaviour.
   unblock: a refactor Story that moves the parser to one module and decides on extra keys.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `query_section` pole-load guard counts only BSpline and Bezier faces; surfaces of extrusion or revolution over a BSpline curve and offset surfaces over a BSpline surface are not counted.
+  evidence: Round-2 Edge Case Hunter: an OffsetSurface face has no `NbUPoles`, so it bypasses `_bspline_pole_load`. Cost of these surfaces in `Shape.section` was not measured.
+  blocker: no measurement of section cost on swept-curve and offset surfaces.
+  unblock: a probe of section time against basis-curve poles, then extend `_bspline_pole_load`.

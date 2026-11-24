@@ -955,11 +955,17 @@ _MAX_BSPLINE_POLE_LOAD = 800**2
 # 0.11 s, 300 -> 0.91 s, 600 -> 7.9 s; a plate with 600 holes -> 2.4 s. 300 wires keep both near
 # 2 s. Above it the area is null, never 0.
 _MAX_AREA_WIRES = 300
-# A plane within this distance of a planar face of the shape (``Precision::Confusion``) lies on
-# the face: ``Shape.section`` then returns the inner edges of the face as well.
+# A plane within this distance of a planar face of the shape (``Precision::Confusion``), or within
+# the face's own tolerance when that is larger, lies on the face: ``Shape.section`` then returns the
+# inner edges of the face as well (a box with tolerance 1e-5 cut 1e-6 mm from a face gave an open
+# wire of 82.4 mm against a perimeter of 60 mm).
 _COINCIDENT_TOLERANCE_MM = 1e-7
+_BSPLINE_SURFACE_TYPES = ("Part::GeomBSplineSurface", "Part::GeomBezierSurface")
 # The area from ``Shape.common`` and the area bounded by the section wires must agree this closely.
-_AREA_AGREEMENT_REL_TOL = 1e-6
+# On a section whose edges are approximated curves the two differ slightly (a NURBS cylinder of
+# radius 10: 314.157 against 313.931, 7e-4 relative); with a plane that confuses the kernel they
+# differ widely (a void floor: 400 against 300).
+_AREA_AGREEMENT_REL_TOL = 5e-3
 _MAX_POLYLINE_POINTS = 5000
 _MIN_POLYLINE_POINTS = 2
 _DEFAULT_POLYLINE_POINTS = 1000
@@ -1048,28 +1054,43 @@ def _bspline_pole_load(shape: object) -> int:
     return load
 
 
+def _face_plane(face: object) -> object | None:
+    """The plane a planar face lies in, or ``None`` for a curved face.
+
+    A planar BSpline or Bezier face (a box after ``toNurbs()``) is found with ``findPlane``; the
+    other curved surfaces are not tried because the search costs time on every face.
+    """
+    surface = face.Surface
+    if surface.TypeId == "Part::GeomPlane":
+        return surface
+    if surface.TypeId in _BSPLINE_SURFACE_TYPES:
+        return face.findPlane()
+    return None
+
+
 def _plane_on_face(shape: object, normal: tuple[float, float, float], offset: float) -> bool:
     """Whether the plane ``normal . p = offset`` coincides with a planar face of ``shape``.
 
     A face coincides when its normal is parallel to ``normal`` closely enough that the two planes
-    stay within ``_COINCIDENT_TOLERANCE_MM`` across the face, and one of its vertices is on the
-    plane.
+    stay within the tolerance across the face, and one of its vertices is on the plane. The
+    tolerance is ``_COINCIDENT_TOLERANCE_MM`` or the face's own tolerance, whichever is larger.
     """
     for face in shape.Faces:
-        surface = face.Surface
-        if surface.TypeId != "Part::GeomPlane" or not face.Vertexes:
+        plane = _face_plane(face)
+        if plane is None or not face.Vertexes:
             continue
-        axis = surface.Axis
+        tolerance = max(_COINCIDENT_TOLERANCE_MM, face.Tolerance)
+        axis = plane.Axis
         tilt = math.hypot(
             axis.y * normal[2] - axis.z * normal[1],
             axis.z * normal[0] - axis.x * normal[2],
             axis.x * normal[1] - axis.y * normal[0],
         )
-        if tilt * max(face.BoundBox.DiagonalLength, 1.0) > _COINCIDENT_TOLERANCE_MM:
+        if tilt * max(face.BoundBox.DiagonalLength, 1.0) > tolerance:
             continue
         point = face.Vertexes[0].Point
         distance = normal[0] * point.x + normal[1] * point.y + normal[2] * point.z - offset
-        if abs(distance) <= _COINCIDENT_TOLERANCE_MM:
+        if abs(distance) <= tolerance:
             return True
     return False
 
@@ -1092,6 +1113,13 @@ def _section_untrusted_reason(shape: object) -> str | None:
     except Exception:  # noqa: BLE001 -- a shape the kernel cannot even inspect is not cuttable
         return "the shape cannot be inspected"
     return None
+
+
+def _untrusted_envelope(name: str, reason: str) -> ResultEnvelope:
+    """The refusal for a shape the section kernel cannot be trusted on."""
+    return _refusal_envelope(
+        "section.untrusted_shape", f"object {name} cannot be sectioned: {reason}"
+    )
 
 
 def _section_plane_face(shape: object, normal: tuple[float, float, float], offset: float):
@@ -1213,22 +1241,30 @@ def query_section(
                 f"object {object} has {face_count} faces, limit {_MAX_SECTION_FACES}. "
                 "Section a simpler object.",
             )
-        if _bspline_pole_load(own_shape) > _MAX_BSPLINE_POLE_LOAD:
+        try:
+            pole_load = _bspline_pole_load(own_shape)
+        except Exception:  # noqa: BLE001 -- a face whose surface cannot be read is not cuttable
+            return _untrusted_envelope(object, "the shape cannot be inspected")
+        if pole_load > _MAX_BSPLINE_POLE_LOAD:
             return _refusal_envelope(
                 "section.too_complex",
-                f"object {object} has BSpline or Bezier faces with too many poles to cut in "
-                "one call (about 800 poles in one face is the limit). Section a simpler object.",
-            )
-        if _plane_on_face(own_shape, normal, offset):
-            return _refusal_envelope(
-                "section.plane_on_face",
-                f"the plane lies on a face of {object}; offset it by a small amount",
+                f"object {object} has a BSpline and Bezier pole load of {pole_load}, limit "
+                f"{_MAX_BSPLINE_POLE_LOAD}: the sum over its faces of the square of the pole "
+                "count (one face of 800 poles reaches it). Section a simpler object.",
             )
         shape = _copied_queryable_shape(document, object)
         reason = _section_untrusted_reason(shape)
         if reason is not None:
+            return _untrusted_envelope(object, reason)
+        try:
+            on_face = _plane_on_face(shape, normal, offset)
+        except Exception:  # noqa: BLE001 -- a face whose surface cannot be read is not cuttable
+            return _untrusted_envelope(object, "the shape cannot be inspected")
+        if on_face:
             return _refusal_envelope(
-                "section.untrusted_shape", f"object {object} cannot be sectioned: {reason}"
+                "section.plane_on_face",
+                f"the plane lies on a face of {object}; offset it by a small amount "
+                "(1e-6 mm or more, more for a shape with a larger tolerance)",
             )
         if request is not None:
             floor = shape.BoundBox.DiagonalLength * _MIN_DEFLECTION_RATIO

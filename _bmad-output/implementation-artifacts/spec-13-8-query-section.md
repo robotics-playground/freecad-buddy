@@ -108,3 +108,21 @@ Review round 2 (red team, decision 31), deviations from the frozen text: face li
 | R2-4 | RT-4 | Loose BSpline bbox | medium | patch: `optimalBoundingBox` |
 | R2-5 | RT-5 | Plane on a face gives wrong numbers | medium | patch: `section.plane_on_face` |
 | R2-6 | verifier f | Design names the copy as the fingerprint reason | low | patch: reworded |
+
+Review round 2 lenses: Blind Hunter abfb81d141a72bd07 (opus, high), Edge Case Hunter a5dbd96c7419d33d7 (opus, high), Verification Gap abd3c64bf528ae7ff (sonnet, medium) on d4a258e4..b29c92b4.
+
+| # | Lens | Finding | Verdict | Route and evidence |
+|---|------|---------|---------|--------------------|
+| R2-7 | BH, VG | Six round-1 tests deleted by a bad splice in the round-2 test patch | high | patch: restored; 99 tests in the three query classes pass |
+| R2-8 | BH, VG | Pole refusal message states a per-face rule and no measured load | medium | patch: message names the load and limit; boundary and sum tests |
+| R2-9 | BH, EC | Face tolerance above 1e-7 not used; box with tolerance 1e-5 gave an open wire | medium | patch: `max(1e-7, face.Tolerance)`; test with `fixTolerance(1e-5)` |
+| R2-10 | BH, EC | Planar BSpline face (`toNurbs()` box) not detected | medium | patch: `findPlane()` for BSpline and Bezier faces; test |
+| R2-11 | EC | `face.Surface` can raise; guards ran outside the trust handling | medium | patch: guards wrapped, refusal `section.untrusted_shape`; test |
+| R2-12 | BH, EC | Plane-on-face check ran before the trust check | medium | patch: reordered; test with an invalid solid |
+| R2-13 | BH, EC | Area tolerance 1e-6 nulls NURBS sections (7e-4 gap) | medium | patch: 5e-3 with the measurement beside the constant; test |
+| R2-14 | BH | Message gives no minimum offset | low | patch: message names 1e-6 mm |
+| R2-15 | BH, VG | Budget bound 60 s hides regressions; area path unmeasured at limits | medium | patch: 30 s bound, plate with area, combined shape measured |
+| R2-16 | BH | Tilted-plane test asserts only status | low | patch: asserts wires and area; refused tilt 1e-10 added |
+| R2-17 | BH, VG | No placement or 1e-6 void floor test | medium | patch: placed top face refused; void floor at 1e-6 measured |
+| R2-18 | EC | Offset surface over a BSpline surface bypasses the pole load | low | defer: not measured; documented in design and constant comment |
+| R2-19 | BH, EC, VG | Spec acceptance criterion, quality bar Q6 and T-2 still list the old offsets and 10,000 faces | medium | leader-owned documents; reported to the leader; spec change log above names the new rules |
