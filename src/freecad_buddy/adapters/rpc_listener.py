@@ -31,6 +31,7 @@ from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited, wrote_own_audit
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import confirm, view_fit
+from freecad_buddy.usecases.process import pid_alive
 from freecad_buddy.contracts.rpc import (
     RPC_BUSY_MESSAGE,
     RPC_ERROR_NO_HANDSHAKE,
@@ -243,6 +244,7 @@ class RpcListener:
         }
         directory = self._discovery_dir()
         directory.mkdir(parents=True, exist_ok=True)
+        self._sweep_orphan_discovery(directory)
         path = directory / f"rpc-{os.getpid()}.json"
         path.write_text(json.dumps(record), encoding="utf-8")
         # On POSIX this sets owner-only mode. On Windows chmod sets only the read-only bit, which
@@ -254,6 +256,33 @@ class RpcListener:
         except OSError:
             pass
         self._discovery_path = path
+
+    @staticmethod
+    def _sweep_orphan_discovery(directory: Path) -> None:
+        """Delete the ``rpc-<pid>.json`` files of processes that are gone.
+
+        A file is deleted only when its JSON ``pid`` is an integer that ``pid_alive`` reports dead.
+        ``pid_alive`` answers True on access denied and on a reused pid, so such files stay.
+        An unreadable file or one with a non-integer ``pid`` also stays: deleting on doubt could
+        remove the record of a live bridge.
+        """
+        for path in directory.glob("rpc-*.json"):
+            try:
+                pid = json.loads(path.read_text(encoding="utf-8")).get("pid")
+            except (OSError, ValueError, AttributeError):
+                continue
+            if not isinstance(pid, int) or isinstance(pid, bool):
+                continue
+            try:
+                if pid == os.getpid() or pid_alive(pid):
+                    continue
+            except (OverflowError, ValueError):
+                # A corrupt pid beyond the platform's range: keep the file.
+                continue
+            try:
+                path.unlink()
+            except OSError:
+                pass
 
     def _delete_discovery(self) -> None:
         path = self._discovery_path

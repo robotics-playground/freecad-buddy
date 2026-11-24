@@ -1865,6 +1865,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: Discovery files `rpc-<pid>.json` of dead FreeCADs are never removed: 61 in `%APPDATA%\FreeCAD\v1-1\freecad-buddy` at the end of run 2026-10-23-02, the oldest from 2026-08-01, each holding a dead token. AD-25 binds every file writer ("unbounded artifact growth"). Proposed fix, not made: the bridge-start sweep also deletes `rpc-<pid>.json` whose pid is dead.
   evidence: Lead log §5 W5; run P9 finding B8; TC-10-03 picked a stale file through `glob(...)[0]` (`bugs.md` N-02, B-18).
+  resolution: resolved by Story 13-20: `RpcListener._sweep_orphan_discovery` (`adapters/rpc_listener.py`) runs at bridge start and deletes `rpc-<pid>.json` whose JSON pid is an integer and `pid_alive` is False; it keeps live, own, unreadable and non-integer-pid files.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: The H1 stdio front can deadlock on a pip-installed numpy: with numpy 2.4.6, `verify_export_stl` hangs in `import trimesh` because a thread is blocked on `sys.stdin.buffer.readline()` when `import numpy` runs. FreeCAD's conda numpy 1.26.4 does not hang. Possible fix: import the oracle modules at front start, before the stdio reader starts. Owner decision needed.
@@ -2187,3 +2188,11 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
   summary: The `query_interference` text and record do not say why a pair is `boolean_failed` (untrusted input, or a kernel failure at contact).
   evidence: Both give the same text line; a reason field or a named object in the text would be additive.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-20-usage-report.md`
+  summary: `rpc_client._live_records` sorts discovery files with `p.stat()` inside the sort key, so a file deleted between `glob` and `stat` (now possible when a bridge start sweeps orphans) raises `FileNotFoundError`, which the `except OSError: return` turns into no discovery at all.
+  evidence: `adapters/rpc_client.py:123`; reached only when a client discovers while another bridge starts, unverified in practice; a fix wraps `stat()` per file and skips a vanished one.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-20-usage-report.md`
+  summary: The spill-stub patterns `_SPILL` (`scripts/automation/replay_result_sizes.py`) and `_PERSISTED` (`scripts/automation/session_metrics.py`) match the file path with `\S+?\.txt`, so a spill path with a space (a Windows profile name with a space) is not recognised by `session_metrics` or `usage_report`.
+  evidence: both patterns use `\S`; the current profile path has no space, so no report was affected; unverified for other profiles.

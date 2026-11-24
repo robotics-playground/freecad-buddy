@@ -625,7 +625,7 @@ mcp query_screenshot { doc: "fcb-doc:not-a-real-handle" }
 mcp query_tree_summary { doc: 12345 }
 ```
 
-**Then** every read-only tool refuses — verify: each of the five envelope tools among the six read-only calls (`query_object`, `query_mass_properties`, `query_dependencies`, `query_placement`, `query_sketch_info`) returns `status: "INVALID_INPUT"` with message `unknown or stale document handle: fcb-doc:not-a-real-handle`; `query_tree_summary` is a text-only tool, so its refusal is the one text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle` (`mcp-tools-design.md:60`)  
+**Then** every read-only tool refuses — verify: each of the five envelope tools among the six read-only calls (`query_object`, `query_mass_properties`, `query_dependencies`, `query_placement`, `query_sketch_info`) returns `status: "INVALID_INPUT"` with message `unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles`; `query_tree_summary` is a text-only tool, so its refusal is the one text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles` (`mcp-tools-design.md:60`)  
 **And** every lifecycle tool refuses — verify: each of the six lifecycle calls returns the same `INVALID_INPUT` message  
 **And** the refusal is an envelope, not a protocol error — verify: each of the eleven envelope-tool responses (five read-only, six lifecycle) carries `schema` `fcb.result-envelope/1` and `detail.code` `INVALID_INPUT`, because a well-typed but unknown handle passes the JSON Schema and fails at resolution. The `query_tree_summary` refusal is the exception by design: the tool declares no `outputSchema` and its result is one plain `TextContent` with no `structuredContent` (`mcp-tools-design.md:60`), so read its text line and expect no `schema` or `detail` field; it is still a tool error (`isError`), not a protocol rejection  
 **And** nothing crashes — verify: after all twelve calls, `mcp query_capabilities {}` still returns `status: "OK"` and `docker exec -u cua fcb-desktop grep -iE "access violation|segfault|swig" "$FCB_USER_DIR/freecad-buddy/addon.log"` returns nothing  
@@ -661,7 +661,7 @@ mcp query_tree_summary { doc: <handle> }
 ```
 
 **Then** the first close succeeds — verify: `status: "OK"` with `closed: true` and `name` `sphere_r10` (FreeCAD's internal `Name` replaces the `-` of the file stem with `_`)  
-**And** the second close is refused — verify: `status: "INVALID_INPUT"` with message `unknown or stale document handle: <handle>`  
+**And** the second close is refused — verify: `status: "INVALID_INPUT"` with message `unknown or stale document handle: <handle>; call document_list for the current handles`  
 **And** the refusal names the handle that failed — verify: the message contains the exact handle string passed in, so a caller can identify which of several handles is stale  
 **And** a query through the released handle is refused the same way — verify: the `query_tree_summary` returns the same `INVALID_INPUT` message  
 **And** no document was closed twice in FreeCAD — verify: `mcp document_list {}` returns `0 open document(s).` and the FreeCAD window shows no orphan MDI child  
