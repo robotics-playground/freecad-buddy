@@ -519,7 +519,9 @@ def restore_step_config(unit: str) -> None:
     Part.setStaticValue("write.step.schema", scheme)
 
 
-def export_step_objects(items: list[tuple[str, object]], path: str) -> list[str]:
+def export_step_objects(
+    items: list[tuple[str, object]], document_name: str, path: str
+) -> list[str]:
     """Write ``(label, shape)`` pairs to one STEP file, one product per pair named by its label.
 
     Each shape is copied into a scratch ``Part::Feature`` carrying the label, and ``Import.export``
@@ -530,11 +532,14 @@ def export_step_objects(items: list[tuple[str, object]], path: str) -> list[str]
     pair may become several products. The writer reads the same ``write.step.*`` statics
     ``pin_step_config`` sets, so the caller pins and restores them. Writer options that otherwise
     come from the operator's ``Mod/Import`` preferences are passed explicitly. Returns the label
-    each feature ended with, which FreeCAD makes unique within the scratch document.
+    each feature ended with, which FreeCAD makes unique within the scratch document. The writer
+    names the root product after the document's internal name, so the scratch document is named
+    ``<document_name>_export`` (FreeCAD adds a number when that name is taken). A feature has no
+    colours of its own, so the file carries none.
     """
     import Import
 
-    with _scratch_document("FCB_TMP_step_write") as doc:
+    with _scratch_document(f"{document_name}_export") as doc:
         features = []
         for label, shape in items:
             feature = doc.addObject("Part::Feature", "Part")

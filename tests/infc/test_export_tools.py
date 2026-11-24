@@ -648,6 +648,9 @@ class MultiObjectExportTest(_ExportFixture):
         target = self._verify_step(written)
 
         # Assert
+        recorded = self.exports._by_id[written["structured_content"]["export_id"]]["source"]
+        self.assertEqual(recorded["objects"][0]["solids"], 1)
+        self.assertAlmostEqual(recorded["objects"][0]["volume"], ANALYTIC_VOLUME, places=6)
         self.assertEqual(target["status"], "OK")
 
     def test_Should_grade_only_the_solids_When_an_object_holds_a_solid_and_a_loose_face(self):
@@ -665,6 +668,8 @@ class MultiObjectExportTest(_ExportFixture):
         # Assert
         recorded = self.exports._by_id[written["structured_content"]["export_id"]]["source"]
         self.assertAlmostEqual(recorded["objects"][0]["volume"], 1000.0, places=6)
+        self.assertEqual(recorded["objects"][0]["faces"], 6)
+        self.assertEqual(recorded["faces"], 6 + 1)
         self.assertEqual(target["status"], "OK")
 
     def test_Should_fail_the_name_check_When_a_recorded_product_name_is_not_in_the_file(self):
@@ -682,6 +687,89 @@ class MultiObjectExportTest(_ExportFixture):
         self.assertNotEqual(target["status"], "OK")
         self.assertFalse(by_id["export_step.object_names"]["passed"])
         self.assertIn("Delta", by_id["export_step.object_names"]["detail"]["message"])
+
+    def test_Should_export_a_compound_and_not_its_visible_children_When_objects_are_omitted(self):
+        # Arrange
+        first = self._add_box("Child1")
+        second = self._add_box("Child2")
+        second.Placement.Base = App.Vector(30, 0, 0)
+        compound = self.document.addObject("Part::Compound", "Cmp")
+        compound.Links = [first, second]
+        self.document.recompute()
+
+        # Act
+        _path, target = self._export(exports.export_step, "cmp.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Cmp"])
+
+    def test_Should_pass_the_name_check_When_labels_are_long_or_hold_special_characters(self):
+        # Arrange
+        labels = ["L" * 120, "tab\there", "line\nbreak", "Al'pha\\x", "Khoi ø — 1"]
+        names = []
+        for index, label in enumerate(labels):
+            box = self._add_box(f"Obj{index}")
+            box.Label = label
+            box.Placement.Base = App.Vector(30 * index, 0, 0)
+            names.append(f"Obj{index}")
+        self.document.recompute()
+        _path, written = self._export(exports.export_step, "labels.step", objects=names)
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        by_id = {c["id"]: c for c in target["structured_content"]["checks"]}
+        self.assertTrue(
+            by_id["export_step.object_names"]["passed"], by_id["export_step.object_names"]
+        )
+        self.assertEqual(target["status"], "OK")
+
+    def test_Should_name_the_product_after_the_object_name_When_a_label_is_empty(self):
+        # Arrange
+        first = self._add_box("Blank")
+        first.Label = ""
+        second = self._add_box("Other")
+        second.Placement.Base = App.Vector(30, 0, 0)
+        self.document.recompute()
+        path, written = self._export(exports.export_step, "blank.step", objects=["Blank", "Other"])
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        self.assertEqual(target["status"], "OK")
+        self.assertIn("Blank", self._step_product_names(path))
+
+    def test_Should_name_the_root_product_after_the_document_When_several_objects_go_to_step(self):
+        # Arrange
+        names = self._add_three_bodies()
+
+        # Act
+        path, _written = self._export(exports.export_step, "root.step", objects=names)
+
+        # Assert
+        products = self._step_product_names(path)
+        self.assertTrue(any(name.startswith(self.document.Name) for name in products), products)
+        self.assertFalse(any(name.startswith("FCB_TMP") for name in products), products)
+
+    def test_Should_record_the_file_name_When_a_3mf_label_holds_a_tab(self):
+        # Arrange
+        first = self._add_box("Tabbed")
+        first.Label = "a\tb"
+        second = self._add_box("Other")
+        second.Placement.Base = App.Vector(30, 0, 0)
+        self.document.recompute()
+        _path, written = self._export(exports.export_3mf, "tab.3mf", objects=["Tabbed", "Other"])
+        export_id = written["structured_content"]["export_id"]
+
+        # Act
+        target = exports.export_self_read_3mf(
+            self.registry, self.exports, doc=self.handle, export_id=export_id
+        )["structured_content"]
+
+        # Assert
+        self.assertEqual([o["file_name"] for o in target["objects"]], ["a b", "Other"])
 
     def test_Should_skip_a_hidden_object_When_objects_are_omitted(self):
         # Arrange

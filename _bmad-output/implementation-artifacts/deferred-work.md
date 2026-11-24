@@ -2153,7 +2153,13 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   unblock: a decision on global coordinates, then a Story that applies `getGlobalPlacement()` to the shapes before export and verification.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
-  summary: Default selection (omitted `objects`) ignores `App::Link` objects, which have no `Shape`, and does not treat a solid inside a hidden `App::Part` as hidden.
-  evidence: Edge Hunter findings in the Story 13-5 review (low, not reproduced; Assembly workbench documents are outside the Phase 1 to 3 flows).
+  summary: Default selection (omitted `objects`) ignores `App::Link` objects, which have no `Shape`.
+  evidence: Edge Hunter finding in the Story 13-5 review (low, not reproduced; Assembly workbench documents are outside the Phase 1 to 3 flows).
   blocker: no reproduction document; assemblies are not in scope.
   unblock: an assembly Story, or a measured report of a document that loses a solid this way.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: `verify_export_step` fails `export_step.topology_counts` for a BooleanFragments object, in the single-object path and in the several-object path.
+  evidence: red team RT-7 (`_bmad-output/implementation-artifacts/redteam-13-5.md`): faces 25 against 19 on re-import, same on the single path (`bf_single`); not caused by Story 13-5.
+  blocker: needs a decision whether FreeCAD's re-import of fragments (split faces) is a verification fault or an expected difference.
+  unblock: a Story that measures the fragment topology on re-import and sets the count rule for compound results.

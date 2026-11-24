@@ -21,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FREECAD_STYLE_3MF = (
     REPO_ROOT / "benchmarks" / "g0" / "export-fault-injection" / "3mf-clean-control" / "export.3mf"
 )
+GUI_WRITTEN_THREE = Path(__file__).parent / "fixtures" / "gui-written-three-objects.3mf"
 THUMBNAIL_PNG = bytes.fromhex(
     "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
     "0000000d49444154789c63f8ffff3f0005fe02fea79aa0a00000000049454e44ae426082"
@@ -231,3 +232,23 @@ def test_Should_expect_the_file_name_When_an_object_label_holds_a_control_charac
     # Assert
     names = next(c for c in target["checks"] if c["id"] == "lib3mf.object_names")
     assert names["passed"] is True
+
+
+def test_Should_read_every_name_with_lib3mf_When_a_real_gui_written_archive_is_named(tmp_path):
+    # Arrange
+    import lib3mf
+
+    path = tmp_path / "gui-three.3mf"
+    path.write_bytes(GUI_WRITTEN_THREE.read_bytes())
+    with pytest.raises(lib3mf.ELib3MFException):
+        _read_with_lib3mf(path)
+
+    # Act
+    exports._name_3mf_objects(str(path), ["Alpha", "Beta", "Gamma"])
+
+    # Assert
+    iterator = _read_with_lib3mf(path).GetMeshObjects()
+    names = []
+    while iterator.MoveNext():
+        names.append(iterator.GetCurrentMeshObject().GetName())
+    assert names == ["Alpha", "Beta", "Gamma"]

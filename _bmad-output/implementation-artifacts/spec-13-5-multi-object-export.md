@@ -120,3 +120,29 @@ Lenses: Blind Hunter a04acfda514f282a5, Edge Case Hunter a44d449d801e1aea6, Veri
 | E15 type="surface" regex | low | Patched: regex keeps the type. |
 | E16 INVALID_INPUT with file left | medium | Same as B8. |
 | E17 control characters in label | low | Patched: newline, return, tab as character references. |
+
+### Round 2 (container UAT D-1, red team RT-1 to RT-8, lenses round 2)
+
+Lenses: Blind Hunter ab25971a900789028, Edge Case Hunter aa71fe06eaf454d5b, Verification Gap a0669763dbe56b3c4.
+
+| Finding | Verdict | Evidence and route |
+|---------|---------|--------------------|
+| D-1 GUI 3MF repeats the png content type | high | Patched: `_unique_content_types`; test with the GUI-written archive from the UAT and lib3mf (it refuses the file before the fix). |
+| RT-1 hidden Body or Part keeps visible children | high | Patched: `_is_shown` walks the groups above an object; tests. |
+| RT-2 mirror source dropped | medium | Patched: a mirror consumes nothing. |
+| RT-3, RT-6 control characters in 3MF names | medium | Patched: each becomes a space; read back with lib3mf. |
+| RT-4 shared shape, one product name | medium | Patched: scratch `Part::Feature` copies; decision recorded in Implementation Notes. |
+| RT-5 hidden child of a selected Part | medium | Patched: the written shape is the recorded shape. |
+| RT-7 solid plus loose face | low | Patched: only the solids are recorded and written. BooleanFragments counts: pre-existing, deferred. |
+| L-1 no product-name check | low | Patched: `export_step.object_names`. |
+| RT-8 non-ASCII labels | low | Not fixed: OCCT writer; leader records it. |
+| Lens: link allow-list drops compound and other links | medium | Patched: links consume unless attachment or mirror; compound test. |
+| Lens: root product named `FCB_TMP_step_write` | medium | Patched: scratch document named `<document name>_export`. Colours are not carried (stated in the design). |
+| Lens: long, tab, newline, quote, backslash and empty labels fail the name check | high | Reproduced on host; patched (line join, escape decoding, empty label uses the object name); tests. |
+| Lens: duplicate labels use set membership | low | Patched: counts. |
+| Lens: tests that cannot fail (loose face, hidden child) | low | Patched: assert faces, solids, volume. |
+| Lens: `file_name` hand-off untested | medium | Patched: infc test reads it from the self-read facts. |
+| Lens: name matched to geometry only by file order | low | Rejected: the writer sends each label with its shape; a swap is not a writer fault. |
+| Lens: expected name taken from the writer return value | low | Rejected: needed for labels FreeCAD makes unique in the scratch document. |
+| Lens: plain group hidden by script, nested groups | low | Rejected: not reproduced in the GUI, where hiding sets the children. |
+| Lens: design and ledger wording | low | Patched. |

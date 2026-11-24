@@ -25,6 +25,7 @@ import os
 import re
 import secrets
 import zipfile
+from collections import Counter
 from xml.sax.saxutils import escape
 
 from freecad_buddy.contracts import (
@@ -59,17 +60,17 @@ _LINK_PROPERTY_TYPES = frozenset(
         "App::PropertyLinkSubList",
     }
 )
-# Input links whose result contains the target: a boolean's operands, the sections of a loft or
-# sweep, an extrusion's base, a Body's or Part's members.
-_CONSUMING_LINKS = frozenset(
-    {"Base", "Tool", "Shapes", "Sections", "Spine", "Group", "BaseFeature"}
-)
+# Links that point at an object without containing it: an attachment target. A mirror's links are
+# skipped by type, because the mirror does not contain its source.
+_NON_INPUT_LINKS = frozenset({"AttachmentSupport", "Support"})
 _ATTRIBUTE_ESCAPES = {'"': "&quot;"}
 _CONTROL_CHARACTERS = re.compile(r"[\x00-\x1f]")
 _CONTENT_TYPE_DEFAULT = re.compile(
     r"[ \t]*<Default\b[^>]*?\bExtension=\"([^\"]*)\"[^>]*/>[ \t]*\r?\n?"
 )
-_STEP_PRODUCT = re.compile(r"PRODUCT\('(?:[^']|'')*','((?:[^']|'')*)'")
+_STEP_PRODUCT = re.compile(r"PRODUCT\(\s*'(?:[^']|'')*'\s*,\s*'((?:[^']|'')*)'")
+_STEP_ESCAPE = re.compile(r"\\\\|\\N\\|\\T\\|''")
+_STEP_ESCAPED = {"\\\\": "\\", "\\N\\": "\n", "\\T\\": "\t", "''": "'"}
 
 
 class ExportRegistry:
@@ -135,15 +136,16 @@ def _resolve_export_objects(document: object, objects: list | None) -> list:
 
 
 def _shape_inputs(obj: object) -> list:
-    """Return the objects ``obj`` contains: the targets of its input link properties.
+    """Return the objects ``obj`` contains: the targets of its link properties.
 
-    Only the links that name an input the result contains count (see ``_CONSUMING_LINKS``). An
-    attachment target, an expression reference and the ``Source`` of a mirror are not inputs: the
-    object they point at still exports on its own.
+    An attachment target, an expression reference and the source of a mirror are not inputs: the
+    object they point at still exports on its own, because the result does not contain it.
     """
+    if obj.TypeId == "Part::Mirroring":
+        return []
     inputs: list = []
     for name in obj.PropertiesList:
-        if name in _CONSUMING_LINKS and obj.getTypeIdOfProperty(name) in _LINK_PROPERTY_TYPES:
+        if name not in _NON_INPUT_LINKS and obj.getTypeIdOfProperty(name) in _LINK_PROPERTY_TYPES:
             inputs.extend(_linked_objects(getattr(obj, name)))
     return inputs
 
@@ -286,7 +288,9 @@ def export_step(
                 shapes[0].exportStep(path)
             else:
                 step_names = shim.export_step_objects(
-                    [(obj.Label, shape) for obj, shape in zip(objs, shapes)], path
+                    [(obj.Label or obj.Name, shape) for obj, shape in zip(objs, shapes)],
+                    document.Name,
+                    path,
                 )
         finally:
             shim.restore_step_config(previous_unit)
@@ -653,19 +657,23 @@ def _object_volume_checks(leaves: list[dict], objects: list[dict]) -> list[dict]
 def _object_names_check(path: str, objects: list[dict]) -> dict:
     """Return the check that the file names a product after every object's ``Label``.
 
-    The names come from the written file, never from the writer's return value. The file may hold
-    more products than objects (a multi-solid object, the root of the scratch document).
+    The written names come from the file, never from the writer's return value. The file may hold
+    more products than objects (a multi-solid object, the root product). A name that two objects
+    share must appear as often as the objects that carry it. OCCT wraps long lines at 72
+    characters with a bare newline, escapes a quote as two quotes and a backslash as two
+    backslashes, and writes a tab and a newline as ``\\T\\`` and ``\\N\\``.
     """
     with open(path, encoding="utf-8", errors="replace") as handle:
-        written = {
-            match.replace("''", "'").replace("\\\\", "\\")
-            for match in _STEP_PRODUCT.findall(handle.read())
-        }
+        text = handle.read().replace("\r", "").replace("\n", "")
+    written = Counter(
+        _STEP_ESCAPE.sub(lambda match: _STEP_ESCAPED[match.group(0)], name)
+        for name in _STEP_PRODUCT.findall(text)
+    )
     expected = [entry["step_name"] for entry in objects]
-    missing = [name for name in expected if name not in written]
+    missing = [name for name, count in Counter(expected).items() if written[name] < count]
     return {
         "id": "export_step.object_names",
-        "measured": sorted(written),
+        "measured": sorted(written.elements()),
         "expected": expected,
         "tolerance": None,
         "passed": not missing,
