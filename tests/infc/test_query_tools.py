@@ -466,6 +466,17 @@ class QueryObjectDisplayTest(unittest.TestCase):
         self.assertEqual(out, "Vector (6.0, 0.0, 1234.57)")
 
 
+class _FakeSolid:
+    """A stand-in solid the interference trust check accepts; tests override the booleans."""
+
+    ShapeType = "Solid"
+    Volume = 1.0
+
+    @staticmethod
+    def isValid():
+        return True
+
+
 class QueryInterferenceTest(unittest.TestCase):
     def setUp(self):
         self.registry = DocumentRegistry()
@@ -552,12 +563,12 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertEqual(direct_distance, 0.0)
         self.assertTrue(record["boolean_failed"])
         self.assertIsNone(record["common_volume"])
-        self.assertEqual(record["min_distance"]["value"], 0.0)
+        self.assertIsNone(record["min_distance"])
         self.assertIn("BOOLEAN FAILED", envelope["text"])
 
     def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_zero(self):
         # Arrange
-        class RaisingShape:
+        class RaisingShape(_FakeSolid):
             def common(self, other):
                 raise RuntimeError("boolean failed")
 
@@ -574,7 +585,7 @@ class QueryInterferenceTest(unittest.TestCase):
 
     def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_unknown(self):
         # Arrange
-        class BrokenShape:
+        class BrokenShape(_FakeSolid):
             def common(self, other):
                 raise RuntimeError("boolean failed")
 
@@ -602,7 +613,7 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertTrue(record["boolean_failed"])
         self.assertIsNone(record["common_volume"])
 
-    def test_Should_report_zero_volume_and_no_failure_When_common_is_a_non_empty_zero_volume_shell(
+    def test_Should_flag_a_failed_boolean_When_both_shapes_are_faces(
         self,
     ):
         # Arrange
@@ -614,8 +625,8 @@ class QueryInterferenceTest(unittest.TestCase):
 
         # Assert
         record = envelope["structured_content"]["pairs"][0]
-        self.assertEqual(record["common_volume"]["value"], 0.0)
-        self.assertFalse(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+        self.assertTrue(record["boolean_failed"])
 
     def test_Should_measure_every_pair_in_order_When_objects_lists_three_names(self):
         # Arrange
@@ -700,7 +711,7 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertEqual([obj.Name for obj in self.document.Objects], names_before)
         self.assertEqual(self.document.A.Shape.Volume, volume_before)
 
-    def test_Should_report_the_measured_volume_When_common_has_a_negative_volume(self):
+    def test_Should_flag_a_failed_boolean_When_common_has_a_negative_volume(self):
         # Arrange
         class ReversedCommon:
             Volume = -5.0
@@ -713,7 +724,7 @@ class QueryInterferenceTest(unittest.TestCase):
                 def isValid():
                     return True
 
-        class Shape:
+        class Shape(_FakeSolid):
             def common(self, other):
                 return ReversedCommon()
 
@@ -721,7 +732,7 @@ class QueryInterferenceTest(unittest.TestCase):
         volume, distance, failed = queries._measure_interference(Shape(), Shape())
 
         # Assert
-        self.assertEqual((volume, distance, failed), (5.0, 0.0, False))
+        self.assertEqual((volume, distance, failed), (None, None, True))
 
     def test_Should_flag_a_failed_boolean_When_common_volume_is_not_a_number(self):
         # Arrange
@@ -736,7 +747,7 @@ class QueryInterferenceTest(unittest.TestCase):
                 def isValid():
                     return True
 
-        class Shape:
+        class Shape(_FakeSolid):
             def common(self, other):
                 return NanCommon()
 
@@ -748,7 +759,7 @@ class QueryInterferenceTest(unittest.TestCase):
 
     def test_Should_report_no_overlap_When_common_raises_but_the_distance_is_positive(self):
         # Arrange
-        class Shape:
+        class Shape(_FakeSolid):
             def common(self, other):
                 raise RuntimeError("boolean failed")
 
@@ -808,6 +819,125 @@ class QueryInterferenceTest(unittest.TestCase):
         # Assert
         self.assertEqual(signature(), before)
         self.assertEqual(self.document.UndoCount, undo_before)
+
+    def _add_bowtie_100(self, name):
+        corners = [(0, 0), (100, 100), (100, 0), (0, 100), (0, 0)]
+        wire = Part.makePolygon([App.Vector(x, y, 0) for x, y in corners])
+        return self._add_shape(name, Part.Face(wire).extrude(App.Vector(0, 0, 100)))
+
+    def test_Should_flag_a_failed_boolean_When_an_invalid_solid_contains_the_other_shape(self):
+        # Arrange
+        bowtie = self._add_bowtie_100("Bowtie")
+        self._add_box("InLobe", 70, 40, 40)
+        direct_distance = bowtie.Shape.distToShape(self.document.InLobe.Shape)[0]
+
+        # Act
+        envelope = self._measure(pairs=[["Bowtie", "InLobe"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(bowtie.Shape.isValid())
+        self.assertGreater(direct_distance, 0.0)
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+        self.assertIsNone(record["min_distance"])
+
+    def test_Should_flag_a_failed_boolean_When_a_reversed_solid_contains_the_other_shape(self):
+        # Arrange
+        self._add_shape("Rev", Part.makeBox(100, 100, 100).reversed())
+        self._add_box("Small", 40, 40, 40)
+        self._add_box("Big", 0, 0, 0, size=100)
+
+        # Act
+        reversed_pair = self._measure(pairs=[["Rev", "Small"]])["structured_content"]["pairs"][0]
+        plain_pair = self._measure(pairs=[["Big", "Small"]])["structured_content"]["pairs"][0]
+
+        # Assert
+        self.assertTrue(self.document.Rev.Shape.isValid())
+        self.assertLess(self.document.Rev.Shape.Volume, 0.0)
+        self.assertTrue(reversed_pair["boolean_failed"])
+        self.assertIsNone(reversed_pair["common_volume"])
+        self.assertAlmostEqual(plain_pair["common_volume"]["value"], 1000.0, places=6)
+
+    def test_Should_flag_a_failed_boolean_When_a_reversed_solid_overlaps_a_box(self):
+        # Arrange
+        self._add_shape("Rev", Part.makeBox(100, 100, 100).reversed())
+        self._add_box("Corner", 95, 95, 95)
+
+        # Act
+        envelope = self._measure(pairs=[["Rev", "Corner"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_a_closed_shell_contains_a_solid(self):
+        # Arrange
+        self._add_shape("Shell", Part.Shell(Part.makeBox(100, 100, 100).Faces))
+        self._add_box("Inside", 40, 40, 40)
+
+        # Act
+        envelope = self._measure(pairs=[["Shell", "Inside"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertEqual(self.document.Shell.Shape.ShapeType, "Shell")
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+        self.assertIsNone(record["min_distance"])
+
+    def test_Should_flag_a_failed_boolean_When_a_compound_holds_a_face_beside_a_solid(self):
+        # Arrange
+        mixed = Part.Compound(
+            [Part.makeBox(10, 10, 10), Part.makePlane(5, 5, App.Vector(50, 0, 0))]
+        )
+        self._add_shape("Mixed", mixed)
+        self._add_box("Other", 5, 5, 5)
+
+        # Act
+        envelope = self._measure(pairs=[["Mixed", "Other"]])
+
+        # Assert
+        self.assertTrue(envelope["structured_content"]["pairs"][0]["boolean_failed"])
+
+    def test_Should_measure_the_pair_When_both_shapes_are_compounds_of_valid_solids(self):
+        # Arrange
+        self._add_shape(
+            "Group",
+            Part.Compound(
+                [Part.makeBox(10, 10, 10), Part.makeBox(10, 10, 10, App.Vector(50, 0, 0))]
+            ),
+        )
+        self._add_box("Other", 5, 5, 5)
+
+        # Act
+        envelope = self._measure(pairs=[["Group", "Other"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertAlmostEqual(record["common_volume"]["value"], 125.0, places=6)
+
+    def test_Should_not_count_a_pair_as_overlapping_When_its_volume_rounds_to_zero(self):
+        # Arrange
+        sc = {
+            "pairs": [
+                {
+                    "a": "A",
+                    "b": "B",
+                    "common_volume": {"value": 1.25e-10, "unit": "mm^3"},
+                    "min_distance": {"value": 0.0, "unit": "mm"},
+                    "boolean_failed": False,
+                }
+            ]
+        }
+
+        # Act
+        text = queries.summarize_interference(sc)
+
+        # Assert
+        self.assertEqual(text, "1 pair(s), 0 overlapping, 0 boolean failed.")
 
     def test_Should_finish_inside_the_query_budget_When_twenty_realistic_objects_are_measured(self):
         # Arrange

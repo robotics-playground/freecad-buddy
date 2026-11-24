@@ -70,6 +70,8 @@ Probe (FreeCAD 1.1, freecadcmd): `Shape.common` of two boxes sharing a face or a
 
 ## Spec Change Log
 
+Red team round (decision 26): RT-1 invalid solid with a box inside a lobe read distance 7.07 not failed; RT-2 `Part::Reverse` gave common 875 against 125 and a contained box read volume 0; RT-3 a closed shell around a solid read 40 mm disjoint; RT-4 a volume below 1e-9 counted as overlapping in text and 0.0 in structured content; RT-5 Body-local frame for features. Fix: a pair is measured only when both shapes are valid, solids only, each with positive volume (checked once per object); otherwise `boolean_failed` true with null volume and distance. The `abs()` on common volume is removed (a negative common volume is a failed boolean). The text counts a pair as overlapping only when its displayed volume is non-zero. Frame note names Body features. Timing after the change: 190 plate pairs 10.7 s disjoint, 29.4 s overlapping.
+
 ## Review Triage Log
 
 Lenses: Blind Hunter a47020905ae6d8459 (opus, high), Edge Case Hunter a5f4117b508fefa6d (opus, high), Verification Gap a41661ce8d89645be (sonnet, medium).

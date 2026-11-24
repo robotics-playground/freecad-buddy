@@ -684,7 +684,12 @@ def summarize_interference(sc: dict) -> str:
     """Count line, then one line per pair whose boolean failed or whose shapes overlap."""
     pairs = sc.get("pairs") or []
     failed = [pair for pair in pairs if pair.get("boolean_failed")]
-    overlapping = [pair for pair in pairs if (pair.get("common_volume") or {}).get("value")]
+    # A volume the result rounds to zero is not counted, so the text agrees with the numbers.
+    overlapping = [
+        pair
+        for pair in pairs
+        if pair.get("common_volume") and shim.displayed(pair["common_volume"]["value"])
+    ]
     head = f"{len(pairs)} pair(s), {len(overlapping)} overlapping, {len(failed)} boolean failed."
     lines = [head]
     for pair in failed:
@@ -736,28 +741,59 @@ def _interference_shape(document: object, name: str) -> object:
     return shape
 
 
+def _solid_volumes(shape: object):
+    """Yield the signed volume of each solid in ``shape``, and ``None`` for any other content.
+
+    A ``Compound`` or ``CompSolid`` is walked; a shell, face, wire or edge yields ``None``. A solid
+    with reversed orientation reports a negative volume (``Part::Reverse``).
+    """
+    if shape.ShapeType == "Solid":
+        yield float(shape.Volume)
+    elif shape.ShapeType in ("Compound", "CompSolid"):
+        for sub in shape.SubShapes:
+            yield from _solid_volumes(sub)
+    else:
+        yield None
+
+
+def _is_measurable_solid(shape: object) -> bool:
+    """Whether the boolean and distance kernels can be trusted on ``shape``.
+
+    True only for a valid shape made of solids that all have a positive volume. OCC reads a
+    reversed solid as the material outside its faces, finds no inner distance solution for an
+    invalid solid, and a shell encloses no volume, so each of those can turn a real overlap into
+    an empty ``common`` with a positive distance.
+    """
+    volumes = list(_solid_volumes(shape))
+    return (
+        bool(volumes)
+        and all(volume is not None and volume > 0 and math.isfinite(volume) for volume in volumes)
+        and bool(shape.isValid())
+    )
+
+
 def _measure_interference(
     shape_a: object, shape_b: object
 ) -> tuple[float | None, float | None, bool]:
     """``(common_volume, min_distance, boolean_failed)`` for one shape pair, in mm^3 and mm.
 
-    ``common`` runs first because it is cheap, and a non-zero common volume proves a distance of
-    0. ``distToShape`` is the slow call on large compounds, so it runs only when ``common`` gives
-    no volume. A ``common`` that raises or returns an empty compound is not proof of no overlap
-    (a self-intersecting solid returns empty at distance 0), so it is a failed boolean unless
-    the distance is positive. ``None`` means unmeasured.
+    The caller has checked both shapes with ``_is_measurable_solid``. ``common`` runs first because
+    it is cheap, and a non-zero common volume proves a distance of 0. ``distToShape`` is the slow
+    call on large compounds, so it runs only when ``common`` gives no volume. A ``common`` that
+    raises or returns an empty compound is not proof of no overlap (a self-intersecting solid
+    returns empty at distance 0), so it is a failed boolean unless the distance is positive.
+    ``None`` means unmeasured.
     """
     try:
         common = shape_a.common(shape_b)
     except Exception:  # noqa: BLE001 -- Part.OCCError is the only expected type; any raise = failed
         common = None
     empty = common is None or common.isNull() or not common.BoundBox.isValid()
-    # abs(): a solid with reversed orientation reports a negative volume for a real overlap.
-    volume = None if empty else abs(common.Volume)
-    if volume is not None and not math.isfinite(volume):
+    volume = None if empty else float(common.Volume)
+    if volume is not None and (volume < 0 or not math.isfinite(volume)):
         return None, None, True
     if volume:
-        return float(volume), 0.0, False
+        return volume, 0.0, False
     try:
         distance = float(shape_a.distToShape(shape_b)[0])
     except Exception:  # noqa: BLE001 -- a failed distance leaves the overlap unproven
@@ -791,9 +827,14 @@ def query_interference(
     def read(_handle: str, document: object) -> ResultEnvelope:
         names = {name for pair in name_pairs for name in pair}
         shapes = {name: _interference_shape(document, name) for name in sorted(names)}
+        # Validity is checked once per object: it costs more than the booleans on a large shape.
+        measurable = {name: _is_measurable_solid(shape) for name, shape in shapes.items()}
         records = []
         for name_a, name_b in name_pairs:
-            volume, distance, failed = _measure_interference(shapes[name_a], shapes[name_b])
+            if measurable[name_a] and measurable[name_b]:
+                volume, distance, failed = _measure_interference(shapes[name_a], shapes[name_b])
+            else:
+                volume, distance, failed = None, None, True
             records.append(
                 {
                     "a": name_a,

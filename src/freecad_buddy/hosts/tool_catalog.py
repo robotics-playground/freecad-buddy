@@ -1303,14 +1303,16 @@ def tool_specs() -> list[ToolSpec]:
                 "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Common volume and minimum distance for object pairs, measured on each object's own "
-            "shape (container-local frame). Give exactly one of objects (2 to 20 names, every "
-            "pair) or pairs (1 to 100 [a, b] pairs). Result {pairs: [{a, b, common_volume, "
-            "min_distance, boolean_failed}]}. boolean_failed true (common_volume null) means "
-            "the boolean returned nothing at distance 0 or an unknown distance: overlap is "
-            "unmeasured, not zero (solids that only touch also give this). Cost grows with face "
-            "count: a pair of large compounds can take tens of seconds, so query few pairs per "
-            "call. Numbers only, no verdict.",
+            "Common volume and minimum distance for object pairs, measured on each object's "
+            "own shape in its container's frame (name a Body, not a feature inside it; "
+            "App::Link is refused). Both shapes must be valid solids with positive volume, "
+            "else the pair is boolean_failed with null volume and distance. Give exactly one "
+            "of objects (2 to 20 names, every pair) or pairs (1 to 100 [a, b] pairs). Result "
+            "{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}. boolean_failed "
+            "true (common_volume null) means the boolean returned nothing at distance 0 or an"
+            " unknown distance: overlap is unmeasured, not zero (solids that only touch also "
+            "give this). Cost grows with face count: a pair of large compounds can take tens "
+            "of seconds, so query few pairs per call. Numbers only, no verdict.",
         ),
         _query_method(
             "query_dependencies",
