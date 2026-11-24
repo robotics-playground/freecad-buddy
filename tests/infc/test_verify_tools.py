@@ -613,6 +613,131 @@ class VerifyShapeTest(_DocFixture):
         with self.assertRaisesRegex(ValidationError, r"^missing required 'object' name$"):
             act()
 
+    def test_should_measure_the_only_shape_object_when_object_is_omitted(self):
+        # Arrange
+        self.document.addObject("App::DocumentObjectGroup", "Group")
+        self._add_box()
+
+        # Act
+        envelope = verify.verify_shape(self.registry, doc=self.handle)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(envelope["structured_content"]["subject"], {"object": "Box"})
+
+    def test_should_refuse_with_a_code_and_candidates_when_object_is_omitted_on_three_shapes(self):
+        # Arrange
+        for name in ("BoxA", "BoxB", "BoxC"):
+            self._add_box(name)
+
+        # Act
+        envelope = verify.verify_shape(self.registry, doc=self.handle)
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["code"], "verify_shape.object_required")
+        self.assertEqual(
+            envelope["detail"]["message"],
+            "object is required: document has 3 shape objects: "
+            "BoxA (BoxA), BoxB (BoxB), BoxC (BoxC)",
+        )
+        self.assertEqual(envelope["detail"]["objects"], ["BoxA", "BoxB", "BoxC"])
+        self.assertEqual(envelope["structured_content"], {})
+
+    def test_should_cut_the_candidate_list_when_object_is_omitted_on_twelve_shapes(self):
+        # Arrange
+        for index in range(12):
+            self._add_box(f"Box{index:02d}")
+
+        # Act
+        envelope = verify.verify_shape(self.registry, doc=self.handle)
+
+        # Assert
+        message = envelope["detail"]["message"]
+        self.assertTrue(message.startswith("object is required: document has 12 shape objects: "))
+        self.assertIn("Box09 (Box09)", message)
+        self.assertNotIn("Box10", message)
+        self.assertTrue(message.endswith(", +2 more"))
+
+    def test_should_refuse_when_object_is_omitted_on_a_body_with_a_sketch_and_a_pad(self):
+        # Arrange
+        body = self.document.addObject("PartDesign::Body", "Body")
+        sketch = body.newObject("Sketcher::SketchObject", "Sketch")
+        sketch.AttachmentSupport = [(self.document.getObject("XY_Plane"), "")]
+        sketch.MapMode = "FlatFace"
+        for start, end in [
+            ((0, 0), (10, 0)),
+            ((10, 0), (10, 10)),
+            ((10, 10), (0, 10)),
+            ((0, 10), (0, 0)),
+        ]:
+            sketch.addGeometry(Part.LineSegment(App.Vector(*start, 0), App.Vector(*end, 0)))
+        pad = body.newObject("PartDesign::Pad", "Pad")
+        pad.Profile = sketch
+        pad.Length = 5
+        self.document.recompute()
+
+        # Act
+        envelope = verify.verify_shape(self.registry, doc=self.handle)
+
+        # Assert
+        self.assertEqual(envelope["detail"]["code"], "verify_shape.object_required")
+        self.assertEqual(
+            envelope["detail"]["message"],
+            "object is required: document has 3 shape objects: "
+            "Body (Body), Sketch (Sketch), Pad (Pad)",
+        )
+
+    def test_should_keep_the_earlier_error_when_object_is_omitted_on_an_empty_body(self):
+        # Arrange
+        self.document.addObject("PartDesign::Body", "Body")
+        self.document.recompute()
+
+        # Act
+        def act():
+            return verify.verify_shape(self.registry, doc=self.handle)
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, r"^object has no shape: Body$"):
+            act()
+
+    def test_should_refuse_a_shape_fact_check_when_it_carries_a_foreign_key_or_a_mistyped_expect(
+        self,
+    ):
+        # Arrange
+        self._add_box()
+        cases = [
+            {"fn": "expect_valid", "expect": True, "tol": {}},
+            {"fn": "expect_valid"},
+            {"fn": "expect_valid", "expect": 1},
+            {"fn": "expect_solid_count", "expect": "1"},
+            {"fn": "expect_watertight", "expect": None},
+        ]
+
+        for check in cases:
+            with self.subTest(check=check):
+                # Act
+                def act():
+                    return verify.verify_shape(
+                        self.registry, doc=self.handle, object="Box", checks=[check]
+                    )
+
+                # Assert
+                with self.assertRaises(ValidationError):
+                    act()
+
+    def test_should_keep_the_earlier_error_when_object_is_omitted_and_no_object_has_a_shape(self):
+        # Arrange
+        self.document.addObject("App::DocumentObjectGroup", "Group")
+
+        # Act
+        def act():
+            return verify.verify_shape(self.registry, doc=self.handle)
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, r"^object has no shape: Group$"):
+            act()
+
     def test_shape_floor_missing_tolerance_attr_is_benign_zero(self):
         self.assertEqual(assertions.shape_floor(_FakeShape(tolerance=None)), 0.0)
 

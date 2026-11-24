@@ -313,6 +313,8 @@ Deterministic read-only contract on a shape-bearing object; also the reusable ga
 
 Result is a `ValidationReport` (AD-17): every field is a re-executed deterministic check; agent claims are never echoed.
 
+The subject is the object the caller names. With no `object`, the tool measures the document's only shape-bearing object and refuses a document that has several (`INVALID_INPUT`, `detail.code = verify_shape.object_required`), so a check never grades a sketch or a Body by accident. Each `checks` item is validated against a per-`fn` schema generated from `contracts/assertions.py` (`mcp-tools-design.md` §3.3).
+
 ---
 
 ## 6. `verify_export_*` (AD-9)

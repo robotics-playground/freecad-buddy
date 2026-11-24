@@ -8,12 +8,23 @@ assertion vocabulary (``usecases.assertions``) in an optional anchor frame, plus
 ``verify_sketch`` and ``verify_recompute`` call ``doc.recompute()`` as a read-refresh, and
 ``verify_sketch`` then solves the sketch so its solver diagnostics are current; neither opens a
 transaction. Unknown object, null ``Shape``, or a non-sketch raises
-``ValidationError`` so the dispatch boundary maps it to ``INVALID_INPUT``.
+``ValidationError`` so the dispatch boundary maps it to ``INVALID_INPUT``. ``verify_shape`` with no
+``object`` on a document holding several shape-bearing objects returns that ``INVALID_INPUT``
+envelope itself, with ``detail.code`` and the candidate names.
 """
 
 from __future__ import annotations
 
-from freecad_buddy.contracts import ASSERTION_FNS, ResultEnvelope, derive_verdict, summary_text
+from freecad_buddy.contracts import (
+    ASSERTION_FNS,
+    CHECK_COMMON_KEYS,
+    CHECK_OPTIONAL_KEYS,
+    SHAPE_CHECK_FNS,
+    VERIFY_SHAPE_FNS,
+    ResultEnvelope,
+    derive_verdict,
+    summary_text,
+)
 from freecad_buddy.usecases import assertions, shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
 
@@ -106,6 +117,73 @@ def _resolve_object(document: object, name: str | None):
     if obj is None:
         raise ValidationError(f"unknown object: {name}")
     return obj
+
+
+_CANDIDATES_SHOWN = 10
+OBJECT_REQUIRED_CODE = "verify_shape.object_required"
+
+
+# The auto-created origin axes, planes and point carry a Shape but are never what a caller measures.
+_ORIGIN_TYPE_IDS = frozenset({"App::Line", "App::Plane", "App::Point"})
+
+
+class _AmbiguousObject(Exception):
+    """The caller named no object and the document holds several shape-bearing ones."""
+
+    def __init__(self, names: list[str], message: str):
+        super().__init__(message)
+        self.names = names
+
+
+def _default_object(document: object):
+    """Return the object to measure when the caller named none.
+
+    The sole shape-bearing object is unambiguous. With several, the first would be a silent guess
+    (often a sketch), so the call is refused with the candidates named. Origin axes, planes and the
+    origin point do not count. With none, the document's first object keeps the earlier error path.
+
+    :raises ValidationError: the document has no objects.
+    :raises _AmbiguousObject: the document has several shape-bearing objects.
+    """
+    objects = list(document.Objects)
+    if not objects:
+        raise ValidationError("document has no objects to verify")
+    bearing = [obj for obj in objects if obj.TypeId not in _ORIGIN_TYPE_IDS and _has_shape(obj)]
+    if len(bearing) > 1:
+        shown = ", ".join(f"{obj.Name} ({obj.Label})" for obj in bearing[:_CANDIDATES_SHOWN])
+        extra = len(bearing) - _CANDIDATES_SHOWN
+        suffix = f", +{extra} more" if extra > 0 else ""
+        raise _AmbiguousObject(
+            [obj.Name for obj in bearing],
+            f"object is required: document has {len(bearing)} shape objects: {shown}{suffix}",
+        )
+    return bearing[0] if bearing else objects[0]
+
+
+def _has_shape(obj: object) -> bool:
+    shape = getattr(obj, "Shape", None)
+    is_null = getattr(shape, "isNull", None)
+    return shape is not None and not (is_null is not None and is_null())
+
+
+def _validate_shape_check(check: dict) -> None:
+    """Refuse a shape-fact check with a foreign key, or a missing or mistyped ``expect``.
+
+    :raises ValidationError: naming the defect.
+    """
+    fn = check["fn"]
+    unknown = set(check) - CHECK_COMMON_KEYS - CHECK_OPTIONAL_KEYS[fn]
+    if unknown:
+        raise ValidationError(f"{fn} does not take {sorted(unknown)}")
+    if "expect" not in check:
+        raise ValidationError(f"{fn} needs 'expect'")
+    expect = check["expect"]
+    if fn == "expect_solid_count":
+        valid = isinstance(expect, int) and not isinstance(expect, bool)
+    else:
+        valid = isinstance(expect, bool)
+    if not valid:
+        raise ValidationError(f"{fn}.expect has the wrong shape: {expect!r}")
 
 
 def _require_shape(obj: object, name: str):
@@ -212,9 +290,9 @@ def verify_shape(
     ``usecases.assertions`` in ``anchor_frame`` (``{kind, ref}``, the global frame when omitted),
     and ``expect_solid_count``/``expect_valid``/``expect_watertight`` here. When ``checks`` is
     omitted the report carries the bare measured shape facts with ``passed=true`` and no expected.
-    When ``object`` is omitted the document's first object is measured. The banner records the
-    resolved frame. Never recomputes. An unknown object, a null ``Shape``, or a malformed check or
-    frame raises ``ValidationError``.
+    When ``object`` is omitted the document's one shape-bearing object is measured; several are
+    refused, naming them. The banner records the resolved frame. Never recomputes. An unknown
+    object, a null ``Shape``, or a malformed check or frame raises ``ValidationError``.
     """
     return registry.with_document(
         doc, lambda _h, document: read_shape(document, object, checks, anchor_frame)
@@ -235,14 +313,28 @@ def read_shape(
 
     :raises ValidationError: the object is unknown, its ``Shape`` is null, or a check or the
         anchor frame is malformed.
+
+    Returns, rather than raises, the ``INVALID_INPUT`` envelope for an omitted ``object`` on a
+    document with several shape-bearing objects: its ``structured_content`` is empty.
     """
     if object is not None:
         obj = _resolve_object(document, object)
     else:
-        objects = list(document.Objects)
-        if not objects:
-            raise ValidationError("document has no objects to verify")
-        obj = objects[0]
+        try:
+            obj = _default_object(document)
+        except _AmbiguousObject as ambiguous:
+            message = str(ambiguous)
+            return {
+                "schema": "fcb.result-envelope/1",
+                "status": "INVALID_INPUT",
+                "detail": {
+                    "code": OBJECT_REQUIRED_CODE,
+                    "message": message,
+                    "objects": ambiguous.names,
+                },
+                "structured_content": {},
+                "text": message,
+            }
     shape = assertions.document_shape(obj, _require_shape(obj, obj.Name))
 
     checks = checks or []
@@ -251,8 +343,10 @@ def read_shape(
             raise ValidationError(f"check must be an object, got {check!r}")
         fn = check.get("fn")
         # A non-string fn (a nested object) is unhashable, so the membership test would raise.
-        if not isinstance(fn, str) or (fn not in ASSERTION_FNS and fn not in _ASSERTIONS):
+        if not isinstance(fn, str) or fn not in VERIFY_SHAPE_FNS:
             raise ValidationError(f"unknown assertion fn: {fn!r}")
+        if fn in SHAPE_CHECK_FNS:
+            _validate_shape_check(check)
     primitives = [check for check in checks if check["fn"] in ASSERTION_FNS]
     measured, frame = assertions.evaluate_checks(document, shape, anchor_frame, primitives)
 

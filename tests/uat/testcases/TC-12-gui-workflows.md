@@ -141,14 +141,14 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 mcp document_list {}
 mcp query_tree_summary {doc:<handle>, depth:3}
 mcp query_mass_properties {doc:<handle>, object:"<Fillet>"}
-mcp verify_shape {doc:<handle>}
+mcp verify_shape {doc:<handle>, object:"<Fillet>"}
 ```
 
 **Then** the GUI actions landed — verify: `echo '{"pid":<PID>,"window_id":<WID>,"expect":[{"element":{"selector":{"label_contains":"Pad"},"exists":true}}]}' | "$FCB_CUA" verify_state` returns `satisfied`; `unknown` is inconclusive, not a pass  
 **And** the bridge sees the document — verify: `mcp document_list {}` returns exactly one handle  
 **And** the bridge sees the same feature chain — verify: `mcp query_tree_summary {doc:<handle>, depth:3}` lists the Body, the sketch, the pad, the pocket, and the fillet in that dependency order  
 **And** the geometry agrees with the design intent — verify: `mcp query_mass_properties {doc:<handle>, object:"<Fillet>"}` returns a `bbox` of 60 x 40 x 5 mm within the fillet's corner allowance  
-**And** the solid is valid — verify: `mcp verify_shape {doc:<handle>}` reports a valid, closed, single solid  
+**And** the solid is valid — verify: `mcp verify_shape {doc:<handle>, object:"<Fillet>"}` reports a valid, closed, single solid  
 **And** the hole spacing is real — verify: the two pocket cylinders are 40 mm apart, read from `mcp query_placement {doc:<handle>}` or from the sketch datum in `mcp query_sketch_info {doc:<handle>, sketch:"<Sketch>"}`  
 **And** the recompute is clean after GUI editing — verify: `mcp verify_recompute {doc:<handle>}` returns `OK` with `subject.failing_objects` empty  
 **And** the MCP render matches the viewport — verify: `mcp query_screenshot {doc:<handle>, view:{camera:"iso"}}` produces an image whose silhouette matches a `cua-driver` viewport grab of the same isometric view. The render is the claim and the `cua-driver` grab is the evidence: on a disagreement the grab wins and the render is recorded as the defect.  

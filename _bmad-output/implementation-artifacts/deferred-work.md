@@ -2215,3 +2215,11 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Round-2 Edge Case Hunter: an OffsetSurface face has no `NbUPoles`, so it bypasses `_bspline_pole_load`. Cost of these surfaces in `Shape.section` was not measured.
   blocker: no measurement of section cost on swept-curve and offset surfaces.
   unblock: a probe of section time against basis-curve poles, then extend `_bspline_pole_load`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-14-typed-verify-shape-check-schema.md`
+  summary: `verify_shape` value rules (expect type, positive diameter, non-zero direction, `hole_spacing` form) are written twice, as JSON Schema in `hosts/tool_catalog.py` and as Python in `usecases/assertions.py`.
+  evidence: Only the key tables moved to `contracts/assertions.py` (decision 11). Review found seven disagreements between the two; they are fixed and tested, but a new value rule needs both edits.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-14-typed-verify-shape-check-schema.md`
+  summary: No test sends a bad `verify_shape` check through the server's `tools/call` handler to pin the SDK's input validation and its message.
+  evidence: Gap lens. Story 13-14 relies on the MCP SDK validating `inputSchema` before dispatch; its verifier checks this with one live call. A permanent test would catch an SDK change.

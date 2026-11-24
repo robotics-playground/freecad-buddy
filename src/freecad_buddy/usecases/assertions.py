@@ -22,7 +22,13 @@ import math
 import re
 import sys as _sys
 
-from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, ASSERTION_FNS, displayed_deviation
+from freecad_buddy.contracts import (
+    ANCHOR_FRAME_KINDS,
+    ASSERTION_FNS,
+    CHECK_COMMON_KEYS,
+    CHECK_OPTIONAL_KEYS,
+    displayed_deviation,
+)
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import ValidationError
 
@@ -61,21 +67,6 @@ _PARALLEL_EPSILON = 1e-9
 INVALID_INPUT_CODE = "invalid_input.unsupported_assertion"
 
 _INDEX_SELECTOR = re.compile(r"^(?:Face|Edge|Vertex)\d+$")
-
-_COMMON_KEYS = frozenset({"fn", "expect"})
-_KEYS = {
-    "is_valid_solid": frozenset(),
-    "count_cylindrical_holes": frozenset({"select"}),
-    "hole_diameter": frozenset({"tol", "select"}),
-    "hole_position": frozenset({"tol", "select"}),
-    "hole_spacing": frozenset({"tol", "select", "select_a", "select_b", "pattern"}),
-    "hole_through": frozenset({"select"}),
-    "distance_between": frozenset({"tol", "select_a", "select_b"}),
-    "angle_between": frozenset({"tol", "select_a", "select_b"}),
-    "expect_bbox": frozenset({"tol"}),
-    "expect_extent": frozenset({"tol", "direction"}),
-    "expect_volume": frozenset({"tol"}),
-}
 
 
 class UnmeasurableGeometry(Exception):
@@ -220,7 +211,7 @@ def validate_check(check) -> None:
     fn = check.get("fn")
     if fn not in ASSERTION_FNS:
         raise ValidationError(f"unknown assertion fn: {fn!r}")
-    unknown = set(check) - _COMMON_KEYS - _KEYS[fn]
+    unknown = set(check) - CHECK_COMMON_KEYS - CHECK_OPTIONAL_KEYS[fn]
     if unknown:
         raise ValidationError(f"{fn} does not take {sorted(unknown)}")
     if "expect" not in check:

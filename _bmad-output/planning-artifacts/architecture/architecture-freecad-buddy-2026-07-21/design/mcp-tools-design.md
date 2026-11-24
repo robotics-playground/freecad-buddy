@@ -398,9 +398,9 @@ The one-line text is `N wire(s), K closed, length L mm, area A mm^2.` (`area unm
 ```json
 { "inputSchema": { "type": "object", "properties": {
     "doc": { "type": "string" },
-    "object": { "type": "string", "description": "immutable Name; omit = the document's first object" },
-    "checks": { "type": "array", "items": { "type": "object" },
-      "description": "{fn, expect, tol?, select?, select_a?, select_b?, direction?}; omit = measurement-only report" },
+    "object": { "type": "string", "description": "immutable Name; optional only when the document has one shape-bearing object" },
+    "checks": { "type": "array", "items": { "oneOf": [ "<one branch per fn, see Check schema>" ] },
+      "description": "{fn, expect, ...}; each fn takes only its own keys; omit = measurement-only report" },
     "anchor_frame": { "type": "object", "properties": {
       "kind": { "enum": ["base_sketch_plane", "largest_planar_face", "named_datum"] },
       "ref": { "type": ["string", "null"], "description": "object Name, else unique Label; null for largest_planar_face" }
@@ -418,6 +418,10 @@ The one-line text is `N wire(s), K closed, length L mm, area A mm^2.` (`area unm
 Selector, `hole_diameter` and empty-match semantics follow `benchmarks/g3/README.md` §Assertion
 vocabulary. `expect_bbox` compares sorted extents measured in the frame; `expect_extent` measures
 along one frame `direction`.
+
+**Check schema.** `checks.items` is a `oneOf` with one branch per `fn` of the fourteen above (`hole_spacing` has two: a pitch form with `expect` a number or a list and no pair, and a pair form with `select_a` and `select_b` holes, one distance and no `select`). Each branch has `fn` as a `const`, a typed `expect`, the keys that `fn` takes and `additionalProperties: false`. The key sets come from `contracts/assertions.py` (`CHECK_OPTIONAL_KEYS`, `CHECK_REQUIRED_KEYS`), the same tables `usecases/assertions.py` and `usecases/verify.py` validate against. The value types are written twice, as JSON Schema in `hosts/tool_catalog.py` and as Python in `usecases/assertions.py`; `tests/external/test_verify_shape_schema.py` checks that both accept and refuse the same checks. The failure text for a rejected check is only "is not valid under any of the given schemas"; `items.description` lists the keys of each `fn`. `expect_extent` requires `direction`; `distance_between` and `angle_between` require `select_a` and `select_b`. `{"type": "is_valid_solid"}` fails schema validation before dispatch. `oneOf` sits on the array items, never at the schema top level.
+
+**Object resolution.** `object` stays optional. When it is omitted and the document holds exactly one shape-bearing object (a non-null `Shape`; the origin axes, planes and point do not count), that object is measured. When it holds more than one, the call returns `INVALID_INPUT` with `detail.code = verify_shape.object_required` the message `object is required: document has N shape objects: <Name (Label)>, ...` (first 10, then `+K more`) and `detail.objects` listing every candidate Name. A PartDesign Body with its sketch and pad counts as three. A document with no shape-bearing object keeps the earlier `ValidationError`.
 
 **Anchor frame.** `base_sketch_plane` and `named_datum` resolve `ref` to that object's global
 placement. `largest_planar_face` takes the largest planar face (ties: lowest centroid Z, then
