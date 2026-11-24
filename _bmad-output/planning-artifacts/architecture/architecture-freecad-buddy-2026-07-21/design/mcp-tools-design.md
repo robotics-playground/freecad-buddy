@@ -197,7 +197,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
-| `script_exec` | 0 | Agent Python exec inside FreeCAD for operations no typed tool covers (listed gaps); observe-only AD-5 bracket (automatic transaction, fingerprint, `changed`, `new_errors`, no rollback); see §5 | yes |
+| `script_exec` | 0 | Agent Python exec inside FreeCAD for operations no typed tool covers (listed gaps); observe-only AD-5 bracket (automatic transaction, fingerprint, `changed`, `new_errors`, no rollback; TIMEOUT: AD-27); see §5 | yes |
 
 ### Counts & G0.2
 

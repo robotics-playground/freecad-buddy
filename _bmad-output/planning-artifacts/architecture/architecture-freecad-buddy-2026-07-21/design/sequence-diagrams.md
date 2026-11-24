@@ -450,7 +450,7 @@ status of its least-citable input.
 ## 8. Script path — `script_exec`
 
 On by default; unregistered when the operator turns it off, or in a marked unattended run without
-opt-in (AD-4). Observe-only AD-5 bracket: no rollback.
+opt-in (AD-4). Observe-only AD-5 bracket: no rollback (TIMEOUT: AD-27).
 
 ```mermaid
 sequenceDiagram
@@ -474,7 +474,7 @@ sequenceDiagram
   U-->>MCP: result
   MCP->>Audit: append-only after record: status and both fingerprints from the result
   MCP-->>Agent: envelope
-  Note over Agent: fingerprint_before, fingerprint_after,<br/>changed and new_errors; no rollback —<br/>the agent checks with verify_* afterwards
+  Note over Agent: fingerprint_before, fingerprint_after,<br/>changed and new_errors; no rollback (TIMEOUT: AD-27) —<br/>the agent checks with verify_* afterwards
   Note over U: in-process restriction is never called a security<br/>boundary — this repo ships NO boundary of its<br/>own, so the operator's environment is it
 ```
 

@@ -40,7 +40,7 @@ Module layout and type shapes are owned by **data-contracts-design.md** (§1); i
 | `sketches.py` | P2 | `sketch_*` typed mutations (geometry + constraints), 1-based solver-ID → `Constraints[id-1]` diagnostic mapping | contracts, shim, transaction |
 | `features.py` | P2 | `feature_*` typed mutations (pad/pocket/hole/dress-up…), intent-bearing generated `Name`s | contracts, shim, transaction |
 | `preview.py` | P2 | `preview_dry_run` on `copyObject` TempDoc (AD-10, AD-20): structured diff (Δvolume/area/bbox/COM, counts, validity, TNP pre-check); apply path re-runs op under AD-5 | contracts, shim, documents, transaction |
-| `script_exec.py` | P0 | Agent Python exec (AD-4): on by default, unregistered when off or unattended without opt-in, observe-only AD-5 bracket (no rollback), audit-logged | contracts, shim |
+| `script_exec.py` | P0 | Agent Python exec (AD-4): on by default, unregistered when off or unattended without opt-in, observe-only AD-5 bracket (no rollback; TIMEOUT: AD-27), audit-logged | contracts, shim |
 
 Key entry points:
 
