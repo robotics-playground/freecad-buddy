@@ -34,6 +34,11 @@ _LENGTH_UNITS = frozenset({"mm"})
 
 _BODY_TYPE = "PartDesign::Body"
 _ORIGIN_TYPE = "App::Origin"
+_LINK_TYPE = "App::Link"
+
+# The types whose ``Group`` only lists members. ``PartDesign::Boolean`` also has a ``Group``, but it
+# holds the operand Bodies the Boolean fuses, cuts or intersects.
+_GROUP_CONTAINER_TYPES = frozenset({_BODY_TYPE, "App::Part", "App::DocumentObjectGroup"})
 _FEATURE_BASE_TYPE = "PartDesign::FeatureBase"
 
 # FreeCAD rewrites any character outside this set when it names an object, so a name failing the
@@ -2351,6 +2356,9 @@ def _owned_by(owner: object) -> list[object]:
     if owner.TypeId == _BODY_TYPE:
         owned.extend(owner.Group)
     owned.extend(_origin_objects(owner))
+    if owner.TypeId == _LINK_TYPE and owner.ElementCount:
+        # The GUI delete removes the elements of a link array with it (ViewProviderLink::onDelete).
+        owned.extend(owner.ElementList)
     return owned
 
 
@@ -2362,20 +2370,38 @@ def _with_owned(document: object, names: set[str]) -> set[str]:
     return expanded
 
 
+def _expression_names(obj: object, members: list[object]) -> bool:
+    """Whether an expression on ``obj`` names one of ``members``, by Name or as ``<<Label>>``."""
+    for _path, expression in getattr(obj, "ExpressionEngine", None) or ():
+        text = str(expression)
+        for member in members:
+            by_name = rf"(?<![A-Za-z0-9_]){re.escape(member.Name)}(?![A-Za-z0-9_])"
+            if re.search(by_name, text) or f"<<{member.Label}>>" in text:
+                return True
+    return False
+
+
 def _dependents(document: object, delete_set: set[str]) -> list[str]:
     """Return the objects outside ``delete_set`` whose ``OutList`` holds a member of it.
 
-    A container that holds a member only in its ``Group`` (a Body, Part or group) is not a
-    dependent: removing the member leaves the container valid. ``OutList`` includes the objects an
-    expression names, so an object bound to a deleted one is a dependent.
+    A pure container (a Body, Part or group) that holds a member only in its ``Group`` is not a
+    dependent: removing the member leaves the container valid. Any other holder is, including a
+    ``PartDesign::Boolean``, whose ``Group`` is its list of operand Bodies. A container with an
+    expression that names a member is a dependent too, because the expression fails once the
+    member is gone. ``OutList`` includes the objects an expression names, so an object bound to a
+    deleted one is a dependent.
     """
     found = []
     for obj in document.Objects:
         if obj.Name in delete_set:
             continue
         held = _names(obj.OutList) & delete_set
-        if held and not held <= _names(getattr(obj, "Group", None)):
-            found.append(obj.Name)
+        if not held:
+            continue
+        only_members = obj.TypeId in _GROUP_CONTAINER_TYPES and held <= _names(obj.Group)
+        if only_members and not _expression_names(obj, [document.getObject(n) for n in held]):
+            continue
+        found.append(obj.Name)
     return found
 
 
@@ -2450,7 +2476,7 @@ def document_object_delete(
     confirm: dict | None = None,
     audit_sink: object = None,
 ) -> ResultEnvelope:
-    """Delete objects, and with them what a Body or Part owns, inside the AD-5 bracket.
+    """Delete objects, and with them what a Body, Part or link array owns, inside the AD-5 bracket.
 
     A Body takes its ``Group`` members, its Origin and the Origin features with it. A feature of a
     Body that stays goes through ``Body.removeObject`` first, so ``Tip`` and the next feature's
@@ -2483,7 +2509,12 @@ def document_object_delete(
                 continue
             body = _owning_body(document, target)
             if body is not None and body.Name not in deleted:
+                shown_tip = body.Tip is not None and body.Tip.Name == name and target.Visibility
                 body.removeObject(target)
+                if shown_tip and body.Tip is not None:
+                    # PartDesign ViewProvider::onDelete shows the previous feature when the
+                    # deleted one was visible; Document.removeObject alone leaves the Body empty.
+                    body.Tip.Visibility = True
                 if body.Name not in touched:
                     touched.append(body.Name)
             document.removeObject(name)

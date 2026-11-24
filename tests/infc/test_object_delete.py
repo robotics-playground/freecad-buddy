@@ -267,6 +267,132 @@ class DeleteTest(_DeleteFixture):
         self.assertIn(expected_name, [entry["name"] for entry in changed])
 
 
+class OperandAndBindingTest(_DeleteFixture):
+    def _boolean_over_second_body(self):
+        """A PartDesign::Boolean in Body that fuses a second Body (a 10x10x10 block at x=30)."""
+        document = self.document()
+        second = document.addObject("PartDesign::Body", "Body2")
+        sketch = self.rect_sketch(second, "SketchB", 30, 0, 10, 10)
+        pad = second.newObject("PartDesign::Pad", "PadB")
+        pad.Profile = sketch
+        pad.Length = 10
+        boolean = self.body.newObject("PartDesign::Boolean", "Bool")
+        boolean.addObjects([second])
+        document.recompute()
+        return boolean
+
+    def test_Should_refuse_naming_the_boolean_When_an_operand_body_is_deleted(self):
+        # Arrange
+        self._boolean_over_second_body()
+        before = self.names()
+
+        # Act
+        with self.assertRaises(ValidationError) as caught:
+            self.delete(["Body2"])
+
+        # Assert
+        self.assertEqual(caught.exception.code, HAS_DEPENDENTS)
+        self.assertIn("Bool", str(caught.exception))
+        self.assertEqual(self.names(), before)
+
+    def test_Should_drop_the_operand_volume_When_the_boolean_is_deleted_with_its_operand(self):
+        # Arrange
+        self._boolean_over_second_body()
+        alone = self.obj("Pad2").Shape.Volume
+        fused = self.body.Shape.Volume
+        self.assertAlmostEqual(fused, alone + 1000.0, places=3)
+
+        # Act
+        envelope = self.delete(["Body2"], with_dependents=True)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIn("Bool", envelope["structured_content"]["dependents"])
+        self.document().recompute()
+        self.assertAlmostEqual(self.body.Shape.Volume, alone, places=3)
+
+    def test_Should_refuse_naming_the_body_When_an_expression_on_it_names_a_member(self):
+        # Arrange
+        self.body.setExpression("Placement.Base.z", "Pad2.Length")
+        self.document().recompute()
+        before = self.names()
+
+        # Act
+        with self.assertRaises(ValidationError) as caught:
+            self.delete(["Pad2"])
+
+        # Assert
+        self.assertEqual(caught.exception.code, HAS_DEPENDENTS)
+        self.assertIn("Body", str(caught.exception))
+        self.assertEqual(self.names(), before)
+
+    def test_Should_delete_the_body_and_succeed_When_dependents_are_allowed_for_a_bound_member(
+        self,
+    ):
+        # Arrange
+        self.body.setExpression("Placement.Base.z", "Pad2.Length")
+        self.document().recompute()
+
+        # Act
+        envelope = self.delete(["Pad2"], with_dependents=True)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIn("Body", envelope["structured_content"]["deleted"])
+        self.assertIsNone(self.obj("Body"))
+
+
+class VisibleTipAndLinkArrayTest(_DeleteFixture):
+    def test_Should_show_the_new_tip_and_undo_the_visibility_When_a_visible_tip_is_deleted(self):
+        # Arrange
+        self.obj("Pad1").Visibility = False
+        self.obj("Pad2").Visibility = True
+
+        # Act
+        envelope = self.delete(["Pad2"])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIs(self.obj("Pad1").Visibility, True)
+        self.registry.document_undo(doc=self.handle)
+        self.assertIs(self.obj("Pad1").Visibility, False)
+        self.assertIs(self.obj("Pad2").Visibility, True)
+
+    def test_Should_leave_the_visible_feature_alone_When_a_hidden_tip_is_deleted(self):
+        # Arrange
+        self.obj("Pad1").Visibility = False
+        self.obj("Pad2").Visibility = False
+
+        # Act
+        self.delete(["Pad2"])
+
+        # Assert
+        self.assertIs(self.obj("Pad1").Visibility, False)
+
+    def test_Should_delete_the_elements_with_the_array_and_restore_them_When_undone(self):
+        # Arrange
+        document = self.document()
+        box = document.addObject("Part::Box", "Box")
+        array = document.addObject("App::Link", "Arr")
+        array.setLink(box)
+        array.ShowElement = True
+        array.ElementCount = 3
+        document.recompute()
+        elements = [element.Name for element in array.ElementList]
+        self.assertEqual(len(elements), 3)
+
+        # Act
+        envelope = self.delete(["Arr"])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(envelope["structured_content"]["deleted"], ["Arr", *elements])
+        for name in elements:
+            self.assertIsNone(self.obj(name))
+        self.registry.document_undo(doc=self.handle)
+        self.assertEqual([e.Name for e in self.obj("Arr").ElementList], elements)
+
+
 class TnpExemptionTest(_DeleteFixture):
     def _audit(self, vanished, deleted):
         document = self.document()
