@@ -9,8 +9,9 @@ Rules:
 
 - a project folder is a directory of ``<session>.jsonl`` transcripts. Each session may hold
   ``<session>/subagents/*.jsonl``; those count as part of the session;
-- a call is a ``tool_use`` whose name contains ``freecad-buddy`` (both
-  ``mcp__freecad-buddy__*`` and ``mcp__plugin_freecad-buddy_freecad-buddy__*``). It is counted once
+- a call is a ``tool_use`` of a server whose name contains ``freecad-buddy`` (for example
+  ``mcp__freecad-buddy__*``, ``mcp__plugin_freecad-buddy_freecad-buddy__*`` and
+  ``mcp__freecad-buddy-docker__*``; the report lists the servers it found). It is counted once
   by ``tool_use.id``, because a resumed session repeats lines, and it belongs to the first
   transcript file (in sorted path order) that holds it;
 - a call is in range when the UTC date of its ``tool_use`` record is between ``--since`` and
@@ -34,6 +35,7 @@ A project folder is a path, or a name under ``~/.claude/projects``.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import statistics
@@ -56,14 +58,34 @@ _MUTATING_CALL = re.compile(
     r"addObject|removeObject|setExpression|addProperty|newObject|addGeometry|addConstraint"
     r"|delGeometry|\.recompute\(|\.save\("
 )
+# Fallback for code that does not parse: it reads each ``;``- or newline-separated statement and
+# ignores string literals badly (a ``.attr =`` inside a string counts as an assignment).
 _ATTRIBUTE_ASSIGNMENT = re.compile(r"[^#=]*[\w\])]\.\w+\s*(?:[-+*/%|&^]|//|\*\*|<<|>>)?=(?!=)")
 _STATEMENT_SEPARATOR = re.compile(r"[;\n]")
 
 
-def _is_mutating(code: str) -> bool:
-    return bool(_MUTATING_CALL.search(code)) or any(
-        _ATTRIBUTE_ASSIGNMENT.match(statement) for statement in _STATEMENT_SEPARATOR.split(code)
+def _assigns_attribute(code: str) -> bool:
+    try:
+        tree = ast.parse(code)
+    except (SyntaxError, ValueError, RecursionError):
+        return any(
+            _ATTRIBUTE_ASSIGNMENT.match(statement) for statement in _STATEMENT_SEPARATOR.split(code)
+        )
+    targets = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            targets.extend(node.targets)
+        elif isinstance(node, (ast.AugAssign, ast.AnnAssign)):
+            targets.append(node.target)
+    return any(
+        isinstance(part, ast.Attribute) and isinstance(part.ctx, ast.Store)
+        for target in targets
+        for part in ast.walk(target)
     )
+
+
+def _is_mutating(code: str) -> bool:
+    return bool(_MUTATING_CALL.search(code)) or _assigns_attribute(code)
 
 
 # Classes of ``script_exec`` code. One script can match several classes.
@@ -118,19 +140,21 @@ class FailureClass:
 
 FAILURE_CLASSES = (
     FailureClass(
-        "`script_exec` timeout", "script_exec", message=re.compile(r"marshaled call timed out")
+        "`script_exec` timeout", tool="script_exec", message=re.compile(r"marshaled call timed out")
     ),
-    FailureClass("Python error reported as `RECOMPUTE_ERROR`", "script_exec", "RECOMPUTE_ERROR"),
+    FailureClass(
+        "Python error reported as `RECOMPUTE_ERROR`", tool="script_exec", status="RECOMPUTE_ERROR"
+    ),
     FailureClass(
         "Multi-object export refused", message=re.compile(r"export supports a single object")
     ),
-    FailureClass("`verify_shape` input rejected", "verify_shape", "INVALID_INPUT"),
+    FailureClass("`verify_shape` input rejected", tool="verify_shape", status="INVALID_INPUT"),
     FailureClass("TNP audit flag on a typed mutation", message=re.compile(r"TNP audit flagged")),
     FailureClass("Stale document handle", message=re.compile(r"unknown or stale document handle")),
     FailureClass("Document-suspect refusal after timeout", message=re.compile(r"document-suspect")),
     FailureClass(
         "`feature_set_parameters` cannot write",
-        "feature_set_parameters",
+        tool="feature_set_parameters",
         message=re.compile(r"cannot write"),
     ),
 )

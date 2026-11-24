@@ -16,6 +16,7 @@ import struct
 import sys
 import threading
 import time
+from pathlib import Path
 
 from freecad_buddy.adapters import rpc_listener
 from freecad_buddy.adapters.marshal import Marshal
@@ -1054,7 +1055,7 @@ def test_Should_bind_and_write_the_own_file_When_a_discovery_file_is_nested_too_
     # Arrange
     directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
     nested = directory / "rpc-99999999.json"
-    nested.write_text("[" * 200_000, encoding="utf-8")
+    nested.write_text("[" * 50_000, encoding="utf-8")
     target = RpcListener(
         _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
     )
@@ -1068,4 +1069,33 @@ def test_Should_bind_and_write_the_own_file_When_a_discovery_file_is_nested_too_
     # Assert
     assert own_file_written
     assert nested.exists()
-    assert "discovery sweep kept rpc-99999999.json after an error" in caplog.text
+    assert "discovery sweep kept rpc-99999999.json after RecursionError" in caplog.text
+
+
+def test_Should_keep_the_discovery_file_When_it_is_larger_than_a_discovery_record(
+    tmp_path, monkeypatch
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    padding = " " * (rpc_listener._DISCOVERY_FILE_LIMIT_BYTES + 1)
+    large = _discovery_file(directory, 4_000_010, content=json.dumps({"pid": 4_000_010}) + padding)
+
+    # Act
+    RpcListener._sweep_orphan_discovery(directory)
+
+    # Assert
+    assert large.exists()
+
+
+def test_Should_not_raise_When_the_discovery_directory_cannot_be_listed(tmp_path, monkeypatch):
+    # Arrange
+    def refuse(self, pattern):
+        raise PermissionError(pattern)
+
+    monkeypatch.setattr(Path, "glob", refuse)
+
+    # Act
+    act = lambda: RpcListener._sweep_orphan_discovery(tmp_path)  # noqa: E731
+
+    # Assert
+    act()

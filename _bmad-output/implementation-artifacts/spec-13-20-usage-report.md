@@ -92,3 +92,23 @@ context:
 
 **Commands:**
 - `uv run ruff check .`, `uv run python scripts/check_imports.py`, `uv run pytest tests/external -q`
+
+Round 2 (triage-13-20-r2.md RT-1..RT-6, G-1; lenses blind `a744a79b3af10f7c5`, edge `ac14355a21fd06f64`, gap `a7bb6b77aec3aaddf`):
+
+| Lens | Finding | Verdict | Route | Evidence |
+|------|---------|---------|-------|----------|
+| red team | loft class misses PartDesign types | medium | patch | regex covers Additive/Subtractive Loft, Pipe, Helix, Thickness, Part::Sweep; 2 on the evidence range |
+| red team | timeout class counts every tool | medium | patch | `FailureClass` gates on tool and status |
+| red team | other servers dropped | medium | patch | any server containing `freecad-buddy`; totals list servers |
+| red team | nested JSON stops bridge start | medium | patch | per-file `except Exception`, one log line |
+| red team | mutation after `;` read-only | low | patch | `ast` assignment scan with a statement fallback |
+| red team | result in an earlier-sorting file lost | low | patch | orphan results replayed for calls and ToolSearch |
+| verifier | date filter test checks count only | low | patch | asserts which tools count |
+| edge, blind | `==`, chain, annotation, f-string `=`, string `;` and `#` misread | medium | patch | `ast` scan; parametrized cases |
+| edge | FIFO or large discovery file blocks read | low | patch | regular file under 64 KiB only |
+| gap | ToolSearch orphan, loft shapes, operators, glob OSError untested | low | patch | tests added |
+| blind | missing mutators (setDatum, ...) | low | rejected | `usage-evidence.md` fixes the keyword set; changing it breaks comparison |
+| blind | typed timeout now unclassified | low | rejected | intended: counted in its tool row |
+| blind | unpaired results uncounted, orphan memory | low | rejected | 0 such results on real data |
+| blind | sibling scripts use the narrow prefix | low | rejected | outside this story |
+| blind | positional `FailureClass` args | low | patch | keywords |

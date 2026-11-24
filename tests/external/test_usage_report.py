@@ -524,6 +524,11 @@ def test_Should_match_the_loft_class_When_the_code_creates_a_partdesign_or_part_
         "body.newObject('PartDesign::Thickness', 'D')",
         "doc.addObject('Part::Loft', 'E')",
         "Part.makePipeShell([w], True, False)",
+        "doc.addObject('Part::Sweep', 'F')",
+        "body.newObject('PartDesign::SubtractiveHelix', 'G')",
+        "Part.makeLoft([a, b])",
+        "Part.makeHelix(1, 2, 3)",
+        "doc.addObject('Part::Thickness', 'H')",
         "name = 'Loft_FloorCavity'",
     ]
     records = [
@@ -537,7 +542,7 @@ def test_Should_match_the_loft_class_When_the_code_creates_a_partdesign_or_part_
     text = usage_report.render(_report(tmp_path))
 
     # Assert
-    assert "| Loft, sweep, helix, thickness | 6 |" in text
+    assert "| Loft, sweep, helix, thickness | 11 |" in text
 
 
 def test_Should_count_a_timeout_in_the_row_of_its_own_tool_When_a_typed_tool_times_out(tmp_path):
@@ -558,7 +563,7 @@ def test_Should_count_a_timeout_in_the_row_of_its_own_tool_When_a_typed_tool_tim
     assert "| Not OK, no class above (includes calls with no outcome) | 1 |" in text
 
 
-def test_Should_count_a_call_of_every_server_whose_name_contains_freecad_buddy(tmp_path):
+def test_Should_count_a_call_of_every_server_When_its_name_contains_freecad_buddy(tmp_path):
     # Arrange
     records = [
         *_call("id-1", "document_list", _envelope()),
@@ -578,27 +583,64 @@ def test_Should_count_a_call_of_every_server_whose_name_contains_freecad_buddy(t
     assert "- Servers: `freecad-buddy` 1, `freecad-buddy-docker` 1." in text
 
 
-def test_Should_count_a_mutation_as_mutating_When_it_follows_a_semicolon_on_one_line(tmp_path):
+MUTATING_CODE = [
+    "o = doc.getObject('A'); o.Placement = P",
+    "d['k'].v = 1",
+    "o.Length += 1",
+    "o.x: float = 1",
+    "x = o.y = 3",
+    "if o.Label == 'A': o.Label = 'B'",
+    "d['#1'].v = 1",
+    "o.Length //= 2",
+    "o.Length <<= 2",
+]
+READ_ONLY_CODE = [
+    "o = doc.getObject('A'); print(o.Shape.Volume == 1)",
+    "f(a=1); g.h(b=2)",
+    "print(o.Length <= 1, o.Length >= 1, o.Length != 1)",
+    "print(f'{o.Length=}')",
+    "print('a; b.c = 1')",
+    "x = 1  # o.y = 2",
+]
+
+
+@pytest.mark.parametrize("code", MUTATING_CODE)
+def test_Should_count_the_script_as_mutating_When_the_code_assigns_an_attribute(tmp_path, code):
     # Arrange
-    records = [
-        *_call("id-1", "script_exec", _envelope(), code="o = doc.getObject('A'); o.Placement = P"),
-        *_call(
-            "id-2",
-            "script_exec",
-            _envelope(),
-            code="o = doc.getObject('A'); print(o.Shape.Volume == 1)",
-        ),
-        *_call("id-3", "script_exec", _envelope(), code="d['k'].v = 1"),
-        *_call("id-4", "script_exec", _envelope(), code="o.Length += 1"),
-        *_call("id-5", "script_exec", _envelope(), code="f(a=1); g.h(b=2)"),
-    ]
-    _write(tmp_path / "aaa.jsonl", records)
+    _write(tmp_path / "aaa.jsonl", _call("id-1", "script_exec", _envelope(), code=code))
+    target = _report(tmp_path)
 
     # Act
-    text = usage_report.render(_report(tmp_path))
+    text = usage_report.render(target)
 
     # Assert
-    assert "Read-only 2 (40% of calls), mutating 3." in text
+    assert "Read-only 0 (0% of calls), mutating 1." in text
+
+
+@pytest.mark.parametrize("code", READ_ONLY_CODE)
+def test_Should_count_the_script_as_read_only_When_the_code_assigns_no_attribute(tmp_path, code):
+    # Arrange
+    _write(tmp_path / "aaa.jsonl", _call("id-1", "script_exec", _envelope(), code=code))
+    target = _report(tmp_path)
+
+    # Act
+    text = usage_report.render(target)
+
+    # Assert
+    assert "Read-only 1 (100% of calls), mutating 0." in text
+
+
+def test_Should_scan_statements_When_the_code_does_not_parse(tmp_path):
+    # Arrange
+    code = "o = doc.getObject('A'); o.Placement = P\n  bad indent("
+    _write(tmp_path / "aaa.jsonl", _call("id-1", "script_exec", _envelope(), code=code))
+    target = _report(tmp_path)
+
+    # Act
+    text = usage_report.render(target)
+
+    # Assert
+    assert "Read-only 0 (0% of calls), mutating 1." in text
 
 
 def test_Should_pair_a_result_with_its_call_When_the_result_file_sorts_before_the_call_file(
@@ -614,3 +656,26 @@ def test_Should_pair_a_result_with_its_call_When_the_result_file_sorts_before_th
 
     # Assert
     assert [call.status for call in target.calls] == ["OK"]
+
+
+def test_Should_pair_a_tool_search_result_with_its_call_When_the_result_file_sorts_first(
+    tmp_path,
+):
+    # Arrange
+    use = {
+        "type": "assistant",
+        "timestamp": "2026-11-01T10:00:00Z",
+        "message": {
+            "content": [{"type": "tool_use", "id": "s1", "name": "ToolSearch", "input": {}}]
+        },
+    }
+    reference = [{"type": "tool_reference", "tool_name": PREFIX + "document_list"}]
+    _write(tmp_path / "aaa.jsonl", [_result("s1", reference)])
+    _write(tmp_path / "bbb.jsonl", [use])
+
+    # Act
+    text = usage_report.render(_report(tmp_path))
+
+    # Assert
+    assert "1 transcripts load freecad-buddy tools." in text
+    assert "| `document_list` | 1 | 1 |" in text

@@ -42,6 +42,7 @@ from freecad_buddy.contracts.rpc import (
 logger = logging.getLogger("freecad_buddy.rpc_listener")
 
 _MAX_FRAME_BYTES = 16 * 1024 * 1024
+_DISCOVERY_FILE_LIMIT_BYTES = 64 * 1024
 _SUPPORTED_VERSIONS = ["1"]
 # The client's own hello budget (rpc_client._HELLO_TIMEOUT_S): a client that has not sent its
 # hello by then has given up, and the accept thread must not wait longer on it.
@@ -273,18 +274,23 @@ class RpcListener:
         for path in paths:
             try:
                 RpcListener._sweep_one(path)
-            except Exception:  # noqa: BLE001 - a bad file must never stop the bridge start
-                logger.warning("discovery sweep kept %s after an error", path.name, exc_info=True)
+            except Exception as error:  # noqa: BLE001 - a bad file must never stop the bridge start
+                logger.warning("discovery sweep kept %s after %s", path.name, type(error).__name__)
 
     @staticmethod
     def _sweep_one(path: Path) -> None:
+        # A discovery file holds a few hundred bytes. A larger file, or one that is not a regular
+        # file (a FIFO would block the read), is not ours to judge.
+        if not path.is_file() or path.stat().st_size > _DISCOVERY_FILE_LIMIT_BYTES:
+            return
         try:
             pid = json.loads(path.read_text(encoding="utf-8")).get("pid")
         except (OSError, ValueError, AttributeError):
             return
         if not isinstance(pid, int) or isinstance(pid, bool):
             return
-        # A pid beyond the platform's range raises from pid_alive; the caller keeps the file.
+        # On POSIX a pid beyond the platform's range makes pid_alive raise; the caller then
+        # keeps the file.
         if pid == os.getpid() or pid_alive(pid):
             return
         try:
