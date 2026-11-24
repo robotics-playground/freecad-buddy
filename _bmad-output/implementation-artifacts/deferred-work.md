@@ -2171,3 +2171,13 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/redteam-13-6.md` RT-3 (reproduced; also true before Story 13-6 on the `object` path).
   blocker: reporting object state in the record is a contract addition outside T-2.
   unblock: a Story that adds an object-state field to measurement records, or a skill rule to run `verify_recompute` before trusting measurements.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: `query_interference` measures each object's own container-local `Shape`; parts inside `App::Part` or `App::Link` instances need a global-frame shape.
+  evidence: `queries.py` `_interference_shape` reads `obj.Shape`; a part under a placed container is measured in its local frame and an `App::Link` has no `Shape`. Assemblies are Phase 5 (M-20); `query_mass_properties` has the same frame.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: A `query_interference` call whose pairs exceed the 60 s query timeout may keep running in FreeCAD after the marshal returns TIMEOUT.
+  evidence: The pair loop has no deadline check. Unverified (medium): a container run with a disjoint pair of large compounds (`distToShape` 45 s each, several pairs) would show whether the main thread stays blocked.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: T-2 in `tool-contracts.md` lists `min_distance` as a non-null Quantity; the code returns null when `distToShape` fails.
+  evidence: `queries.py` `query_interference`; design doc §3.2.3 states the widening. The leader owns the contract text.

@@ -129,6 +129,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_tree_summary` | 0 | Plain-text containment tree in the shape of the Model panel, line-capped (G1.3 large-tree safe) | no |
 | `query_object` | 0 | One object: type, label, properties, error state + `getStatusString()` | no |
 | `query_mass_properties` | 0 | Volume/area/bbox/COM + topology counts + `is_valid` for one object, or for 1 to 50 objects (`objects`) | no |
+| `query_interference` | 1 | Common volume and minimum distance for object pairs (`objects`: every pair, or `pairs`); `boolean_failed` flags a boolean that returned nothing at distance 0, so an empty result never reads as no overlap (numbers only, AD-35) | no |
 | `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc (whole-doc `edges` capped at `max_edges`, truncation flagged) | no |
 | `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
 | `query_placement` | 0 | Local + global placement of an object | no |
@@ -206,19 +207,19 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | Namespace | P0 | P1 | P2 | P3 | Specified | Shipped |
 | --- | --- | --- | --- | --- | --- | --- |
 | `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
-| `query_` | 8 | 2 | — | — | 10 | 8 (`query_tree_children`, `query_parameters` planned) |
+| `query_` | 8 | 3 | — | — | 11 | 9 (`query_tree_children`, `query_parameters` planned) |
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
 | `feature_` | — | — | 11 | — | 11 | 11 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **50** | **45** |
+| **AI-visible total** (typed tools) | | | | | **51** | **46** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **45**; with `SCRIPT_EXEC_SPEC` that is 46 registered specs.
+The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **46**; with `SCRIPT_EXEC_SPEC` that is 47 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -332,6 +333,30 @@ Mass data per object by immutable `Name`. Exactly one of `object` and `objects` 
         "required": ["name", "shape"] } ] } }
   }, "required": ["objects"] } }
 ```
+
+### 3.2.3 `query_interference`
+
+Pair measurement by immutable `Name`; read-only, numbers only (AD-35: no pass or "no interference" verdict). Each shape is the object's own `Shape`, in its container-local frame; a global frame for parts inside `App::Part` containers and `App::Link` objects are not handled. Exactly one of `objects` (2 to 20 names, every pair measured, in order `(i, j)` with `i < j`) and `pairs` (1 to 100 `[a, b]` pairs, input order) is required; both or neither, a repeated name in `objects`, a pair of one name twice, or a list outside its bounds → `INVALID_INPUT`. A name that does not exist fails the whole call with `INVALID_INPUT` "unknown object: <name>". An object with no shape, a null shape or an empty shape fails the call with `INVALID_INPUT` naming it, because a skipped object would read as no overlap. `common_volume` is the volume of `Shape.common`; `min_distance` is `distToShape` and is 0 when the shapes touch or overlap. `Shape.common` runs first; a positive common volume proves distance 0, so `distToShape` (slow on large compounds) runs only when `common` gives no volume. A `common` that raises or returns an empty compound, with the distance 0 or unknown, sets `boolean_failed` true and `common_volume` null (`min_distance` may then be null when `distToShape` also failed; this widens the T-2 contract, where `min_distance` is a non-null Quantity): the overlap is unmeasured, never zero. Two solids that only touch at a face give an empty `common` at distance 0 in FreeCAD 1.1, so they also read `boolean_failed` true. A non-empty `common` with zero volume (a shell or edge from non-solid input) gives `common_volume` 0 and `boolean_failed` false. With a positive distance the shapes are disjoint: `common_volume` 0, `boolean_failed` false.
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "objects": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 20,
+                 "description": "every pair is measured" },
+    "pairs": { "type": "array", "items": { "type": "array", "items": { "type": "string" },
+               "minItems": 2, "maxItems": 2 }, "minItems": 1, "maxItems": 100 }
+  }, "required": ["doc"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "pairs": { "type": "array", "items": { "type": "object", "properties": {
+      "a": { "type": "string" }, "b": { "type": "string" },
+      "common_volume": { "oneOf": [{ "$ref": "#/$defs/Quantity" }, { "type": "null" }] },
+      "min_distance": { "oneOf": [{ "$ref": "#/$defs/Quantity" }, { "type": "null" }] },
+      "boolean_failed": { "type": "boolean" } },
+      "required": ["a", "b", "common_volume", "min_distance", "boolean_failed"] } }
+  }, "required": ["pairs"] } }
+```
+
+The one-line text is a count line (`N pair(s), K overlapping, F boolean failed.`) plus one line per failed or overlapping pair. The call budget is 60 s. `Shape.common` and `distToShape` cost grows with face count: 190 pairs of 81-hole plates took 8 s disjoint and 26 s overlapping on a development host; a single `distToShape` between two 200-box compounds took 45 s.
 
 ### 3.3 `verify_shape`
 

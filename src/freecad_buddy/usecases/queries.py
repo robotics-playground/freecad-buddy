@@ -674,6 +674,141 @@ def query_mass_properties(
     return registry.with_document(doc, read)
 
 
+_MAX_INTERFERENCE_OBJECTS = 20
+_MAX_INTERFERENCE_PAIRS = 100
+# OCC's own tolerance for "touching" (Precision::Confusion). A distance at or below it is contact.
+_CONTACT_DISTANCE_MM = 1e-7
+
+
+def summarize_interference(sc: dict) -> str:
+    """Count line, then one line per pair whose boolean failed or whose shapes overlap."""
+    pairs = sc.get("pairs") or []
+    failed = [pair for pair in pairs if pair.get("boolean_failed")]
+    overlapping = [pair for pair in pairs if (pair.get("common_volume") or {}).get("value")]
+    head = f"{len(pairs)} pair(s), {len(overlapping)} overlapping, {len(failed)} boolean failed."
+    lines = [head]
+    for pair in failed:
+        lines.append(f"{pair['a']}/{pair['b']}: BOOLEAN FAILED, overlap unknown.")
+    for pair in overlapping:
+        volume = shim.displayed(pair["common_volume"]["value"])
+        lines.append(f"{pair['a']}/{pair['b']}: common volume {volume} mm^3.")
+    return "\n".join(lines)
+
+
+def _interference_pairs(objects: list[str] | None, pairs: list[list[str]] | None):
+    """The name pairs to measure, or raise ``ValidationError`` unless exactly one form is given."""
+    if (objects is None) == (pairs is None):
+        raise ValidationError("give exactly one of 'objects' and 'pairs'")
+    if objects is not None:
+        if not isinstance(objects, list) or not 2 <= len(objects) <= _MAX_INTERFERENCE_OBJECTS:
+            raise ValidationError(
+                f"objects must be a list of 2 to {_MAX_INTERFERENCE_OBJECTS} names"
+            )
+        if not all(isinstance(name, str) and name for name in objects):
+            raise ValidationError("objects must contain only non-empty object names (strings)")
+        if len(set(objects)) != len(objects):
+            raise ValidationError("objects must not repeat a name")
+        return [
+            (objects[i], objects[j])
+            for i in range(len(objects))
+            for j in range(i + 1, len(objects))
+        ]
+    if not isinstance(pairs, list) or not 1 <= len(pairs) <= _MAX_INTERFERENCE_PAIRS:
+        raise ValidationError(f"pairs must be a list of 1 to {_MAX_INTERFERENCE_PAIRS} pairs")
+    for pair in pairs:
+        valid = isinstance(pair, list) and len(pair) == 2
+        if not (valid and all(isinstance(name, str) and name for name in pair)):
+            raise ValidationError("each pair must be two non-empty object names (strings)")
+        if pair[0] == pair[1]:
+            raise ValidationError(f"a pair must name two different objects: {pair[0]}")
+    return [(pair[0], pair[1]) for pair in pairs]
+
+
+def _interference_shape(document: object, name: str) -> object:
+    """The named object's shape, or raise ``ValidationError`` when it has no measurable shape.
+
+    A skipped object would read as "no overlap", so a missing, null or empty shape is refused.
+    """
+    obj = _resolve_object(document, name)
+    shape = _queryable_shape(obj)
+    if shape is None or not shape.BoundBox.isValid():
+        raise ValidationError(f"object has no queryable shape: {name}")
+    return shape
+
+
+def _measure_interference(
+    shape_a: object, shape_b: object
+) -> tuple[float | None, float | None, bool]:
+    """``(common_volume, min_distance, boolean_failed)`` for one shape pair, in mm^3 and mm.
+
+    ``common`` runs first because it is cheap, and a non-zero common volume proves a distance of
+    0. ``distToShape`` is the slow call on large compounds, so it runs only when ``common`` gives
+    no volume. A ``common`` that raises or returns an empty compound is not proof of no overlap
+    (a self-intersecting solid returns empty at distance 0), so it is a failed boolean unless
+    the distance is positive. ``None`` means unmeasured.
+    """
+    try:
+        common = shape_a.common(shape_b)
+    except Exception:  # noqa: BLE001 -- Part.OCCError is the only expected type; any raise = failed
+        common = None
+    empty = common is None or common.isNull() or not common.BoundBox.isValid()
+    # abs(): a solid with reversed orientation reports a negative volume for a real overlap.
+    volume = None if empty else abs(common.Volume)
+    if volume is not None and not math.isfinite(volume):
+        return None, None, True
+    if volume:
+        return float(volume), 0.0, False
+    try:
+        distance = float(shape_a.distToShape(shape_b)[0])
+    except Exception:  # noqa: BLE001 -- a failed distance leaves the overlap unproven
+        distance = None
+    if distance is not None and not math.isfinite(distance):
+        distance = None
+    if distance is not None and distance > _CONTACT_DISTANCE_MM:
+        return 0.0, distance, False
+    if not empty:
+        return 0.0, distance, False
+    return None, distance, True
+
+
+def query_interference(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    objects: list[str] | None = None,
+    pairs: list[list[str]] | None = None,
+) -> ResultEnvelope:
+    """Measure common volume and minimum distance for object pairs.
+
+    Give exactly one of ``objects`` (2 to 20 names, every pair measured in order ``(i, j)``,
+    ``i < j``) or ``pairs`` (1 to 100 ``[a, b]`` pairs). Each record is ``{a, b, common_volume,
+    min_distance, boolean_failed}``. ``boolean_failed`` is true, and ``common_volume`` null, when
+    the boolean raised or returned nothing while the shapes touch or the distance is unknown: an
+    empty result must never read as no overlap. Reports numbers only, never a verdict. Raises
+    ``ValidationError`` for bad input, an unknown name, or an object with no shape.
+    """
+    name_pairs = _interference_pairs(objects, pairs)
+
+    def read(_handle: str, document: object) -> ResultEnvelope:
+        names = {name for pair in name_pairs for name in pair}
+        shapes = {name: _interference_shape(document, name) for name in sorted(names)}
+        records = []
+        for name_a, name_b in name_pairs:
+            volume, distance, failed = _measure_interference(shapes[name_a], shapes[name_b])
+            records.append(
+                {
+                    "a": name_a,
+                    "b": name_b,
+                    "common_volume": None if volume is None else _quantity(volume, "mm^3"),
+                    "min_distance": None if distance is None else _quantity(distance, "mm"),
+                    "boolean_failed": failed,
+                }
+            )
+        structured = {"pairs": records}
+        return _ok_envelope(structured, summarize_interference(structured))
+
+    return registry.with_document(doc, read)
+
+
 def query_dependencies(
     registry: DocumentRegistry,
     doc: str | None = None,
