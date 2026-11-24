@@ -2187,3 +2187,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
   summary: The `query_interference` text and record do not say why a pair is `boolean_failed` (untrusted input, or a kernel failure at contact).
   evidence: Both give the same text line; a reason field or a named object in the text would be additive.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: The bridge cannot recover from one long FreeCAD/OCC call that holds the Python GIL. The marshal timeout cannot fire during the call; after the proxy `TIMEOUT` the bridge answers `WORKER_CRASHED` "handshake rejected" for minutes while FreeCAD stays alive. Seen with `query_interference` on two 900-box compounds (13-7 F2, about 8 minutes) and with `query_section` on a 3-face coil spring (13-8 RT-1, 112-210 s). Each tool now refuses inputs above measured cost limits, but any typed tool (fillet, boolean, export) can hit the same state.
+  evidence: `_bmad-output/implementation-artifacts/verify-13-7.md` (F2), `_bmad-output/implementation-artifacts/redteam-13-8.md` (RT-1).
+  blocker: architecture decision under AD-27 (worker isolation, a watchdog that restarts the worker, or a documented limit); approval tier: architecture.
+  unblock: the user decides the AD-27 direction; then a Story implements it.
