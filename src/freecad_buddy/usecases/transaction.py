@@ -245,6 +245,7 @@ def post_verify(
     touched: list[str],
     refs_before: list,
     refs_written: list | None = None,
+    deleted: frozenset[str] = frozenset(),
     removed_bindings: Collection[tuple[str, str]] = (),
 ) -> PostVerifyBlock:
     """Run the mutation checklist in order, short-circuiting on the first hard failure.
@@ -273,7 +274,11 @@ def post_verify(
 
     def audit() -> TnpAuditBlock:
         return tnp_guard.audit_references(
-            document, refs_before, refs_written, removed_bindings=removed_bindings
+            document,
+            refs_before,
+            refs_written,
+            deleted,
+            removed_bindings=removed_bindings,
         )
 
     invalid = _invalid_objects(document)
@@ -605,6 +610,7 @@ def run_mutation(
     params: dict | None = None,
     fp_before: FingerprintRecord | None = None,
     state_probe: Callable[[object], object] | None = None,
+    deleted: frozenset[str] = frozenset(),
     recompute_check: Callable[[object], None] | None = None,
     removed_bindings: Collection[tuple[str, str]] = (),
 ) -> tuple[object, ResultEnvelope]:
@@ -644,6 +650,8 @@ def run_mutation(
         ``None`` (a preview's copy, which the gate exempts) makes the bracket take its own.
     :param state_probe: reads state the shape fingerprint cannot see; the rollback proof also
         needs it back at its pre-mutation reading (see ``_prove_rollback``).
+    :param deleted: names of the objects ``op`` deletes on purpose. The TNP audit excuses a
+        reference owner in this set that is gone; any other vanished owner stays ``BROKEN``.
     :param recompute_check: runs on the document after the bracket's recompute and before
         ``post_verify``; it raises ``RecomputeFailure`` to fail the mutation with a code.
     :param removed_bindings: filled by ``op`` with the ``(owner, record prop)`` of each expression
@@ -663,6 +671,7 @@ def run_mutation(
         params,
         fp_before,
         state_probe,
+        deleted,
         recompute_check,
         removed_bindings,
     )
@@ -682,6 +691,7 @@ def _bracket(
     params: dict,
     fp_before: FingerprintRecord | None,
     state_probe: Callable[[object], object] | None = None,
+    deleted: frozenset[str] = frozenset(),
     recompute_check: Callable[[object], None] | None = None,
     removed_bindings: Collection[tuple[str, str]] = (),
 ) -> tuple[object, ResultEnvelope]:
@@ -723,7 +733,9 @@ def _bracket(
         document.recompute()
         if recompute_check is not None:
             recompute_check(document)
-        report = post_verify(document, handle, touched, refs_before, refs_written, removed_bindings)
+        report = post_verify(
+            document, handle, touched, refs_before, refs_written, deleted, removed_bindings
+        )
     except RecomputeFailure as exc:
         failure_code = exc.code
         report = _block(False, NOT_MEASURED, None, _unrun_tnp_audit(), False, str(exc))
@@ -762,9 +774,16 @@ def _bracket(
         )
         return document, _envelope(block, "OK", summarize_mutation(block))
 
+    present_before_abort = {obj.Name for obj in document.Objects}
     document.abortTransaction()
     shim.close_pending_transaction(transaction_name)
     document.recompute()
+    # An object the abort brought back has its expression text but not its dependency on the bound
+    # object; the rollback proof below reads that dependency (``state_probe``).
+    restored = [obj.Name for obj in document.Objects if obj.Name not in present_before_abort]
+    if restored:
+        shim.relink_expressions(document, restored)
+        document.recompute()
     if not undo_enabled:
         # Undo could not be turned on, so abort restores nothing and the snapshot path below is
         # expected. Recorded so it is not misread as the #6031 undo-boundary defect.

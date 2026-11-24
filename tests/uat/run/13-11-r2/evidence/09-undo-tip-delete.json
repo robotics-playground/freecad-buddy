@@ -1,0 +1,44 @@
+{
+ "tool": "document_undo",
+ "args": {
+  "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+   "name": "Del1311r2",
+   "undone": "buddy: delete PadB",
+   "fingerprint_before": "b54b58f14c5088bcf01ff58cf58eb958f968649f1a466c44e572a6da1833fce9",
+   "fingerprint_after": "2407931bab21ca4564803cec1ee3c5b4bcfd996f4c13adab74cb6fdac33bb3b6",
+   "matches_pre_op": null,
+   "restored_objects": [
+    "Body",
+    "Origin",
+    "X_Axis",
+    "Y_Axis",
+    "Z_Axis",
+    "XY_Plane",
+    "XZ_Plane",
+    "YZ_Plane",
+    "Origin001",
+    "SkA",
+    "PadA",
+    "SkB",
+    "PadB"
+   ],
+   "undo_count": 7,
+   "errors": []
+  },
+  "text": "Undid 'buddy: delete PadB' on Del1311r2: no pre-op digest supplied to compare against (b54b58f14c50 -> 2407931bab21).",
+  "framing": {
+   "fits": true,
+   "ratio": 0.95,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

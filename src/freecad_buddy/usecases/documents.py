@@ -604,6 +604,10 @@ class DocumentRegistry:
         report a successful undo that never happened. ``UndoCount`` is read here rather than
         inside a mutation bracket, where it would also count the open transaction.
 
+        An object the undo restores gets its expression bindings re-applied
+        (``shim.relink_expressions``), because FreeCAD restores their text but not their
+        dependency on the bound object; a binding that cannot be set again is listed in ``errors``.
+
         The recompute after the undo is mandatory: undo replays property deltas and leaves the
         objects it touched dirty without recomputing them, so a fingerprint taken before it would
         read stale shapes.
@@ -664,7 +668,12 @@ class DocumentRegistry:
                 )
 
             before = fingerprint(document)
+            present_before_undo = {obj.Name for obj in document.Objects}
             document.undo()
+            # An object the undo brought back has its expression text but not its dependency on
+            # the bound object, so the property would stop following its source.
+            restored = [obj.Name for obj in document.Objects if obj.Name not in present_before_undo]
+            relink_failures = shim.relink_expressions(document, restored)
             document.recompute()
             after = fingerprint(document)
             # Resolved before remembering: a full cache would otherwise evict the expected record.
@@ -682,6 +691,14 @@ class DocumentRegistry:
                 for state in [list(getattr(obj, "State", None) or [])]
                 if _recompute_error_state(state)
             ]
+            errors.extend(
+                {
+                    "name": name,
+                    "error": f"expression on {path} could not be re-linked after undo and is "
+                    f"cleared; it was '{expression}'",
+                }
+                for name, path, expression in relink_failures
+            )
 
             structured = {
                 "doc": handle,

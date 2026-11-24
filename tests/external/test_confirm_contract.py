@@ -42,7 +42,7 @@ def _mutation_schemas() -> dict:
     return {
         name: tool.inputSchema
         for name, tool in _tools().items()
-        if name.startswith(("sketch_", "feature_"))
+        if name.startswith(("sketch_", "feature_")) or name == "document_object_delete"
     }
 
 
@@ -75,7 +75,7 @@ def _verify(token, **overrides):
 
 def test_every_mutation_tool_declares_the_narrowed_confirm_shape():
     schemas = _mutation_schemas()
-    assert len(schemas) == 21, f"expected 21 geometry-mutation tools, got {sorted(schemas)}"
+    assert len(schemas) == 22, f"expected 22 geometry-mutation tools, got {sorted(schemas)}"
     for name, schema in schemas.items():
         block = schema["properties"]["confirm"]
         assert set(block["properties"]) == {"preview_id", "elicitation_action"}, name

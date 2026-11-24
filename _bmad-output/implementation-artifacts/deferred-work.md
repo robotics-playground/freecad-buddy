@@ -2272,8 +2272,32 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   blocker: Story 13-12 owns the skill routing text.
   unblock: Story 13-12.
 
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: `document_object_delete` does not scan objects in other open documents that link to a deleted object.
+  evidence: `_dependents` reads `document.Objects` only; an `App::Link` or XLink in another document breaks silently (edge-case lens, probed on 1.1).
+  blocker: needs a cross-document `InList` scan and a decision on refusing versus listing.
+  unblock: a real multi-document case.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: Unverified (medium): the expression re-link may add an undo step or clear redo in the GUI host.
+  evidence: measured only under `FreeCADCmd` (UndoCount and RedoCount equal before and after); `Document::_checkTransaction` opens a transaction when the application has an active transaction name, which a GUI command sets.
+  blocker: needs the container GUI.
+  unblock: container UAT reads UndoCount and RedoCount after `document_undo` of a bound-pad delete.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md` and `SKILL.md` still route object deletion to `script_exec`.
+  evidence: `document_object_delete` now ships.
+  blocker: Story 13-12 owns the skill routing text.
+  unblock: Story 13-12.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: The `document_object_delete` container exemption compares names only (`features.py:2414`): a GroupExtension holder that also links to one of its Group members through a `PropertyLink` is treated as a pure container, so the delete returns OK and clears that link.
+  evidence: `_bmad-output/implementation-artifacts/verify-13-11.md` "Round 2" R2-1 (synthetic Python object; no stock FreeCAD type found affected).
+  blocker: no stock FreeCAD type reproduces it; low.
+  unblock: a real document type that holds a member in Group and also links to it, or a small refactor that checks link properties besides Group.
+
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-10-set-expression.md`
-  summary: A mutation that leaves a shape with an infinite dimension commits, and the document then cannot be fingerprinted.
+  summary: A mutation that leaves a shape with an infinite dimension commits, and the document then cannot be fingerprinted (`feature_set_expression` now rolls this back through `recompute_check`; other tools do not).
   evidence: Items `Other.Height = 5 mm` then `Box.Height = 1 mm / (Other.Height - 5 mm)` pass the pre-call checks and commit; `fingerprint` raises on `PrincipalProperties`, the bracket reports `SPEC_FAILED` with the snapshot kept, and later calls on the document fail at setup. `post_verify` does not check for a non-finite property or shape. The same state follows any recompute that makes a dependent expression infinite (for example `feature_parameters_define` changing a value that an existing binding divides by).
   blocker: the check belongs in `post_verify` or `fingerprint`, shared code that every tool uses.
   unblock: an AD-5 decision on a non-finite check before commit.

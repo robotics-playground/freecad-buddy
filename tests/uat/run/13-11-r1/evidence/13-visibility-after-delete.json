@@ -1,0 +1,26 @@
+{
+ "tool": "script_exec",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "code": "import FreeCADGui as Gui\nnames = [\"Body\", \"Sketch1\", \"Pad1\", \"Sketch2\", \"Pad2\", \"Body001\", \"Pad3\", \"VS\"]\nout = {}\nfor n in names:\n    o = doc.getObject(n)\n    if o is None:\n        out[n] = None; continue\n    vo = Gui.getDocument(doc.Name).getObject(n)\n    out[n] = {\"Visibility\": o.Visibility, \"vp_visible\": vo.Visibility if vo else None,\n              \"valid_shape\": (not o.Shape.isNull()) if hasattr(o, \"Shape\") else None}\nb = doc.getObject(\"Body\")\nresult = {\"vis\": out, \"tip\": b.Tip.Name if b.Tip else None, \"UndoCount\": doc.UndoCount, \"RedoCount\": doc.RedoCount}\n"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+   "stdout": "",
+   "value_repr": "{'vis': {'Body': {'Visibility': True, 'vp_visible': True, 'valid_shape': True}, 'Sketch1': {'Visibility': True, 'vp_visible': True, 'valid_shape': True}, 'Pad1': {'Visibility': False, 'vp_visible': False, 'valid_shape': True}, 'Sketch2': {'Visibility': True, 'vp_visible': True, 'valid_shape': True}, 'Pad2': None, 'Body001': {'Visibility': True, 'vp_visible': True, 'valid_shape': True}, 'Pad3': {'Visibility': True, 'vp_visible': True, 'valid_shape': True}, 'VS': {'Visibility': True, 'vp_visible': True, 'valid_shape': None}}, 'tip': 'Pad1', 'UndoCount': 2, 'RedoCount': 0}",
+   "fingerprint_after": null
+  },
+  "text": "doc: fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA\nfingerprint_after: None\nstdout: \nvalue_repr: <576 chars>",
+  "framing": {
+   "fits": true,
+   "ratio": 0.86,
+   "checked": "cached",
+   "stale_reason": "served from cache; unverified key component(s): geometry"
+  }
+ }
+}
