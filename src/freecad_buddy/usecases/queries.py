@@ -933,16 +933,33 @@ def query_interference(
     return registry.with_document(doc, read)
 
 
-# Largest face count cut in one call. ``Shape.section`` and ``Shape.common`` hold the interpreter
-# lock, so the 60 s marshal timeout cannot stop them. ``Shape.section`` alone, on the development
-# host with separate boxes in one compound and a plane through all of them: 9,600 faces -> 1.7 s,
-# 19,200 -> 7.4 s, 38,400 -> 25 s; a 9,006-face plate with 9,000 holes -> 3 s.
-_MAX_SECTION_FACES = 10_000
-# Largest wire count for which the area is measured. ``Shape.common`` of the plane face grows with
-# the square of the wire count: separate boxes 1,600 wires -> 4.7 s, 3,200 -> 16 s, 6,400 -> 51 s;
-# a plate with 3,000 holes -> 21 s and with 9,000 holes -> 103 s (past the 60 s budget with only
-# 9,006 faces). 1,500 wires keep ``common`` near 5 s. Above it the area is null, never 0.
-_MAX_AREA_WIRES = 1500
+# Largest face count cut in one call. ``Shape.isValid``, ``Shape.section`` and ``Shape.common`` hold
+# the interpreter lock, so the 60 s marshal timeout cannot stop them, and on one solid they grow
+# with the square of the face count. Whole tool call on the development host, plane through a
+# regular prism or a plate with hexagonal holes: 1,002 faces -> 1.0 s, 2,002 -> 3.1 s, 3,002 ->
+# 6.1 s (prism); 1,806 -> 3.0 s, 3,006 -> 7.1 s, 4,206 -> 13 s (plate); 5,000-face prism 27 s,
+# 8,406-face plate 42.6 s, 9,992-face prism 95.7 s (red team). 3,000 keeps one call near 7 s.
+_MAX_SECTION_FACES = 3000
+# Largest sum, over the BSpline and Bezier faces of a shape, of the square of the face's pole count
+# (``NbUPoles * NbVPoles``). ``Shape.section`` on a swept BSpline face grows with the square of its
+# poles, with only 3 faces: a coil spring of 3 turns (246 poles) -> 0.8 s, 5 turns (414) -> 1.9 s,
+# 10 turns (822) -> 7.8 s, 30 turns (about 2,400) -> 112 s, 60 turns -> 210 s (red team). Many
+# small patches cost little: 1,000 NURBS cylinders (3,000 faces, 20,000 poles in all, load 135,000)
+# -> 11.8 s. 800 poles in one face (load 640,000) keep one call near 8 s. Surfaces of extrusion
+# or revolution over a BSpline curve are not counted (not measured).
+_MAX_BSPLINE_POLE_LOAD = 800**2
+# Largest wire count for which the area is measured. The area needs ``Shape.common`` and a face
+# built from the wires with ``FaceMakerBullseye``, and both grow with the square of the wire
+# count. ``common``: separate boxes 1,600 wires -> 4.7 s, 3,200 -> 16 s; a plate with 3,000 holes
+# -> 21 s and with 9,000 holes -> 103 s. ``FaceMakerBullseye``: separate cylinders 100 wires ->
+# 0.11 s, 300 -> 0.91 s, 600 -> 7.9 s; a plate with 600 holes -> 2.4 s. 300 wires keep both near
+# 2 s. Above it the area is null, never 0.
+_MAX_AREA_WIRES = 300
+# A plane within this distance of a planar face of the shape (``Precision::Confusion``) lies on
+# the face: ``Shape.section`` then returns the inner edges of the face as well.
+_COINCIDENT_TOLERANCE_MM = 1e-7
+# The area from ``Shape.common`` and the area bounded by the section wires must agree this closely.
+_AREA_AGREEMENT_REL_TOL = 1e-6
 _MAX_POLYLINE_POINTS = 5000
 _MIN_POLYLINE_POINTS = 2
 _DEFAULT_POLYLINE_POINTS = 1000
@@ -1021,6 +1038,42 @@ def _section_points(points: object) -> tuple[float, int]:
     return deflection, limit
 
 
+def _bspline_pole_load(shape: object) -> int:
+    """The sum over BSpline and Bezier faces of the square of ``NbUPoles * NbVPoles``."""
+    load = 0
+    for face in shape.Faces:
+        surface = face.Surface
+        if hasattr(surface, "NbUPoles"):
+            load += (surface.NbUPoles * surface.NbVPoles) ** 2
+    return load
+
+
+def _plane_on_face(shape: object, normal: tuple[float, float, float], offset: float) -> bool:
+    """Whether the plane ``normal . p = offset`` coincides with a planar face of ``shape``.
+
+    A face coincides when its normal is parallel to ``normal`` closely enough that the two planes
+    stay within ``_COINCIDENT_TOLERANCE_MM`` across the face, and one of its vertices is on the
+    plane.
+    """
+    for face in shape.Faces:
+        surface = face.Surface
+        if surface.TypeId != "Part::GeomPlane" or not face.Vertexes:
+            continue
+        axis = surface.Axis
+        tilt = math.hypot(
+            axis.y * normal[2] - axis.z * normal[1],
+            axis.z * normal[0] - axis.x * normal[2],
+            axis.x * normal[1] - axis.y * normal[0],
+        )
+        if tilt * max(face.BoundBox.DiagonalLength, 1.0) > _COINCIDENT_TOLERANCE_MM:
+            continue
+        point = face.Vertexes[0].Point
+        distance = normal[0] * point.x + normal[1] * point.y + normal[2] * point.z - offset
+        if abs(distance) <= _COINCIDENT_TOLERANCE_MM:
+            return True
+    return False
+
+
 def _section_untrusted_reason(shape: object) -> str | None:
     """Why the section kernel cannot be trusted on ``shape``, or ``None`` when it can.
 
@@ -1065,6 +1118,33 @@ def _section_area(shape: object, plane_face: object) -> float | None:
     return area if area > 0 and math.isfinite(area) else None
 
 
+def _wire_face_area(wires: list) -> float | None:
+    """The area bounded by closed coplanar ``wires`` (holes respected), or ``None`` if not built."""
+    import Part
+
+    try:
+        area = float(Part.makeFace(wires, "Part::FaceMakerBullseye").Area)
+    except Exception:  # noqa: BLE001 -- a face the kernel cannot build leaves the area unmeasured
+        return None
+    return area if area > 0 and math.isfinite(area) else None
+
+
+def _checked_section_area(shape: object, plane_face: object, wires: list) -> float | None:
+    """The ``common`` area when the area bounded by the wires agrees with it, else ``None``.
+
+    The two come from different calls, so a plane that confuses ``Shape.section`` (inner edges of
+    a coincident face) or ``Shape.common`` makes them differ. A section the kernel loses in both
+    calls is not caught.
+    """
+    from_common = _section_area(shape, plane_face)
+    from_wires = _wire_face_area(wires)
+    if from_common is None or from_wires is None:
+        return None
+    if not math.isclose(from_common, from_wires, rel_tol=_AREA_AGREEMENT_REL_TOL):
+        return None
+    return from_common
+
+
 def _section_polylines(wires: list, deflection: float, max_points: int) -> tuple[list, bool]:
     """Each wire as ``[[x, y, z], ...]`` up to ``max_points`` points; true when any is left out."""
     polylines: list[list[list[float]]] = []
@@ -1105,13 +1185,15 @@ def query_section(
     with a plane face on a copy of the shape; ``Shape.slice`` is not used because it returns no
     wires for a plane within 1e-5 mm of a face. ``area`` is the area of the plane face inside the
     shape (``Shape.common``), so holes and islands are right; it is ``null``, never 0, for a shape
-    that is not solids only, above ``_MAX_AREA_WIRES`` wires, and when the boolean gives nothing.
-    A plane that misses gives ``wires`` 0, ``area`` 0 and ``bbox`` null. Solids that overlap or
+    that is not solids only, with an open wire, above ``_MAX_AREA_WIRES`` wires, when the boolean
+    gives nothing, and when the area bounded by the wires disagrees with the boolean's. A plane
+    that misses gives ``wires`` 0, ``area`` 0 and ``bbox`` null. Solids that overlap or
     touch inside one compound are not detected: the area counts each solid and touching solids
     share edges in the wires. With ``points`` each wire is discretised to ``deflection`` into
     ``polylines``, stopping at ``max_points`` points in total (``truncated``). Returns
     ``INVALID_INPUT`` with code ``section.untrusted_shape`` for an invalid, reversed or face-less
-    shape and ``section.too_complex`` above ``_MAX_SECTION_FACES``. Numbers only.
+    shape, ``section.too_complex`` above ``_MAX_SECTION_FACES`` faces or ``_MAX_BSPLINE_POLE_LOAD``
+    and ``section.plane_on_face`` for a plane that lies on a planar face. Numbers only.
     """
     if not isinstance(object, str) or not object:
         raise ValidationError("object must be a non-empty object name")
@@ -1123,12 +1205,24 @@ def query_section(
 
         # The face limit is checked on the object's own shape: the copy and ``isValid`` of a shape
         # of 240,000 faces took 9.6 s and 42 s with the interpreter lock held.
-        face_count = len(_named_shape(document, object).Faces)
+        own_shape = _named_shape(document, object)
+        face_count = len(own_shape.Faces)
         if face_count > _MAX_SECTION_FACES:
             return _refusal_envelope(
                 "section.too_complex",
                 f"object {object} has {face_count} faces, limit {_MAX_SECTION_FACES}. "
                 "Section a simpler object.",
+            )
+        if _bspline_pole_load(own_shape) > _MAX_BSPLINE_POLE_LOAD:
+            return _refusal_envelope(
+                "section.too_complex",
+                f"object {object} has BSpline or Bezier faces with too many poles to cut in "
+                "one call (about 800 poles in one face is the limit). Section a simpler object.",
+            )
+        if _plane_on_face(own_shape, normal, offset):
+            return _refusal_envelope(
+                "section.plane_on_face",
+                f"the plane lies on a face of {object}; offset it by a small amount",
             )
         shape = _copied_queryable_shape(document, object)
         reason = _section_untrusted_reason(shape)
@@ -1150,8 +1244,8 @@ def query_section(
         solids_only = None not in list(_solid_volumes(shape))
         if not wires:
             area = 0.0
-        elif solids_only and len(wires) <= _MAX_AREA_WIRES:
-            area = _section_area(shape, plane_face)
+        elif solids_only and closed == len(wires) and len(wires) <= _MAX_AREA_WIRES:
+            area = _checked_section_area(shape, plane_face, wires)
         else:
             area = None
         structured: dict = {
@@ -1162,7 +1256,9 @@ def query_section(
             "bbox": None,
         }
         if edges:
-            hull = Part.Compound(edges).BoundBox
+            # ``BoundBox`` bounds a BSpline edge by its poles (2 mm too wide on a 20 mm NURBS
+            # circle); the optimal box is exact.
+            hull = Part.Compound(edges).optimalBoundingBox()
             structured["bbox"] = _bbox_record(
                 hull.XMin, hull.YMin, hull.ZMin, hull.XMax, hull.YMax, hull.ZMax
             )

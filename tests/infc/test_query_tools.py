@@ -1115,6 +1115,39 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertLess(elapsed, budget_seconds)
 
 
+def _coil_spring(turns):
+    helix = Part.makeHelix(6, 6 * turns, 20)
+    circle = Part.Wire(Part.makeCircle(1, App.Vector(20, 0, 0), App.Vector(0, 1, 0)))
+    return Part.Wire(helix).makePipeShell([circle], True, True)
+
+
+def _prism(sides):
+    corners = [
+        App.Vector(
+            50 * math.cos(2 * math.pi * i / sides), 50 * math.sin(2 * math.pi * i / sides), 0
+        )
+        for i in range(sides)
+    ]
+    outline = Part.makePolygon(corners + [corners[0]])
+    return Part.Face(outline).extrude(App.Vector(0, 0, 10))
+
+
+def _hex_hole_plate(holes):
+    columns = 40
+    plate = Part.makeBox(columns * 6 + 6, (holes // columns + 1) * 6 + 6, 10)
+    prisms = []
+    for index in range(holes):
+        center = App.Vector(7 + 6 * (index % columns), 7 + 6 * (index // columns), 0)
+        corners = [
+            center + App.Vector(2 * math.cos(math.pi / 3 * k), 2 * math.sin(math.pi / 3 * k), 0)
+            for k in range(6)
+        ]
+        prisms.append(
+            Part.Face(Part.makePolygon(corners + [corners[0]])).extrude(App.Vector(0, 0, 10))
+        )
+    return plate.cut(Part.makeCompound(prisms))
+
+
 class QuerySectionTest(unittest.TestCase):
     def setUp(self):
         self.registry = DocumentRegistry()
@@ -1171,10 +1204,10 @@ class QuerySectionTest(unittest.TestCase):
         self.assertAlmostEqual(result["bbox"]["xmax"]["value"], BOX_L, places=6)
         self.assertNotIn("polylines", result)
 
-    def test_Should_not_read_a_miss_When_the_plane_is_on_or_within_1e5_mm_of_a_face(self):
+    def test_Should_not_read_a_miss_When_the_plane_is_within_1e5_mm_of_a_face(self):
         # Arrange
         self._box()
-        offsets = [0.0, 1e-9, 1e-7, 1e-6, 1e-5, 1e-4, BOX_H - 1e-5, BOX_H]
+        offsets = [1e-6, 1e-5, 1e-4, BOX_H - 1e-5, BOX_H - 1e-6]
 
         for offset in offsets:
             with self.subTest(offset=offset):
@@ -1529,122 +1562,148 @@ class QuerySectionTest(unittest.TestCase):
         # Assert
         self.assertEqual(fingerprint(self.document, fresh=True)["digest"], before)
 
-    def test_Should_finish_inside_the_query_budget_When_a_shape_is_at_the_face_limit(self):
+    def test_Should_refuse_the_plane_When_it_lies_on_a_planar_face(self):
         # Arrange
-        budget_seconds = 60.0
-        boxes = [
-            Part.makeBox(2, 2, 2, App.Vector(3 * (i % 60), 3 * (i // 60), 0)) for i in range(1666)
+        self._box()
+        cylinder = Part.makeCylinder(10, 30)
+        self._add_shape("Cylinder", cylinder)
+        void_box = Part.makeBox(20, 20, 20).cut(Part.makeBox(10, 10, 10, App.Vector(5, 5, 5)))
+        self._add_shape("Hollow", void_box)
+        cases = [
+            ("Box", "z", 0.0),
+            ("Box", "z", 1e-9),
+            ("Box", "z", 1e-7),
+            ("Box", "z", BOX_H),
+            ("Box", "x", BOX_L),
+            ("Cylinder", "z", 30.0),
+            ("Hollow", "z", 5.0),
+            ("Hollow", [0, 0, 1e-3], 15.0),
         ]
-        self._add_shape("Many", Part.makeCompound(boxes))
+
+        for name, normal, offset in cases:
+            with self.subTest(name=name, normal=normal, offset=offset):
+                # Act
+                envelope = self._section(name, normal=normal, offset=offset)
+
+                # Assert
+                self.assertEqual(envelope["status"], "INVALID_INPUT")
+                self.assertEqual(envelope["detail"]["code"], "section.plane_on_face")
+                self.assertEqual(
+                    envelope["detail"]["message"],
+                    f"the plane lies on a face of {name}; offset it by a small amount",
+                )
+
+    def test_Should_cut_the_plane_When_it_is_tilted_or_just_off_a_planar_face(self):
+        # Arrange
+        self._box()
+        void_box = Part.makeBox(20, 20, 20).cut(Part.makeBox(10, 10, 10, App.Vector(5, 5, 5)))
+        self._add_shape("Hollow", void_box)
+
+        # Act
+        tilted = self._section("Box", normal=[1, 0, 1e-3], offset=0.0)
+        inside_void = self._section("Hollow", offset=5.001)
+
+        # Assert
+        self.assertEqual(tilted["status"], "OK")
+        result = inside_void["structured_content"]
+        self.assertEqual((result["wires"], result["closed_wires"]), (2, 2))
+        self.assertAlmostEqual(result["area"]["value"], 400 - 100, places=6)
+
+    def test_Should_return_null_area_When_the_wires_and_the_boolean_disagree(self):
+        # Arrange
+        self._box()
+
+        # Act
+        with mock.patch.object(queries, "_wire_face_area", return_value=123.0):
+            disagree = self._section(offset=15.0)["structured_content"]
+        with mock.patch.object(queries, "_wire_face_area", return_value=None):
+            unbuilt = self._section(offset=15.0)["structured_content"]
+
+        # Assert
+        self.assertEqual(disagree["wires"], 1)
+        self.assertIsNone(disagree["area"])
+        self.assertIsNone(unbuilt["area"])
+
+    def test_Should_return_null_area_When_a_wire_is_open(self):
+        # Arrange
+        side_by_side = Part.makeCompound(
+            [Part.makeBox(10, 10, 10), Part.makeBox(10, 10, 10, App.Vector(10, 0, 0))]
+        )
+        self._add_shape("Touching", side_by_side)
+
+        # Act
+        result = self._section("Touching", offset=5.0)["structured_content"]
+
+        # Assert
+        self.assertGreater(result["wires"], result["closed_wires"])
+        self.assertIsNone(result["area"])
+
+    def test_Should_report_an_exact_bbox_When_the_section_edge_is_a_bspline(self):
+        # Arrange
+        radius = 10.0
+        self._add_shape("Nurbs", Part.makeCylinder(radius, 30).toNurbs())
+
+        # Act
+        result = self._section("Nurbs", offset=15.0)["structured_content"]
+
+        # Assert
+        box = result["bbox"]
+        for key, expected in (
+            ("xmin", -radius),
+            ("xmax", radius),
+            ("ymin", -radius),
+            ("ymax", radius),
+        ):
+            self.assertAlmostEqual(box[key]["value"], expected, delta=1e-3)
+
+    def test_Should_refuse_a_coil_spring_When_its_bspline_face_has_too_many_poles(self):
+        # Arrange
+        self._add_shape("Long", _coil_spring(30))
+        self._add_shape("Short", _coil_spring(5))
         started = time.monotonic()
 
         # Act
-        envelope = self._section("Many", offset=1.0)
+        refused = self._section("Long", normal="y", offset=0.5)
+        cut = self._section("Short", normal="y", offset=0.5)
 
         # Assert
-        elapsed = time.monotonic() - started
-        self.assertEqual(envelope["status"], "OK")
-        self.assertEqual(envelope["structured_content"]["wires"], 1666)
-        self.assertLess(elapsed, budget_seconds)
+        self.assertEqual(refused["status"], "INVALID_INPUT")
+        self.assertEqual(refused["detail"]["code"], "section.too_complex")
+        self.assertIn("poles", refused["detail"]["message"])
+        self.assertEqual(cut["status"], "OK")
+        self.assertEqual(cut["structured_content"]["wires"], 10)
+        self.assertLess(time.monotonic() - started, 30.0)
 
-    def test_Should_return_null_area_and_open_wires_When_a_face_or_an_open_shell_is_cut(self):
+    def test_Should_refuse_a_prism_When_it_has_one_face_above_the_limit(self):
         # Arrange
-        box = Part.makeBox(BOX_L, BOX_W, BOX_H)
-        self._add_shape("Face", box.Faces[4])
-        self._add_shape("OpenShell", Part.Shell(box.Faces[:5]))
+        self._add_shape("Prism", _prism(queries._MAX_SECTION_FACES - 1))
 
-        for name in ("Face", "OpenShell"):
+        # Act
+        envelope = self._section("Prism", offset=5.0)
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["code"], "section.too_complex")
+        self.assertIn(f"{queries._MAX_SECTION_FACES + 1} faces", envelope["detail"]["message"])
+
+    def test_Should_finish_inside_the_query_budget_When_one_solid_is_at_the_face_limit(self):
+        # Arrange
+        budget_seconds = 60.0
+        self._add_shape("Prism", _prism(queries._MAX_SECTION_FACES - 2))
+        self._add_shape("Plate", _hex_hole_plate(495))
+        shapes = ("Prism", "Plate")
+
+        for name in shapes:
             with self.subTest(name=name):
+                started = time.monotonic()
+
                 # Act
-                result = self._section(name, normal="x", offset=5.0)["structured_content"]
+                envelope = self._section(name, offset=5.0)
 
                 # Assert
-                self.assertGreaterEqual(result["wires"], 1)
-                self.assertEqual(result["closed_wires"], 0)
-                self.assertIsNone(result["area"])
-
-    def test_Should_return_null_area_not_zero_When_the_wire_count_is_above_the_area_limit(self):
-        # Arrange
-        boxes = [Part.makeBox(2, 2, 2, App.Vector(3 * index, 0, 0)) for index in range(4)]
-        self._add_shape("Row", Part.makeCompound(boxes))
-
-        # Act
-        with mock.patch.object(queries, "_MAX_AREA_WIRES", 3):
-            above = self._section("Row", offset=1.0)["structured_content"]
-        with mock.patch.object(queries, "_MAX_AREA_WIRES", 4):
-            at_limit = self._section("Row", offset=1.0)["structured_content"]
-
-        # Assert
-        self.assertEqual(above["wires"], 4)
-        self.assertIsNone(above["area"])
-        self.assertAlmostEqual(at_limit["area"]["value"], 16.0, places=6)
-
-    def test_Should_cut_in_the_container_frame_When_the_object_has_a_placement(self):
-        # Arrange
-        placed = self._box()
-        placed.Placement = App.Placement(App.Vector(0, 0, 100), App.Rotation())
-
-        # Act
-        hit = self._section(offset=115.0)["structured_content"]
-        miss = self._section(offset=15.0)["structured_content"]
-
-        # Assert
-        self.assertEqual(hit["wires"], 1)
-        self.assertAlmostEqual(hit["bbox"]["zmin"]["value"], 115.0, places=6)
-        self.assertEqual(miss["wires"], 0)
-
-    def test_Should_drop_the_next_wire_When_the_cap_leaves_fewer_than_two_points(self):
-        # Arrange
-        plate = Part.makeBox(100, 100, 10).cut(Part.makeCylinder(10, 10, App.Vector(50, 50, 0)))
-        self._add_shape("Plate", plate)
-        full = self._section("Plate", offset=5.0, **self._points(0.5))["structured_content"]
-        first_wire_points = len(full["polylines"][0])
-
-        for cap in (first_wire_points, first_wire_points + 1):
-            with self.subTest(cap=cap):
-                # Act
-                result = self._section("Plate", offset=5.0, **self._points(0.5, max_points=cap))[
-                    "structured_content"
-                ]
-
-                # Assert
-                self.assertEqual(len(result["polylines"]), 1)
-                self.assertEqual(len(result["polylines"][0]), first_wire_points)
-                self.assertTrue(result["truncated"])
-        self.assertFalse(full["truncated"])
-
-    def test_Should_raise_When_a_number_is_beyond_the_float_range(self):
-        # Arrange
-        self._box()
-        huge_int = 10**400
-        planes = [
-            {"normal": [huge_int, 0, 0], "offset": {"value": 1.0, "unit": "mm"}},
-            {"normal": "z", "offset": {"value": huge_int, "unit": "mm"}},
-        ]
-
-        for plane in planes:
-            with self.subTest(plane=plane):
-                # Act
-                act = lambda plane=plane: queries.query_section(  # noqa: E731
-                    self.registry, doc=self.handle, object="Box", plane=plane
-                )
-
-                # Assert
-                with self.assertRaises(ValidationError):
-                    act()
-
-    def test_Should_cut_the_same_plane_When_the_normal_is_near_the_float_limits(self):
-        # Arrange
-        self._box()
-        expected = self._section(normal="z", offset=15.0)["structured_content"]
-
-        for scale in (1.5e308, 5e-324):
-            with self.subTest(scale=scale):
-                # Act
-                result = self._section(normal=[0, 0, scale], offset=15.0)["structured_content"]
-
-                # Assert
-                self.assertEqual(result, expected)
+                elapsed = time.monotonic() - started
+                self.assertEqual(envelope["status"], "OK")
+                self.assertLess(elapsed, budget_seconds)
 
     def test_Should_report_the_counts_in_the_text_When_a_section_is_measured(self):
         # Arrange

@@ -97,3 +97,14 @@ Lenses: Blind Hunter ac765520a554447e9 (opus, high), Edge Case Hunter a38cb940b3
 | 14 | EC | Normal near float limits aborts the process or cuts a wrong plane | high | patch: scale by largest component; tests |
 | 15 | EC | JSON integer beyond float range gives wrong status | medium | patch: `_is_finite_number`; test |
 | 16 | EC | Dispatch zero-normal test passes a non-Quantity offset | low | patch: test uses a Quantity |
+
+Review round 2 (red team, decision 31), deviations from the frozen text: face limit 3,000 (was 10,000); new `section.too_complex` rule for BSpline and Bezier pole load (spring); new code `section.plane_on_face` (a plane within 1e-7 mm of a planar face is refused, so offsets 0, 1e-9, 1e-7 and the top face are no longer cut); area limit 300 wires (was 1,500) because the area is cross-checked against the face built from the wires; `area` null for an open wire or when the two areas disagree; `bbox` from `optimalBoundingBox()`. The section loss on a 30-turn spring is not caught by the cross-check (both calls lose it); the pole limit refuses that spring.
+
+| # | Source | Finding | Verdict | Route and evidence |
+|---|--------|---------|---------|--------------------|
+| R2-1 | red team RT-1 | Face guard does not bound cost (spring 112 s, prism 95.7 s, hole plate 42.6 s) | high | patch: faces 3,000 and pole load limit, measured |
+| R2-2 | RT-2 | Budget test uses separate boxes | medium | patch: prism and hole plate at the limit |
+| R2-3 | RT-3 | Section drops spring crossings, area short | medium | patch: pole limit refuses it; wires-vs-common cross-check added (does not see a loss in both) |
+| R2-4 | RT-4 | Loose BSpline bbox | medium | patch: `optimalBoundingBox` |
+| R2-5 | RT-5 | Plane on a face gives wrong numbers | medium | patch: `section.plane_on_face` |
+| R2-6 | verifier f | Design names the copy as the fingerprint reason | low | patch: reworded |

@@ -1371,12 +1371,15 @@ def tool_specs() -> list[ToolSpec]:
             "Cross-section of one object at a plane, in the frame of the object's container (its "
             "own Placement is applied, the container's is not). Result {wires, closed_wires, "
             "length, area, bbox}; a plane that misses gives wires 0, area 0, bbox null. area is "
-            "null when it is unmeasured, never 0: a shell or face, a failed boolean, or more than "
-            "1,500 wires. With points: polylines in mm, at most max_points points in total, "
-            "truncated true when any is left out. An invalid or reversed shape, or one with no "
-            "face, is refused (section.untrusted_shape), as is one above 10,000 faces "
-            "(section.too_complex). Solids that overlap or touch inside one compound are not "
-            "detected: area counts each solid. Numbers only, no verdict.",
+            "null when it is unmeasured, never 0: a shell or face, an open wire, more than 300 "
+            "wires, a failed boolean, or two area methods that disagree. With points: polylines "
+            "in mm, at most max_points points in total, truncated true when any is left out. "
+            "Refused with INVALID_INPUT: an invalid or reversed shape, or one with no face "
+            "(section.untrusted_shape); more than 3,000 faces, or BSpline or Bezier faces with "
+            "about 800 poles or more in one face, such as a coil spring (section.too_complex); a "
+            "plane on a planar face (section.plane_on_face, offset it by 1e-6 mm or more). "
+            "Solids that overlap or touch inside one compound are not detected: area counts each "
+            "solid. Numbers only, no verdict.",
         ),
         _query_method(
             "query_dependencies",
