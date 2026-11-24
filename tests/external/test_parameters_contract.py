@@ -26,6 +26,18 @@ PARAMETERS_SKILL = REPO_ROOT / "skills" / "parametric-patterns" / "SKILL.md"
 _LEXER_TOKEN = re.compile(r'^"([^"]+)"\s+COUNTCHARS;[^\n]*return (?:UNIT|CONSTANT);', re.MULTILINE)
 
 
+_ENVELOPE_SCHEMA = json.loads(
+    (
+        REPO_ROOT
+        / "src"
+        / "freecad_buddy"
+        / "contracts"
+        / "jsonschema"
+        / "result-envelope.schema.json"
+    ).read_text(encoding="utf-8")
+)
+
+
 def _spec(name: str):
     return {spec.name: spec for spec in tool_specs()}[name]
 
@@ -159,6 +171,7 @@ def test_Should_keep_the_status_as_the_code_When_the_error_is_not_a_project_refu
     code = envelope["detail"]["code"]
     assert code == envelope["status"]
     json.dumps(envelope)
+    jsonschema.validate(envelope, _ENVELOPE_SCHEMA)
 
 
 def test_Should_put_the_refusal_code_in_the_detail_When_a_coded_validation_error_is_raised():

@@ -1900,11 +1900,25 @@ _ANGLE_LIMIT_DEGREES = 360.0
 # ends ``SPEC_FAILED`` (probed: parameter ``Shape``).
 _PROJECT_READ_NAMES = frozenset({"Shape", "ElementMapVersion"})
 
-# Characters FreeCAD does not keep in a string property. NUL cuts the value in memory; the control
-# characters below and U+FFFE and U+FFFF read back as ``_`` after the document is saved and
-# reopened, which is how a snapshot restore reads it; a lone surrogate cannot be encoded. Tab,
-# line feed and carriage return are kept (probed on 1.1.4).
-_UNSTORABLE_TEXT = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ud800-\udfff\ufffe\uffff]")
+
+def _unstorable(character: str) -> bool:
+    """Whether FreeCAD fails to keep ``character`` in a string property.
+
+    NUL cuts the value in memory. The characters below read back as ``_`` after the document is
+    saved and reopened, which is how a snapshot restore reads it: the C0 controls except tab, line
+    feed and carriage return, U+007F to U+0084, U+0086 to U+009F, U+FDD0 to U+FDEF and the last two
+    code points of every plane. A lone surrogate cannot be encoded. Every other code point was
+    kept in a save and reopen of the whole range (probed on FreeCAD 1.1.4).
+    """
+    code = ord(character)
+    return (
+        (code < 0x20 and character not in "\t\n\r")
+        or 0x7F <= code <= 0x84
+        or 0x86 <= code <= 0x9F
+        or 0xD800 <= code <= 0xDFFF
+        or 0xFDD0 <= code <= 0xFDEF
+        or code & 0xFFFE == 0xFFFE
+    )
 
 
 class ParameterRefusal(CodedValidationError):
@@ -1917,12 +1931,13 @@ def _storable_text(text: str, what: str) -> str:
     :raises ParameterRefusal: ``parameters.invalid_string`` when it holds a character FreeCAD
         cuts or rewrites.
     """
-    if _UNSTORABLE_TEXT.search(text):
-        raise ParameterRefusal(
-            "parameters.invalid_string",
-            f"{what} holds a control character or a lone surrogate, which FreeCAD would cut "
-            "or change when it stores the string",
-        )
+    for index, character in enumerate(text):
+        if _unstorable(character):
+            raise ParameterRefusal(
+                "parameters.invalid_string",
+                f"{what} holds U+{ord(character):04X} at index {index}, a character FreeCAD "
+                "cuts or changes when it stores the string",
+            )
     return text
 
 
@@ -2067,14 +2082,14 @@ def _precheck_parameters(document: object, varset: object, specs: list[dict]) ->
             f"varset {varset!r} must start with a letter or underscore and hold only ASCII "
             "letters, digits and underscores"
         )
+    if varset in _EXPRESSION_RESERVED_NAMES:
+        raise ParameterRefusal(
+            "parameters.unit_symbol_name",
+            f"varset {varset!r} is a unit or constant to FreeCAD's expression parser, so no "
+            f"expression could name it; choose another name, for example {varset}_params",
+        )
     target = document.getObject(varset)
     if target is None:
-        if varset in _EXPRESSION_RESERVED_NAMES:
-            raise ParameterRefusal(
-                "parameters.unit_symbol_name",
-                f"varset {varset!r} is a unit or constant to FreeCAD's expression parser, so no "
-                f"expression could name it; choose another name, for example {varset}_params",
-            )
         return
     if target.TypeId != _VARSET_TYPE:
         raise ParameterRefusal(
@@ -2149,7 +2164,9 @@ def _write_parameter(target: object, spec: dict) -> str:
     return "updated"
 
 
-_COMPARED_TYPES = frozenset(PARAMETER_PROPERTY_TYPES.values()) | {"App::PropertyExpressionEngine"}
+# Property types whose repr carries a memory address or an object handle, so two readings of the
+# same value differ and a snapshot restore would never compare equal.
+_UNSTABLE_REPR_TYPES = ("App::PropertyPythonObject", "App::PropertyLink", "App::PropertyXLink")
 
 
 def _varset_state(varset: str) -> Callable[[object], object]:
@@ -2168,9 +2185,10 @@ def _varset_state(varset: str) -> Callable[[object], object]:
         for prop in sorted(target.PropertiesList):
             type_id = target.getTypeIdOfProperty(prop)
             try:
-                # A Python-object or link property has no stable repr (it carries an address)
-                # and this tool never writes one, so only its presence and type are compared.
-                value = repr(getattr(target, prop)) if type_id in _COMPARED_TYPES else "<skipped>"
+                # Such a property has no stable repr and this tool never writes one, so only
+                # its presence and type are compared.
+                unstable = type_id.startswith(_UNSTABLE_REPR_TYPES)
+                value = "<skipped>" if unstable else repr(getattr(target, prop))
             except Exception:  # noqa: BLE001 - an unreadable value still differs from a readable one
                 value = "<unreadable>"
             state[prop] = (
@@ -2199,8 +2217,8 @@ def _unchanged_envelope(varset: str, names: list[str]) -> ResultEnvelope:
         "status": "OK",
         "detail": None,
         "structured_content": content,
-        "text": f"{varset}: {len(names)} parameter(s) already hold the values; "
-        "no undo step recorded.",
+        "text": f"{varset}: {len(names)} parameter(s) already hold the values; no undo "
+        "step recorded, so document_undo would revert an earlier step.",
     }
 
 
@@ -2260,7 +2278,10 @@ def feature_parameters_define(
         return [target.Name]
 
     def report(document: object) -> dict:
-        steps = 1 if outcome["added"] or outcome["updated"] else 0
+        # Undo is switched on inside the bracket when it can be; a document that stays at
+        # UndoMode 0 commits no step.
+        recorded = bool(outcome["added"] or outcome["updated"]) and bool(document.UndoMode)
+        steps = 1 if recorded else 0
         return {"varset": varset, **outcome, "undo_steps": steps}
 
     params = {"doc": doc, "varset": varset, "parameters": parameters, "confirm": confirm}

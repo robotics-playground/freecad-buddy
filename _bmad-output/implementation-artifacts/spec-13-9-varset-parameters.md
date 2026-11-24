@@ -78,6 +78,8 @@ Decision 32 (leader): the rollback proof also reads the VarSet back. `run_mutati
 
 ## Spec Change Log
 
+Round 2 review (patches to the red-team fixes): the unstorable-character set is the measured one (every code point saved and reopened on 1.1.4), the refusal names the code point and index; the VarSet name check applies to an existing VarSet too; `undo_steps` is 0 when the document stays at undo mode 0; the state probe skips only Python-object and link properties; a call that changes nothing needs no `confirm`.
+
 Red-team round (decision 34), deviations from the frozen text: (a) `unchanged` and `undo_steps` in the output, and a call that changes nothing opens no transaction and has no `mutation` block (FreeCAD records no undo step for a same-value string write, so the next `document_undo` reverted the step before the call); (b) group and description are set when a parameter is created only, a change on an existing one is refused as `parameters.metadata_immutable` (FreeCAD does not undo them); (c) `parameters.invalid_string` for NUL and other characters FreeCAD cuts or rewrites; (d) the VarSet name is checked like a parameter name on creation; (e) `Shape` and `ElementMapVersion` are reserved names (read by `post_verify` and the fingerprint from every object); (f) `rpc_dispatch` reads `code` from `CodedValidationError` only, as a non-empty string; (g) the state probe compares only the types this tool writes (a Python-object property has an address in its repr); (h) the unproven-rollback message names the property state only for a tool that has a probe.
 
 Review round 1 (deviations from the frozen text, approved scope unchanged): (a) a new refusal code `parameters.bound_by_expression` for an update of a property an expression binds, because the next recompute applies the expression over the written value (probed: 99 mm written, 20 mm read) and `updated` would then name a value that did not stick; (b) `length` must not be negative and `angle` must lie within +-360 deg, because both properties clamp silently (probed: -5 mm reads 0 mm, 720 deg reads 360 deg); (c) `parameters.reserved_name` also covers attributes of the VarSet object (a property named `TypeId` shadows it) and the `ObjectIdentifier` pseudo-property names (`_pla`, `_self`, ...); (d) a ReadOnly property update and a trailing newline in a name are refused before the bracket; (e) coded refusals are raised as `ParameterRefusal` and `rpc_dispatch` reads `code`, so a refusal is an exception like every other tool's and the preview path sees it; (f) the call is refused when the built-in probe read nothing.
@@ -128,6 +130,25 @@ Red-team round (triage-13-9-r2.md, decision 34):
 | RT6 | red team | Parameter `Shape` ends SPEC_FAILED | medium | patch: `Shape`, `ElementMapVersion` reserved (read with getattr from every object in `transaction`, `fingerprint`, `tnp_guard`); test |
 | RT7 | red team | Python-object property: correct restore reads as unproven | low | patch: only the types the tool writes are compared; test with a `PropertyPythonObject` |
 | RT8 | red team | Unproven message names property state for every tool | low | patch: only when a probe is given; two tests |
+
+Round 2 lenses: Blind Hunter a01f9257f02b8c76a (opus, high), Edge Case Hunter aae529cfbf3db840a (opus, high), Verification Gap a83adadd230e8d5f7 (sonnet, medium) on feac4bfd..03b4fbf7.
+
+| # | Lens | Finding | Verdict | Route and evidence |
+|---|------|---------|---------|--------------------|
+| R2-1 | BH, EC | Design output schema still requires `mutation`, lacks `unchanged` and `undo_steps`; stale "change only when given" clause | medium | patch: schema and prose |
+| R2-2 | BH, EC | `undo_steps` inferred, wrong at undo mode 0 | medium | patch: needs `document.UndoMode`; test |
+| R2-3 | BH | RT2 undo test passes even if group and description were not undone | medium | patch: test adds a property to an existing VarSet and undoes it |
+| R2-4 | BH | RT4 test lacks envelope-schema validation and `script_exec` | low | patch: schema validation added; `script_exec` not driven (needs the exec host), the raising handler stands for it |
+| R2-5 | BH | State-probe skip wider than its reason | medium | patch: skip only PythonObject and Link types |
+| R2-6 | BH | `_unchanged_envelope` copies the OK-envelope shape; text lacks the undo warning | low | patch: text names the undo effect; copy kept (the helper is private to two modules) |
+| R2-7 | BH, EC, VG | No-op skips the confirm gate and audit, undocumented, untested | medium | patch: documented, strict-posture test |
+| R2-8 | BH, VG | No-op tested for strings only; no preview or dispatch case | high | patch: all six types, dispatch, preview (no apply token) |
+| R2-9 | BH, EC | Round-trip tests cover `value` only; unstorable set not complete; temp dir leaked | high | patch: whole code-point range measured and tested, group and description round trip, refused characters pinned, cleanup |
+| R2-10 | BH | Registry run id unchanged after sha change | low | false: the run id is the date; `score_g2_infc.py` ran after the last `transaction.py` change |
+| R2-11 | BH | `invalid_string` message names no character | low | patch: code point and index |
+| R2-12 | BH | Unproven message does not say which comparison failed | low | reject: the proof reports one failure, the operator has the snapshot |
+| R2-13 | BH, EC | VarSet-name check only on creation | medium | patch: any VarSet name; test |
+| R2-14 | EC | Change between the no-change read and the bracket gives an empty transaction | low | reject: single-writer session; the result is still correct (`undo_steps` 0 with a `mutation` block) |
 
 ## Design Notes
 

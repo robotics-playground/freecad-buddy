@@ -5,6 +5,7 @@ back from the live VarSet, and analytic prism volumes; never read from the tool 
 """
 
 import os
+import shutil
 import tempfile
 from unittest import mock
 
@@ -12,7 +13,7 @@ import FreeCAD as App
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.hosts.tool_catalog import preview_op_table
-from freecad_buddy.usecases import features, preview, shim, transaction
+from freecad_buddy.usecases import confirm, features, preview, shim, transaction
 from freecad_buddy.usecases import fingerprint as fingerprint_module
 from infc.test_feature_tools import _FeatureFixture, _snapshot_leftovers, deg, mm
 
@@ -623,14 +624,31 @@ class UndoRecordTest(_ParametersFixture):
 
 
 class MetadataTest(_ParametersFixture):
-    def test_Should_restore_everything_When_the_creating_call_is_undone(self):
+    def test_Should_remove_only_the_new_property_When_a_call_added_one_to_an_existing_varset(
+        self,
+    ):
         # Arrange
         self.define([length("w", 3.0, group="Size", description="width")])
 
         # Act
-        self.registry.document_undo(doc=self.handle)
+        self.define([length("d", 4.0, group="Depth", description="depth")])
+        undone = self.registry.document_undo(doc=self.handle)
 
         # Assert
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertNotIn("d", self.varset().PropertiesList)
+        self.assertEqual(self.varset().getGroupOfProperty("w"), "Size")
+        self.assertEqual(self.varset().getDocumentationOfProperty("w"), "width")
+
+    def test_Should_remove_the_varset_with_its_metadata_When_the_creating_call_is_undone(self):
+        # Arrange
+        self.define([length("w", 3.0, group="Size", description="width")])
+
+        # Act
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
         self.assertIsNone(self.varset())
 
     def test_Should_refuse_with_the_metadata_code_When_a_group_or_description_would_change(self):
@@ -665,7 +683,8 @@ class MetadataTest(_ParametersFixture):
 class StringAndNameTest(_ParametersFixture):
     def test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character(self):
         # Arrange
-        characters = ["\x00", "\x01", "\x08", "\x0b", "\x1f", "\x7f", "￾", "￿", "\ud800"]
+        characters = ["\x00", "\x01", "\x08", "\x0b", "\x1f", "\x7f", "\x80", "\x84", "\x9f"]
+        characters += ["\ufdd0", "\ufffe", "\uffff", "\U0001fffe", "\U0010ffff", "\ud800"]
 
         for character in characters:
             for field in ("value", "group", "description"):
@@ -684,7 +703,9 @@ class StringAndNameTest(_ParametersFixture):
         # Arrange
         text = 'a\tb\nc\ré Ø 12 µm 漢 \U0001f600 "q" <&>'
         self.define([{"name": "note", "type": "string", "value": text}])
-        path = os.path.join(tempfile.mkdtemp(prefix="fcb_str_"), "round.FCStd")
+        directory = tempfile.mkdtemp(prefix="fcb_str_")
+        self.addCleanup(shutil.rmtree, directory, True)
+        path = os.path.join(directory, "round.FCStd")
         self.document().saveCopy(path)
 
         # Act
@@ -777,3 +798,159 @@ class StateProbeScopeTest(_ParametersFixture):
 
         # Assert
         self.assertNotIn("property state", message)
+
+
+class NoChangeTest(_ParametersFixture):
+    def _every_type(self):
+        return [
+            length("a_length", 3.5),
+            {"name": "an_angle", "type": "angle", "value": deg(37.5)},
+            {"name": "a_float", "type": "float", "value": 0.1},
+            {"name": "an_integer", "type": "integer", "value": 7},
+            {"name": "a_bool", "type": "bool", "value": True},
+            {"name": "a_string", "type": "string", "value": "rev A"},
+        ]
+
+    def test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat(self):
+        # Arrange
+        parameters = self._every_type()
+        self.define(parameters)
+        undo_before = self.document().UndoCount
+
+        for parameter in parameters:
+            with self.subTest(type=parameter["type"]):
+                # Act
+                envelope, minted = self.snapshots_minted_by(lambda: self.define([parameter]))
+
+                # Assert
+                content = envelope["structured_content"]
+                self.assertEqual(content["unchanged"], [parameter["name"]])
+                self.assertEqual((content["updated"], content["undo_steps"]), ([], 0))
+                self.assertEqual(minted, 0)
+                self.assertEqual(self.document().UndoCount, undo_before)
+
+    def test_Should_need_no_confirm_When_a_call_changes_nothing_under_the_strict_posture(self):
+        # Arrange
+        self.define([length("w", 3.0)])
+        confirm.set_auto_approve(False)
+
+        # Act
+        envelope = self.dispatch([length("w", 3.0)])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(envelope["structured_content"]["undo_steps"], 0)
+
+    def test_Should_issue_no_apply_token_When_a_no_change_call_is_previewed(self):
+        # Arrange
+        self.define([length("w", 3.0)])
+        operation = {
+            "tool": "feature_parameters_define",
+            "args": {"varset": "Params", "parameters": [length("w", 3.0)]},
+        }
+
+        # Act
+        envelope = preview.preview_dry_run(
+            self.registry,
+            preview_op_table(),
+            None,
+            doc=self.handle,
+            operation=operation,
+            render="off",
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIsNone(envelope["structured_content"]["preview_id"])
+
+    def test_Should_report_zero_undo_steps_When_the_document_stays_at_undo_mode_zero(self):
+        # Arrange
+        self.document().UndoMode = 0
+
+        # Act
+        with mock.patch.object(shim, "enable_undo", return_value=False):
+            envelope = self.define([length("w", 3.0)])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(envelope["structured_content"]["undo_steps"], 0)
+
+    def test_Should_refuse_When_an_existing_varset_is_named_like_a_unit(self):
+        # Arrange
+        self.document().addObject("App::VarSet", "mm")
+
+        # Act
+        envelope = self.dispatch([length("width", 1.0)], varset="mm")
+
+        # Assert
+        self.assertEqual(envelope["detail"]["code"], "parameters.unit_symbol_name")
+        self.assertNotIn("width", self.document().getObject("mm").PropertiesList)
+
+
+class StringRangeTest(_ParametersFixture):
+    def _round_trip(self, parameters):
+        self.define(parameters)
+        directory = tempfile.mkdtemp(prefix="fcb_range_")
+        self.addCleanup(shutil.rmtree, directory, True)
+        path = os.path.join(directory, "range.FCStd")
+        self.document().saveCopy(path)
+        return App.openDocument(path).getObject("Params")
+
+    def test_Should_keep_every_accepted_code_point_When_the_document_is_saved_and_reopened(self):
+        # Arrange
+        text = "".join(
+            chr(code) for code in range(1, 0x110000) if not features._unstorable(chr(code))
+        )
+
+        # Act
+        reopened = self._round_trip([{"name": "everything", "type": "string", "value": text}])
+
+        # Assert
+        self.assertEqual(len(reopened.everything), len(text))
+        self.assertTrue(reopened.everything == text)
+
+    def test_Should_read_a_refused_character_back_changed_When_it_is_stored_anyway(self):
+        # Arrange
+        # This pins the measurement behind the refusal: if FreeCAD starts keeping one of these,
+        # the character no longer needs to be refused.
+        samples = ["\x01", "\x7f", "\x80", "﷐", "￾", "\U0001ffff"]
+        document = self.document()
+        holder = document.addObject("App::VarSet", "Holder")
+        for index, character in enumerate(samples):
+            holder.addProperty("App::PropertyString", f"s{index}", "Parameters")
+            setattr(holder, f"s{index}", "a" + character + "b")
+        directory = tempfile.mkdtemp(prefix="fcb_changed_")
+        self.addCleanup(shutil.rmtree, directory, True)
+        path = os.path.join(directory, "changed.FCStd")
+
+        # Act
+        document.saveCopy(path)
+        reopened = App.openDocument(path).getObject("Holder")
+
+        # Assert
+        for index, character in enumerate(samples):
+            with self.subTest(character=repr(character)):
+                self.assertNotEqual(getattr(reopened, f"s{index}"), "a" + character + "b")
+
+    def test_Should_keep_group_and_description_When_they_hold_text_that_needs_escaping(self):
+        # Arrange
+        group = 'Size & "shape" <1>'
+        description = "width Ø µm 漢 \U0001f600\n2nd line"
+
+        # Act
+        reopened = self._round_trip([length("w", 3.0, group=group, description=description)])
+
+        # Assert
+        self.assertEqual(reopened.getGroupOfProperty("w"), group)
+        self.assertEqual(reopened.getDocumentationOfProperty("w"), description)
+
+    def test_Should_name_the_code_point_and_index_When_a_string_is_refused(self):
+        # Arrange
+        parameter = {"name": "note", "type": "string", "value": "ab\x00cd"}
+
+        # Act
+        envelope = self.dispatch([parameter])
+
+        # Assert
+        self.assertEqual(envelope["detail"]["code"], "parameters.invalid_string")
+        self.assertIn("U+0000 at index 2", envelope["detail"]["message"])
