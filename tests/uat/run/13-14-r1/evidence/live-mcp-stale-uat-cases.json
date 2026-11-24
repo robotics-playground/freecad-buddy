@@ -1,0 +1,97 @@
+[
+  {
+    "label": "TC-07-01 unknown fn expect_genus",
+    "checks": [
+      {
+        "fn": "expect_genus",
+        "expect": 0
+      }
+    ],
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: {'fn': 'expect_genus', 'expect': 0} is not valid under any of the given schemas"
+        }
+      ],
+      "isError": true
+    }
+  },
+  {
+    "label": "TC-09-10 non-object item",
+    "checks": [
+      "expect_volume"
+    ],
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: 'expect_volume' is not valid under any of the given schemas"
+        }
+      ],
+      "isError": true
+    }
+  },
+  {
+    "label": "TC-09-10 nested fn",
+    "checks": [
+      {
+        "fn": {
+          "a": {
+            "a": {
+              "a": {
+                "a": {
+                  "a": {
+                    "a": {
+                      "a": {
+                        "a": {
+                          "a": {
+                            "a": {}
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: {'fn': {'a': {'a': {'a': {'a': {'a': {'a': {'a': {'a': {'a': {'a': {}}}}}}}}}}}} is not valid under any of the given schemas"
+        }
+      ],
+      "isError": true
+    }
+  },
+  {
+    "label": "TC-09-10 nested tol",
+    "checks": [
+      {
+        "fn": "expect_volume",
+        "expect": 6000,
+        "tol": {
+          "rel": {
+            "deep": {
+              "deeper": 0.001
+            }
+          }
+        }
+      }
+    ],
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: {'fn': 'expect_volume', 'expect': 6000, 'tol': {'rel': {'deep': {'deeper': 0.001}}}} is not valid under any of the given schemas"
+        }
+      ],
+      "isError": true
+    }
+  }
+]
