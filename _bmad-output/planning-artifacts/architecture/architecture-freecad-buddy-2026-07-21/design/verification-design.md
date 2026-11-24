@@ -1,7 +1,7 @@
 ---
 title: 'Verification Subsystem Design — FreeCAD Buddy'
 status: final
-date: '2026-07-21'
+date: '2026-11-24'
 ad-refs:
   primary: [AD-5, AD-6, AD-7, AD-8, AD-9, AD-13]
   secondary: [AD-1, AD-11, AD-12, AD-17, AD-19, AD-20]
@@ -33,6 +33,10 @@ One wrapper — `run_mutation()` — is the only path any `sketch_*` / `feature_
 | R4 | Rollback success is measured by re-hash, never assumed. | Bug #6031: undo can fail to restore the pre-`openTransaction` boundary; property restore is best-effort and swallows exceptions. |
 | R5 | Never nest or leave transactions open. One transaction per tool call, opened and closed inside `run_mutation()`. | Opening a new transaction silently auto-commits a stray open one and wipes the redo stack; nesting is a #6031 trigger. |
 | R6 | A `saveCopy` snapshot is taken before every mutation and deleted only after commit or verified rollback. | Undo history is in-memory only, capped at 20 steps, and not trustworthy alone — the snapshot is the guaranteed restore path. |
+
+### 1.1.1 Observe-only bracket (`script_exec`) — AD-5 exception
+
+`script_exec` does not run through `run_mutation()`; it runs the observe-only bracket of AD-5 (mcp-tools-design.md §5 rule 4). R1 applies: the bridge opens the transaction itself, before the script runs. One transaction per call and a commit at the end also apply. The bracket recomputes after the script (unless the call sets `recompute: false`); this is the AD-5 step, not R2. R3 does not apply as written: FreeCAD's `openTransaction` sets an application-wide transaction, which also reaches other documents a script changes. R4 and R6 do not apply: for a call that finishes inside its time budget the bracket aborts nothing, proves no rollback and takes no `saveCopy` snapshot; a `TIMEOUT` follows AD-27. No post-verify and no TNP audit run. R5 holds only for the bridge transaction: a script that opens its own transaction is tolerated, not nested, and it splits the undo history (FreeCAD commits the active transaction when a new one opens).
 
 ### 1.2 Wrapper pseudocode
 

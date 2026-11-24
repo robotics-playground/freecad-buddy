@@ -1,7 +1,7 @@
 ---
 title: 'FreeCAD Buddy — Component Design'
 status: final
-date: '2026-07-21'
+date: '2026-11-24'
 ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-14, AD-15, AD-16, AD-17, AD-19, AD-20, AD-35]
 binds: ['../ARCHITECTURE-SPINE.md']
 ---
@@ -40,7 +40,7 @@ Module layout and type shapes are owned by **data-contracts-design.md** (§1); i
 | `sketches.py` | P2 | `sketch_*` typed mutations (geometry + constraints), 1-based solver-ID → `Constraints[id-1]` diagnostic mapping | contracts, shim, transaction |
 | `features.py` | P2 | `feature_*` typed mutations (pad/pocket/hole/dress-up…), intent-bearing generated `Name`s | contracts, shim, transaction |
 | `preview.py` | P2 | `preview_dry_run` on `copyObject` TempDoc (AD-10, AD-20): structured diff (Δvolume/area/bbox/COM, counts, validity, TNP pre-check); apply path re-runs op under AD-5 | contracts, shim, documents, transaction |
-| `script_exec.py` | P0 | Agent Python exec (AD-4): on by default, unregistered when off or unattended without opt-in, raw (AD-5 exception), audit-logged | contracts, shim |
+| `script_exec.py` | P0 | Agent Python exec (AD-4): on by default, unregistered when off or unattended without opt-in, observe-only AD-5 bracket (no rollback; TIMEOUT: AD-27), audit-logged | contracts, shim |
 
 Key entry points:
 
