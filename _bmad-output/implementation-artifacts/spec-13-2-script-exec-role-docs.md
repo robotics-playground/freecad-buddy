@@ -105,6 +105,8 @@ Implemented directly from this spec (documents only). `integration-mcp-freecad.m
 | edge | spec date mismatch | low | patch |
 | gap | docs ahead of code | low | rejected: plan order (13-13 after 13-2) fixed; docs describe target by decision |
 
+Round 2 (verifier F-1, F-2, red team RT-1 to RT-15, commit f38a027): all closed. Lenses r2: blind a514bb1be440bd744, edge ae7c7e212565e4c50, gap aa3b62d1f4c361223. Patched: `changed` wording (AD-6 invariants), undo-proof limit for property-only change, R3 not applicable, `document_undo` reason, audit after-line nulls and writer, stderr traceback, rule 4 sentence order, verification-design TIMEOUT scope. Deferred to 13-13 entry: bracket failure modes, closed document and `SystemExit`, `remember` of fingerprints, framing key after Visibility-only script. Rejected: security "defended" wording and boundary text (verifier wording; text pre-existing), trust diagram node, SPEC.md:120 detail (one-line constraint; AC 2 names sections, not that line), sample digests (target contract).
+
 ## Design Notes
 
 Token count of this spec exceeds 1600: one goal, many before/after lines the user must approve. Keep full.

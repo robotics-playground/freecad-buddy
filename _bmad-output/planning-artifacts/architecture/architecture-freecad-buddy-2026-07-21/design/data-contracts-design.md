@@ -68,7 +68,7 @@ class ErrorDetail(TypedDict, total=False):
     data: dict           # code-specific machine payload
 ```
 
-Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17). `INVALID_INPUT` means the call made no change, except for `script_exec`: it returns `INVALID_INPUT` with `code` `"exec.python_error"` when the agent script raised after it started. `data` then holds `exception` and `traceback`, and the partial changes stay in the document. `changed` lists the objects whose geometry changed (AD-6); a property-only change is not listed (AD-5).
+Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17). `INVALID_INPUT` means the call made no change, except for `script_exec`: it returns `INVALID_INPUT` with `code` `"exec.python_error"` when the agent script raised after it started. `data` then holds `exception` and `traceback`, and the partial changes stay in the document. `changed` lists the objects whose geometric invariants differ (AD-6); a property-only change is not listed (AD-5).
 
 ## 4. `ResultEnvelope` (`envelope.py`)
 

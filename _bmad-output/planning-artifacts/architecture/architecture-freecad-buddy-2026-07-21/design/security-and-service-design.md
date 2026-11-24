@@ -54,7 +54,7 @@ def exec_registered(caps: Capabilities) -> bool:
  "fingerprint_before": "<digest>", "fingerprint_after": "<digest>", "verify_verdict": "OK", "rollback": null}
 ```
 
-The adapter writes the `before` and `after` lines around the call, and the use case writes none. The `before` line is written before the bracket takes its fingerprint, so `fingerprint_before` is `null` there; the `after` line takes both fingerprints from the result. `verify_verdict` holds the envelope status. `actor` is the sink's configured actor: the record carries no client identity.
+The adapter (the MCP server, or the RPC listener in GUI mode) writes the `before` and `after` lines around the call, and the use case writes none. The `before` line is written before the bracket takes its fingerprint, so `fingerprint_before` is `null` there; the `after` line takes both fingerprints from the result, and they are `null` when the result carries none (a refusal before execution, a `TIMEOUT`). `verify_verdict` holds the envelope status. `actor` is the sink's configured actor: the record carries no client identity.
 
 Records reuse the AD-17 contracts-owned audit-record type. The log file is opened append-only (`"a"`, plus `O_APPEND` semantics); the bridge exposes no tool that reads, truncates, or rotates it. Location: operator-configurable — `FREECAD_BUDDY_AUDIT_LOG`, else (GUI host) the **Audit log file** preference, else the default. The GUI default is `<FreeCAD user app data>/freecad-buddy/audit.jsonl`, beside the default workdir `<FreeCAD user app data>/freecad-buddy/workdir`, so it does not depend on the working directory FreeCAD starts in. The headless hosts keep the cwd-relative `freecad-buddy-audit.jsonl` default.
 
