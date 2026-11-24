@@ -36,9 +36,10 @@ _BODY_TYPE = "PartDesign::Body"
 _ORIGIN_TYPE = "App::Origin"
 _LINK_TYPE = "App::Link"
 
-# The types whose ``Group`` only lists members. ``PartDesign::Boolean`` also has a ``Group``, but it
-# holds the operand Bodies the Boolean fuses, cuts or intersects.
-_GROUP_CONTAINER_TYPES = frozenset({_BODY_TYPE, "App::Part", "App::DocumentObjectGroup"})
+# Types that carry ``App::GroupExtension`` but whose ``Group`` is an operand list, not a member
+# list: a ``PartDesign::Boolean`` keeps the Bodies it fuses, cuts or intersects there (probed on
+# 1.1.4: ``hasExtension("App::GroupExtension")`` is true for it).
+_OPERAND_GROUP_TYPES = ("PartDesign::Boolean",)
 _FEATURE_BASE_TYPE = "PartDesign::FeatureBase"
 
 # FreeCAD rewrites any character outside this set when it names an object, so a name failing the
@@ -2356,7 +2357,7 @@ def _owned_by(owner: object) -> list[object]:
     if owner.TypeId == _BODY_TYPE:
         owned.extend(owner.Group)
     owned.extend(_origin_objects(owner))
-    if owner.TypeId == _LINK_TYPE and owner.ElementCount:
+    if owner.isDerivedFrom(_LINK_TYPE) and owner.ElementCount:
         # The GUI delete removes the elements of a link array with it (ViewProviderLink::onDelete).
         owned.extend(owner.ElementList)
     return owned
@@ -2370,12 +2371,24 @@ def _with_owned(document: object, names: set[str]) -> set[str]:
     return expanded
 
 
+def _is_member_container(obj: object) -> bool:
+    """Whether ``obj`` only lists members in ``Group``: a Body, Part, group or a subclass of one."""
+    return obj.hasExtension("App::GroupExtension") and not any(
+        obj.isDerivedFrom(type_id) for type_id in _OPERAND_GROUP_TYPES
+    )
+
+
 def _expression_names(obj: object, members: list[object]) -> bool:
-    """Whether an expression on ``obj`` names one of ``members``, by Name or as ``<<Label>>``."""
+    """Whether an expression on ``obj`` names one of ``members``, by Name or as ``<<Label>>``.
+
+    A Name counts at the start of an identifier path only, so ``VS.Pad2`` (a property of another
+    object) does not name the object ``Pad2``. A match that is not a real reference makes the
+    caller refuse, which is the safe side.
+    """
     for _path, expression in getattr(obj, "ExpressionEngine", None) or ():
         text = str(expression)
         for member in members:
-            by_name = rf"(?<![A-Za-z0-9_]){re.escape(member.Name)}(?![A-Za-z0-9_])"
+            by_name = rf"(?<![A-Za-z0-9_.#]){re.escape(member.Name)}(?![A-Za-z0-9_])"
             if re.search(by_name, text) or f"<<{member.Label}>>" in text:
                 return True
     return False
@@ -2398,7 +2411,7 @@ def _dependents(document: object, delete_set: set[str]) -> list[str]:
         held = _names(obj.OutList) & delete_set
         if not held:
             continue
-        only_members = obj.TypeId in _GROUP_CONTAINER_TYPES and held <= _names(obj.Group)
+        only_members = _is_member_container(obj) and held <= _names(obj.Group)
         if only_members and not _expression_names(obj, [document.getObject(n) for n in held]):
             continue
         found.append(obj.Name)
@@ -2452,8 +2465,8 @@ def _owning_body(document: object, obj: object) -> object | None:
 def _object_state(document: object) -> tuple:
     """Read the object set the shape fingerprint cannot see, for the rollback proof.
 
-    Per object: name, label, type, the names it depends on, and for a Body its ``Tip`` and
-    ``Group``. The dependency names matter: an object that FreeCAD restores without its
+    Per object: name, label, type, the names it depends on, for a Body its ``Tip`` and ``Group``,
+    and ``Visibility``. The dependency names matter: an object that FreeCAD restores without its
     expression dependency has the same name and label as before.
     """
     state = []
@@ -2463,7 +2476,14 @@ def _object_state(document: object) -> tuple:
             tip = obj.Tip.Name if obj.Tip is not None else None
             body_state = (tip, tuple(member.Name for member in obj.Group))
         state.append(
-            (obj.Name, obj.Label, obj.TypeId, tuple(sorted(_names(obj.OutList))), body_state)
+            (
+                obj.Name,
+                obj.Label,
+                obj.TypeId,
+                tuple(sorted(_names(obj.OutList))),
+                body_state,
+                getattr(obj, "Visibility", None),
+            )
         )
     return tuple(sorted(state))
 
@@ -2509,12 +2529,14 @@ def document_object_delete(
                 continue
             body = _owning_body(document, target)
             if body is not None and body.Name not in deleted:
-                shown_tip = body.Tip is not None and body.Tip.Name == name and target.Visibility
+                previous = getattr(target, "BaseFeature", None)
+                shown = target.Visibility
                 body.removeObject(target)
-                if shown_tip and body.Tip is not None:
+                if shown and previous is not None and previous.Name not in deleted:
                     # PartDesign ViewProvider::onDelete shows the previous feature when the
                     # deleted one was visible; Document.removeObject alone leaves the Body empty.
-                    body.Tip.Visibility = True
+                    previous.Visibility = True
+                    touched.append(previous.Name)
                 if body.Name not in touched:
                     touched.append(body.Name)
             document.removeObject(name)

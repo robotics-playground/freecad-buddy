@@ -1110,7 +1110,7 @@ def _object_edit_specs():
             "with with_dependents false the call is refused with INVALID_INPUT code "
             "delete.has_dependents naming them and nothing is deleted; with true they are deleted "
             "too and listed in dependents. A Body takes its Group, Origin and Origin features, a "
-            "link array its elements; deleting the last feature shows the new Tip. An "
+            "link array its elements; deleting a visible feature shows the previous one. An "
             "Origin or Origin feature named without its Body is refused (delete.origin_object). "
             "Result {deleted, dependents}. Previewable with preview_dry_run.",
         ),

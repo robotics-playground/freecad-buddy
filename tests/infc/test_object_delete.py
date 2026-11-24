@@ -343,7 +343,17 @@ class OperandAndBindingTest(_DeleteFixture):
 
 
 class VisibleTipAndLinkArrayTest(_DeleteFixture):
-    def test_Should_show_the_new_tip_and_undo_the_visibility_When_a_visible_tip_is_deleted(self):
+    def _array(self):
+        document = self.document()
+        box = document.addObject("Part::Box", "Box")
+        array = document.addObject("App::Link", "Arr")
+        array.setLink(box)
+        array.ShowElement = True
+        array.ElementCount = 3
+        document.recompute()
+        return [element.Name for element in array.ElementList]
+
+    def test_Should_show_the_previous_feature_When_a_visible_tip_is_deleted(self):
         # Arrange
         self.obj("Pad1").Visibility = False
         self.obj("Pad2").Visibility = True
@@ -354,9 +364,36 @@ class VisibleTipAndLinkArrayTest(_DeleteFixture):
         # Assert
         self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
         self.assertIs(self.obj("Pad1").Visibility, True)
+        self.assertIn("Pad1", envelope["structured_content"]["mutation"]["touched"])
+
+    def test_Should_hide_the_previous_feature_again_When_a_visible_tip_delete_is_undone(self):
+        # Arrange
+        self.obj("Pad1").Visibility = False
+        self.obj("Pad2").Visibility = True
+        self.delete(["Pad2"])
+
+        # Act
         self.registry.document_undo(doc=self.handle)
+
+        # Assert
         self.assertIs(self.obj("Pad1").Visibility, False)
         self.assertIs(self.obj("Pad2").Visibility, True)
+
+    def test_Should_restore_the_visibility_and_prove_it_When_a_visible_tip_delete_is_aborted(self):
+        # Arrange
+        self.obj("Pad1").Visibility = False
+        self.obj("Pad2").Visibility = True
+        failure = RuntimeError("planted failure after every removal")
+
+        # Act
+        with mock.patch.object(transaction, "post_verify", side_effect=failure):
+            envelope = self.delete(["Pad2"])
+
+        # Assert
+        block = envelope["structured_content"]["mutation"]
+        self.assertEqual(block["rollback_proven"], "rolled_back_verified")
+        self.assertIs(self.obj("Pad1").Visibility, False)
+        self.assertIsNotNone(self.obj("Pad2"))
 
     def test_Should_leave_the_visible_feature_alone_When_a_hidden_tip_is_deleted(self):
         # Arrange
@@ -369,17 +406,9 @@ class VisibleTipAndLinkArrayTest(_DeleteFixture):
         # Assert
         self.assertIs(self.obj("Pad1").Visibility, False)
 
-    def test_Should_delete_the_elements_with_the_array_and_restore_them_When_undone(self):
+    def test_Should_delete_the_elements_with_the_array_When_a_link_array_is_deleted(self):
         # Arrange
-        document = self.document()
-        box = document.addObject("Part::Box", "Box")
-        array = document.addObject("App::Link", "Arr")
-        array.setLink(box)
-        array.ShowElement = True
-        array.ElementCount = 3
-        document.recompute()
-        elements = [element.Name for element in array.ElementList]
-        self.assertEqual(len(elements), 3)
+        elements = self._array()
 
         # Act
         envelope = self.delete(["Arr"])
@@ -389,8 +418,89 @@ class VisibleTipAndLinkArrayTest(_DeleteFixture):
         self.assertEqual(envelope["structured_content"]["deleted"], ["Arr", *elements])
         for name in elements:
             self.assertIsNone(self.obj(name))
+
+    def test_Should_restore_the_elements_When_a_link_array_delete_is_undone(self):
+        # Arrange
+        elements = self._array()
+        self.delete(["Arr"])
+
+        # Act
         self.registry.document_undo(doc=self.handle)
+
+        # Assert
         self.assertEqual([e.Name for e in self.obj("Arr").ElementList], elements)
+
+    def test_Should_delete_the_elements_When_the_array_is_a_python_link(self):
+        # Arrange
+        document = self.document()
+        box = document.addObject("Part::Box", "Box")
+        array = document.addObject("App::LinkPython", "PyArr")
+        array.setLink(box)
+        array.ShowElement = True
+        array.ElementCount = 2
+        document.recompute()
+        elements = [element.Name for element in array.ElementList]
+
+        # Act
+        envelope = self.delete(["PyArr"])
+
+        # Assert
+        self.assertEqual(envelope["structured_content"]["deleted"], ["PyArr", *elements])
+        for name in elements:
+            self.assertIsNone(self.obj(name))
+
+
+class ContainerTest(_DeleteFixture):
+    def _box_in(self, type_id):
+        document = self.document()
+        container = document.addObject(type_id, "Holder")
+        box = document.addObject("Part::Box", "Loose")
+        container.addObject(box)
+        document.recompute()
+        return container
+
+    def test_Should_delete_only_the_member_When_the_holder_is_a_member_container(self):
+        # Arrange
+        holders = ["App::Part", "App::DocumentObjectGroup", "App::DocumentObjectGroupPython"]
+        outcomes = []
+
+        # Act
+        for type_id in holders:
+            container = self._box_in(type_id)
+            envelope = self.delete(["Loose"])
+            outcomes.append((type_id, envelope["status"], container.Name in self.names()))
+            self.document().removeObject("Holder")
+
+        # Assert
+        self.assertEqual(outcomes, [(type_id, "OK", True) for type_id in holders])
+
+    def test_Should_refuse_naming_the_body_When_an_expression_names_a_member_by_label(self):
+        # Arrange
+        self.obj("Pad2").Label = "Cap"
+        self.body.setExpression("Placement.Base.z", "<<Cap>>.Length")
+        self.document().recompute()
+
+        # Act
+        with self.assertRaises(ValidationError) as caught:
+            self.delete(["Pad2"])
+
+        # Assert
+        self.assertEqual(caught.exception.code, HAS_DEPENDENTS)
+        self.assertIn("Body", str(caught.exception))
+
+    def test_Should_delete_only_the_member_When_an_expression_names_a_property_of_that_name(self):
+        # Arrange
+        self.obj("VS").addProperty("App::PropertyLength", "Pad2", "Parameters")
+        self.body.setExpression("Placement.Base.z", "VS.Pad2")
+        self.document().recompute()
+
+        # Act
+        envelope = self.delete(["Pad2"])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIsNotNone(self.obj("Body"))
+        self.assertEqual(envelope["structured_content"]["dependents"], [])
 
 
 class TnpExemptionTest(_DeleteFixture):

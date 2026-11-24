@@ -114,3 +114,25 @@ Lenses: Blind Hunter a7e01f6f1eb288383 (opus, high), Edge Case Hunter aab97bc4cd
 - `uv run --extra dev ruff check`, `ruff format --check <changed files>`, `check_imports`, `gen_schemas --check`, `check_provenance` -- expected: pass
 - `uv run --extra dev pytest tests/external -q` -- expected: pass
 - freecadcmd `tests/run_tests.py` with temp cfg and `FREECAD_USER_HOME` -- expected: pass
+
+### Round 2 (red team RT-1..RT-3, verifier F1/F2, three lenses on 4ee8c26b..b83276a0)
+
+Lenses: Blind Hunter a74611b22f08d2fa4 (opus, high), Edge Case Hunter a78f48fd5e37d3364 (opus, high), Verification Gap a3ac4f00fa17466bc (sonnet, medium).
+
+| Source | Finding | Verdict | Route and evidence |
+| --- | --- | --- | --- |
+| RT-1 | `PartDesign::Boolean` operand Body treated as a container member | high | patch: `_is_member_container` excludes `PartDesign::Boolean`; tests refuse and volume after `with_dependents` |
+| RT-2 | container expression on its own member | medium | patch: `_expression_names` makes the container a dependent; tests |
+| F1 | new Tip hidden after a visible Tip delete | medium | patch: visible deleted feature shows its `BaseFeature` (GUI rule), `touched` lists it, undo and abort tests |
+| RT-3 | `App::Link` array elements orphaned | low | patch: elements deleted with the array (GUI rule), `App::LinkPython` too; tests |
+| F2 | preview argument text | low | patch |
+| Blind, Edge | exact TypeId list refuses members of Assembly, FemAnalysis, GroupPython | high | patch: `hasExtension("App::GroupExtension")` minus Boolean; container test for Part, group, group python (mutation fails it) |
+| Blind, Edge | `App::LinkPython` missed | medium | patch: `isDerivedFrom`; test |
+| Blind, Edge | expression regex matched `VS.Pad2` | medium | patch: Name only at the start of a path; test |
+| Gap | `<<Label>>` branch untested | medium | patch: test |
+| Blind | visibility not in rollback probe or `touched` | low | patch: `_object_state` reads `Visibility`; abort test |
+| Blind, Edge | description and design text inexact about Tip | low | patch: text follows the BaseFeature rule |
+| Blind | one element of a live array named alone: GUI refuses, tool lists the array as dependent | low | rejected: consistent with the dependents rule; `with_dependents` is an explicit opt-in |
+| Blind | two tests with Act in Assert | low | patch: split |
+| Gap | Tip None path, plain link `ElementCount` 0, Boolean preview | low | rejected: Tip None is asserted by the closure test; the others add no observable behaviour |
+| Gap | GUI visibility | maybe-false | UAT (verifier) |
