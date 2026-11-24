@@ -1,7 +1,7 @@
 ---
 title: 'FreeCAD Buddy — Project Structure Design'
 status: final
-date: '2026-07-21'
+date: '2026-11-24'
 ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-6, AD-9, AD-11, AD-12, AD-13, AD-15, AD-16, AD-17, AD-19, AD-20]
 binds-to: ../ARCHITECTURE-SPINE.md
 ---
@@ -59,7 +59,7 @@ freecad-buddy/
 │       │   ├── screenshot.py         # constructed-scene render; _MAX_DIM = 1920 (AD-10)
 │       │   ├── capabilities.py       # runtime capability map surfaced by query_capabilities
 │       │   ├── confirm.py            # preview_id confirm-token issue/validate (AD-10)
-│       │   ├── script_exec.py        # agent Python exec, on by default, raw, audit-logged (AD-4)
+│       │   ├── script_exec.py        # agent Python exec, on by default, observe-only AD-5 bracket, audit-logged (AD-4)
 │       │   ├── stats.py              # Wilson/McNemar rate statistics (AD-14); stdlib-only so the
 │       │   │                         #   in-FreeCAD G2 scorer can import it too
 │       │   └── verify.py             # verify_shape, verify_sketch, in-FreeCAD leg of verify_export_* (AD-8, AD-9)

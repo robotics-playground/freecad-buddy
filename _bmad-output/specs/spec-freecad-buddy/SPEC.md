@@ -117,7 +117,7 @@ depending on which model is talking to it.
 
 ## Constraints
 
-- The architecture spine's ADs bind all implementation (adopted companion); load-bearing here: no AI workflow in shipped code (AD-35), typed-tools-only mutation (AD-4), uniform mutation protocol with hash-proven rollback (AD-5/6), TNP audit (AD-7), `FullyConstrained` as the sketch pass signal (AD-8), Validation Design Gate ordering (AD-19).
+- The architecture spine's ADs bind all implementation (adopted companion); load-bearing here: no AI workflow in shipped code (AD-35), typed tools first, `script_exec` for listed gaps (AD-4), uniform mutation protocol with hash-proven rollback for typed tools and an observe-only bracket for `script_exec` (AD-5/6), TNP audit (AD-7), `FullyConstrained` as the sketch pass signal (AD-8), Validation Design Gate ordering (AD-19).
 - The agent reaches the tools only through MCP. No in-process path into the use-case layer exists, for any caller.
 - Pass/fail is computed by deterministic harness code or an independent grader — the producing agent's self-assessment is never a result (AD-13).
 - A phase may not start until the previous phase's gate is fully green; phase implementation may not start until its entry gate lands (AD-19).

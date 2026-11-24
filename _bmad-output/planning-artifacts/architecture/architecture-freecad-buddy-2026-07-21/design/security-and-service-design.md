@@ -1,8 +1,8 @@
 ---
 title: 'Security Design'
 status: final
-date: '2026-07-21'
-ad-refs: ['AD-4', 'AD-3', 'AD-35']
+date: '2026-11-24'
+ad-refs: ['AD-4', 'AD-3', 'AD-5', 'AD-17', 'AD-35']
 sources:
   - 'ARCHITECTURE-SPINE.md'
   - '_bmad-output/planning-artifacts/research/technical-python-execution-sandbox-policy-research-2026-07-20.md'
@@ -46,10 +46,15 @@ def exec_registered(caps: Capabilities) -> bool:
 - A mutating call refused before the bracket gets its pair from the adapter after dispatch.
 
 ```json
-{"ts": "...", "session": "<id>", "event": "exec_call", "tool": "script_exec",
- "code_sha256": "...", "code": "<full source>", "caller": "<mcp client id>"}
-{"ts": "...", "session": "<id>", "event": "exec_result", "status": "OK", "detail": {...}}
+{"schema": "fcb.audit-record/1", "ts": "...", "actor": "operator", "event": "exec", "tool": "script_exec",
+ "doc": {"handle": "<doc handle>"}, "params_digest": "<sha256 hex>", "code": "<full source>",
+ "fingerprint_before": null}
+{"schema": "fcb.audit-record/1", "ts": "...", "actor": "operator", "event": "exec", "tool": "script_exec",
+ "doc": {"handle": "<doc handle>"}, "params_digest": "<same digest>", "code": "<full source>",
+ "fingerprint_before": "<digest>", "fingerprint_after": "<digest>", "verify_verdict": "OK", "rollback": null}
 ```
+
+The `before` line is written ahead of execution, so it holds no fingerprint. `verify_verdict` holds the envelope status. `actor` is the sink's configured actor: the record carries no client identity.
 
 Records reuse the AD-17 contracts-owned audit-record type. The log file is opened append-only (`"a"`, plus `O_APPEND` semantics); the bridge exposes no tool that reads, truncates, or rotates it. Location: operator-configurable — `FREECAD_BUDDY_AUDIT_LOG`, else (GUI host) the **Audit log file** preference, else the default. The GUI default is `<FreeCAD user app data>/freecad-buddy/audit.jsonl`, beside the default workdir `<FreeCAD user app data>/freecad-buddy/workdir`, so it does not depend on the working directory FreeCAD starts in. The headless hosts keep the cwd-relative `freecad-buddy-audit.jsonl` default.
 
@@ -81,7 +86,7 @@ On the stdio transport, stdout **is** the MCP protocol; one stray `print()` corr
 | --- | --- | --- | --- |
 | 0 (bridge/harness) | None — operator + our own CI scripts | `script_exec` on by default, unregistered when off (AD-4); localhost bind + token (AD-3); audit log (AD-17) | Malicious local processes with the operator's own privileges; malicious operator |
 | 1 (read-only assistant) | LLM output (hallucination, prompt injection) | Zero mutation tools registered (AD-4); read-only `query_*` only; no exec in tool list | Model reading data it's shown; local-process threats as above |
-| 2 (copilot) | LLM-driven mutation requests | Typed tools first, `script_exec` only where none covers the operation (AD-4); AD-5 transaction + verify + proven rollback per mutation; audit log with one `approval` line per mutation; AD-10 auto-approve on by default, the **Auto-approve mutations** preference off or `FREECAD_BUDDY_AUTO_APPROVE=0` as the opt-in confirm gate; a sent `preview_id` is checked in every posture; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because every typed mutation is verified, rolled back on failure and audited, every `script_exec` call is audited with its source, and an operator who wants per-call consent clears the preference or sets `=0` |
+| 2 (copilot) | LLM-driven mutation requests | Typed tools first, `script_exec` only where none covers the operation (AD-4); AD-5 transaction + verify + proven rollback per mutation; `script_exec` runs the observe-only bracket (fingerprint, `changed`, no rollback); audit log with one `approval` line per mutation; AD-10 auto-approve on by default, the **Auto-approve mutations** preference off or `FREECAD_BUDDY_AUTO_APPROVE=0` as the opt-in confirm gate; a sent `preview_id` is checked in every posture; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because every typed mutation is verified, rolled back on failure and audited, every `script_exec` call is audited with its source and returns its changes in `changed`, and an operator who wants per-call consent clears the preference or sets `=0` |
 | Unattended | Agent requests = fully untrusted input, even over typed tools | Everything above; every reported field is a re-executed check (AD-17); `script_exec` off unless the operator sets `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`; the audit log makes the run reconstructable after the fact | This repository ships no process boundary — the operator's environment provides isolation, and a determined attacker on that host is out of scope |
 
 Threats defended across phases: LLM free-form exec as mutation path (AD-4); silent bad-part success (AD-17 re-executed checks); stdout protocol corruption (AD-3); rogue local RPC caller (token); An unattended run adds: resource exhaustion, exfiltration/egress, host FS tamper, and crash cascade — all bounded by the operator's environment rather than by anything this repository ships.

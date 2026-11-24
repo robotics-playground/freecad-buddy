@@ -1,8 +1,8 @@
 ---
 title: 'Data Contracts Design — contracts/ package'
 status: final
-date: '2026-07-21'
-ad-refs: [AD-1, AD-2, AD-3, AD-5, AD-6, AD-7, AD-8, AD-10, AD-12, AD-13, AD-14, AD-17, AD-20]
+date: '2026-11-24'
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-5, AD-6, AD-7, AD-8, AD-10, AD-12, AD-13, AD-14, AD-17, AD-20]
 sources:
   - ARCHITECTURE-SPINE.md
   - _bmad-output/specs/spec-freecad-buddy/phase-gates.md
@@ -60,14 +60,15 @@ JobState = Literal["QUEUED", "RUNNING"] | TerminalStatus   # non-terminal states
 
 class ErrorDetail(TypedDict, total=False):
     code: str            # machine code, dotted namespace: "recompute.failed_objects",
-                         # "tnp.unsupported", "sketch.conflicting", "rpc.handshake_mismatch"
+                         # "tnp.unsupported", "sketch.conflicting", "rpc.handshake_mismatch",
+                         # "exec.python_error"
     message: str         # human-readable explanation (spine Errors convention) — required
     objects: list[str]   # affected FreeCAD immutable Names
     constraint_ids: list[dict]  # {"solver_id": int(1-based), "name": str}  ← Constraints[id-1] map
     data: dict           # code-specific machine payload
 ```
 
-Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17).
+Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17). `INVALID_INPUT` means no execution, except for `script_exec`: it returns `INVALID_INPUT` with `code` `"exec.python_error"` when the agent script raised after it started. `data` then holds `exception` and `traceback`, and the partial changes stay in the document and in `changed` (AD-5).
 
 ## 4. `ResultEnvelope` (`envelope.py`)
 

@@ -1713,6 +1713,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
   summary: The `script_exec` audit record shape in `security-and-service-design.md` §1 (`exec_call`/`exec_result`, `code_sha256`, `caller`) differs from the code (`event:"exec"`, `params_digest`, `code`, no caller identity).
   evidence: Pre-existing design drift since `72eb277`; with `script_exec` on for any MCP client, the missing caller identity matters more. Decide: correct the design, or add the fields (review finding 16).
+  resolution: resolved by spec-13-2-script-exec-role-docs: `security-and-service-design.md` §1 now shows the code's field names (`event:"exec"`, `params_digest`, `code`, `doc` handle, `actor` operator); the digests on the `after` line follow the Story 13-13 bracket. Caller identity stays open in the entry whose summary starts `Audit records carry`.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-12-1-script-exec-official-tool.md`
   summary: `CLAUDE.md`/`AGENTS.md` section 16 says headless automation is unaffected, but the headless `tools/list` now includes `script_exec`, and no CI job, `run_mcp_*` sweep or bmad-loop run sets `FREECAD_BUDDY_UNATTENDED=1`.
@@ -2128,3 +2129,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `tests/uat/run/2026-11-18-01/bugs.md` B-18; `report.md` row TC-02-13.
   blocker: spec D2: no harness change inside the UAT run.
   unblock: install an emoji font in the image (`tests/close-loop/docker/`); rebuild; re-run TC-02-13.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-2-script-exec-role-docs.md`
+  summary: Define the observe-only `script_exec` bracket for four cases the amended AD-5 leaves open: the bridge transaction after a `TIMEOUT` late return, a script that aborts, undoes or commits its own transaction, an empty transaction that FreeCAD drops (so one `document_undo` reverts an earlier step), and the transaction name for a blank, comment or very long first code line.
+  evidence: Review of Story 13-2 (edge-case and blind lenses). AD-27 aborts the in-flight AD-5 transaction with rollback proved; AD-5 now says `script_exec` never rolls back after it returns; the two meet only at TIMEOUT. Settle in the Story 13-13 spec checkpoint with a measured FreeCAD run for each case.

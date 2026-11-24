@@ -1,8 +1,8 @@
 ---
 title: MCP Tool Catalog Design — Phases 0–2
 status: final
-date: '2026-07-21'
-ad-refs: [AD-1, AD-2, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-17, AD-20]
+date: '2026-11-24'
+ad-refs: [AD-1, AD-2, AD-4, AD-5, AD-6, AD-7, AD-8, AD-9, AD-10, AD-11, AD-12, AD-13, AD-17, AD-20, AD-27]
 sources:
   - ../ARCHITECTURE-SPINE.md
   - ../../../../specs/spec-freecad-buddy/phase-gates.md
@@ -15,7 +15,7 @@ sources:
 
 # MCP Tool Catalog Design — Phases 0–2
 
-Implementation-ready catalog of the FreeCAD Buddy MCP tool surface for Phases 0–2. Tool names use the wire convention: underscore + namespace prefix (`query_`, `document_`, `export_`, `verify_`, `sketch_`, `feature_`, `preview_`, `debug_`); dot form is docs shorthand only (spine Consistency Conventions). All tool implementations live in `usecases/`, schemas and envelopes in `contracts/` (AD-1); identical implementations serve GUI (via RPC listener) and headless hosts (AD-2).
+Implementation-ready catalog of the FreeCAD Buddy MCP tool surface for Phases 0–2. Tool names use the wire convention: underscore + namespace prefix (`query_`, `document_`, `export_`, `verify_`, `sketch_`, `feature_`, `preview_`; `script_exec` is the one tool with no prefix); dot form is docs shorthand only (spine Consistency Conventions). All tool implementations live in `usecases/`, schemas and envelopes in `contracts/` (AD-1); identical implementations serve GUI (via RPC listener) and headless hosts (AD-2).
 
 ## 1. Cross-Cutting Contracts
 
@@ -57,7 +57,7 @@ A caller-supplied bare `Face6` is resolved to a mapped name at call time and nev
 
 ### 1.3 Result envelope & error surface (AD-17)
 
-Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). A tool whose payload is a long text body (today only `query_tree_summary`) puts it in the optional `text_blocks: list[str]` and is registered with `RpcMethod.structured_output=False`. Such a tool declares no `outputSchema` and its result is one plain `TextContent`: a `<STATUS>: <text>` line (`detail.message` in place of `text` when the status is not OK), a `framing: <fits|does not fit|unknown>, ratio <r>, <checked>[, <stale_reason>]` line when the envelope has `framing`, then each `text_blocks` entry. There is no JSON block and no `structuredContent`: Claude Code shows the agent only `structuredContent` when a result carries it and drops every content block, so the tree would never reach the agent. No namespace defines a variant envelope.
+Every tool returns the contracts-owned `ResultEnvelope` as MCP `structuredContent` validated by its per-tool `outputSchema`, plus a human-readable `text` summary in `content` (spine convention "Tool results"). The `text` field is a per-tool one-line summary of `structured_content` — counts, headline values, and error flags (e.g. `"201 objects, 4 shown."`, `"Body 'pcb': volume 8642.85 mm³, 15 faces."`) — never a JSON re-dump; a tool without a bespoke summary falls back to a compact `key: value` flattening (`summary_text`). A string longer than 80 characters, or holding a line break, renders as `key: <N chars>`, because `structured_content` already carries it. A tool whose payload is a long text body (today only `query_tree_summary`) puts it in the optional `text_blocks: list[str]` and is registered with `RpcMethod.structured_output=False`. Such a tool declares no `outputSchema` and its result is one plain `TextContent`: a `<STATUS>: <text>` line (`detail.message` in place of `text` when the status is not OK), a `framing: <fits|does not fit|unknown>, ratio <r>, <checked>[, <stale_reason>]` line when the envelope has `framing`, then each `text_blocks` entry. There is no JSON block and no `structuredContent`: Claude Code shows the agent only `structuredContent` when a result carries it and drops every content block, so the tree would never reach the agent. No namespace defines a variant envelope.
 
 The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contracts-design.md §4) — this catalog consumes it, never redefines it:
 
@@ -83,7 +83,7 @@ The envelope shape is contracts-owned (`fcb.result-envelope/1`, see data-contrac
 
 ### 1.4 Mutation protocol fields (AD-5, AD-6, AD-7)
 
-Every mutation tool (column **Mut** = yes below) executes the AD-5 bracket (geohash snapshot → `openTransaction` → typed op → `recompute()` → post-verify → commit; on failure abort + re-hash-proven rollback) and returns a common `mutation` block inside `result`:
+Every mutation tool (column **Mut** = yes below) except `script_exec` (observe-only bracket, §5 rule 4) executes the AD-5 bracket (geohash snapshot → `openTransaction` → typed op → `recompute()` → post-verify → commit; on failure abort + re-hash-proven rollback) and returns a common `mutation` block inside `result`:
 
 ```json
 { "mutation": {
@@ -193,11 +193,11 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | --- | --- | --- | --- |
 | `preview_dry_run` | 2 | Execute proposed op on `FCB_TMP_` copy-doc; return structured diff + optional render; no live-doc mutation | no |
 
-### `debug_` — operator-only (AD-4; never an AI surface)
+### Escape route — `script_exec` (AD-4)
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
-| `script_exec` | 0 | Agent Python exec inside FreeCAD for operations no typed tool covers; raw, outside the AD-5 bracket; see §5 | yes |
+| `script_exec` | 0 | Agent Python exec inside FreeCAD for operations no typed tool covers (listed gaps); observe-only AD-5 bracket (automatic transaction, fingerprint, `changed`, `new_errors`, no rollback); see §5 | yes |
 
 ### Counts & G0.2
 
@@ -213,8 +213,8 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `feature_` | — | — | 11 | — | 11 | 11 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** | | | | | **50** | **45** |
-| `debug_` (operator-only) | 1 | — | — | — | 1 | 1 |
+| **AI-visible total** (typed tools) | | | | | **50** | **45** |
+| `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
@@ -564,10 +564,10 @@ Typical agent patterns: *isolate* (`include: [Body]`), *context-ghost* (`styles:
 1. **On by default.** Registered unless the operator sets `FREECAD_BUDDY_SCRIPT_EXEC` to a value other than `1`, or — GUI host, variable unset — clears the **Allow script_exec** preference (`ScriptExec`). When off it is *unregistered*: absent from `tools/list`, not present-and-refusing.
 2. **Unattended runs.** With `FREECAD_BUDDY_UNATTENDED=1` it is unregistered unless `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. Both variables are read once at start, env only; exactly `"1"` is on.
 3. **Typed tools first.** Excluded from `preview_dry_run.operation.tool`, from the confirm flow, from the read-only assistant profile, and from every benchmark and gate toolset. G1.6/registry introspection must show zero mutation tools *and* no `script_exec` in the read-only profile. `FREECAD_BUDDY_AUTO_APPROVE` does not gate it; an operator who wants per-call control turns `ScriptExec` off.
-4. **Raw.** No AD-5 bracket, fingerprint, or rollback (AD-5 exception). `mutating=True`, so a `TIMEOUT` marks the document suspect and the call writes an audit pair.
+4. **Observe-only bracket (AD-5).** The bridge fingerprints, opens its transaction before the script runs, recomputes unless `recompute` is false, commits, fingerprints again, and lists `changed` and `new_errors`. No post-verify, TNP audit or rollback: the changes stay. Statuses: `OK`; `RECOMPUTE_ERROR` when new objects are in error (the message names them); `INVALID_INPUT` with `detail.code` `exec.python_error` (`data.exception`, `data.traceback`) when the script raised, partial changes kept and listed in `changed` (the one `INVALID_INPUT` where the code ran; `detail.code` tells it from a refusal before execution); `TIMEOUT` as AD-27. A script that opens its own transaction splits the undo history, so one `document_undo` then reverts only the last part. With `recompute` false no recompute runs: `changed`, `new_errors` and `fingerprint_after` read the objects as the script left them, so `new_errors` can be empty and the status `OK` on a document that fails at its next recompute. When the script raised, the bracket still recomputes (unless `recompute` is false), commits and fingerprints; `INVALID_INPUT` takes precedence over `RECOMPUTE_ERROR`, and `new_errors` still lists the objects. The bracket observes only the document named by `doc`. `mutating=True`, so a `TIMEOUT` marks the document suspect and the call writes an audit pair.
 5. **Audited.** Every call appends a `before` record carrying the full source ahead of execution, and an `after` record (AD-17).
 6. **Not a sandbox.** Namespace reduction (FreeCAD API globals only) is hygiene, never described as a security boundary; this repository ships no isolation boundary, so the operator's environment is the only one (AD-35, exec-sandbox research Finding 1).
-7. Input `{ "doc": handle, "code": string }`; result `{ "stdout", "value_repr", "fingerprint_after" }`. It requires an explicit doc handle (AD-20).
+7. Input `{ "doc": handle, "code": string, "recompute"?: boolean }` (`recompute` defaults to true); result `{ "stdout", "value_repr", "fingerprint_before", "fingerprint_after", "changed", "new_errors" }`, with fingerprints and `changed` shaped as in the §1.4 `mutation` block. The result is flat (it has no `mutation` block) and carries these fields with every status except `TIMEOUT`. It requires an explicit doc handle (AD-20).
 
 ## 6. Registration & Phasing Rules
 
