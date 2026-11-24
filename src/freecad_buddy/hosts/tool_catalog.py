@@ -1036,6 +1036,7 @@ READ_ONLY_PROFILE = frozenset(
         "query_object",
         "query_mass_properties",
         "query_interference",
+        "query_section",
         "query_dependencies",
         "query_sketch_info",
         "query_placement",
@@ -1314,6 +1315,68 @@ def tool_specs() -> list[ToolSpec]:
             "multiplied exceed 150000 is refused, and a call still measuring after 40 s stops, "
             "both with INVALID_INPUT code interference.too_complex. Cost grows with face "
             "count, so query few large pairs per call. Numbers only, no verdict.",
+        ),
+        _query_method(
+            "query_section",
+            queries.query_section,
+            60.0,
+            {
+                "type": "object",
+                "properties": {
+                    "doc": _DOC_SCHEMA,
+                    "object": {"type": "string", "description": "immutable Name"},
+                    "plane": {
+                        "type": "object",
+                        "description": "the cut plane normal . p = offset, in the frame of the "
+                        "object's container (the object's own Placement is applied)",
+                        "properties": {
+                            "normal": {
+                                "oneOf": [
+                                    {"enum": ["x", "y", "z"]},
+                                    {
+                                        "type": "array",
+                                        "items": {"type": "number"},
+                                        "minItems": 3,
+                                        "maxItems": 3,
+                                    },
+                                ],
+                                "description": "an axis name or a non-zero [nx, ny, nz]",
+                            },
+                            "offset": _LENGTH_QUANTITY_SCHEMA,
+                        },
+                        "required": ["normal", "offset"],
+                        "additionalProperties": False,
+                    },
+                    "points": {
+                        "type": "object",
+                        "description": "return each wire as a polyline; omit for counts only. "
+                        "deflection must be at least 1e-6 of the shape's bounding-box diagonal",
+                        "properties": {
+                            "deflection": _LENGTH_QUANTITY_SCHEMA,
+                            "max_points": {
+                                "type": "integer",
+                                "minimum": 2,
+                                "maximum": 5000,
+                                "default": 1000,
+                                "description": "points returned in total, over all wires",
+                            },
+                        },
+                        "required": ["deflection"],
+                        "additionalProperties": False,
+                    },
+                },
+                "required": ["doc", "object", "plane"],
+                "additionalProperties": False,
+            },
+            "Cross-section of one object at a plane, in the frame of the object's container (its "
+            "own Placement is applied, the container's is not). Result {wires, closed_wires, "
+            "length, area, bbox}; a plane that misses gives wires 0, area 0, bbox null. area is "
+            "null when it is unmeasured, never 0: a shell or face, a failed boolean, or more than "
+            "1,500 wires. With points: polylines in mm, at most max_points points in total, "
+            "truncated true when any is left out. An invalid or reversed shape, or one with no "
+            "face, is refused (section.untrusted_shape), as is one above 10,000 faces "
+            "(section.too_complex). Solids that overlap or touch inside one compound are not "
+            "detected: area counts each solid. Numbers only, no verdict.",
         ),
         _query_method(
             "query_dependencies",

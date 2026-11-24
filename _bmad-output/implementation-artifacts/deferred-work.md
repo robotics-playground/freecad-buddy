@@ -2187,3 +2187,19 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
   summary: The `query_interference` text and record do not say why a pair is `boolean_failed` (untrusted input, or a kernel failure at contact).
   evidence: Both give the same text line; a reason field or a named object in the text would be additive.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md:38` still routes "Section or slice of a shape" to `shape.slice(...)` in `script_exec`, the method that returns no wires within 1e-5 mm of a face.
+  evidence: Review finding (Blind Hunter): the gap list says no typed tool covers sections; `query_section` now does, and `slice` gives false misses (probe in the spec).
+  blocker: skill routing to the new measure tools is Story 13-12 (plan: "Skill routing to the new measure, parameter and delete tools").
+  unblock: Story 13-12 replaces the row with `query_section` and drops the `slice` advice.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `query_section` and `query_interference` do not detect solids that touch or overlap inside one `Compound`: the section area counts each solid and touching solids merge into shared wire groups.
+  evidence: Probe: two stacked 10x10x5 boxes cut on the shared face read area 200; two boxes side by side cut at mid height give one closed and one open wire. Same class as the 13-7 entry on overlapping solids.
+  blocker: a compound self-check (`shape.check(True)` or pairwise solid checks) has no measured cost yet.
+  unblock: a Story that measures the check cost and adds a refusal code.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `queries.py` `_mm_quantity` is a third copy of the `{value, unit}` parser (`features.py:89`, `sketches.py:111`), and it is stricter (rejects extra keys).
+  evidence: Review finding (Blind Hunter, Duplicated Code). Sharing one helper edits `features.py` and `sketches.py`, outside this Story.
+  blocker: touching two other tool modules for a cosmetic gain; the stricter key check would change their behaviour.
+  unblock: a refactor Story that moves the parser to one module and decides on extra keys.
