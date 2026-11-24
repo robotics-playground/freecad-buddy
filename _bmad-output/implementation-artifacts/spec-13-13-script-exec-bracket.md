@@ -94,7 +94,7 @@ Fix = add `recompute: false` (decision 4) unless stated. Text "opens no transact
 ## Code Map
 
 - `src/freecad_buddy/usecases/script_exec.py:19-68` -- replace the raw exec with the bracket; add `recompute` parameter.
-- `src/freecad_buddy/usecases/transaction.py:213` (`_invalid_objects`) -- reused for `new_errors`; `result_projection.changed_objects`, `remember` -- reused. No other change to the module.
+- `src/freecad_buddy/usecases/transaction.py:182` (`_invalid_objects`, private: promote to a public name) -- reused for `new_errors`; `result_projection.changed_objects`, `remember` -- reused. No other change to the module.
 - `src/freecad_buddy/hosts/tool_catalog.py:1051-1085` -- `recompute` in `input_schema`, handler passes it, description rewritten (own-transaction limit, `undo_steps`, statuses); `with_framing` gets a bypass for `script_exec`.
 - `src/freecad_buddy/adapters/rpc_listener.py:437-449`, `src/freecad_buddy/adapters/mcp_server.py:300-318` -- the `exec` `after` line takes `fingerprint_before` and `fingerprint_after` from the result (`audit_log.py:129` already accepts them).
 - `src/freecad_buddy/contracts/envelope.py` (`summary_text` use) -- no change expected; check `text` of the new fields.
