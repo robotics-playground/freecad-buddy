@@ -1294,7 +1294,7 @@ def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_veri
 
     seen = {}
 
-    def stl_oracle(path, expected_volume, volume_band, decimals):
+    def stl_oracle(path, expected_volume, volume_band, decimals, facet_counts=None):
         seen["decimals"] = decimals
         return {"oracle": "trimesh_stl", "checks": [], "ok": True}
 
@@ -1312,7 +1312,7 @@ def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_veri
     monkeypatch.setattr(
         export_oracle.StdlibStlOracle,
         "check",
-        lambda _self, _path: {"oracle": "stdlib_stl", "checks": [], "ok": True},
+        lambda _self, _path, _facet_counts=None: {"oracle": "stdlib_stl", "checks": [], "ok": True},
     )
     monkeypatch.setattr(export_verdict, "assemble_export_verdict", lambda *_a: {"status": "OK"})
     handler = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "stl")
@@ -1322,3 +1322,141 @@ def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_veri
 
     # Assert
     assert seen["decimals"] == 4
+
+
+def _mesh_self_read(**extra):
+    return {
+        "structured_content": {
+            "source": {"volume": 1000.0, "is_mm": True},
+            "volume_band": 0.5,
+            "path": "part.file",
+            "banner": {},
+            **extra,
+        }
+    }
+
+
+def _stub_oracles(monkeypatch, seen):
+    from freecad_buddy.adapters import export_oracle, export_verdict
+
+    def mesh3mf_oracle(path, is_mm, volume, band, decimals, objects=None):
+        seen["objects"] = objects
+        return {"oracle": "lib3mf", "checks": [], "ok": True}
+
+    def stl_oracle(path, volume, band, decimals, facet_counts=None):
+        seen["stl_counts"] = facet_counts
+        return {"oracle": "trimesh_stl", "checks": [], "ok": True}
+
+    def stdlib_check(_self, _path, facet_counts=None):
+        seen["stdlib_counts"] = facet_counts
+        return {"oracle": "stdlib_stl", "checks": [], "ok": True}
+
+    monkeypatch.setattr(export_oracle, "mesh3mf_oracle", mesh3mf_oracle)
+    monkeypatch.setattr(export_oracle, "stl_oracle", stl_oracle)
+    monkeypatch.setattr(export_oracle.StdlibStlOracle, "check", stdlib_check)
+    monkeypatch.setattr(export_verdict, "assemble_export_verdict", lambda *_a: {"status": "OK"})
+
+
+def test_Should_pass_the_recorded_objects_to_the_oracle_When_the_catalog_verifies_a_3mf(
+    monkeypatch,
+):
+    # Arrange
+    from freecad_buddy.hosts import tool_catalog
+
+    seen = {}
+    objects = [{"name": "A", "label": "Alpha", "volume": 1000.0, "band": 0.5}]
+    self_read = _mesh_self_read(objects=objects)
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_3mf", lambda *_a, **_k: self_read)
+    _stub_oracles(monkeypatch, seen)
+    target = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "3mf")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["objects"] == objects
+
+
+def test_Should_pass_the_facet_counts_to_both_oracles_When_the_catalog_verifies_an_stl(
+    monkeypatch,
+):
+    # Arrange
+    from freecad_buddy.hosts import tool_catalog
+
+    seen = {}
+    self_read = _mesh_self_read(facet_counts=[12, 12])
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_stl", lambda *_a, **_k: self_read)
+    _stub_oracles(monkeypatch, seen)
+    target = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "stl")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["stl_counts"] == [12, 12]
+    assert seen["stdlib_counts"] == [12, 12]
+
+
+def test_Should_pass_no_objects_to_the_oracle_When_a_single_object_3mf_is_verified(monkeypatch):
+    # Arrange
+    from freecad_buddy.hosts import tool_catalog
+
+    seen = {}
+    self_read = _mesh_self_read()
+    monkeypatch.setattr(tool_catalog.exports, "export_self_read_3mf", lambda *_a, **_k: self_read)
+    _stub_oracles(monkeypatch, seen)
+    target = tool_catalog._mesh_verify_handler(DocumentRegistry(), None, None, "3mf")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["objects"] is None
+
+
+class _SelfReadClient:
+    """A stand-in RPC client that answers the self-read call with a fixed envelope."""
+
+    def __init__(self, structured):
+        self._structured = structured
+
+    def call(self, _method, _params):
+        return {"status": "OK", "structured_content": self._structured}
+
+
+def test_Should_pass_the_recorded_objects_to_the_oracle_When_the_proxy_verifies_a_3mf(monkeypatch):
+    # Arrange
+    import threading
+
+    from freecad_buddy.hosts import rpc_proxy
+
+    seen = {}
+    objects = [{"name": "A", "label": "Alpha", "volume": 1000.0, "band": 0.5}]
+    client = _SelfReadClient(_mesh_self_read(objects=objects)["structured_content"])
+    _stub_oracles(monkeypatch, seen)
+    target = rpc_proxy._mesh_verify_proxy_handler(client, threading.Lock(), "verify_export_3mf")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["objects"] == objects
+
+
+def test_Should_pass_the_facet_counts_to_both_oracles_When_the_proxy_verifies_an_stl(monkeypatch):
+    # Arrange
+    import threading
+
+    from freecad_buddy.hosts import rpc_proxy
+
+    seen = {}
+    client = _SelfReadClient(_mesh_self_read(facet_counts=[12, 12])["structured_content"])
+    _stub_oracles(monkeypatch, seen)
+    target = rpc_proxy._mesh_verify_proxy_handler(client, threading.Lock(), "verify_export_stl")
+
+    # Act
+    target(doc="fcb-doc:D", export_id="e1")
+
+    # Assert
+    assert seen["stl_counts"] == [12, 12]
+    assert seen["stdlib_counts"] == [12, 12]

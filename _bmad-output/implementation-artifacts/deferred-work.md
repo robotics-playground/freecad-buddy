@@ -2145,3 +2145,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-4.md` "Round 2", product notes.
   blocker: outside Story 13-4 (skills only); needs a reproduction in FreeCAD before any fix.
   unblock: a Story that touches `sketch_add_constraint`, or a small bug Story after a measured run confirms the drop.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: `export_step`, `export_stl` and `export_3mf` write `obj.Shape` in the object's own coordinates, so the placement of an `App::Part` that holds the object is not applied (one object or several).
+  evidence: measured on host FreeCAD 1.1: Box inside an `App::Part` placed at x=100 exports with `XMin` 0.0 in STEP for `shape.exportStep` and for `Import.export`; `getGlobalPlacement().Base.x` is 100.0. Pre-existing for the single-object path. Edge Hunter finding in the Story 13-5 review.
+  blocker: the intended behaviour (global or local coordinates) is a product decision; assemblies are not in SPEC-mcp-usage-improvement.
+  unblock: a decision on global coordinates, then a Story that applies `getGlobalPlacement()` to the shapes before export and verification.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: Default selection (omitted `objects`) ignores `App::Link` objects, which have no `Shape`, and does not treat a solid inside a hidden `App::Part` as hidden.
+  evidence: Edge Hunter findings in the Story 13-5 review (low, not reproduced; Assembly workbench documents are outside the Phase 1 to 3 flows).
+  blocker: no reproduction document; assemblies are not in scope.
+  unblock: an assembly Story, or a measured report of a document that loses a solid this way.

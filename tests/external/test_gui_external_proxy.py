@@ -42,7 +42,7 @@ def test_should_run_the_oracle_and_round_at_freecad_decimals_when_a_proxy_verifi
     # Arrange
     seen = {}
 
-    def stl_oracle(path, expected_volume, volume_band, decimals):
+    def stl_oracle(path, expected_volume, volume_band, decimals, facet_counts=None):
         seen["decimals"] = decimals
         return {"oracle": "trimesh_stl", "checks": [], "ok": True}
 
@@ -51,7 +51,11 @@ def test_should_run_the_oracle_and_round_at_freecad_decimals_when_a_proxy_verifi
     monkeypatch.setattr(
         export_oracle.StdlibStlOracle,
         "check",
-        lambda _self, _path: {"oracle": "stdlib_stl", "checks": [], "ok": True},
+        lambda _self, _path, _facet_counts=None: {
+            "oracle": "stdlib_stl",
+            "checks": [],
+            "ok": True,
+        },
     )
     monkeypatch.setattr(
         export_verdict,

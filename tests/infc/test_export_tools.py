@@ -8,8 +8,10 @@ export result carries ``verified: false``, the self-read facts, and the bad ``ex
 ``doc`` INVALID_INPUT boundary.
 """
 
+import re
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest import mock
 
@@ -343,6 +345,362 @@ class ExportMeshTest(_ExportFixture):
         self.assertGreater(band, 0)
 
 
+class MultiObjectExportTest(_ExportFixture):
+    """Several objects, or none named, export to one file per format (tool-contracts T-5)."""
+
+    def _add_three_bodies(self):
+        alpha = self._add_box("BoxA")
+        alpha.Label = "Alpha"
+        beta = self.document.addObject("Part::Cylinder", "Cyl")
+        beta.Label = "Beta"
+        beta.Placement.Base = App.Vector(30, 0, 0)
+        gamma = self.document.addObject("Part::Sphere", "Sph")
+        gamma.Label = "Gamma"
+        gamma.Placement.Base = App.Vector(0, 60, 0)
+        self.document.recompute()
+        return ["BoxA", "Cyl", "Sph"]
+
+    def _export(self, tool, name, **params):
+        path = str(self.tmp / name)
+        envelope = tool(self.registry, self.exports, doc=self.handle, path=path, **params)
+        return path, envelope
+
+    def _verify_step(self, written):
+        return exports.verify_export_step(
+            self.registry,
+            self.exports,
+            doc=self.handle,
+            export_id=written["structured_content"]["export_id"],
+        )
+
+    def _step_product_names(self, path):
+        text = Path(path).read_text(errors="replace")
+        return re.findall(r"PRODUCT\('[^']*','([^']*)'", text)
+
+    def test_Should_pass_with_one_volume_check_per_object_When_three_objects_go_to_step(self):
+        # Arrange
+        names = self._add_three_bodies()
+        path, written = self._export(exports.export_step, "three.step", objects=names)
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        by_id = {c["id"]: c for c in target["structured_content"]["checks"]}
+        self.assertEqual(target["status"], "OK")
+        self.assertEqual(written["structured_content"]["objects"], names)
+        for name in names:
+            self.assertTrue(by_id[f"export_step.object_volume:{name}"]["passed"])
+        self.assertTrue(by_id["export_step.objects_matched"]["passed"])
+        products = self._step_product_names(path)
+        for label in ("Alpha", "Beta", "Gamma"):
+            self.assertIn(label, products)
+
+    def test_Should_fail_and_name_the_object_When_one_recorded_object_volume_is_wrong(self):
+        # Arrange
+        names = self._add_three_bodies()
+        _path, written = self._export(exports.export_step, "three.step", objects=names)
+        export_id = written["structured_content"]["export_id"]
+        self.exports._by_id[export_id]["source"]["objects"][1]["volume"] *= 2
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        failed = [c["id"] for c in target["structured_content"]["checks"] if not c["passed"]]
+        self.assertNotEqual(target["status"], "OK")
+        self.assertIn("export_step.object_volume:Cyl", failed)
+        self.assertNotIn("export_step.object_volume:BoxA", failed)
+        self.assertIn("export_step.object_volume:Cyl", target["detail"]["message"])
+
+    def test_Should_match_objects_in_order_When_one_object_holds_several_solids(self):
+        # Arrange
+        first = self.document.addObject("Part::Box", "B1")
+        second = self.document.addObject("Part::Box", "B2")
+        second.Placement.Base = App.Vector(50, 0, 0)
+        fuse = self.document.addObject("Part::Fuse", "Fuse")
+        fuse.Base = first
+        fuse.Tool = second
+        lone = self.document.addObject("Part::Sphere", "Sph")
+        lone.Placement.Base = App.Vector(0, 80, 0)
+        self.document.recompute()
+        _path, written = self._export(exports.export_step, "fuse.step", objects=["Fuse", "Sph"])
+        export_id = written["structured_content"]["export_id"]
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        recorded = self.exports._by_id[export_id]["source"]["objects"]
+        self.assertEqual(recorded[0]["solids"], 2)
+        self.assertEqual(target["status"], "OK")
+
+    def test_Should_export_only_the_body_and_free_solids_When_objects_are_omitted(self):
+        # Arrange
+        body = self.document.addObject("PartDesign::Body", "Body")
+        sketch = body.newObject("Sketcher::SketchObject", "Sk")
+        sketch.AttachmentSupport = (self.document.getObject("XY_Plane"), [""])
+        sketch.MapMode = "FlatFace"
+        corners = [(0, 0), (10, 0), (10, 10), (0, 10)]
+        for index, (x, y) in enumerate(corners):
+            nx, ny = corners[(index + 1) % 4]
+            sketch.addGeometry(Part.LineSegment(App.Vector(x, y, 0), App.Vector(nx, ny, 0)))
+        pad = body.newObject("PartDesign::Pad", "Pad")
+        pad.Profile = sketch
+        pad.Length = 5
+        body.newObject("PartDesign::AdditiveBox", "Extra")
+        free = self._add_box("Free")
+        free.Placement.Base = App.Vector(40, 0, 0)
+        left = self.document.addObject("Part::Box", "Left")
+        right = self.document.addObject("Part::Box", "Right")
+        right.Placement.Base = App.Vector(0, 40, 0)
+        fuse = self.document.addObject("Part::Fuse", "Fuse")
+        fuse.Base = left
+        fuse.Tool = right
+        self.document.recompute()
+
+        # Act
+        _path, target = self._export(exports.export_step, "all.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Body", "Free", "Fuse"])
+
+    def test_Should_keep_a_solid_that_only_an_expression_or_attachment_references_When_omitted(
+        self,
+    ):
+        # Arrange
+        base = self._add_box("Base")
+        driven = self._add_box("Driven")
+        driven.Placement.Base = App.Vector(30, 0, 0)
+        driven.setExpression("Length", "Base.Length")
+        attached = self.document.addObject("Part::Cylinder", "Attached")
+        attached.Placement.Base = App.Vector(0, 40, 0)
+        attached.AttachmentSupport = [(base, "Face1")]
+        self.document.recompute()
+
+        # Act
+        _path, target = self._export(exports.export_step, "all.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Base", "Driven", "Attached"])
+
+    def test_Should_export_the_sole_object_When_it_is_hidden_and_objects_are_omitted(self):
+        # Arrange
+        box = self._add_box("Only")
+        box.Visibility = False
+
+        # Act
+        _path, target = self._export(exports.export_step, "only.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Only"])
+
+    def test_Should_fail_the_match_check_When_a_recorded_object_holds_more_solids(self):
+        # Arrange
+        names = self._add_three_bodies()
+        _path, written = self._export(exports.export_step, "three.step", objects=names)
+        export_id = written["structured_content"]["export_id"]
+        self.exports._by_id[export_id]["source"]["objects"][0]["solids"] = 2
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        by_id = {c["id"]: c for c in target["structured_content"]["checks"]}
+        self.assertNotEqual(target["status"], "OK")
+        self.assertFalse(by_id["export_step.objects_matched"]["passed"])
+
+    def test_Should_leave_no_file_When_naming_the_3mf_objects_fails(self):
+        # Arrange
+        names = self._add_three_bodies()
+        path = self.tmp / "failed.3mf"
+
+        # Act
+        with mock.patch.object(exports, "_name_3mf_objects", side_effect=RuntimeError("boom")):
+            act = lambda: exports.export_3mf(  # noqa: E731
+                self.registry, self.exports, doc=self.handle, path=str(path), objects=names
+            )
+            with self.assertRaises(RuntimeError):
+                act()
+
+        # Assert
+        self.assertFalse(path.exists())
+
+    def test_Should_record_one_facet_count_per_object_When_touching_objects_go_to_stl(self):
+        # Arrange
+        first = self._add_box("First")
+        second = self._add_box("Second")
+        second.Placement.Base = App.Vector(BOX_L, 0, 0)
+        self.document.recompute()
+
+        # Act
+        _path, written = self._export(exports.export_stl, "touch.stl", objects=["First", "Second"])
+        export_id = written["structured_content"]["export_id"]
+        target = exports.export_self_read_stl(
+            self.registry, self.exports, doc=self.handle, export_id=export_id
+        )["structured_content"]
+
+        # Assert
+        self.assertEqual(target["facet_counts"], [12, 12])
+        self.assertEqual(target["self_read"]["facets"], 24)
+        self.assertEqual(first.Shape.Volume + second.Shape.Volume, target["source"]["volume"])
+
+    def test_Should_skip_a_hidden_object_When_objects_are_omitted(self):
+        # Arrange
+        self._add_box("Shown")
+        hidden = self._add_box("Hidden")
+        hidden.Visibility = False
+
+        # Act
+        _path, target = self._export(exports.export_step, "shown.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Shown"])
+
+    def test_Should_refuse_When_no_visible_solid_exists(self):
+        # Arrange
+        self.document.addObject("Part::Feature", "Empty")
+        self.document.addObject("Part::Feature", "AlsoEmpty")
+        self.document.recompute()
+
+        # Act
+        act = lambda: self._export(exports.export_step, "none.step")  # noqa: E731
+
+        # Assert
+        with self.assertRaisesRegex(exports.ValidationError, "no visible solid"):
+            act()
+
+    def test_Should_refuse_and_write_nothing_When_one_selected_name_is_unknown(self):
+        # Arrange
+        self._add_box("BoxA")
+        path = self.tmp / "x.step"
+
+        # Act
+        act = lambda: exports.export_step(  # noqa: E731
+            self.registry, self.exports, doc=self.handle, path=str(path), objects=["BoxA", "Nope"]
+        )
+
+        # Assert
+        with self.assertRaisesRegex(exports.ValidationError, "unknown object: Nope"):
+            act()
+        self.assertFalse(path.exists())
+
+    def test_Should_refuse_naming_the_object_When_a_selected_object_has_no_solid(self):
+        # Arrange
+        self._add_box("BoxA")
+        sketch = self.document.addObject("Sketcher::SketchObject", "Flat")
+        sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(5, 0, 0)))
+        self.document.recompute()
+
+        # Act
+        act = lambda: self._export(  # noqa: E731
+            exports.export_step, "x.step", objects=["BoxA", "Flat"]
+        )
+
+        # Assert
+        with self.assertRaisesRegex(exports.ValidationError, "object has no solid: Flat"):
+            act()
+
+    def test_Should_export_once_When_a_name_is_repeated(self):
+        # Arrange
+        self._add_box("BoxA")
+
+        # Act
+        _path, target = self._export(exports.export_step, "dup.step", objects=["BoxA", "BoxA"])
+
+        # Assert
+        export_id = target["structured_content"]["export_id"]
+        self.assertEqual(target["structured_content"]["objects"], ["BoxA"])
+        self.assertNotIn("objects", self.exports._by_id[export_id]["source"])
+
+    def test_Should_keep_the_single_object_check_ids_When_one_object_is_verified(self):
+        # Arrange
+        self._add_box("BoxA")
+        _path, written = self._export(exports.export_step, "one.step", objects=["BoxA"])
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        ids = {c["id"] for c in target["structured_content"]["checks"]}
+        self.assertEqual(
+            ids,
+            {
+                "export_step.volume",
+                "export_step.valid",
+                "export_step.topology_counts",
+                "export_step.schema",
+            },
+        )
+
+    def test_Should_write_millimetres_and_the_schema_When_several_objects_go_to_step(self):
+        # Arrange
+        names = self._add_three_bodies()
+        saved_unit = Part.exportUnits()["write.step.unit"]
+        self.addCleanup(shim.restore_step_config, saved_unit)
+        Part.setStaticValue("write.step.unit", "INCH")
+
+        # Act
+        path, written = self._export(exports.export_step, "pinned.step", objects=names, ap="AP242")
+
+        # Assert
+        self.assertNotIn(INCH_UNIT, Path(path).read_text(errors="replace"))
+        self.assertEqual(Part.exportUnits()["write.step.unit"], "INCH")
+        by_id = {c["id"]: c for c in self._verify_step(written)["structured_content"]["checks"]}
+        self.assertTrue(by_id["export_step.schema"]["passed"])
+
+    def test_Should_write_one_merged_mesh_When_three_objects_go_to_stl(self):
+        # Arrange
+        import Mesh
+
+        names = self._add_three_bodies()
+        singles = 0
+        for name in names:
+            _p, one = self._export(exports.export_stl, f"{name}.stl", objects=[name])
+            singles += one["structured_content"]["facets"]
+
+        # Act
+        path, target = self._export(exports.export_stl, "all.stl", objects=names)
+
+        # Assert
+        export_id = target["structured_content"]["export_id"]
+        source = self.exports._by_id[export_id]["source"]
+        self.assertEqual(target["structured_content"]["facets"], singles)
+        self.assertEqual(Mesh.Mesh(path).CountFacets, singles)
+        self.assertAlmostEqual(
+            source["volume"], sum(o["volume"] for o in source["objects"]), places=6
+        )
+
+    def test_Should_self_read_the_recorded_counts_When_three_objects_go_to_3mf(self):
+        # Arrange
+        names = self._add_three_bodies()
+        _path, written = self._export(exports.export_3mf, "all.3mf", objects=names)
+        export_id = written["structured_content"]["export_id"]
+
+        # Act
+        target = exports.export_self_read_3mf(
+            self.registry, self.exports, doc=self.handle, export_id=export_id
+        )["structured_content"]
+
+        # Assert
+        self.assertEqual(target["self_read"]["facets"], target["recorded"]["facets"])
+        self.assertEqual(target["self_read"]["vertices"], target["recorded"]["vertices"])
+        self.assertEqual([o["name"] for o in target["objects"]], names)
+
+    def test_Should_name_each_mesh_object_by_label_When_three_objects_go_to_3mf(self):
+        # Arrange
+        names = self._add_three_bodies()
+
+        # Act
+        path, _written = self._export(exports.export_3mf, "all.3mf", objects=names)
+
+        # Assert
+        with zipfile.ZipFile(path) as archive:
+            model = archive.read("3D/3dmodel.model").decode("utf-8")
+        found = re.findall(r'<object id="\d+" type="model" name="([^"]*)"', model)
+        self.assertEqual(found, ["Alpha", "Beta", "Gamma"])
+
+
 class ExportBadInputTest(_ExportFixture):
     def _dispatch(self):
         methods = MethodRegistry()
@@ -422,15 +780,6 @@ class ExportBadInputTest(_ExportFixture):
         envelope = methods.dispatch(
             "export_stl",
             {"doc": self.handle, "path": str(self.tmp / "b.stl"), "linear": float("inf")},
-        )
-        self.assertEqual(envelope["status"], "INVALID_INPUT")
-
-    def test_no_selection_with_multiple_objects_is_invalid_input(self):
-        self._add_box("BoxA")
-        self._add_box("BoxB")
-        methods = self._mesh_methods()
-        envelope = methods.dispatch(
-            "export_stl", {"doc": self.handle, "path": str(self.tmp / "b.stl")}
         )
         self.assertEqual(envelope["status"], "INVALID_INPUT")
 

@@ -335,7 +335,7 @@ Export pins config **per call** through the OCC statics, never ambient defaults:
 
 1. Re-import the written file into a fresh document (fresh `STEPControl_Reader` state).
 2. `Shape.isValid()` + `Shape.check()` pass on the re-imported shape.
-3. `Volume` within **±0.1 %** of source; `BoundBox` diagonal and `CenterOfMass` within tolerance.
+3. `Volume` within **±0.1 %** of source; `BoundBox` diagonal and `CenterOfMass` within tolerance. Several objects: the file is re-imported into a scratch document with `Import.insert` (reader options `merge`, `importHidden`, `useLinkGroup`, `mode` passed explicitly, as the writer's `exportHidden`, `legacy`, `keepPlacement`, so the operator's `Mod/Import` preferences do not change the structure), one leaf per product. The total volume, validity and counts are graded over all leaves, and each object gets `export_step.object_volume:<Name>` (±0.1 % of its own recorded volume). FreeCAD splits an object that holds several solids into one product per solid, so each object takes leaves in file order until their solid count reaches the recorded count; `export_step.objects_matched` fails when an object cannot be filled or leaves remain. A failed per-object check names the object in the verdict message. The writer is `Import.export` (product name = object `Label`).
 4. Face / edge / solid counts match the source (no dropped subshapes).
 5. `export_step.schema`: the first identifier of the written file's `FILE_SCHEMA` (header text before `DATA;`, may span lines) equals the schema of the recorded `ap` — `AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF` (AP242), `AUTOMOTIVE_DESIGN` (AP214), `CONFIG_CONTROL_DESIGN` (AP203). The check reads the file, never a setting. No `FILE_SCHEMA` fails the check with `measured: null`.
 
@@ -344,13 +344,14 @@ Export pins config **per call** through the OCC statics, never ambient defaults:
 - **trimesh (primary):** `is_watertight`, `is_winding_consistent`, `is_volume`, `mesh.volume` within the deflection-derived band (§8 — never ±0.1 %), and an **even** `euler_number`. A closed orientable surface has even Euler characteristic (Σ 2−2g over its bodies), so an odd value signals a non-closed/non-manifold mesh; a *specific* genus is NOT required — a through-hole part (χ=0) and a multi-body compound (χ=4) are valid exports, and flipped-normals detection comes from `is_volume`, not Euler.
 - **Second oracle:** admesh where available (check-only mode: unconnected facets, bad normals, degenerate facets, holes; auto-repair is a separate remediation tool, never silently applied inside a pass). admesh is dormant upstream and Linux-leaning; the fallback second oracle is chosen at the Phase 0 gate (AD-9). The verifier interface takes an abstract `SecondStlOracle` so the pin is a config swap.
 - trimesh/second-oracle disagreement → FAIL.
+- Several objects are one merged mesh: only the total volume is graded (per-object volume is not recoverable from a merged mesh). The writer records the facet count of each object; trimesh and the second oracle weld vertices and grade soundness inside one object at a time, because two objects that touch share vertex positions and welding across them reads as a non-manifold edge. Counts that do not add up to the written facets are ignored and the whole mesh is graded as one.
 
 ### 6.4 `verify_export_3mf` — layered oracle stack
 
 1. **lib3mf (container/spec layer):** parses clean; declared `unit == "millimeter"` and the source document was mm (guard against the writer's hardcoded-mm unit lie); object `type` consistent with actual manifoldness (catches non-watertight mesh labelled `type="model"`); required metadata present.
 2. **trimesh (geometry layer):** same assertions as STL.
 3. **FreeCAD self-read (in-FreeCAD via RPC):** re-import; facet/vertex counts and bbox match — necessary but not sufficient (FreeCAD's lenient reader accepts its own writer's defects).
-4. Exported object/facet count matches the intended object set (guards visibility-filtered partial export, FreeCAD #22483).
+4. Exported object/facet count matches the intended object set (guards visibility-filtered partial export, FreeCAD #22483). Several objects: each object is its own mesh object of the file. FreeCAD's writer drops object names (`Exporter3MF::addMesh` ignores `name`), so after `Mesh.export` the bridge adds `name="<Label>"` to each `<object>` of `3D/3dmodel.model` and copies every other archive part unchanged. lib3mf checks `lib3mf.object_count`, `lib3mf.object_names` (read from the file) and trimesh checks `trimesh_3mf.object_volume:<Name>` per object within that object's deflection band; the trimesh geometry layer covers all meshes together against the total. A one-object 3MF is written unnamed and keeps its checks.
 5. Slicer-acceptance smoke test and lib3mf-as-fallback-writer: deferred to the Phase 4 realism gate (spine Deferred table).
 
 Any layer failing, or any cross-oracle disagreement → FAIL.
