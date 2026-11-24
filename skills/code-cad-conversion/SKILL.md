@@ -87,7 +87,7 @@ operator to turn on `ScriptExec`: no typed tool writes a VarSet or an expression
   parameter.
 - **Prove equality before any new design work.** Re-export the source at its
   defaults, in the same world frame, and also compare with any STEP the user
-  gave. Per part: one valid solid, volume difference 0.000 %, overlap (`common`
+  gave. Per part: one valid solid, volume difference below 0.0001 %, overlap (`common`
   volume / source volume) 100.000 %. Equal volume alone is not equality; bounding
   boxes are not a test.
 - **Prove the parameters, at their limits.** Edit several variables at both ends
@@ -96,7 +96,7 @@ operator to turn on `ScriptExec`: no typed tool writes a VarSet or an expression
   with the same values (`references/verification-kit.md`: the source derives its
   own constants) and repeat the equality check. Then restore the defaults and
   repeat it against the default STEP. Budget about 8 s per case for a 100-object
-  model: two cases per call.
+  model: one case per call, restored before the next.
 - **Measure; then look.** `query_screenshot` (its `include` takes object Names,
   not Labels) and a real-window screenshot confirm the look. The equality and
   limit checks decide correctness.
@@ -131,8 +131,8 @@ s.sub(cyl(P.BORE_R, P.BOSS_H, frame=F))
 bracket = s.done()
 ```
 
-One `script_exec` runs it. The equality script reports one valid solid,
-`diff_pct` 0.0, `overlap_pct` 100.0; the coverage script finds no unbound size
+One `script_exec` runs it. The equality check passes (`verify_shape` valid, one
+solid, volume equal; overlap script `overlap_pct` 100.0); the coverage script finds no unbound size
 or placement. The limit test sets `PLATE_T` 3 and 8, `COUNTERSINK` false, and
 `FRAME_DEG` 0 and -120; each case matches its re-export, and the restored part
 overlaps the default STEP 100 %. Then `document_save`.

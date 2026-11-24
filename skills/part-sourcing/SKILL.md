@@ -3,8 +3,8 @@ name: part-sourcing
 track: R
 description: >-
   Use when finding and bringing in an off-the-shelf part: searching a catalog for a
-  named screw, bearing, motor, connector, or standoff, importing its STEP file
-  through the bridge, and placing it with measured mating frames. Trigger phrases:
+  named screw, bearing, motor, connector, or standoff, importing its STEP file,
+  and placing it with measured mating frames. Trigger phrases:
   "find an M3 screw", "add an SG90 servo", "source a bearing", "import this
   off-the-shelf part", "off-the-shelf STEP", "catalog part", "purchasable
   component". Do NOT use for modeling a custom part (see design-decomposition) or
@@ -17,18 +17,16 @@ freecad-versions: ['1.1']
 
 Bring a purchasable off-the-shelf part into a design correctly. This skill owns the
 sourcing flow: searching an external catalog for a named component, importing its
-STEP through the bridge, and placing it with frames measured from its real geometry.
+STEP, and placing it with frames measured from its real geometry.
 It does not own modeling a custom part (design-decomposition) or exporting a robot
 description (urdf-export). The catalog *search* is an external concern; this skill's
-discipline is that *import and placement* go through the bridge and never trust an
-imported part's assumed origin.
+discipline is that an imported part's assumed origin is never trusted: measure it, then
+place it.
 
-This skill drives FreeCAD through the **freecad-buddy MCP server** (the document
-import path plus `query_mass_properties`, `query_object`, and `query_placement`).
-These are Phase-5 capabilities — if they aren't available in your session, the
-sourcing/import tools aren't installed yet; install and connect the freecad-buddy
-MCP (open FreeCAD with the add-on, which auto-starts the server, then point your MCP
-client at it) and confirm the Phase-5 tool set is present.
+This skill drives FreeCAD through the **freecad-buddy MCP server**
+(`query_mass_properties`, `query_object`, `query_placement`, and `script_exec` for
+the import). If those tools aren't available in your session, open FreeCAD with the
+add-on, which auto-starts the server, then point your MCP client at it.
 
 ## Decision Rules
 
@@ -40,10 +38,13 @@ client at it) and confirm the Phase-5 tool set is present.
   exact or near-exact match exists, because a real part carries correct mating
   geometry a stand-in doesn't — drop to a documented simplified envelope only when
   no match exists and an assembly-time reason justifies it, and record the miss.
-- Import a sourced part **only through the bridge's document/import path**, never a
-  raw open alongside it, because the bridge tracks the document handle,
-  single-writer serialization, and cleanup — a side import desynchronizes that
-  bookkeeping.
+- Import a sourced part **with `script_exec` on the live document**, because no typed
+  tool imports a STEP file (a gap in `freecad-scripting-idioms`
+  `references/gap-list.md`, which holds the import script). Say so before you call
+  it, then check each imported solid with `verify_shape`. If `query_capabilities`
+  reports `exec_enabled: false`, report the import as blocked. Never import through a
+  separate `freecadcmd` run beside the live GUI: the GUI keeps its own copy of the
+  document.
 - **Measure an imported part before trusting its frames.** Its origin and
   orientation were authored elsewhere and are not assumed — run
   `query_mass_properties` and `query_placement` on it, then derive its mating frames
@@ -69,8 +70,8 @@ Input: "Add an M3×12 socket-head cap screw to this bracket's corner holes."
 Reasoning → sourcing:
 1. Search: `M3 SHCS 12` (specific, not overconstrained). If empty, retry the
    standard designation (ISO 4762) and common aliases before treating it as a miss.
-2. Import the matched STEP through the bridge's document/import path (not a raw
-   open), returning a handle.
+2. Import the matched STEP with `script_exec` (no typed import tool exists), in a
+   transaction.
 3. Measure: `query_mass_properties` + `query_placement` on the imported screw →
    locate its shaft axis and head-seat face from geometry, not its assumed origin.
 4. Place: align the screw's shaft axis coaxial with each corner hole via a
@@ -90,8 +91,9 @@ the real part.
 - **Placeholder when a real part exists.** Symptom: an assembly with wrong mating
   geometry. Why: a stand-in was used instead of the catalog STEP. Fix: prefer the
   real off-the-shelf STEP; envelope only on a recorded miss.
-- **Raw import beside the bridge.** Symptom: desynchronized document state. Why: the
-  part bypassed the tracked import path. Fix: import through the document/import path.
+- **Import in a separate process.** Symptom: the imported part is missing after the
+  next GUI save. Why: a `freecadcmd` run edited a second copy of the document. Fix:
+  import with `script_exec` on the live document.
 - **Trusting the imported origin.** Symptom: the part lands in the wrong place or
   orientation. Why: its authored origin was assumed. Fix: measure geometry and derive
   mating frames.
