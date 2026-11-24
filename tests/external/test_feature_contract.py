@@ -35,6 +35,7 @@ FEATURE_TOOLS = {
     "feature_mirror",
     "feature_datum",
     "feature_set_parameters",
+    "feature_parameters_define",
     "feature_body_create",
 }
 
@@ -226,7 +227,7 @@ def test_every_feature_tool_accepts_an_optional_unenforced_confirm():
 
 def test_every_creating_feature_tool_requires_an_intent_bearing_name():
     specs = _specs_by_name()
-    for name in FEATURE_TOOLS - {"feature_set_parameters"}:
+    for name in FEATURE_TOOLS - {"feature_set_parameters", "feature_parameters_define"}:
         schema = specs[name].input_schema
         assert "name" in schema["required"], name
 

@@ -60,6 +60,7 @@ EXPECTED_QUERY_TOOLS = {
     "query_mass_properties",
     "query_interference",
     "query_section",
+    "query_parameters",
     "query_dependencies",
     "query_sketch_info",
     "query_placement",
@@ -102,6 +103,7 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_mirror",
     "feature_datum",
     "feature_set_parameters",
+    "feature_parameters_define",
     "feature_body_create",
 }
 

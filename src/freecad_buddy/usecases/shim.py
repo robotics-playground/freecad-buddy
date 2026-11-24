@@ -149,6 +149,31 @@ def varset_available() -> bool:
     return varset_backend() == "varset"
 
 
+@lru_cache(maxsize=1)
+def _varset_surface() -> tuple[frozenset[str], frozenset[str]]:
+    """The property names and the Python attribute names of a fresh ``App::VarSet``.
+
+    Read from a throwaway VarSet so both follow the running build. Both are empty when the VarSet
+    cannot be created; callers refuse before they read them in that case.
+    """
+    try:
+        with _scratch_document("FCB_TMP_varset_builtin_probe") as doc:
+            probe = doc.addObject("App::VarSet", "FCB_TMP_probe")
+            return frozenset(probe.PropertiesList), frozenset(dir(probe))
+    except Exception:  # noqa: BLE001 - FreeCAD missing or no VarSet: there is nothing to read
+        return frozenset(), frozenset()
+
+
+def varset_builtin_properties() -> frozenset[str]:
+    """The property names every ``App::VarSet`` carries before a parameter is added."""
+    return _varset_surface()[0]
+
+
+def varset_attribute_names() -> frozenset[str]:
+    """The attribute names of an ``App::VarSet`` object; a property named so would shadow one."""
+    return _varset_surface()[1]
+
+
 def render_available(render: str = "none") -> bool:
     """Whether a render context is usable, given the host-probed ladder mode ``render``.
 
@@ -473,6 +498,7 @@ def warm_capability_probes() -> None:
     serializer_tag()
     varset_backend()
     varset_available()
+    varset_builtin_properties()
     element_map_available()
     element_map_version_string()
     element_map_version()

@@ -93,7 +93,7 @@ def _error_envelope(status: str, exc: BaseException, *, unexpected: bool = False
     if unexpected:
         data["unexpected"] = True
     detail = {
-        "code": status,
+        "code": getattr(exc, "code", None) or status,
         "message": str(exc) or type(exc).__name__,
         "data": data,
     }

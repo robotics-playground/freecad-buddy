@@ -44,6 +44,7 @@ from freecad_buddy.usecases.capabilities import (
 )
 from freecad_buddy.usecases.documents import DocumentRegistry
 from freecad_buddy.usecases.exports import ExportRegistry
+from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
 
 _DOC_SCHEMA = {"type": "string", "description": "opaque fcb-doc handle"}
 
@@ -811,6 +812,53 @@ def _feature_specs():
             "it opens. A call whose parameters hold only Visibility (true/false) is display state "
             "and needs no confirm in any posture.",
         ),
+        _feature_method(
+            "feature_parameters_define",
+            features.feature_parameters_define,
+            _feature_schema(
+                {
+                    "varset": {
+                        "type": "string",
+                        "description": "VarSet object Name; created when missing",
+                    },
+                    "parameters": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                                    "description": "not a unit symbol (W, T, mm, deg, in, e, ...)",
+                                },
+                                "type": {"enum": sorted(PARAMETER_PROPERTY_TYPES)},
+                                "value": {
+                                    "description": "length: {value, unit: 'mm'}; angle: "
+                                    "{value, unit: 'deg'}; float: number; integer: integer "
+                                    "within +-2147483647; bool; string",
+                                },
+                                "group": {"type": "string", "default": "Parameters"},
+                                "description": {"type": "string"},
+                            },
+                            "required": ["name", "type", "value"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                ["varset", "parameters"],
+            ),
+            "Create the VarSet when missing, then add or update typed parameters on it in one "
+            "transaction. Result {varset, added, updated}. A name that FreeCAD's expression "
+            "parser reads as a unit or constant (W, T, A, V, N, C, K, mm, deg, in, e, pi, ...) "
+            "is refused with INVALID_INPUT code parameters.unit_symbol_name, because every "
+            "expression that reads it would fail to parse. Other refusals: "
+            "parameters.reserved_name, parameters.duplicate_name, parameters.not_a_varset, "
+            "parameters.type_conflict, parameters.bound_by_expression (update of a property "
+            "an expression drives). A length must not be negative and an angle must be "
+            "within +-360 deg: FreeCAD would clamp them silently.",
+        ),
     ]
 
 
@@ -1037,6 +1085,7 @@ READ_ONLY_PROFILE = frozenset(
         "query_mass_properties",
         "query_interference",
         "query_section",
+        "query_parameters",
         "query_dependencies",
         "query_sketch_info",
         "query_placement",
@@ -1380,6 +1429,22 @@ def tool_specs() -> list[ToolSpec]:
             "plane on a planar face (section.plane_on_face, offset it by 1e-6 mm or more). "
             "Solids that overlap or touch inside one compound are not detected: area counts each "
             "solid. Numbers only, no verdict.",
+        ),
+        _query_method(
+            "query_parameters",
+            queries.query_parameters,
+            30.0,
+            {
+                "type": "object",
+                "properties": {"doc": _DOC_SCHEMA},
+                "required": ["doc"],
+                "additionalProperties": False,
+            },
+            "List the document's parameters: every property of each VarSet {name, type, value, "
+            "unit, group, description}, every aliased spreadsheet cell {name, cell, contents, "
+            "value, unit}, and every expression binding {object, path, expression}. A value "
+            "that cannot be read is null with a reason. Each list holds 500 rows at most; "
+            "totals counts all and truncated says when one was cut. Reads without a recompute.",
         ),
         _query_method(
             "query_dependencies",

@@ -81,10 +81,10 @@ assertions:
   suite: g2/fault-injection/
   validator_sha: "ca5363cb6f06a48fd22bb53aec8003e815f57e1c4d7b8f207e0fe9ed1517a190"
   last_run:
-    run_id: g2-2026-10-08-1
+    run_id: g2-2026-11-24-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-24
     wilson_ci:
       rate: 1.0
       low: 0.6756
@@ -96,10 +96,10 @@ audit_references:
   suite: g2/fault-injection/
   validator_sha: "a1de7077c2ad7ab91e07f26b8851620024d3bd1d7e89950c929d6e069340cc5a"
   last_run:
-    run_id: g2-2026-10-08-1
+    run_id: g2-2026-11-24-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-24
     skipped_cases: 4
     wilson_ci:
       rate: 1.0
@@ -112,10 +112,10 @@ fingerprint:
   suite: g2/fault-injection/
   validator_sha: "a80e01b3702bd6a493890f957c3d6dfdff3eed4c14050e697c08b0d9a9598096"
   last_run:
-    run_id: g2-2026-10-08-1
+    run_id: g2-2026-11-24-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-24
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
@@ -126,12 +126,12 @@ fingerprint:
 
 run_mutation:
   suite: g2/fault-injection/
-  validator_sha: "e9566f4af5864be5107ad48c2665280690355fbc886fdacd0b24dd902804cf62"
+  validator_sha: "e76f8c8e8b10fbe4fe0cb5e7f7d27712cad14b7b2febf10a24f09b0b70979603"
   last_run:
-    run_id: g2-2026-10-08-1
+    run_id: g2-2026-11-24-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-24
     not_scored: "no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero"
     skipped_cases: 2
     wilson_ci:
@@ -145,10 +145,10 @@ verify_sketch:
   suite: g2/fault-injection/
   validator_sha: "6f1907519b2f0cb2f5b34231c801726dba6fda70f326254abe1a7706155ba273"
   last_run:
-    run_id: g2-2026-10-08-1
+    run_id: g2-2026-11-24-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-24
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
