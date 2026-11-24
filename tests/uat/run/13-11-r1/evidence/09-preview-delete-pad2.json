@@ -1,0 +1,147 @@
+{
+ "tool": "preview_dry_run",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "operation": {
+   "tool": "document_object_delete",
+   "args": {
+    "objects": [
+     "Pad2"
+    ]
+   }
+  },
+  "render": "off"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "preview_id": "fcb-preview:eyJhcmdzX2RpZ2VzdCI6ImY2MjlkNGYyN2E4MmRjNGFlNTIxM2ZmNzNkNWQ1MTc4MmZjY2E4NzY2ZWExYmY4NGM1OWVmYWYxMzI2MjczOWEiLCJkb2MiOiJmY2ItZG9jOkVSS0VqUlJBNEhKT01RNndsVzZUWEEiLCJleHAiOjE3OTU1Mzc0NjYsImZpbmdlcnByaW50X2JlZm9yZSI6ImNiNDZmMTRhMGM1MmM1M2JiODczZWU1OWY2YTkzMDZjMzg5ZDQzZWM1MGM0YmM1NzFkOTgwODMwODIxZThiOWEiLCJqdGkiOiJWVC1xY3FsWFJUXzR3Q1RtV2E3a293IiwidG9vbCI6ImRvY3VtZW50X29iamVjdF9kZWxldGUifQ.pz1qp_jNvSCzQeq-89QHDrP-d6yfRuVBsoxzOsUJybE",
+   "diff": {
+    "schema": "fcb.geometry-diff/2",
+    "op": {
+     "tool": "document_object_delete"
+    },
+    "doc": {
+     "handle": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA"
+    },
+    "deltas": {
+     "volume": {
+      "before": 5300.0,
+      "after": 4800.0,
+      "delta": -500.0,
+      "units": "mm^3"
+     },
+     "area": {
+      "before": 2320.0,
+      "after": 2120.0,
+      "delta": -200.0,
+      "units": "mm^2"
+     },
+     "bbox": {
+      "before": [
+       0.0,
+       0.0,
+       0.0,
+       50.0,
+       20.0,
+       15.0
+      ],
+      "after": [
+       0.0,
+       0.0,
+       0.0,
+       50.0,
+       20.0,
+       10.0
+      ],
+      "center_shift": [
+       0.0,
+       0.0,
+       -2.5
+      ],
+      "units": "mm"
+     },
+     "com": {
+      "before": [
+       15.28,
+       9.25,
+       6.97
+      ],
+      "after": [
+       15.83,
+       9.17,
+       4.83
+      ],
+      "shift": [
+       0.55,
+       -0.08,
+       -2.14
+      ],
+      "units": "mm"
+     }
+    },
+    "counts": {
+     "faces": {
+      "before": 17,
+      "after": 12,
+      "delta": -5
+     },
+     "edges": {
+      "before": 36,
+      "after": 28,
+      "delta": -8
+     },
+     "vertices": {
+      "before": 24,
+      "after": 20,
+      "delta": -4
+     },
+     "solids": {
+      "before": 2,
+      "after": 2,
+      "delta": 0
+     }
+    },
+    "touched": [
+     "Body"
+    ],
+    "new": [],
+    "deleted": [
+     "Pad2"
+    ],
+    "validity": {
+     "is_valid": true,
+     "recompute_clean": true,
+     "recompute_errors": [],
+     "pre_existing_errors": [],
+     "status": "OK",
+     "explanation": null
+    },
+    "tnp_precheck": {
+     "status": "CLEAN",
+     "element_map_version": "15.70200.5",
+     "counts": {
+      "PASS": 7
+     },
+     "findings": []
+    },
+    "fingerprint_before": "cb46f14a0c52c53bb873ee59f6a9306c389d43ec50c4bc571d980830821e8b9a",
+    "render": {
+     "available": false,
+     "reason": "off"
+    }
+   },
+   "expires_at": "2026-11-24T16:24:26.483780+00:00"
+  },
+  "text": "Preview: volume -500.0 mm^3, faces -5, valid=True, tnp=CLEAN.",
+  "framing": {
+   "fits": true,
+   "ratio": 0.95,
+   "checked": "cached",
+   "stale_reason": "served from cache; unverified key component(s): geometry"
+  }
+ }
+}

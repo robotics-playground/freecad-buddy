@@ -1,0 +1,18 @@
+{
+ "tool": "document_create",
+ "args": {
+  "label": "VisRepro"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+   "name": "VisRepro",
+   "label": "VisRepro"
+  },
+  "text": "doc: fcb-doc:dYgwCWXxb154oXxBatWDhg\nlabel: VisRepro\nname: VisRepro"
+ }
+}

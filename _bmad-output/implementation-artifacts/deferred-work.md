@@ -2289,3 +2289,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `document_object_delete` now ships.
   blocker: Story 13-12 owns the skill routing text.
   unblock: Story 13-12.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: The `document_object_delete` container exemption compares names only (`features.py:2414`): a GroupExtension holder that also links to one of its Group members through a `PropertyLink` is treated as a pure container, so the delete returns OK and clears that link.
+  evidence: `_bmad-output/implementation-artifacts/verify-13-11.md` "Round 2" R2-1 (synthetic Python object; no stock FreeCAD type found affected).
+  blocker: no stock FreeCAD type reproduces it; low.
+  unblock: a real document type that holds a member in Group and also links to it, or a small refactor that checks link properties besides Group.

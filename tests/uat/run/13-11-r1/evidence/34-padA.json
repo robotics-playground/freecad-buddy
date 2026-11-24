@@ -1,0 +1,74 @@
+{
+ "tool": "feature_pad",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "body": "Body",
+  "profile": "SkA",
+  "name": "PadA",
+  "length": {
+   "value": 5,
+   "unit": "mm"
+  }
+ },
+ "isError": true,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "RECOMPUTE_ERROR",
+  "detail": {
+   "code": "mutation.recompute_error",
+   "message": "recompute left 1 object(s) invalid: PadA: Linked shape object is empty"
+  },
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "e8fdb6b8c861a9461c28b32f10f06e1619b35f4e296993fb19fd90e1ffe79f80",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "e8fdb6b8c861a9461c28b32f10f06e1619b35f4e296993fb19fd90e1ffe79f80",
+     "serializer": "exportBinary"
+    },
+    "changed": [],
+    "post_verify": {
+     "recompute_clean": false,
+     "is_valid": false,
+     "fully_constrained": "not_measured",
+     "tnp_audit": {
+      "status": "FLAGGED",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "BROKEN": 1
+      },
+      "findings": [
+       {
+        "owner": "PadA",
+        "prop": "",
+        "mapped_before": null,
+        "state_after": "Linked shape object is empty",
+        "verdict": "BROKEN",
+        "layer": 0,
+        "detail": "PadA is invalid after the mutation: Linked shape object is empty"
+       }
+      ]
+     },
+     "passed": false,
+     "explanation": "recompute left 1 object(s) invalid: PadA: Linked shape object is empty"
+    },
+    "rolled_back": true,
+    "rollback_proven": "rolled_back_verified",
+    "touched": [
+     "PadA",
+     "Body"
+    ]
+   },
+   "feature": "PadA",
+   "feature_state": {
+    "schema": "fcb.feature-state/1",
+    "feature": "PadA",
+    "readable": false
+   }
+  },
+  "text": "Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: PadA: Linked shape object is empty"
+ }
+}

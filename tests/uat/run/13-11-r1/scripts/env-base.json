@@ -1,0 +1,336 @@
+{
+ "document_undo": {
+  "detail": null,
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "structured_content": {
+   "doc": "fcb-doc:bXfN6GK8RNmdaNqvKBa6_g",
+   "errors": [],
+   "fingerprint_after": "619183a0030f57ea9f933450cb891b74a21cc69b98263a51522a87308d7f6d48",
+   "fingerprint_before": "f9227da1a23b7ce4cd69cede1197597add6a1c7efe851c6937a588fdb3f28eea",
+   "matches_pre_op": null,
+   "name": "envcmp",
+   "restored_objects": [
+    "Body",
+    "Origin",
+    "X_Axis",
+    "Y_Axis",
+    "Z_Axis",
+    "XY_Plane",
+    "XZ_Plane",
+    "YZ_Plane",
+    "Origin001",
+    "Rect",
+    "Block"
+   ],
+   "undo_count": 2,
+   "undone": "buddy: set parameters on Block"
+  },
+  "text": "Undid 'buddy: set parameters on Block' on envcmp: no pre-op digest supplied to compare against (f9227da1a23b -> 619183a0030f)."
+ },
+ "feature_pad": {
+  "detail": null,
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "structured_content": {
+   "feature": "Block",
+   "feature_state": {
+    "body": "Body",
+    "feature": "Block",
+    "is_tip": true,
+    "readable": true,
+    "schema": "fcb.feature-state/1",
+    "shape_summary": {
+     "area": 496.0,
+     "bbox": [
+      16.0,
+      8.0,
+      5.0
+     ],
+     "edge_count": 12,
+     "face_count": 6,
+     "is_valid": true,
+     "solid_count": 1,
+     "vertex_count": 8,
+     "volume": 639.9999999999999
+    }
+   },
+   "mutation": {
+    "changed": [
+     {
+      "area": 496.0,
+      "com": [
+       8.0,
+       4.0,
+       2.5
+      ],
+      "name": "Block",
+      "volume": 640.0
+     },
+     {
+      "area": 496.0,
+      "com": [
+       8.0,
+       4.0,
+       2.5
+      ],
+      "name": "Body",
+      "volume": 640.0
+     }
+    ],
+    "fingerprint_after": {
+     "digest": "619183a0030f57ea9f933450cb891b74a21cc69b98263a51522a87308d7f6d48",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_before": {
+     "digest": "3d776867b39e041deb06fd95b7976d6955cade0fb81cb8a1473917104a2c40ae",
+     "serializer": "exportBinary"
+    },
+    "post_verify": {
+     "explanation": null,
+     "fully_constrained": true,
+     "is_valid": true,
+     "passed": true,
+     "recompute_clean": true,
+     "tnp_audit": {
+      "counts": {
+       "PASS": 1
+      },
+      "element_map_version": "15.70200.5",
+      "findings": [],
+      "status": "CLEAN"
+     }
+    },
+    "rollback_proven": null,
+    "rolled_back": false,
+    "schema": "fcb.mutation/2",
+    "touched": [
+     "Block",
+     "Body"
+    ]
+   }
+  },
+  "text": "Mutation committed; fingerprint 619183a0030f."
+ },
+ "feature_pad_bad": null,
+ "feature_set_parameters": {
+  "detail": null,
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "structured_content": {
+   "feature": "Block",
+   "feature_state": {
+    "body": "Body",
+    "feature": "Block",
+    "is_tip": true,
+    "readable": true,
+    "schema": "fcb.feature-state/1",
+    "shape_summary": {
+     "area": 688.0,
+     "bbox": [
+      16.0,
+      8.0,
+      9.0
+     ],
+     "edge_count": 12,
+     "face_count": 6,
+     "is_valid": true,
+     "solid_count": 1,
+     "vertex_count": 8,
+     "volume": 1151.9999999999998
+    }
+   },
+   "mutation": {
+    "changed": [
+     {
+      "area": 688.0,
+      "com": [
+       8.0,
+       4.0,
+       4.5
+      ],
+      "name": "Block",
+      "volume": 1152.0
+     },
+     {
+      "area": 688.0,
+      "com": [
+       8.0,
+       4.0,
+       4.5
+      ],
+      "name": "Body",
+      "volume": 1152.0
+     }
+    ],
+    "fingerprint_after": {
+     "digest": "f9227da1a23b7ce4cd69cede1197597add6a1c7efe851c6937a588fdb3f28eea",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_before": {
+     "digest": "619183a0030f57ea9f933450cb891b74a21cc69b98263a51522a87308d7f6d48",
+     "serializer": "exportBinary"
+    },
+    "post_verify": {
+     "explanation": null,
+     "fully_constrained": true,
+     "is_valid": true,
+     "passed": true,
+     "recompute_clean": true,
+     "tnp_audit": {
+      "counts": {
+       "PASS": 2
+      },
+      "element_map_version": "15.70200.5",
+      "findings": [],
+      "status": "CLEAN"
+     }
+    },
+    "rollback_proven": null,
+    "rolled_back": false,
+    "schema": "fcb.mutation/2",
+    "touched": [
+     "Block",
+     "Body"
+    ]
+   }
+  },
+  "text": "Mutation committed; fingerprint f9227da1a23b."
+ },
+ "feature_set_parameters_rollback": {
+  "detail": {
+   "code": "mutation.recompute_error",
+   "message": "recompute left 1 object(s) invalid: Block: Cannot create a pad with a total length of zero."
+  },
+  "schema": "fcb.result-envelope/1",
+  "status": "RECOMPUTE_ERROR",
+  "structured_content": {
+   "feature": "Block",
+   "feature_state": {
+    "body": "Body",
+    "feature": "Block",
+    "is_tip": true,
+    "readable": true,
+    "schema": "fcb.feature-state/1",
+    "shape_summary": {
+     "area": 496.0,
+     "bbox": [
+      16.0,
+      8.0,
+      5.0
+     ],
+     "edge_count": 12,
+     "face_count": 6,
+     "is_valid": true,
+     "solid_count": 1,
+     "vertex_count": 8,
+     "volume": 639.9999999999999
+    }
+   },
+   "mutation": {
+    "changed": [],
+    "fingerprint_after": {
+     "digest": "d3bf0b3eb41cece9653af02ff86c2978d369071512fda3d92f5cf9f291f58ede",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_before": {
+     "digest": "619183a0030f57ea9f933450cb891b74a21cc69b98263a51522a87308d7f6d48",
+     "serializer": "exportBinary"
+    },
+    "post_verify": {
+     "explanation": "recompute left 1 object(s) invalid: Block: Cannot create a pad with a total length of zero.",
+     "fully_constrained": "not_measured",
+     "is_valid": false,
+     "passed": false,
+     "recompute_clean": false,
+     "tnp_audit": {
+      "counts": {
+       "BROKEN": 1,
+       "PASS": 2
+      },
+      "element_map_version": "15.70200.5",
+      "findings": [
+       {
+        "detail": "Block is invalid after the mutation: Cannot create a pad with a total length of zero.",
+        "layer": 0,
+        "mapped_before": null,
+        "owner": "Block",
+        "prop": "Profile",
+        "state_after": "Cannot create a pad with a total length of zero.",
+        "verdict": "BROKEN"
+       }
+      ],
+      "status": "FLAGGED"
+     }
+    },
+    "rollback_proven": "rolled_back_verified",
+    "rolled_back": true,
+    "schema": "fcb.mutation/2",
+    "touched": [
+     "Block",
+     "Body"
+    ]
+   }
+  },
+  "text": "Mutation rolled back (rolled_back_verified): recompute left 1 object(s) invalid: Block: Cannot create a pad with a total length of zero."
+ },
+ "sketch_add_constraint": {
+  "detail": null,
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "structured_content": {
+   "constraint_ids": [
+    10,
+    11
+   ],
+   "mutation": {
+    "changed": [],
+    "fingerprint_after": {
+     "digest": "3d776867b39e041deb06fd95b7976d6955cade0fb81cb8a1473917104a2c40ae",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_before": {
+     "digest": "3d776867b39e041deb06fd95b7976d6955cade0fb81cb8a1473917104a2c40ae",
+     "serializer": "exportBinary"
+    },
+    "post_verify": {
+     "explanation": null,
+     "fully_constrained": true,
+     "is_valid": true,
+     "passed": true,
+     "recompute_clean": true,
+     "tnp_audit": {
+      "counts": {
+       "PASS": 1
+      },
+      "element_map_version": "15.70200.5",
+      "findings": [],
+      "status": "CLEAN"
+     }
+    },
+    "rollback_proven": null,
+    "rolled_back": false,
+    "schema": "fcb.mutation/2",
+    "touched": [
+     "Rect"
+    ]
+   },
+   "sketch": "Rect",
+   "sketch_state": {
+    "conflicting": [],
+    "constraint_count": 11,
+    "dof": 0,
+    "fully_constrained": true,
+    "geometry_count": 4,
+    "malformed": [],
+    "partially_redundant": [],
+    "readable": true,
+    "redundant": [],
+    "schema": "fcb.sketch-state/1",
+    "sketch": "Rect",
+    "solver_status_code": 0
+   }
+  },
+  "text": "Mutation committed; fingerprint 3d776867b39e."
+ }
+}

@@ -1,0 +1,122 @@
+{
+ "tool": "document_object_delete",
+ "args": {
+  "doc": "fcb-doc:Zl_TO-5lU4gEUbmbyKQU0Q",
+  "objects": [
+   "Body2"
+  ],
+  "with_dependents": true
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "f9a42bcc42de01a5da59fbc60abdf3f526e5dc3e02f1d554b5b1eaa1440a5839",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "2407931bab21ca4564803cec1ee3c5b4bcfd996f4c13adab74cb6fdac33bb3b6",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 2073.45,
+      "area": 1193.81,
+      "com": [
+       0.0,
+       0.0,
+       4.32
+      ]
+     },
+     {
+      "name": "Body2",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "Bool",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "PadC",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "SkC",
+      "volume": null,
+      "area": null,
+      "com": null
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": true,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "PASS": 4
+      },
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "Body2",
+     "Origin002",
+     "X_Axis001",
+     "Y_Axis001",
+     "Z_Axis001",
+     "XY_Plane001",
+     "XZ_Plane001",
+     "YZ_Plane001",
+     "Origin003",
+     "SkC",
+     "PadC",
+     "Bool",
+     "PadB",
+     "Body"
+    ]
+   },
+   "deleted": [
+    "Body2",
+    "Origin002",
+    "X_Axis001",
+    "Y_Axis001",
+    "Z_Axis001",
+    "XY_Plane001",
+    "XZ_Plane001",
+    "YZ_Plane001",
+    "Origin003",
+    "SkC",
+    "PadC",
+    "Bool"
+   ],
+   "dependents": [
+    "Bool"
+   ]
+  },
+  "text": "Mutation committed; fingerprint 2407931bab21.",
+  "framing": {
+   "fits": true,
+   "ratio": 0.7,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}
