@@ -2139,3 +2139,9 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/redteam-13-4.md` (low, not in Story 13-4 scope).
   blocker: Phase 5 robot-description tools are out of scope for SPEC-mcp-usage-improvement (non-goal "Phase 5 work").
   unblock: the Phase 5 epic that adds URDF/SDF export tools; or a skills-only Story that marks those steps as not yet available.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-4-skill-routing-gap-list.md`
+  summary: `sketch_add_constraint` accepts a `third` argument for `Tangent` and `Perpendicular` and then drops it (found by reading the code, not run). Also confirm whether rolling back every call that leaves the sketch with DoF > 0 is intended or too strict for incremental constraining.
+  evidence: `_bmad-output/implementation-artifacts/verify-13-4.md` "Round 2", product notes.
+  blocker: outside Story 13-4 (skills only); needs a reproduction in FreeCAD before any fix.
+  unblock: a Story that touches `sketch_add_constraint`, or a small bug Story after a measured run confirms the drop.
