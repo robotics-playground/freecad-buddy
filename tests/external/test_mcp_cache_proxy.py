@@ -601,3 +601,81 @@ def test_should_treat_cache_as_empty_when_file_is_not_a_tool_list(
 
     # Assert
     assert names == []
+
+
+def _refreshed_proxy(
+    tools_file: Path, marker: Path, cache_path: Path, instructions: str | None
+) -> CacheProxy:
+    extra = [] if instructions is None else ["--instructions", instructions]
+    parameters = StdioServerParameters(
+        command=sys.executable, args=[*_fake_arguments(tools_file, marker), *extra]
+    )
+    target = CacheProxy(
+        Upstream(UpstreamSpec("fake", None, lambda: stdio_client(parameters))), "fake", cache_path
+    )
+    _run_and_close(target, target.refresh_once)
+    return target
+
+
+def _next_start_instructions(cache_path: Path) -> str | None:
+    return (
+        CacheProxy(Upstream(_unreachable_spec(), 5), "fake", cache_path)
+        .initialization_options()
+        .instructions
+    )
+
+
+def test_Should_serve_cached_upstream_instructions_When_a_later_proxy_starts_with_the_upstream_down(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    instructions = "Use typed tools first."
+
+    # Act
+    first = _refreshed_proxy(tools_file, marker, cache_path, instructions)
+
+    # Assert
+    assert first.initialization_options().instructions is None
+    assert _next_start_instructions(cache_path) == instructions
+
+
+def test_Should_serve_the_new_text_When_the_upstream_instructions_change(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    _refreshed_proxy(tools_file, marker, cache_path, "old text")
+
+    # Act
+    _refreshed_proxy(tools_file, marker, cache_path, "new text")
+
+    # Assert
+    assert _next_start_instructions(cache_path) == "new text"
+
+
+def test_Should_serve_no_instructions_When_the_upstream_stops_sending_them(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    _refreshed_proxy(tools_file, marker, cache_path, "old text")
+
+    # Act
+    _refreshed_proxy(tools_file, marker, cache_path, None)
+
+    # Assert
+    assert _next_start_instructions(cache_path) is None
+
+
+@pytest.mark.parametrize("content", [b"", bytes([0xFF, 0xFE, 0x80])], ids=["empty", "not-utf8"])
+def test_Should_serve_no_instructions_When_the_cache_file_is_unusable(
+    cache_path: Path, content: bytes
+) -> None:
+    # Arrange
+    instructions_path = cache_path.with_name("fake.instructions.txt")
+    instructions_path.parent.mkdir(parents=True)
+    instructions_path.write_bytes(content)
+
+    # Act
+    instructions = _next_start_instructions(cache_path)
+
+    # Assert
+    assert instructions is None

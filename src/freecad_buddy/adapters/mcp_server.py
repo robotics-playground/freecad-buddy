@@ -56,6 +56,31 @@ except (OSError, ValueError) as exc:
     ) from exc
 
 
+SERVER_INSTRUCTIONS = "\n".join(
+    [
+        "FreeCAD Buddy drives a live FreeCAD document through typed tools. Tool families:",
+        "- document_: create, open, save, close, list, recompute and undo documents.",
+        "- query_: read-only facts: tree, objects, sketches, placement, dependencies, "
+        "mass properties, screenshots, capabilities.",
+        "- verify_: check shapes, sketches and recomputes against numbers.",
+        "- export_ and verify_export_: write STEP, STL or 3MF, then check the written file.",
+        "- sketch_: create sketches; add, remove and constrain geometry.",
+        "- feature_: PartDesign bodies and features (pad, pocket, revolve, hole, fillet, "
+        "chamfer, pattern, mirror, datum) and their parameters.",
+        "- preview_: dry-run a mutation before it is applied.",
+        "- view_: fit the 3D viewport.",
+        "",
+        "Use a typed tool whenever one covers the operation. Before a build, make the sketch_, "
+        "feature_, query_ and verify_ tools available in your client.",
+        "",
+        "script_exec is for the gaps listed in the freecad-scripting-idioms skill.",
+        "",
+        "Load these skills first: design-decomposition, freecad-sketcher, freecad-partdesign, "
+        "verification-thinking.",
+    ]
+)
+
+
 def configure_stderr_logging(level: int = logging.INFO) -> None:
     """Route all logging to stderr; stdout carries the stdio MCP protocol."""
     handler = logging.StreamHandler(sys.stderr)
@@ -228,7 +253,7 @@ def build_server(
     confirm.set_approval_sink(audit)
     view_fit.set_audit_sink(audit)
 
-    server: Server = Server(name)
+    server: Server = Server(name, instructions=SERVER_INSTRUCTIONS)
     suspect = _SuspectDocuments()
 
     @server.list_tools()
@@ -339,6 +364,7 @@ async def serve_stdio(server: Server) -> None:
 
 
 __all__ = [
+    "SERVER_INSTRUCTIONS",
     "Capabilities",
     "build_server",
     "configure_stderr_logging",

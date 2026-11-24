@@ -122,3 +122,20 @@ def test_should_follow_the_exec_switch_when_the_proxy_builds_its_registry(enviro
 
     # Assert
     assert ("script_exec" in {method.name for method in registry.methods()}) is listed
+
+
+def test_Should_carry_the_shared_instructions_When_the_gui_proxy_server_initializes():
+    # Arrange
+    from freecad_buddy.adapters.mcp_server import SERVER_INSTRUCTIONS
+    from freecad_buddy.hosts.gui_external.entry import build_proxy_server
+
+    caps = Capabilities(script_exec=False)
+    target = build_proxy_server(
+        build_proxy_registry(_FakeClient(_self_read_envelope(4)), caps), caps
+    )
+
+    # Act
+    options = target.create_initialization_options()
+
+    # Assert
+    assert options.instructions == SERVER_INSTRUCTIONS
