@@ -97,6 +97,8 @@ EXPECTED_FEATURE_TOOLS = {
     "feature_pad",
     "feature_pocket",
     "feature_revolve",
+    "feature_loft",
+    "feature_sweep",
     "feature_hole",
     "feature_fillet",
     "feature_chamfer",

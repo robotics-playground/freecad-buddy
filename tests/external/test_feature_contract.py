@@ -28,6 +28,8 @@ FEATURE_TOOLS = {
     "feature_pad",
     "feature_pocket",
     "feature_revolve",
+    "feature_loft",
+    "feature_sweep",
     "feature_hole",
     "feature_fillet",
     "feature_chamfer",
@@ -349,6 +351,8 @@ def test_a_field_freecad_needs_stays_required_on_the_wire():
     specs = _specs_by_name()
     for tool, field in (
         ("feature_revolve", "axis"),
+        ("feature_loft", "sections"),
+        ("feature_sweep", "spine"),
         ("feature_mirror", "mirror_plane"),
         ("feature_pad", "profile"),
         ("feature_pocket", "profile"),
@@ -392,3 +396,38 @@ def test_feature_patterns_conditional_schema_accepts_and_refuses_the_right_calls
     assert validator.is_valid({**base, "kind": "polar", "axis": selector})
     assert not validator.is_valid({**base, "kind": "linear"}), "a linear pattern needs direction"
     assert not validator.is_valid({**base, "kind": "polar"}), "a polar pattern needs axis"
+
+
+def test_Should_accept_a_sketch_name_or_a_selector_When_the_sweep_spine_is_validated():
+    # Arrange
+    schema = _specs_by_name()["feature_sweep"].input_schema
+    target = jsonschema.Draft202012Validator(schema)
+    base = {"doc": "fcb-doc:x", "body": "Body", "profile": "Ring", "name": "Rail"}
+    selector = {"kind": "mapped_name", "object": "Path", "mapped_name": "Edge1"}
+
+    # Act
+    by_name = target.is_valid({**base, "spine": "Path"})
+    by_selector = target.is_valid({**base, "spine": selector})
+    by_whole_object = target.is_valid({**base, "spine": {"kind": "mapped_name", "object": "Path"}})
+    by_number = target.is_valid({**base, "spine": 3})
+    missing = target.is_valid(base)
+
+    # Assert
+    assert by_name and by_selector and by_whole_object
+    assert not by_number
+    assert not missing
+
+
+def test_Should_offer_only_standard_and_frenet_When_the_sweep_mode_is_validated():
+    # Arrange
+    schema = _specs_by_name()["feature_sweep"].input_schema
+    target = jsonschema.Draft202012Validator(schema)
+    base = {"doc": "fcb-doc:x", "body": "Body", "profile": "Ring", "spine": "Path", "name": "Rail"}
+
+    # Act
+    accepted = [target.is_valid({**base, "mode": mode}) for mode in ("standard", "frenet")]
+    refused = [target.is_valid({**base, "mode": mode}) for mode in ("fixed", "Standard", "")]
+
+    # Assert
+    assert accepted == [True, True]
+    assert refused == [False, False, False]

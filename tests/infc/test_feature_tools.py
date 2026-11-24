@@ -2480,5 +2480,564 @@ class CapabilityTest(_FeatureFixture):
         self.assertTrue(banner["partdesign_available"])
 
 
+FRUSTUM_VOLUME = 20.0 / 3.0 * (400.0 + 144.0 + math.sqrt(400.0 * 144.0))
+CIRCLE_AREA = math.pi * 3.0**2
+STRAIGHT_SPINE = 30.0
+ARC_SPINE = STRAIGHT_SPINE + 30.0
+_VERTICAL = App.Rotation(App.Vector(1, 0, 0), 90)
+
+
+class _LoftSweepFixture(_FeatureFixture):
+    """Loft sections and sweep spines built as plain sketches in a Body."""
+
+    def square(self, body, name, offset, side, z):
+        return self.rect_sketch(body, name, offset, offset, side, side, z=z)
+
+    def line_spine(self, body, name, base=(0.0, 0.0), length=STRAIGHT_SPINE):
+        """A vertical line in a sketch whose plane contains the Z axis, rising from ``base``."""
+        sketch = self._sketch(body, name, 0.0, _VERTICAL)
+        sketch.Placement = App.Placement(App.Vector(base[0], base[1], 0.0), _VERTICAL)
+        sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(0, length, 0)), False)
+        sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 1, -1, 1))
+        sketch.addConstraint(Sketcher.Constraint("Vertical", 0))
+        sketch.addConstraint(Sketcher.Constraint("DistanceY", 0, 1, 0, 2, length))
+        self.document().recompute()
+        self.assertTrue(sketch.FullyConstrained, f"{name} is not fully constrained")
+        return sketch
+
+    def arc_spine(self, body, name):
+        """The vertical 30 mm line, then a 30 mm arc of radius 20 that continues it."""
+        sketch = self.line_spine(body, name)
+        sketch.addGeometry(
+            Part.ArcOfCircle(
+                Part.Circle(App.Vector(-20, 30, 0), App.Vector(0, 0, 1), 20.0), 0.0, 1.5
+            ),
+            False,
+        )
+        sketch.addConstraint(Sketcher.Constraint("Tangent", 0, 2, 1, 1))
+        sketch.addConstraint(Sketcher.Constraint("Radius", 1, 20.0))
+        sketch.addConstraint(Sketcher.Constraint("Angle", 1, 1.5))
+        self.document().recompute()
+        self.assertTrue(sketch.FullyConstrained, f"{name} is not fully constrained")
+        return sketch
+
+    def folded_spine(self, body, name):
+        """A BSpline that runs forward and back along one line: a zero-velocity point."""
+        sketch = self._sketch(body, name, 0.0, _VERTICAL)
+        curve = Part.BSplineCurve()
+        curve.interpolate([App.Vector(0.5 * i * math.cos(i * 0.3), 0, 0) for i in range(8)])
+        sketch.addGeometry(curve, False)
+        self.document().recompute()
+        return sketch
+
+    def open_square(self, body, name, side, z):
+        """Three sides of a square: a wire that bounds no face."""
+        sketch = self._sketch(body, name, z)
+        corners = [(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)]
+        for index in range(3):
+            start = App.Vector(*corners[index], 0)
+            end = App.Vector(*corners[index + 1], 0)
+            sketch.addGeometry(Part.LineSegment(start, end), False)
+        self.document().recompute()
+        return sketch
+
+    def ring_sketch(self, body, name, z):
+        """Two concentric circles: one face with a hole, so two wires."""
+        sketch = self._sketch(body, name, z)
+        for radius in (8.0, 4.0):
+            circle = Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), radius)
+            sketch.addGeometry(circle, False)
+        self.document().recompute()
+        return sketch
+
+    def two_square_loft_body(self):
+        body = self.empty_body()
+        self.square(body, "Base", 0.0, 20.0, 0.0)
+        self.square(body, "Top", 4.0, 12.0, 20.0)
+        return body
+
+    def loft(self, **overrides):
+        args = {
+            "doc": self.handle,
+            "body": "Body",
+            "profile": "Base",
+            "sections": ["Top"],
+            "name": "Lofted",
+            "ruled": True,
+        }
+        args.update(overrides)
+        return features.feature_loft(self.registry, **args)
+
+    def sweep(self, **overrides):
+        args = {
+            "doc": self.handle,
+            "body": "Body",
+            "profile": "Ring",
+            "spine": "Path",
+            "name": "Swept",
+        }
+        args.update(overrides)
+        return features.feature_sweep(self.registry, **args)
+
+    def sweep_body(self, spine="line"):
+        body = self.empty_body()
+        self.circle_sketch(body, "Ring", (0.0, 0.0), 3.0)
+        if spine == "line":
+            self.line_spine(body, "Path")
+        else:
+            self.arc_spine(body, "Path")
+        return body
+
+    def plate_with_cutter(self):
+        """A 40x40x10 plate, a 3 mm profile circle centred at (20, 20) on its bottom, a spine up."""
+        body, _ = self.plate()
+        self.circle_sketch(body, "Ring", (20.0, 20.0), 3.0)
+        self.line_spine(body, "Path", base=(20.0, 20.0), length=10.0)
+        return body
+
+    def feature_type(self, name):
+        return self.document().getObject(name).TypeId
+
+    def tnp_status(self, envelope):
+        return envelope["structured_content"]["mutation"]["post_verify"]["tnp_audit"]["status"]
+
+    def preview(self, operation):
+        from freecad_buddy.hosts.tool_catalog import preview_op_table
+        from freecad_buddy.usecases import preview
+
+        return preview.preview_dry_run(
+            self.registry, preview_op_table(), None, doc=self.handle, operation=operation
+        )
+
+
+class LoftTest(_LoftSweepFixture):
+    def test_Should_build_the_frustum_volume_When_two_squares_are_lofted_ruled(self):
+        # Arrange
+        self.two_square_loft_body()
+
+        # Act
+        envelope = self.loft()
+
+        # Assert
+        self.assert_volume(envelope, FRUSTUM_VOLUME, places=3)
+        self.assertEqual(self.feature_type("Lofted"), "PartDesign::AdditiveLoft")
+        self.assertEqual(self.document().getObject("Body").Tip.Name, "Lofted")
+
+    def test_Should_write_the_sections_in_order_When_three_sections_are_lofted_smooth(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.square(body, "Third", 0.0, 20.0, 30.0)
+
+        # Act
+        envelope = self.loft(sections=["Top", "Third"], ruled=False)
+
+        # Assert
+        state = self.assert_ok(envelope)
+        volume = state["shape_summary"]["volume"]
+        self.assertTrue(12.0**2 * 30.0 < volume < 20.0**2 * 30.0, volume)
+        feature = self.document().getObject("Lofted")
+        self.assertEqual([section.Name for section, _ in feature.Sections], ["Top", "Third"])
+        self.assertFalse(feature.Ruled)
+
+    def test_Should_join_the_last_section_to_the_profile_When_closed_is_true(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.square(body, "Third", 0.0, 20.0, 40.0)
+        sections = ["Top", "Third"]
+        self.assert_ok(self.loft(sections=sections, ruled=False))
+        open_volume = self.document().getObject("Lofted").Shape.Volume
+        self.registry.document_undo(doc=self.handle)
+
+        # Act
+        envelope = self.loft(sections=sections, ruled=False, closed=True)
+
+        # Assert
+        state = self.assert_ok(envelope)
+        self.assertTrue(self.document().getObject("Lofted").Closed)
+        self.assertNotAlmostEqual(state["shape_summary"]["volume"], open_volume, places=0)
+
+    def test_Should_remove_the_frustum_volume_When_the_loft_is_subtractive(self):
+        # Arrange
+        body, _ = self.plate()
+        self.square(body, "Base", 10.0, 10.0, 0.0)
+        self.square(body, "Top", 12.0, 6.0, 10.0)
+        cut = 10.0 / 3.0 * (100.0 + 36.0 + math.sqrt(100.0 * 36.0))
+
+        # Act
+        envelope = self.loft(subtractive=True)
+
+        # Assert
+        self.assert_volume(envelope, PLATE_VOLUME - cut, places=3)
+        self.assertEqual(self.feature_type("Lofted"), "PartDesign::SubtractiveLoft")
+
+    def test_Should_restore_the_pre_op_state_When_a_loft_is_undone(self):
+        # Arrange
+        self.two_square_loft_body()
+        pre_op = fingerprint.fingerprint(self.document())["digest"]
+        self.assert_ok(self.loft())
+
+        # Act
+        undone = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)
+
+        # Assert
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertTrue(undone["structured_content"]["matches_pre_op"])
+        self.assertIsNone(self.document().getObject("Lofted"))
+
+    def test_Should_report_a_clean_tnp_audit_When_a_loft_commits(self):
+        # Arrange
+        self.two_square_loft_body()
+
+        # Act
+        envelope = self.loft()
+
+        # Assert
+        self.assertEqual(self.tnp_status(envelope), "CLEAN")
+
+    def test_Should_roll_back_and_leave_undo_usable_When_the_sections_bound_no_solid(self):
+        # Arrange
+        body = self.empty_body()
+        self.open_square(body, "Base", 20.0, 0.0)
+        self.open_square(body, "Top", 12.0, 20.0)
+        self.rect_sketch(body, "Pocket", 0.0, 0.0, 8.0, 8.0)
+        before = self.object_count()
+
+        # Act
+        envelope = self.loft()
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"])
+        self.assertIsNotNone(block["rollback_proven"])
+        self.assertIsNone(self.document().getObject("Lofted"))
+        self.assertEqual(self.object_count(), before)
+        padded = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Pocket",
+            name="Block",
+            length=mm(5.0),
+        )
+        self.assert_ok(padded)
+        undone = self.registry.document_undo(doc=self.handle)
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertIsNone(self.document().getObject("Block"))
+
+    def test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.ring_sketch(body, "Holed", 20.0)
+        self.document().addObject("Part::Box", "Box")
+        self.document().recompute()
+        cases = {
+            "closed with one section": ({"closed": True}, "closed"),
+            "profile in sections": ({"sections": ["Base"]}, "profile"),
+            "repeated section": ({"sections": ["Top", "Top"]}, "repeat"),
+            "empty sections": ({"sections": []}, "sections"),
+            "section is not a sketch": ({"sections": ["Box"]}, "not a sketch"),
+            "unknown section": ({"sections": ["Nope"]}, "Nope"),
+            "wire count mismatch": ({"sections": ["Holed"]}, "wires"),
+            "ruled is not a bool": ({"ruled": "yes"}, "ruled"),
+            "subtractive is not a bool": ({"subtractive": 1}, "subtractive"),
+            "taken name": ({"name": "Base"}, "already exists"),
+        }
+
+        for label, (overrides, expected) in cases.items():
+            with self.subTest(label):
+                # Act
+                message = self.assert_rejected_pre_bracket(
+                    self.object_count, self.loft, **overrides
+                )
+
+                # Assert
+                self.assertIn(expected, message)
+
+    def test_Should_refuse_with_a_code_When_the_sections_cost_more_than_the_limit(self):
+        # Arrange
+        self.two_square_loft_body()
+        real_limit = features._LOFT_MAX_COST
+        features._LOFT_MAX_COST = 7
+
+        # Act
+        try:
+            with self.assertRaises(features.LoftSweepRefusal) as caught:
+                self.loft()
+            message = self.assert_rejected_pre_bracket(self.object_count, self.loft)
+        finally:
+            features._LOFT_MAX_COST = real_limit
+
+        # Assert
+        self.assertEqual(caught.exception.code, "loft.too_complex")
+        self.assertIn("8 edge units", message)
+        self.assertIn("limit of 7", message)
+
+    def test_Should_accept_a_request_exactly_at_the_cost_limit_When_the_limit_is_tight(self):
+        # Arrange
+        self.two_square_loft_body()
+        real_limit = features._LOFT_MAX_COST
+        features._LOFT_MAX_COST = 8
+
+        # Act
+        try:
+            envelope = self.loft()
+        finally:
+            features._LOFT_MAX_COST = real_limit
+
+        # Assert
+        self.assert_ok(envelope)
+
+    def test_Should_count_the_poles_When_a_section_edge_is_a_bspline(self):
+        # Arrange
+        body = self.empty_body()
+        sketch = self._sketch(body, "Spline", 0.0)
+        curve = Part.BSplineCurve()
+        points = [App.Vector(10 * math.cos(i), 10 * math.sin(i), 0) for i in range(6)]
+        curve.interpolate(points, PeriodicFlag=True)
+        sketch.addGeometry(curve, False)
+        self.document().recompute()
+        poles = len(sketch.Shape.Edges[0].Curve.getPoles())
+
+        # Act
+        cost = features._loft_cost([sketch.Shape])
+
+        # Assert
+        self.assertGreater(poles, 1)
+        self.assertEqual(cost, poles)
+
+    def test_Should_reach_the_loft_When_preview_dry_run_names_it(self):
+        # Arrange
+        self.two_square_loft_body()
+        operation = {
+            "tool": "feature_loft",
+            "args": {
+                "body": "Body",
+                "profile": "Base",
+                "sections": ["Top"],
+                "name": "Lofted",
+                "ruled": True,
+            },
+        }
+
+        # Act
+        envelope = self.preview(operation)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIsNone(self.document().getObject("Lofted"))
+
+
+class SweepTest(_LoftSweepFixture):
+    def assert_straight_sweep(self, mode, selector, subtractive):
+        """Sweep the 3 mm circle up a straight line and check the volume by hand."""
+        if subtractive:
+            self.plate_with_cutter()
+        else:
+            self.sweep_body()
+        spine = sub("Path", "Edge1") if selector else "Path"
+
+        envelope = self.sweep(mode=mode, spine=spine, subtractive=subtractive)
+
+        swept = CIRCLE_AREA * (10.0 if subtractive else STRAIGHT_SPINE)
+        expected = PLATE_VOLUME - swept if subtractive else swept
+        self.assert_volume(envelope, expected, places=3)
+        kind = "Subtractive" if subtractive else "Additive"
+        self.assertEqual(self.feature_type("Swept"), f"PartDesign::{kind}Pipe")
+        expected_mode = "Frenet" if mode == "frenet" else "Standard"
+        self.assertEqual(self.document().getObject("Swept").Mode, expected_mode)
+
+    def test_Should_sweep_additive_standard_When_the_spine_is_a_sketch_name(self):
+        self.assert_straight_sweep("standard", selector=False, subtractive=False)
+
+    def test_Should_sweep_additive_frenet_When_the_spine_is_a_sketch_name(self):
+        self.assert_straight_sweep("frenet", selector=False, subtractive=False)
+
+    def test_Should_sweep_additive_standard_When_the_spine_is_an_edge_selector(self):
+        self.assert_straight_sweep("standard", selector=True, subtractive=False)
+
+    def test_Should_sweep_additive_frenet_When_the_spine_is_an_edge_selector(self):
+        self.assert_straight_sweep("frenet", selector=True, subtractive=False)
+
+    def test_Should_cut_subtractive_standard_When_the_spine_is_a_sketch_name(self):
+        self.assert_straight_sweep("standard", selector=False, subtractive=True)
+
+    def test_Should_cut_subtractive_frenet_When_the_spine_is_a_sketch_name(self):
+        self.assert_straight_sweep("frenet", selector=False, subtractive=True)
+
+    def test_Should_cut_subtractive_standard_When_the_spine_is_an_edge_selector(self):
+        self.assert_straight_sweep("standard", selector=True, subtractive=True)
+
+    def test_Should_cut_subtractive_frenet_When_the_spine_is_an_edge_selector(self):
+        self.assert_straight_sweep("frenet", selector=True, subtractive=True)
+
+    def test_Should_sweep_the_whole_wire_When_the_spine_has_a_line_and_an_arc(self):
+        # Arrange
+        self.sweep_body(spine="arc")
+
+        # Act
+        envelope = self.sweep(mode="frenet")
+
+        # Assert
+        self.assert_volume(envelope, CIRCLE_AREA * ARC_SPINE, places=1)
+
+    def test_Should_sweep_only_that_edge_When_the_selector_names_one_edge_of_a_wire(self):
+        # Arrange
+        self.sweep_body(spine="arc")
+
+        # Act
+        envelope = self.sweep(spine=sub("Path", "Edge1"))
+
+        # Assert
+        self.assert_volume(envelope, CIRCLE_AREA * STRAIGHT_SPINE, places=3)
+
+    def test_Should_sweep_the_whole_object_When_the_selector_omits_the_mapped_name(self):
+        # Arrange
+        self.sweep_body(spine="arc")
+
+        # Act
+        envelope = self.sweep(spine={"kind": "mapped_name", "object": "Path"}, mode="frenet")
+
+        # Assert
+        self.assert_volume(envelope, CIRCLE_AREA * ARC_SPINE, places=1)
+
+    def test_Should_restore_the_pre_op_state_When_a_sweep_is_undone(self):
+        # Arrange
+        self.sweep_body()
+        pre_op = fingerprint.fingerprint(self.document())["digest"]
+        self.assert_ok(self.sweep())
+
+        # Act
+        undone = self.registry.document_undo(doc=self.handle, expect_fingerprint=pre_op)
+
+        # Assert
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertTrue(undone["structured_content"]["matches_pre_op"])
+        self.assertIsNone(self.document().getObject("Swept"))
+
+    def test_Should_report_a_clean_tnp_audit_When_a_sweep_commits(self):
+        # Arrange
+        self.sweep_body(spine="arc")
+
+        # Act
+        envelope = self.sweep(spine=sub("Path", "Edge1"))
+
+        # Assert
+        self.assertEqual(self.tnp_status(envelope), "CLEAN")
+
+    def test_Should_roll_back_When_the_profile_is_open_and_the_sweep_builds_no_solid(self):
+        # Arrange
+        body = self.empty_body()
+        self.open_square(body, "Ring", 6.0, 0.0)
+        self.line_spine(body, "Path")
+        before = self.object_count()
+
+        # Act
+        envelope = self.sweep()
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
+        block = envelope["structured_content"]["mutation"]
+        self.assertTrue(block["rolled_back"])
+        self.assertIsNotNone(block["rollback_proven"])
+        self.assertEqual(self.object_count(), before)
+
+    def test_Should_refuse_before_the_bracket_When_the_input_is_not_acceptable(self):
+        # Arrange
+        self.sweep_body()
+        self.document().addObject("Part::Box", "Box")
+        self.document().recompute()
+        cases = {
+            "spine is the profile": ({"spine": "Ring"}, "profile"),
+            "spine string is not a sketch": ({"spine": "Box"}, "not a sketch"),
+            "unknown spine": ({"spine": "Nope"}, "Nope"),
+            "solid as whole-object spine": (
+                {"spine": {"kind": "mapped_name", "object": "Box"}},
+                "edge or a wire",
+            ),
+            "face as spine element": ({"spine": sub("Box", "Face1")}, "not an Edge"),
+            "geometric selector": (
+                {"spine": {"kind": "geometric", "object": "Path"}},
+                "mapped_name",
+            ),
+            "spine of a number": ({"spine": 3}, "spine"),
+            "mode fixed": ({"mode": "fixed"}, "standard"),
+            "mode capitalised": ({"mode": "Standard"}, "frenet"),
+            "subtractive is not a bool": ({"subtractive": "no"}, "subtractive"),
+            "taken name": ({"name": "Ring"}, "already exists"),
+        }
+
+        for label, (overrides, expected) in cases.items():
+            with self.subTest(label):
+                # Act
+                message = self.assert_rejected_pre_bracket(
+                    self.object_count, self.sweep, **overrides
+                )
+
+                # Assert
+                self.assertIn(expected, message)
+
+    def test_Should_refuse_without_hanging_When_the_spine_doubles_back_on_itself(self):
+        # Arrange
+        body = self.empty_body()
+        self.circle_sketch(body, "Ring", (0.0, 0.0), 3.0)
+        self.folded_spine(body, "Path")
+
+        # Act
+        with self.assertRaises(features.LoftSweepRefusal) as caught:
+            self.sweep()
+        message = self.assert_rejected_pre_bracket(self.object_count, self.sweep)
+
+        # Assert
+        self.assertEqual(caught.exception.code, "sweep.degenerate_spine")
+        self.assertIn("doubles back", message)
+
+    def test_Should_refuse_with_a_code_When_the_sweep_costs_more_than_the_limit(self):
+        # Arrange
+        self.sweep_body()
+        real_limit = features._SWEEP_MAX_COST
+        features._SWEEP_MAX_COST = 0
+
+        # Act
+        try:
+            with self.assertRaises(features.LoftSweepRefusal) as caught:
+                self.sweep()
+        finally:
+            features._SWEEP_MAX_COST = real_limit
+
+        # Assert
+        self.assertEqual(caught.exception.code, "sweep.too_complex")
+        self.assertIn("limit of 0", str(caught.exception))
+
+    def test_Should_name_only_live_enumeration_members_When_the_mode_map_is_read(self):
+        # Arrange
+        probes = [
+            shim.probe_object(type_id, lambda probe: shim.enum_values(probe, "Mode"))
+            for type_id in ("PartDesign::AdditivePipe", "PartDesign::SubtractivePipe")
+        ]
+
+        # Act
+        mapped = set(features._SWEEP_MODES.values())
+
+        # Assert
+        for members in probes:
+            self.assertTrue(mapped <= set(members), members)
+
+    def test_Should_reach_the_sweep_When_preview_dry_run_names_it(self):
+        # Arrange
+        self.sweep_body()
+        operation = {
+            "tool": "feature_sweep",
+            "args": {"body": "Body", "profile": "Ring", "spine": "Path", "name": "Swept"},
+        }
+
+        # Act
+        envelope = self.preview(operation)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIsNone(self.document().getObject("Swept"))
+
+
 if __name__ == "__main__":
     unittest.main()

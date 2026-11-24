@@ -668,6 +668,66 @@ def _feature_specs():
             "FreeCAD computes the read-only Base/Axis. Angles are in degrees.",
         ),
         _feature_method(
+            "feature_loft",
+            features.feature_loft,
+            _feature_schema(
+                {
+                    "body": {"type": "string", "description": "target PartDesign Body Name"},
+                    "profile": {"type": "string", "description": "first section: sketch Name"},
+                    "sections": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "description": "further section sketch Names, in loft order; each has "
+                        "the same number of wires as the profile",
+                    },
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "ruled": {"type": "boolean", "default": False},
+                    "closed": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "join the last section back to the profile; needs 2 or "
+                        "more sections",
+                    },
+                    "subtractive": {"type": "boolean", "default": False},
+                },
+                ["body", "profile", "sections", "name"],
+            ),
+            "Loft through the profile sketch and the section sketches (additive, or "
+            "subtractive with subtractive=true). Every sketch must be fully constrained. A "
+            "request above the measured cost limit is refused with detail.code "
+            "loft.too_complex.",
+        ),
+        _feature_method(
+            "feature_sweep",
+            features.feature_sweep,
+            _feature_schema(
+                {
+                    "body": {"type": "string", "description": "target PartDesign Body Name"},
+                    "profile": {"type": "string", "description": "sketch Name"},
+                    "spine": {
+                        "oneOf": [
+                            {"type": "string", "description": "spine sketch Name"},
+                            {
+                                **_SUBELEMENT_SELECTOR_SCHEMA,
+                                "description": "one Edge (mapped_name), or a whole edge or "
+                                "wire object (mapped_name omitted)",
+                            },
+                        ],
+                    },
+                    "name": _FEATURE_NAME_SCHEMA,
+                    "mode": {"enum": ["standard", "frenet"], "default": "standard"},
+                    "subtractive": {"type": "boolean", "default": False},
+                },
+                ["body", "profile", "spine", "name"],
+            ),
+            "Sweep the profile sketch along a spine (additive, or subtractive with "
+            "subtractive=true). Every sketch must be fully constrained. mode 'frenet' follows "
+            "the spine's Frenet frame. Refusals with "
+            "detail.code: sweep.too_complex, sweep.degenerate_spine (a spine that doubles back "
+            "inside one edge).",
+        ),
+        _feature_method(
             "feature_hole",
             features.feature_hole,
             _feature_schema(
