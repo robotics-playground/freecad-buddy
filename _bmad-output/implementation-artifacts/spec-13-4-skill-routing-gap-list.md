@@ -46,3 +46,15 @@ Lenses: Blind Hunter adde9f60f12d90587 (claude-opus-5-5, high); Edge Case Hunter
 - Kit routes to `query_mass_properties` but never calls it (Blind): low. Patched: intro says to read the volume with it.
 - `query_mass_properties` gives container coordinates (Edge): low, pre-existing behaviour, not caused by this change. Rejected.
 - Quantity repr in restore literal (Edge): low. Rejected; `Params` floats are unitless and JSON floats round-trip.
+
+## Round 2
+
+Verifier D1-D5, red team RT1-RT3 and RT-L1..L3 closed in 0f1d1f6, 14c2e7b. Lenses round 2: blind a5b7b74ceff167b25 (8), edge a46291ebf16e62109 (14), gap abd787c4709a4b5ec (none).
+
+- Constraint gap row deleted instead of fixed (blind, edge): medium, real. Patched: row restored with `InternalAlignment`, `TangentViaPoint`; covered row limited to the enum types.
+- `code-cad-conversion/SKILL.md:31` still said "no typed tool writes a VarSet" and "stop" (blind, edge): medium, real. Patched to the shared script-off rule.
+- VarSet row scope, string and link values, expression-driven write, units (blind, edge): low, real. Patched in the covered row and one gap row.
+- D5 wording (Origin objects, container is the sum of leaves), Import preferences (blind, edge): low, real. Patched.
+- Fence parser: tilde fence, nested shorter fence (blind, edge, gap): low, real. Patched in e9cf5bd with two tests; unclosed fence still fails loudly through the missing sections, so no extra check.
+- Docstring, link sentence placement, no-shell wording, `document_open` before the check (blind, edge): low, real. Patched.
+- Link array or unloaded target (edge): low, rare. Rejected.
