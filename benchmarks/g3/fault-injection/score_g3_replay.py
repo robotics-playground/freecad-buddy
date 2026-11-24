@@ -72,6 +72,7 @@ LEGS = ("1.1.x",)
 VALIDATOR_SOURCES = (
     SRC / "freecad_buddy" / "usecases" / "assertions.py",
     SRC / "freecad_buddy" / "usecases" / "verify.py",
+    SRC / "freecad_buddy" / "contracts" / "assertions.py",
     HERE / "score_g3_replay.py",
     SRC / "freecad_buddy" / "contracts" / "numbers.py",
 )

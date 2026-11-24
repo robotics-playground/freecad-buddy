@@ -415,10 +415,10 @@ mcp document_close { doc: <H> }
 ### TC-09-10: Deeply nested objects inside a `checks` item
 
 **Priority**: Medium
-**Design Ref**: `data-contracts-design.md` §3 (`checks` items typed `object`), `verification-design.md` §5
+**Design Ref**: `mcp-tools-design.md` §3.3 (`checks` items are a `oneOf` per `fn`), `verification-design.md` §5
 
 **Given** `box-10-20-30.FCStd` is open as `<H>` with sole object `<OBJ>`  
-**And** `checks` items are typed `object` with no per-item property schema: `verify_shape` declares `checks: {type: array, items: {type: object}}` (`hosts/tool_catalog.py:1313`). So a non-object item is a schema refusal, while nesting inside an object item is not checked by the schema and MUST be caught at the handler  
+**And** `checks` items are a `oneOf` with one typed branch per `fn` (`_VERIFY_SHAPE_CHECKS_SCHEMA` in `hosts/tool_catalog.py`), so a non-object item, a non-string `fn` and a nested `tol` are each refused at the schema gate and none reaches the handler  
 **And** the model is framed, so the before and after images share a camera — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  
 **And** the untouched window is captured after that fit — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-09-10-before.png"}' | "$FCB_CUA" get_window_state`  
 
@@ -435,10 +435,10 @@ mcp verify_shape { doc: <H>, object: <OBJ>, checks: ["expect_volume"] }
 mcp verify_shape { doc: <H>, object: <OBJ>, checks: [{ fn: "expect_volume", expect: 6000, tol: { rel: { deep: { deeper: 0.001 } } } }] }
 ```
 
-**Then** the deeply nested `fn` is refused by the handler, not the schema — verify: a real envelope with `status` equal to `INVALID_INPUT` and a message starting `unknown assertion fn:` (`usecases/verify.py:253-255`)  
-**And** a non-object check is refused at the schema gate — verify: the call is a protocol rejection (`isError` set, `structuredContent` is `null`) whose text names `'expect_volume' is not of type 'object'` (schema refusal); the input is refused either way  
-**And** a nested `tol` does not crash the tolerance resolver — verify: the nested-`tol` call returns a real envelope with `status` equal to `INVALID_INPUT` and message `expect_volume.tol.rel must be a non-negative number` (`usecases/assertions.py:191`), never an unhandled fault  
-**And** the two object items reach the handler — verify: the nested-`fn` call and the nested-`tol` call each carry `structuredContent` with a `status`, because the item schema admitted them  
+**Then** the deeply nested `fn` is refused at the schema gate — verify: the call is a protocol rejection (`isError` set, `structuredContent` is `null`) whose text starts `Input validation error:` and ends `is not valid under any of the given schemas`  
+**And** a non-object check is refused at the schema gate — verify: the call is a protocol rejection (`isError` set, `structuredContent` is `null`) whose text starts `Input validation error: 'expect_volume' is not valid under any of the given schemas`  
+**And** a nested `tol` does not crash the tolerance resolver — verify: the nested-`tol` call is a protocol rejection at the schema gate (`tol.rel` must be a number), never an unhandled fault  
+**And** none of the three reaches the handler — verify: each call has `isError` set and `structuredContent` `null`  
 **And** the server survives the nesting — verify: `mcp verify_shape { doc: <H>, object: <OBJ> }` still returns `OK` afterwards  
 **And** no recursion error escapes — verify: `grep -i "RecursionError" "$RUN_DIR/evidence/tc-09-01-edge.stderr.log"` and the addon log return nothing  
 **And** *(visual)* the model is framed — verify: run Show All, then `mcp view_fit_viewport { doc: <H> }` returns `OK`; if it does not, or if this scenario is testing the fit itself, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test  

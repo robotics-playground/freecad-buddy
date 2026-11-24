@@ -22,7 +22,15 @@ from freecad_buddy.adapters import export_oracle, export_verdict
 from freecad_buddy.adapters.marshal import Marshal, ThreadExecutor
 from freecad_buddy.adapters.render_probe import OffscreenRenderPort, render_capability_flag
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
-from freecad_buddy.contracts import ANCHOR_FRAME_KINDS, RenderPort, ViewportPort, with_framing_text
+from freecad_buddy.contracts import (
+    ANCHOR_FRAME_KINDS,
+    CHECK_OPTIONAL_KEYS,
+    CHECK_REQUIRED_KEYS,
+    VERIFY_SHAPE_FNS,
+    RenderPort,
+    ViewportPort,
+    with_framing_text,
+)
 from freecad_buddy.usecases import script_exec as script_exec_uc
 from freecad_buddy.usecases import (
     confirm,
@@ -1050,6 +1058,138 @@ READ_ONLY_PROFILE = frozenset(
 )
 
 
+_VECTOR3_SCHEMA = {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}
+_DIRECTION_SCHEMA = {**_VECTOR3_SCHEMA, "not": {"const": [0, 0, 0]}}
+_POSITIVE_NUMBER_SCHEMA = {"type": "number", "exclusiveMinimum": 0}
+_HOLE_QUERY_SCHEMA = {
+    "type": "object",
+    "properties": {"diameter": _POSITIVE_NUMBER_SCHEMA, "axis": _DIRECTION_SCHEMA},
+    "additionalProperties": False,
+}
+_FACE_QUERY_SCHEMA = {
+    "type": "object",
+    "properties": {"normal": _DIRECTION_SCHEMA, "diameter": _POSITIVE_NUMBER_SCHEMA},
+    "minProperties": 1,
+    "maxProperties": 1,
+    "additionalProperties": False,
+}
+_CHECK_SIDE_SCHEMA = {
+    "type": "object",
+    "properties": {"hole": _HOLE_QUERY_SCHEMA, "face": _FACE_QUERY_SCHEMA},
+    "minProperties": 1,
+    "maxProperties": 1,
+    "additionalProperties": False,
+}
+_CHECK_HOLE_SIDE_SCHEMA = {
+    "type": "object",
+    "properties": {"hole": _HOLE_QUERY_SCHEMA},
+    "required": ["hole"],
+    "additionalProperties": False,
+}
+_NON_NEGATIVE_OR_NULL_SCHEMA = {"type": ["number", "null"], "minimum": 0}
+_CHECK_KEY_SCHEMAS = {
+    "tol": {
+        "type": ["object", "null"],
+        "properties": {"abs": _NON_NEGATIVE_OR_NULL_SCHEMA, "rel": _NON_NEGATIVE_OR_NULL_SCHEMA},
+        "additionalProperties": False,
+    },
+    "select": _HOLE_QUERY_SCHEMA,
+    "select_a": _CHECK_SIDE_SCHEMA,
+    "select_b": _CHECK_SIDE_SCHEMA,
+    "direction": _DIRECTION_SCHEMA,
+    "pattern": {},
+}
+_NUMBER_SCHEMA = {"type": "number"}
+_BOOLEAN_SCHEMA = {"type": "boolean"}
+_CHECK_EXPECT_SCHEMAS = {
+    "is_valid_solid": _BOOLEAN_SCHEMA,
+    "count_cylindrical_holes": {"type": "integer", "minimum": 0},
+    "hole_diameter": _NUMBER_SCHEMA,
+    "hole_position": {"type": "array", "items": _NUMBER_SCHEMA, "minItems": 2, "maxItems": 2},
+    "hole_spacing": {"type": ["number", "array"], "items": _NUMBER_SCHEMA, "minItems": 1},
+    "hole_through": _BOOLEAN_SCHEMA,
+    "distance_between": _NUMBER_SCHEMA,
+    "angle_between": _NUMBER_SCHEMA,
+    "expect_bbox": _VECTOR3_SCHEMA,
+    "expect_extent": _NUMBER_SCHEMA,
+    "expect_volume": _NUMBER_SCHEMA,
+    "expect_solid_count": {"type": "integer"},
+    "expect_valid": _BOOLEAN_SCHEMA,
+    "expect_watertight": _BOOLEAN_SCHEMA,
+}
+
+
+def _check_branch(fn: str, keys: frozenset[str] | None = None, **overrides) -> dict:
+    """The input schema of one ``verify_shape`` check, built from the contract key tables.
+
+    ``keys`` narrows the optional keys the branch takes; ``overrides`` replace a key's or
+    ``expect``'s fragment.
+    """
+    keys = CHECK_OPTIONAL_KEYS[fn] if keys is None else keys
+    properties = {"fn": {"const": fn}, "expect": overrides.get("expect", _CHECK_EXPECT_SCHEMAS[fn])}
+    properties.update({key: overrides.get(key, _CHECK_KEY_SCHEMAS[key]) for key in sorted(keys)})
+    required = ["fn", "expect", *sorted(CHECK_REQUIRED_KEYS.get(fn, frozenset()))]
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": False,
+    }
+
+
+_PAIR_KEYS = frozenset({"select_a", "select_b"})
+
+
+def _check_branches(fn: str) -> list[dict]:
+    """The branches of ``fn``: one, except ``hole_spacing``, which has two mutually exclusive forms.
+
+    A pitch check gives one pitch or a list per pattern direction and no pair. A pair check gives
+    both hole sides and one distance, and no ``select``.
+    """
+    if fn != "hole_spacing":
+        return [_check_branch(fn)]
+    pitch = _check_branch(fn, CHECK_OPTIONAL_KEYS[fn] - _PAIR_KEYS)
+    pair_keys = CHECK_OPTIONAL_KEYS[fn] - {"select"}
+    pair = _check_branch(
+        fn,
+        pair_keys,
+        expect=_NUMBER_SCHEMA,
+        select_a=_CHECK_HOLE_SIDE_SCHEMA,
+        select_b=_CHECK_HOLE_SIDE_SCHEMA,
+    )
+    pair["required"] += sorted(_PAIR_KEYS)
+    return [pitch, pair]
+
+
+def _branch_summary(branch: dict) -> str:
+    """``fn {key, key*}`` for one branch, a ``*`` marking a required key."""
+    keys = [
+        f"{key}*" if key in branch["required"] else key
+        for key in branch["properties"]
+        if key != "fn"
+    ]
+    return f"{branch['properties']['fn']['const']} {{{', '.join(keys)}}}"
+
+
+_VERIFY_SHAPE_BRANCHES = [
+    branch for fn in sorted(VERIFY_SHAPE_FNS) for branch in _check_branches(fn)
+]
+
+# The schema refuses a bad check before the handler runs, so the handler's own messages never reach
+# the caller; this text carries what they said.
+_VERIFY_SHAPE_CHECKS_SCHEMA = {
+    "type": "array",
+    "items": {
+        "oneOf": _VERIFY_SHAPE_BRANCHES,
+        "description": "{fn, expect, ...}; * marks a required key; a fn takes only the keys "
+        "listed: "
+        + "; ".join(_branch_summary(branch) for branch in _VERIFY_SHAPE_BRANCHES)
+        + ". Select geometry by a query such as {hole: {diameter}} or {face: {normal}}; "
+        "sub-element names such as Face3 are banned (AD-13).",
+    },
+}
+
+
 SCRIPT_EXEC_SPEC = ToolSpec(
     name="script_exec",
     make_handler=lambda doc_registry, export_registry, caps, render_port, viewport_port: (
@@ -1430,8 +1570,12 @@ def tool_specs() -> list[ToolSpec]:
                 "type": "object",
                 "properties": {
                     "doc": _DOC_SCHEMA,
-                    "object": {"type": "string"},
-                    "checks": {"type": "array", "items": {"type": "object"}},
+                    "object": {
+                        "type": "string",
+                        "description": "immutable Name; required when the document has more "
+                        "than one shape-bearing object",
+                    },
+                    "checks": _VERIFY_SHAPE_CHECKS_SCHEMA,
                     "anchor_frame": {
                         "type": "object",
                         "properties": {
@@ -1448,7 +1592,9 @@ def tool_specs() -> list[ToolSpec]:
             "Measure a shape against the closed assertion vocabulary (is_valid_solid, "
             "count_cylindrical_holes, hole_diameter/position/spacing/through, distance_between, "
             "angle_between, expect_bbox/extent/volume, expect_solid_count/valid/watertight) in "
-            "an anchor_frame {kind: named_datum|base_sketch_plane|largest_planar_face, ref}.",
+            "an anchor_frame {kind: named_datum|base_sketch_plane|largest_planar_face, ref}. Each "
+            "check is {fn, expect, ...} with only the keys its fn takes. Omit object only when the "
+            "document has one shape-bearing object; otherwise the call is refused naming them.",
         ),
         _query_method(
             "verify_sketch",
