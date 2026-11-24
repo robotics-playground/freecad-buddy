@@ -37,6 +37,17 @@ class ValidationError(Exception):
     """Caller-facing input validation failure for a document operation."""
 
 
+class CodedValidationError(ValidationError):
+    """A validation failure that names its ``detail.code`` (AD-17).
+
+    The dispatcher reads ``code`` from this type only, and only when it is a non-empty string.
+    """
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
 # -- session workdir (AD-25) ------------------------------------------------------------
 
 _WORKDIR_ENV = "FREECAD_BUDDY_WORKDIR"

@@ -4,6 +4,8 @@ Run via ``FreeCADCmd tests/run_tests.py``. Expected values are the ones the call
 back from the live VarSet, and analytic prism volumes; never read from the tool under test.
 """
 
+import os
+import tempfile
 from unittest import mock
 
 import FreeCAD as App
@@ -11,6 +13,7 @@ import FreeCAD as App
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.hosts.tool_catalog import preview_op_table
 from freecad_buddy.usecases import features, preview, shim, transaction
+from freecad_buddy.usecases import fingerprint as fingerprint_module
 from infc.test_feature_tools import _FeatureFixture, _snapshot_leftovers, deg, mm
 
 UNIT_SYMBOL_CODE = "parameters.unit_symbol_name"
@@ -534,3 +537,243 @@ class DrivenGeometryTest(_ParametersFixture):
         self.assertEqual(self.varset().height.getValueAs("mm"), 5.0)
         self.assertAlmostEqual(self.document().getObject("Block").Shape.Volume, 8.0 * 16.0 * 5.0)
         self.assertEqual(App.listDocuments()[self.document().Name], self.document())
+
+
+class Blob:
+    """A picklable object a PropertyPythonObject can hold; its repr carries an address."""
+
+    def __init__(self):
+        self.value = 1
+
+
+class UndoRecordTest(_ParametersFixture):
+    def _user_box(self):
+        document = self.document()
+        document.openTransaction("user box")
+        document.addObject("Part::Box", "UserBox")
+        document.commitTransaction()
+
+    def _note(self):
+        return {"name": "note", "type": "string", "value": "rev A"}
+
+    def test_Should_open_no_transaction_and_report_zero_undo_steps_When_every_value_is_current(
+        self,
+    ):
+        # Arrange
+        self.define([self._note()])
+        self._user_box()
+        undo_before = self.document().UndoCount
+
+        # Act
+        envelope, minted = self.snapshots_minted_by(lambda: self.define([self._note()]))
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(content["unchanged"], ["note"])
+        self.assertEqual((content["added"], content["updated"]), ([], []))
+        self.assertEqual(content["undo_steps"], 0)
+        self.assertNotIn("mutation", content)
+        self.assertEqual(minted, 0)
+        self.assertEqual(self.document().UndoCount, undo_before)
+
+    def test_Should_revert_the_earlier_step_When_undo_follows_a_call_that_changed_nothing(self):
+        # Arrange
+        self.define([self._note()])
+        self._user_box()
+        noop = self.define([self._note()])
+
+        # Act
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        # undo_steps 0 is the signal: the undo reverts the step before the call, the user's box.
+        self.assertEqual(noop["structured_content"]["undo_steps"], 0)
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertIsNone(self.document().getObject("UserBox"))
+
+    def test_Should_record_one_step_and_list_the_unchanged_When_the_call_changes_only_some(self):
+        # Arrange
+        self.define([self._note()])
+        self._user_box()
+
+        # Act
+        envelope = self.define([self._note(), length("w", 3.0)])
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual((content["unchanged"], content["added"]), (["note"], ["w"]))
+        self.assertEqual(content["undo_steps"], 1)
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertIsNotNone(self.document().getObject("UserBox"))
+        self.assertNotIn("w", self.varset().PropertiesList)
+
+    def test_Should_report_the_step_it_recorded_When_a_value_changes(self):
+        # Arrange
+        self.define([length("w", 3.0)])
+
+        # Act
+        envelope = self.define([length("w", 4.0)])
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(content["updated"], ["w"])
+        self.assertEqual((content["unchanged"], content["undo_steps"]), ([], 1))
+
+
+class MetadataTest(_ParametersFixture):
+    def test_Should_restore_everything_When_the_creating_call_is_undone(self):
+        # Arrange
+        self.define([length("w", 3.0, group="Size", description="width")])
+
+        # Act
+        self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        self.assertIsNone(self.varset())
+
+    def test_Should_refuse_with_the_metadata_code_When_a_group_or_description_would_change(self):
+        # Arrange
+        self.define([length("w", 3.0, group="Size", description="width")])
+        cases = {"group": {"group": "Other"}, "description": {"description": "other"}}
+
+        for label, extra in cases.items():
+            with self.subTest(label):
+                # Act
+                envelope, minted = self.snapshots_minted_by(
+                    lambda: self.dispatch([length("w", 4.0, **extra)])
+                )
+
+                # Assert
+                self.assertEqual(envelope["detail"]["code"], "parameters.metadata_immutable")
+                self.assertEqual(minted, 0)
+                self.assertEqual(self.varset().w.getValueAs("mm"), 3.0)
+
+    def test_Should_accept_the_same_metadata_When_it_repeats_the_current_values(self):
+        # Arrange
+        self.define([length("w", 3.0, group="Size", description="width")])
+
+        # Act
+        envelope = self.define([length("w", 4.0, group="Size", description="width")])
+
+        # Assert
+        self.assertEqual(envelope["structured_content"]["updated"], ["w"])
+        self.assertEqual(self.varset().getGroupOfProperty("w"), "Size")
+
+
+class StringAndNameTest(_ParametersFixture):
+    def test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character(self):
+        # Arrange
+        characters = ["\x00", "\x01", "\x08", "\x0b", "\x1f", "\x7f", "￾", "￿", "\ud800"]
+
+        for character in characters:
+            for field in ("value", "group", "description"):
+                with self.subTest(character=repr(character), field=field):
+                    parameter = {"name": "note", "type": "string", "value": "ok"}
+                    parameter[field] = "rev A" + character + "tail"
+
+                    # Act
+                    envelope = self.dispatch([parameter])
+
+                    # Assert
+                    self.assertEqual(envelope["detail"]["code"], "parameters.invalid_string")
+                    self.assertIsNone(self.varset())
+
+    def test_Should_keep_a_text_unchanged_When_it_is_saved_and_reopened(self):
+        # Arrange
+        text = 'a\tb\nc\ré Ø 12 µm 漢 \U0001f600 "q" <&>'
+        self.define([{"name": "note", "type": "string", "value": text}])
+        path = os.path.join(tempfile.mkdtemp(prefix="fcb_str_"), "round.FCStd")
+        self.document().saveCopy(path)
+
+        # Act
+        reopened = App.openDocument(path)
+
+        # Assert
+        self.assertEqual(reopened.getObject("Params").note, text)
+
+    def test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit(self):
+        for name in ("W", "mm", "e", "pi", "deg"):
+            with self.subTest(name=name):
+                # Act
+                envelope = self.dispatch([length("width", 1.0)], varset=name)
+
+                # Assert
+                self.assertEqual(envelope["detail"]["code"], "parameters.unit_symbol_name")
+                self.assertIn(name, envelope["detail"]["message"])
+                self.assertIsNone(self.document().getObject(name))
+
+    def test_Should_create_a_varset_whose_name_only_starts_with_a_unit_symbol_When_defining(self):
+        # Act
+        envelope = self.define([length("width", 1.0)], varset="W2")
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+
+    def test_Should_refuse_with_the_reserved_code_When_a_name_is_read_from_every_object(self):
+        for name in ("Shape", "ElementMapVersion"):
+            with self.subTest(name=name):
+                # Act
+                envelope = self.dispatch([{"name": name, "type": "string", "value": "x"}])
+
+                # Assert
+                self.assertEqual(envelope["detail"]["code"], "parameters.reserved_name")
+        self.assertIsNone(self.varset())
+
+
+class StateProbeScopeTest(_ParametersFixture):
+    def test_Should_prove_a_snapshot_restore_When_the_varset_holds_a_python_object(self):
+        # Arrange
+        self.define([length("width", 10.0)])
+        varset = self.varset()
+        varset.addProperty("App::PropertyPythonObject", "blob", "Parameters")
+        varset.blob = Blob()
+        self.document().UndoMode = 0
+        real = features._write_parameter
+        writes = []
+
+        def write_then_fail(target, spec):
+            writes.append(spec["name"])
+            result = real(target, spec)
+            if len(writes) == 2:
+                raise RuntimeError("planted failure after a write")
+            return result
+
+        # Act
+        with mock.patch.object(shim, "enable_undo", return_value=False):
+            with mock.patch.object(features, "_write_parameter", write_then_fail):
+                envelope = self.dispatch([length("width", 99.0), length("depth", 98.0)])
+
+        # Assert
+        block = envelope["structured_content"]["mutation"]
+        self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
+        self.assertEqual(self.varset().width.getValueAs("mm"), 10.0)
+
+    def _unproven_message(self, probe):
+        record = fingerprint_module.fingerprint(self.document())
+        path = transaction.temp_snapshot_path(self.document())
+        self.document().saveCopy(path)
+
+        def act():
+            with mock.patch.object(transaction, "massprops_equal", return_value=False):
+                with mock.patch.object(transaction, "fingerprints_equal", return_value=False):
+                    transaction._prove_rollback(self.document(), record, path, False, probe, None)
+
+        with self.assertRaises(transaction.RollbackNotProven) as caught:
+            act()
+        return str(caught.exception)
+
+    def test_Should_name_the_property_state_When_the_tool_has_a_state_probe(self):
+        # Act
+        message = self._unproven_message(lambda document: None)
+
+        # Assert
+        self.assertIn("pre-mutation property state", message)
+
+    def test_Should_not_name_a_property_state_When_the_tool_has_no_state_probe(self):
+        # Act
+        message = self._unproven_message(None)
+
+        # Assert
+        self.assertNotIn("property state", message)

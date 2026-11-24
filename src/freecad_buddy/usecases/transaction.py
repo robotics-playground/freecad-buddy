@@ -397,7 +397,8 @@ def _prove_rollback(
     if not massprops_equal(record, fp_before) or not state_restored(restored):
         raise RollbackNotProven(
             "rollback could not be proven: the snapshot-restored document does not match the "
-            f"pre-mutation fingerprint {fp_before['digest']} or the pre-mutation property state",
+            f"pre-mutation fingerprint {fp_before['digest']}"
+            + (" or the pre-mutation property state" if state_probe is not None else ""),
             restored,
             record,
         )

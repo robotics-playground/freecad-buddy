@@ -6,13 +6,16 @@ lexer source, and the skill text that names unit symbols.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
 import jsonschema
 import pytest
 
+from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.hosts.tool_catalog import READ_ONLY_PROFILE, preview_op_table, tool_specs
+from freecad_buddy.usecases.documents import CodedValidationError, ValidationError
 from freecad_buddy.usecases.features import _EXPRESSION_RESERVED_NAMES
 from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
 
@@ -118,3 +121,50 @@ def test_Should_keep_the_query_read_only_and_the_define_out_of_the_profile_When_
     assert _spec("query_parameters").mutating is False
     assert "query_parameters" in READ_ONLY_PROFILE
     assert "feature_parameters_define" not in READ_ONLY_PROFILE
+
+
+class _CodeMethod(Exception):
+    def code(self):
+        return "not a string"
+
+
+class _IntCode(ValidationError):
+    code = 5
+
+
+def _dispatch_raising(error):
+    def handler(**_params):
+        raise error
+
+    methods = MethodRegistry()
+    methods.register(RpcMethod(name="probe", handler=handler, mutating=False))
+    return methods.dispatch("probe", {})
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        OSError(5, "access denied"),
+        _CodeMethod("boom"),
+        _IntCode("bad"),
+        CodedValidationError("", "x"),
+    ],
+    ids=["os-error-int-code", "code-method", "validation-error-int-code", "empty-code"],
+)
+def test_Should_keep_the_status_as_the_code_When_the_error_is_not_a_project_refusal(error):
+    # Act
+    envelope = _dispatch_raising(error)
+
+    # Assert
+    code = envelope["detail"]["code"]
+    assert code == envelope["status"]
+    json.dumps(envelope)
+
+
+def test_Should_put_the_refusal_code_in_the_detail_When_a_coded_validation_error_is_raised():
+    # Act
+    envelope = _dispatch_raising(CodedValidationError("parameters.invalid_string", "bad text"))
+
+    # Assert
+    assert envelope["status"] == "INVALID_INPUT"
+    assert envelope["detail"]["code"] == "parameters.invalid_string"

@@ -850,12 +850,19 @@ def _feature_specs():
                 ["varset", "parameters"],
             ),
             "Create the VarSet when missing, then add or update typed parameters on it in one "
-            "transaction. Result {varset, added, updated}. A name that FreeCAD's expression "
+            "transaction. Result {varset, added, updated, unchanged, undo_steps}: a parameter "
+            "that already holds the value is listed in unchanged and not written; undo_steps is "
+            "1 when the call recorded an undo step and 0 when it changed nothing, in which case "
+            "no transaction opened and document_undo would revert an earlier step. group and "
+            "description apply when a parameter is created only. A name (or a new VarSet name) "
+            "that FreeCAD's expression "
             "parser reads as a unit or constant (W, T, A, V, N, C, K, mm, deg, in, e, pi, ...) "
             "is refused with INVALID_INPUT code parameters.unit_symbol_name, because every "
             "expression that reads it would fail to parse. Other refusals: "
             "parameters.reserved_name, parameters.duplicate_name, parameters.not_a_varset, "
-            "parameters.type_conflict, parameters.bound_by_expression (update of a property "
+            "parameters.type_conflict, parameters.metadata_immutable (group or description of "
+            "an existing parameter), parameters.invalid_string (a control character FreeCAD "
+            "would cut or change), parameters.bound_by_expression (update of a property "
             "an expression drives). A length must not be negative and an angle must be "
             "within +-360 deg: FreeCAD would clamp them silently.",
         ),

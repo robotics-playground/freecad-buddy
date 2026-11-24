@@ -78,6 +78,8 @@ Decision 32 (leader): the rollback proof also reads the VarSet back. `run_mutati
 
 ## Spec Change Log
 
+Red-team round (decision 34), deviations from the frozen text: (a) `unchanged` and `undo_steps` in the output, and a call that changes nothing opens no transaction and has no `mutation` block (FreeCAD records no undo step for a same-value string write, so the next `document_undo` reverted the step before the call); (b) group and description are set when a parameter is created only, a change on an existing one is refused as `parameters.metadata_immutable` (FreeCAD does not undo them); (c) `parameters.invalid_string` for NUL and other characters FreeCAD cuts or rewrites; (d) the VarSet name is checked like a parameter name on creation; (e) `Shape` and `ElementMapVersion` are reserved names (read by `post_verify` and the fingerprint from every object); (f) `rpc_dispatch` reads `code` from `CodedValidationError` only, as a non-empty string; (g) the state probe compares only the types this tool writes (a Python-object property has an address in its repr); (h) the unproven-rollback message names the property state only for a tool that has a probe.
+
 Review round 1 (deviations from the frozen text, approved scope unchanged): (a) a new refusal code `parameters.bound_by_expression` for an update of a property an expression binds, because the next recompute applies the expression over the written value (probed: 99 mm written, 20 mm read) and `updated` would then name a value that did not stick; (b) `length` must not be negative and `angle` must lie within +-360 deg, because both properties clamp silently (probed: -5 mm reads 0 mm, 720 deg reads 360 deg); (c) `parameters.reserved_name` also covers attributes of the VarSet object (a property named `TypeId` shadows it) and the `ObjectIdentifier` pseudo-property names (`_pla`, `_self`, ...); (d) a ReadOnly property update and a trailing newline in a name are refused before the bracket; (e) coded refusals are raised as `ParameterRefusal` and `rpc_dispatch` reads `code`, so a refusal is an exception like every other tool's and the preview path sees it; (f) the call is refused when the built-in probe read nothing.
 
 ## Review Triage Log
@@ -113,6 +115,19 @@ Lenses: Blind Hunter a9139ba6fdd856c99 (opus, high), Edge Case Hunter ab08a795c3
 | 25 | VG | Probe-raises paths of `state_restored` untested | low | defer: the differing-state paths are covered; a raise gives False |
 | 26 | VG | `op` validates the parameters a second time | low | reject: the bracket must not trust a value read before it |
 | 27 | VG | `validators.yaml` run_id bump unverifiable | low | false: `score_g2_infc.py` run on 2026-11-24, sha of `run_mutation` changed with `transaction.py` |
+
+Red-team round (triage-13-9-r2.md, decision 34):
+
+| # | Source | Finding | Verdict | Route and evidence |
+|---|--------|---------|---------|--------------------|
+| RT1 | red team | Same-value define records no undo step; undo reverts an earlier step | high | patch: no-op detected before the bracket, `unchanged`, `undo_steps` 0; unchanged values never written; tests with a user box |
+| RT2 | red team | Group and description not undone | high | patch: set at create only; `parameters.metadata_immutable`; undo-after-create test |
+| RT3 | red team | NUL cuts a string, status OK | high | patch: `parameters.invalid_string`; probed which characters survive a save and reopen; round-trip test |
+| RT4 | red team | `exc.code` from any exception | medium | patch: `CodedValidationError` only, non-empty str; tests with `OSError(5)`, a `code` method, an int code |
+| RT5 | red team | VarSet named `W` or `mm` | medium | patch: checked on creation; test |
+| RT6 | red team | Parameter `Shape` ends SPEC_FAILED | medium | patch: `Shape`, `ElementMapVersion` reserved (read with getattr from every object in `transaction`, `fingerprint`, `tnp_guard`); test |
+| RT7 | red team | Python-object property: correct restore reads as unproven | low | patch: only the types the tool writes are compared; test with a `PropertyPythonObject` |
+| RT8 | red team | Unproven message names property state for every tool | low | patch: only when a probe is given; two tests |
 
 ## Design Notes
 
