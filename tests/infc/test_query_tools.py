@@ -547,20 +547,17 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertFalse(record["boolean_failed"])
         self.assertEqual(envelope["text"], "1 pair(s), 0 overlapping, 0 boolean failed.")
 
-    def test_Should_flag_a_failed_boolean_When_common_is_empty_at_distance_zero(self):
+    def test_Should_flag_a_failed_boolean_When_one_shape_is_an_invalid_solid_at_distance_zero(self):
         # Arrange
         self._add_box("Box")
         bowtie = self._add_bowtie("Bowtie")
-        direct_common = self.document.Box.Shape.common(bowtie.Shape)
-        direct_distance = self.document.Box.Shape.distToShape(bowtie.Shape)[0]
 
         # Act
         envelope = self._measure(pairs=[["Box", "Bowtie"]])
 
         # Assert
         record = envelope["structured_content"]["pairs"][0]
-        self.assertEqual(len(direct_common.SubShapes), 0)
-        self.assertEqual(direct_distance, 0.0)
+        self.assertFalse(bowtie.Shape.isValid())
         self.assertTrue(record["boolean_failed"])
         self.assertIsNone(record["common_volume"])
         self.assertIsNone(record["min_distance"])
@@ -657,6 +654,8 @@ class QueryInterferenceTest(unittest.TestCase):
         self._add_box("A")
         self._add_box("B", 30)
         self.document.addObject("App::DocumentObjectGroup", "Group")
+        for index in range(21):
+            self._add_box(f"A{index}", index * 30, 100)
         target = self._dispatch()
         calls = [
             {"doc": self.handle},
@@ -938,6 +937,127 @@ class QueryInterferenceTest(unittest.TestCase):
 
         # Assert
         self.assertEqual(text, "1 pair(s), 0 overlapping, 0 boolean failed.")
+
+    def test_Should_report_zero_volume_When_common_is_a_non_empty_zero_volume_shape(self):
+        # Arrange
+        class ZeroVolumeCommon:
+            Volume = 0.0
+
+            def isNull(self):
+                return False
+
+            class BoundBox:
+                @staticmethod
+                def isValid():
+                    return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                return ZeroVolumeCommon()
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (0.0, 0.0, False))
+
+    def test_Should_flag_a_failed_boolean_When_a_zero_volume_common_has_no_distance(self):
+        # Arrange
+        class ZeroVolumeCommon:
+            Volume = 0.0
+
+            def isNull(self):
+                return False
+
+            class BoundBox:
+                @staticmethod
+                def isValid():
+                    return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                return ZeroVolumeCommon()
+
+            def distToShape(self, other):
+                raise RuntimeError("distance failed")
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, None, True))
+
+    def test_Should_fail_only_the_pairs_with_the_untrusted_object_When_objects_mixes_shapes(self):
+        # Arrange
+        self._add_shape("Shell", Part.Shell(Part.makeBox(10, 10, 10).Faces))
+        self._add_box("A", 5, 5, 5)
+        self._add_box("B", 100, 0, 0)
+
+        # Act
+        envelope = self._measure(objects=["Shell", "A", "B"])
+
+        # Assert
+        records = envelope["structured_content"]["pairs"]
+        self.assertEqual(
+            [(r["a"], r["b"]) for r in records], [("Shell", "A"), ("Shell", "B"), ("A", "B")]
+        )
+        self.assertEqual([r["boolean_failed"] for r in records], [True, True, False])
+        self.assertAlmostEqual(records[2]["min_distance"]["value"], 85.0, places=6)
+
+    def test_Should_refuse_the_call_with_a_code_When_a_pair_is_above_the_face_limit(self):
+        # Arrange
+        three_boxes = Part.Compound(
+            [Part.makeBox(1, 1, 1, App.Vector(i * 5, 0, 0)) for i in range(3)]
+        )
+        self._add_shape("Big1", three_boxes)
+        self._add_shape("Big2", three_boxes.translated(App.Vector(0, 50, 0)))
+        target = self._dispatch()
+
+        # Act
+        with mock.patch.object(queries, "_MAX_PAIR_FACE_PRODUCT", 300):
+            envelope = target.dispatch(
+                "query_interference", {"doc": self.handle, "pairs": [["Big1", "Big2"]]}
+            )
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["code"], "interference.too_complex")
+        self.assertIn("Big1/Big2", envelope["detail"]["message"])
+
+    def test_Should_measure_the_pair_When_it_is_at_the_face_limit(self):
+        # Arrange
+        three_boxes = Part.Compound(
+            [Part.makeBox(1, 1, 1, App.Vector(i * 5, 0, 0)) for i in range(3)]
+        )
+        self._add_shape("Big1", three_boxes)
+        self._add_shape("Big2", three_boxes.translated(App.Vector(0, 50, 0)))
+
+        # Act
+        with mock.patch.object(queries, "_MAX_PAIR_FACE_PRODUCT", 18 * 18):
+            envelope = self._measure(pairs=[["Big1", "Big2"]])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertFalse(envelope["structured_content"]["pairs"][0]["boolean_failed"])
+
+    def test_Should_leave_a_fresh_fingerprint_digest_equal_When_pairs_are_measured(self):
+        # Arrange
+        from freecad_buddy.usecases.fingerprint import fingerprint
+
+        for index, name in enumerate(("A", "B", "C")):
+            box = self.document.addObject("Part::Box", name)
+            box.Placement.Base = App.Vector(index * 30, 0, 0)
+        self.document.recompute()
+        before = fingerprint(self.document, fresh=True)["digest"]
+
+        # Act
+        self._measure(objects=["A", "B", "C"])
+
+        # Assert
+        self.assertEqual(fingerprint(self.document, fresh=True)["digest"], before)
 
     def test_Should_finish_inside_the_query_budget_When_twenty_realistic_objects_are_measured(self):
         # Arrange

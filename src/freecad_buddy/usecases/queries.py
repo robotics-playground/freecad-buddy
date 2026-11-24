@@ -678,6 +678,14 @@ _MAX_INTERFERENCE_OBJECTS = 20
 _MAX_INTERFERENCE_PAIRS = 100
 # OCC's own tolerance for "touching" (Precision::Confusion). A distance at or below it is contact.
 _CONTACT_DISTANCE_MM = 1e-7
+# Largest faces(a) x faces(b) accepted for one pair. Measured on the development host with two
+# interleaved box compounds one millimetre apart (the slowest geometry found, ``distToShape`` runs
+# because ``common`` finds no volume): 129,600 -> 9.5 s, 230,400 -> 17.8 s, 360,000 -> 29.4 s.
+# 150,000 keeps one pair near 10 s against the 60 s query budget. Above it ``distToShape`` holds
+# the interpreter lock and the marshal timeout cannot fire (two 900-box compounds hung the worker
+# for minutes in the container). Realistic parts sit far below it: a plate with 81 holes has 87
+# faces.
+_MAX_PAIR_FACE_PRODUCT = 150_000
 
 
 def summarize_interference(sc: dict) -> str:
@@ -738,7 +746,9 @@ def _interference_shape(document: object, name: str) -> object:
     shape = _queryable_shape(obj)
     if shape is None or not shape.BoundBox.isValid():
         raise ValidationError(f"object has no queryable shape: {name}")
-    return shape
+    # ``Shape.common`` clears a BREP flag on its inputs, which would change a fresh fingerprint
+    # digest of the document; the booleans and the distance run on a copy.
+    return shape.copy()
 
 
 def _solid_volumes(shape: object):
@@ -764,12 +774,17 @@ def _is_measurable_solid(shape: object) -> bool:
     invalid solid, and a shell encloses no volume, so each of those can turn a real overlap into
     an empty ``common`` with a positive distance.
     """
-    volumes = list(_solid_volumes(shape))
-    return (
-        bool(volumes)
-        and all(volume is not None and volume > 0 and math.isfinite(volume) for volume in volumes)
-        and bool(shape.isValid())
-    )
+    try:
+        volumes = list(_solid_volumes(shape))
+        return (
+            bool(volumes)
+            and all(
+                volume is not None and volume > 0 and math.isfinite(volume) for volume in volumes
+            )
+            and bool(shape.isValid())
+        )
+    except Exception:  # noqa: BLE001 -- a shape the kernel cannot even inspect is not measurable
+        return False
 
 
 def _measure_interference(
@@ -802,9 +817,25 @@ def _measure_interference(
         distance = None
     if distance is not None and distance > _CONTACT_DISTANCE_MM:
         return 0.0, distance, False
-    if not empty:
+    if not empty and distance is not None:
         return 0.0, distance, False
     return None, distance, True
+
+
+def _too_complex_envelope(name_a: str, name_b: str, face_counts: dict[str, int]) -> ResultEnvelope:
+    """The refusal for a pair whose boolean and distance cost would pass the query budget."""
+    message = (
+        f"pair {name_a}/{name_b} is too complex to measure: {face_counts[name_a]} and "
+        f"{face_counts[name_b]} faces, limit {_MAX_PAIR_FACE_PRODUCT} for their product. "
+        "Measure simpler shapes, or fewer faces per object."
+    )
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {"code": "interference.too_complex", "message": message},
+        "structured_content": {},
+        "text": message,
+    }
 
 
 def query_interference(
@@ -818,17 +849,26 @@ def query_interference(
     Give exactly one of ``objects`` (2 to 20 names, every pair measured in order ``(i, j)``,
     ``i < j``) or ``pairs`` (1 to 100 ``[a, b]`` pairs). Each record is ``{a, b, common_volume,
     min_distance, boolean_failed}``. ``boolean_failed`` is true, and ``common_volume`` null, when
-    the boolean raised or returned nothing while the shapes touch or the distance is unknown: an
-    empty result must never read as no overlap. Reports numbers only, never a verdict. Raises
-    ``ValidationError`` for bad input, an unknown name, or an object with no shape.
+    either shape is not a valid solid-only shape with positive volume (``min_distance`` is then
+    null too), or when the boolean raised or returned nothing while the shapes touch or the
+    distance is unknown: an empty result must never read as no overlap. Reports numbers only,
+    never a verdict. Raises ``ValidationError`` for bad input, an unknown name, or an object with
+    no shape, and returns ``INVALID_INPUT`` with code ``interference.too_complex`` for a pair above
+    ``_MAX_PAIR_FACE_PRODUCT``.
     """
     name_pairs = _interference_pairs(objects, pairs)
 
     def read(_handle: str, document: object) -> ResultEnvelope:
         names = {name for pair in name_pairs for name in pair}
         shapes = {name: _interference_shape(document, name) for name in sorted(names)}
-        # Validity is checked once per object: it costs more than the booleans on a large shape.
         measurable = {name: _is_measurable_solid(shape) for name, shape in shapes.items()}
+        # The trust check runs once per object, not per pair: 20 plates and 190 pairs took 10.7 s
+        # with it per object and 69.7 s with it per pair.
+        face_counts = {name: len(shape.Faces) for name, shape in shapes.items()}
+        for name_a, name_b in name_pairs:
+            work = face_counts[name_a] * face_counts[name_b]
+            if measurable[name_a] and measurable[name_b] and work > _MAX_PAIR_FACE_PRODUCT:
+                return _too_complex_envelope(name_a, name_b, face_counts)
         records = []
         for name_a, name_b in name_pairs:
             if measurable[name_a] and measurable[name_b]:
