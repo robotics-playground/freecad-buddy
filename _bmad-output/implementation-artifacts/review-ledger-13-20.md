@@ -13,3 +13,6 @@ Quality bar: `quality-bar-13-20.md` (this folder). Lens triage: `spec-13-20-usag
 | Round | Head | Lenses (session ids) | Open high + product medium: before → after | Closed with proof | New | Regressed |
 | --- | --- | --- | --- | --- | --- | --- |
 | r1 | 27d75a93 | blind a8ecc4bd8aa7737a6; edge aa76abcfde1254f06; gap af83c2fd28cfe2a1c | ? → 0 | 12 | 29 | 0 |
+| r2 | 8392d7f5, 3864c166 | blind a744a79b3af10f7c5; edge ac14355a21fd06f64; gap a7bb6b77aec3aaddf | RT-1..RT-4 medium → 0 | RT-1..RT-6, G-1 (verifier r2 reverts red); independent recount equals report on every count | lens r2 rows | 0 |
+
+R1-A1: the evidence transcripts are partly deleted; the report equals an independent recount on the transcripts on disk. Merged on decision 35 (the user's "auto merge"); the acceptance wording question (decision batch item 4) was not answered separately.

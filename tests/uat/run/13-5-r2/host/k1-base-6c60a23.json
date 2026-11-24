@@ -1,0 +1,797 @@
+{
+ "cases": {
+  "body": {
+   "3mf": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 1112,
+      "facets": 12,
+      "verified": false
+     },
+     "text": "3MF export written -> <out>\\files\\body.3mf."
+    },
+    "file": {
+     "bytes": 1112,
+     "sha256": "eba6520bd6338894c0db64454d74d32ff3e3e79bbfcb6d40322707c40fbf278e",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 12,
+       "vertices": 8
+      },
+      "self_read": {
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "facets": 12,
+       "readable": true,
+       "vertices": 8
+      },
+      "source": {
+       "area": 599.9999999999999,
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "edges": 12,
+       "faces": 6,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 999.9999999999998
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 39.99999999999999
+     },
+     "text": "banner: {2 fields}\npath: <134 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 39.99999999999999"
+    }
+   },
+   "step": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 6886,
+      "verified": false
+     },
+     "text": "STEP export written -> <out>\\files\\body.step."
+    },
+    "file": {
+     "bytes": 6765,
+     "sha256": "397c3b5bfd5b337b79db9cd1ef292ed9ed1eeb0ca0bf99810ab9595d9e000649",
+     "step_colour_entities": 0
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "checks": [
+       {
+        "detail": {
+         "message": "|1000.0 - 1000.0| = 0.0 <= 1"
+        },
+        "expected": 999.9999999999998,
+        "id": "export_step.volume",
+        "measured": 999.9999999999998,
+        "passed": true,
+        "tolerance": {
+         "rel": 0.001
+        }
+       },
+       {
+        "detail": {
+         "message": "isValid() True"
+        },
+        "expected": true,
+        "id": "export_step.valid",
+        "measured": true,
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "faces 6 vs 6, edges 12 vs 12, solids 1 vs 1"
+        },
+        "expected": {
+         "edges": 12,
+         "faces": 6,
+         "solids": 1
+        },
+        "id": "export_step.topology_counts",
+        "measured": {
+         "edges": 12,
+         "faces": 6,
+         "solids": 1
+        },
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+        },
+        "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "id": "export_step.schema",
+        "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "passed": true,
+        "tolerance": null
+       }
+      ],
+      "format": "step",
+      "schema": "fcb.validation-report/1",
+      "verdict": "OK"
+     },
+     "text": "STEP export OK -> <out>\\files\\body.step."
+    }
+   },
+   "stl": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 684,
+      "facets": 12,
+      "verified": false
+     },
+     "text": "STL export written -> <out>\\files\\body.stl."
+    },
+    "file": {
+     "bytes": 684,
+     "sha256": "85a03d0456c302dc3f46d9e55c649af3416ae40196b59480784f3f70ac07e17f",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 12,
+       "vertices": 8
+      },
+      "self_read": {
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "facets": 12,
+       "readable": true,
+       "vertices": 8
+      },
+      "source": {
+       "area": 599.9999999999999,
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "edges": 12,
+       "faces": 6,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 999.9999999999998
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 39.99999999999999
+     },
+     "text": "banner: {2 fields}\npath: <134 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 39.99999999999999"
+    }
+   }
+  },
+  "box_named": {
+   "3mf": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 1112,
+      "facets": 12,
+      "verified": false
+     },
+     "text": "3MF export written -> <out>\\files\\box_named.3mf."
+    },
+    "file": {
+     "bytes": 1112,
+     "sha256": "eba6520bd6338894c0db64454d74d32ff3e3e79bbfcb6d40322707c40fbf278e",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 12,
+       "vertices": 8
+      },
+      "self_read": {
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "facets": 12,
+       "readable": true,
+       "vertices": 8
+      },
+      "source": {
+       "area": 599.9999999999999,
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "edges": 12,
+       "faces": 6,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 999.9999999999998
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 39.99999999999999
+     },
+     "text": "banner: {2 fields}\npath: <139 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 39.99999999999999"
+    }
+   },
+   "step": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 6886,
+      "verified": false
+     },
+     "text": "STEP export written -> <out>\\files\\box_named.step."
+    },
+    "file": {
+     "bytes": 6765,
+     "sha256": "b48a9e310b250430ce5abcdbb6ccd72b06d954a4abec4467550f2959725211e0",
+     "step_colour_entities": 0
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "checks": [
+       {
+        "detail": {
+         "message": "|1000.0 - 1000.0| = 0.0 <= 1"
+        },
+        "expected": 999.9999999999998,
+        "id": "export_step.volume",
+        "measured": 999.9999999999998,
+        "passed": true,
+        "tolerance": {
+         "rel": 0.001
+        }
+       },
+       {
+        "detail": {
+         "message": "isValid() True"
+        },
+        "expected": true,
+        "id": "export_step.valid",
+        "measured": true,
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "faces 6 vs 6, edges 12 vs 12, solids 1 vs 1"
+        },
+        "expected": {
+         "edges": 12,
+         "faces": 6,
+         "solids": 1
+        },
+        "id": "export_step.topology_counts",
+        "measured": {
+         "edges": 12,
+         "faces": 6,
+         "solids": 1
+        },
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+        },
+        "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "id": "export_step.schema",
+        "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "passed": true,
+        "tolerance": null
+       }
+      ],
+      "format": "step",
+      "schema": "fcb.validation-report/1",
+      "verdict": "OK"
+     },
+     "text": "STEP export OK -> <out>\\files\\box_named.step."
+    }
+   },
+   "stl": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 684,
+      "facets": 12,
+      "verified": false
+     },
+     "text": "STL export written -> <out>\\files\\box_named.stl."
+    },
+    "file": {
+     "bytes": 684,
+     "sha256": "85a03d0456c302dc3f46d9e55c649af3416ae40196b59480784f3f70ac07e17f",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 12,
+       "vertices": 8
+      },
+      "self_read": {
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "facets": 12,
+       "readable": true,
+       "vertices": 8
+      },
+      "source": {
+       "area": 599.9999999999999,
+       "bbox": [
+        10.0,
+        10.0,
+        10.0
+       ],
+       "edges": 12,
+       "faces": 6,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 999.9999999999998
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 39.99999999999999
+     },
+     "text": "banner: {2 fields}\npath: <139 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 39.99999999999999"
+    }
+   }
+  },
+  "cylinder": {
+   "3mf": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 1850,
+      "facets": 100,
+      "verified": false
+     },
+     "text": "3MF export written -> <out>\\files\\cylinder.3mf."
+    },
+    "file": {
+     "bytes": 1850,
+     "sha256": "aa7eecad269e0492b72d3fcc785450a95a9e631bef5f82cf4a967768b315b073",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 100,
+       "vertices": 52
+      },
+      "self_read": {
+       "bbox": [
+        4.0,
+        3.9708399772644043,
+        10.0
+       ],
+       "facets": 100,
+       "readable": true,
+       "vertices": 52
+      },
+      "source": {
+       "area": 150.79644737231004,
+       "bbox": [
+        4.0,
+        3.9708354963922163,
+        10.0
+       ],
+       "edges": 3,
+       "faces": 3,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 125.6637061435917
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 10.053096491487336
+     },
+     "text": "banner: {2 fields}\npath: <138 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 10.053096491487336"
+    }
+   },
+   "step": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 3557,
+      "verified": false
+     },
+     "text": "STEP export written -> <out>\\files\\cylinder.step."
+    },
+    "file": {
+     "bytes": 3436,
+     "sha256": "37cf588b14614bb33e6ef06192b40ed444ff012467021d9a20a7292dd5c14889",
+     "step_colour_entities": 0
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "checks": [
+       {
+        "detail": {
+         "message": "|125.66 - 125.66| = 0.0 <= 0.125664"
+        },
+        "expected": 125.6637061435917,
+        "id": "export_step.volume",
+        "measured": 125.66370614359172,
+        "passed": true,
+        "tolerance": {
+         "rel": 0.001
+        }
+       },
+       {
+        "detail": {
+         "message": "isValid() True"
+        },
+        "expected": true,
+        "id": "export_step.valid",
+        "measured": true,
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "faces 3 vs 3, edges 3 vs 3, solids 1 vs 1"
+        },
+        "expected": {
+         "edges": 3,
+         "faces": 3,
+         "solids": 1
+        },
+        "id": "export_step.topology_counts",
+        "measured": {
+         "edges": 3,
+         "faces": 3,
+         "solids": 1
+        },
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+        },
+        "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "id": "export_step.schema",
+        "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "passed": true,
+        "tolerance": null
+       }
+      ],
+      "format": "step",
+      "schema": "fcb.validation-report/1",
+      "verdict": "OK"
+     },
+     "text": "STEP export OK -> <out>\\files\\cylinder.step."
+    }
+   },
+   "stl": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 5084,
+      "facets": 100,
+      "verified": false
+     },
+     "text": "STL export written -> <out>\\files\\cylinder.stl."
+    },
+    "file": {
+     "bytes": 5084,
+     "sha256": "8b43c48b5dcbf6bd2f3796274841771d4da6a821f65f7bbbbd0dc836ddfa8878",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 100,
+       "vertices": 52
+      },
+      "self_read": {
+       "bbox": [
+        4.0,
+        3.9708354473114014,
+        10.0
+       ],
+       "facets": 100,
+       "readable": true,
+       "vertices": 52
+      },
+      "source": {
+       "area": 150.79644737231004,
+       "bbox": [
+        4.0,
+        3.9708354963922163,
+        10.0
+       ],
+       "edges": 3,
+       "faces": 3,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 125.6637061435917
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 10.053096491487336
+     },
+     "text": "banner: {2 fields}\npath: <138 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 10.053096491487336"
+    }
+   }
+  },
+  "hidden_sphere": {
+   "3mf": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 6259,
+      "facets": 514,
+      "verified": false
+     },
+     "text": "3MF export written -> <out>\\files\\hidden_sphere.3mf."
+    },
+    "file": {
+     "bytes": 6259,
+     "sha256": "9010253a76d1b79a36b8cece52d2865b5296103170424a58cfda89eb545261d8",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 514,
+       "vertices": 259
+      },
+      "self_read": {
+       "bbox": [
+        9.916970252990723,
+        9.976679801940918,
+        10.0
+       ],
+       "facets": 514,
+       "readable": true,
+       "vertices": 259
+      },
+      "source": {
+       "area": 314.1592653589793,
+       "bbox": [
+        9.916974100671926,
+        9.976687691905394,
+        10.0
+       ],
+       "edges": 3,
+       "faces": 1,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 523.598775598299
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 20.943951023931955
+     },
+     "text": "banner: {2 fields}\npath: <143 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 20.943951023931955"
+    }
+   },
+   "step": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 2131,
+      "verified": false
+     },
+     "text": "STEP export written -> <out>\\files\\hidden_sphere.step."
+    },
+    "file": {
+     "bytes": 2010,
+     "sha256": "efb0f807362912c91cf989c0af9063441f1132356988dd5d743d0d45ef91bf12",
+     "step_colour_entities": 0
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "checks": [
+       {
+        "detail": {
+         "message": "|523.6 - 523.6| = 0.0 <= 0.523599"
+        },
+        "expected": 523.598775598299,
+        "id": "export_step.volume",
+        "measured": 523.598775598299,
+        "passed": true,
+        "tolerance": {
+         "rel": 0.001
+        }
+       },
+       {
+        "detail": {
+         "message": "isValid() True"
+        },
+        "expected": true,
+        "id": "export_step.valid",
+        "measured": true,
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "faces 1 vs 1, edges 3 vs 3, solids 1 vs 1"
+        },
+        "expected": {
+         "edges": 3,
+         "faces": 1,
+         "solids": 1
+        },
+        "id": "export_step.topology_counts",
+        "measured": {
+         "edges": 3,
+         "faces": 1,
+         "solids": 1
+        },
+        "passed": true,
+        "tolerance": null
+       },
+       {
+        "detail": {
+         "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+        },
+        "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "id": "export_step.schema",
+        "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+        "passed": true,
+        "tolerance": null
+       }
+      ],
+      "format": "step",
+      "schema": "fcb.validation-report/1",
+      "verdict": "OK"
+     },
+     "text": "STEP export OK -> <out>\\files\\hidden_sphere.step."
+    }
+   },
+   "stl": {
+    "export": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "bytes": 25784,
+      "facets": 514,
+      "verified": false
+     },
+     "text": "STL export written -> <out>\\files\\hidden_sphere.stl."
+    },
+    "file": {
+     "bytes": 25784,
+     "sha256": "d0a712acc92e3f1b970ecba6fd74657de3bc36ea2f3270124fe206cd5d3b692b",
+     "step_colour_entities": null
+    },
+    "verify": {
+     "detail": null,
+     "schema": "fcb.result-envelope/1",
+     "status": "OK",
+     "structured_content": {
+      "recorded": {
+       "facets": 514,
+       "vertices": 259
+      },
+      "self_read": {
+       "bbox": [
+        9.916974067687988,
+        9.97668743133545,
+        10.0
+       ],
+       "facets": 514,
+       "readable": true,
+       "vertices": 259
+      },
+      "source": {
+       "area": 314.1592653589793,
+       "bbox": [
+        9.916974100671926,
+        9.976687691905394,
+        10.0
+       ],
+       "edges": 3,
+       "faces": 1,
+       "is_mm": true,
+       "solids": 1,
+       "volume": 523.598775598299
+      },
+      "tess": {
+       "angular": 0.5,
+       "linear": 0.1
+      },
+      "volume_band": 20.943951023931955
+     },
+     "text": "banner: {2 fields}\npath: <143 chars>\nrecorded: {2 fields}\nself_read: {4 fields}\nsource: {7 fields}\ntess: {2 fields}\nvolume_band: 20.943951023931955"
+    }
+   }
+  }
+ },
+ "module": "C:\\Users\\thuan\\AppData\\Local\\Temp\\claude\\3d3814eab912640f\\50958ed8-8fcb-4d26-a32d-c7025b2780ae\\scratchpad\\v135r2\\base\\src\\freecad_buddy\\__init__.py"
+}
