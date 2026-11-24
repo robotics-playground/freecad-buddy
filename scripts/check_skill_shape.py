@@ -3,7 +3,8 @@
 Per ``SKILL.md``:
 
   - the body's H2 headings are exactly ``## Scope``, ``## Decision Rules``,
-    ``## Worked Examples``, ``## Anti-Patterns``, in that order, and each has text under it;
+    ``## Worked Examples``, ``## Anti-Patterns``, in that order, and each has text under it
+    (a ``## `` line inside a fenced code block is not a heading);
   - the body is at most 1,500 words. The body is everything after the front matter's closing
     ``---``; a word is one whitespace-separated token.
 
@@ -15,6 +16,7 @@ Runnable: ``python scripts/check_skill_shape.py [skills_dir]``.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -31,14 +33,26 @@ def _body(text: str) -> str:
     return text
 
 
+_FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+
+
+def _closes_fence(line: str, fence: str) -> bool:
+    """Whether ``line`` closes ``fence``: the same character, at least as long, no info string."""
+    stripped = line.strip()
+    return len(stripped) >= len(fence) and set(stripped) == {fence[0]}
+
+
 def _sections(body: str) -> list[tuple[str, str]]:
     """Return ``(heading, text under it)`` for each H2 in ``body``, in order."""
     sections: list[tuple[str, list[str]]] = []
-    in_fence = False
+    fence: str | None = None
     for line in body.splitlines():
-        if line.lstrip().startswith("```"):
-            in_fence = not in_fence
-        if line.startswith("## ") and not in_fence:
+        marker = _FENCE.match(line)
+        if marker and fence is None:
+            fence = marker.group(1)
+        elif fence is not None and _closes_fence(line, fence):
+            fence = None
+        if line.startswith("## ") and fence is None:
             sections.append((line[3:].strip(), []))
         elif sections:
             sections[-1][1].append(line)
