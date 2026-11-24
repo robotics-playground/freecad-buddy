@@ -187,3 +187,16 @@ def test_should_exit_0_with_no_output_when_the_real_skills_tree_is_checked(capsy
     # Assert
     assert code == 0
     assert capsys.readouterr().out == ""
+
+
+def test_should_ignore_a_heading_line_when_it_sits_inside_a_code_fence(tmp_path):
+    # Arrange
+    fenced = "\n```text\n## Not A Section\n```\n"
+    body = VALID_BODY.replace("One example.\n", "One example.\n" + fenced)
+    skills_dir = _make_skill(tmp_path, FRONT_MATTER + body)
+
+    # Act
+    violations = check_skill_shape.check_tree(skills_dir)
+
+    # Assert
+    assert violations == []

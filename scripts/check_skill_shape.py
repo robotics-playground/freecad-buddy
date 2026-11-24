@@ -34,8 +34,11 @@ def _body(text: str) -> str:
 def _sections(body: str) -> list[tuple[str, str]]:
     """Return ``(heading, text under it)`` for each H2 in ``body``, in order."""
     sections: list[tuple[str, list[str]]] = []
+    in_fence = False
     for line in body.splitlines():
-        if line.startswith("## "):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+        if line.startswith("## ") and not in_fence:
             sections.append((line[3:].strip(), []))
         elif sections:
             sections[-1][1].append(line)
