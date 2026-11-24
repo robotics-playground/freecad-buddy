@@ -76,8 +76,9 @@ result = {"name": part.Name, "ref_vol": ref.Volume,
           "overlap_pct": round(100 * common.Volume / ref.Volume, 4)}
 ```
 
-Then one `verify_shape` with `object` set to the returned `name` and `ref_vol` in `expect_volume`
-(`expect_solid_count` takes the source solid count; 1 for one solid):
+Then one `verify_shape` with `object` set to the returned `name` (for an `App::Link`, its Name:
+the placement is applied) and `ref_vol` in `expect_volume` (`expect_solid_count` takes the source
+solid count; 1 for one solid):
 
 ```json
 [{"fn": "is_valid_solid", "expect": true},
@@ -88,8 +89,7 @@ Then one `verify_shape` with `object` set to the returned `name` and `ref_vol` i
 Pass: all three checks pass and `overlap_pct` is 100.000. The `rel` tolerance is a fraction of
 `ref_vol`: 1e-6 equals `diff_pct` 0.0001, and the default is 0.01 (1 %), too wide for this proof.
 Equal volume alone is not equality: a part shifted or rotated keeps its volume and loses
-overlap. `query_mass_properties` and `verify_shape` measure an `App::Link` with its placement
-applied: pass the link's Name as `object`. Do not compare bounding boxes: OCC boxes around tori and cylinders are loose (several mm)
+overlap. Do not compare bounding boxes: OCC boxes around tori and cylinders are loose (several mm)
 when the volumes are identical.
 
 When a part fails, compare each `<part>_stepN` object against the same partial build in the

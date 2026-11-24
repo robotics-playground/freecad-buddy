@@ -41,7 +41,8 @@ add-on, which auto-starts the server, then point your MCP client at it.
 - Import a sourced part **with `script_exec` on the live document**, because no typed
   tool imports a STEP file (a gap in `freecad-scripting-idioms`,
   whose gap list holds the import script). Say so before you call
-  it, then check each imported solid with `verify_shape`. If `query_capabilities`
+  it, then check each imported solid with `verify_shape` (after `document_open` on the
+  headless route). If `query_capabilities`
   reports `exec_enabled: false`, use the headless route in `freecad-scripting-idioms`. Never
   import through a `freecadcmd` run while the GUI has the document open: the GUI keeps
   its own copy of the document.

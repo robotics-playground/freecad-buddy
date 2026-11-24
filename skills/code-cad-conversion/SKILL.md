@@ -28,8 +28,8 @@ Copy-ready helpers: `references/generator-kit.md`. Source call to FreeCAD object
 All steps run through the **freecad-buddy MCP server** (`script_exec`,
 `document_*`, `query_*`, `verify_*`, `export_*`). If those tools are not in your
 session, open FreeCAD with the freecad-buddy add-on and connect your MCP client
-first. If `query_capabilities` reports `exec_enabled: false`, stop and ask the
-operator to turn on `ScriptExec`: no typed tool writes a VarSet or an expression.
+first. If `query_capabilities` reports `exec_enabled: false`, use the headless route in
+`freecad-scripting-idioms`: no typed tool creates a VarSet property or binds an expression.
 
 ## Decision Rules
 
