@@ -155,6 +155,33 @@ class QueryToolsTest(unittest.TestCase):
             envelope["structured_content"], {"objects": [{"name": "Empty", "shape": None}]}
         )
 
+    def test_Should_return_a_null_shape_record_When_a_listed_object_is_an_empty_compound(self):
+        # Arrange
+        empty = self.document.addObject("Part::Feature", "EmptyCompound")
+        empty.Shape = Part.makeCompound([])
+        self.document.recompute()
+        target = queries.query_mass_properties
+
+        # Act
+        envelope = target(self.registry, doc=self.handle, objects=["EmptyCompound", "Box"])
+
+        # Assert
+        records = envelope["structured_content"]["objects"]
+        self.assertEqual(records[0], {"name": "EmptyCompound", "shape": None})
+        self.assertEqual(records[1]["name"], "Box")
+
+    def test_Should_reject_an_empty_name_When_it_is_listed_with_valid_names(self):
+        # Arrange
+        target = queries.query_mass_properties
+
+        # Act
+        def act():
+            return target(self.registry, doc=self.handle, objects=["Box", ""])
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, "non-empty"):
+            act()
+
     def test_Should_return_fifty_records_in_order_When_fifty_objects_are_dispatched(self):
         # Arrange
         self._add_shell()

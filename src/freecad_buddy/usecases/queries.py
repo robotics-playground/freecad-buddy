@@ -660,8 +660,12 @@ def query_mass_properties(
                 raise ValidationError(f"object has no queryable shape: {object}")
             record = _mass_record(resolved[0], shapes[0])
             return _ok_envelope(record, summarize_mass_properties(record))
+        # An empty compound is not null but has an inverted +-1.797e308 bounding box; in a list it
+        # reads as no shape. The single-object path keeps its existing response.
         records = [
-            {"name": obj.Name, "shape": None} if shape is None else _mass_record(obj, shape)
+            {"name": obj.Name, "shape": None}
+            if shape is None or not shape.BoundBox.isValid()
+            else _mass_record(obj, shape)
             for obj, shape in zip(resolved, shapes)
         ]
         text = "\n".join(summarize_mass_properties(record) for record in records)

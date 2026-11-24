@@ -85,6 +85,8 @@ context:
 
 ## Design Notes
 
+Empty compound (red team RT-4): in `objects` it gives `{name, shape: null}`; the `object` path keeps today's response (AD-28, no change to an existing response).
+
 Record helper sketch (no new ring crossing, `usecases` only):
 
 ```
