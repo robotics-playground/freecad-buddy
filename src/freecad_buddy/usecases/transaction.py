@@ -711,7 +711,8 @@ def _bracket(
             _delete_snapshot(snapshot_path)
         return document, _setup_failed_envelope(exc, params_digest, fp_before)
 
-    document.openTransaction(f"buddy: {label}")
+    transaction_name = f"buddy: {label}"
+    document.openTransaction(transaction_name)
     touched: list[str] = []
     failure_code: str | None = None
     try:
@@ -725,7 +726,7 @@ def _bracket(
         report = post_verify(document, handle, touched, refs_before, refs_written, removed_bindings)
     except RecomputeFailure as exc:
         failure_code = exc.code
-        report = _block(False, False, None, _unrun_tnp_audit(), False, str(exc))
+        report = _block(False, NOT_MEASURED, None, _unrun_tnp_audit(), False, str(exc))
     except Exception as exc:  # noqa: BLE001 - any op failure maps to the proven-rollback path
         report = _block(
             True, False, None, _unrun_tnp_audit(), False, f"{type(exc).__name__}: {exc}"
@@ -734,17 +735,17 @@ def _bracket(
     if report["passed"]:
         try:
             document.commitTransaction()
-            shim.close_pending_transaction()
         except Exception as exc:  # noqa: BLE001 - a failed commit must not leave the bracket open
             # R5: never leave a transaction open. abortTransaction no-ops when there is no active
             # transaction (App/Document.cpp:622-639), so it is safe whether the commit got far
             # enough to close one or not.
             document.abortTransaction()
-            shim.close_pending_transaction()
+            shim.close_pending_transaction(transaction_name)
             document.recompute()
             return document, _commit_failed_envelope(
                 exc, fp_before, report["tnp_audit"], snapshot_path, params_digest, touched
             )
+        shim.close_pending_transaction(transaction_name)
         # The after-fingerprint is taken while the snapshot still exists: it serializes every shape
         # and can raise, and the snapshot is the only pre-mutation copy until it succeeds.
         try:
@@ -762,7 +763,7 @@ def _bracket(
         return document, _envelope(block, "OK", summarize_mutation(block))
 
     document.abortTransaction()
-    shim.close_pending_transaction()
+    shim.close_pending_transaction(transaction_name)
     document.recompute()
     if not undo_enabled:
         # Undo could not be turned on, so abort restores nothing and the snapshot path below is
@@ -788,7 +789,7 @@ def _bracket(
             params_digest,
             touched,
         )
-        return document, _envelope(block, "SPEC_FAILED", summarize_mutation(block))
+        return document, _envelope(block, "SPEC_FAILED", summarize_mutation(block), failure_code)
 
     _delete_snapshot(snapshot_path)
     status = _rollback_status(report)

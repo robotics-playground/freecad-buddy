@@ -2332,7 +2332,9 @@ _EXPRESSION_ITEM_KEYS = frozenset({"object", "path", "expression"})
 # limit bounds parsing and this refusal bounds evaluation. A ternary that compares two cell
 # references also matches; none is worth the cost of a range.
 _CELL_RANGE = re.compile(
-    r"\$?[A-Za-z]{1,3}\$?[0-9]+\s*:\s*(?:[A-Za-z_][A-Za-z0-9_]*\.)?\$?[A-Za-z]{1,3}\$?[0-9]+"
+    r"\$?[A-Za-z]{1,3}\$?[0-9]+\s*:\s*"
+    r"(?:(?:[A-Za-z_][A-Za-z0-9_]*|<<[^>]*>>)(?:#(?:[A-Za-z_][A-Za-z0-9_]*|<<[^>]*>>))?\.)?"
+    r"\$?[A-Za-z]{1,3}\$?[0-9]+"
 )
 
 _SHEET_TYPE = "Spreadsheet::Sheet"
@@ -2464,6 +2466,8 @@ def _range_problem(
     assigned = candidate if _is_quantity(candidate) and type(current) is not int else expected
 
     def assign(scratch: object) -> object:
+        if prop not in scratch.PropertiesList:
+            scratch.addProperty(type_id, prop, "", "")
         setattr(scratch, prop, assigned)
         return getattr(scratch, prop)
 
@@ -2640,6 +2644,10 @@ def _binding_problems(document: object) -> dict[tuple[str, str], tuple[str, str]
     problems: dict[tuple[str, str], tuple[str, str]] = {}
     for obj in document.Objects:
         for key, text in list(getattr(obj, "ExpressionEngine", None) or []):
+            if _CELL_RANGE.search(text):
+                # Evaluating a range can hold the call for minutes, and a binding made outside
+                # this tool may hold one.
+                continue
             try:
                 value = _path_value(obj, key)
                 expected = obj.evalExpression(text)
@@ -2699,7 +2707,8 @@ def feature_set_expression(
     :raises ExpressionRefusal: a ``ValidationError`` whose ``code`` is one of
         ``expression.invalid_path``, ``expression.unsupported_property``,
         ``expression.invalid_text``, ``expression.invalid_expression``,
-        ``expression.not_finite``, ``expression.unit_mismatch``, ``expression.not_integer`` and
+        ``expression.not_finite``, ``expression.unit_mismatch``, ``expression.not_integer``,
+        ``expression.range_unsupported``, ``expression.value_out_of_range`` and
         ``expression.duplicate_path``; the dispatcher puts it in ``detail.code``.
     """
 
@@ -2766,8 +2775,8 @@ def feature_set_expression(
     def recompute_check(document: object) -> None:
         new = {
             key: problem
-            for key, problem in _binding_problems(document).items()
-            if key not in problems_before[0]
+            for key, problem in sorted(_binding_problems(document).items())
+            if problems_before[0].get(key) != problem
         }
         if new:
             code = next(iter(new.values()))[0]

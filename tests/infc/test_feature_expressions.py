@@ -4,6 +4,7 @@ Run via ``FreeCADCmd tests/run_tests.py``. Expected values are the ones the call
 back from the live document, never read from the tool under test.
 """
 
+import unittest
 from unittest import mock
 
 import FreeCAD as App
@@ -741,14 +742,14 @@ class ClosureTest(_ExpressionFixture):
     def test_Should_leave_no_transaction_open_and_keep_undo_working_When_a_cycle_is_refused(self):
         # Arrange
         self.set_expressions(bind("Box", "Length", "Params.width"))
-        cycle = self.set_expressions(bind("Box", "Length", "Box.Length + 1 mm"))
-        self.assertEqual(cycle["status"], "RECOMPUTE_ERROR")
 
         # Act
+        cycle = self.set_expressions(bind("Box", "Length", "Box.Length + 1 mm"))
         self.set_expressions(bind("Other", "Height", "Params.width"))
         undone = self.registry.document_undo(doc=self.handle)
 
         # Assert
+        self.assertEqual(cycle["status"], "RECOMPUTE_ERROR")
         self.assertIsNone(App.getActiveTransaction())
         self.assertEqual(undone["status"], "OK", undone.get("detail"))
         self.assertEqual(sorted(self.bindings()), ["Box"])
@@ -797,8 +798,10 @@ class ClosureTest(_ExpressionFixture):
 class RoundTwoRefusalTest(_ExpressionFixture):
     def assert_refused(self, item, code):
         before = self.bindings()
-        envelope = self.dispatch(item)
+        envelope, minted = self.snapshots_minted_by(lambda: self.dispatch(item))
+        self.assertEqual(envelope["status"], "INVALID_INPUT", envelope.get("detail"))
         self.assertEqual(envelope["detail"]["code"], code, envelope["detail"])
+        self.assertEqual(minted, 0)
         self.assertEqual(self.bindings(), before)
 
     def sheet(self):
@@ -833,6 +836,8 @@ class RoundTwoRefusalTest(_ExpressionFixture):
             "sum(Sheet.A1:Sheet.B2)",
             "sum($A$1:$B$2)",
             "sum( C1 : ZZ16384 ) + 1",
+            "sum(<<My Sheet>>.A1:<<My Sheet>>.B2)",
+            "sum(Doc#Sheet.A1:Doc#Sheet.B2)",
         ):
             with self.subTest(text=text):
                 self.assert_refused(bind("Box", "Height", text), "expression.range_unsupported")
@@ -849,10 +854,11 @@ class RoundTwoRefusalTest(_ExpressionFixture):
         self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
 
     def test_Should_refuse_with_the_unsupported_code_When_the_object_is_not_attached(self):
-        self.assert_refused(
-            bind("Loose", ".AttachmentOffset.Base.z", "Params.width"),
-            "expression.unsupported_property",
-        )
+        # Arrange
+        item = bind("Loose", ".AttachmentOffset.Base.z", "Params.width")
+
+        # Act, Assert
+        self.assert_refused(item, "expression.unsupported_property")
 
     def test_Should_refuse_with_the_range_code_When_a_revolution_angle_exceeds_a_full_turn(self):
         # Arrange
@@ -882,10 +888,59 @@ class RoundTwoRefusalTest(_ExpressionFixture):
     def test_Should_refuse_with_the_range_code_When_an_integer_leaves_the_int32_range(self):
         for text in ("3000000000", "-3000000000"):
             with self.subTest(text=text):
-                self.assert_refused(bind("Params", "count", text), "expression.value_out_of_range")
+                # Arrange
+                item = bind("Params", "count", text)
+
+                # Act, Assert
+                self.assert_refused(item, "expression.value_out_of_range")
+
+    def test_Should_refuse_with_the_range_code_When_a_percent_parameter_exceeds_100(self):
+        # Arrange
+        self.live("Params").addProperty("App::PropertyPercent", "share", "Parameters", "")
+        item = bind("Params", "share", "150")
+
+        # Act, Assert
+        self.assert_refused(item, "expression.value_out_of_range")
 
     def test_Should_refuse_with_the_unsupported_code_When_the_path_reads_into_a_shape(self):
-        self.assert_refused(bind("Box", ".Shape.Volume", "5"), "expression.unsupported_property")
+        # Arrange
+        item = bind("Box", ".Shape.Volume", "5")
+
+        # Act, Assert
+        self.assert_refused(item, "expression.unsupported_property")
+
+
+class _StubObject:
+    """An object holding one binding, recording every expression it is asked to evaluate."""
+
+    def __init__(self, name, bindings):
+        self.Name = name
+        self.ExpressionEngine = bindings
+        self.evaluated = []
+
+    def evalExpression(self, text):
+        self.evaluated.append(text)
+        return 1.0
+
+
+class _StubDocument:
+    def __init__(self, objects):
+        self.Objects = objects
+
+
+class BindingSweepTest(unittest.TestCase):
+    def test_Should_not_evaluate_a_binding_that_holds_a_cell_range_When_sweeping_the_document(self):
+        # Arrange
+        costly = _StubObject("Sheet", [(".A1", "sum(C1:ZZ16384)")])
+        cheap = _StubObject("Box", [("Length", "1")])
+        document = _StubDocument([costly, cheap])
+
+        # Act
+        features._binding_problems(document)
+
+        # Assert
+        self.assertEqual(costly.evaluated, [])
+        self.assertIn("1", cheap.evaluated)
 
 
 class OtherToolTest(_ExpressionFixture):

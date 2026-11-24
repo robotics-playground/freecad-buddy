@@ -894,10 +894,6 @@ class AuditRecordTest(_MutationFixture):
         self.assertIsNone(post[5])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class ApplicationTransactionTest(_MutationFixture):
     """No exit path of the bracket leaves the application's active transaction open."""
 
@@ -955,3 +951,30 @@ class ApplicationTransactionTest(_MutationFixture):
         # Assert
         self.assertEqual(undone["status"], "OK", undone.get("detail"))
         self.assertIsNone(self.document.getObject("Cyl"))
+
+    def test_Should_leave_a_transaction_of_another_name_open_When_closing_the_bracket_name(self):
+        # Arrange
+        App.setActiveTransaction("user command")
+
+        # Act
+        shim.close_pending_transaction("buddy: set expressions 1")
+
+        # Assert
+        active = App.getActiveTransaction()
+        App.closeActiveTransaction(True)
+        self.assertIsNotNone(active)
+        self.assertEqual(active[0], "user command")
+
+    def test_Should_close_the_transaction_of_the_bracket_name_When_it_is_left_open(self):
+        # Arrange
+        App.setActiveTransaction("buddy: set expressions 1")
+
+        # Act
+        shim.close_pending_transaction("buddy: set expressions 1")
+
+        # Assert
+        self.assertIsNone(App.getActiveTransaction())
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -4,7 +4,7 @@
 reference-holding subsystems (Sketcher external geometry, attachment/datums, PartDesign
 profile/base, expression-engine dependencies), capturing the owner's ``ElementMapVersion``, each
 entry's subname, its resolved mapped shadow, a geometric witness and its element ancestry.
-``audit_references(doc, snapshot, written)`` runs the Layer-0 validity sweep over
+``audit_references(doc, snapshot, written, removed_bindings)`` runs the Layer-0 validity sweep over
 ``isValid()``/``getStatusString()``, then the Layer-1 per-entry diff (resolution, mapped name,
 witness, entry count, ``ElementMapVersion`` re-baseline) and the Layer-2 ancestry cross-check over
 the entries Layer 1 left ambiguous, returning a ``TnpAuditBlock``.

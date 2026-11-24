@@ -122,3 +122,31 @@ Lenses: Blind Hunter aa27ed9c6e117ea3a (opus, high), Edge Case Hunter a1e6daed23
 - `uv run python scripts/check_imports.py`, `gen_schemas.py --check`, `check_provenance.py` -- expected: pass
 - `uv run --extra dev pytest tests/external -q` (Git Bash) -- expected: pass
 - `freecadcmd -u <tmp>/user.cfg -s <tmp>/system.cfg tests/run_tests.py` with `FREECAD_USER_HOME` set to a temp folder -- expected: pass
+
+Round 2. Verifier V1-V5, red team RT-1..RT-8 (triage-13-10-r2.md), then lenses Blind a196bc6602c80f3ce (opus, high), Edge Case adff17f15a8cf2ba4 (opus, high), Verification Gap aaf3ec8e6d09a8775 (sonnet, medium) on f2a19ce8..eca29153.
+
+| # | Source | Finding | Verdict | Route and evidence |
+|---|--------|---------|---------|--------------------|
+| r2-1 | V1 | A no-write call leaves the application transaction open | high | patch: `shim.close_pending_transaction(name)` after commit and abort; tests for every exit path and the next undo |
+| r2-2 | RT-8, RT-3 | Spreadsheet range held a call 1,087 s; cell binding ignored and lost on save | high | patch: sheet targets and range text refused; range bindings skipped in the sweep |
+| r2-3 | V3 | Unattached `AttachmentOffset` reports bound, moves nothing | medium | patch: refused when the property is Hidden |
+| r2-4 | RT-4, RT-2, RT-6, RT-7 | Range clamps bypassed, int32 overflow, sibling-driven values, `.Shape.Volume` | medium | patch: type rules, scratch probe (dynamic properties added), `recompute_check`, shape root refused |
+| r2-5 | RT-1 | `undo_steps` 0 while a step was recorded | medium | patch: read from the undo list with a numbered transaction name |
+| r2-6 | RT-5 | Exemption changed `sketch_remove_geometry` | low | patch: keyed to `removed_bindings`; test shows BROKEN as at base |
+| r2-7 | V4 | Cycle was `SPEC_FAILED` | low | patch: `RecomputeFailure`, `RECOMPUTE_ERROR`, `expression.cycle` |
+| r2-8 | V2 | Stale `validator_sha` | high (gate) | patch: both scorers re-run after the last source edit |
+| r2-9 | BH, EC | `close_pending_transaction` aborts a foreign transaction under a GUI guard; close inside the commit try | medium | patch: closes only the bracket's own name, outside the try; two tests |
+| r2-10 | BH | `RecomputeFailure` block claims unmeasured `is_valid false`; unproven path drops the code | low | patch: `NOT_MEASURED`, code passed on |
+| r2-11 | BH, EC | The binding sweep evaluates existing range bindings twice per call | medium | patch: range bindings skipped; stub test |
+| r2-12 | BH, EC | Baseline by key hides a worsened existing problem; code depends on object order | medium | patch: baseline compares the problem text; sorted keys |
+| r2-13 | BH, EC | `_CELL_RANGE` misses `<<Sheet>>` and `Doc#Sheet` prefixes | medium | patch: prefixes added, tests; the ternary over cell-like names stays refused and is documented |
+| r2-14 | EC | The probe skips dynamic VarSet properties (Percent, Area) | medium | patch: the property is added to the scratch object; Percent test |
+| r2-15 | BH | Refusal tests do not prove "before the bracket" | low | patch: status and snapshot count asserted |
+| r2-16 | BH, GAP | `ApplicationTransactionTest` defined after the main guard | low | patch: moved above it |
+| r2-17 | BH | Catalog and docstrings omit new codes and the touched-document case | low | patch |
+| r2-18 | BH | Test phase comments | low | patch for the new tests |
+| r2-19 | BH, EC | The exemption now grades a constraint renumbering `BROKEN` | low | reject: same grade at base; `OtherToolTest` pins the other tools' grading |
+| r2-20 | BH | Validator hash without a run | false | scorer ran after the last edit; same date and run id |
+| r2-21 | BH | Cycle detection depends on message text | low | reject: the cycle tests assert `expression.cycle` and fail if FreeCAD rewords it |
+| r2-22 | EC | A stale baseline on a touched document | low | reject: bindings and values of a touched document are the user's pending edit; GUI edits recompute |
+| r2-23 | EC | `undo_steps` when the call joined an existing application transaction | low | reject: only under a GUI guard; the numbered name stays the evidence |

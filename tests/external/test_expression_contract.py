@@ -92,7 +92,15 @@ def test_Should_reach_the_expression_tool_through_the_preview_table_When_buildin
 
 
 @pytest.mark.parametrize(
-    "text", ["sum(A1:B2)", "sum(Sheet.A1:Sheet.B2)", "sum($A$1:$B$2)", "sum( C1 : ZZ16384 )"]
+    "text",
+    [
+        "sum(A1:B2)",
+        "sum(Sheet.A1:Sheet.B2)",
+        "sum($A$1:$B$2)",
+        "sum( C1 : ZZ16384 )",
+        "sum(<<My Sheet>>.A1:<<My Sheet>>.B2)",
+        "sum(Doc#Sheet.A1:Doc#Sheet.B2)",
+    ],
 )
 def test_Should_match_the_range_pattern_When_the_text_holds_a_cell_range(text):
     # Act
