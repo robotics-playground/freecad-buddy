@@ -14,7 +14,7 @@ sources:
 
 Implementation-ready security design: `script_exec` gating (AD-4), RPC bind/token posture (AD-3), stderr-only logging (AD-3), the phase threat model, the trust boundary, and the mechanisms explicitly rejected as boundaries.
 
-Security stance (from the sandbox-policy research, adopted by AD-4/AD-35): the only security boundary this repository ships is **architectural** — typed tools are the sole AI mutation path, reached only over MCP. Process and OS isolation are the operator's environment to provide; this repository ships none of its own. In-process Python restriction is never a boundary (§6).
+Security stance (from the sandbox-policy research, adopted by AD-4/AD-35): the only security boundary this repository ships is **architectural** — typed tools are the AI mutation path, with `script_exec` only for operations no typed tool covers, all reached only over MCP. Process and OS isolation are the operator's environment to provide; this repository ships none of its own. In-process Python restriction is never a boundary (§6).
 
 ## 1. script_exec Gating (AD-4) — implementation-ready
 
@@ -54,7 +54,7 @@ def exec_registered(caps: Capabilities) -> bool:
  "fingerprint_before": "<digest>", "fingerprint_after": "<digest>", "verify_verdict": "OK", "rollback": null}
 ```
 
-The `before` line is written ahead of execution, so it holds no fingerprint. `verify_verdict` holds the envelope status. `actor` is the sink's configured actor: the record carries no client identity.
+The adapter writes the `before` and `after` lines around the call, and the use case writes none. The `before` line is written before the bracket takes its fingerprint, so `fingerprint_before` is `null` there; the `after` line takes both fingerprints from the result. `verify_verdict` holds the envelope status. `actor` is the sink's configured actor: the record carries no client identity.
 
 Records reuse the AD-17 contracts-owned audit-record type. The log file is opened append-only (`"a"`, plus `O_APPEND` semantics); the bridge exposes no tool that reads, truncates, or rotates it. Location: operator-configurable — `FREECAD_BUDDY_AUDIT_LOG`, else (GUI host) the **Audit log file** preference, else the default. The GUI default is `<FreeCAD user app data>/freecad-buddy/audit.jsonl`, beside the default workdir `<FreeCAD user app data>/freecad-buddy/workdir`, so it does not depend on the working directory FreeCAD starts in. The headless hosts keep the cwd-relative `freecad-buddy-audit.jsonl` default.
 
@@ -86,10 +86,10 @@ On the stdio transport, stdout **is** the MCP protocol; one stray `print()` corr
 | --- | --- | --- | --- |
 | 0 (bridge/harness) | None — operator + our own CI scripts | `script_exec` on by default, unregistered when off (AD-4); localhost bind + token (AD-3); audit log (AD-17) | Malicious local processes with the operator's own privileges; malicious operator |
 | 1 (read-only assistant) | LLM output (hallucination, prompt injection) | Zero mutation tools registered (AD-4); read-only `query_*` only; no exec in tool list | Model reading data it's shown; local-process threats as above |
-| 2 (copilot) | LLM-driven mutation requests | Typed tools first, `script_exec` only where none covers the operation (AD-4); AD-5 transaction + verify + proven rollback per mutation; `script_exec` runs the observe-only bracket (fingerprint, `changed`, no rollback); audit log with one `approval` line per mutation; AD-10 auto-approve on by default, the **Auto-approve mutations** preference off or `FREECAD_BUDDY_AUTO_APPROVE=0` as the opt-in confirm gate; a sent `preview_id` is checked in every posture; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because every typed mutation is verified, rolled back on failure and audited, every `script_exec` call is audited with its source and returns its changes in `changed`, and an operator who wants per-call consent clears the preference or sets `=0` |
+| 2 (copilot) | LLM-driven mutation requests | Typed tools first, `script_exec` only where none covers the operation (AD-4); AD-5 transaction + verify + proven rollback per mutation; `script_exec` runs the observe-only bracket (fingerprint, `changed`, no rollback); audit log with one `approval` line per mutation; AD-10 auto-approve on by default, the **Auto-approve mutations** preference off or `FREECAD_BUDDY_AUTO_APPROVE=0` as the opt-in confirm gate; a sent `preview_id` is checked in every posture; token'd RPC | OS-level containment — the bridge runs with the operator's privileges inside their FreeCAD; acceptable because every typed mutation is verified, rolled back on failure and audited, every `script_exec` call is audited with its source and reports its geometry changes in `changed` (AD-6; a property-only change is not listed), and an operator who wants per-call consent clears the preference or sets `=0` |
 | Unattended | Agent requests = fully untrusted input, even over typed tools | Everything above; every reported field is a re-executed check (AD-17); `script_exec` off unless the operator sets `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`; the audit log makes the run reconstructable after the fact | This repository ships no process boundary — the operator's environment provides isolation, and a determined attacker on that host is out of scope |
 
-Threats defended across phases: LLM free-form exec as mutation path (AD-4); silent bad-part success (AD-17 re-executed checks); stdout protocol corruption (AD-3); rogue local RPC caller (token); An unattended run adds: resource exhaustion, exfiltration/egress, host FS tamper, and crash cascade — all bounded by the operator's environment rather than by anything this repository ships.
+Threats defended across phases: free-form exec replacing a typed tool that exists (AD-4); silent bad-part success (AD-17 re-executed checks); stdout protocol corruption (AD-3); rogue local RPC caller (token); An unattended run adds: resource exhaustion, exfiltration/egress, host FS tamper, and crash cascade — all bounded by the operator's environment rather than by anything this repository ships.
 
 ## 5. Trust Boundary Diagram
 
@@ -107,8 +107,8 @@ graph TB
     llm[Agent tool requests<br/>attended: auto-approved by default,<br/>confirmed with =0]
     unatt[Agent tool requests<br/>unattended: no human in loop]
   end
-  llm -->|MCP, typed tools only| typed
-  unatt -->|MCP, typed tools only| typed
+  llm -->|MCP, typed tools first; script_exec for gaps| typed
+  unatt -->|MCP, typed tools; script_exec only if opted in| typed
   typed -->|token-validated frames| rpc
   typed --> audit
   op -.->|ScriptExec preference or FREECAD_BUDDY_SCRIPT_EXEC<br/>script_exec, off in a marked unattended run unless opted in| typed
@@ -128,4 +128,4 @@ Never described, configured, or relied upon as a security boundary. Permitted on
 | Namespace-restricted `exec` globals | Same class-tree escape; reduces accidents, not adversaries | `script_exec` hardening layer only (§1 item 4) |
 | String/AST filtering of submitted code | Denylist arms race; dynamic introspection routes around it | Nowhere |
 
-The real boundary, restated: **typed tools as the only AI mutation path, reached only over MCP (AD-4, AD-35)**. Everything else is depth, and process isolation is the operator's environment to provide.
+The real boundary, restated: **typed tools first and `script_exec` for listed gaps, both reached only over MCP (AD-4, AD-35)**. Everything else is depth, and process isolation is the operator's environment to provide.

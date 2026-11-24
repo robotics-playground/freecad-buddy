@@ -2,7 +2,7 @@
 title: 'Integration Design — MCP <-> FreeCAD Bridge'
 status: final
 date: '2026-11-24'
-ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-11, AD-12, AD-17, AD-20, AD-24, AD-26, AD-27]
+ad-refs: [AD-1, AD-2, AD-3, AD-4, AD-5, AD-11, AD-12, AD-17, AD-20, AD-24, AD-26, AD-27]
 sources:
   - _bmad-output/planning-artifacts/research/technical-mcp-embedding-freecad-gui-process-research-2026-07-20.md
   - _bmad-output/planning-artifacts/research/technical-offscreen-screenshot-freecadcmd-research-2026-07-20.md
@@ -99,7 +99,7 @@ class MethodRegistry:
     def dispatch(self, name: str, params: dict) -> ResultEnvelope: ...
 ```
 
-`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`; a Python exception raised by `script_exec` code is `INVALID_INPUT` with `detail.code` `exec.python_error`, AD-5) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `script_exec` is registered unless the operator turns it off — `FREECAD_BUDDY_SCRIPT_EXEC`, or in GUI mode the **Allow script_exec** preference with the variable unset — or the run is marked unattended without opt-in (AD-4), and every invocation is appended to the audit log (AD-17).
+`dispatch` is the single error boundary: it maps use-case exceptions onto the AD-17 closed set (`INVALID_INPUT` for validation errors, `RECOMPUTE_ERROR` for FreeCAD/recompute failures, `TIMEOUT` for marshal expiry; anything unexpected → `RECOMPUTE_ERROR` with `detail.unexpected=true`; `script_exec` catches its script's exception inside the bracket and returns `INVALID_INPUT` with `detail.code` `exec.python_error` itself (AD-5), so `dispatch` never sees that exception) and always attaches machine detail: exception class, message, truncated traceback. Tracebacks also go to stderr (AD-3 logging rule). `script_exec` is registered unless the operator turns it off — `FREECAD_BUDDY_SCRIPT_EXEC`, or in GUI mode the **Allow script_exec** preference with the variable unset — or the run is marked unattended without opt-in (AD-4), and every invocation is appended to the audit log (AD-17).
 
 ### 2.6 Discovery (connection file)
 

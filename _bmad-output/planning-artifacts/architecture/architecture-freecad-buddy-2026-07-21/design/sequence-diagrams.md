@@ -468,11 +468,11 @@ sequenceDiagram
   Note over Cat: when off, the tool is absent from the list —<br/>not present-and-refusing
   Agent->>MCP: script_exec(Python)
   Note over MCP: still an MCP tool — the agent<br/>reaches it through the same surface as every typed tool
+  MCP->>Audit: append-only before record with source (before execution)
   MCP->>U: dispatch
-  U->>Audit: append-only record with source (before execution)
-  Note over U: fingerprint → bridge transaction → run → recompute → commit → fingerprint
-  U->>Audit: append-only record with status and fingerprints (after execution)
+  Note over U: fingerprint → bridge transaction → run → recompute (unless recompute: false) → commit → fingerprint
   U-->>MCP: result
+  MCP->>Audit: append-only after record: status and both fingerprints from the result
   MCP-->>Agent: envelope
   Note over Agent: fingerprint_before, fingerprint_after,<br/>changed and new_errors; no rollback —<br/>the agent checks with verify_* afterwards
   Note over U: in-process restriction is never called a security<br/>boundary — this repo ships NO boundary of its<br/>own, so the operator's environment is it

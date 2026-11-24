@@ -68,7 +68,7 @@ class ErrorDetail(TypedDict, total=False):
     data: dict           # code-specific machine payload
 ```
 
-Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17). `INVALID_INPUT` means no execution, except for `script_exec`: it returns `INVALID_INPUT` with `code` `"exec.python_error"` when the agent script raised after it started. `data` then holds `exception` and `traceback`, and the partial changes stay in the document and in `changed` (AD-5).
+Semantics fixed here: `TIMEOUT` originates only from the transport layer (marshal timeout, RPC listener unreachable — from Phase 0; see integration-mcp-freecad.md §7); `WORKER_CRASHED` and `OOM_KILLED` are reserved vocabulary with no producer (AD-17, AD-28); use-case code maps its own failures to `SPEC_FAILED | RECOMPUTE_ERROR | INVALID_INPUT`. A crashed or timed-out producer can never be reported `OK` (AD-17). `INVALID_INPUT` means the call made no change, except for `script_exec`: it returns `INVALID_INPUT` with `code` `"exec.python_error"` when the agent script raised after it started. `data` then holds `exception` and `traceback`, and the partial changes stay in the document. `changed` lists the objects whose geometry changed (AD-6); a property-only change is not listed (AD-5).
 
 ## 4. `ResultEnvelope` (`envelope.py`)
 
@@ -182,12 +182,12 @@ class AuditRecord(TypedDict, total=False):
     event: Literal["mutation", "exec", "preview", "approval", "rollback"]
     tool: str                       # wire tool name ("feature_pocket", "script_exec", …)
     doc: DocHandle                  # §9 — required for document-touching events
-    params_digest: str              # "sha256:<hex>" over canonical-JSON params (params
+    params_digest: str              # sha256 hex over canonical-JSON params (params
                                     #   themselves may be large/sensitive; digest is mandatory,
                                     #   inline params optional under a size cap)
     fingerprint_before: str | None  # FingerprintRecord.digest (§9), serializer-tagged
     fingerprint_after: str | None
-    verify_verdict: TerminalStatus | None   # verdict of the AD-5 post-verify report
+    verify_verdict: TerminalStatus | None   # envelope status of the call (the post-verify verdict for a bracketed mutation)
     verify_report_ref: str | None   # path/uri of the full ValidationReport
     approval: dict | None           # {"mode": "elicitation" | "client_confirm" |
                                     #   "auto_approve" | "operator_flag",
