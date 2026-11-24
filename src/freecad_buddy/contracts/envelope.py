@@ -10,6 +10,7 @@ learned to recognize one wording would miss the others.
 
 from __future__ import annotations
 
+import re
 from typing import Literal, TypedDict
 
 from freecad_buddy.contracts.render import FramingVerdict
@@ -35,6 +36,15 @@ from freecad_buddy.contracts.status import ErrorDetail, TerminalStatus
 # So a non-zero value here would buy nothing and cost exactness. Raise it only against a measured
 # stream of false warnings, and record that measurement here.
 NEAR_MISS_TOLERANCE = 0.0
+
+# Longest string ``summary_text`` prints in full, set by tool-contracts.md T-13. A longer
+# string, for example a ``script_exec`` ``stdout``, a long ``value_repr`` or a deep file
+# path, is elided because ``structured_content`` already carries it in full.
+INLINE_STRING_LIMIT = 80
+
+# Every character ``str.splitlines`` treats as a line boundary: a value holding one cannot sit on
+# the single ``key: value`` line the text mirror promises.
+_LINE_BREAK = re.compile("[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]")
 
 
 class ImageRef(TypedDict, total=False):
@@ -67,12 +77,19 @@ def summary_text(structured_content: dict) -> str:
     """Compact human mirror of ``structured_content``: one ``key: value`` line per top-level key.
 
     Scalars render inline; a nested dict renders ``key: {N fields}`` and a list ``key: [N items]``
-    — a signal of shape, never a full JSON dump.
+    — a signal of shape, never a full JSON dump. A string longer than ``INLINE_STRING_LIMIT``
+    characters, or holding a line break (any ``str.splitlines`` boundary), renders
+    ``key: <N chars>``: ``structured_content`` already carries it, so a copy here only
+    doubles the characters the agent reads.
     """
     lines = []
     for key in sorted(structured_content):
         value = structured_content[key]
-        if isinstance(value, dict):
+        if isinstance(value, str) and (
+            len(value) > INLINE_STRING_LIMIT or _LINE_BREAK.search(value)
+        ):
+            lines.append(f"{key}: <{len(value)} chars>")
+        elif isinstance(value, dict):
             lines.append(f"{key}: {{{len(value)} fields}}")
         elif isinstance(value, list):
             lines.append(f"{key}: [{len(value)} items]")
