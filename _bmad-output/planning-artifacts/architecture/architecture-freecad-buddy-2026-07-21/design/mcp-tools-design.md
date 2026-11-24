@@ -128,7 +128,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | --- | --- | --- | --- |
 | `query_tree_summary` | 0 | Plain-text containment tree in the shape of the Model panel, line-capped (G1.3 large-tree safe) | no |
 | `query_object` | 0 | One object: type, label, properties, error state + `getStatusString()` | no |
-| `query_mass_properties` | 0 | Volume/area/bbox/COM/inertia + topology counts for an object | no |
+| `query_mass_properties` | 0 | Volume/area/bbox/COM/inertia + topology counts + `is_valid` for one object, or for 1 to 50 objects (`objects`) | no |
 | `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc (whole-doc `edges` capped at `max_edges`, truncation flagged) | no |
 | `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
 | `query_placement` | 0 | Local + global placement of an object | no |
@@ -304,6 +304,33 @@ Dependency links by immutable `Name`. With `object` → `{object, in_list, out_l
     "returned_edges": { "type": "integer", "description": "min(total_edges, max_edges)" },
     "truncated": { "type": "boolean", "description": "true when total_edges > max_edges" }
   }, "required": ["edges", "total_edges", "returned_edges", "truncated"] } }
+```
+
+### 3.2.2 `query_mass_properties`
+
+Mass data per object by immutable `Name`. Exactly one of `object` and `objects` is required; both or neither → `INVALID_INPUT`, as is an `objects` list that is empty, longer than 50, or holds a non-string. A name that does not exist, or an empty name, fails the whole call with `INVALID_INPUT`. With `object` → one record; an object with no shape → `INVALID_INPUT`. With `objects` → `{objects: [record, ...]}` in input order, one record per name, duplicates kept; an object with no shape gives `{name, shape: null}` and the call stays `OK`. A record keeps `volume` and `com` null for a non-solid. `is_valid` is `Shape.isValid()`; the solid count stays in `counts.solids` (it appears once). The input schema carries no top-level `oneOf` for the one-of rule, because some MCP clients reject it; the use case enforces it.
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "object": { "type": "string" },
+    "objects": { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 50 }
+  }, "required": ["doc"], "additionalProperties": false },
+  "$defs": { "MassRecord": { "type": "object", "properties": {
+    "name": { "type": "string" }, "solid": { "type": "boolean" },
+    "volume": { "oneOf": [{ "$ref": "#/$defs/Quantity" }, { "type": "null" }] },
+    "area": { "$ref": "#/$defs/Quantity" },
+    "bbox": { "type": "object", "description": "xmin, xmax, ymin, ymax, zmin, zmax, each a Quantity in mm" },
+    "com": { "oneOf": [{ "type": "object", "description": "x, y, z, each a Quantity in mm" }, { "type": "null" }] },
+    "counts": { "type": "object", "description": "faces, edges, vertices, solids (integers)" },
+    "is_valid": { "type": "boolean" }
+  }, "required": ["name", "solid", "volume", "area", "bbox", "com", "counts", "is_valid"] } },
+  "outputSchema-objects": { "type": "object", "properties": {
+    "objects": { "type": "array", "items": { "oneOf": [
+      { "$ref": "#/$defs/MassRecord" },
+      { "type": "object", "properties": { "name": { "type": "string" }, "shape": { "type": "null" } },
+        "required": ["name", "shape"] } ] } }
+  }, "required": ["objects"] } }
 ```
 
 ### 3.3 `verify_shape`

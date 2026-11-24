@@ -1254,11 +1254,23 @@ def tool_specs() -> list[ToolSpec]:
             30.0,
             {
                 "type": "object",
-                "properties": {"doc": _DOC_SCHEMA, "object": {"type": "string"}},
-                "required": ["doc", "object"],
+                "properties": {
+                    "doc": _DOC_SCHEMA,
+                    "object": {"type": "string"},
+                    "objects": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "maxItems": 50,
+                    },
+                },
+                "required": ["doc"],
                 "additionalProperties": False,
             },
-            "Volume, area, bbox, centre of mass, and topology counts of a shape.",
+            "Volume, area, bbox, centre of mass, topology counts, and is_valid of a shape. "
+            "Give exactly one of object (one record) or objects (1 to 50 names, result "
+            "{objects: [...]} in input order; an object with no shape gives "
+            "{name, shape: null}).",
         ),
         _query_method(
             "query_dependencies",

@@ -100,6 +100,171 @@ class QueryToolsTest(unittest.TestCase):
         self.assertEqual(content["counts"]["edges"], 12)
         self.assertEqual(content["counts"]["solids"], 1)
 
+    def _add_shell(self, name="Shell"):
+        shell = self.document.addObject("Part::Feature", name)
+        shell.Shape = Part.makeBox(1, 1, 1).Shells[0]
+        self.document.recompute()
+
+    def test_Should_add_is_valid_to_the_record_When_one_object_is_queried(self):
+        # Arrange
+        target = queries.query_mass_properties
+
+        # Act
+        record = target(self.registry, doc=self.handle, object="Box")["structured_content"]
+
+        # Assert
+        self.assertIs(record["is_valid"], True)
+        self.assertNotIn("objects", record)
+        self.assertNotIn("shape", record)
+
+    def test_Should_return_records_in_input_order_When_several_objects_are_queried(self):
+        # Arrange
+        self._add_shell()
+        self.document.addObject("App::DocumentObjectGroup", "Group")
+        target = queries.query_mass_properties
+        names = ["Shell", "Box", "Group", "Box"]
+
+        # Act
+        envelope = target(self.registry, doc=self.handle, objects=names)
+
+        # Assert
+        records = envelope["structured_content"]["objects"]
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual([record["name"] for record in records], names)
+        self.assertIsNone(records[0]["volume"])
+        self.assertIsNone(records[0]["com"])
+        self.assertFalse(records[0]["solid"])
+        self.assertLessEqual(abs(records[1]["volume"]["value"] - ANALYTIC_VOLUME), 1e-6)
+        self.assertIs(records[1]["is_valid"], True)
+        self.assertEqual(records[1]["counts"]["solids"], 1)
+        self.assertNotIn("solids", records[1])
+        self.assertEqual(records[2], {"name": "Group", "shape": None})
+        self.assertEqual(records[3], records[1])
+
+    def test_Should_return_a_null_shape_record_When_an_object_has_a_null_shape(self):
+        # Arrange
+        self.document.addObject("Part::Feature", "Empty")
+        self.document.recompute()
+        target = queries.query_mass_properties
+
+        # Act
+        envelope = target(self.registry, doc=self.handle, objects=["Empty"])
+
+        # Assert
+        self.assertEqual(
+            envelope["structured_content"], {"objects": [{"name": "Empty", "shape": None}]}
+        )
+
+    def test_Should_return_fifty_records_in_order_When_fifty_objects_are_dispatched(self):
+        # Arrange
+        self._add_shell()
+        target = self._dispatch()
+        names = ["Box", "Shell"] * 25
+
+        # Act
+        envelope = target.dispatch("query_mass_properties", {"doc": self.handle, "objects": names})
+
+        # Assert
+        records = envelope["structured_content"]["objects"]
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual([record["name"] for record in records], names)
+
+    def test_Should_equal_the_object_record_and_a_direct_shape_read_When_objects_is_used(self):
+        # Arrange
+        target = queries.query_mass_properties
+        shape = self.box.Shape
+
+        # Act
+        single = target(self.registry, doc=self.handle, object="Box")["structured_content"]
+        listed = target(self.registry, doc=self.handle, objects=["Box"])["structured_content"]
+
+        # Assert
+        record = listed["objects"][0]
+        self.assertEqual(record, single)
+        self.assertAlmostEqual(record["bbox"]["xmax"]["value"], shape.BoundBox.XMax, places=6)
+        self.assertAlmostEqual(record["bbox"]["zmax"]["value"], shape.BoundBox.ZMax, places=6)
+        self.assertAlmostEqual(record["volume"]["value"], shape.Volume, places=6)
+        self.assertEqual(record["is_valid"], bool(shape.isValid()))
+
+    def test_Should_report_is_valid_false_and_flag_the_summary_When_the_shape_is_invalid(self):
+        # Arrange
+        bowtie = Part.makePolygon(
+            [
+                App.Vector(*point)
+                for point in [(0, 0, 0), (1, 1, 0), (1, 0, 0), (0, 1, 0), (0, 0, 0)]
+            ]
+        )
+        invalid = self.document.addObject("Part::Feature", "Bowtie")
+        invalid.Shape = Part.Face(bowtie)
+        self.document.recompute()
+        target = queries.query_mass_properties
+
+        # Act
+        single = target(self.registry, doc=self.handle, object="Bowtie")
+        listed = target(self.registry, doc=self.handle, objects=["Bowtie", "Box"])
+
+        # Assert
+        self.assertIs(single["structured_content"]["is_valid"], False)
+        self.assertIn("INVALID shape", single["text"])
+        self.assertEqual(
+            [record["is_valid"] for record in listed["structured_content"]["objects"]],
+            [False, True],
+        )
+
+    def test_Should_raise_validation_error_When_the_input_form_or_list_is_wrong(self):
+        # Arrange
+        target = queries.query_mass_properties
+        bad_inputs = [
+            {"object": "Box", "objects": ["Box"]},
+            {},
+            {"objects": []},
+            {"objects": ["Box"] * 51},
+            {"objects": ["Box", 3]},
+            {"objects": "Box"},
+        ]
+
+        for bad in bad_inputs:
+            with self.subTest(bad=bad):
+                # Act
+                def act(bad=bad):
+                    return target(self.registry, doc=self.handle, **bad)
+
+                # Assert
+                with self.assertRaises(ValidationError):
+                    act()
+
+    def test_Should_raise_validation_error_naming_the_object_When_a_listed_name_is_unknown(self):
+        # Arrange
+        target = queries.query_mass_properties
+
+        # Act
+        def act():
+            return target(self.registry, doc=self.handle, objects=["Box", "Nope"])
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, "Nope"):
+            act()
+
+    def test_Should_map_both_or_neither_to_invalid_input_When_dispatched(self):
+        # Arrange
+        target = self._dispatch()
+        calls = [
+            {"doc": self.handle},
+            {"doc": self.handle, "object": "Box", "objects": ["Box"]},
+            {"doc": self.handle, "objects": []},
+            {"doc": self.handle, "objects": ["Box"] * 51},
+            {"doc": self.handle, "objects": ["Box", ""]},
+            {"doc": self.handle, "objects": ["Box", "Nope"]},
+        ]
+
+        for arguments in calls:
+            with self.subTest(arguments=arguments):
+                # Act
+                envelope = target.dispatch("query_mass_properties", arguments)
+
+                # Assert
+                self.assertEqual(envelope["status"], "INVALID_INPUT")
+
     def test_query_dependencies_object_and_whole_doc(self):
         group = self.document.addObject("App::DocumentObjectGroup", "Group")
         group.addObject(self.box)
