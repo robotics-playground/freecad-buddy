@@ -2171,3 +2171,19 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/redteam-13-6.md` RT-3 (reproduced; also true before Story 13-6 on the `object` path).
   blocker: reporting object state in the record is a contract addition outside T-2.
   unblock: a Story that adds an object-state field to measurement records, or a skill rule to run `verify_recompute` before trusting measurements.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: `query_interference` measures each object's own container-local `Shape`; parts inside `App::Part` or `App::Link` instances need a global-frame shape.
+  evidence: `queries.py` `_interference_shape` reads `obj.Shape`; a part under a placed container, or a feature inside a moved Body, is measured in its local frame. Assemblies are Phase 5 (M-20); `query_mass_properties` has the same frame.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: A `query_interference` call with many large pairs can still pass the 60 s budget; the face-product guard limits one pair, not the sum.
+  evidence: The pair loop has no deadline check. Unverified (medium): a container run with a disjoint pair of large compounds (`distToShape` 45 s each, several pairs) would show whether the main thread stays blocked.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: T-2 in `tool-contracts.md` lists `min_distance` as a non-null Quantity; the code returns null when `distToShape` fails.
+  evidence: `queries.py` `query_interference`; design doc §3.2.3 states the widening. The leader owns the contract text.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: `query_interference` does not detect solids that overlap each other inside one `Compound`, or a self-intersecting solid that passes `isValid()`.
+  evidence: `_is_measurable_solid` uses `isValid()` and per-solid volume only. A BOP self-interference check (`shape.check(True)`) or pairwise solid checks would close it at a cost not yet measured.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-7-query-interference.md`
+  summary: The `query_interference` text and record do not say why a pair is `boolean_failed` (untrusted input, or a kernel failure at contact).
+  evidence: Both give the same text line; a reason field or a named object in the text would be additive.

@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import math
 import re
+import time
+from collections.abc import Callable
 from typing import Literal
 
 from freecad_buddy.contracts import CapabilityBanner, ResultEnvelope, summary_text
@@ -670,6 +672,246 @@ def query_mass_properties(
         ]
         text = "\n".join(summarize_mass_properties(record) for record in records)
         return _ok_envelope({"objects": records}, text)
+
+    return registry.with_document(doc, read)
+
+
+_MAX_INTERFERENCE_OBJECTS = 20
+_MAX_INTERFERENCE_PAIRS = 100
+# OCC's own tolerance for "touching" (Precision::Confusion). A distance at or below it is contact.
+_CONTACT_DISTANCE_MM = 1e-7
+# Largest faces(a) x faces(b) accepted for one pair. Measured on the development host with two
+# interleaved box compounds one millimetre apart (the slowest geometry found, ``distToShape`` runs
+# because ``common`` finds no volume): 129,600 -> 9.5 s, 230,400 -> 17.8 s, 360,000 -> 29.4 s.
+# 150,000 keeps one pair near 10 s against the 60 s query budget. Above it ``distToShape`` holds
+# the interpreter lock and the marshal timeout cannot fire (two 900-box compounds hung the worker
+# for minutes in the container). Realistic parts sit far below it: a plate with 81 holes has 87
+# faces.
+_MAX_PAIR_FACE_PRODUCT = 150_000
+# A call stops between pairs once this much time has passed. Worst case is this deadline plus one
+# pair at the per-pair limit (about 12 s on the development host: 129,600 -> 9.5 s, 230,400 ->
+# 17.8 s in the dense layout, and the limit is 150,000), which stays under the 60 s query budget.
+# Face counts are a poor cost proxy across layouts (87-face plates cost about 12 microseconds per
+# unit, dense boxes about 80), so the sum of a call is bounded by time, not by faces.
+_CALL_DEADLINE_SECONDS = 40.0
+
+
+def summarize_interference(sc: dict) -> str:
+    """Count line, then one line per pair whose boolean failed or whose shapes overlap."""
+    pairs = sc.get("pairs") or []
+    failed = [pair for pair in pairs if pair.get("boolean_failed")]
+    # A volume the result rounds to zero is not counted, so the text agrees with the numbers.
+    overlapping = [
+        pair
+        for pair in pairs
+        if pair.get("common_volume") and shim.displayed(pair["common_volume"]["value"])
+    ]
+    head = f"{len(pairs)} pair(s), {len(overlapping)} overlapping, {len(failed)} boolean failed."
+    lines = [head]
+    for pair in failed:
+        lines.append(f"{pair['a']}/{pair['b']}: BOOLEAN FAILED, overlap unknown.")
+    for pair in overlapping:
+        volume = shim.displayed(pair["common_volume"]["value"])
+        lines.append(f"{pair['a']}/{pair['b']}: common volume {volume} mm^3.")
+    return "\n".join(lines)
+
+
+def _interference_pairs(objects: list[str] | None, pairs: list[list[str]] | None):
+    """The name pairs to measure, or raise ``ValidationError`` unless exactly one form is given."""
+    if (objects is None) == (pairs is None):
+        raise ValidationError("give exactly one of 'objects' and 'pairs'")
+    if objects is not None:
+        if not isinstance(objects, list) or not 2 <= len(objects) <= _MAX_INTERFERENCE_OBJECTS:
+            raise ValidationError(
+                f"objects must be a list of 2 to {_MAX_INTERFERENCE_OBJECTS} names"
+            )
+        if not all(isinstance(name, str) and name for name in objects):
+            raise ValidationError("objects must contain only non-empty object names (strings)")
+        if len(set(objects)) != len(objects):
+            raise ValidationError("objects must not repeat a name")
+        return [
+            (objects[i], objects[j])
+            for i in range(len(objects))
+            for j in range(i + 1, len(objects))
+        ]
+    if not isinstance(pairs, list) or not 1 <= len(pairs) <= _MAX_INTERFERENCE_PAIRS:
+        raise ValidationError(f"pairs must be a list of 1 to {_MAX_INTERFERENCE_PAIRS} pairs")
+    for pair in pairs:
+        valid = isinstance(pair, list) and len(pair) == 2
+        if not (valid and all(isinstance(name, str) and name for name in pair)):
+            raise ValidationError("each pair must be two non-empty object names (strings)")
+        if pair[0] == pair[1]:
+            raise ValidationError(f"a pair must name two different objects: {pair[0]}")
+    return [(pair[0], pair[1]) for pair in pairs]
+
+
+def _interference_shape(document: object, name: str) -> object:
+    """The named object's shape, or raise ``ValidationError`` when it has no measurable shape.
+
+    A skipped object would read as "no overlap", so a missing, null or empty shape is refused.
+    """
+    obj = _resolve_object(document, name)
+    shape = _queryable_shape(obj)
+    if shape is None or not shape.BoundBox.isValid():
+        raise ValidationError(f"object has no queryable shape: {name}")
+    # ``Shape.common`` clears a BREP flag on its inputs, which would change a fresh fingerprint
+    # digest of the document; the booleans and the distance run on a copy.
+    return shape.copy()
+
+
+def _solid_volumes(shape: object):
+    """Yield the signed volume of each solid in ``shape``, and ``None`` for any other content.
+
+    A ``Compound`` or ``CompSolid`` is walked; a shell, face, wire or edge yields ``None``. A solid
+    with reversed orientation reports a negative volume (``Part::Reverse``).
+    """
+    if shape.ShapeType == "Solid":
+        yield float(shape.Volume)
+    elif shape.ShapeType in ("Compound", "CompSolid"):
+        for sub in shape.SubShapes:
+            yield from _solid_volumes(sub)
+    else:
+        yield None
+
+
+def _is_measurable_solid(shape: object) -> bool:
+    """Whether the boolean and distance kernels can be trusted on ``shape``.
+
+    True only for a valid shape made of solids that all have a positive volume. OCC reads a
+    reversed solid as the material outside its faces, finds no inner distance solution for an
+    invalid solid, and a shell encloses no volume, so each of those can turn a real overlap into
+    an empty ``common`` with a positive distance.
+    """
+    try:
+        volumes = list(_solid_volumes(shape))
+        return (
+            bool(volumes)
+            and all(
+                volume is not None and volume > 0 and math.isfinite(volume) for volume in volumes
+            )
+            and bool(shape.isValid())
+        )
+    except Exception:  # noqa: BLE001 -- a shape the kernel cannot even inspect is not measurable
+        return False
+
+
+def _measure_interference(
+    shape_a: object, shape_b: object
+) -> tuple[float | None, float | None, bool]:
+    """``(common_volume, min_distance, boolean_failed)`` for one shape pair, in mm^3 and mm.
+
+    The caller has checked both shapes with ``_is_measurable_solid``. ``common`` runs first because
+    it is cheap, and a non-zero common volume proves a distance of 0. ``distToShape`` is the slow
+    call on large compounds, so it runs only when ``common`` gives no volume. A ``common`` that
+    raises or returns an empty compound is not proof of no overlap (a self-intersecting solid
+    returns empty at distance 0), so it is a failed boolean unless the distance is positive.
+    ``None`` means unmeasured.
+    """
+    try:
+        common = shape_a.common(shape_b)
+    except Exception:  # noqa: BLE001 -- Part.OCCError is the only expected type; any raise = failed
+        common = None
+    empty = common is None or common.isNull() or not common.BoundBox.isValid()
+    volume = None if empty else float(common.Volume)
+    if volume is not None and (volume < 0 or not math.isfinite(volume)):
+        return None, None, True
+    if volume:
+        return volume, 0.0, False
+    try:
+        distance = float(shape_a.distToShape(shape_b)[0])
+    except Exception:  # noqa: BLE001 -- a failed distance leaves the overlap unproven
+        distance = None
+    if distance is not None and not math.isfinite(distance):
+        distance = None
+    if distance is not None and distance > _CONTACT_DISTANCE_MM:
+        return 0.0, distance, False
+    if not empty and distance is not None:
+        return 0.0, distance, False
+    return None, distance, True
+
+
+def _too_complex_envelope(message: str) -> ResultEnvelope:
+    """The refusal for a call whose boolean and distance cost would pass the query budget."""
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {"code": "interference.too_complex", "message": message},
+        "structured_content": {},
+        "text": message,
+    }
+
+
+def _pair_complexity_refusal(
+    name_pairs: list[tuple[str, str]], face_counts: dict[str, int], measurable: dict[str, bool]
+) -> ResultEnvelope | None:
+    """A refusal naming the first measured pair whose face product is above the per-pair limit."""
+    for name_a, name_b in name_pairs:
+        if not (measurable[name_a] and measurable[name_b]):
+            continue
+        if face_counts[name_a] * face_counts[name_b] > _MAX_PAIR_FACE_PRODUCT:
+            return _too_complex_envelope(
+                f"pair {name_a}/{name_b} is too complex to measure: {face_counts[name_a]} and "
+                f"{face_counts[name_b]} faces, limit {_MAX_PAIR_FACE_PRODUCT} for their product. "
+                "Measure simpler shapes, or fewer faces per object."
+            )
+    return None
+
+
+def query_interference(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    objects: list[str] | None = None,
+    pairs: list[list[str]] | None = None,
+    clock: Callable[[], float] = time.monotonic,
+) -> ResultEnvelope:
+    """Measure common volume and minimum distance for object pairs.
+
+    Give exactly one of ``objects`` (2 to 20 names, every pair measured in order ``(i, j)``,
+    ``i < j``) or ``pairs`` (1 to 100 ``[a, b]`` pairs). Each record is ``{a, b, common_volume,
+    min_distance, boolean_failed}``. ``boolean_failed`` is true, and ``common_volume`` null, when
+    either shape is not a valid solid-only shape with positive volume (``min_distance`` is then
+    null too), or when the boolean raised or returned nothing while the shapes touch or the
+    distance is unknown: an empty result must never read as no overlap. Reports numbers only,
+    never a verdict. Raises ``ValidationError`` for bad input, an unknown name, or an object with
+    no shape, and returns ``INVALID_INPUT`` with code ``interference.too_complex`` for a pair above
+    ``_MAX_PAIR_FACE_PRODUCT``, or for a call still measuring after ``_CALL_DEADLINE_SECONDS`` as
+    read from ``clock``.
+    """
+    name_pairs = _interference_pairs(objects, pairs)
+
+    def read(_handle: str, document: object) -> ResultEnvelope:
+        names = {name for pair in name_pairs for name in pair}
+        shapes = {name: _interference_shape(document, name) for name in sorted(names)}
+        measurable = {name: _is_measurable_solid(shape) for name, shape in shapes.items()}
+        # The trust check runs once per object, not per pair: 20 plates and 190 pairs took 10.7 s
+        # with it per object and 69.7 s with it per pair.
+        face_counts = {name: len(shape.Faces) for name, shape in shapes.items()}
+        refusal = _pair_complexity_refusal(name_pairs, face_counts, measurable)
+        if refusal is not None:
+            return refusal
+        records = []
+        started = clock()
+        for name_a, name_b in name_pairs:
+            if clock() - started > _CALL_DEADLINE_SECONDS:
+                return _too_complex_envelope(
+                    f"stopped after {len(records)} of {len(name_pairs)} pairs; "
+                    "measure fewer pairs per call"
+                )
+            if measurable[name_a] and measurable[name_b]:
+                volume, distance, failed = _measure_interference(shapes[name_a], shapes[name_b])
+            else:
+                volume, distance, failed = None, None, True
+            records.append(
+                {
+                    "a": name_a,
+                    "b": name_b,
+                    "common_volume": None if volume is None else _quantity(volume, "mm^3"),
+                    "min_distance": None if distance is None else _quantity(distance, "mm"),
+                    "boolean_failed": failed,
+                }
+            )
+        structured = {"pairs": records}
+        return _ok_envelope(structured, summarize_interference(structured))
 
     return registry.with_document(doc, read)
 

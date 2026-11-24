@@ -58,6 +58,7 @@ EXPECTED_QUERY_TOOLS = {
     "query_tree_summary",
     "query_object",
     "query_mass_properties",
+    "query_interference",
     "query_dependencies",
     "query_sketch_info",
     "query_placement",
@@ -1441,3 +1442,19 @@ def test_Should_name_only_tools_that_exist_When_a_tool_shaped_token_is_in_the_in
 
     # Assert
     assert tokens - real_names == set()
+
+
+def test_Should_advertise_the_interference_input_bounds_When_the_catalog_is_read():
+    # Arrange
+    target = {spec.name: spec for spec in tool_specs()}["query_interference"]
+
+    # Act
+    schema = target.input_schema
+
+    # Assert
+    properties = schema["properties"]
+    assert (properties["objects"]["minItems"], properties["objects"]["maxItems"]) == (2, 20)
+    assert (properties["pairs"]["minItems"], properties["pairs"]["maxItems"]) == (1, 100)
+    assert properties["pairs"]["items"]["minItems"] == properties["pairs"]["items"]["maxItems"] == 2
+    assert schema["required"] == ["doc"]
+    assert schema["additionalProperties"] is False

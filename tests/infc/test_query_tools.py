@@ -7,6 +7,7 @@ guarantee (document state unchanged across a full query sweep).
 """
 
 import math
+import time
 import unittest
 from unittest import mock
 
@@ -463,6 +464,654 @@ class QueryObjectDisplayTest(unittest.TestCase):
 
         # Assert
         self.assertEqual(out, "Vector (6.0, 0.0, 1234.57)")
+
+
+class _FakeSolid:
+    """A stand-in solid the interference trust check accepts; tests override the booleans."""
+
+    ShapeType = "Solid"
+    Volume = 1.0
+
+    @staticmethod
+    def isValid():
+        return True
+
+
+class QueryInterferenceTest(unittest.TestCase):
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.handle = self.registry.document_create("interference")["structured_content"]["doc"]
+        _, self.document = self.registry.with_document(self.handle, lambda h, d: (h, d))
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _add_shape(self, name, shape):
+        obj = self.document.addObject("Part::Feature", name)
+        obj.Shape = shape
+        return obj
+
+    def _add_box(self, name, x=0.0, y=0.0, z=0.0, size=10.0):
+        return self._add_shape(name, Part.makeBox(size, size, size, App.Vector(x, y, z)))
+
+    def _add_bowtie(self, name):
+        corners = [(0, 0), (10, 10), (10, 0), (0, 10), (0, 0)]
+        wire = Part.makePolygon([App.Vector(x, y, 0) for x, y in corners])
+        return self._add_shape(name, Part.Face(wire).extrude(App.Vector(0, 0, 10)))
+
+    def _dispatch(self) -> MethodRegistry:
+        methods = MethodRegistry()
+        methods.register(
+            RpcMethod(
+                name="query_interference",
+                handler=lambda **p: queries.query_interference(self.registry, **p),
+                mutating=False,
+            )
+        )
+        return methods
+
+    def _measure(self, **arguments):
+        return queries.query_interference(self.registry, doc=self.handle, **arguments)
+
+    def test_Should_report_common_volume_and_zero_distance_When_two_boxes_overlap(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 5, 5, 5)
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual((record["a"], record["b"]), ("A", "B"))
+        self.assertAlmostEqual(record["common_volume"]["value"], 125.0, places=6)
+        self.assertEqual(record["common_volume"]["unit"], "mm^3")
+        self.assertEqual(record["min_distance"]["value"], 0.0)
+        self.assertFalse(record["boolean_failed"])
+        self.assertIn("A/B: common volume 125", envelope["text"])
+
+    def test_Should_report_zero_volume_and_the_gap_When_two_boxes_are_disjoint(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 20, 0, 0)
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+        self.assertAlmostEqual(record["min_distance"]["value"], 10.0, places=6)
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(envelope["text"], "1 pair(s), 0 overlapping, 0 boolean failed.")
+
+    def test_Should_flag_a_failed_boolean_When_one_shape_is_an_invalid_solid_at_distance_zero(self):
+        # Arrange
+        self._add_box("Box")
+        bowtie = self._add_bowtie("Bowtie")
+
+        # Act
+        envelope = self._measure(pairs=[["Box", "Bowtie"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(bowtie.Shape.isValid())
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+        self.assertIsNone(record["min_distance"])
+        self.assertIn("BOOLEAN FAILED", envelope["text"])
+
+    def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_zero(self):
+        # Arrange
+        class RaisingShape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+        # Act
+        volume, distance, failed = queries._measure_interference(RaisingShape(), RaisingShape())
+
+        # Assert
+        self.assertIsNone(volume)
+        self.assertEqual(distance, 0.0)
+        self.assertTrue(failed)
+
+    def test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_unknown(self):
+        # Arrange
+        class BrokenShape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                raise RuntimeError("distance failed")
+
+        # Act
+        volume, distance, failed = queries._measure_interference(BrokenShape(), BrokenShape())
+
+        # Assert
+        self.assertIsNone(volume)
+        self.assertIsNone(distance)
+        self.assertTrue(failed)
+
+    def test_Should_flag_a_failed_boolean_When_two_solids_only_touch_at_a_face(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 10, 0, 0)
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_both_shapes_are_faces(
+        self,
+    ):
+        # Arrange
+        self._add_shape("PlaneA", Part.makePlane(10, 10, App.Vector(0, 0, 0)))
+        self._add_shape("PlaneB", Part.makePlane(10, 10, App.Vector(5, 5, 0)))
+
+        # Act
+        envelope = self._measure(objects=["PlaneA", "PlaneB"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertIsNone(record["common_volume"])
+        self.assertTrue(record["boolean_failed"])
+
+    def test_Should_measure_every_pair_in_order_When_objects_lists_three_names(self):
+        # Arrange
+        for index, name in enumerate(("A", "B", "C")):
+            self._add_box(name, index * 30)
+
+        # Act
+        envelope = self._measure(objects=["A", "B", "C"])
+
+        # Assert
+        pairs = [(r["a"], r["b"]) for r in envelope["structured_content"]["pairs"]]
+        self.assertEqual(pairs, [("A", "B"), ("A", "C"), ("B", "C")])
+
+    def test_Should_measure_the_given_pairs_in_input_order_When_pairs_is_used(self):
+        # Arrange
+        for index, name in enumerate(("A", "B", "C")):
+            self._add_box(name, index * 30)
+
+        # Act
+        envelope = self._measure(pairs=[["C", "A"], ["B", "C"]])
+
+        # Assert
+        pairs = [(r["a"], r["b"]) for r in envelope["structured_content"]["pairs"]]
+        self.assertEqual(pairs, [("C", "A"), ("B", "C")])
+
+    def test_Should_map_bad_input_to_invalid_input_When_dispatched(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 30)
+        self.document.addObject("App::DocumentObjectGroup", "Group")
+        for index in range(21):
+            self._add_box(f"A{index}", index * 30, 100)
+        target = self._dispatch()
+        calls = [
+            {"doc": self.handle},
+            {"doc": self.handle, "objects": ["A", "B"], "pairs": [["A", "B"]]},
+            {"doc": self.handle, "objects": ["A"]},
+            {"doc": self.handle, "objects": ["A", "B", "A"]},
+            {"doc": self.handle, "objects": ["A", ""]},
+            {"doc": self.handle, "objects": [f"A{i}" for i in range(21)]},
+            {"doc": self.handle, "pairs": []},
+            {"doc": self.handle, "pairs": [["A"]]},
+            {"doc": self.handle, "pairs": [["A", "A"]]},
+            {"doc": self.handle, "pairs": [["A", "B"]] * 101},
+            {"doc": self.handle, "objects": ["A", "Nope"]},
+            {"doc": self.handle, "objects": ["A", "Group"]},
+        ]
+
+        for arguments in calls:
+            with self.subTest(arguments=arguments):
+                # Act
+                envelope = target.dispatch("query_interference", arguments)
+
+                # Assert
+                self.assertEqual(envelope["status"], "INVALID_INPUT")
+
+    def test_Should_name_the_object_When_a_listed_name_is_unknown_or_has_no_shape(self):
+        # Arrange
+        self._add_box("A")
+        self.document.addObject("App::DocumentObjectGroup", "Group")
+
+        # Act
+        act_unknown = lambda: self._measure(objects=["A", "Nope"])  # noqa: E731
+        act_no_shape = lambda: self._measure(objects=["A", "Group"])  # noqa: E731
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, "unknown object: Nope"):
+            act_unknown()
+        with self.assertRaisesRegex(ValidationError, "no queryable shape: Group"):
+            act_no_shape()
+
+    def test_Should_leave_the_document_unchanged_When_pairs_are_measured(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 5, 5, 5)
+        self.document.recompute()
+        names_before = [obj.Name for obj in self.document.Objects]
+        volume_before = self.document.A.Shape.Volume
+
+        # Act
+        self._measure(objects=["A", "B"])
+
+        # Assert
+        self.assertEqual([obj.Name for obj in self.document.Objects], names_before)
+        self.assertEqual(self.document.A.Shape.Volume, volume_before)
+
+    def test_Should_flag_a_failed_boolean_When_common_has_a_negative_volume(self):
+        # Arrange
+        class ReversedCommon:
+            Volume = -5.0
+
+            def isNull(self):
+                return False
+
+            class BoundBox:
+                @staticmethod
+                def isValid():
+                    return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                return ReversedCommon()
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, None, True))
+
+    def test_Should_flag_a_failed_boolean_When_common_volume_is_not_a_number(self):
+        # Arrange
+        class NanCommon:
+            Volume = float("nan")
+
+            def isNull(self):
+                return False
+
+            class BoundBox:
+                @staticmethod
+                def isValid():
+                    return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                return NanCommon()
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, None, True))
+
+    def test_Should_report_no_overlap_When_common_raises_but_the_distance_is_positive(self):
+        # Arrange
+        class Shape(_FakeSolid):
+            def common(self, other):
+                raise RuntimeError("boolean failed")
+
+            def distToShape(self, other):
+                return (3.5, [], [])
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (0.0, 3.5, False))
+
+    def test_Should_refuse_an_object_with_a_null_or_empty_shape_When_it_is_listed(self):
+        # Arrange
+        self._add_box("A")
+        self.document.addObject("Part::Feature", "NullShape")
+        self._add_shape("EmptyCompound", Part.Compound([]))
+
+        for name in ("NullShape", "EmptyCompound"):
+            with self.subTest(name=name):
+                # Act
+                act = lambda: self._measure(objects=["A", name])  # noqa: E731
+
+                # Assert
+                with self.assertRaisesRegex(ValidationError, f"no queryable shape: {name}"):
+                    act()
+
+    def test_Should_name_the_object_When_a_pair_repeats_one_name(self):
+        # Arrange
+        self._add_box("A")
+
+        # Act
+        act = lambda: self._measure(pairs=[["A", "A"]])  # noqa: E731
+
+        # Assert
+        with self.assertRaisesRegex(ValidationError, "two different objects: A"):
+            act()
+
+    def test_Should_not_change_placement_or_state_When_pairs_are_measured(self):
+        # Arrange
+        self._add_box("A")
+        self._add_box("B", 5, 5, 5)
+        self.document.recompute()
+
+        def signature():
+            return {
+                obj.Name: (tuple(obj.Placement.Base), tuple(obj.State), obj.Shape.Volume)
+                for obj in self.document.Objects
+            }
+
+        before = signature()
+        undo_before = self.document.UndoCount
+
+        # Act
+        self._measure(objects=["A", "B"])
+
+        # Assert
+        self.assertEqual(signature(), before)
+        self.assertEqual(self.document.UndoCount, undo_before)
+
+    def _add_bowtie_100(self, name):
+        corners = [(0, 0), (100, 100), (100, 0), (0, 100), (0, 0)]
+        wire = Part.makePolygon([App.Vector(x, y, 0) for x, y in corners])
+        return self._add_shape(name, Part.Face(wire).extrude(App.Vector(0, 0, 100)))
+
+    def test_Should_flag_a_failed_boolean_When_an_invalid_solid_contains_the_other_shape(self):
+        # Arrange
+        bowtie = self._add_bowtie_100("Bowtie")
+        self._add_box("InLobe", 70, 40, 40)
+        direct_distance = bowtie.Shape.distToShape(self.document.InLobe.Shape)[0]
+
+        # Act
+        envelope = self._measure(pairs=[["Bowtie", "InLobe"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(bowtie.Shape.isValid())
+        self.assertGreater(direct_distance, 0.0)
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+        self.assertIsNone(record["min_distance"])
+
+    def test_Should_flag_a_failed_boolean_When_a_reversed_solid_contains_the_other_shape(self):
+        # Arrange
+        self._add_shape("Rev", Part.makeBox(100, 100, 100).reversed())
+        self._add_box("Small", 40, 40, 40)
+        self._add_box("Big", 0, 0, 0, size=100)
+
+        # Act
+        reversed_pair = self._measure(pairs=[["Rev", "Small"]])["structured_content"]["pairs"][0]
+        plain_pair = self._measure(pairs=[["Big", "Small"]])["structured_content"]["pairs"][0]
+
+        # Assert
+        self.assertTrue(self.document.Rev.Shape.isValid())
+        self.assertLess(self.document.Rev.Shape.Volume, 0.0)
+        self.assertTrue(reversed_pair["boolean_failed"])
+        self.assertIsNone(reversed_pair["common_volume"])
+        self.assertAlmostEqual(plain_pair["common_volume"]["value"], 1000.0, places=6)
+
+    def test_Should_flag_a_failed_boolean_When_a_reversed_solid_overlaps_a_box(self):
+        # Arrange
+        self._add_shape("Rev", Part.makeBox(100, 100, 100).reversed())
+        self._add_box("Corner", 95, 95, 95)
+
+        # Act
+        envelope = self._measure(pairs=[["Rev", "Corner"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+
+    def test_Should_flag_a_failed_boolean_When_a_closed_shell_contains_a_solid(self):
+        # Arrange
+        self._add_shape("Shell", Part.Shell(Part.makeBox(100, 100, 100).Faces))
+        self._add_box("Inside", 40, 40, 40)
+
+        # Act
+        envelope = self._measure(pairs=[["Shell", "Inside"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertEqual(self.document.Shell.Shape.ShapeType, "Shell")
+        self.assertTrue(record["boolean_failed"])
+        self.assertIsNone(record["common_volume"])
+        self.assertIsNone(record["min_distance"])
+
+    def test_Should_flag_a_failed_boolean_When_a_compound_holds_a_face_beside_a_solid(self):
+        # Arrange
+        mixed = Part.Compound(
+            [Part.makeBox(10, 10, 10), Part.makePlane(5, 5, App.Vector(50, 0, 0))]
+        )
+        self._add_shape("Mixed", mixed)
+        self._add_box("Other", 5, 5, 5)
+
+        # Act
+        envelope = self._measure(pairs=[["Mixed", "Other"]])
+
+        # Assert
+        self.assertTrue(envelope["structured_content"]["pairs"][0]["boolean_failed"])
+
+    def test_Should_measure_the_pair_When_both_shapes_are_compounds_of_valid_solids(self):
+        # Arrange
+        self._add_shape(
+            "Group",
+            Part.Compound(
+                [Part.makeBox(10, 10, 10), Part.makeBox(10, 10, 10, App.Vector(50, 0, 0))]
+            ),
+        )
+        self._add_box("Other", 5, 5, 5)
+
+        # Act
+        envelope = self._measure(pairs=[["Group", "Other"]])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertAlmostEqual(record["common_volume"]["value"], 125.0, places=6)
+
+    def test_Should_not_count_a_pair_as_overlapping_When_its_volume_rounds_to_zero(self):
+        # Arrange
+        sc = {
+            "pairs": [
+                {
+                    "a": "A",
+                    "b": "B",
+                    "common_volume": {"value": 1.25e-10, "unit": "mm^3"},
+                    "min_distance": {"value": 0.0, "unit": "mm"},
+                    "boolean_failed": False,
+                }
+            ]
+        }
+
+        # Act
+        text = queries.summarize_interference(sc)
+
+        # Assert
+        self.assertEqual(text, "1 pair(s), 0 overlapping, 0 boolean failed.")
+
+    def test_Should_report_zero_volume_When_common_is_a_non_empty_zero_volume_shape(self):
+        # Arrange
+        class ZeroVolumeCommon:
+            Volume = 0.0
+
+            def isNull(self):
+                return False
+
+            class BoundBox:
+                @staticmethod
+                def isValid():
+                    return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                return ZeroVolumeCommon()
+
+            def distToShape(self, other):
+                return (0.0, [], [])
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (0.0, 0.0, False))
+
+    def test_Should_flag_a_failed_boolean_When_a_zero_volume_common_has_no_distance(self):
+        # Arrange
+        class ZeroVolumeCommon:
+            Volume = 0.0
+
+            def isNull(self):
+                return False
+
+            class BoundBox:
+                @staticmethod
+                def isValid():
+                    return True
+
+        class Shape(_FakeSolid):
+            def common(self, other):
+                return ZeroVolumeCommon()
+
+            def distToShape(self, other):
+                raise RuntimeError("distance failed")
+
+        # Act
+        volume, distance, failed = queries._measure_interference(Shape(), Shape())
+
+        # Assert
+        self.assertEqual((volume, distance, failed), (None, None, True))
+
+    def test_Should_fail_only_the_pairs_with_the_untrusted_object_When_objects_mixes_shapes(self):
+        # Arrange
+        self._add_shape("Shell", Part.Shell(Part.makeBox(10, 10, 10).Faces))
+        self._add_box("A", 5, 5, 5)
+        self._add_box("B", 100, 0, 0)
+
+        # Act
+        envelope = self._measure(objects=["Shell", "A", "B"])
+
+        # Assert
+        records = envelope["structured_content"]["pairs"]
+        self.assertEqual(
+            [(r["a"], r["b"]) for r in records], [("Shell", "A"), ("Shell", "B"), ("A", "B")]
+        )
+        self.assertEqual([r["boolean_failed"] for r in records], [True, True, False])
+        self.assertAlmostEqual(records[2]["min_distance"]["value"], 85.0, places=6)
+
+    def test_Should_refuse_the_call_with_a_code_When_a_pair_is_above_the_face_limit(self):
+        # Arrange
+        three_boxes = Part.Compound(
+            [Part.makeBox(1, 1, 1, App.Vector(i * 5, 0, 0)) for i in range(3)]
+        )
+        self._add_shape("Big1", three_boxes)
+        self._add_shape("Big2", three_boxes.translated(App.Vector(0, 50, 0)))
+        target = self._dispatch()
+
+        # Act
+        with mock.patch.object(queries, "_MAX_PAIR_FACE_PRODUCT", 300):
+            envelope = target.dispatch(
+                "query_interference", {"doc": self.handle, "pairs": [["Big1", "Big2"]]}
+            )
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["code"], "interference.too_complex")
+        self.assertIn("Big1/Big2", envelope["detail"]["message"])
+
+    def test_Should_measure_the_pair_When_it_is_at_the_face_limit(self):
+        # Arrange
+        three_boxes = Part.Compound(
+            [Part.makeBox(1, 1, 1, App.Vector(i * 5, 0, 0)) for i in range(3)]
+        )
+        self._add_shape("Big1", three_boxes)
+        self._add_shape("Big2", three_boxes.translated(App.Vector(0, 50, 0)))
+
+        # Act
+        with mock.patch.object(queries, "_MAX_PAIR_FACE_PRODUCT", 18 * 18):
+            envelope = self._measure(pairs=[["Big1", "Big2"]])
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertFalse(envelope["structured_content"]["pairs"][0]["boolean_failed"])
+
+    def test_Should_stop_with_a_code_and_the_count_When_the_deadline_passes_between_pairs(self):
+        # Arrange
+        for index in range(4):
+            self._add_box(f"Box{index}", index * 30)
+        names = [f"Box{index}" for index in range(4)]
+        ticks = iter([0.0, 0.0, 10.0, 41.0, 41.0])
+
+        # Act
+        envelope = queries.query_interference(
+            self.registry, doc=self.handle, objects=names, clock=lambda: next(ticks)
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["code"], "interference.too_complex")
+        self.assertEqual(
+            envelope["detail"]["message"],
+            "stopped after 2 of 6 pairs; measure fewer pairs per call",
+        )
+
+    def test_Should_measure_every_pair_When_the_clock_stays_inside_the_deadline(self):
+        # Arrange
+        for index in range(4):
+            self._add_box(f"Box{index}", index * 30)
+        names = [f"Box{index}" for index in range(4)]
+
+        # Act
+        envelope = queries.query_interference(
+            self.registry, doc=self.handle, objects=names, clock=lambda: 40.0
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(len(envelope["structured_content"]["pairs"]), 6)
+
+    def test_Should_leave_a_fresh_fingerprint_digest_equal_When_pairs_are_measured(self):
+        # Arrange
+        from freecad_buddy.usecases.fingerprint import fingerprint
+
+        for index, name in enumerate(("A", "B", "C")):
+            box = self.document.addObject("Part::Box", name)
+            box.Placement.Base = App.Vector(index * 30, 0, 0)
+        self.document.recompute()
+        before = fingerprint(self.document, fresh=True)["digest"]
+
+        # Act
+        self._measure(objects=["A", "B", "C"])
+
+        # Assert
+        self.assertEqual(fingerprint(self.document, fresh=True)["digest"], before)
+
+    def test_Should_finish_inside_the_query_budget_When_twenty_realistic_objects_are_measured(self):
+        # Arrange
+        budget_seconds = 60.0
+        for index in range(20):
+            drilled = Part.makeBox(20, 20, 20, App.Vector(index * 9, 0, 0)).cut(
+                Part.makeCylinder(4, 20, App.Vector(index * 9 + 10, 10, 0))
+            )
+            self._add_shape(f"Part{index}", drilled)
+        names = [f"Part{index}" for index in range(20)]
+        started = time.monotonic()
+
+        # Act
+        envelope = self._measure(objects=names)
+
+        # Assert
+        elapsed = time.monotonic() - started
+        self.assertEqual(len(envelope["structured_content"]["pairs"]), 190)
+        self.assertLess(elapsed, budget_seconds)
 
 
 if __name__ == "__main__":
