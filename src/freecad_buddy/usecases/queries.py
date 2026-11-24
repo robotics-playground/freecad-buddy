@@ -88,6 +88,8 @@ def summarize_dependencies(sc: dict) -> str:
 
 def summarize_mass_properties(sc: dict) -> str:
     """One-line mass-properties summary: volume headline + topology counts."""
+    if "shape" in sc:
+        return f"{sc.get('name', '?')}: no shape."
     vol = sc.get("volume") or {}
     counts = sc.get("counts") or {}
     kind = "solid" if sc.get("solid") else "non-solid"
@@ -95,7 +97,8 @@ def summarize_mass_properties(sc: dict) -> str:
     v_txt = f"{v} {vol.get('unit', '')}" if v is not None else "n/a"
     return (
         f"{sc.get('name', '?')}: volume {v_txt} ({kind}), "
-        f"{counts.get('faces', '?')} faces, {counts.get('edges', '?')} edges."
+        f"{counts.get('faces', '?')} faces, {counts.get('edges', '?')} edges"
+        f"{'' if sc.get('is_valid', True) else ', INVALID shape'}."
     )
 
 
@@ -567,56 +570,106 @@ def query_object(
     return registry.with_document(doc, read)
 
 
+_MAX_MASS_OBJECTS = 50
+
+
+def _queryable_shape(obj: object) -> object | None:
+    """The object's shape, or ``None`` when it has no shape or a null one."""
+    shape = getattr(obj, "Shape", None)
+    is_null = getattr(shape, "isNull", None)
+    if shape is None or (is_null is not None and is_null()):
+        return None
+    return shape
+
+
+def _mass_record(obj: object, shape: object) -> dict:
+    """One object's mass-properties record; ``volume`` and ``com`` are null for a non-solid."""
+    metrics = shape_metrics(shape)
+    is_solid = metrics["solid"]
+    xmin, ymin, zmin, xmax, ymax, zmax = metrics["bbox"]
+    # CenterOfMass is meaningful only for a volumetric solid (and is unavailable on some shape
+    # types, e.g. Part.Compound). Report null volume/com for a non-solid so an area/length
+    # centroid is never presented as volumetric mass; bbox/area/counts stay valid. The com
+    # branch keys on whether CenterOfMass was readable, not on `solid`: a compound of solids
+    # is a solid that has none, and the bbox-centre fallback must not be published as one.
+    com = metrics["com"] if (is_solid and metrics["com_readable"]) else None
+    return {
+        "name": obj.Name,
+        "solid": is_solid,
+        "volume": _quantity(metrics["volume"], "mm^3") if is_solid else None,
+        "area": _quantity(metrics["area"], "mm^2"),
+        "bbox": {
+            "xmin": _quantity(xmin, "mm"),
+            "xmax": _quantity(xmax, "mm"),
+            "ymin": _quantity(ymin, "mm"),
+            "ymax": _quantity(ymax, "mm"),
+            "zmin": _quantity(zmin, "mm"),
+            "zmax": _quantity(zmax, "mm"),
+        },
+        "com": None
+        if com is None
+        else {
+            "x": _quantity(com[0], "mm"),
+            "y": _quantity(com[1], "mm"),
+            "z": _quantity(com[2], "mm"),
+        },
+        "counts": dict(metrics["counts"]),
+        "is_valid": bool(shape.isValid()),
+    }
+
+
+def _mass_object_names(object: str | None, objects: list[str] | None) -> list[str]:
+    """The names to measure, or raise ``ValidationError`` unless exactly one input form is given."""
+    if (object is None) == (objects is None):
+        raise ValidationError("give exactly one of 'object' and 'objects'")
+    if objects is None:
+        return [object]
+    if not isinstance(objects, list) or not 1 <= len(objects) <= _MAX_MASS_OBJECTS:
+        raise ValidationError(f"objects must be a list of 1 to {_MAX_MASS_OBJECTS} names")
+    if not all(isinstance(name, str) and name for name in objects):
+        raise ValidationError("objects must contain only non-empty object names (strings)")
+    return objects
+
+
 def query_mass_properties(
-    registry: DocumentRegistry, doc: str | None = None, object: str | None = None
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    object: str | None = None,
+    objects: list[str] | None = None,
 ) -> ResultEnvelope:
-    """Report volume, area, bounding box, centre of mass, and topology counts of an object's shape.
+    """Report volume, area, bounding box, centre of mass, and topology counts of object shapes.
 
     Reads the currently-stored ``obj.Shape``. Dimensional fields carry explicit units
     (``mm``/``mm^2``/``mm^3``). A ``solid`` flag records whether the shape encloses volume; for a
     non-solid (shell/wire/face/compound-of-open) ``volume`` and ``com`` are reported ``null`` so
-    an area/length-based centroid is never presented as volumetric mass. An object with no
-    ``Shape`` raises ``ValidationError``.
+    an area/length-based centroid is never presented as volumetric mass. ``is_valid`` is the
+    shape's ``isValid()``.
+
+    With ``object`` the result is one record, and an object with no ``Shape`` raises
+    ``ValidationError``. With ``objects`` (1 to 50 names) the result is ``{"objects": [...]}``
+    in input order, and an object with no shape gives ``{"name", "shape": null}``. Exactly one of
+    the two is required.
     """
+    names = _mass_object_names(object, objects)
 
     def read(_handle: str, document: object) -> ResultEnvelope:
-        obj = _resolve_object(document, object)
-        shape = getattr(obj, "Shape", None)
-        is_null = getattr(shape, "isNull", None)
-        if shape is None or (is_null is not None and is_null()):
-            raise ValidationError(f"object has no queryable shape: {object}")
-        metrics = shape_metrics(shape)
-        is_solid = metrics["solid"]
-        xmin, ymin, zmin, xmax, ymax, zmax = metrics["bbox"]
-        # CenterOfMass is meaningful only for a volumetric solid (and is unavailable on some shape
-        # types, e.g. Part.Compound). Report null volume/com for a non-solid so an area/length
-        # centroid is never presented as volumetric mass; bbox/area/counts stay valid. The com
-        # branch keys on whether CenterOfMass was readable, not on `solid`: a compound of solids
-        # is a solid that has none, and the bbox-centre fallback must not be published as one.
-        com = metrics["com"] if (is_solid and metrics["com_readable"]) else None
-        structured = {
-            "name": obj.Name,
-            "solid": is_solid,
-            "volume": _quantity(metrics["volume"], "mm^3") if is_solid else None,
-            "area": _quantity(metrics["area"], "mm^2"),
-            "bbox": {
-                "xmin": _quantity(xmin, "mm"),
-                "xmax": _quantity(xmax, "mm"),
-                "ymin": _quantity(ymin, "mm"),
-                "ymax": _quantity(ymax, "mm"),
-                "zmin": _quantity(zmin, "mm"),
-                "zmax": _quantity(zmax, "mm"),
-            },
-            "com": None
-            if com is None
-            else {
-                "x": _quantity(com[0], "mm"),
-                "y": _quantity(com[1], "mm"),
-                "z": _quantity(com[2], "mm"),
-            },
-            "counts": dict(metrics["counts"]),
-        }
-        return _ok_envelope(structured, summarize_mass_properties(structured))
+        resolved = [_resolve_object(document, name) for name in names]
+        shapes = [_queryable_shape(obj) for obj in resolved]
+        if objects is None:
+            if shapes[0] is None:
+                raise ValidationError(f"object has no queryable shape: {object}")
+            record = _mass_record(resolved[0], shapes[0])
+            return _ok_envelope(record, summarize_mass_properties(record))
+        # An empty compound is not null but has an inverted +-1.797e308 bounding box; in a list it
+        # reads as no shape. The single-object path keeps its existing response.
+        records = [
+            {"name": obj.Name, "shape": None}
+            if shape is None or not shape.BoundBox.isValid()
+            else _mass_record(obj, shape)
+            for obj, shape in zip(resolved, shapes)
+        ]
+        text = "\n".join(summarize_mass_properties(record) for record in records)
+        return _ok_envelope({"objects": records}, text)
 
     return registry.with_document(doc, read)
 

@@ -2145,3 +2145,21 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-4.md` "Round 2", product notes.
   blocker: outside Story 13-4 (skills only); needs a reproduction in FreeCAD before any fix.
   unblock: a Story that touches `sketch_add_constraint`, or a small bug Story after a measured run confirms the drop.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: Skill references still say `query_mass_properties` takes one `object` per call (`skills/freecad-scripting-idioms/references/gap-list.md:14`, `skills/code-cad-conversion/references/verification-kit.md:4`, `gap-list.md:64` validity via `verify_shape`; `urdf-export` and `sdf-export` loop per link).
+  evidence: Blind Hunter and Edge Case lens of Story 13-6; skills are outside the 13-6 files.
+  blocker: skills text belongs to the skill-update Stories, not to the tool change.
+  unblock: the Epic 13 Story that updates skills after the typed tools land (the gap list owner), or a skills-only Story.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: `tool-contracts.md` T-2 still lists a `solids` field and gives no exception for the `object` path with no shape; code follows decision 8 and the approved plan.
+  evidence: Blind Hunter lens of Story 13-6; `tool-contracts.md:55-59`.
+  blocker: `tool-contracts.md` is the SPEC contract, owned by the leader.
+  unblock: leader edits T-2 to match decisions 8 and 21.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: (unverified, would be medium) `query_mass_properties` now runs `isValid()` per object under the fixed 30 s query budget; 50 heavy shapes or a heavy single shape could reach TIMEOUT.
+  evidence: Blind Hunter and Edge Case lens; no measurement yet. Settle by timing a 50-object call on a large multi-feature part in the container.
+  blocker: needs a container run (verifier).
+  unblock: container UAT of Story 13-6 with a large part.
