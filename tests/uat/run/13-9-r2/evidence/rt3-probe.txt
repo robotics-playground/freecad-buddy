@@ -1,0 +1,16 @@
+NUL: in-memory='a' reopened='a' kept=False
+BEL_U+0007: in-memory='a\x07b' reopened='a_b' kept=False
+U+0084: in-memory='a\x84b' reopened='a_b' kept=False
+U+0085: in-memory='a\x85b' reopened='a\x85b' kept=True
+U+FDD0: in-memory='a\ufdd0b' reopened='a_b' kept=False
+U+FFFE: in-memory='a\ufffeb' reopened='a_b' kept=False
+TAB: in-memory='a\tb' reopened='a\tb' kept=True
+e_acute: in-memory='aéb' reopened='aéb' kept=True
+NUL: tool refuses=True
+BEL_U+0007: tool refuses=True
+U+0084: tool refuses=True
+U+0085: tool refuses=False
+U+FDD0: tool refuses=True
+U+FFFE: tool refuses=True
+TAB: tool refuses=False
+e_acute: tool refuses=False

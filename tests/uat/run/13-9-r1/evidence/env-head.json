@@ -1,0 +1,508 @@
+[
+ {
+  "call": "feature_pad",
+  "envelope": {
+   "detail": null,
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "feature": "Block",
+    "feature_state": {
+     "body": "Body",
+     "feature": "Block",
+     "is_tip": true,
+     "readable": true,
+     "schema": "fcb.feature-state/1",
+     "shape_summary": {
+      "area": 496.0,
+      "bbox": [
+       8.0,
+       16.0,
+       5.0
+      ],
+      "edge_count": 12,
+      "face_count": 6,
+      "is_valid": "<masked>",
+      "solid_count": 1,
+      "vertex_count": 8,
+      "volume": 640.0
+     }
+    },
+    "mutation": {
+     "changed": [
+      {
+       "area": 496.0,
+       "com": [
+        4.0,
+        8.0,
+        2.5
+       ],
+       "name": "Block",
+       "volume": 640.0
+      },
+      {
+       "area": 496.0,
+       "com": [
+        4.0,
+        8.0,
+        2.5
+       ],
+       "name": "Body",
+       "volume": 640.0
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "6516f1970fe3c2b983e898aece1cd8486d9d8c31ceded19e1bc1f24f4c999024",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "fbded0a8db86fcd1181ee05ae9fb5a809cb08f7147b61c34416b93be507f2643",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": true,
+      "is_valid": "<masked>",
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": "<masked>",
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Block",
+      "Body"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint 6516f1970fe3."
+  },
+  "params": {
+   "body": "Body",
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "length": {
+    "unit": "mm",
+    "value": 5
+   },
+   "name": "Block",
+   "profile": "Profile"
+  }
+ },
+ {
+  "call": "feature_set_parameters",
+  "envelope": {
+   "detail": null,
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "feature": "Block",
+    "feature_state": {
+     "body": "Body",
+     "feature": "Block",
+     "is_tip": true,
+     "readable": true,
+     "schema": "fcb.feature-state/1",
+     "shape_summary": {
+      "area": 592.0,
+      "bbox": [
+       8.0,
+       16.0,
+       7.0
+      ],
+      "edge_count": 12,
+      "face_count": 6,
+      "is_valid": "<masked>",
+      "solid_count": 1,
+      "vertex_count": 8,
+      "volume": 896.0
+     }
+    },
+    "mutation": {
+     "changed": [
+      {
+       "area": 592.0,
+       "com": [
+        4.0,
+        8.0,
+        3.5
+       ],
+       "name": "Block",
+       "volume": 896.0
+      },
+      {
+       "area": 592.0,
+       "com": [
+        4.0,
+        8.0,
+        3.5
+       ],
+       "name": "Body",
+       "volume": 896.0
+      }
+     ],
+     "fingerprint_after": {
+      "digest": "8a6163783885e3b948ca34e75cf71fbed4ec6e84a39ef453c69ecdc9efe51cd0",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_before": {
+      "digest": "6516f1970fe3c2b983e898aece1cd8486d9d8c31ceded19e1bc1f24f4c999024",
+      "serializer": "exportBinary"
+     },
+     "post_verify": {
+      "explanation": null,
+      "fully_constrained": true,
+      "is_valid": "<masked>",
+      "passed": true,
+      "recompute_clean": true,
+      "tnp_audit": {
+       "counts": "<masked>",
+       "element_map_version": "15.70200.5",
+       "findings": [],
+       "status": "CLEAN"
+      }
+     },
+     "rollback_proven": null,
+     "rolled_back": false,
+     "schema": "fcb.mutation/2",
+     "touched": [
+      "Block",
+      "Body"
+     ]
+    }
+   },
+   "text": "Mutation committed; fingerprint 8a6163783885."
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "feature": "Block",
+   "parameters": {
+    "Length": {
+     "unit": "mm",
+     "value": 7
+    }
+   }
+  }
+ },
+ {
+  "call": "feature_set_parameters",
+  "envelope": {
+   "detail": {
+    "code": "INVALID_INPUT",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "<masked>"
+    },
+    "message": "Block has no property named 'Nope'"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "feature": "Block",
+   "parameters": {
+    "Nope": 1
+   }
+  }
+ },
+ {
+  "call": "feature_pad",
+  "envelope": {
+   "detail": {
+    "code": "INVALID_INPUT",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "<masked>"
+    },
+    "message": "length must be positive, got -3.0"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {
+   "body": "Body",
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "length": {
+    "unit": "mm",
+    "value": -3
+   },
+   "name": "Bad",
+   "profile": "Profile"
+  }
+ },
+ {
+  "call": "feature_fillet",
+  "envelope": {
+   "detail": {
+    "code": "INVALID_INPUT",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "<masked>"
+    },
+    "message": "edges[0] must be an object, got 'Edge999'"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {
+   "base": "Block",
+   "body": "Body",
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "edges": [
+    "Edge999"
+   ],
+   "name": "F",
+   "radius": {
+    "unit": "mm",
+    "value": 1
+   }
+  }
+ },
+ {
+  "call": "query_object",
+  "envelope": {
+   "detail": {
+    "code": "INVALID_INPUT",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "<masked>"
+    },
+    "message": "unknown object: Missing"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "object": "Missing"
+  }
+ },
+ {
+  "call": "query_tree_summary",
+  "envelope": {
+   "detail": null,
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+    "shown": 1,
+    "total_objects": "<masked>",
+    "truncated": false
+   },
+   "text": "11 objects, 1 shown.",
+   "text_blocks": [
+    "v [BODY] Body (+2)"
+   ]
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A"
+  }
+ },
+ {
+  "call": "query_parameters",
+  "envelope": {
+   "detail": null,
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "bindings": [],
+    "spreadsheets": "<masked>",
+    "totals": {
+     "bindings": 0,
+     "spreadsheet_parameters": 0,
+     "varset_parameters": 0
+    },
+    "truncated": false,
+    "varsets": "<masked>"
+   },
+   "text": "0 VarSet parameter(s) in 0 VarSet(s), 0 spreadsheet parameter(s), 0 binding(s)."
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A"
+  }
+ },
+ {
+  "call": "document_undo",
+  "envelope": {
+   "detail": null,
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+    "errors": [],
+    "fingerprint_after": "6516f1970fe3c2b983e898aece1cd8486d9d8c31ceded19e1bc1f24f4c999024",
+    "fingerprint_before": "8a6163783885e3b948ca34e75cf71fbed4ec6e84a39ef453c69ecdc9efe51cd0",
+    "matches_pre_op": null,
+    "name": "envdiff",
+    "restored_objects": "<masked>",
+    "undo_count": 1,
+    "undone": "buddy: set parameters on Block"
+   },
+   "text": "Undid 'buddy: set parameters on Block' on envdiff: no pre-op digest supplied to compare against (8a6163783885 -> 6516f1970fe3)."
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A"
+  }
+ },
+ {
+  "call": "query_mass_properties",
+  "envelope": {
+   "detail": null,
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "structured_content": {
+    "area": {
+     "unit": "mm^2",
+     "value": 496.0
+    },
+    "bbox": {
+     "xmax": {
+      "unit": "mm",
+      "value": 8.0
+     },
+     "xmin": {
+      "unit": "mm",
+      "value": 0.0
+     },
+     "ymax": {
+      "unit": "mm",
+      "value": 16.0
+     },
+     "ymin": {
+      "unit": "mm",
+      "value": 0.0
+     },
+     "zmax": {
+      "unit": "mm",
+      "value": 5.0
+     },
+     "zmin": {
+      "unit": "mm",
+      "value": 0.0
+     }
+    },
+    "com": {
+     "x": {
+      "unit": "mm",
+      "value": 4.0
+     },
+     "y": {
+      "unit": "mm",
+      "value": 8.0
+     },
+     "z": {
+      "unit": "mm",
+      "value": 2.5
+     }
+    },
+    "counts": "<masked>",
+    "is_valid": "<masked>",
+    "name": "Block",
+    "solid": "<masked>",
+    "volume": {
+     "unit": "mm^3",
+     "value": 640.0
+    }
+   },
+   "text": "Block: volume 640.0 mm^3 (solid), 6 faces, 12 edges."
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "object": "Block"
+  }
+ },
+ {
+  "call": "script_exec",
+  "envelope": {
+   "detail": {
+    "code": "INVALID_INPUT",
+    "data": {
+     "exception": "ValueError",
+     "traceback": "<masked>"
+    },
+    "message": "boom"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {
+   "code": "raise ValueError('boom')",
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A"
+  }
+ },
+ {
+  "call": "no_such_tool",
+  "envelope": {
+   "detail": {
+    "code": "INVALID_INPUT",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "<masked>"
+    },
+    "message": "unknown method: no_such_tool"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {}
+ },
+ {
+  "call": "feature_parameters_define",
+  "envelope": {
+   "detail": {
+    "code": "parameters.unit_symbol_name",
+    "data": {
+     "exception": "ParameterRefusal",
+     "traceback": "<masked>"
+    },
+    "message": "parameters[0].name 'W' is a unit or constant to FreeCAD's expression parser, so any expression that reads it fails to parse; choose another name, for example W_value"
+   },
+   "display_decimals": 2,
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "structured_content": {},
+   "text": ""
+  },
+  "params": {
+   "doc": "fcb-doc:8XqbryiCKVdfgJBs8dNL5A",
+   "parameters": [
+    {
+     "name": "W",
+     "type": "float",
+     "value": 1
+    }
+   ],
+   "varset": "P"
+  }
+ }
+]

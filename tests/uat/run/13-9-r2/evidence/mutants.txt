@@ -1,0 +1,98 @@
+== RT1_noop_goes_through_bracket
+PKG D:\Work\Personal\Sources\fcb-verify-13-9\src\freecad_buddy\__init__.py
+RESULT run=67 fail=13 err=0
+RED infc.test_feature_parameters.NoChangeTest.test_Should_issue_no_apply_token_When_a_no_change_call_is_previewed
+RED infc.test_feature_parameters.NoChangeTest.test_Should_need_no_confirm_When_a_call_changes_nothing_under_the_strict_posture
+RED infc.test_feature_parameters.NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat (type='length')
+RED infc.test_feature_parameters.NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat (type='angle')
+RED infc.test_feature_parameters.NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat (type='float')
+RED infc.test_feature_parameters.NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat (type='integer')
+RED infc.test_feature_parameters.NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat (type='bool')
+RED infc.test_feature_parameters.NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat (type='string')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ud800'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ud800'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ud800'", field='description')
+RED infc.test_feature_parameters.UndoRecordTest.test_Should_open_no_transaction_and_report_zero_undo_steps_When_every_value_is_current
+RED infc.test_feature_parameters.UndoRecordTest.test_Should_revert_the_earlier_step_When_undo_follows_a_call_that_changed_nothing
+ext: 98 passed, 2 skipped in 1.27s
+== RT2_metadata_change_allowed
+PKG D:\Work\Personal\Sources\fcb-verify-13-9\src\freecad_buddy\__init__.py
+RESULT run=67 fail=0 err=2
+RED infc.test_feature_parameters.MetadataTest.test_Should_refuse_with_the_metadata_code_When_a_group_or_description_would_change [group]
+RED infc.test_feature_parameters.MetadataTest.test_Should_refuse_with_the_metadata_code_When_a_group_or_description_would_change [description]
+ext: 98 passed, 2 skipped in 1.28s
+== RT3_unstorable_string_allowed
+PKG D:\Work\Personal\Sources\fcb-verify-13-9\src\freecad_buddy\__init__.py
+RESULT run=67 fail=31 err=15
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x00'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x00'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x01'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x01'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x08'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x08'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x0b'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x0b'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x1f'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x1f'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x7f'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x7f'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x80'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x80'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x84'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x84'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x9f'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x9f'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ufdd0'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ufdd0'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ufffe'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ufffe'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\uffff'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\uffff'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\U0001fffe'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\U0001fffe'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\U0010ffff'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\U0010ffff'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ud800'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ud800'", field='group')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ud800'", field='description')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x00'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x01'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x08'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x0b'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x1f'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x7f'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x80'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x84'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\x9f'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ufdd0'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\ufffe'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\uffff'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\U0001fffe'", field='value')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character (character="'\\U0010ffff'", field='value')
+RED infc.test_feature_parameters.StringRangeTest.test_Should_name_the_code_point_and_index_When_a_string_is_refused
+ext: 98 passed, 2 skipped in 1.25s
+== RT4_dispatch_reads_any_code
+PKG D:\Work\Personal\Sources\fcb-verify-13-9\src\freecad_buddy\__init__.py
+RESULT run=67 fail=0 err=0
+ext: FAILED tests/external/test_parameters_contract.py::test_Should_keep_the_status_as_the_code_When_the_error_is_not_a_project_refusal[code-method]
+  FAILED tests/external/test_parameters_contract.py::test_Should_keep_the_status_as_the_code_When_the_error_is_not_a_project_refusal[validation-error-int-code]
+  2 failed, 96 passed, 2 skipped in 1.30s
+== RT5_varset_name_unchecked
+PKG D:\Work\Personal\Sources\fcb-verify-13-9\src\freecad_buddy\__init__.py
+RESULT run=67 fail=0 err=6
+RED infc.test_feature_parameters.NoChangeTest.test_Should_refuse_When_an_existing_varset_is_named_like_a_unit
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit (name='W')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit (name='mm')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit (name='e')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit (name='pi')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit (name='deg')
+ext: 98 passed, 2 skipped in 1.27s
+== RT6_shape_not_reserved
+PKG D:\Work\Personal\Sources\fcb-verify-13-9\src\freecad_buddy\__init__.py
+RESULT run=67 fail=2 err=1
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_reserved_code_When_a_name_is_read_from_every_object (name='Shape')
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_reserved_code_When_a_name_is_read_from_every_object
+RED infc.test_feature_parameters.StringAndNameTest.test_Should_refuse_with_the_reserved_code_When_a_name_is_read_from_every_object (name='ElementMapVersion')
+ext: 98 passed, 2 skipped in 1.25s
+src clean after mutants: ''
+exit=0

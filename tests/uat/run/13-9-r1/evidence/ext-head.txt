@@ -1,0 +1,112 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 30%]
+........................................................................ [ 34%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 53%]
+.....................................ssss...........................F... [ 57%]
+........................................................................ [ 61%]
+........................................................................ [ 65%]
+...........................................ss........................... [ 69%]
+........................................................................ [ 72%]
+........................................................................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+================================== FAILURES ===================================
+__ test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session __
+
+http_fake = <test_mcp_cache_proxy.HttpFake object at 0x000001A08BCE6210>
+cache_path = WindowsPath('C:/Users/thuan/AppData/Local/Temp/pytest-of-thuan/pytest-420/test_should_answer_both_calls_0/cache/fake.json')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001A089ECC050>
+
+    def test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session(
+        http_fake: HttpFake, cache_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Arrange
+        monkeypatch.setattr(proxy_module, "LIVENESS_IDLE_SECONDS", 3600.0)
+        target = CacheProxy(Upstream(http_fake.spec()), "fake", cache_path)
+    
+        async def act() -> list[types.CallToolResult]:
+            async with _client(target) as client:
+                await client.call_tool("echo", {})
+                http_fake.stop()
+                http_fake.start()
+                return await asyncio.gather(
+                    client.call_tool("echo", {"n": 1}), client.call_tool("echo", {"n": 2})
+                )
+    
+        # Act
+        results = _run_and_close(target, act)
+    
+        # Assert
+>       assert [result.isError for result in results] == [False, False]
+E       assert [False, True] == [False, False]
+E         
+E         At index 1 diff: True != False
+E         Use -v to get more diff
+
+tests\external\test_mcp_cache_proxy.py:332: AssertionError
+---------------------------- Captured stderr setup ----------------------------
+INFO:     Started server process [8368]
+INFO:     Waiting for application startup.
+StreamableHTTP session manager started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:57687 (Press CTRL+C to quit)
+---------------------------- Captured stdout call -----------------------------
+INFO:     127.0.0.1:57732 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57736 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:57737 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57741 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57763 - "POST /mcp HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57764 - "DELETE /mcp HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57766 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57767 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:57768 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57769 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57770 - "DELETE /mcp HTTP/1.1" 200 OK
+---------------------------- Captured stderr call -----------------------------
+Created new transport with session ID: 0ee855a542344bc6bd4bba898d6cc456
+Processing request of type CallToolRequest
+INFO:     Started server process [39396]
+INFO:     Waiting for application startup.
+StreamableHTTP session manager started
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:57687 (Press CTRL+C to quit)
+Created new transport with session ID: b93a9500bde7422ca8df916116b99aa2
+Processing request of type CallToolRequest
+Terminating session: b93a9500bde7422ca8df916116b99aa2
+------------------------------ Captured log call ------------------------------
+WARNING  client:session.py:427 Tool echo not listed by server, cannot validate any structured content
+WARNING  mcp.client.streamable_http:streamable_http.py:591 Session termination failed: 404
+WARNING  client:session.py:427 Tool echo not listed by server, cannot validate any structured content
+============================== warnings summary ===============================
+tests\external\test_gui_external_identity.py:14
+  D:\Work\Personal\Sources\fcb-verify-13-9\tests\external\test_gui_external_identity.py:14: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+tests/external/test_export_fault_score.py::test_oracle_verifiers_are_scored
+tests/external/test_export_fault_score.py::test_each_oracle_verifier_meets_bars
+tests/external/test_export_fault_score.py::test_every_planted_defect_detected_and_control_passes
+tests/external/test_export_fault_score.py::test_committed_suites_clear_the_planted_floor
+tests/external/test_export_oracle.py::test_mesh3mf_oracle_passes_clean_and_catches_lies
+  D:\Work\Personal\Sources\fcb-verify-13-9\.venv\Lib\site-packages\trimesh\triangles.py:302: RuntimeWarning: invalid value encountered in divide
+    center_mass = integrated[1:4] / volume
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/external/test_mcp_cache_proxy.py::test_should_answer_both_calls_when_two_parallel_calls_meet_a_lost_session
+1 failed, 1870 passed, 6 skipped, 6 warnings in 252.02s (0:04:12)
+head=1

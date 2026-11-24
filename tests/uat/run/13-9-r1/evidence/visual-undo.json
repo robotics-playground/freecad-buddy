@@ -1,0 +1,41 @@
+{
+ "elapsed_s": 0.316,
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:923T77Ge4werA5YVJcGXDQ",
+   "name": "CAP2d_VarSet",
+   "undone": "buddy: define parameters on Params",
+   "fingerprint_before": "0fcf115cda05306a4fb882b31fd0b56ac54a21848ed15a1c2d0fdd75a9d06550",
+   "fingerprint_after": "b48d72056b247f46d998102dec177ed51f3a408418363a824959013cda537e21",
+   "matches_pre_op": null,
+   "restored_objects": [
+    "Params",
+    "Body",
+    "Origin",
+    "X_Axis",
+    "Y_Axis",
+    "Z_Axis",
+    "XY_Plane",
+    "XZ_Plane",
+    "YZ_Plane",
+    "Origin001",
+    "Lift",
+    "Profile",
+    "Pad"
+   ],
+   "undo_count": 7,
+   "errors": []
+  },
+  "text": "Undid 'buddy: define parameters on Params' on CAP2d_VarSet: no pre-op digest supplied to compare against (0fcf115cda05 -> b48d72056b24).",
+  "framing": {
+   "fits": true,
+   "ratio": 0.67,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}
