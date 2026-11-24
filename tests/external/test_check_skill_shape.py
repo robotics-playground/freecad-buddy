@@ -1,6 +1,6 @@
-"""``check_skill_shape`` cases: section names, order and content, the body word cap, and the CLI
-exit codes. Each case builds a skill tree in ``tmp_path``; one case checks the real ``skills/``
-tree."""
+"""``check_skill_shape`` cases: section names, order and content, fenced code blocks, the body
+word cap, and the CLI exit codes. Each case builds a skill tree in ``tmp_path``; one case checks
+the real ``skills/`` tree."""
 
 from __future__ import annotations
 
@@ -187,3 +187,42 @@ def test_should_exit_0_with_no_output_when_the_real_skills_tree_is_checked(capsy
     # Assert
     assert code == 0
     assert capsys.readouterr().out == ""
+
+
+def test_should_ignore_a_heading_line_when_it_sits_inside_a_code_fence(tmp_path):
+    # Arrange
+    fenced = "\n```text\n## Not A Section\n```\n"
+    body = VALID_BODY.replace("One example.\n", "One example.\n" + fenced)
+    skills_dir = _make_skill(tmp_path, FRONT_MATTER + body)
+
+    # Act
+    violations = check_skill_shape.check_tree(skills_dir)
+
+    # Assert
+    assert violations == []
+
+
+def test_should_ignore_a_heading_line_when_it_sits_inside_a_tilde_fence(tmp_path):
+    # Arrange
+    fenced = "\n~~~\n## Not A Section\n~~~\n"
+    body = VALID_BODY.replace("One example.\n", "One example.\n" + fenced)
+    skills_dir = _make_skill(tmp_path, FRONT_MATTER + body)
+
+    # Act
+    violations = check_skill_shape.check_tree(skills_dir)
+
+    # Assert
+    assert violations == []
+
+
+def test_should_keep_a_fence_open_when_a_shorter_fence_line_appears_inside_it(tmp_path):
+    # Arrange
+    fenced = "\n````text\n```\n## Not A Section\n````\n"
+    body = VALID_BODY.replace("One example.\n", "One example.\n" + fenced)
+    skills_dir = _make_skill(tmp_path, FRONT_MATTER + body)
+
+    # Act
+    violations = check_skill_shape.check_tree(skills_dir)
+
+    # Assert
+    assert violations == []

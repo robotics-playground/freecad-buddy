@@ -1,9 +1,12 @@
 # Verification kit
 
-Run the FreeCAD snippets with `script_exec` on the converted document. Each is read-only except
-the parameter-limit test, which restores every value it changes. The re-export script runs
-outside FreeCAD and writes one reference STEP per case, in the same world frame as the FreeCAD
-part.
+Measure the converted part with the typed tools: `verify_shape` for validity, solid count and
+volume against a value, `query_mass_properties` (one `object` per call) to read the volume,
+`verify_recompute` for failing objects. Run a FreeCAD snippet with `script_exec` only for what no
+typed tool measures: overlap against a reference STEP, the reference's own volume, and the VarSet
+set and restore. Each snippet is read-only except the parameter-limit test, whose restore script
+puts every value back. The re-export script runs outside
+FreeCAD and writes one reference STEP per case, in the same world frame as the FreeCAD part.
 
 ## Re-export the source per case
 
@@ -68,19 +71,23 @@ Case keys use the source names; map them to `Params` names in the FreeCAD-side t
 import Part
 ref = Part.read(r"D:/path/to/refs/bracket_default.step")
 part = doc.getObjectsByLabel("bracket")[0]
-shape = part.Shape                                   # use Part.getShape(obj) for links
-common = shape.common(ref)
-result = {
-    "valid": shape.isValid(),
-    "solids": len(shape.Solids),
-    "vol": round(shape.Volume, 4),
-    "ref_vol": round(ref.Volume, 4),
-    "diff_pct": round(100 * (shape.Volume - ref.Volume) / ref.Volume, 4),
-    "overlap_pct": round(100 * common.Volume / ref.Volume, 4),
-}
+common = part.Shape.common(ref)
+result = {"name": part.Name, "ref_vol": ref.Volume,
+          "overlap_pct": round(100 * common.Volume / ref.Volume, 4)}
 ```
 
-Pass: `valid` true, `solids` 1 (or the source count), `diff_pct` 0.000, `overlap_pct` 100.000.
+Then one `verify_shape` with `object` set to the returned `name` (for an `App::Link`, its Name:
+the placement is applied) and `ref_vol` in `expect_volume` (`expect_solid_count` takes the source
+solid count; 1 for one solid):
+
+```json
+[{"fn": "is_valid_solid", "expect": true},
+ {"fn": "expect_solid_count", "expect": 1},
+ {"fn": "expect_volume", "expect": 1234.5678, "tol": {"rel": 1e-6}}]
+```
+
+Pass: all three checks pass and `overlap_pct` is 100.000. The `rel` tolerance is a fraction of
+`ref_vol`: 1e-6 equals `diff_pct` 0.0001, and the default is 0.01 (1 %), too wide for this proof.
 Equal volume alone is not equality: a part shifted or rotated keeps its volume and loses
 overlap. Do not compare bounding boxes: OCC boxes around tori and cylinders are loose (several mm)
 when the volumes are identical.
@@ -118,41 +125,57 @@ result = unbound                          # pass: []
 
 ## Parameter-limit test with restore
 
-Compare each FreeCAD case with its own re-export, not only with the default STEP. Each case
+Compare each FreeCAD case with its own re-export, not only with the default STEP. Run each case
+in four steps: a script sets the values, recomputes and measures the overlap; typed calls measure
+the changed part; a restore script puts the defaults back; then the next case starts. Restore
+after every case, also when a typed check fails, and before any `document_save`: a case that
+runs on top of the previous case's values compares against the wrong re-export. The case script
 recomputes the model and runs one `common()` per part: about 8 s per case for a 100-object,
-two-part model. Run two cases per call to stay under the 30 s budget.
+two-part model. Run one case per `script_exec` call to stay under the 30 s budget.
+
+Case script. It restores the values itself when it raises. Keep the returned `old`: those are
+the defaults.
 
 ```python
 import Part
 REFS = r"D:/path/to/refs"
 PARTS = ("bracket",)
+tag, values = "T3", {"PLATE_T": 3.0}                        # one case per call
 V = doc.getObject("Params")
-cases = {"T3": {"PLATE_T": 3.0}, "T8": {"PLATE_T": 8.0}}    # two per call
-log = []
-for tag, values in cases.items():
-    old = {k: getattr(V, k) for k in values}
-    try:
-        for k, v in values.items():
-            setattr(V, k, v)
-        doc.recompute()
-        for name in PARTS:
-            s, ref = doc.getObjectsByLabel(name)[0].Shape, Part.read(f"{REFS}/{name}_{tag}.step")
-            log.append({"case": tag, "part": name, "valid": s.isValid(), "solids": len(s.Solids),
-                        "diff_pct": round(100 * (s.Volume - ref.Volume) / ref.Volume, 4),
-                        "overlap_pct": round(100 * s.common(ref).Volume / ref.Volume, 4),
-                        "invalid": [o.Name for o in doc.Objects if "Invalid" in o.State]})
-    finally:
-        for k, v in old.items():
-            setattr(V, k, v)
-        doc.recompute()
-result = log
+old = {k: getattr(V, k) for k in values}
+try:
+    for k, v in values.items():
+        setattr(V, k, v)
+    doc.recompute()
+    parts = []
+    for name in PARTS:
+        obj = doc.getObjectsByLabel(name)[0]
+        ref = Part.read(f"{REFS}/{name}_{tag}.step")
+        parts.append({"name": obj.Name, "ref_vol": ref.Volume,
+                      "overlap_pct": round(100 * obj.Shape.common(ref).Volume / ref.Volume, 4)})
+    result = {"case": tag, "old": old, "parts": parts}
+except Exception:
+    for k, v in old.items():
+        setattr(V, k, v)
+    doc.recompute()
+    raise
 ```
 
-After the last batch, run the part-equality snippet against the `default` references: a frame
+Then `verify_recompute` once, and per part the `verify_shape` call of the equality check above
+with that part's `name` and `ref_vol`. Restore script, with the returned `old`:
+
+```python
+V = doc.getObject("Params")
+for k, v in {"PLATE_T": 5.0}.items():                       # the `old` of this case
+    setattr(V, k, v)
+doc.recompute()
+```
+
+After the last restore, run the part-equality snippet against the `default` references: a frame
 or rotation that did not come back keeps its volume, so only the overlap proves the restore.
 
-Pass: every case valid, one solid, no `Invalid` objects, `diff_pct` 0.0000, `overlap_pct`
-100.0000; after the restore, the default equality passes again. Pick values at both ends of
+Pass: every case has `verify_recompute` and `verify_shape` passing and `overlap_pct` 100.0000;
+after the restore, the default equality passes again. Pick values at both ends of
 the useful range, flip every switch, and choose values that change every fit decision and both
 branches of every `min()` / `max()`.
 

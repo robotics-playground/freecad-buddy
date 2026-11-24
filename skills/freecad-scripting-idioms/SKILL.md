@@ -73,9 +73,10 @@ MCP client at it — otherwise none of these steps can run.
   recompute reshuffles them; never store an index for later reuse.
 - **Exhaust the typed tools before any fallback**: `feature_set_parameters` writes
   booleans, numbers, quantities, and enum members on any object — including
-  `Visibility` — so try it before GUI input or a script. It cannot write a placement
-  (`AttachmentOffset`) and no tool deletes an object; only those gaps justify a
-  fallback.
+  `Visibility` — so try it before GUI input or a script. `references/gap-list.md`
+  names every operation with no typed tool; only a row there, or a tool list that
+  shows no typed tool, justifies a fallback. Before each `script_exec` call, state
+  the missing typed tool in one sentence.
 - **Never edit the live model through a headless script while the bridge serves
   it**: no `freecadcmd` run that writes a document the GUI has open. The script
   skips the transaction, verification, and reference audit, and the GUI keeps its
