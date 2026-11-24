@@ -93,3 +93,60 @@ Teardown: `fcb-freecad stop` (window close timed out, process killed by the help
 ## Product defects
 
 None found.
+
+## Round 2 (head `57bba0eb`)
+
+Commits: `03b4fbf7` (red-team fixes RT1..RT8), `57bba0eb` (lens fixes). Contract: decision 34, `triage-13-9-r2.md`. Fresh detached copy at `57bba0eb`, removed after the run. Evidence: `tests/uat/run/13-9-r2/` in the main repo.
+
+### Verdict
+
+**PASS, with one item for the leader to confirm (R2-1).** Every RT fix matches decision 34. Reverting each fix turns a named test red. Gates are green. The container run shows each refusal over MCP with its `detail.code`.
+
+**R2-1: the brief and decision 34 do not agree.** The brief says "no-op then `document_undo` must not delete the Box". Decision 34 and triage RT1 say something different. They ask for a no-op call that opens no transaction and returns `undo_steps: 0`, with a tool description that warns that `document_undo` would then revert an earlier step. The code does what decision 34 asks. The test `test_Should_revert_the_earlier_step_When_undo_follows_a_call_that_changed_nothing` asserts that the Box is deleted. Live result: the no-op returned `unchanged` [note, width] and `undo_steps` 0, and `UndoCount` stayed at 2. The no-op call itself does not delete the Box, and an undo after a partial change keeps it. A `document_undo` after the no-op reverted "user box", so `UserBox` is gone, as designed. If the leader wants the brief's rule (undo after a no-op must keep the Box), that is a new requirement. It would need, for example, a marker step or a refusal in `document_undo`. It is not a defect against decision 34.
+
+### Gates and counts
+
+| Command | Result |
+| --- | --- |
+| ruff check, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape, check_provenance | all OK |
+| `ruff format --check` on the 7 changed `.py` files | already formatted |
+| `uv run --extra dev pytest tests/external -q` (Git Bash) | 1876 passed, 6 skipped, 0 failed |
+| infc `tests/run_tests.py`, `FREECAD_USER_HOME` temp | Ran 1020, OK (skipped=1) |
+
+Every mutant run printed `PKG ...\fcb-verify-13-9\src\freecad_buddy\__init__.py`, which confirms that the tests ran the copy's own source.
+
+### Fix reverted → red (`evidence/mutants.txt`; 67 target infc tests and 98 external tests; `src` clean after)
+
+| Row | Revert | Red tests |
+| --- | --- | --- |
+| RT1 | `if registry.with_document(doc, changes_nothing):` → `if False:` | `UndoRecordTest.test_Should_open_no_transaction_and_report_zero_undo_steps_When_every_value_is_current`, `UndoRecordTest.test_Should_revert_the_earlier_step_When_undo_follows_a_call_that_changed_nothing`, `NoChangeTest.test_Should_report_every_type_unchanged_and_open_no_transaction_When_values_repeat` (6 types), `test_Should_need_no_confirm_...`, `test_Should_issue_no_apply_token_...` (13 in all) |
+| RT2 | metadata check `given != current` → `False` | `MetadataTest.test_Should_refuse_with_the_metadata_code_When_a_group_or_description_would_change` [group], [description] |
+| RT3 | `_unstorable` check → `False` | `StringAndNameTest.test_Should_refuse_with_the_string_code_When_a_text_holds_an_unstorable_character` (45 subtests: NUL, U+0001, U+0008, U+000B, U+001F, U+007F, U+0080, U+0084, U+009F, U+FDD0, U+FFFE, U+FFFF, U+1FFFE, U+10FFFF, U+D800 × value/group/description), `StringRangeTest.test_Should_name_the_code_point_and_index_When_a_string_is_refused` |
+| RT4 | `_refusal_code` → `getattr(exc, "code", None)` | external `test_Should_keep_the_status_as_the_code_When_the_error_is_not_a_project_refusal` [code-method], [validation-error-int-code] |
+| RT5 | `if varset in _EXPRESSION_RESERVED_NAMES:` → `False` | `StringAndNameTest.test_Should_refuse_with_the_unit_symbol_code_When_the_varset_is_named_like_a_unit` (W, mm, e), `NoChangeTest.test_Should_refuse_When_an_existing_varset_is_named_like_a_unit` |
+| RT6 | `_PROJECT_READ_NAMES` → `frozenset()` | `StringAndNameTest.test_Should_refuse_with_the_reserved_code_When_a_name_is_read_from_every_object` (Shape, ElementMapVersion) |
+
+### Independent probes
+
+- **RT3, measured in FreeCAD** (`evidence/rt3-probe.txt`). I wrote each string into a `PropertyString`, saved the document, reopened it and read the value back. Changed and refused: NUL is cut in memory to `'a'`; U+0007, U+0084, U+FDD0 and U+FFFE read back as `'a_b'`. Kept and accepted: U+0085, tab, é. The `_unstorable` result matches the round trip for all 8 code points.
+- **RT4 through the real dispatch** (`build_inline_handlers`, `script_exec`; `evidence/rt4-head.json`, `rt4-reverted.json`). Each envelope was checked against `result-envelope.schema.json`. On head: `OSError(5, ...)`, an exception with a `code` method and an exception with `code = 404` all give `RECOMPUTE_ERROR` with `detail.code` `'RECOMPUTE_ERROR'`, JSON-encodable and schema-valid. With the fix reverted, the `code` method gives a bound method that `json.dumps` cannot encode, and `code = 404` gives `404 is not of type 'string'`. Correction to the red-team text: `OSError(5, ...)` has `errno`, not `code`, so it gave a valid envelope even before the fix. The `code` method case and the `code = 404` case are the real failures.
+
+### Container run (`fcb-desktop`, built from the copy; `freecad_pid` 663)
+
+Script `scripts/rt1_live.py` over MCP. Transcript: `evidence/live-transcript.json`. Summary: `evidence/live-summary.txt`.
+
+1. Define `note` 'rev A' and `width` 12 mm: `added` both, `undo_steps` 1.
+2. User Box, committed in its own transaction through `script_exec`: `UndoCount` 2.
+3. Same define again: `unchanged` [note, width], `undo_steps` 0, no `mutation` block, `UndoCount` stays 2, Box present.
+4. Partial define (width 14): `updated` [width], `unchanged` [note], `undo_steps` 1. `document_undo` reverted "buddy: define parameters on Params" and the Box stayed.
+5. No-op again, then `document_undo`: reverted "user box", so `UserBox` is gone (R2-1).
+6. Refusals over MCP, each `INVALID_INPUT`: group change → `parameters.metadata_immutable`; `'rev A\x00x'` → `parameters.invalid_string` ("U+0000 at index 5"); VarSet `W` → `parameters.unit_symbol_name`; parameter `Shape` → `parameters.reserved_name`.
+7. `script_exec` raising `OSError(5, 'access denied')`, and raising an exception with a `code` method: both `RECOMPUTE_ERROR`, `detail.code` `'RECOMPUTE_ERROR'` (a string).
+
+Visual check: in `evidence/freecad-final.png` the tree shows `RT1_Box` with `Params` only. `UserBox` is gone after step 5, and no VarSet `W` was created. Teardown: FreeCAD stopped and `compose down` run, so no container is left. Port 8765 and `user.cfg` were not touched.
+
+### Notes (low, not blocking)
+
+- **R2-2.** A no-op call returns OK with no confirm and writes no audit line. This is deliberate: `test_Should_need_no_confirm_When_a_call_changes_nothing_under_the_strict_posture` covers it, and nothing changes.
+- **R2-3.** With the RT1 revert, the lone-surrogate (U+D800) refusal subtests also turned red. Cause: on head the no-op pre-check runs `_parameter_specs` first and refuses the surrogate; without that pre-check the surrogate reaches the bracket. Head behaviour is correct. The refusal depends on the order of the checks, so a later change to that order would need the same test.
+- **R2-4 (pre-existing, outside this Story).** A `script_exec` body that raises `SystemExit(3)` escapes `MethodRegistry.dispatch` (`except Exception` does not catch `BaseException`). In my `freecadcmd` probe this ended the process. I did not test it on the GUI host. Base `28586faa` has the same dispatch boundary.

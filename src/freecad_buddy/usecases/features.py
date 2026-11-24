@@ -22,7 +22,12 @@ from typing import Callable
 
 from freecad_buddy.contracts import ResultEnvelope
 from freecad_buddy.usecases import confirm, shim, transaction, verify
-from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.documents import (
+    CodedValidationError,
+    DocumentRegistry,
+    ValidationError,
+)
+from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
 
 _ANGLE_UNITS = frozenset({"deg"})
 _LENGTH_UNITS = frozenset({"mm"})
@@ -350,6 +355,8 @@ def _feature_mutation(
     op: Callable[[object], list[str]],
     audit_sink: object = None,
     precheck: Callable[[object], None] | None = None,
+    report: Callable[[object], dict] | None = None,
+    state_probe: Callable[[object], object] | None = None,
 ) -> ResultEnvelope:
     """Run ``op`` through the mutation bracket and attach the post-op ``feature_state``.
 
@@ -362,6 +369,9 @@ def _feature_mutation(
     :param op: applies the typed operation and returns the names of the objects it touched.
     :param precheck: validates the request against the resolved document before the bracket
         opens, so a malformed request raises ``ValidationError`` without writing a snapshot.
+    :param report: for an op that creates no shape: reads the fields to add to an ``OK`` result
+        from the returned document, in place of ``feature`` and ``feature_state``.
+    :param state_probe: reads state the shape fingerprint cannot see; passed to ``run_mutation``.
     :raises ValidationError: the call carries no confirm authorizing it, or the request is
         malformed; neither writes a snapshot nor opens a transaction.
     """
@@ -384,6 +394,7 @@ def _feature_mutation(
             tool=tool,
             params=params,
             fp_before=fp_before,
+            state_probe=state_probe,
         )
         rebound.append(result[0])
         # The reported state is read here, in the window that produced it: reading it after this
@@ -394,8 +405,11 @@ def _feature_mutation(
         if not isinstance(content, dict):
             content = {}
             result[1]["structured_content"] = content
-        content["feature"] = feature
-        content["feature_state"] = _feature_state(result[0], feature)
+        if report is None:
+            content["feature"] = feature
+            content["feature_state"] = _feature_state(result[0], feature)
+        elif result[1]["status"] == "OK":
+            content.update(report(result[0]))
         return result
 
     try:
@@ -1835,4 +1849,452 @@ def feature_set_parameters(
         op,
         audit_sink,
         precheck,
+    )
+
+
+# --------------------------------------------------------------------------------------------
+# VarSet parameters
+# --------------------------------------------------------------------------------------------
+
+_VARSET_TYPE = "App::VarSet"
+
+_DEFAULT_PARAMETER_GROUP = "Parameters"
+_MAX_PARAMETERS = 100
+
+# ``App::PropertyInteger`` stores a C ``long``, which is 32 bits on Windows: a larger value raises
+# ``OverflowError`` inside the transaction. The bound is the one every platform holds.
+_MAX_INTEGER_PARAMETER = 2**31 - 1
+
+# Every ASCII spelling the expression lexer returns as UNIT or CONSTANT
+# (docs/references/FreeCAD/src/App/Expression.l). A VarSet property with one of these names adds
+# without error, but ``<VarSet>.<name>`` then fails to parse in every expression, e.g.
+# ``Failed to parse expression 'VS.W'`` (probed on FreeCAD 1.1.4). Longer names that merely begin
+# with a symbol (``W2``, ``min2``) parse.
+_EXPRESSION_RESERVED_NAMES = frozenset(
+    (
+        "A AS C CV F False G GHz GPa H Hz J K M MA MHz MN MOhm MPa MS MeV Mpsi N Nm None Ohm "
+        "Pa S T THz Torr True V VA VAs W Wb Ws bar cal cd cft cm cwt deg dm e eV false ft g "
+        "gon h in kA kHz kJ kN kOhm kPa kS kV kW kWh kcal keV kg km ksi l lb lbf lbm m mA mF "
+        "mH mJ mK mN mS mTorr mV mW mbar mg mi mil min ml mm mmol mol mph nF nH nm oz pF pi "
+        "psi rad s sqft st t thou true uF uH uK uS uTorr ug um yd"
+    ).split()
+)
+
+
+# The names ``ObjectIdentifier::resolveProperty`` answers itself (App/ObjectIdentifier.cpp, the
+# ``_props`` table) before it looks up a property, so ``<VarSet>._pla`` reads the placement and
+# never a parameter of that name. ``addProperty`` accepts all of them without error.
+_EXPRESSION_PSEUDO_PROPERTIES = frozenset(
+    "_shape _pla _matrix __pla __matrix _self _app _part _re _py _math _coll _gui _cq".split()
+)
+
+# ``App::PropertyAngle`` and ``App::PropertyLength`` clamp a value to their bounds without an
+# error (PropertyUnits.cpp ``AngleStandard``, ``LengthStandard``; probed: -5 mm reads 0 mm and
+# 720 deg reads 360 deg), so a value outside them is refused instead of stored changed.
+_ANGLE_LIMIT_DEGREES = 360.0
+
+
+# Names the mutation bracket and the fingerprint read with ``getattr`` from every object they
+# touch (``transaction._shape_bearing``, ``fingerprint.fingerprint``, ``tnp_guard``). A VarSet
+# property of that name makes the VarSet look like a shape-bearing object, and the call always
+# ends ``SPEC_FAILED`` (probed: parameter ``Shape``).
+_PROJECT_READ_NAMES = frozenset({"Shape", "ElementMapVersion"})
+
+
+def _unstorable(character: str) -> bool:
+    """Whether FreeCAD fails to keep ``character`` in a string property.
+
+    NUL cuts the value in memory. The characters below read back as ``_`` after the document is
+    saved and reopened, which is how a snapshot restore reads it: the C0 controls except tab, line
+    feed and carriage return, U+007F to U+0084, U+0086 to U+009F, U+FDD0 to U+FDEF and the last two
+    code points of every plane. A lone surrogate cannot be encoded. Every other code point was
+    kept in a save and reopen of the whole range (probed on FreeCAD 1.1.4).
+    """
+    code = ord(character)
+    return (
+        (code < 0x20 and character not in "\t\n\r")
+        or 0x7F <= code <= 0x84
+        or 0x86 <= code <= 0x9F
+        or 0xD800 <= code <= 0xDFFF
+        or 0xFDD0 <= code <= 0xFDEF
+        or code & 0xFFFE == 0xFFFE
+    )
+
+
+class ParameterRefusal(CodedValidationError):
+    """A refused ``feature_parameters_define`` request, carrying its ``detail.code`` (AD-17)."""
+
+
+def _storable_text(text: str, what: str) -> str:
+    """Return ``text`` after checking FreeCAD keeps it unchanged.
+
+    :raises ParameterRefusal: ``parameters.invalid_string`` when it holds a character FreeCAD
+        cuts or rewrites.
+    """
+    for index, character in enumerate(text):
+        if _unstorable(character):
+            raise ParameterRefusal(
+                "parameters.invalid_string",
+                f"{what} holds U+{ord(character):04X} at index {index}, a character FreeCAD "
+                "cuts or changes when it stores the string",
+            )
+    return text
+
+
+def _parameter_spec(
+    raw: object, index: int, builtin: frozenset[str], attributes: frozenset[str]
+) -> dict:
+    """Return one validated parameter as ``{name, type, value, group, description}``.
+
+    ``value`` is what the property takes: a float in mm or degrees for ``length`` and ``angle``.
+
+    :raises ParameterRefusal: the name is a lexer unit or constant, or a name a VarSet or an
+        expression already uses.
+    :raises ValidationError: any other malformed field.
+    """
+    where = f"parameters[{index}]"
+    if not isinstance(raw, dict):
+        raise ValidationError(f"{where} must be an object, got {raw!r}")
+    name, kind, value = raw.get("name"), raw.get("type"), raw.get("value")
+    if not isinstance(name, str) or not _OBJECT_NAME.fullmatch(name):
+        raise ValidationError(
+            f"{where}.name {name!r} must start with a letter or underscore and hold only ASCII "
+            "letters, digits and underscores"
+        )
+    if name in _EXPRESSION_RESERVED_NAMES:
+        raise ParameterRefusal(
+            "parameters.unit_symbol_name",
+            f"{where}.name {name!r} is a unit or constant to FreeCAD's expression parser, so any "
+            "expression that reads it fails to parse; choose another name, for example "
+            f"{name}_value",
+        )
+    if (
+        name in builtin
+        or name in attributes
+        or name in _EXPRESSION_PSEUDO_PROPERTIES
+        or name in _PROJECT_READ_NAMES
+    ):
+        raise ParameterRefusal(
+            "parameters.reserved_name",
+            f"{where}.name {name!r} is a name a VarSet or an expression already uses",
+        )
+    if kind not in PARAMETER_PROPERTY_TYPES:
+        raise ValidationError(
+            f"{where}.type must be one of {sorted(PARAMETER_PROPERTY_TYPES)}, got {kind!r}"
+        )
+    group, description = raw.get("group"), raw.get("description")
+    if group is not None and (not isinstance(group, str) or not group):
+        raise ValidationError(f"{where}.group must be a non-empty string, got {group!r}")
+    if description is not None and not isinstance(description, str):
+        raise ValidationError(f"{where}.description must be a string, got {description!r}")
+    for text, field in ((group, "group"), (description, "description")):
+        if text is not None:
+            _storable_text(text, f"{where}.{field}")
+    try:
+        parsed = _parameter_write_value(kind, value, f"{where}.value")
+    except OverflowError:
+        raise ValidationError(f"{where}.value is too large to be a number") from None
+    return {
+        "name": name,
+        "type": kind,
+        "value": parsed,
+        "group": group,
+        "description": description,
+    }
+
+
+def _parameter_write_value(kind: str, value: object, what: str) -> object:
+    """Return ``value`` as the Python value the ``kind`` property takes.
+
+    A ``length`` or ``angle`` is a float in mm or degrees, from a ``{value, unit}`` quantity.
+
+    :raises ValidationError: the value does not match ``kind``.
+    """
+    if kind == "length":
+        millimetres = _length_mm(value, what)
+        if millimetres < 0:
+            raise ValidationError(f"{what} must not be negative, got {millimetres} mm")
+        return millimetres
+    if kind == "angle":
+        degrees = _angle_degrees(value, what)
+        if abs(degrees) > _ANGLE_LIMIT_DEGREES:
+            raise ValidationError(
+                f"{what} must be within +-{_ANGLE_LIMIT_DEGREES:g} deg, got {degrees} deg"
+            )
+        return degrees
+    if kind == "float":
+        if not _is_number(value) or not math.isfinite(float(value)):
+            raise ValidationError(f"{what} must be a finite number, got {value!r}")
+        return float(value)
+    if kind == "integer":
+        if (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or abs(value) > _MAX_INTEGER_PARAMETER
+        ):
+            raise ValidationError(
+                f"{what} must be an integer within +-{_MAX_INTEGER_PARAMETER}, got {value!r}"
+            )
+        return value
+    if kind == "bool":
+        if not isinstance(value, bool):
+            raise ValidationError(f"{what} must be true or false, got {value!r}")
+        return value
+    if not isinstance(value, str):
+        raise ValidationError(f"{what} must be a string, got {value!r}")
+    return _storable_text(value, what)
+
+
+def _parameter_specs(parameters: object) -> list[dict]:
+    """Return every parameter of the request, validated, in request order.
+
+    :raises ParameterRefusal: a name appears twice.
+    :raises ValidationError: the list is empty or too long, or an item is malformed.
+    """
+    if not isinstance(parameters, list) or not 1 <= len(parameters) <= _MAX_PARAMETERS:
+        raise ValidationError(f"'parameters' must be a list of 1 to {_MAX_PARAMETERS} items")
+    builtin = shim.varset_builtin_properties()
+    if not builtin:
+        raise ValidationError("the built-in properties of App::VarSet could not be read")
+    attributes = shim.varset_attribute_names()
+    specs = [
+        _parameter_spec(raw, index, builtin, attributes) for index, raw in enumerate(parameters)
+    ]
+    names = [spec["name"] for spec in specs]
+    for name in names:
+        if names.count(name) > 1:
+            raise ParameterRefusal(
+                "parameters.duplicate_name", f"parameter {name!r} appears more than once"
+            )
+    return specs
+
+
+def _precheck_parameters(document: object, varset: object, specs: list[dict]) -> None:
+    """Refuse a request the document cannot take, before the bracket opens.
+
+    :raises ParameterRefusal: ``varset`` names another kind of object, an existing property has
+        a different type than the request, or an updated property is bound by an expression.
+    :raises ValidationError: ``varset`` is not a usable object name, or an updated property is
+        read-only.
+    """
+    if not isinstance(varset, str) or not _OBJECT_NAME.fullmatch(varset):
+        raise ValidationError(
+            f"varset {varset!r} must start with a letter or underscore and hold only ASCII "
+            "letters, digits and underscores"
+        )
+    if varset in _EXPRESSION_RESERVED_NAMES:
+        raise ParameterRefusal(
+            "parameters.unit_symbol_name",
+            f"varset {varset!r} is a unit or constant to FreeCAD's expression parser, so no "
+            f"expression could name it; choose another name, for example {varset}_params",
+        )
+    target = document.getObject(varset)
+    if target is None:
+        return
+    if target.TypeId != _VARSET_TYPE:
+        raise ParameterRefusal(
+            "parameters.not_a_varset", f"{varset} is a {target.TypeId}, not an {_VARSET_TYPE}"
+        )
+    bound = {path for path, _ in target.ExpressionEngine}
+    for spec in specs:
+        name = spec["name"]
+        if name not in target.PropertiesList:
+            continue
+        existing = target.getTypeIdOfProperty(name)
+        wanted = PARAMETER_PROPERTY_TYPES[spec["type"]]
+        if existing != wanted:
+            raise ParameterRefusal(
+                "parameters.type_conflict",
+                f"{varset}.{name} is a {existing}; a {spec['type']} parameter is a {wanted}",
+            )
+        for given, current, field in (
+            (spec["group"], target.getGroupOfProperty(name), "group"),
+            (spec["description"], target.getDocumentationOfProperty(name), "description"),
+        ):
+            if given is not None and given != current:
+                raise ParameterRefusal(
+                    "parameters.metadata_immutable",
+                    f"{varset}.{name} exists with {field} {current!r}; FreeCAD does not undo a "
+                    f"{field} change, so it is set only when the parameter is created",
+                )
+        if name in bound:
+            raise ParameterRefusal(
+                "parameters.bound_by_expression",
+                f"{varset}.{name} is bound by an expression, which the next recompute would "
+                "apply over the new value; clear the binding first",
+            )
+        if "ReadOnly" in target.getPropertyStatus(name):
+            raise ValidationError(f"{varset}.{name} is read-only")
+
+
+def _holds_value(target: object, spec: dict) -> bool:
+    """Whether ``target`` already has the property with exactly the requested value."""
+    name = spec["name"]
+    if name not in target.PropertiesList:
+        return False
+    current = getattr(target, name)
+    if spec["type"] == "length":
+        return current.getValueAs("mm") == spec["value"]
+    if spec["type"] == "angle":
+        return current.getValueAs("deg") == spec["value"]
+    return current == spec["value"]
+
+
+def _write_parameter(target: object, spec: dict) -> str:
+    """Add or update one parameter on ``target``; return ``added``, ``updated`` or ``unchanged``.
+
+    A property already holding the value is not written: FreeCAD records no undo step for some
+    same-value writes (a string), and a call that wrote only those would leave ``document_undo``
+    reverting the step before it. Group and description are set when the property is created and
+    never after, because FreeCAD does not undo them.
+    """
+    name = spec["name"]
+    if name not in target.PropertiesList:
+        target.addProperty(
+            PARAMETER_PROPERTY_TYPES[spec["type"]],
+            name,
+            spec["group"] or _DEFAULT_PARAMETER_GROUP,
+            spec["description"] or "",
+        )
+        setattr(target, name, spec["value"])
+        return "added"
+    if _holds_value(target, spec):
+        return "unchanged"
+    setattr(target, name, spec["value"])
+    return "updated"
+
+
+# Property types whose repr carries a memory address or an object handle, so two readings of the
+# same value differ and a snapshot restore would never compare equal.
+_UNSTABLE_REPR_TYPES = ("App::PropertyPythonObject", "App::PropertyLink", "App::PropertyXLink")
+
+
+def _varset_state(varset: str) -> Callable[[object], object]:
+    """Return a reader of ``varset``'s full property state, for the rollback proof.
+
+    The state is ``None`` while the object does not exist, else every property's type, group,
+    documentation, value and bound expression. The shape fingerprint holds none of it.
+    """
+
+    def read(document: object) -> object:
+        target = document.getObject(varset)
+        if target is None:
+            return None
+        expressions = dict(target.ExpressionEngine)
+        state = {}
+        for prop in sorted(target.PropertiesList):
+            type_id = target.getTypeIdOfProperty(prop)
+            try:
+                # Such a property has no stable repr and this tool never writes one, so only
+                # its presence and type are compared.
+                unstable = type_id.startswith(_UNSTABLE_REPR_TYPES)
+                value = "<skipped>" if unstable else repr(getattr(target, prop))
+            except Exception:  # noqa: BLE001 - an unreadable value still differs from a readable one
+                value = "<unreadable>"
+            state[prop] = (
+                type_id,
+                target.getGroupOfProperty(prop),
+                target.getDocumentationOfProperty(prop),
+                value,
+                expressions.get(prop),
+            )
+        return (target.TypeId, state)
+
+    return read
+
+
+def _unchanged_envelope(varset: str, names: list[str]) -> ResultEnvelope:
+    """The ``OK`` result of a call that changes nothing: no transaction, no mutation block."""
+    content = {
+        "varset": varset,
+        "added": [],
+        "updated": [],
+        "unchanged": names,
+        "undo_steps": 0,
+    }
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": content,
+        "text": f"{varset}: {len(names)} parameter(s) already hold the values; no undo "
+        "step recorded, so document_undo would revert an earlier step.",
+    }
+
+
+def feature_parameters_define(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    varset: str | None = None,
+    parameters: list | None = None,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Create the VarSet ``varset`` when missing, then add or update typed parameters on it.
+
+    Each parameter is ``{name, type, value, group?, description?}``; a ``length`` or ``angle``
+    value is a ``{value, unit}`` quantity in ``mm`` or ``deg``. A name the VarSet lacks is added;
+    one it holds with the same type is updated. ``added``, ``updated`` and ``unchanged`` (already
+    holding the value, not written) name them in request order and appear on an ``OK`` result
+    only, with ``undo_steps``: 1 when the call recorded an undo step, 0 when it changed nothing.
+    A call that changes nothing opens no transaction and has no ``mutation`` block, so
+    ``document_undo`` after it would revert an earlier step.
+
+    The rollback proof also reads the VarSet's properties back against their pre-mutation state,
+    because the shape fingerprint cannot see a VarSet change.
+
+    :raises ValidationError: the build has no ``App::VarSet``, or a field is malformed.
+    :raises ParameterRefusal: a ``ValidationError`` whose ``code`` is one of
+        ``parameters.unit_symbol_name``, ``parameters.reserved_name``,
+        ``parameters.duplicate_name``, ``parameters.not_a_varset``, ``parameters.type_conflict``
+        ``parameters.bound_by_expression``, ``parameters.metadata_immutable`` and
+        ``parameters.invalid_string``; the dispatcher puts it in ``detail.code``.
+    """
+    if not shim.varset_available():
+        raise ValidationError("App::VarSet is unavailable on this FreeCAD build")
+    outcome: dict[str, list[str]] = {"added": [], "updated": [], "unchanged": []}
+
+    def changes_nothing(_handle: str, document: object) -> bool:
+        specs = _parameter_specs(parameters)
+        _precheck_parameters(document, varset, specs)
+        target = document.getObject(varset)
+        return target is not None and all(_holds_value(target, spec) for spec in specs)
+
+    if registry.with_document(doc, changes_nothing):
+        return _unchanged_envelope(varset, [p["name"] for p in parameters])
+
+    def precheck(document: object) -> None:
+        _precheck_parameters(document, varset, _parameter_specs(parameters))
+
+    def op(document: object) -> list[str]:
+        target = document.getObject(varset)
+        if target is None:
+            target = document.addObject(_VARSET_TYPE, varset)
+            if target.Name != varset:
+                raise ValidationError(f"{varset} is not a usable FreeCAD object name")
+            target.Label = varset
+        for spec in _parameter_specs(parameters):
+            outcome[_write_parameter(target, spec)].append(spec["name"])
+        return [target.Name]
+
+    def report(document: object) -> dict:
+        # Undo is switched on inside the bracket when it can be; a document that stays at
+        # UndoMode 0 commits no step.
+        recorded = bool(outcome["added"] or outcome["updated"]) and bool(document.UndoMode)
+        steps = 1 if recorded else 0
+        return {"varset": varset, **outcome, "undo_steps": steps}
+
+    params = {"doc": doc, "varset": varset, "parameters": parameters, "confirm": confirm}
+    return _feature_mutation(
+        registry,
+        doc,
+        varset,
+        f"define parameters on {varset}",
+        "feature_parameters_define",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        report,
+        _varset_state(varset),
     )

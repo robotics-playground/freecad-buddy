@@ -2248,3 +2248,26 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-20-usage-report.md`
   summary: The spill-stub patterns `_SPILL` (`scripts/automation/replay_result_sizes.py`) and `_PERSISTED` (`scripts/automation/session_metrics.py`) match the file path with `\S+?\.txt`, so a spill path with a space (a Windows profile name with a space) is not recognised by `session_metrics` or `usage_report`.
   evidence: both patterns use `\S`; the current profile path has no space, so no report was affected; unverified for other profiles.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: The AD-6 fingerprint hashes shapes only, so a change to a VarSet or a Spreadsheet that no shape reflects is invisible to the fingerprint, to `mutation.changed` and to the rollback proof.
+  evidence: `fingerprint.py` skips objects without a shape; `feature_parameters_define` on a VarSet with no bound object leaves the digest unchanged. Story 13-9 added a `state_probe` to `run_mutation` for its own tool only; `feature_set_parameters` on a VarSet property and a future spreadsheet writer have no such proof.
+  blocker: an architecture decision: put VarSet and Spreadsheet property state in the fingerprint (changes every digest) or require a `state_probe` from every tool that writes non-shape state.
+  unblock: a decision record from the leader or architect, then a Story.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: No G2 fault-injection case plants a VarSet-only rollback, so `run_mutation` sensitivity for the new state proof is measured by infc tests only.
+  evidence: `benchmarks/_registry/validators.yaml` `run_mutation` stays `not_scored`; the two planted tests live in `tests/infc/test_feature_parameters.py`.
+  blocker: the G2 suite and its scorer are outside this Story.
+  unblock: a Story that adds a VarSet-only planted case to `benchmarks/g2/fault-injection/rollback-boundary/`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: A VarSet that already holds a property named like an object attribute (`TypeId`, `PropertiesList`) breaks `feature_parameters_define` and `query_parameters`.
+  evidence: Edge Case Hunter probe: `vs.TypeId` reads the property. Only `script_exec` can create it, since the tool now refuses such names.
+  blocker: no tool path creates the state; reading through non-shadowable accessors is a wider change.
+  unblock: a report of a real document holding such a property.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-9-varset-parameters.md`
+  summary: `skills/parametric-patterns/SKILL.md` Decision Rules still say no typed tool adds a VarSet property or calls `setExpression`.
+  evidence: `feature_parameters_define` now adds the property; `feature_set_expression` is Story 13-10.
+  blocker: Story 13-12 owns the skill routing text.
+  unblock: Story 13-12.

@@ -338,7 +338,12 @@ def _restore_from_snapshot(document: object, snapshot_path: str) -> object:
 
 
 def _prove_rollback(
-    document: object, fp_before: FingerprintRecord, snapshot_path: str, undo_enabled: bool
+    document: object,
+    fp_before: FingerprintRecord,
+    snapshot_path: str,
+    undo_enabled: bool,
+    state_probe: Callable[[object], object] | None = None,
+    state_before: object = None,
 ) -> tuple[object, RollbackProof, FingerprintRecord]:
     """Prove the document is back at ``fp_before``; return the document, proof path and record.
 
@@ -357,25 +362,43 @@ def _prove_rollback(
     area, centre of mass, principal moments and inertia tensor do. A null shape carries zeroed mass
     properties on both sides.
 
+    The fingerprint hashes shapes only, so a mutation of state no shape carries (a VarSet's
+    properties) leaves it unchanged and an abort that restored nothing would still compare equal.
+    ``state_probe`` reads that state; the proof then also needs ``state_probe(document)`` to equal
+    ``state_before``, on the aborted document and again on the snapshot-restored one. A probe that
+    raises after the abort counts as a mismatch.
+
     The returned record is the fingerprint the proof compared, so the caller reports it as the
     after-fingerprint rather than hashing the document again.
 
-    :raises RollbackNotProven: the restored document still does not match ``fp_before``.
+    :raises RollbackNotProven: the restored document still does not match ``fp_before`` or
+        ``state_before``.
     :raises ValueError: the fingerprints carry differing serializer tags.
     """
+
+    def state_restored(candidate: object) -> bool:
+        if state_probe is None:
+            return True
+        try:
+            return state_probe(candidate) == state_before
+        except Exception:  # noqa: BLE001 - an unreadable state cannot prove a restoration
+            return False
+
     record = fingerprint(document, fresh=True)
-    if fingerprints_equal(record, fp_before) or (
-        undo_enabled and massprops_equal(record, fp_before)
-    ):
+    if (
+        fingerprints_equal(record, fp_before)
+        or (undo_enabled and massprops_equal(record, fp_before))
+    ) and state_restored(document):
         return document, "rolled_back_verified", record
 
     restored = _restore_from_snapshot(document, snapshot_path)
     restored.recompute()
     record = fingerprint(restored, fresh=True)
-    if not massprops_equal(record, fp_before):
+    if not massprops_equal(record, fp_before) or not state_restored(restored):
         raise RollbackNotProven(
             "rollback could not be proven: the snapshot-restored document does not match the "
-            f"pre-mutation fingerprint {fp_before['digest']}",
+            f"pre-mutation fingerprint {fp_before['digest']}"
+            + (" or the pre-mutation property state" if state_probe is not None else ""),
             restored,
             record,
         )
@@ -561,6 +584,7 @@ def run_mutation(
     tool: str = "",
     params: dict | None = None,
     fp_before: FingerprintRecord | None = None,
+    state_probe: Callable[[object], object] | None = None,
 ) -> tuple[object, ResultEnvelope]:
     """Execute ``op`` on ``document`` inside the mutation bracket; return the document + envelope.
 
@@ -596,11 +620,15 @@ def run_mutation(
     :param params: the tool arguments whose digest the audit lines record.
     :param fp_before: the fingerprint the mutation gate took of ``document`` under the same lock;
         ``None`` (a preview's copy, which the gate exempts) makes the bracket take its own.
+    :param state_probe: reads state the shape fingerprint cannot see; the rollback proof also
+        needs it back at its pre-mutation reading (see ``_prove_rollback``).
     :raises ValueError: two fingerprints carry differing serializer tags.
     """
     params = params or {}
     sink = audit_sink if audit_sink is not None else confirm.host_audit_sink()
-    document, envelope = _bracket(document, handle, label, op, sink, tool, params, fp_before)
+    document, envelope = _bracket(
+        document, handle, label, op, sink, tool, params, fp_before, state_probe
+    )
     full_block = envelope["structured_content"]["mutation"]
     _audit_after(sink, tool, handle, params, full_block)
     envelope["structured_content"]["mutation"] = result_projection.project_mutation(full_block)
@@ -616,6 +644,7 @@ def _bracket(
     tool: str,
     params: dict,
     fp_before: FingerprintRecord | None,
+    state_probe: Callable[[object], object] | None = None,
 ) -> tuple[object, ResultEnvelope]:
     """The bracket ``run_mutation`` wraps; it writes the ``before`` line, not the ``after``."""
     params_digest = _params_digest(params)
@@ -635,6 +664,7 @@ def _bracket(
     snapshot_path = None
     try:
         refs_before = tnp_guard.snapshot_references(document)
+        state_before = state_probe(document) if state_probe is not None else None
         snapshot_path = temp_snapshot_path(document)
         document.saveCopy(snapshot_path)
     except Exception as exc:  # noqa: BLE001 - setup failure must not escape as a raw exception
@@ -692,7 +722,7 @@ def _bracket(
         report["explanation"] = f"{report['explanation']}; undo unavailable on this document"
     try:
         document, proof, fp_after = _prove_rollback(
-            document, fp_before, snapshot_path, undo_enabled
+            document, fp_before, snapshot_path, undo_enabled, state_probe, state_before
         )
     except RollbackNotProven as exc:
         # R6: the snapshot is deleted only after commit or PROVEN rollback. An unproven rollback
