@@ -16,8 +16,10 @@ Stdlib + FreeCAD App modules only; version-sensitive calls go through ``shim``.
 
 from __future__ import annotations
 
+import itertools
 import math
 import re
+from collections.abc import Collection
 from typing import Callable
 
 from freecad_buddy.contracts import ResultEnvelope
@@ -358,6 +360,8 @@ def _feature_mutation(
     precheck: Callable[[object], None] | None = None,
     report: Callable[[object], dict] | None = None,
     state_probe: Callable[[object], object] | None = None,
+    recompute_check: Callable[[object], None] | None = None,
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> ResultEnvelope:
     """Run ``op`` through the mutation bracket and attach the post-op ``feature_state``.
 
@@ -373,6 +377,8 @@ def _feature_mutation(
     :param report: for an op that creates no shape: reads the fields to add to an ``OK`` result
         from the returned document, in place of ``feature`` and ``feature_state``.
     :param state_probe: reads state the shape fingerprint cannot see; passed to ``run_mutation``.
+    :param recompute_check: runs after the bracket's recompute; passed to ``run_mutation``.
+    :param removed_bindings: the expression bindings ``op`` removes; passed to ``run_mutation``.
     :raises ValidationError: the call carries no confirm authorizing it, or the request is
         malformed; neither writes a snapshot nor opens a transaction.
     """
@@ -396,6 +402,8 @@ def _feature_mutation(
             params=params,
             fp_before=fp_before,
             state_probe=state_probe,
+            recompute_check=recompute_check,
+            removed_bindings=removed_bindings,
         )
         rebound.append(result[0])
         # The reported state is read here, in the window that produced it: reading it after this
@@ -2318,6 +2326,22 @@ _MAX_EXPRESSION_LENGTH = 400
 _EXPRESSION_PATH = re.compile(r"\.?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*")
 _EXPRESSION_ITEM_KEYS = frozenset({"object", "path", "expression"})
 
+# A spreadsheet range such as ``sum(A1:ZZ16384)``, with or without a sheet prefix on the second
+# cell. A range is evaluated cell by cell while the call holds the interpreter lock: one 31
+# character expression over ``C1:ZZ16384`` held a call for 1,087 s on 1.1.4, so the character
+# limit bounds parsing and this refusal bounds evaluation. A ternary that compares two cell
+# references also matches; none is worth the cost of a range.
+_CELL_RANGE = re.compile(
+    r"\$?[A-Za-z]{1,3}\$?[0-9]+\s*:\s*(?:[A-Za-z_][A-Za-z0-9_]*\.)?\$?[A-Za-z]{1,3}\$?[0-9]+"
+)
+
+_SHEET_TYPE = "Spreadsheet::Sheet"
+_BINDING_RECORD = "ExpressionEngine[{}]"
+
+# Each call names its transaction with the next number, so ``UndoNames`` shows whether the call
+# recorded a step: the document's step count stops growing at 20 steps and cannot tell.
+_EXPRESSION_CALLS = itertools.count(1)
+
 
 def _canonical_path(path: str) -> str:
     """Return ``path`` without its leading dot; FreeCAD stores ``Placement.Base.x`` with one."""
@@ -2370,6 +2394,12 @@ def _check_expression_text(text: object, where: str) -> None:
                 f"{where}.expression holds U+{ord(character):04X} at index {position}, a "
                 "character FreeCAD cuts or changes when it stores the expression",
             )
+    if _CELL_RANGE.search(text):
+        raise ExpressionRefusal(
+            "expression.range_unsupported",
+            f"{where}.expression holds a cell range such as A1:B2, which FreeCAD evaluates cell "
+            "by cell and can hold the call for minutes; read single cells",
+        )
 
 
 def _expression_specs(expressions: object) -> list[dict]:
@@ -2403,6 +2433,50 @@ def _is_numeric(value: object) -> bool:
 def _magnitude(value: object) -> float:
     """Return a number or a quantity as a float in FreeCAD's internal unit."""
     return value.Value if _is_quantity(value) else float(value)
+
+
+_SHAPE_PROPERTY = "Part::PropertyPartShape"
+_ANGLE_PROPERTY = "App::PropertyAngle"
+_LENGTH_PROPERTY = "App::PropertyLength"
+
+
+def _range_problem(
+    obj: object, prop: str, candidate: object, current: object
+) -> tuple[str, str] | None:
+    """Return ``(code, message)`` when FreeCAD would keep a value other than ``candidate``.
+
+    FreeCAD applies an expression result with ``setPathValue``, which skips the range a property
+    enforces on a plain assignment, so a length below 0 and an angle beyond a full turn are stored
+    as given (a pad of -5 mm flips below its sketch, a revolution of 400 deg sweeps 40 deg). A
+    property type with its own range clamps a plain assignment, so assigning the value to a scratch
+    object of the same type shows what the property would keep; a type the scratch document cannot
+    create is not probed.
+    """
+    number = _magnitude(candidate)
+    type_id = obj.getTypeIdOfProperty(prop)
+    if (type_id == _LENGTH_PROPERTY and number < 0) or (
+        type_id == _ANGLE_PROPERTY and abs(number) > _ANGLE_LIMIT_DEGREES
+    ):
+        return "expression.value_out_of_range", f"{number} is outside what a {type_id} accepts"
+    if isinstance(current, bool):
+        return None
+    expected = round(number) if type(current) is int else number
+    assigned = candidate if _is_quantity(candidate) and type(current) is not int else expected
+
+    def assign(scratch: object) -> object:
+        setattr(scratch, prop, assigned)
+        return getattr(scratch, prop)
+
+    try:
+        kept = shim.probe_object(obj.TypeId, assign)
+    except Exception:  # noqa: BLE001 - a type the scratch document cannot hold is left unprobed
+        return None
+    if not math.isclose(_magnitude(kept), expected, rel_tol=1e-9, abs_tol=1e-9):
+        return (
+            "expression.value_out_of_range",
+            f"the property keeps {kept} when given {number}, so FreeCAD would not store the value",
+        )
+    return None
 
 
 def _path_value(obj: object, path: str) -> object:
@@ -2461,6 +2535,12 @@ def _check_expression_target(document: object, spec: dict, where: str) -> None:
             f"{where}: bind the property itself, not its .Value: FreeCAD would keep a second "
             "binding that its own property ignores",
         )
+    if obj.TypeId == _SHEET_TYPE:
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} is a spreadsheet; FreeCAD ignores a binding on a cell and drops "
+            "it when the document is saved, so set the cell contents instead",
+        )
     root = _property_root(path)
     try:
         if root not in obj.PropertiesList:
@@ -2476,9 +2556,21 @@ def _check_expression_target(document: object, spec: dict, where: str) -> None:
             f"{where}: {obj.Name} {path!r} holds a {type(current).__name__}, not a number, "
             "quantity or bool; bind a numeric leaf such as .Placement.Base.x",
         )
-    if "ReadOnly" in obj.getPropertyStatus(root):
+    status = obj.getPropertyStatus(root)
+    if "ReadOnly" in status:
         raise ExpressionRefusal(
             "expression.unsupported_property", f"{where}: {obj.Name} {root!r} is read-only"
+        )
+    if root == "AttachmentOffset" and "Hidden" in status:
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} is not attached, so FreeCAD hides and ignores its "
+            "AttachmentOffset (AttachExtension.cpp); attach it first",
+        )
+    if obj.getTypeIdOfProperty(root) == _SHAPE_PROPERTY:
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} {root!r} is a shape; bind a property that drives it",
         )
     try:
         candidate = obj.evalExpression(spec["expression"])
@@ -2491,7 +2583,9 @@ def _check_expression_target(document: object, spec: dict, where: str) -> None:
             "expression.invalid_expression",
             f"{where}: the expression evaluates to a {type(candidate).__name__}, not a number",
         )
-    problem = _value_problem(candidate, current)
+    problem = _value_problem(candidate, current) or (
+        _range_problem(obj, root, candidate, current) if _canonical_path(path) == root else None
+    )
     if problem is not None:
         raise ExpressionRefusal(problem[0], f"{where}: {obj.Name} {path!r}: {problem[1]}")
 
@@ -2533,6 +2627,37 @@ def _value_row(document: object, spec: dict) -> dict:
     if reason is not None:
         row["reason"] = reason
     return row
+
+
+def _binding_problems(document: object) -> dict[tuple[str, str], tuple[str, str]]:
+    """Return ``{(object, path): (code, message)}`` for each binding whose property reads wrongly.
+
+    A binding reads wrongly when its value is not finite, or differs from what its expression
+    evaluates to: FreeCAD stored another value (an integer past its range, a clamped length). A
+    bool is left out, because FreeCAD converts a number to a bool by design, and so is a binding
+    that cannot be evaluated, which the recompute already fails.
+    """
+    problems: dict[tuple[str, str], tuple[str, str]] = {}
+    for obj in document.Objects:
+        for key, text in list(getattr(obj, "ExpressionEngine", None) or []):
+            try:
+                value = _path_value(obj, key)
+                expected = obj.evalExpression(text)
+            except Exception:  # noqa: BLE001 - an unevaluable binding is the recompute's to fail
+                continue
+            if isinstance(value, bool) or not (_is_numeric(value) and _is_numeric(expected)):
+                continue
+            reading = _magnitude(value)
+            where = f"{obj.Name} {key}"
+            if not math.isfinite(reading):
+                problems[obj.Name, key] = ("expression.not_finite", f"{where} reads {value}")
+            elif not math.isclose(reading, _magnitude(expected), rel_tol=1e-9, abs_tol=1e-9):
+                problems[obj.Name, key] = (
+                    "expression.value_out_of_range",
+                    f"{where} reads {value} but {text!r} evaluates to {expected}; FreeCAD "
+                    "stored another value",
+                )
+    return problems
 
 
 def _unchanged_expression_envelope(rows: list[dict]) -> ResultEnvelope:
@@ -2595,11 +2720,15 @@ def feature_set_expression(
         return _unchanged_expression_envelope(unchanged_rows)
 
     applied: list[dict] = []
+    removed: set[tuple[str, str]] = set()
+    problems_before: list[dict] = []
+    label = f"set expressions {next(_EXPRESSION_CALLS)}"
 
     def precheck(document: object) -> None:
         check(document)
 
     def op(document: object) -> list[str]:
+        problems_before.append(_binding_problems(document))
         touched: list[str] = []
         written: dict[tuple[str, str], int] = {}
         for index, spec in enumerate(_expression_specs(expressions)):
@@ -2607,12 +2736,14 @@ def feature_set_expression(
                 continue
             obj = document.getObject(spec["object"])
             before = _stored_expressions(obj)
+            engine_paths = {_canonical_path(path): path for path, _ in obj.ExpressionEngine}
             try:
                 obj.setExpression(_canonical_path(spec["path"]), spec["expression"])
             except Exception as exc:  # noqa: BLE001 - a cycle is refused here with a RuntimeError
-                raise RuntimeError(
-                    f"expressions[{index}] {spec['object']} {spec['path']}: {exc}"
-                ) from exc
+                message = f"expressions[{index}] {spec['object']} {spec['path']}: {exc}"
+                if "cyclic" in str(exc).lower():
+                    raise transaction.RecomputeFailure("expression.cycle", message) from exc
+                raise RuntimeError(message) from exc
             after = _stored_expressions(obj)
             for key in {k for k in before.keys() | after.keys() if before.get(k) != after.get(k)}:
                 if (obj.Name, key) in written:
@@ -2623,10 +2754,26 @@ def feature_set_expression(
                 written[obj.Name, key] = index
             if before == after:
                 continue
+            removed.update(
+                (obj.Name, _BINDING_RECORD.format(engine_paths[k]))
+                for k in before.keys() - after.keys()
+            )
             applied.append(spec)
             if obj.Name not in touched:
                 touched.append(obj.Name)
         return touched
+
+    def recompute_check(document: object) -> None:
+        new = {
+            key: problem
+            for key, problem in _binding_problems(document).items()
+            if key not in problems_before[0]
+        }
+        if new:
+            code = next(iter(new.values()))[0]
+            raise transaction.RecomputeFailure(
+                code, "; ".join(message for _, message in new.values())
+            )
 
     def report(document: object) -> dict:
         content: dict = {"bound": [], "cleared": [], "unchanged": []}
@@ -2636,10 +2783,11 @@ def feature_set_expression(
             else:
                 group = "bound" if spec["expression"] is not None else "cleared"
             content[group].append(_value_row(document, spec))
-        # Undo is switched on inside the bracket when it can be; a document that stays at
-        # UndoMode 0 commits no step. The document's step count is no measure: it stops growing
-        # once the stack holds its 20 steps.
-        content["undo_steps"] = 1 if applied and document.UndoMode else 0
+        # The call recorded a step when its own transaction name heads the undo list. The
+        # document's step count is no measure: it stops growing once the stack holds 20 steps,
+        # and a no-change call on a document with touched objects still commits a step.
+        names = list(document.UndoNames)
+        content["undo_steps"] = 1 if names and names[0] == f"buddy: {label}" else 0
         return content
 
     params = {"doc": doc, "expressions": expressions, "confirm": confirm}
@@ -2647,7 +2795,7 @@ def feature_set_expression(
         registry,
         doc,
         "",
-        "set expressions",
+        label,
         "feature_set_expression",
         params,
         op,
@@ -2655,4 +2803,6 @@ def feature_set_expression(
         precheck,
         report,
         _expression_state,
+        recompute_check,
+        removed,
     )

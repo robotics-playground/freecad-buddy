@@ -20,6 +20,7 @@ never imported here — the document and its objects are passed in.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import TypedDict
 
 from freecad_buddy.contracts import RefFinding, RefVerdict, TnpAuditBlock
@@ -34,7 +35,6 @@ _MISSING_PREFIX = "?"
 # subsystem funnels through one of them, so one strategy covers all four.
 _LINK_SUB_TYPES = frozenset({"App::PropertyLinkSub", "App::PropertyLinkSubList"})
 _EXPRESSION_ENGINE_TYPE = "App::PropertyExpressionEngine"
-_EXPRESSION_ENGINE_PROP = "ExpressionEngine"
 
 # Sketch axes are pseudo-elements: FeatureSketchBased.cpp:1322-1340 resolves them through
 # Part2DObject::getAxis, and they have no representation in the sketch's shape, so getElement
@@ -414,6 +414,7 @@ def audit_references(
     doc: object,
     snapshot: list[RefRecord],
     written: list[RefRecord] | None = None,
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> TnpAuditBlock:
     """Audit ``doc``'s references against ``snapshot`` and return a ``TnpAuditBlock``.
 
@@ -436,9 +437,11 @@ def audit_references(
     :param snapshot: the pre-mutation ``snapshot_references`` result.
     :param written: the post-op, pre-recompute reading of the same references. A reference whose
         live value matches what the op wrote is the mutation's intended target and is excused the
-        entry-count comparison. An expression binding absent from it and from the live reading,
-        on an owner that still exists, was removed by the op and passes; without a ``written``
-        reading no removal is excused.
+        entry-count comparison.
+    :param removed_bindings: ``(owner, record prop)`` of each expression binding the op reports
+        it removed. Such a binding, absent from ``written`` and from the live reading on an owner
+        that still exists, passes; a binding removed by anything else grades ``BROKEN``, as does
+        every removal when no ``written`` reading is given.
     """
     version = _element_map_version_banner()
     live = snapshot_references(doc)
@@ -451,7 +454,7 @@ def audit_references(
             "findings": findings + _unsupported_findings(snapshot),
         }
 
-    findings += _reference_findings(doc, snapshot, live, written)
+    findings += _reference_findings(doc, snapshot, live, written, removed_bindings)
     failing = [f for f in findings if f["verdict"] not in ("PASS", "RE_BASELINED")]
     return {
         "status": "FLAGGED" if failing else "CLEAN",
@@ -814,6 +817,7 @@ def _reference_findings(
     snapshot: list[RefRecord],
     live: list[RefRecord],
     written: list[RefRecord] | None,
+    removed_bindings: Collection[tuple[str, str]],
 ) -> list[RefFinding]:
     """Run the Layer-1/2 diff over every snapshotted record, skipping the entries Layer 0 reported.
 
@@ -835,7 +839,7 @@ def _reference_findings(
             paired is None
             and written is not None
             and key not in written_by_key
-            and _is_expression_binding(record)
+            and (record["owner"], record["prop"]) in removed_bindings
             and doc.getObject(record["owner"]) is not None
         ):
             findings.append(
@@ -854,11 +858,6 @@ def _reference_findings(
                 continue
         findings.extend(_grade_record(doc, record, paired, written_by_key.get(key)))
     return findings
-
-
-def _is_expression_binding(record: RefRecord) -> bool:
-    """Whether ``record`` is one ``ExpressionEngine`` binding (see ``_expression_records``)."""
-    return record["prop"].startswith(f"{_EXPRESSION_ENGINE_PROP}[")
 
 
 def _without_missing_entries(

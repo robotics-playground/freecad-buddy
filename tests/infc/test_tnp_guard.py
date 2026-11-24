@@ -975,6 +975,7 @@ class ExpressionBindingTest(unittest.TestCase):
     """An ``ExpressionEngine`` binding is a reference record keyed by its property path."""
 
     BOUND_RECORD = "ExpressionEngine[Length]"
+    REMOVED = {("Box", BOUND_RECORD)}
 
     def setUp(self):
         self.document = App.newDocument("tnp_expression")
@@ -991,7 +992,23 @@ class ExpressionBindingTest(unittest.TestCase):
     def _verdicts(self, audit):
         return [f["verdict"] for f in audit["findings"] if f["prop"] == self.BOUND_RECORD]
 
-    def test_Should_pass_When_the_op_wrote_the_removal_of_a_binding(self):
+    def test_Should_pass_When_the_op_reports_it_removed_the_binding(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(
+            self.document, snapshot, written, removed_bindings=self.REMOVED
+        )
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual(self._verdicts(audit), ["PASS"])
+
+    def test_Should_flag_broken_When_the_op_removed_a_binding_without_reporting_it(self):
         # Arrange
         snapshot = tnp_guard.snapshot_references(self.document)
         self.box.setExpression("Length", None)
@@ -1002,8 +1019,7 @@ class ExpressionBindingTest(unittest.TestCase):
         audit = tnp_guard.audit_references(self.document, snapshot, written)
 
         # Assert
-        self.assertEqual(audit["status"], "CLEAN")
-        self.assertEqual(self._verdicts(audit), ["PASS"])
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
 
     def test_Should_flag_broken_When_a_binding_vanishes_after_the_op_wrote_it(self):
         # Arrange
@@ -1013,7 +1029,9 @@ class ExpressionBindingTest(unittest.TestCase):
         self.document.recompute()
 
         # Act
-        audit = tnp_guard.audit_references(self.document, snapshot, written)
+        audit = tnp_guard.audit_references(
+            self.document, snapshot, written, removed_bindings=self.REMOVED
+        )
 
         # Assert
         self.assertEqual(audit["status"], "FLAGGED")
@@ -1026,7 +1044,7 @@ class ExpressionBindingTest(unittest.TestCase):
         self.document.recompute()
 
         # Act
-        audit = tnp_guard.audit_references(self.document, snapshot)
+        audit = tnp_guard.audit_references(self.document, snapshot, removed_bindings=self.REMOVED)
 
         # Assert
         self.assertEqual(self._verdicts(audit), ["BROKEN"])
@@ -1039,7 +1057,9 @@ class ExpressionBindingTest(unittest.TestCase):
         self.document.recompute()
 
         # Act
-        audit = tnp_guard.audit_references(self.document, snapshot, written)
+        audit = tnp_guard.audit_references(
+            self.document, snapshot, written, removed_bindings=self.REMOVED
+        )
 
         # Assert
         self.assertEqual(self._verdicts(audit), ["BROKEN"])

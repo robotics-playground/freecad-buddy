@@ -9,7 +9,7 @@ import jsonschema
 import pytest
 
 from freecad_buddy.hosts.tool_catalog import preview_op_table, tool_specs
-from freecad_buddy.usecases.features import _EXPRESSION_PATH
+from freecad_buddy.usecases.features import _CELL_RANGE, _EXPRESSION_PATH
 
 
 def _spec():
@@ -89,3 +89,23 @@ def test_Should_reach_the_expression_tool_through_the_preview_table_When_buildin
 
     # Assert
     assert "feature_set_expression" in table
+
+
+@pytest.mark.parametrize(
+    "text", ["sum(A1:B2)", "sum(Sheet.A1:Sheet.B2)", "sum($A$1:$B$2)", "sum( C1 : ZZ16384 )"]
+)
+def test_Should_match_the_range_pattern_When_the_text_holds_a_cell_range(text):
+    # Act
+    matched = _CELL_RANGE.search(text)
+
+    # Assert
+    assert matched is not None
+
+
+@pytest.mark.parametrize("text", ["Sheet.A1 * 2 mm", "Params.width * 2", "1 ? 2 : 3", "A1 + B2"])
+def test_Should_not_match_the_range_pattern_When_the_text_has_single_cells_only(text):
+    # Act
+    matched = _CELL_RANGE.search(text)
+
+    # Assert
+    assert matched is None

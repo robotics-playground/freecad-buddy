@@ -12,7 +12,7 @@ import Sketcher
 
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, RpcMethod
 from freecad_buddy.hosts.tool_catalog import preview_op_table
-from freecad_buddy.usecases import features, preview, shim, transaction
+from freecad_buddy.usecases import features, preview, shim, sketches, transaction
 from freecad_buddy.usecases import fingerprint as fingerprint_module
 from infc.test_feature_tools import _FeatureFixture, _snapshot_leftovers
 
@@ -46,6 +46,11 @@ class _ExpressionFixture(_FeatureFixture):
         self.sketch.addConstraint(Sketcher.Constraint("Horizontal", 0))
         index = self.sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 10.0))
         self.sketch.renameConstraint(index, "span")
+        self.support = document.addObject("Part::Box", "Support")
+        document.recompute()
+        self.sketch.MapMode = "FlatFace"
+        self.sketch.AttachmentSupport = [(self.support, ["Face6"])]
+        self.loose = document.addObject("Sketcher::SketchObject", "Loose")
         document.recompute()
 
     def set_expressions(self, *items, **extra):
@@ -359,7 +364,8 @@ class RollbackTest(_ExpressionFixture):
 
         # Assert
         block = envelope["structured_content"]["mutation"]
-        self.assertNotEqual(envelope["status"], "OK")
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(envelope["detail"]["code"], "expression.cycle")
         self.assertTrue(block["rolled_back"])
         self.assertEqual(block["rollback_proven"], "rolled_back_verified")
         self.assertEqual(self.bindings(), before)
@@ -387,7 +393,7 @@ class RollbackTest(_ExpressionFixture):
         # Arrange
         self.set_expressions(bind("Other", "Height", "Params.width"))
         before = self.bindings()
-        item = bind("Box", "Length", "Params.width - 20 mm")
+        item = bind("Box", "Length", "Params.width - 12 mm")
 
         # Act
         envelope = self.set_expressions(item)
@@ -678,11 +684,12 @@ class IntegrityTest(_ExpressionFixture):
             bind("Sketch", ".Constraints[0]", "Params.width"), "expression.unit_mismatch"
         )
 
-    def test_Should_report_a_failed_status_When_an_earlier_item_makes_a_later_one_infinite(self):
+    def test_Should_roll_back_with_the_not_finite_code_When_a_sibling_item_makes_a_value_infinite(
+        self,
+    ):
         # Arrange
         # The second expression is finite against the document as it is before the call, so only
-        # the committed state shows the infinite height; the bracket's fingerprint cannot read
-        # it and reports the unproven commit instead of OK.
+        # the recomputed state shows the infinite height.
         items = [
             bind("Other", "Height", "5 mm"),
             bind("Box", "Height", "1 mm / (Other.Height - 5 mm)"),
@@ -692,8 +699,26 @@ class IntegrityTest(_ExpressionFixture):
         envelope = self.set_expressions(*items)
 
         # Assert
-        self.assertEqual(envelope["status"], "SPEC_FAILED")
-        self.assertNotIn("bound", envelope["structured_content"])
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(envelope["detail"]["code"], "expression.not_finite")
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
+        self.assertEqual(self.bindings(), {})
+        self.assertEqual(self.live("Box").Height.getValueAs("mm"), 10.0)
+
+    def test_Should_roll_back_with_the_range_code_When_a_new_binding_drives_another_out_of_range(
+        self,
+    ):
+        # Arrange
+        self.set_expressions(bind("Params", "count", "Params.ratio * 8"))
+
+        # Act
+        envelope = self.set_expressions(bind("Params", "ratio", "0.3"))
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertEqual(envelope["detail"]["code"], "expression.value_out_of_range")
+        self.assertEqual(self.live("Params").ratio, 0.5)
+        self.assertEqual(self.live("Params").count, 4)
 
     def test_Should_show_the_geometry_change_in_the_mutation_diff_When_a_bound_length_moves(self):
         # Arrange
@@ -708,6 +733,176 @@ class IntegrityTest(_ExpressionFixture):
         self.assertNotEqual(
             block["fingerprint_before"]["digest"], block["fingerprint_after"]["digest"]
         )
+
+
+class ClosureTest(_ExpressionFixture):
+    """The application's active transaction is closed after every exit path of the tool."""
+
+    def test_Should_leave_no_transaction_open_and_keep_undo_working_When_a_cycle_is_refused(self):
+        # Arrange
+        self.set_expressions(bind("Box", "Length", "Params.width"))
+        cycle = self.set_expressions(bind("Box", "Length", "Box.Length + 1 mm"))
+        self.assertEqual(cycle["status"], "RECOMPUTE_ERROR")
+
+        # Act
+        self.set_expressions(bind("Other", "Height", "Params.width"))
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        self.assertIsNone(App.getActiveTransaction())
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertEqual(sorted(self.bindings()), ["Box"])
+
+    def test_Should_leave_no_transaction_open_When_every_item_is_equivalent_text(self):
+        # Arrange
+        self.set_expressions(bind("Box", "Length", "Params.width * 2"))
+
+        # Act
+        envelope = self.set_expressions(bind("Box", "Length", "Params.width*2"))
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_leave_no_transaction_open_When_the_recompute_fails(self):
+        # Arrange
+        item = bind("Box", "Length", "Params.width - 12 mm")
+
+        # Act
+        envelope = self.set_expressions(item)
+
+        # Assert
+        self.assertNotEqual(envelope["status"], "OK")
+        self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_report_the_recorded_step_When_a_no_change_call_runs_on_touched_objects(self):
+        # Arrange
+        # A property edit that is not recomputed leaves the object touched; the bracket's
+        # recompute then writes inside the transaction and FreeCAD commits it as a step.
+        self.set_expressions(bind("Box", "Length", "Params.width * 2"))
+        document = self.document()
+        document.openTransaction("user edit")
+        self.live("Params").tilt = 45.0
+        document.commitTransaction()
+
+        # Act
+        envelope = self.set_expressions(bind("Box", "Length", "Params.width*2"))
+
+        # Assert
+        recorded = list(document.UndoNames)[0].startswith("buddy: set expressions")
+        self.assertEqual(envelope["structured_content"]["undo_steps"], 1 if recorded else 0)
+        self.assertTrue(recorded, "FreeCAD should have committed a step on the touched document")
+
+
+class RoundTwoRefusalTest(_ExpressionFixture):
+    def assert_refused(self, item, code):
+        before = self.bindings()
+        envelope = self.dispatch(item)
+        self.assertEqual(envelope["detail"]["code"], code, envelope["detail"])
+        self.assertEqual(self.bindings(), before)
+
+    def sheet(self):
+        sheet = self.document().addObject("Spreadsheet::Sheet", "Sheet")
+        sheet.set("A1", "1")
+        sheet.set("B1", "2")
+        self.document().recompute()
+        return sheet
+
+    def test_Should_refuse_with_the_unsupported_code_When_the_target_is_a_spreadsheet_cell(self):
+        # Arrange
+        self.sheet()
+
+        # Act, Assert
+        self.assert_refused(bind("Sheet", "A1", "7"), "expression.unsupported_property")
+
+    def test_Should_clear_the_binding_When_a_spreadsheet_cell_already_holds_one(self):
+        # Arrange
+        sheet = self.sheet()
+        sheet.setExpression("A1", "7")
+
+        # Act
+        envelope = self.set_expressions(bind("Sheet", "A1", None))
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.bindings(), {})
+
+    def test_Should_refuse_with_the_range_code_When_the_text_holds_a_cell_range(self):
+        for text in (
+            "sum(A1:B2)",
+            "sum(Sheet.A1:Sheet.B2)",
+            "sum($A$1:$B$2)",
+            "sum( C1 : ZZ16384 ) + 1",
+        ):
+            with self.subTest(text=text):
+                self.assert_refused(bind("Box", "Height", text), "expression.range_unsupported")
+
+    def test_Should_accept_a_ternary_and_a_single_cell_reference_When_no_range_is_present(self):
+        # Arrange
+        self.sheet()
+        items = [bind("Box", "Height", "Sheet.A1 * 1 mm"), bind("Other", "Height", "1 ? 2 : 3")]
+
+        # Act
+        envelope = self.set_expressions(*items)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+
+    def test_Should_refuse_with_the_unsupported_code_When_the_object_is_not_attached(self):
+        self.assert_refused(
+            bind("Loose", ".AttachmentOffset.Base.z", "Params.width"),
+            "expression.unsupported_property",
+        )
+
+    def test_Should_refuse_with_the_range_code_When_a_revolution_angle_exceeds_a_full_turn(self):
+        # Arrange
+        self.document().addObject("Part::Revolution", "Rev")
+
+        # Act, Assert
+        self.assert_refused(bind("Rev", "Angle", "400"), "expression.value_out_of_range")
+
+    def test_Should_refuse_with_the_range_code_When_a_pad_length_is_negative(self):
+        # Arrange
+        self.document().addObject("PartDesign::Pad", "Pad")
+
+        # Act, Assert
+        self.assert_refused(bind("Pad", "Length", "-5 mm"), "expression.value_out_of_range")
+
+    def test_Should_bind_a_revolution_angle_When_it_is_within_a_full_turn(self):
+        # Arrange
+        self.document().addObject("Part::Cylinder", "Cyl")
+
+        # Act
+        envelope = self.set_expressions(bind("Cyl", "Angle", "Params.tilt * 2"))
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.live("Cyl").Angle.getValueAs("deg"), 60.0)
+
+    def test_Should_refuse_with_the_range_code_When_an_integer_leaves_the_int32_range(self):
+        for text in ("3000000000", "-3000000000"):
+            with self.subTest(text=text):
+                self.assert_refused(bind("Params", "count", text), "expression.value_out_of_range")
+
+    def test_Should_refuse_with_the_unsupported_code_When_the_path_reads_into_a_shape(self):
+        self.assert_refused(bind("Box", ".Shape.Volume", "5"), "expression.unsupported_property")
+
+
+class OtherToolTest(_ExpressionFixture):
+    def test_Should_still_grade_the_binding_broken_When_another_tool_removes_its_constraint(self):
+        # Arrange
+        self.set_expressions(bind("Sketch", ".Constraints.span", "Params.width"))
+
+        # Act
+        envelope = sketches.sketch_remove_geometry(
+            self.registry, doc=self.handle, sketch="Sketch", geo_ids=[0]
+        )
+
+        # Assert
+        self.assertEqual(envelope["status"], "SPEC_FAILED")
+        explanation = envelope["structured_content"]["mutation"]["post_verify"]["explanation"]
+        self.assertIn("BROKEN", explanation)
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
 
 
 class DispatchTest(_ExpressionFixture):

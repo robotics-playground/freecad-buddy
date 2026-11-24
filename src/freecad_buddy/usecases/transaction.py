@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import tempfile
+from collections.abc import Collection
 from typing import Callable
 
 from freecad_buddy.contracts import (
@@ -76,6 +77,18 @@ class RollbackNotProven(RuntimeError):
         super().__init__(message)
         self.document = document
         self.record = record
+
+
+class RecomputeFailure(RuntimeError):
+    """Raised by an op or a ``recompute_check`` to fail the mutation as a recompute error.
+
+    The bracket rolls back and reports ``RECOMPUTE_ERROR`` with ``detail.code`` set to ``code``
+    (AD-17) instead of the generic ``mutation.recompute_error``.
+    """
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 class _ResolvedRegistry:
@@ -232,6 +245,7 @@ def post_verify(
     touched: list[str],
     refs_before: list,
     refs_written: list | None = None,
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> PostVerifyBlock:
     """Run the mutation checklist in order, short-circuiting on the first hard failure.
 
@@ -252,11 +266,15 @@ def post_verify(
     :param refs_before: the pre-mutation ``snapshot_references`` result.
     :param refs_written: the post-op, pre-recompute ``snapshot_references`` result, which tells the
         audit which references carry the value the op itself assigned.
+    :param removed_bindings: ``(owner, record prop)`` of each expression binding the op removed
+        itself; the audit excuses only those.
     """
     registry = _ResolvedRegistry(handle, document)
 
     def audit() -> TnpAuditBlock:
-        return tnp_guard.audit_references(document, refs_before, refs_written)
+        return tnp_guard.audit_references(
+            document, refs_before, refs_written, removed_bindings=removed_bindings
+        )
 
     invalid = _invalid_objects(document)
     if invalid:
@@ -487,12 +505,14 @@ def _unhashable_commit_envelope(
     return _envelope(block, "SPEC_FAILED", summarize_mutation(block))
 
 
-def _envelope(block: dict, status: TerminalStatus, text: str) -> ResultEnvelope:
+def _envelope(
+    block: dict, status: TerminalStatus, text: str, code: str | None = None
+) -> ResultEnvelope:
     detail = (
         None
         if status == "OK"
         else {
-            "code": f"mutation.{status.lower()}",
+            "code": code or f"mutation.{status.lower()}",
             "message": block["post_verify"]["explanation"] or status,
         }
     )
@@ -585,6 +605,8 @@ def run_mutation(
     params: dict | None = None,
     fp_before: FingerprintRecord | None = None,
     state_probe: Callable[[object], object] | None = None,
+    recompute_check: Callable[[object], None] | None = None,
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> tuple[object, ResultEnvelope]:
     """Execute ``op`` on ``document`` inside the mutation bracket; return the document + envelope.
 
@@ -622,12 +644,27 @@ def run_mutation(
         ``None`` (a preview's copy, which the gate exempts) makes the bracket take its own.
     :param state_probe: reads state the shape fingerprint cannot see; the rollback proof also
         needs it back at its pre-mutation reading (see ``_prove_rollback``).
+    :param recompute_check: runs on the document after the bracket's recompute and before
+        ``post_verify``; it raises ``RecomputeFailure`` to fail the mutation with a code.
+    :param removed_bindings: filled by ``op`` with the ``(owner, record prop)`` of each expression
+        binding it removes; read after ``op`` returns, so the op fills a collection passed by
+        reference.
     :raises ValueError: two fingerprints carry differing serializer tags.
     """
     params = params or {}
     sink = audit_sink if audit_sink is not None else confirm.host_audit_sink()
     document, envelope = _bracket(
-        document, handle, label, op, sink, tool, params, fp_before, state_probe
+        document,
+        handle,
+        label,
+        op,
+        sink,
+        tool,
+        params,
+        fp_before,
+        state_probe,
+        recompute_check,
+        removed_bindings,
     )
     full_block = envelope["structured_content"]["mutation"]
     _audit_after(sink, tool, handle, params, full_block)
@@ -645,6 +682,8 @@ def _bracket(
     params: dict,
     fp_before: FingerprintRecord | None,
     state_probe: Callable[[object], object] | None = None,
+    recompute_check: Callable[[object], None] | None = None,
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> tuple[object, ResultEnvelope]:
     """The bracket ``run_mutation`` wraps; it writes the ``before`` line, not the ``after``."""
     params_digest = _params_digest(params)
@@ -674,13 +713,19 @@ def _bracket(
 
     document.openTransaction(f"buddy: {label}")
     touched: list[str] = []
+    failure_code: str | None = None
     try:
         touched = list(op(document) or [])
         # Read the references the op leaves behind before recompute runs, so the audit can tell
         # what the op wrote from what FreeCAD changed underneath it.
         refs_written = tnp_guard.snapshot_references(document)
         document.recompute()
-        report = post_verify(document, handle, touched, refs_before, refs_written)
+        if recompute_check is not None:
+            recompute_check(document)
+        report = post_verify(document, handle, touched, refs_before, refs_written, removed_bindings)
+    except RecomputeFailure as exc:
+        failure_code = exc.code
+        report = _block(False, False, None, _unrun_tnp_audit(), False, str(exc))
     except Exception as exc:  # noqa: BLE001 - any op failure maps to the proven-rollback path
         report = _block(
             True, False, None, _unrun_tnp_audit(), False, f"{type(exc).__name__}: {exc}"
@@ -689,11 +734,13 @@ def _bracket(
     if report["passed"]:
         try:
             document.commitTransaction()
+            shim.close_pending_transaction()
         except Exception as exc:  # noqa: BLE001 - a failed commit must not leave the bracket open
             # R5: never leave a transaction open. abortTransaction no-ops when there is no active
             # transaction (App/Document.cpp:622-639), so it is safe whether the commit got far
             # enough to close one or not.
             document.abortTransaction()
+            shim.close_pending_transaction()
             document.recompute()
             return document, _commit_failed_envelope(
                 exc, fp_before, report["tnp_audit"], snapshot_path, params_digest, touched
@@ -715,6 +762,7 @@ def _bracket(
         return document, _envelope(block, "OK", summarize_mutation(block))
 
     document.abortTransaction()
+    shim.close_pending_transaction()
     document.recompute()
     if not undo_enabled:
         # Undo could not be turned on, so abort restores nothing and the snapshot path below is
@@ -755,4 +803,4 @@ def _bracket(
         params_digest,
         touched,
     )
-    return document, _envelope(block, status, summarize_mutation(block))
+    return document, _envelope(block, status, summarize_mutation(block), failure_code)
