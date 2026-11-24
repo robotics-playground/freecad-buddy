@@ -1,0 +1,814 @@
+{
+ "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+ "calls": [
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "code": "\nimport Part, FreeCAD as App\ndef add(n, s):\n    o = doc.addObject(\"Part::Feature\", n); o.Shape = s\nV = App.Vector\nadd(\"A\", Part.makeBox(10, 10, 10))                       # reference box\nadd(\"Sep\", Part.makeBox(10, 10, 10, V(20, 0, 0)))        # 10 mm gap from A\nadd(\"Over\", Part.makeBox(10, 10, 10, V(5, 5, 5)))        # 5x5x5 overlap with A = 125\nadd(\"FaceTouch\", Part.makeBox(10, 10, 10, V(0, 0, 10)))  # shares A's top face\nadd(\"VertTouch\", Part.makeBox(10, 10, 10, V(-10, -10, -10)))  # shares one vertex with A\nadd(\"Cyl\", Part.makeCylinder(3, 30, V(5, 5, -10)))       # through A: pi*9*10\nc = [(0, 0), (10, 10), (10, 0), (0, 10), (0, 0)]\nadd(\"Bowtie\", Part.Face(Part.makePolygon([V(x, y, 0) for x, y in c])).extrude(V(0, 0, 10)))\ndoc.recompute()\nresult = \"built\"\n"
+   },
+   "elapsed_s": 0.164,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+     "stdout": "",
+     "value_repr": "'built'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\nfingerprint_after: None\nstdout: \nvalue_repr: 'built'\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+    "framing": {
+     "fits": false,
+     "ratio": null,
+     "checked": "computed",
+     "stale_reason": null
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\",\"stdout\":\"\",\"value_repr\":\"'built'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\\nfingerprint_after: None\\nstdout: \\nvalue_repr: 'built'\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"computed\",\"stale_reason\":null}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "code": "\nimport Part, FreeCAD as App\nV = App.Vector\nsrc = doc.addObject(\"Part::Feature\", \"RevSrc\"); src.Shape = Part.makeBox(10, 10, 10, V(40, 0, 0))\nrev = doc.addObject(\"Part::Reverse\", \"Reversed\"); rev.Source = src\ninner = doc.addObject(\"Part::Feature\", \"InRev\"); inner.Shape = Part.makeBox(2, 2, 2, V(44, 4, 4))\nsh = doc.addObject(\"Part::Feature\", \"Shell\"); sh.Shape = Part.makeBox(50, 50, 50, V(-20, -20, -20)).Shells[0]\ndoc.recompute()\nresult = [doc.Reversed.Shape.Volume, doc.Shell.Shape.ShapeType, doc.Bowtie.Shape.isValid()]\n"
+   },
+   "elapsed_s": 0.064,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+     "stdout": "",
+     "value_repr": "[-999.9999999999998, 'Shell', False]",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\nfingerprint_after: None\nstdout: \nvalue_repr: [-999.9999999999998, 'Shell', False]",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\",\"stdout\":\"\",\"value_repr\":\"[-999.9999999999998, 'Shell', False]\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\\nfingerprint_after: None\\nstdout: \\nvalue_repr: [-999.9999999999998, 'Shell', False]\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "code": "\nimport json\nfrom freecad_buddy.usecases.fingerprint import fingerprint\nresult = json.dumps({\"fresh\": fingerprint(doc, fresh=True)[\"digest\"], \"cached\": fingerprint(doc)[\"digest\"], \"undo\": doc.UndoCount, \"touched\": [o.Name for o in doc.Objects if \"Touched\" in o.State]})\n"
+   },
+   "elapsed_s": 0.06,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+     "stdout": "",
+     "value_repr": "'{\"fresh\": \"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\", \"cached\": \"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\", \"undo\": 0, \"touched\": []}'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\nfingerprint_after: None\nstdout: \nvalue_repr: <183 chars>",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\",\"stdout\":\"\",\"value_repr\":\"'{\\\"fresh\\\": \\\"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\\\", \\\"cached\\\": \\\"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\\\", \\\"undo\\\": 0, \\\"touched\\\": []}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <183 chars>\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "objects": [
+     "A",
+     "Sep",
+     "Over",
+     "FaceTouch",
+     "VertTouch",
+     "Cyl",
+     "Bowtie",
+     "Reversed",
+     "InRev",
+     "Shell"
+    ]
+   },
+   "elapsed_s": 0.098,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "pairs": [
+      {
+       "a": "A",
+       "b": "Sep",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "Over",
+       "common_volume": {
+        "value": 125.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "FaceTouch",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "VertTouch",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 282.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "InRev",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 34.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Sep",
+       "b": "Over",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 5.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "FaceTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "VertTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 20.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 12.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Sep",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Sep",
+       "b": "InRev",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 14.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Sep",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Over",
+       "b": "FaceTouch",
+       "common_volume": {
+        "value": 125.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "VertTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 8.66,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 70.69,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Over",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Over",
+       "b": "InRev",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 29.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "FaceTouch",
+       "b": "VertTouch",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "FaceTouch",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 282.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "FaceTouch",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "FaceTouch",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "FaceTouch",
+       "b": "InRev",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 34.23,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "FaceTouch",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "VertTouch",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 4.07,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "VertTouch",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "VertTouch",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "VertTouch",
+       "b": "InRev",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 44.36,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "VertTouch",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Cyl",
+       "b": "Bowtie",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Cyl",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Cyl",
+       "b": "InRev",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 36.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Cyl",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Bowtie",
+       "b": "Reversed",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Bowtie",
+       "b": "InRev",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Bowtie",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Reversed",
+       "b": "InRev",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Reversed",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "InRev",
+       "b": "Shell",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      }
+     ]
+    },
+    "text": "45 pair(s), 5 overlapping, 26 boolean failed.\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\nA/VertTouch: BOOLEAN FAILED, overlap unknown.\nA/Bowtie: BOOLEAN FAILED, overlap unknown.\nA/Reversed: BOOLEAN FAILED, overlap unknown.\nA/Shell: BOOLEAN FAILED, overlap unknown.\nSep/Bowtie: BOOLEAN FAILED, overlap unknown.\nSep/Reversed: BOOLEAN FAILED, overlap unknown.\nSep/Shell: BOOLEAN FAILED, overlap unknown.\nOver/Bowtie: BOOLEAN FAILED, overlap unknown.\nOver/Reversed: BOOLEAN FAILED, overlap unknown.\nOver/Shell: BOOLEAN FAILED, overlap unknown.\nFaceTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\nFaceTouch/Reversed: BOOLEAN FAILED, overlap unknown.\nFaceTouch/Shell: BOOLEAN FAILED, overlap unknown.\nVertTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\nVertTouch/Reversed: BOOLEAN FAILED, overlap unknown.\nVertTouch/Shell: BOOLEAN FAILED, overlap unknown.\nCyl/Bowtie: BOOLEAN FAILED, overlap unknown.\nCyl/Reversed: BOOLEAN FAILED, overlap unknown.\nCyl/Shell: BOOLEAN FAILED, overlap unknown.\nBowtie/Reversed: BOOLEAN FAILED, overlap unknown.\nBowtie/InRev: BOOLEAN FAILED, overlap unknown.\nBowtie/Shell: BOOLEAN FAILED, overlap unknown.\nReversed/InRev: BOOLEAN FAILED, overlap unknown.\nReversed/Shell: BOOLEAN FAILED, overlap unknown.\nInRev/Shell: BOOLEAN FAILED, overlap unknown.\nA/Over: common volume 125.0 mm^3.\nA/Cyl: common volume 282.74 mm^3.\nOver/FaceTouch: common volume 125.0 mm^3.\nOver/Cyl: common volume 70.69 mm^3.\nFaceTouch/Cyl: common volume 282.74 mm^3.",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"A\",\"b\":\"Sep\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Over\",\"common_volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"FaceTouch\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"VertTouch\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"Cyl\",\"common_volume\":{\"value\":282.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"InRev\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":34.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Sep\",\"b\":\"Over\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":5.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"FaceTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"VertTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":20.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"Cyl\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":12.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Sep\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Sep\",\"b\":\"InRev\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":14.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Sep\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Over\",\"b\":\"FaceTouch\",\"common_volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"VertTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":8.66,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"Cyl\",\"common_volume\":{\"value\":70.69,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Over\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Over\",\"b\":\"InRev\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":29.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"FaceTouch\",\"b\":\"VertTouch\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"FaceTouch\",\"b\":\"Cyl\",\"common_volume\":{\"value\":282.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"FaceTouch\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"FaceTouch\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"FaceTouch\",\"b\":\"InRev\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":34.23,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"FaceTouch\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"VertTouch\",\"b\":\"Cyl\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":4.07,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"VertTouch\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"VertTouch\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"VertTouch\",\"b\":\"InRev\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":44.36,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"VertTouch\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Cyl\",\"b\":\"Bowtie\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Cyl\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Cyl\",\"b\":\"InRev\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":36.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Cyl\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Bowtie\",\"b\":\"Reversed\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Bowtie\",\"b\":\"InRev\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Bowtie\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Reversed\",\"b\":\"InRev\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Reversed\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"InRev\",\"b\":\"Shell\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true}]},\"text\":\"45 pair(s), 5 overlapping, 26 boolean failed.\\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\\nA/VertTouch: BOOLEAN FAILED, overlap unknown.\\nA/Bowtie: BOOLEAN FAILED, overlap unknown.\\nA/Reversed: BOOLEAN FAILED, overlap unknown.\\nA/Shell: BOOLEAN FAILED, overlap unknown.\\nSep/Bowtie: BOOLEAN FAILED, overlap unknown.\\nSep/Reversed: BOOLEAN FAILED, overlap unknown.\\nSep/Shell: BOOLEAN FAILED, overlap unknown.\\nOver/Bowtie: BOOLEAN FAILED, overlap unknown.\\nOver/Reversed: BOOLEAN FAILED, overlap unknown.\\nOver/Shell: BOOLEAN FAILED, overlap unknown.\\nFaceTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\\nFaceTouch/Reversed: BOOLEAN FAILED, overlap unknown.\\nFaceTouch/Shell: BOOLEAN FAILED, overlap unknown.\\nVertTouch/Bowtie: BOOLEAN FAILED, overlap unknown.\\nVertTouch/Reversed: BOOLEAN FAILED, overlap unknown.\\nVertTouch/Shell: BOOLEAN FAILED, overlap unknown.\\nCyl/Bowtie: BOOLEAN FAILED, overlap unknown.\\nCyl/Reversed: BOOLEAN FAILED, overlap unknown.\\nCyl/Shell: BOOLEAN FAILED, overlap unknown.\\nBowtie/Reversed: BOOLEAN FAILED, overlap unknown.\\nBowtie/InRev: BOOLEAN FAILED, overlap unknown.\\nBowtie/Shell: BOOLEAN FAILED, overlap unknown.\\nReversed/InRev: BOOLEAN FAILED, overlap unknown.\\nReversed/Shell: BOOLEAN FAILED, overlap unknown.\\nInRev/Shell: BOOLEAN FAILED, overlap unknown.\\nA/Over: common volume 125.0 mm^3.\\nA/Cyl: common volume 282.74 mm^3.\\nOver/FaceTouch: common volume 125.0 mm^3.\\nOver/Cyl: common volume 70.69 mm^3.\\nFaceTouch/Cyl: common volume 282.74 mm^3.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "query_interference",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "pairs": [
+     [
+      "A",
+      "Sep"
+     ],
+     [
+      "Over",
+      "A"
+     ],
+     [
+      "A",
+      "FaceTouch"
+     ],
+     [
+      "Bowtie",
+      "A"
+     ],
+     [
+      "Reversed",
+      "InRev"
+     ],
+     [
+      "Shell",
+      "A"
+     ],
+     [
+      "A",
+      "Cyl"
+     ]
+    ]
+   },
+   "elapsed_s": 0.043,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "pairs": [
+      {
+       "a": "A",
+       "b": "Sep",
+       "common_volume": {
+        "value": 0.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 10.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "Over",
+       "b": "A",
+       "common_volume": {
+        "value": 125.0,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      },
+      {
+       "a": "A",
+       "b": "FaceTouch",
+       "common_volume": null,
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": true
+      },
+      {
+       "a": "Bowtie",
+       "b": "A",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Reversed",
+       "b": "InRev",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "Shell",
+       "b": "A",
+       "common_volume": null,
+       "min_distance": null,
+       "boolean_failed": true
+      },
+      {
+       "a": "A",
+       "b": "Cyl",
+       "common_volume": {
+        "value": 282.74,
+        "unit": "mm^3"
+       },
+       "min_distance": {
+        "value": 0.0,
+        "unit": "mm"
+       },
+       "boolean_failed": false
+      }
+     ]
+    },
+    "text": "7 pair(s), 2 overlapping, 4 boolean failed.\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\nBowtie/A: BOOLEAN FAILED, overlap unknown.\nReversed/InRev: BOOLEAN FAILED, overlap unknown.\nShell/A: BOOLEAN FAILED, overlap unknown.\nOver/A: common volume 125.0 mm^3.\nA/Cyl: common volume 282.74 mm^3.",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"A\",\"b\":\"Sep\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":10.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"Over\",\"b\":\"A\",\"common_volume\":{\"value\":125.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false},{\"a\":\"A\",\"b\":\"FaceTouch\",\"common_volume\":null,\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":true},{\"a\":\"Bowtie\",\"b\":\"A\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Reversed\",\"b\":\"InRev\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"Shell\",\"b\":\"A\",\"common_volume\":null,\"min_distance\":null,\"boolean_failed\":true},{\"a\":\"A\",\"b\":\"Cyl\",\"common_volume\":{\"value\":282.74,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":0.0,\"unit\":\"mm\"},\"boolean_failed\":false}]},\"text\":\"7 pair(s), 2 overlapping, 4 boolean failed.\\nA/FaceTouch: BOOLEAN FAILED, overlap unknown.\\nBowtie/A: BOOLEAN FAILED, overlap unknown.\\nReversed/InRev: BOOLEAN FAILED, overlap unknown.\\nShell/A: BOOLEAN FAILED, overlap unknown.\\nOver/A: common volume 125.0 mm^3.\\nA/Cyl: common volume 282.74 mm^3.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "code": "\nimport json\nfrom freecad_buddy.usecases.fingerprint import fingerprint\nresult = json.dumps({\"fresh\": fingerprint(doc, fresh=True)[\"digest\"], \"cached\": fingerprint(doc)[\"digest\"], \"undo\": doc.UndoCount, \"touched\": [o.Name for o in doc.Objects if \"Touched\" in o.State]})\n"
+   },
+   "elapsed_s": 0.057,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+     "stdout": "",
+     "value_repr": "'{\"fresh\": \"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\", \"cached\": \"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\", \"undo\": 0, \"touched\": []}'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\nfingerprint_after: None\nstdout: \nvalue_repr: <183 chars>",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\",\"stdout\":\"\",\"value_repr\":\"'{\\\"fresh\\\": \\\"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\\\", \\\"cached\\\": \\\"4f7cf29110a8d676a72b2f5709947165f1bec85393c72970ea7c4a8463f3a3fb\\\", \\\"undo\\\": 0, \\\"touched\\\": []}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <183 chars>\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "code": "\nimport json, math\nout = []\nfor a, b in [['A', 'Sep'], ['A', 'Over'], ['A', 'FaceTouch'], ['A', 'VertTouch'], ['A', 'Cyl'], ['A', 'Bowtie'], ['A', 'Reversed'], ['A', 'InRev'], ['A', 'Shell'], ['Sep', 'Over'], ['Sep', 'FaceTouch'], ['Sep', 'VertTouch'], ['Sep', 'Cyl'], ['Sep', 'Bowtie'], ['Sep', 'Reversed'], ['Sep', 'InRev'], ['Sep', 'Shell'], ['Over', 'FaceTouch'], ['Over', 'VertTouch'], ['Over', 'Cyl'], ['Over', 'Bowtie'], ['Over', 'Reversed'], ['Over', 'InRev'], ['Over', 'Shell'], ['FaceTouch', 'VertTouch'], ['FaceTouch', 'Cyl'], ['FaceTouch', 'Bowtie'], ['FaceTouch', 'Reversed'], ['FaceTouch', 'InRev'], ['FaceTouch', 'Shell'], ['VertTouch', 'Cyl'], ['VertTouch', 'Bowtie'], ['VertTouch', 'Reversed'], ['VertTouch', 'InRev'], ['VertTouch', 'Shell'], ['Cyl', 'Bowtie'], ['Cyl', 'Reversed'], ['Cyl', 'InRev'], ['Cyl', 'Shell'], ['Bowtie', 'Reversed'], ['Bowtie', 'InRev'], ['Bowtie', 'Shell'], ['Reversed', 'InRev'], ['Reversed', 'Shell'], ['InRev', 'Shell'], ['A', 'Sep'], ['Over', 'A'], ['A', 'FaceTouch'], ['Bowtie', 'A'], ['Reversed', 'InRev'], ['Shell', 'A'], ['A', 'Cyl']]:\n    sa, sb = doc.getObject(a).Shape, doc.getObject(b).Shape\n    try:\n        cm = sa.common(sb); vol = cm.Volume; nsub = len(cm.SubShapes); bbv = cm.BoundBox.isValid(); err = None\n    except Exception as e:\n        vol = None; nsub = None; bbv = None; err = repr(e)\n    try:\n        d = sa.distToShape(sb)[0]\n    except Exception as e:\n        d = repr(e)\n    out.append({\"a\": a, \"b\": b, \"common_volume\": vol, \"common_subshapes\": nsub, \"common_bbox_valid\": bbv, \"common_error\": err, \"dist\": d})\nresult = json.dumps(out)\n"
+   },
+   "elapsed_s": 0.255,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+     "stdout": "",
+     "value_repr": "'[{\"a\": \"A\", \"b\": \"Sep\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"A\", \"b\": \"Over\", \"common_volume\": 124.99999999999997, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"FaceTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Cyl\", \"common_volume\": 282.7433388230814, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"Reversed\", \"common_volume\": 999.9999999999998, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 34.0}, {\"a\": \"A\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 20.0}, {\"a\": \"Sep\", \"b\": \"Over\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 5.0}, {\"a\": \"Sep\", \"b\": \"FaceTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"Sep\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 20.0}, {\"a\": \"Sep\", \"b\": \"Cyl\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 12.0}, {\"a\": \"Sep\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Sep\", \"b\": \"Reversed\", \"common_volume\": 999.9999999999998, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Sep\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 14.0}, {\"a\": \"Sep\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"FaceTouch\", \"common_volume\": 124.99999999999997, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 8.660254037844387}, {\"a\": \"Over\", \"b\": \"Cyl\", \"common_volume\": 70.68583470577035, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"Reversed\", \"common_volume\": 999.9999999999998, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Over\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 29.0}, {\"a\": \"Over\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 15.0}, {\"a\": \"FaceTouch\", \"b\": \"VertTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"FaceTouch\", \"b\": \"Cyl\", \"common_volume\": 282.7433388230814, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"FaceTouch\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"FaceTouch\", \"b\": \"Reversed\", \"common_volume\": 999.9999999999998, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"FaceTouch\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 34.23448553724738}, {\"a\": \"FaceTouch\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"VertTouch\", \"b\": \"Cyl\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 4.071067811865475}, {\"a\": \"VertTouch\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"VertTouch\", \"b\": \"Reversed\", \"common_volume\": 999.9999999999998, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"VertTouch\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 44.36214602563767}, {\"a\": \"VertTouch\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"Cyl\", \"b\": \"Bowtie\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Cyl\", \"b\": \"Reversed\", \"common_volume\": 848.2300164692441, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Cyl\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 36.0}, {\"a\": \"Cyl\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"Bowtie\", \"b\": \"Reversed\", \"common_volume\": 5.684341886080802e-14, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Bowtie\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Bowtie\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Reversed\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 4.0}, {\"a\": \"Reversed\", \"b\": \"Shell\", \"common_volume\": 124999.99999999999, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"InRev\", \"b\": \"Shell\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 14.0}, {\"a\": \"A\", \"b\": \"Sep\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 10.0}, {\"a\": \"Over\", \"b\": \"A\", \"common_volume\": 124.99999999999997, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"A\", \"b\": \"FaceTouch\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Bowtie\", \"b\": \"A\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 0.0}, {\"a\": \"Reversed\", \"b\": \"InRev\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 4.0}, {\"a\": \"Shell\", \"b\": \"A\", \"common_volume\": 0.0, \"common_subshapes\": 0, \"common_bbox_valid\": false, \"common_error\": null, \"dist\": 20.0}, {\"a\": \"A\", \"b\": \"Cyl\", \"common_volume\": 282.7433388230814, \"common_subshapes\": 1, \"common_bbox_valid\": true, \"common_error\": null, \"dist\": 0.0}]'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\nfingerprint_after: None\nstdout: \nvalue_repr: <7459 chars>",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\",\"stdout\":\"\",\"value_repr\":\"'[{\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Sep\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Over\\\", \\\"common_volume\\\": 124.99999999999997, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 282.7433388230814, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 999.9999999999998, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 34.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 20.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Over\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 5.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 20.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 12.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 999.9999999999998, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 14.0}, {\\\"a\\\": \\\"Sep\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 124.99999999999997, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 8.660254037844387}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 70.68583470577035, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 999.9999999999998, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 29.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 15.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"VertTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 282.7433388230814, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 999.9999999999998, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 34.23448553724738}, {\\\"a\\\": \\\"FaceTouch\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 4.071067811865475}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 999.9999999999998, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 44.36214602563767}, {\\\"a\\\": \\\"VertTouch\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"Cyl\\\", \\\"b\\\": \\\"Bowtie\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Cyl\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 848.2300164692441, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Cyl\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 36.0}, {\\\"a\\\": \\\"Cyl\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"Bowtie\\\", \\\"b\\\": \\\"Reversed\\\", \\\"common_volume\\\": 5.684341886080802e-14, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Bowtie\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Bowtie\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Reversed\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 4.0}, {\\\"a\\\": \\\"Reversed\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 124999.99999999999, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"InRev\\\", \\\"b\\\": \\\"Shell\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 14.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Sep\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 10.0}, {\\\"a\\\": \\\"Over\\\", \\\"b\\\": \\\"A\\\", \\\"common_volume\\\": 124.99999999999997, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"FaceTouch\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Bowtie\\\", \\\"b\\\": \\\"A\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 0.0}, {\\\"a\\\": \\\"Reversed\\\", \\\"b\\\": \\\"InRev\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 4.0}, {\\\"a\\\": \\\"Shell\\\", \\\"b\\\": \\\"A\\\", \\\"common_volume\\\": 0.0, \\\"common_subshapes\\\": 0, \\\"common_bbox_valid\\\": false, \\\"common_error\\\": null, \\\"dist\\\": 20.0}, {\\\"a\\\": \\\"A\\\", \\\"b\\\": \\\"Cyl\\\", \\\"common_volume\\\": 282.7433388230814, \\\"common_subshapes\\\": 1, \\\"common_bbox_valid\\\": true, \\\"common_error\\\": null, \\\"dist\\\": 0.0}]'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <7459 chars>\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "script_exec",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+    "code": "\nimport json\ndef ok(s):\n    def vols(x):\n        if x.ShapeType == \"Solid\": return [x.Volume]\n        if x.ShapeType in (\"Compound\", \"CompSolid\"): return [v for c in x.SubShapes for v in vols(c)]\n        return [None]\n    v = vols(s); return bool(v) and all(a is not None and a > 0 for a in v) and s.isValid()\nresult = json.dumps({o.Name: ok(o.Shape) for o in doc.Objects if o.Name in ['A', 'Sep', 'Over', 'FaceTouch', 'VertTouch', 'Cyl', 'Bowtie', 'Reversed', 'InRev', 'Shell']})\n"
+   },
+   "elapsed_s": 0.065,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg",
+     "stdout": "",
+     "value_repr": "'{\"A\": true, \"Sep\": true, \"Over\": true, \"FaceTouch\": true, \"VertTouch\": true, \"Cyl\": true, \"Bowtie\": false, \"Reversed\": false, \"InRev\": true, \"Shell\": false}'",
+     "fingerprint_after": null
+    },
+    "text": "doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\nfingerprint_after: None\nstdout: \nvalue_repr: <158 chars>",
+    "framing": {
+     "fits": null,
+     "ratio": null,
+     "checked": "unavailable",
+     "stale_reason": "every projected corner was an implausible magnitude"
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\",\"stdout\":\"\",\"value_repr\":\"'{\\\"A\\\": true, \\\"Sep\\\": true, \\\"Over\\\": true, \\\"FaceTouch\\\": true, \\\"VertTouch\\\": true, \\\"Cyl\\\": true, \\\"Bowtie\\\": false, \\\"Reversed\\\": false, \\\"InRev\\\": true, \\\"Shell\\\": false}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <158 chars>\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"every projected corner was an implausible magnitude\"}}"
+   ]
+  },
+  {
+   "tool": "view_fit_viewport",
+   "args": {
+    "doc": "fcb-doc:Pu-z6YH8FmhQHxgmwqxqLg"
+   },
+   "elapsed_s": 0.06,
+   "isError": false,
+   "structured": {
+    "schema": "fcb.result-envelope/1",
+    "status": "OK",
+    "detail": null,
+    "structured_content": {
+     "fitted": true,
+     "document": "Interference137r2",
+     "camera_recorded": true
+    },
+    "text": "fitted the live viewport to 'Interference137r2'",
+    "framing": {
+     "fits": true,
+     "ratio": 0.95,
+     "checked": "computed",
+     "stale_reason": null
+    }
+   },
+   "text": [
+    "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"fitted\":true,\"document\":\"Interference137r2\",\"camera_recorded\":true},\"text\":\"fitted the live viewport to 'Interference137r2'\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+   ]
+  }
+ ]
+}

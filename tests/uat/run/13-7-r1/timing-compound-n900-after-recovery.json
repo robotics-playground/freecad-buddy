@@ -1,0 +1,78 @@
+[
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:kIw-fZTT-Pi7CUUYQVlU3A",
+   "code": "\nimport json\nfrom freecad_buddy.usecases.fingerprint import fingerprint\nresult = json.dumps({\"cached\": fingerprint(doc)[\"digest\"], \"touched\": [o.Name for o in doc.Objects if \"Touched\" in o.State or \"Invalid\" in o.State], \"undo\": doc.UndoCount, \"n\": len(doc.Objects)})\n"
+  },
+  "elapsed_s": 0.059,
+  "isError": false,
+  "structured": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:kIw-fZTT-Pi7CUUYQVlU3A",
+    "stdout": "",
+    "value_repr": "'{\"cached\": \"9dbfb187cb51036e4bdb90db193560d19733629b7671ddad8aafbf4b3ef75629\", \"touched\": [\"C1\", \"C2\", \"P\", \"Q\"], \"undo\": 0, \"n\": 4}'",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:kIw-fZTT-Pi7CUUYQVlU3A\nfingerprint_after: None\nstdout: \nvalue_repr: <134 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:kIw-fZTT-Pi7CUUYQVlU3A\",\"stdout\":\"\",\"value_repr\":\"'{\\\"cached\\\": \\\"9dbfb187cb51036e4bdb90db193560d19733629b7671ddad8aafbf4b3ef75629\\\", \\\"touched\\\": [\\\"C1\\\", \\\"C2\\\", \\\"P\\\", \\\"Q\\\"], \\\"undo\\\": 0, \\\"n\\\": 4}'\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:kIw-fZTT-Pi7CUUYQVlU3A\\nfingerprint_after: None\\nstdout: \\nvalue_repr: <134 chars>\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ },
+ {
+  "tool": "query_interference",
+  "args": {
+   "doc": "fcb-doc:kIw-fZTT-Pi7CUUYQVlU3A",
+   "pairs": [
+    [
+     "P",
+     "Q"
+    ]
+   ]
+  },
+  "elapsed_s": 0.068,
+  "isError": false,
+  "structured": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "pairs": [
+     {
+      "a": "P",
+      "b": "Q",
+      "common_volume": {
+       "value": 0.0,
+       "unit": "mm^3"
+      },
+      "min_distance": {
+       "value": 4.0,
+       "unit": "mm"
+      },
+      "boolean_failed": false
+     }
+    ]
+   },
+   "text": "1 pair(s), 0 overlapping, 0 boolean failed.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"pairs\":[{\"a\":\"P\",\"b\":\"Q\",\"common_volume\":{\"value\":0.0,\"unit\":\"mm^3\"},\"min_distance\":{\"value\":4.0,\"unit\":\"mm\"},\"boolean_failed\":false}]},\"text\":\"1 pair(s), 0 overlapping, 0 boolean failed.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":null,\"checked\":\"cached\",\"stale_reason\":\"served from cache; unverified key component(s): geometry\"}}"
+  ]
+ }
+]

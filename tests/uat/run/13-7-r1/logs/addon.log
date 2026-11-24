@@ -1,0 +1,22 @@
+2026-11-24 05:22:08,173 INFO freecad_buddy.hosts.gui_addon.bootstrap: operator settings: FREECAD_BUDDY_AUTO_APPROVE='1' (preference), FREECAD_BUDDY_SCRIPT_EXEC='1' (preference), FREECAD_BUDDY_UNATTENDED='' (unset), FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED='' (unset), FREECAD_BUDDY_NO_AUTO_MCP='' (unset), FREECAD_BUDDY_MCP_CMD='' (unset), FREECAD_BUDDY_AUDIT_LOG='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/audit.jsonl' (default), FREECAD_BUDDY_WORKDIR='/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/workdir' (default), uv path ''
+2026-11-24 05:22:08,173 INFO freecad_buddy.hosts.gui_addon.bootstrap: session-start sweep removed 0 leftover temp artifact(s)
+2026-11-24 05:22:08,173 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: mutation auto-approve ENABLED (to require preview_id, clear Auto-approve mutations in the FreeCAD GUI: Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_AUTO_APPROVE=0)
+2026-11-24 05:22:08,173 WARNING freecad_buddy.hosts.gui_addon.bootstrap: SECURITY: script_exec ENABLED: any MCP client of this bridge can run Python with your user rights (to turn it off, clear Allow script_exec in Edit > Preferences > FreeCAD Buddy, or set FREECAD_BUDDY_SCRIPT_EXEC=0)
+2026-11-24 05:22:09,591 INFO freecad_buddy.hosts.gui_addon.bootstrap: freecad-buddy RPC listener started on 127.0.0.1:46739
+2026-11-24 05:22:09,591 INFO freecad_buddy.hosts.gui_addon.bootstrap: uv: /usr/local/bin/uv
+2026-11-24 05:22:09,592 INFO freecad_buddy.hosts.gui_addon.bootstrap: provisioning the MCP proxy venv at /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv from freecad_buddy-0.1.1-py3-none-any.whl; log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/provision.log
+2026-11-24 05:22:37,392 INFO freecad_buddy.hosts.gui_addon.bootstrap: MCP proxy venv ready at /home/cua/.local/share/FreeCAD/v1-1/FreeCADBuddy/venv
+2026-11-24 05:22:37,393 INFO freecad_buddy.hosts.gui_addon.bootstrap: spawned MCP proxy (pid 720) -> http://127.0.0.1:8765/mcp; proxy log: /home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/mcp-proxy.log
+2026-11-24 05:27:23,724 INFO freecad_buddy.dispatch: INVALID_INPUT: a pair must name two different objects: A
+2026-11-24 05:27:23,807 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Nope
+2026-11-24 05:27:23,876 INFO freecad_buddy.dispatch: INVALID_INPUT: give exactly one of 'objects' and 'pairs'
+2026-11-24 05:27:35,015 INFO freecad_buddy.dispatch: INVALID_INPUT: a pair must name two different objects: A
+2026-11-24 05:27:35,030 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Nope
+2026-11-24 05:27:35,044 INFO freecad_buddy.dispatch: INVALID_INPUT: give exactly one of 'objects' and 'pairs'
+2026-11-24 05:27:59,808 INFO freecad_buddy.dispatch: INVALID_INPUT: a pair must name two different objects: A
+2026-11-24 05:27:59,820 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Nope
+2026-11-24 05:27:59,876 INFO freecad_buddy.dispatch: INVALID_INPUT: give exactly one of 'objects' and 'pairs'
+2026-11-24 05:29:00,222 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown assertion fn: None
+2026-11-24 05:39:42,625 INFO freecad_buddy.dispatch: INVALID_INPUT: a pair must name two different objects: A
+2026-11-24 05:39:42,638 INFO freecad_buddy.dispatch: INVALID_INPUT: unknown object: Nope
+2026-11-24 05:39:42,651 INFO freecad_buddy.dispatch: INVALID_INPUT: give exactly one of 'objects' and 'pairs'

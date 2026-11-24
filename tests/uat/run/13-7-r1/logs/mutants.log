@@ -1,0 +1,50 @@
+### a_empty_reads_zero
+QUERIES=D:\Work\Personal\Sources\fcb-verify-13-7\src\freecad_buddy\usecases\queries.py
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_flag_a_failed_boolean_When_common_is_empty_at_distance_zero
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_unknown
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_flag_a_failed_boolean_When_common_raises_and_the_distance_is_zero
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_flag_a_failed_boolean_When_two_solids_only_touch_at_a_face
+RESULT run=19 fail=4 err=0
+95 passed in 13.69s
+gen_schemas --check exit=0
+
+### b_drop_readonly
+QUERIES=D:\Work\Personal\Sources\fcb-verify-13-7\src\freecad_buddy\usecases\queries.py
+RESULT run=19 fail=0 err=0
+FAILED tests/external/test_assistant_readonly_profile.py::test_allow_list_matches_expected_read_only_set
+FAILED tests/external/test_assistant_readonly_profile.py::test_build_readonly_profile_registers_exactly_the_allow_list
+2 failed, 93 passed in 1.51s
+gen_schemas --check exit=0
+
+### c_accept_self_pair
+QUERIES=D:\Work\Personal\Sources\fcb-verify-13-7\src\freecad_buddy\usecases\queries.py
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_map_bad_input_to_invalid_input_When_dispatched (arguments={'doc': 'fcb-doc:j2EGoGrwJoq9bh_sjN_vrg', 'pairs': [['A', 'A']]})
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_name_the_object_When_a_pair_repeats_one_name
+RESULT run=19 fail=2 err=0
+95 passed in 1.43s
+gen_schemas --check exit=0
+
+### d_swap_ab
+QUERIES=D:\Work\Personal\Sources\fcb-verify-13-7\src\freecad_buddy\usecases\queries.py
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_measure_every_pair_in_order_When_objects_lists_three_names
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_measure_the_given_pairs_in_input_order_When_pairs_is_used
+RED: infc.test_query_tools.QueryInterferenceTest.test_Should_report_common_volume_and_zero_distance_When_two_boxes_overlap
+RESULT run=19 fail=3 err=0
+95 passed in 1.40s
+gen_schemas --check exit=0
+
+### e1_code_bound_21
+QUERIES=D:\Work\Personal\Sources\fcb-verify-13-7\src\freecad_buddy\usecases\queries.py
+RESULT run=19 fail=0 err=0
+95 passed in 1.40s
+gen_schemas --check exit=0
+
+### e2_schema_bound_21
+QUERIES=D:\Work\Personal\Sources\fcb-verify-13-7\src\freecad_buddy\usecases\queries.py
+RESULT run=19 fail=0 err=0
+FAILED tests/external/test_mcp_surface.py::test_Should_advertise_the_interference_input_bounds_When_the_catalog_is_read
+1 failed, 94 passed in 1.54s
+gen_schemas --check exit=0
+
+ M src/freecad_buddy/hosts/tool_catalog.py
+ M src/freecad_buddy/usecases/queries.py

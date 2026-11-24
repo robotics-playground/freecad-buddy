@@ -85,6 +85,14 @@ Exactly one of `objects` and `pairs`. `common_volume` uses `Shape.common`; `min_
 empty shape while `min_distance` is 0, `boolean_failed` is true and `common_volume` is null. An
 empty result must never read as "no overlap" (a measured false pass, usage-evidence.md).
 
+A pair is measured only when both shapes are valid solids with positive volume; otherwise
+`boolean_failed` is true and `common_volume` and `min_distance` are null (FreeCAD's `common` and
+`distToShape` are not reliable on invalid, reversed or non-solid shapes). `min_distance` is also
+null when `distToShape` raises. Cost bounds: a pair whose face counts multiply to more than
+150,000, or a call still running after 40 s between pairs, returns `INVALID_INPUT` with
+`detail.code` `interference.too_complex` and no partial result. Unknown name, self pair, or an
+object with no shape → `INVALID_INPUT`.
+
 ### `query_section` — new, read-only
 
 Input: `doc`, `object`, `plane: { "normal": "x"|"y"|"z"|[nx,ny,nz], "offset": Quantity }`,
