@@ -1,0 +1,62 @@
+{
+  "document_create": {
+    "meta": null,
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:QGMUXh1IUcNfMzl-jtdH6A\",\"name\":\"Verify131\",\"label\":\"Verify131\"},\"text\":\"doc: fcb-doc:QGMUXh1IUcNfMzl-jtdH6A\\nlabel: Verify131\\nname: Verify131\"}",
+        "annotations": null,
+        "meta": null
+      }
+    ],
+    "structuredContent": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:QGMUXh1IUcNfMzl-jtdH6A",
+        "name": "Verify131",
+        "label": "Verify131"
+      },
+      "text": "doc: fcb-doc:QGMUXh1IUcNfMzl-jtdH6A\nlabel: Verify131\nname: Verify131"
+    },
+    "isError": false
+  },
+  "request": {
+    "tool": "script_exec",
+    "arguments": {
+      "doc": "fcb-doc:QGMUXh1IUcNfMzl-jtdH6A",
+      "code": "for i in range(5):\n    print('stdout line %d of the 13-1 live check, padded to exceed eighty characters' % i)\nresult = ['value_repr element %02d' % i for i in range(10)]\n"
+    }
+  },
+  "response": {
+    "meta": null,
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:QGMUXh1IUcNfMzl-jtdH6A\",\"stdout\":\"stdout line 0 of the 13-1 live check, padded to exceed eighty characters\\nstdout line 1 of the 13-1 live check, padded to exceed eighty characters\\nstdout line 2 of the 13-1 live check, padded to exceed eighty characters\\nstdout line 3 of the 13-1 live check, padded to exceed eighty characters\\nstdout line 4 of the 13-1 live check, padded to exceed eighty characters\\n\",\"value_repr\":\"['value_repr element 00', 'value_repr element 01', 'value_repr element 02', 'value_repr element 03', 'value_repr element 04', 'value_repr element 05', 'value_repr element 06', 'value_repr element 07', 'value_repr element 08', 'value_repr element 09']\",\"fingerprint_after\":null},\"text\":\"doc: fcb-doc:QGMUXh1IUcNfMzl-jtdH6A\\nfingerprint_after: None\\nstdout: <365 chars>\\nvalue_repr: <250 chars>\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}",
+        "annotations": null,
+        "meta": null
+      }
+    ],
+    "structuredContent": {
+      "schema": "fcb.result-envelope/1",
+      "status": "OK",
+      "detail": null,
+      "structured_content": {
+        "doc": "fcb-doc:QGMUXh1IUcNfMzl-jtdH6A",
+        "stdout": "stdout line 0 of the 13-1 live check, padded to exceed eighty characters\nstdout line 1 of the 13-1 live check, padded to exceed eighty characters\nstdout line 2 of the 13-1 live check, padded to exceed eighty characters\nstdout line 3 of the 13-1 live check, padded to exceed eighty characters\nstdout line 4 of the 13-1 live check, padded to exceed eighty characters\n",
+        "value_repr": "['value_repr element 00', 'value_repr element 01', 'value_repr element 02', 'value_repr element 03', 'value_repr element 04', 'value_repr element 05', 'value_repr element 06', 'value_repr element 07', 'value_repr element 08', 'value_repr element 09']",
+        "fingerprint_after": null
+      },
+      "text": "doc: fcb-doc:QGMUXh1IUcNfMzl-jtdH6A\nfingerprint_after: None\nstdout: <365 chars>\nvalue_repr: <250 chars>",
+      "framing": {
+        "fits": null,
+        "ratio": null,
+        "checked": "unavailable",
+        "stale_reason": "no visible shape-bearing objects to measure"
+      }
+    },
+    "isError": false
+  }
+}

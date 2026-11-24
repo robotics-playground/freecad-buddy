@@ -1152,6 +1152,20 @@ def test_should_regenerate_the_summary_text_from_rounded_content_when_it_was_gen
     assert json.loads(result.content[0].text)["text"] == "verdict: OK\nvolume_band: 0.12"
 
 
+def test_Should_regenerate_text_with_char_count_When_rounded_content_holds_a_long_string():
+    # Arrange
+    long_text = "x" * 200
+    structured = {"volume_band": 0.123456789, "stdout": long_text}
+    envelope = {**_ok_envelope_with(structured), "text": summary_text(structured)}
+
+    # Act
+    result = _to_call_result(envelope)
+
+    # Assert
+    assert result.structuredContent["text"] == "stdout: <200 chars>\nvolume_band: 0.12"
+    assert result.structuredContent["structured_content"]["stdout"] == long_text
+
+
 def test_should_keep_a_hand_written_text_when_it_is_not_the_generated_summary():
     # Arrange
     envelope = {**_ok_envelope_with({"volume": 5.999999998}), "text": "Pad: volume 6.0 mm^3."}
