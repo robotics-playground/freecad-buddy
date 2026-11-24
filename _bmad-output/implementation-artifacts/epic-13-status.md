@@ -1,17 +1,17 @@
 # Epic 13 status
 
 Goal: Build SPEC-mcp-usage-improvement (`_bmad-output/specs/spec-mcp-usage-improvement/SPEC.md`): typed tools cover the frequent operations so `script_exec` becomes an escape route for rare work (CAP-1 .. CAP-9).
-Done: 13-1 — 07c5ffc (merge 905e038); 13-2 — 42cce78 (merge 4f453ce, records 33f74f3); 13-4 — 409c1b8 (merge dc02520, records 6c60a23); 13-3 — f4782e7 (merge 7bb503d, records 116377e); 13-6 — c513a0d (merge see log)
-In progress: 13-5 (worktree wt-13-5; verifier + red team running; done_checkpoint); 13-15 (worktree wt-13-15; spec waits for the user)
-Remaining: 13-7 .. 13-20 in epic-13-plan.md order
+Done: 13-1, 13-2, 13-3, 13-4, 13-6, 13-7 (merge c6492d77, records 90303e36)
+In progress: 13-5 (PASS at 9af2ac8; done_checkpoint waits for user acceptance before merge); 13-8 (main tree, builder); 13-15 (spec waits for the user)
+Remaining: 13-9 .. 13-14, 13-16 .. 13-20
 Branch / head: integration feat/epic-13-mcp-usage-improvement @ 116377e, checked out in worktree D:/Work/Personal/Sources/freecad-buddy-int (leader merges there)
 Blockers: none
-Open decisions: none (autonomy granted, decision 13)
+Open decisions (user): accept 13-5; 13-15 TNP rule (3 questions); 13-7 touching solids option b
 Open for the user to confirm: decisions 15-17 (leader)
-Agents alive: builder-13-5, verifier-13-5, redteam-13-5, builder-13-15; builder-13-7 next
+Agents alive: builder-13-5, verifier-13-5 (13-5 checkpoint); builder-13-7 (option b if user chooses); builder-13-8; builder-13-15
 Next: 13-7 in the main tree. Leader records live in this integration worktree.
 Plan: epic-13-plan.md. Context: epic-13-context.md. Decisions: epic-13-decisions.md.
-Updated: 2026-11-24 at 116377e
+Updated: 2026-11-24 at 90303e36
 
 ## Environment
 Skill version: bmad-leader SKILL.md sha256 `936e3e227d5e`.
