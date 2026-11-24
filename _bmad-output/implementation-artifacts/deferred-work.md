@@ -2157,9 +2157,17 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: Blind Hunter lens of Story 13-6; `tool-contracts.md:55-59`.
   blocker: `tool-contracts.md` is the SPEC contract, owned by the leader.
   unblock: leader edits T-2 to match decisions 8 and 21.
+  resolution: resolved at the Story 13-6 merge: `tool-contracts.md` T-2 drops `solids` (decision 8), names the unknown-name error (decision 21) and the empty-shape record.
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
   summary: (unverified, would be medium) `query_mass_properties` now runs `isValid()` per object under the fixed 30 s query budget; 50 heavy shapes or a heavy single shape could reach TIMEOUT.
   evidence: Blind Hunter and Edge Case lens; no measurement yet. Settle by timing a 50-object call on a large multi-feature part in the container.
   blocker: needs a container run (verifier).
   unblock: container UAT of Story 13-6 with a large part.
+  resolution: measured by verifier-13-6 in `fcb-desktop`: 50 objects x 172 faces (8,600 faces) took 3.68-3.71 s over 3 runs against the 30 s budget (`verify-13-6.md`, `tests/uat/run/13-6-r1/evidence/live-13-6.json`).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-6-query-mass-properties-objects.md`
+  summary: `query_mass_properties` reports `is_valid: true` and the last good volume for an object in an error state that keeps its previous shape (for example a Pad whose recompute failed); nothing in the record shows the error.
+  evidence: `_bmad-output/implementation-artifacts/redteam-13-6.md` RT-3 (reproduced; also true before Story 13-6 on the `object` path).
+  blocker: reporting object state in the record is a contract addition outside T-2.
+  unblock: a Story that adds an object-state field to measurement records, or a skill rule to run `verify_recompute` before trusting measurements.

@@ -52,11 +52,13 @@ typed tool families in the server instructions."
 
 Input adds `objects: string[]` (1..50). Exactly one of `object` and `objects` is required.
 
-Output with `objects`: `{ "objects": [ <the per-object record of today> + "is_valid": bool +
-"solids": int ] }`, in input order. With `object`: unchanged plus `is_valid` and `solids`.
+Output with `objects`: `{ "objects": [ <the per-object record of today> + "is_valid": bool ] }`,
+in input order. The solid count stays in the record's `counts.solids` (CAP-8: each value once).
+With `object`: unchanged plus `is_valid`.
 
-Errors: both or neither of `object`/`objects` → `INVALID_INPUT`; an object with no shape →
-its record carries `"shape": null` and the call stays `OK`.
+Errors: both or neither of `object`/`objects` → `INVALID_INPUT`; an unknown name in `objects` →
+`INVALID_INPUT` naming it; in `objects`, an object with no shape or an empty shape → its record
+is `{ "name", "shape": null }` and the call stays `OK`. The `object` path keeps its errors.
 
 ### `query_interference` — new, read-only
 
