@@ -545,6 +545,144 @@ class MultiObjectExportTest(_ExportFixture):
         self.assertEqual(target["self_read"]["facets"], 24)
         self.assertEqual(first.Shape.Volume + second.Shape.Volume, target["source"]["volume"])
 
+    def _add_body_with_box(self, name):
+        body = self.document.addObject("PartDesign::Body", name)
+        body.newObject("PartDesign::AdditiveBox", f"{name}Box")
+        self.document.recompute()
+        return body
+
+    def test_Should_export_only_the_cut_When_a_boolean_hides_two_bodies_in_the_gui_way(self):
+        # Arrange
+        first = self._add_body_with_box("B1")
+        second = self._add_body_with_box("B2")
+        second.Placement.Base = App.Vector(5, 0, 0)
+        cut = self.document.addObject("Part::Cut", "Cut")
+        cut.Base = first
+        cut.Tool = second
+        first.Visibility = False
+        second.Visibility = False
+        self.document.recompute()
+
+        # Act
+        _path, target = self._export(exports.export_step, "cut.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Cut"])
+
+    def test_Should_skip_the_tip_of_a_hidden_body_When_objects_are_omitted(self):
+        # Arrange
+        body = self._add_body_with_box("Hidden")
+        body.Visibility = False
+        self._add_box("Shown")
+
+        # Act
+        _path, target = self._export(exports.export_step, "shown.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Shown"])
+
+    def test_Should_skip_a_solid_inside_a_hidden_part_When_objects_are_omitted(self):
+        # Arrange
+        part = self.document.addObject("App::Part", "Asm")
+        inner = self._add_box("Inner")
+        part.addObject(inner)
+        part.Visibility = False
+        self._add_box("Shown")
+
+        # Act
+        _path, target = self._export(exports.export_step, "shown.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Shown"])
+
+    def test_Should_export_a_visible_mirror_source_with_the_mirror_When_objects_are_omitted(self):
+        # Arrange
+        box = self._add_box("Source")
+        mirror = self.document.addObject("Part::Mirroring", "Mirror")
+        mirror.Source = box
+        mirror.Base = App.Vector(20, 0, 0)
+        mirror.Normal = App.Vector(1, 0, 0)
+        self.document.recompute()
+
+        # Act
+        _path, target = self._export(exports.export_step, "mirror.step")
+
+        # Assert
+        self.assertEqual(target["structured_content"]["objects"], ["Source", "Mirror"])
+
+    def test_Should_name_each_object_and_verify_When_two_objects_share_one_shape(self):
+        # Arrange
+        box = self._add_box("Box")
+        copy = self.document.addObject("Part::Feature", "Copy")
+        copy.Shape = box.Shape
+        copy.Placement.Base = App.Vector(40, 0, 0)
+        self.document.recompute()
+        path, written = self._export(exports.export_step, "shared.step", objects=["Box", "Copy"])
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        by_id = {c["id"]: c for c in target["structured_content"]["checks"]}
+        products = self._step_product_names(path)
+        self.assertEqual(target["status"], "OK")
+        self.assertIn("Box", products)
+        self.assertIn("Copy", products)
+        self.assertTrue(by_id["export_step.object_names"]["passed"])
+
+    def test_Should_write_what_it_recorded_When_a_selected_part_holds_a_hidden_child(self):
+        # Arrange
+        part = self.document.addObject("App::Part", "Asm")
+        shown = self._add_box("In1")
+        hidden = self._add_box("In2")
+        hidden.Placement.Base = App.Vector(30, 0, 0)
+        part.addObject(shown)
+        part.addObject(hidden)
+        hidden.Visibility = False
+        free = self.document.addObject("Part::Sphere", "Free")
+        free.Placement.Base = App.Vector(0, 60, 0)
+        self.document.recompute()
+        _path, written = self._export(exports.export_step, "asm.step", objects=["Asm", "Free"])
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        self.assertEqual(target["status"], "OK")
+
+    def test_Should_grade_only_the_solids_When_an_object_holds_a_solid_and_a_loose_face(self):
+        # Arrange
+        mixed = self.document.addObject("Part::Feature", "Mixed")
+        mixed.Shape = Part.makeCompound([Part.makeBox(10, 10, 10), Part.makePlane(5, 5)])
+        lone = self.document.addObject("Part::Sphere", "Sph")
+        lone.Placement.Base = App.Vector(0, 60, 0)
+        self.document.recompute()
+        _path, written = self._export(exports.export_step, "mixed.step", objects=["Mixed", "Sph"])
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        recorded = self.exports._by_id[written["structured_content"]["export_id"]]["source"]
+        self.assertAlmostEqual(recorded["objects"][0]["volume"], 1000.0, places=6)
+        self.assertEqual(target["status"], "OK")
+
+    def test_Should_fail_the_name_check_When_a_recorded_product_name_is_not_in_the_file(self):
+        # Arrange
+        names = self._add_three_bodies()
+        _path, written = self._export(exports.export_step, "three.step", objects=names)
+        export_id = written["structured_content"]["export_id"]
+        self.exports._by_id[export_id]["source"]["objects"][2]["step_name"] = "Delta"
+
+        # Act
+        target = self._verify_step(written)
+
+        # Assert
+        by_id = {c["id"]: c for c in target["structured_content"]["checks"]}
+        self.assertNotEqual(target["status"], "OK")
+        self.assertFalse(by_id["export_step.object_names"]["passed"])
+        self.assertIn("Delta", by_id["export_step.object_names"]["detail"]["message"])
+
     def test_Should_skip_a_hidden_object_When_objects_are_omitted(self):
         # Arrange
         self._add_box("Shown")

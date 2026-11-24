@@ -321,7 +321,7 @@ def _object_checks(meshes: list, objects: list[dict], decimals: int | None) -> l
     the file, never assumed from the writer.
     """
     names = [str(mesh_obj.GetName()) for mesh_obj in meshes]
-    labels = [obj["label"] for obj in objects]
+    labels = [obj.get("file_name", obj["label"]) for obj in objects]
     checks = [
         {
             "id": "lib3mf.object_count",

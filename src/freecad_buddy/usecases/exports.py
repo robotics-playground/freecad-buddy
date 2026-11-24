@@ -49,6 +49,7 @@ _STEP_FILE_SCHEMAS = {
 }
 _FILE_SCHEMA_IDENTIFIER = re.compile(r"FILE_SCHEMA\s*\(\s*\(\s*'\s*([A-Za-z0-9_]+)")
 _3MF_MODEL_PART = "3D/3dmodel.model"
+_3MF_CONTENT_TYPES_PART = "[Content_Types].xml"
 _3MF_OBJECT_TAG = re.compile(r'<object id="(\d+)" type="(model|surface)">')
 _LINK_PROPERTY_TYPES = frozenset(
     {
@@ -58,8 +59,17 @@ _LINK_PROPERTY_TYPES = frozenset(
         "App::PropertyLinkSubList",
     }
 )
-_ATTACHMENT_LINKS = frozenset({"AttachmentSupport", "Support"})
-_ATTRIBUTE_ESCAPES = {'"': "&quot;", "\n": "&#10;", "\r": "&#13;", "\t": "&#9;"}
+# Input links whose result contains the target: a boolean's operands, the sections of a loft or
+# sweep, an extrusion's base, a Body's or Part's members.
+_CONSUMING_LINKS = frozenset(
+    {"Base", "Tool", "Shapes", "Sections", "Spine", "Group", "BaseFeature"}
+)
+_ATTRIBUTE_ESCAPES = {'"': "&quot;"}
+_CONTROL_CHARACTERS = re.compile(r"[\x00-\x1f]")
+_CONTENT_TYPE_DEFAULT = re.compile(
+    r"[ \t]*<Default\b[^>]*?\bExtension=\"([^\"]*)\"[^>]*/>[ \t]*\r?\n?"
+)
+_STEP_PRODUCT = re.compile(r"PRODUCT\('(?:[^']|'')*','((?:[^']|'')*)'")
 
 
 class ExportRegistry:
@@ -99,8 +109,10 @@ def _resolve_export_objects(document: object, objects: list | None) -> list:
 
     Named ``objects`` resolve in order with repeated names collapsed. With no selection the
     export covers every visible solid object that no other such object consumes: the inputs of a
-    boolean and the features of a Body are covered by the boolean and the Body that use them. A
-    document that holds exactly one object exports it whatever its visibility.
+    boolean and the features of a Body are covered by the boolean and the Body that use them. An
+    object is visible when it and every Body or Part that holds it is visible, because hiding a
+    group in the GUI leaves its children's own flag set. A document that holds exactly one object
+    exports it whatever its visibility.
     """
     if objects:
         resolved = []
@@ -123,16 +135,16 @@ def _resolve_export_objects(document: object, objects: list | None) -> list:
 
 
 def _shape_inputs(obj: object) -> list:
-    """Return the objects ``obj`` is built from: the targets of its link properties.
+    """Return the objects ``obj`` contains: the targets of its input link properties.
 
-    An attachment target (``AttachmentSupport``) and an expression reference are not inputs: the
+    Only the links that name an input the result contains count (see ``_CONSUMING_LINKS``). An
+    attachment target, an expression reference and the ``Source`` of a mirror are not inputs: the
     object they point at still exports on its own.
     """
     inputs: list = []
     for name in obj.PropertiesList:
-        if name in _ATTACHMENT_LINKS or obj.getTypeIdOfProperty(name) not in _LINK_PROPERTY_TYPES:
-            continue
-        inputs.extend(_linked_objects(getattr(obj, name)))
+        if name in _CONSUMING_LINKS and obj.getTypeIdOfProperty(name) in _LINK_PROPERTY_TYPES:
+            inputs.extend(_linked_objects(getattr(obj, name)))
     return inputs
 
 
@@ -144,11 +156,23 @@ def _linked_objects(value: object) -> list:
 
 
 def _is_visible_solid(obj: object) -> bool:
-    """Whether ``obj`` is shown and its shape holds at least one solid."""
+    """Whether ``obj`` is shown, with every group above it, and its shape holds a solid."""
     shape = getattr(obj, "Shape", None)
-    if shape is None or shape.isNull() or not getattr(obj, "Visibility", True):
+    if shape is None or shape.isNull() or not _is_shown(obj):
         return False
     return len(shape.Solids) > 0
+
+
+def _is_shown(obj: object) -> bool:
+    """Whether ``obj`` and every Body or Part that holds it have ``Visibility`` set."""
+    if not getattr(obj, "Visibility", True):
+        return False
+    group = obj.getParentGeoFeatureGroup()
+    while group is not None:
+        if not group.Visibility:
+            return False
+        group = group.getParentGeoFeatureGroup()
+    return True
 
 
 def _require_shape(obj: object):
@@ -175,13 +199,22 @@ def _source_facts(shape: object, is_mm: bool) -> dict:
 
 
 def _selected_shapes(objs: list) -> list:
-    """Return the shape of each object; a multi-object selection needs a solid in every object."""
+    """Return the shape of each object to write.
+
+    One object keeps its shape. With several objects each object needs a solid, and the shape to
+    write is its solids alone: a loose face or wire would become a product with no solid, and
+    the recorded facts and every written file then describe the same geometry.
+    """
     shapes = [_require_shape(obj) for obj in objs]
-    if len(objs) > 1:
-        for obj, shape in zip(objs, shapes):
-            if not shape.Solids:
-                raise ValidationError(f"object has no solid: {obj.Name}")
-    return shapes
+    if len(objs) == 1:
+        return shapes
+    solid_shapes = []
+    for obj, shape in zip(objs, shapes):
+        solids = shape.Solids
+        if not solids:
+            raise ValidationError(f"object has no solid: {obj.Name}")
+        solid_shapes.append(solids[0] if len(solids) == 1 else _one_shape(solids))
+    return solid_shapes
 
 
 def _one_shape(shapes: list):
@@ -252,10 +285,15 @@ def export_step(
             if len(objs) == 1:
                 shapes[0].exportStep(path)
             else:
-                shim.export_step_objects(objs, path)
+                step_names = shim.export_step_objects(
+                    [(obj.Label, shape) for obj, shape in zip(objs, shapes)], path
+                )
         finally:
             shim.restore_step_config(previous_unit)
         facts = _selection_facts(objs, shapes, _is_mm(document))
+        if len(objs) > 1:
+            for entry, name in zip(facts["objects"], step_names):
+                entry["step_name"] = name
         export_id = export_registry.record(
             {
                 "path": path,
@@ -409,7 +447,8 @@ def _name_3mf_objects(path: str, labels: list[str]) -> None:
 
     FreeCAD's 3MF writer ignores object names (``Exporter3MF::addMesh`` discards them), so the
     names are added to the model part after the write. Every other archive part is copied
-    unchanged. Raises ``RuntimeError`` when the file has no model part or its object count
+    unchanged, except that repeated ``Default`` content types are reduced to one per extension.
+    Raises ``RuntimeError`` when the file has no model part or its object count
     differs from ``labels``: the file is then not what the writer was expected to produce.
     """
     with zipfile.ZipFile(path) as archive:
@@ -422,6 +461,8 @@ def _name_3mf_objects(path: str, labels: list[str]) -> None:
             for info, data in parts:
                 if info.filename == _3MF_MODEL_PART:
                     data = _name_model_objects(data.decode("utf-8"), labels).encode("utf-8")
+                elif info.filename == _3MF_CONTENT_TYPES_PART:
+                    data = _unique_content_types(data.decode("utf-8")).encode("utf-8")
                 target.writestr(info, data, compress_type=info.compress_type)
         os.replace(rewritten, path)
     finally:
@@ -429,13 +470,37 @@ def _name_3mf_objects(path: str, labels: list[str]) -> None:
             os.remove(rewritten)
 
 
-def _attribute(text: str) -> str:
-    """Return ``text`` escaped for a double-quoted XML attribute value.
+def _unique_content_types(content_types_xml: str) -> str:
+    """Return ``content_types_xml`` with one ``Default`` entry per file extension.
 
-    A parser turns a raw newline or tab inside an attribute into a space, so those are written
-    as character references to keep the name equal to the ``Label``.
+    The GUI writer adds a thumbnail per mesh and writes one ``Default Extension="png"`` entry per
+    thumbnail, and lib3mf refuses a file that declares a content type twice. The first entry of
+    an extension stays.
     """
-    return escape(text, _ATTRIBUTE_ESCAPES)
+    seen: set[str] = set()
+
+    def keep(match: re.Match) -> str:
+        extension = match.group(1).lower()
+        if extension in seen:
+            return ""
+        seen.add(extension)
+        return match.group(0)
+
+    return _CONTENT_TYPE_DEFAULT.sub(keep, content_types_xml)
+
+
+def three_mf_object_name(label: str) -> str:
+    """Return the object name written to a 3MF for ``label``.
+
+    XML cannot carry a control character in a name, and lib3mf refuses every numeric character
+    reference, so each control character (tab and newline included) becomes a space.
+    """
+    return _CONTROL_CHARACTERS.sub(" ", label)
+
+
+def _attribute(text: str) -> str:
+    """Return ``text`` escaped for a double-quoted XML attribute value."""
+    return escape(three_mf_object_name(text), _ATTRIBUTE_ESCAPES)
 
 
 def _name_model_objects(model_xml: str, labels: list[str]) -> str:
@@ -491,6 +556,7 @@ def verify_export_step(
             leaves = shim.read_step_leaves(entry["path"])
             checks = _grade_step_measure(_leaf_measure(leaves), source)
             checks.extend(_object_volume_checks(leaves, source["objects"]))
+            checks.append(_object_names_check(entry["path"], source["objects"]))
         else:
             reimported = Part.Shape()
             reimported.read(entry["path"])
@@ -582,6 +648,29 @@ def _object_volume_checks(leaves: list[dict], objects: list[dict]) -> list[dict]
         }
     )
     return checks
+
+
+def _object_names_check(path: str, objects: list[dict]) -> dict:
+    """Return the check that the file names a product after every object's ``Label``.
+
+    The names come from the written file, never from the writer's return value. The file may hold
+    more products than objects (a multi-solid object, the root of the scratch document).
+    """
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        written = {
+            match.replace("''", "'").replace("\\\\", "\\")
+            for match in _STEP_PRODUCT.findall(handle.read())
+        }
+    expected = [entry["step_name"] for entry in objects]
+    missing = [name for name in expected if name not in written]
+    return {
+        "id": "export_step.object_names",
+        "measured": sorted(written),
+        "expected": expected,
+        "tolerance": None,
+        "passed": not missing,
+        "detail": {"message": f"missing product names: {missing}" if missing else "all named"},
+    }
 
 
 def _step_checks(shape: object, source: dict) -> list[dict]:
@@ -705,6 +794,7 @@ def _self_read(
                 {
                     "name": obj["name"],
                     "label": obj["label"],
+                    "file_name": three_mf_object_name(obj["label"]),
                     "volume": obj["volume"],
                     "band": mesh_volume_band(entry["tess"]["linear"], obj["area"]),
                 }

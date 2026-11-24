@@ -519,18 +519,30 @@ def restore_step_config(unit: str) -> None:
     Part.setStaticValue("write.step.schema", scheme)
 
 
-def export_step_objects(objects: list, path: str) -> None:
-    """Write ``objects`` to one STEP file, one product per object named by its ``Label``.
+def export_step_objects(items: list[tuple[str, object]], path: str) -> list[str]:
+    """Write ``(label, shape)`` pairs to one STEP file, one product per pair named by its label.
 
-    ``Import.export`` goes through the OCAF writer that keeps the object ``Label`` as the STEP
-    product name; the multi-solid shape of one object may become several products. It reads the
-    same ``write.step.*`` statics ``pin_step_config`` sets, so the caller pins and restores them.
-    The writer options that otherwise come from the operator's ``Mod/Import`` preferences are
-    passed explicitly, so the file structure never depends on them.
+    Each shape is copied into a scratch ``Part::Feature`` carrying the label, and ``Import.export``
+    writes those features. The OCAF writer shares one product between objects whose shapes share
+    their geometry (a simple copy, a link), which would give two objects one product name; the
+    copy gives every object its own geometry and so its own product. It also writes exactly the
+    shape the caller recorded, whatever a group holds that is hidden. The multi-solid shape of one
+    pair may become several products. The writer reads the same ``write.step.*`` statics
+    ``pin_step_config`` sets, so the caller pins and restores them. Writer options that otherwise
+    come from the operator's ``Mod/Import`` preferences are passed explicitly. Returns the label
+    each feature ended with, which FreeCAD makes unique within the scratch document.
     """
     import Import
 
-    Import.export(objects, path, exportHidden=True, legacy=False, keepPlacement=False)
+    with _scratch_document("FCB_TMP_step_write") as doc:
+        features = []
+        for label, shape in items:
+            feature = doc.addObject("Part::Feature", "Part")
+            feature.Label = label
+            feature.Shape = shape.copy()
+            features.append(feature)
+        Import.export(features, path, exportHidden=True, legacy=False, keepPlacement=False)
+        return [feature.Label for feature in features]
 
 
 def read_step_leaves(path: str) -> list[dict]:

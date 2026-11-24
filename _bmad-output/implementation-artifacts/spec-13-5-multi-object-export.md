@@ -79,7 +79,14 @@ context:
 - Default selection: a candidate is consumed when another candidate holds it in a link property (`Base`, `Tool`, `Shapes`, a Body `Group`); `AttachmentSupport` and expression references do not consume. A document with exactly one object exports it whatever its visibility (K-1).
 - STL of several objects records `facet_counts`; trimesh and the second oracle weld per object, because two touching objects fail as one welded mesh (measured: two boxes sharing a face failed all five checks).
 - Importer and exporter options that come from `Mod/Import` preferences are passed explicitly in the shim.
-- Deferred: App::Part placement (pre-existing), App::Link and hidden-group visibility (low).
+- Round 2 (container UAT and red team):
+  - The GUI writer repeats `Default Extension="png"` once per mesh thumbnail; the rewrite keeps one entry per extension. Tested with a fixture archive and lib3mf (headless FreeCAD cannot produce it).
+  - A hidden Body or Part hides its children (default selection). A mirror's `Source` is not consumed; consuming links are an allow-list.
+  - Several objects: STEP writes scratch `Part::Feature` copies of each object's solids, so each object gets its own product named by its `Label`, the hidden child of a selected `App::Part` is not written, and a loose face is dropped. Decision: copies, not the original objects, because OCCT shares one product between objects that share a shape.
+  - 3MF names: each control character becomes a space (lib3mf refuses numeric character references); the verifier compares against that file name.
+  - `verify_export_step` reads the product names from the file (`export_step.object_names`).
+  - Not changed: BooleanFragments fails `topology_counts` on the single path too. OCCT writes non-ASCII labels as raw UTF-8 (RT-8), recorded in `deferred-work.md` by the leader.
+- Deferred: App::Part placement (pre-existing), App::Link visibility (low).
 
 ## Review Triage Log
 
