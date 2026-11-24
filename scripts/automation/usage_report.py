@@ -46,17 +46,25 @@ from pathlib import Path
 from replay_result_sizes import _SPILL
 from session_metrics import _PERSISTED, _text
 
-_TOOL_PREFIX = re.compile(r"mcp__(?:plugin_freecad-buddy_)?freecad-buddy__(.+)")
+_TOOL_NAME = re.compile(r"mcp__((?:(?!__).)*freecad-buddy(?:(?!__).)*)__(.+)")
 _SCRIPT_TOOL = "script_exec"
 _TREE_TOOL = "query_tree_summary"
 _TREE_STATUS = re.compile(r"([A-Z][A-Z_]+):")
 _PROJECTS_ROOT = Path.home() / ".claude" / "projects"
 
-_MUTATION = re.compile(
+_MUTATING_CALL = re.compile(
     r"addObject|removeObject|setExpression|addProperty|newObject|addGeometry|addConstraint"
-    r"|delGeometry|\.recompute\(|\.save\(|^[^#\n=]*\w\.\w+\s*=[^=]",
-    re.MULTILINE,
+    r"|delGeometry|\.recompute\(|\.save\("
 )
+_ATTRIBUTE_ASSIGNMENT = re.compile(r"[^#=]*[\w\])]\.\w+\s*(?:[-+*/%|&^]|//|\*\*|<<|>>)?=(?!=)")
+_STATEMENT_SEPARATOR = re.compile(r"[;\n]")
+
+
+def _is_mutating(code: str) -> bool:
+    return bool(_MUTATING_CALL.search(code)) or any(
+        _ATTRIBUTE_ASSIGNMENT.match(statement) for statement in _STATEMENT_SEPARATOR.split(code)
+    )
+
 
 # Classes of ``script_exec`` code. One script can match several classes.
 SCRIPT_CLASSES: dict[str, re.Pattern[str]] = {
@@ -84,28 +92,54 @@ SCRIPT_CLASSES: dict[str, re.Pattern[str]] = {
     "`json.dump` of measured data to disk": re.compile(r"json\.dump"),
     "`Label` rename": re.compile(r"\.Label\s*=[^=]"),
     "Loft, sweep, helix, thickness": re.compile(
-        r"makeLoft|makeSweep|makeHelix|makeThickness|makePipe|Part::(?:Loft|Sweep|Helix|Thickness)"
+        r"makeLoft|makeSweep|makeHelix|makeThickness|makePipe"
+        r"|(?:Part|PartDesign)::(?:(?:Additive|Subtractive)?(?:Loft|Pipe|Helix)|Sweep|Thickness)"
     ),
     "`App::Link` or clone": re.compile(r"App::Link|makeLink|Clone"),
 }
 
-# Classes of failed results, matched on the result message.
-FAILURE_CLASSES: dict[str, re.Pattern[str]] = {
-    "`script_exec` timeout": re.compile(r"marshaled call timed out"),
-    "Multi-object export refused": re.compile(r"export supports a single object"),
-    "TNP audit flag on a typed mutation": re.compile(r"TNP audit flagged"),
-    "Stale document handle": re.compile(r"unknown or stale document handle"),
-    "Document-suspect refusal after timeout": re.compile(r"document-suspect"),
-}
-_SET_PARAMETERS_CLASS = "`feature_set_parameters` cannot write"
-_SET_PARAMETERS_MESSAGE = re.compile(r"cannot write")
-_PYTHON_ERROR_CLASS = "Python error reported as `RECOMPUTE_ERROR`"
-_VERIFY_INPUT_CLASS = "`verify_shape` input rejected"
+
+@dataclass(frozen=True)
+class FailureClass:
+    """A class of failed results. A call joins it when every given condition holds."""
+
+    name: str
+    tool: str | None = None
+    status: str | None = None
+    message: re.Pattern[str] | None = None
+
+    def matches(self, call: Call) -> bool:
+        return (
+            (self.tool is None or call.tool == self.tool)
+            and (self.status is None or call.status == self.status)
+            and (self.message is None or bool(self.message.search(call.message)))
+        )
+
+
+FAILURE_CLASSES = (
+    FailureClass(
+        "`script_exec` timeout", "script_exec", message=re.compile(r"marshaled call timed out")
+    ),
+    FailureClass("Python error reported as `RECOMPUTE_ERROR`", "script_exec", "RECOMPUTE_ERROR"),
+    FailureClass(
+        "Multi-object export refused", message=re.compile(r"export supports a single object")
+    ),
+    FailureClass("`verify_shape` input rejected", "verify_shape", "INVALID_INPUT"),
+    FailureClass("TNP audit flag on a typed mutation", message=re.compile(r"TNP audit flagged")),
+    FailureClass("Stale document handle", message=re.compile(r"unknown or stale document handle")),
+    FailureClass("Document-suspect refusal after timeout", message=re.compile(r"document-suspect")),
+    FailureClass(
+        "`feature_set_parameters` cannot write",
+        "feature_set_parameters",
+        message=re.compile(r"cannot write"),
+    ),
+)
 _UNCLASSIFIED = "Not OK, no class above (includes calls with no outcome)"
 
 
 @dataclass
 class Call:
+    server: str
     tool: str
     timestamp: datetime
     session: str
@@ -145,6 +179,8 @@ class _Scan:
     seen: set[str] = field(default_factory=set)
     pending: dict[str, Call] = field(default_factory=dict)
     searches: dict[str, tuple[Transcript, date]] = field(default_factory=dict)
+    # Results read before their tool_use, because that sits in a file that sorts later.
+    orphan_results: dict[str, object] = field(default_factory=dict)
     calls: list[Call] = field(default_factory=list)
 
 
@@ -220,6 +256,7 @@ def _apply_result(call: Call, content: object) -> None:
 
 def _read_transcript(path: Path, session: str, scan: _Scan) -> Transcript:
     transcript = Transcript(path, session)
+    known_ids: set[str] = set()
     with path.open(encoding="utf-8") as lines:
         for line in lines:
             try:
@@ -236,9 +273,10 @@ def _read_transcript(path: Path, session: str, scan: _Scan) -> Transcript:
                 continue
             for item in content:
                 if item.get("type") == "tool_use":
+                    known_ids.add(item["id"])
                     _read_tool_use(item, moment, transcript, scan)
                 elif item.get("type") == "tool_result":
-                    _read_tool_result(item, moment, scan)
+                    _read_tool_result(item, known_ids, scan)
     return transcript
 
 
@@ -248,24 +286,34 @@ def _read_tool_use(item: dict, moment: datetime, transcript: Transcript, scan: _
     if item["name"] == "ToolSearch":
         scan.seen.add(item["id"])
         scan.searches[item["id"]] = (transcript, moment.astimezone(timezone.utc).date())
+        if item["id"] in scan.orphan_results:
+            _read_tool_result(
+                {"tool_use_id": item["id"], "content": scan.orphan_results.pop(item["id"])},
+                {item["id"]},
+                scan,
+            )
         return
-    match = _TOOL_PREFIX.fullmatch(item["name"])
+    match = _TOOL_NAME.fullmatch(item["name"])
     if not match:
         return
     scan.seen.add(item["id"])
     code = (item.get("input") or {}).get("code")
     call = Call(
         match.group(1),
+        match.group(2),
         moment,
         transcript.session,
         transcript.path,
         code if isinstance(code, str) else None,
     )
-    scan.pending[item["id"]] = call
     scan.calls.append(call)
+    if item["id"] in scan.orphan_results:
+        _apply_result(call, scan.orphan_results.pop(item["id"]))
+    else:
+        scan.pending[item["id"]] = call
 
 
-def _read_tool_result(item: dict, moment: datetime, scan: _Scan) -> None:
+def _read_tool_result(item: dict, known_ids: set[str], scan: _Scan) -> None:
     call_id = item["tool_use_id"]
     if call_id in scan.pending:
         _apply_result(scan.pending.pop(call_id), item.get("content"))
@@ -274,15 +322,17 @@ def _read_tool_result(item: dict, moment: datetime, scan: _Scan) -> None:
         names = _loaded_tools(item.get("content"))
         if names:
             transcript.loaded_tools.append((day, names))
+    elif call_id not in known_ids:
+        scan.orphan_results[call_id] = item.get("content")
 
 
 def _loaded_tools(content: object) -> list[str]:
     names = []
     for item in content if isinstance(content, list) else []:
         if isinstance(item, dict) and item.get("type") == "tool_reference":
-            match = _TOOL_PREFIX.fullmatch(item.get("tool_name", ""))
+            match = _TOOL_NAME.fullmatch(item.get("tool_name", ""))
             if match:
-                names.append(match.group(1))
+                names.append(match.group(2))
     return names
 
 
@@ -340,13 +390,17 @@ def _scripts(report: Report) -> list[Call]:
 def _totals(report: Report) -> list[str]:
     calls = report.calls
     scripts = [call for call in report.calls if call.tool == _SCRIPT_TOOL]
-    read_only = sum(not _MUTATION.search(call.code or "") for call in scripts)
+    read_only = sum(not _is_mutating(call.code or "") for call in scripts)
     sizes = [len((call.code or "").splitlines()) for call in scripts]
     sessions = {call.session for call in calls}
     families = Counter(_family(call.tool) for call in calls)
+    servers = Counter(call.server for call in calls)
     lines = [
         "## Totals",
         "",
+        "- Servers: "
+        + (", ".join(f"`{name}` {count}" for name, count in servers.most_common()) or "none")
+        + ".",
         f"- {len(calls):,} calls in {len(sessions)} sessions "
         f"({len({call.source for call in calls})} transcript files with subagents) "
         f"between {report.since} and {report.until}.",
@@ -409,14 +463,7 @@ def _script_class_table(report: Report) -> list[str]:
 
 
 def _failure_class(call: Call) -> list[str]:
-    classes = [name for name, pattern in FAILURE_CLASSES.items() if pattern.search(call.message)]
-    if call.tool == _SCRIPT_TOOL and call.status == "RECOMPUTE_ERROR":
-        classes.append(_PYTHON_ERROR_CLASS)
-    if call.tool == "verify_shape" and call.status == "INVALID_INPUT":
-        classes.append(_VERIFY_INPUT_CLASS)
-    if call.tool == "feature_set_parameters" and _SET_PARAMETERS_MESSAGE.search(call.message):
-        classes.append(_SET_PARAMETERS_CLASS)
-    return classes
+    return [failure_class.name for failure_class in FAILURE_CLASSES if failure_class.matches(call)]
 
 
 def _failure_table(report: Report) -> list[str]:

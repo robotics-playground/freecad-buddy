@@ -266,23 +266,31 @@ class RpcListener:
         An unreadable file or one with a non-integer ``pid`` also stays: deleting on doubt could
         remove the record of a live bridge.
         """
-        for path in directory.glob("rpc-*.json"):
+        try:
+            paths = list(directory.glob("rpc-*.json"))
+        except OSError:
+            return
+        for path in paths:
             try:
-                pid = json.loads(path.read_text(encoding="utf-8")).get("pid")
-            except (OSError, ValueError, AttributeError):
-                continue
-            if not isinstance(pid, int) or isinstance(pid, bool):
-                continue
-            try:
-                if pid == os.getpid() or pid_alive(pid):
-                    continue
-            except (OverflowError, ValueError):
-                # A corrupt pid beyond the platform's range: keep the file.
-                continue
-            try:
-                path.unlink()
-            except OSError:
-                pass
+                RpcListener._sweep_one(path)
+            except Exception:  # noqa: BLE001 - a bad file must never stop the bridge start
+                logger.warning("discovery sweep kept %s after an error", path.name, exc_info=True)
+
+    @staticmethod
+    def _sweep_one(path: Path) -> None:
+        try:
+            pid = json.loads(path.read_text(encoding="utf-8")).get("pid")
+        except (OSError, ValueError, AttributeError):
+            return
+        if not isinstance(pid, int) or isinstance(pid, bool):
+            return
+        # A pid beyond the platform's range raises from pid_alive; the caller keeps the file.
+        if pid == os.getpid() or pid_alive(pid):
+            return
+        try:
+            path.unlink()
+        except OSError:
+            pass
 
     def _delete_discovery(self) -> None:
         path = self._discovery_path

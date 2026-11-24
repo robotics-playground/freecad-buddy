@@ -1046,3 +1046,26 @@ def test_should_end_the_idle_serving_thread_when_stop_runs(tmp_path):
 
     # Assert
     assert not serving.is_alive()
+
+
+def test_Should_bind_and_write_the_own_file_When_a_discovery_file_is_nested_too_deep(
+    tmp_path, monkeypatch, caplog
+):
+    # Arrange
+    directory = _bind_with_alive_pids(monkeypatch, tmp_path, alive_pids=set())
+    nested = directory / "rpc-99999999.json"
+    nested.write_text("[" * 200_000, encoding="utf-8")
+    target = RpcListener(
+        _fake_registry(), Marshal(ThreadedExecutor()), TOKEN, appdata_dir=str(tmp_path)
+    )
+
+    # Act
+    with caplog.at_level(logging.WARNING, logger=_LISTENER_LOGGER):
+        target.bind()
+    own_file_written = (directory / f"rpc-{os.getpid()}.json").exists()
+    target.stop()
+
+    # Assert
+    assert own_file_written
+    assert nested.exists()
+    assert "discovery sweep kept rpc-99999999.json after an error" in caplog.text

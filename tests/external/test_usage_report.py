@@ -97,10 +97,10 @@ def test_Should_not_count_an_api_request_blob_When_it_repeats_a_tool_use(tmp_pat
 def test_Should_include_both_boundary_days_When_the_range_is_inclusive(tmp_path):
     # Arrange
     records = [
-        *_call("before", "document_list", _envelope(), stamp="2026-10-17T23:59:59Z"),
-        *_call("first", "document_list", _envelope(), stamp="2026-10-18T00:00:00Z"),
-        *_call("last", "document_list", _envelope(), stamp="2026-11-18T23:59:59Z"),
-        *_call("after", "document_list", _envelope(), stamp="2026-11-19T00:00:00Z"),
+        *_call("before", "tool_before", _envelope(), stamp="2026-10-17T23:59:59Z"),
+        *_call("first", "tool_first", _envelope(), stamp="2026-10-18T00:00:00Z"),
+        *_call("last", "tool_last", _envelope(), stamp="2026-11-18T23:59:59Z"),
+        *_call("after", "tool_after", _envelope(), stamp="2026-11-19T00:00:00Z"),
     ]
     _write(tmp_path / "aaa.jsonl", records)
 
@@ -108,7 +108,7 @@ def test_Should_include_both_boundary_days_When_the_range_is_inclusive(tmp_path)
     target = _report(tmp_path)
 
     # Assert
-    assert len(target.calls) == 2
+    assert {call.tool for call in target.calls} == {"tool_first", "tool_last"}
 
 
 def test_Should_report_boundary_day_calls_under_both_offsets_When_a_call_crosses_midnight(tmp_path):
@@ -511,3 +511,106 @@ def test_Should_ignore_tool_searches_outside_the_range_and_repeated_ones_When_co
     assert "1 transcripts load freecad-buddy tools." in text
     assert "| `document_list` | 1 | 1 |" in text
     assert "| `script_exec` | 0 | 1 |" not in text
+
+
+def test_Should_match_the_loft_class_When_the_code_creates_a_partdesign_or_part_loft_shape(
+    tmp_path,
+):
+    # Arrange
+    codes = [
+        "body.newObject('PartDesign::AdditiveLoft', 'A')",
+        "body.newObject('PartDesign::SubtractivePipe', 'B')",
+        "body.newObject('PartDesign::AdditiveHelix', 'C')",
+        "body.newObject('PartDesign::Thickness', 'D')",
+        "doc.addObject('Part::Loft', 'E')",
+        "Part.makePipeShell([w], True, False)",
+        "name = 'Loft_FloorCavity'",
+    ]
+    records = [
+        record
+        for index, code in enumerate(codes)
+        for record in _call(f"id-{index}", "script_exec", _envelope(), code=code)
+    ]
+    _write(tmp_path / "aaa.jsonl", records)
+
+    # Act
+    text = usage_report.render(_report(tmp_path))
+
+    # Assert
+    assert "| Loft, sweep, helix, thickness | 6 |" in text
+
+
+def test_Should_count_a_timeout_in_the_row_of_its_own_tool_When_a_typed_tool_times_out(tmp_path):
+    # Arrange
+    message = "marshaled call timed out after 30 s"
+    records = [
+        *_call("id-1", "query_tree_summary", [{"type": "text", "text": f"TIMEOUT: {message}"}]),
+        *_call("id-2", "script_exec", _envelope("TIMEOUT", message), code="x"),
+    ]
+    _write(tmp_path / "aaa.jsonl", records)
+
+    # Act
+    text = usage_report.render(_report(tmp_path))
+
+    # Assert
+    assert "| `script_exec` timeout | 1 |" in text
+    assert "| `query_tree_summary` | 1 | 0 | TIMEOUT 1 |" in text
+    assert "| Not OK, no class above (includes calls with no outcome) | 1 |" in text
+
+
+def test_Should_count_a_call_of_every_server_whose_name_contains_freecad_buddy(tmp_path):
+    # Arrange
+    records = [
+        *_call("id-1", "document_list", _envelope()),
+        _use("id-2", "mcp__freecad-buddy-docker__document_list", "2026-11-01T10:00:00Z"),
+        _result("id-2", _envelope()),
+        _use("id-3", "mcp__other-server__document_list", "2026-11-01T10:00:00Z"),
+        _result("id-3", _envelope()),
+    ]
+    _write(tmp_path / "aaa.jsonl", records)
+
+    # Act
+    target = _report(tmp_path)
+    text = usage_report.render(target)
+
+    # Assert
+    assert sorted(call.server for call in target.calls) == ["freecad-buddy", "freecad-buddy-docker"]
+    assert "- Servers: `freecad-buddy` 1, `freecad-buddy-docker` 1." in text
+
+
+def test_Should_count_a_mutation_as_mutating_When_it_follows_a_semicolon_on_one_line(tmp_path):
+    # Arrange
+    records = [
+        *_call("id-1", "script_exec", _envelope(), code="o = doc.getObject('A'); o.Placement = P"),
+        *_call(
+            "id-2",
+            "script_exec",
+            _envelope(),
+            code="o = doc.getObject('A'); print(o.Shape.Volume == 1)",
+        ),
+        *_call("id-3", "script_exec", _envelope(), code="d['k'].v = 1"),
+        *_call("id-4", "script_exec", _envelope(), code="o.Length += 1"),
+        *_call("id-5", "script_exec", _envelope(), code="f(a=1); g.h(b=2)"),
+    ]
+    _write(tmp_path / "aaa.jsonl", records)
+
+    # Act
+    text = usage_report.render(_report(tmp_path))
+
+    # Assert
+    assert "Read-only 2 (40% of calls), mutating 3." in text
+
+
+def test_Should_pair_a_result_with_its_call_When_the_result_file_sorts_before_the_call_file(
+    tmp_path,
+):
+    # Arrange
+    use, result = _call("id-1", "document_list", _envelope())
+    _write(tmp_path / "aaa.jsonl", [result])
+    _write(tmp_path / "bbb.jsonl", [use])
+
+    # Act
+    target = _report(tmp_path)
+
+    # Assert
+    assert [call.status for call in target.calls] == ["OK"]
