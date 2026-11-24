@@ -39,12 +39,12 @@ add-on, which auto-starts the server, then point your MCP client at it.
   geometry a stand-in doesn't — drop to a documented simplified envelope only when
   no match exists and an assembly-time reason justifies it, and record the miss.
 - Import a sourced part **with `script_exec` on the live document**, because no typed
-  tool imports a STEP file (a gap in `freecad-scripting-idioms`
-  `references/gap-list.md`, which holds the import script). Say so before you call
+  tool imports a STEP file (a gap in `freecad-scripting-idioms`,
+  whose gap list holds the import script). Say so before you call
   it, then check each imported solid with `verify_shape`. If `query_capabilities`
-  reports `exec_enabled: false`, report the import as blocked. Never import through a
-  separate `freecadcmd` run beside the live GUI: the GUI keeps its own copy of the
-  document.
+  reports `exec_enabled: false`, use the headless route in `freecad-scripting-idioms`. Never
+  import through a `freecadcmd` run while the GUI has the document open: the GUI keeps
+  its own copy of the document.
 - **Measure an imported part before trusting its frames.** Its origin and
   orientation were authored elsewhere and are not assumed — run
   `query_mass_properties` and `query_placement` on it, then derive its mating frames

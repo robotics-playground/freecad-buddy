@@ -4,7 +4,7 @@ Read this before every `script_exec` call. Find the operation in the table. A ro
 tool covers it today, so `script_exec` is the route. No row: look for a typed tool in your tool
 list and use it. If none exists, the list is out of date: report the missing row. State the
 missing typed tool in one sentence before you send the script. When `query_capabilities` reports
-`exec_enabled: false`, report the operation as blocked.
+`exec_enabled: false`, use the headless route in `SKILL.md`, which names its limits.
 
 ## Covered: do not script
 
@@ -12,11 +12,11 @@ missing typed tool in one sentence before you send the script. When `query_capab
 |-----------|-------------|
 | Read bounding box, volume, area, centre of mass, solid count of one object | `query_mass_properties` (one `object` per call) |
 | Check validity, solid count, watertight, bbox, extent, volume, hole count, diameter, position and spacing, distance and angle between selectors | `verify_shape` (`checks` items `{"fn": ..., "expect": ...}`) |
-| Read property values | `query_object` |
+| Read property values and bound expressions (`ExpressionEngine`) | `query_object` |
 | Read a placement, a sketch's geometry and constraints, dependency links, failing objects | `query_placement`, `query_sketch_info`, `query_dependencies`, `verify_recompute` |
-| Sketch geometry and constraints (line, circle, arc, point) | `sketch_*` |
+| Sketch geometry (line, circle, arc, point) and constraints, including a fixed point by `DistanceX` plus `DistanceY` | `sketch_*` |
 | PartDesign body, pad, pocket, hole, fillet, chamfer, revolve, pattern, mirror, datum | `feature_*` |
-| Write a boolean, number, quantity or enum property of a feature | `feature_set_parameters` |
+| Write a boolean, number, quantity or enum property of a feature or a VarSet | `feature_set_parameters` |
 
 ## Gaps
 
@@ -25,12 +25,10 @@ missing typed tool in one sentence before you send the script. When `query_capab
 | Delete an object | none | `doc.removeObject(name)`; for a Body feature, `body.removeObject(feature)` first, then `doc.removeObject(feature.Name)` |
 | Write a placement or `AttachmentOffset` | none (`feature_set_parameters` refuses `App::PropertyPlacement`) | set `obj.Placement` or `obj.AttachmentOffset` |
 | Rename a `Label` | none | set `obj.Label` |
-| Create a VarSet property, set a VarSet value, bind an expression | none (`feature_set_parameters` targets features) | `addProperty`, `setattr`, `setExpression` |
-| Read the expression bound to a property | none (`query_object` returns values only) | read `obj.ExpressionEngine` |
+| Create a VarSet, add a property to it, bind an expression | none | `doc.addObject("App::VarSet", ...)`, `addProperty`, `setExpression` |
 | Part primitives and booleans (`Part::Box`, `Part::Cut`, `Part::Common`) | none | `doc.addObject` |
 | Loft, sweep, helix, thickness | none | `doc.addObject` or `body.newObject` |
 | Groove (subtractive revolve), PartDesign primitives | none | `body.newObject("PartDesign::Groove")`, `body.newObject("PartDesign::AdditiveBox")` |
-| Sketch constraint outside the `sketch_add_constraint` types (for example `Lock`) | none | `sketch.addConstraint` |
 | Ellipse or B-spline sketch geometry | none (`sketch_add_geometry` takes line, circle, arc, point) | `sketch.addGeometry` |
 | `App::Link` or clone | none | `doc.addObject("App::Link", ...)` |
 | Measure across objects: interference volume, distance between shapes | none | `a.common(b).Volume`, `a.distToShape(b)` |
@@ -57,9 +55,9 @@ doc.recompute()
 result = [o.Name for o in doc.Objects if o.Name not in before]
 ```
 
-`result` lists the new objects. A multi-body STEP creates a container: measure each leaf solid
-with `query_mass_properties`, because a container carries no shape. Check validity with
-`verify_shape` `is_valid_solid` on each leaf.
+`result` lists the new objects. A multi-body STEP creates an `App::Part` container that has its own shape: measure each leaf
+solid with `query_mass_properties` to check each body. Check validity with `verify_shape`
+`is_valid_solid` on each leaf.
 
 ## Traced outline route
 
