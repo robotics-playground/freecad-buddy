@@ -33,6 +33,13 @@ _ANGLE_UNITS = frozenset({"deg"})
 _LENGTH_UNITS = frozenset({"mm"})
 
 _BODY_TYPE = "PartDesign::Body"
+_ORIGIN_TYPE = "App::Origin"
+_LINK_TYPE = "App::Link"
+
+# Types that carry ``App::GroupExtension`` but whose ``Group`` is an operand list, not a member
+# list: a ``PartDesign::Boolean`` keeps the Bodies it fuses, cuts or intersects there (probed on
+# 1.1.4: ``hasExtension("App::GroupExtension")`` is true for it).
+_OPERAND_GROUP_TYPES = ("PartDesign::Boolean",)
 _FEATURE_BASE_TYPE = "PartDesign::FeatureBase"
 
 # FreeCAD rewrites any character outside this set when it names an object, so a name failing the
@@ -357,6 +364,7 @@ def _feature_mutation(
     precheck: Callable[[object], None] | None = None,
     report: Callable[[object], dict] | None = None,
     state_probe: Callable[[object], object] | None = None,
+    deleted: set[str] | None = None,
 ) -> ResultEnvelope:
     """Run ``op`` through the mutation bracket and attach the post-op ``feature_state``.
 
@@ -372,6 +380,8 @@ def _feature_mutation(
     :param report: for an op that creates no shape: reads the fields to add to an ``OK`` result
         from the returned document, in place of ``feature`` and ``feature_state``.
     :param state_probe: reads state the shape fingerprint cannot see; passed to ``run_mutation``.
+    :param deleted: the names ``op`` deletes on purpose, filled by ``precheck``; read when the
+        bracket opens and passed to ``run_mutation``.
     :raises ValidationError: the call carries no confirm authorizing it, or the request is
         malformed; neither writes a snapshot nor opens a transaction.
     """
@@ -395,6 +405,7 @@ def _feature_mutation(
             params=params,
             fp_before=fp_before,
             state_probe=state_probe,
+            deleted=frozenset(deleted or ()),
         )
         rebound.append(result[0])
         # The reported state is read here, in the window that produced it: reading it after this
@@ -2297,4 +2308,264 @@ def feature_parameters_define(
         precheck,
         report,
         _varset_state(varset),
+    )
+
+
+# --------------------------------------------------------------------------------------------
+# Object deletion
+# --------------------------------------------------------------------------------------------
+
+
+class ObjectDeleteRefusal(CodedValidationError):
+    """A refused ``document_object_delete`` request, carrying its ``detail.code`` (AD-17)."""
+
+
+def _names(objects: object) -> set[str]:
+    return {obj.Name for obj in objects or ()}
+
+
+def _origin_objects(owner: object) -> list[object]:
+    """Return the origin objects ``owner`` owns: its ``App::Origin`` and that Origin's features.
+
+    A Part::LocalCoordinateSystem carries its axes and planes itself (``OriginFeatures`` with no
+    ``Origin`` link). The ``Origin`` attribute is checked by type: a FEM post function has an
+    ``Origin`` property that is a vector.
+    """
+    origin = getattr(owner, "Origin", None)
+    if getattr(origin, "TypeId", None) == _ORIGIN_TYPE:
+        return [origin, *(origin.OriginFeatures or ())]
+    return list(getattr(owner, "OriginFeatures", None) or ())
+
+
+def _origin_owner(document: object, obj: object) -> object | None:
+    """Return the object that owns the origin object ``obj``; ``None`` when ``obj`` is not one.
+
+    A Body, Part or local coordinate system owns axes, planes and a point. Deleting one of them
+    alone leaves the owner without a plane the sketches attach to.
+    """
+    for candidate in document.Objects:
+        if candidate.TypeId == _ORIGIN_TYPE or candidate.Name == obj.Name:
+            continue
+        if obj.Name in _names(_origin_objects(candidate)):
+            return candidate
+    return None
+
+
+def _owned_by(owner: object) -> list[object]:
+    """Return what deleting ``owner`` takes with it: a Body's group, and its origin objects."""
+    owned = []
+    if owner.TypeId == _BODY_TYPE:
+        owned.extend(owner.Group)
+    owned.extend(_origin_objects(owner))
+    if owner.isDerivedFrom(_LINK_TYPE) and owner.ElementCount:
+        # The GUI delete removes the elements of a link array with it (ViewProviderLink::onDelete).
+        owned.extend(owner.ElementList)
+    return owned
+
+
+def _with_owned(document: object, names: set[str]) -> set[str]:
+    """Return ``names`` plus everything the Bodies and Parts among them own."""
+    expanded = set(names)
+    for name in names:
+        expanded.update(_names(_owned_by(document.getObject(name))))
+    return expanded
+
+
+def _is_member_container(obj: object) -> bool:
+    """Whether ``obj`` only lists members in ``Group``: a Body, Part, group or a subclass of one."""
+    return obj.hasExtension("App::GroupExtension") and not any(
+        obj.isDerivedFrom(type_id) for type_id in _OPERAND_GROUP_TYPES
+    )
+
+
+def _expression_names(obj: object, members: list[object]) -> bool:
+    """Whether an expression on ``obj`` names one of ``members``, by Name or as ``<<Label>>``.
+
+    A Name counts at the start of an identifier path only, so ``VS.Pad2`` (a property of another
+    object) does not name the object ``Pad2``. A match that is not a real reference makes the
+    caller refuse, which is the safe side.
+    """
+    for _path, expression in getattr(obj, "ExpressionEngine", None) or ():
+        text = str(expression)
+        for member in members:
+            by_name = rf"(?<![A-Za-z0-9_.#]){re.escape(member.Name)}(?![A-Za-z0-9_])"
+            if re.search(by_name, text) or f"<<{member.Label}>>" in text:
+                return True
+    return False
+
+
+def _dependents(document: object, delete_set: set[str]) -> list[str]:
+    """Return the objects outside ``delete_set`` whose ``OutList`` holds a member of it.
+
+    A pure container (a Body, Part or group) that holds a member only in its ``Group`` is not a
+    dependent: removing the member leaves the container valid. Any other holder is, including a
+    ``PartDesign::Boolean``, whose ``Group`` is its list of operand Bodies. A container with an
+    expression that names a member is a dependent too, because the expression fails once the
+    member is gone. ``OutList`` includes the objects an expression names, so an object bound to a
+    deleted one is a dependent.
+    """
+    found = []
+    for obj in document.Objects:
+        if obj.Name in delete_set:
+            continue
+        held = _names(obj.OutList) & delete_set
+        if not held:
+            continue
+        only_members = _is_member_container(obj) and held <= _names(obj.Group)
+        if only_members and not _expression_names(obj, [document.getObject(n) for n in held]):
+            continue
+        found.append(obj.Name)
+    return found
+
+
+def _delete_plan(
+    document: object, objects: object, with_dependents: bool
+) -> tuple[list[str], list[str]]:
+    """Return ``(names to delete, names deleted only as dependents)``, both in document order.
+
+    :raises ValidationError: ``objects`` is empty or malformed, or names an unknown object.
+    :raises ObjectDeleteRefusal: ``delete.origin_object`` for an Origin or Origin feature whose
+        owner is not deleted too; ``delete.has_dependents`` when objects outside the set depend on
+        it and ``with_dependents`` is false.
+    """
+    if not isinstance(objects, list) or not objects:
+        raise ValidationError("objects must be a non-empty list of object names")
+    requested = {_resolve_object(document, name, "objects").Name for name in objects}
+    for name in sorted(requested):
+        owner = _origin_owner(document, document.getObject(name))
+        if owner is not None and owner.Name not in requested:
+            raise ObjectDeleteRefusal(
+                "delete.origin_object",
+                f"{name} belongs to the Origin of {owner.Name}; delete {owner.Name} to remove it",
+            )
+    base_set = _with_owned(document, requested)
+    delete_set = set(base_set)
+    dependents = _dependents(document, delete_set)
+    if dependents and not with_dependents:
+        raise ObjectDeleteRefusal(
+            "delete.has_dependents",
+            f"objects that depend on the delete set: {', '.join(dependents)}; "
+            "pass with_dependents true to delete them too",
+        )
+    while dependents:
+        delete_set = _with_owned(document, delete_set | set(dependents))
+        dependents = _dependents(document, delete_set)
+    ordered = [obj.Name for obj in document.Objects if obj.Name in delete_set]
+    return ordered, [name for name in ordered if name not in base_set]
+
+
+def _owning_body(document: object, obj: object) -> object | None:
+    """Return the Body whose ``Group`` holds ``obj``, or ``None``."""
+    for candidate in document.Objects:
+        if candidate.TypeId == _BODY_TYPE and obj.Name in _names(candidate.Group):
+            return candidate
+    return None
+
+
+def _object_state(document: object) -> tuple:
+    """Read the object set the shape fingerprint cannot see, for the rollback proof.
+
+    Per object: name, label, type, the names it depends on, for a Body its ``Tip`` and ``Group``,
+    and ``Visibility``. The dependency names matter: an object that FreeCAD restores without its
+    expression dependency has the same name and label as before.
+    """
+    state = []
+    for obj in document.Objects:
+        body_state = ()
+        if obj.TypeId == _BODY_TYPE:
+            tip = obj.Tip.Name if obj.Tip is not None else None
+            body_state = (tip, tuple(member.Name for member in obj.Group))
+        state.append(
+            (
+                obj.Name,
+                obj.Label,
+                obj.TypeId,
+                tuple(sorted(_names(obj.OutList))),
+                body_state,
+                getattr(obj, "Visibility", None),
+            )
+        )
+    return tuple(sorted(state))
+
+
+def document_object_delete(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    objects: list | None = None,
+    with_dependents: bool = False,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Delete objects, and with them what a Body, Part or link array owns, inside the AD-5 bracket.
+
+    A Body takes its ``Group`` members, its Origin and the Origin features with it. A feature of a
+    Body that stays goes through ``Body.removeObject`` first, so ``Tip`` and the next feature's
+    ``BaseFeature`` stay valid. Objects outside the delete set whose ``OutList`` holds a deleted
+    object are dependents: with ``with_dependents`` false any dependent refuses the call, with
+    true the closure of dependents is deleted too. ``deleted`` on an ``OK`` result names every
+    removed object in document order and ``dependents`` the ones removed only for that reason.
+
+    The rollback proof reads the object set back (``_object_state``), because a deleted shape-less
+    object does not change the shape fingerprint.
+
+    :raises ValidationError: ``objects`` is empty or names an unknown object.
+    :raises ObjectDeleteRefusal: ``delete.has_dependents`` or ``delete.origin_object``; the
+        dispatcher puts the code in ``detail.code``.
+    """
+    plan: dict[str, list[str]] = {"deleted": [], "dependents": []}
+    deleted: set[str] = set()
+
+    def precheck(document: object) -> None:
+        plan["deleted"], plan["dependents"] = _delete_plan(document, objects, with_dependents)
+        deleted.update(plan["deleted"])
+
+    def op(document: object) -> list[str]:
+        touched = list(plan["deleted"])
+        for name in reversed(plan["deleted"]):
+            target = document.getObject(name)
+            if target is None:
+                # Removing a Body can remove its Origin and members first; that is the delete
+                # this loop is carrying out, and the survivors check below still runs.
+                continue
+            body = _owning_body(document, target)
+            if body is not None and body.Name not in deleted:
+                previous = getattr(target, "BaseFeature", None)
+                shown = target.Visibility
+                body.removeObject(target)
+                if shown and previous is not None and previous.Name not in deleted:
+                    # PartDesign ViewProvider::onDelete shows the previous feature when the
+                    # deleted one was visible; Document.removeObject alone leaves the Body empty.
+                    previous.Visibility = True
+                    touched.append(previous.Name)
+                if body.Name not in touched:
+                    touched.append(body.Name)
+            document.removeObject(name)
+        survivors = [name for name in plan["deleted"] if document.getObject(name) is not None]
+        if survivors:
+            raise RuntimeError(f"FreeCAD did not delete: {', '.join(survivors)}")
+        return touched
+
+    def report(_document: object) -> dict:
+        return dict(plan)
+
+    params = {
+        "doc": doc,
+        "objects": objects,
+        "with_dependents": with_dependents,
+        "confirm": confirm,
+    }
+    first = objects[0] if isinstance(objects, list) and objects else ""
+    return _feature_mutation(
+        registry,
+        doc,
+        first,
+        f"delete {', '.join(map(str, objects or ()))}",
+        "document_object_delete",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        report,
+        _object_state,
+        deleted,
     )

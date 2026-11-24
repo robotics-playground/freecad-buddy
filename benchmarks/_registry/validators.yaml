@@ -94,7 +94,7 @@ assertions:
 
 audit_references:
   suite: g2/fault-injection/
-  validator_sha: "a1de7077c2ad7ab91e07f26b8851620024d3bd1d7e89950c929d6e069340cc5a"
+  validator_sha: "8cf8cba61f28c4528b88249453cbfdc3bf491dadb9b640937924fb8ceb97adf9"
   last_run:
     run_id: g2-2026-11-24-1
     sensitivity: 1.0
@@ -126,7 +126,7 @@ fingerprint:
 
 run_mutation:
   suite: g2/fault-injection/
-  validator_sha: "275cea1b2b818b25543bad8f9fc7bc9322c39d025e07cd18f274302099eb0227"
+  validator_sha: "f47318ce11e81f2d1430c7761d87cac80f934d89476e786a81a6b5c6bfc43c83"
   last_run:
     run_id: g2-2026-11-24-1
     sensitivity: 0.0

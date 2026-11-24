@@ -18,7 +18,7 @@ in `src/freecad_buddy/`. "Not in `tool_specs()`" means the tool name never reach
 | `skills_loader.py` | Epic 5 | Module absent. | The loader ships and skills are loaded at runtime, not only read by agents. |
 | `robot_export.py` | Epic 6 | Module absent. | The export path ships and produces a verifiable artifact. |
 | `part_import.py` | Epic 6 | Module absent. | The import path ships and has an oracle to verify against. |
-| `document_object_delete` | Epic 2 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-02. |
+| `document_object_delete` | Epic 2 | Shipped by Epic 13 Story 13-11; in `tool_specs()`. No TC-02 case yet. | Add to TC-02: delete with and without `with_dependents`, then `document_undo`. |
 | `query_tree_children` | Epic 2 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-02. |
 | `query_parameters` | Epic 2 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-04. |
 | `verify_fingerprint` | Epic 3 | Planned, not shipped. Not in `tool_specs()`. | The tool appears in `tools/list`; add to TC-07. |

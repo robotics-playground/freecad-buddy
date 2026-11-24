@@ -9,7 +9,7 @@ probe that cannot run returns a conservative default rather than raising.
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Callable, Literal, TypeVar
@@ -421,6 +421,33 @@ def enable_undo(doc: object) -> bool:
     except Exception:  # noqa: BLE001 - a build that rejects the write leaves undo as it was
         pass
     return bool(getattr(doc, "UndoMode", 0))
+
+
+def relink_expressions(doc: object, names: Iterable[str]) -> list[tuple[str, str, str]]:
+    """Re-apply the expression bindings of the objects ``names``; return the ones that failed.
+
+    FreeCAD restores a deleted object's ``ExpressionEngine`` text on undo or abort but not its
+    dependency on the bound object: ``OutList`` lacks the target and a change to the source no
+    longer drives the property (measured on 1.1.4: ``Pad.Length = VS.L``, ``VS.L`` 3 to 7, the pad
+    stays 3). Writing the same text again is skipped as unchanged, so each binding is cleared and
+    set. Outside a transaction neither write records an undo step or empties the redo stack
+    (measured: ``UndoCount`` and ``RedoCount`` equal before and after).
+
+    :return: ``(object name, property path, expression text)`` for each binding that could not be
+        set again; the binding is then cleared, so the text is what the caller needs to restore it.
+    """
+    failed: list[tuple[str, str, str]] = []
+    for name in names:
+        obj = doc.getObject(name)
+        if obj is None:
+            continue
+        for path, expression in list(getattr(obj, "ExpressionEngine", None) or []):
+            try:
+                obj.setExpression(path, None)
+                obj.setExpression(path, expression)
+            except Exception:  # noqa: BLE001 - one unparsable binding must not stop the others
+                failed.append((name, str(path), str(expression)))
+    return failed
 
 
 @lru_cache(maxsize=1)

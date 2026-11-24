@@ -2271,3 +2271,21 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `feature_parameters_define` now adds the property; `feature_set_expression` is Story 13-10.
   blocker: Story 13-12 owns the skill routing text.
   unblock: Story 13-12.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: `document_object_delete` does not scan objects in other open documents that link to a deleted object.
+  evidence: `_dependents` reads `document.Objects` only; an `App::Link` or XLink in another document breaks silently (edge-case lens, probed on 1.1).
+  blocker: needs a cross-document `InList` scan and a decision on refusing versus listing.
+  unblock: a real multi-document case.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: Unverified (medium): the expression re-link may add an undo step or clear redo in the GUI host.
+  evidence: measured only under `FreeCADCmd` (UndoCount and RedoCount equal before and after); `Document::_checkTransaction` opens a transaction when the application has an active transaction name, which a GUI command sets.
+  blocker: needs the container GUI.
+  unblock: container UAT reads UndoCount and RedoCount after `document_undo` of a bound-pad delete.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-11-object-delete.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md` and `SKILL.md` still route object deletion to `script_exec`.
+  evidence: `document_object_delete` now ships.
+  blocker: Story 13-12 owns the skill routing text.
+  unblock: Story 13-12.
