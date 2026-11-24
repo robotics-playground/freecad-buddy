@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import math
 import re
+import time
+from collections.abc import Callable
 from typing import Literal
 
 from freecad_buddy.contracts import CapabilityBanner, ResultEnvelope, summary_text
@@ -686,11 +688,12 @@ _CONTACT_DISTANCE_MM = 1e-7
 # for minutes in the container). Realistic parts sit far below it: a plate with 81 holes has 87
 # faces.
 _MAX_PAIR_FACE_PRODUCT = 150_000
-# Largest sum of faces(a) x faces(b) over every measured pair of one call. The same dense layout
-# costs about 80 microseconds per unit (230,400 -> 17.8 s), so 300,000 keeps a call near 24 s,
-# well inside the 60 s budget even when one slow host doubles it. A call of 190 pairs of
-# 20-face parts totals 76,000.
-_MAX_TOTAL_FACE_PRODUCT = 300_000
+# A call stops between pairs once this much time has passed. Worst case is this deadline plus one
+# pair at the per-pair limit (about 12 s on the development host: 129,600 -> 9.5 s, 230,400 ->
+# 17.8 s in the dense layout, and the limit is 150,000), which stays under the 60 s query budget.
+# Face counts are a poor cost proxy across layouts (87-face plates cost about 12 microseconds per
+# unit, dense boxes about 80), so the sum of a call is bounded by time, not by faces.
+_CALL_DEADLINE_SECONDS = 40.0
 
 
 def summarize_interference(sc: dict) -> str:
@@ -838,27 +841,19 @@ def _too_complex_envelope(message: str) -> ResultEnvelope:
     }
 
 
-def _complexity_refusal(
+def _pair_complexity_refusal(
     name_pairs: list[tuple[str, str]], face_counts: dict[str, int], measurable: dict[str, bool]
 ) -> ResultEnvelope | None:
-    """A refusal when one pair, or the sum over all measured pairs, is above its face limit."""
-    total = 0
+    """A refusal naming the first measured pair whose face product is above the per-pair limit."""
     for name_a, name_b in name_pairs:
         if not (measurable[name_a] and measurable[name_b]):
             continue
-        work = face_counts[name_a] * face_counts[name_b]
-        if work > _MAX_PAIR_FACE_PRODUCT:
+        if face_counts[name_a] * face_counts[name_b] > _MAX_PAIR_FACE_PRODUCT:
             return _too_complex_envelope(
                 f"pair {name_a}/{name_b} is too complex to measure: {face_counts[name_a]} and "
                 f"{face_counts[name_b]} faces, limit {_MAX_PAIR_FACE_PRODUCT} for their product. "
                 "Measure simpler shapes, or fewer faces per object."
             )
-        total += work
-    if total > _MAX_TOTAL_FACE_PRODUCT:
-        return _too_complex_envelope(
-            f"the call is too complex to measure: its pairs total {total} (faces of a times "
-            f"faces of b, summed), limit {_MAX_TOTAL_FACE_PRODUCT}. Query fewer pairs per call."
-        )
     return None
 
 
@@ -867,6 +862,7 @@ def query_interference(
     doc: str | None = None,
     objects: list[str] | None = None,
     pairs: list[list[str]] | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> ResultEnvelope:
     """Measure common volume and minimum distance for object pairs.
 
@@ -878,7 +874,8 @@ def query_interference(
     distance is unknown: an empty result must never read as no overlap. Reports numbers only,
     never a verdict. Raises ``ValidationError`` for bad input, an unknown name, or an object with
     no shape, and returns ``INVALID_INPUT`` with code ``interference.too_complex`` for a pair above
-    ``_MAX_PAIR_FACE_PRODUCT``, or a call above ``_MAX_TOTAL_FACE_PRODUCT``.
+    ``_MAX_PAIR_FACE_PRODUCT``, or for a call still measuring after ``_CALL_DEADLINE_SECONDS`` as
+    read from ``clock``.
     """
     name_pairs = _interference_pairs(objects, pairs)
 
@@ -889,11 +886,17 @@ def query_interference(
         # The trust check runs once per object, not per pair: 20 plates and 190 pairs took 10.7 s
         # with it per object and 69.7 s with it per pair.
         face_counts = {name: len(shape.Faces) for name, shape in shapes.items()}
-        refusal = _complexity_refusal(name_pairs, face_counts, measurable)
+        refusal = _pair_complexity_refusal(name_pairs, face_counts, measurable)
         if refusal is not None:
             return refusal
         records = []
+        started = clock()
         for name_a, name_b in name_pairs:
+            if clock() - started > _CALL_DEADLINE_SECONDS:
+                return _too_complex_envelope(
+                    f"stopped after {len(records)} of {len(name_pairs)} pairs; "
+                    "measure fewer pairs per call"
+                )
             if measurable[name_a] and measurable[name_b]:
                 volume, distance, failed = _measure_interference(shapes[name_a], shapes[name_b])
             else:

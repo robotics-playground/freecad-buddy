@@ -1043,31 +1043,36 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertEqual(envelope["status"], "OK")
         self.assertFalse(envelope["structured_content"]["pairs"][0]["boolean_failed"])
 
-    def test_Should_refuse_the_call_naming_the_total_When_the_pairs_sum_above_the_limit(self):
+    def test_Should_stop_with_a_code_and_the_count_When_the_deadline_passes_between_pairs(self):
         # Arrange
         for index in range(4):
             self._add_box(f"Box{index}", index * 30)
-        target = self._dispatch()
         names = [f"Box{index}" for index in range(4)]
+        ticks = iter([0.0, 0.0, 10.0, 41.0, 41.0])
 
         # Act
-        with mock.patch.object(queries, "_MAX_TOTAL_FACE_PRODUCT", 6 * 36 - 1):
-            envelope = target.dispatch("query_interference", {"doc": self.handle, "objects": names})
+        envelope = queries.query_interference(
+            self.registry, doc=self.handle, objects=names, clock=lambda: next(ticks)
+        )
 
         # Assert
         self.assertEqual(envelope["status"], "INVALID_INPUT")
         self.assertEqual(envelope["detail"]["code"], "interference.too_complex")
-        self.assertIn("pairs total 216", envelope["detail"]["message"])
+        self.assertEqual(
+            envelope["detail"]["message"],
+            "stopped after 2 of 6 pairs; measure fewer pairs per call",
+        )
 
-    def test_Should_measure_the_call_When_the_pairs_sum_to_the_limit(self):
+    def test_Should_measure_every_pair_When_the_clock_stays_inside_the_deadline(self):
         # Arrange
         for index in range(4):
             self._add_box(f"Box{index}", index * 30)
         names = [f"Box{index}" for index in range(4)]
 
         # Act
-        with mock.patch.object(queries, "_MAX_TOTAL_FACE_PRODUCT", 6 * 36):
-            envelope = self._measure(objects=names)
+        envelope = queries.query_interference(
+            self.registry, doc=self.handle, objects=names, clock=lambda: 40.0
+        )
 
         # Assert
         self.assertEqual(envelope["status"], "OK")
