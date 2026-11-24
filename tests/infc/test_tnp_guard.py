@@ -969,3 +969,91 @@ class MutationRollbackTest(_BodyFixture):
         ]
         self.assertEqual(flagged, [], "the op wrote the shorter list, so it is the intended target")
         self.assertEqual(envelope["status"], "OK")
+
+
+class ExpressionBindingTest(unittest.TestCase):
+    """An ``ExpressionEngine`` binding is a reference record keyed by its property path."""
+
+    BOUND_RECORD = "ExpressionEngine[Length]"
+
+    def setUp(self):
+        self.document = App.newDocument("tnp_expression")
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyLength", "width", "Parameters", "")
+        varset.width = 12.0
+        self.box = self.document.addObject("Part::Box", "Box")
+        self.box.setExpression("Length", "Params.width")
+        self.document.recompute()
+
+    def tearDown(self):
+        App.closeDocument(self.document.Name)
+
+    def _verdicts(self, audit):
+        return [f["verdict"] for f in audit["findings"] if f["prop"] == self.BOUND_RECORD]
+
+    def test_Should_pass_When_the_op_wrote_the_removal_of_a_binding(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, written)
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual(self._verdicts(audit), ["PASS"])
+
+    def test_Should_flag_broken_When_a_binding_vanishes_after_the_op_wrote_it(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        written = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, written)
+
+        # Assert
+        self.assertEqual(audit["status"], "FLAGGED")
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_flag_broken_When_no_written_reading_is_given(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", None)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot)
+
+        # Assert
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_flag_broken_When_the_owner_of_the_binding_is_removed(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.document.removeObject("Box")
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, written)
+
+        # Assert
+        self.assertEqual(self._verdicts(audit), ["BROKEN"])
+
+    def test_Should_stay_clean_When_a_binding_is_added_or_replaced(self):
+        # Arrange
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.box.setExpression("Length", "Params.width * 2")
+        self.box.setExpression("Height", "Params.width")
+        written = tnp_guard.snapshot_references(self.document)
+        self.document.recompute()
+
+        # Act
+        audit = tnp_guard.audit_references(self.document, snapshot, written)
+
+        # Assert
+        self.assertEqual(audit["status"], "CLEAN")

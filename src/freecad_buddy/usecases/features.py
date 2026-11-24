@@ -28,6 +28,7 @@ from freecad_buddy.usecases.documents import (
     ValidationError,
 )
 from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
+from freecad_buddy.usecases.queries import scalar_reading
 
 _ANGLE_UNITS = frozenset({"deg"})
 _LENGTH_UNITS = frozenset({"mm"})
@@ -2297,4 +2298,361 @@ def feature_parameters_define(
         precheck,
         report,
         _varset_state(varset),
+    )
+
+
+class ExpressionRefusal(CodedValidationError):
+    """A refused ``feature_set_expression`` request, carrying its ``detail.code`` (AD-17)."""
+
+
+_MAX_EXPRESSIONS = 100
+
+# FreeCAD ends the whole process (exit 139) while it parses an expression of chained binary
+# operators once it has enough terms. Probed on 1.1.4 with `evalExpression` on `1*1*...`: 500
+# terms pass and 600 (1,200 characters) crash; `1&&` fails at 550 terms (1,650 characters), `1+`
+# at 900; `1^` x 900 and `sin(` nested 300 deep (1,200 characters) pass, and parenthesis and
+# unary-minus nesting is refused by the parser at any depth. 400 characters hold at most 200
+# two-character terms, 2.7 times below the lowest crash.
+_MAX_EXPRESSION_LENGTH = 400
+
+_EXPRESSION_PATH = re.compile(r"\.?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*")
+_EXPRESSION_ITEM_KEYS = frozenset({"object", "path", "expression"})
+
+
+def _canonical_path(path: str) -> str:
+    """Return ``path`` without its leading dot; FreeCAD stores ``Placement.Base.x`` with one."""
+    return path.lstrip(".")
+
+
+def _expression_spec(raw: object, index: int) -> dict:
+    """Return one validated request item as ``{object, path, expression}``.
+
+    :raises ExpressionRefusal: the path or the expression text is not one FreeCAD stores as given.
+    :raises ValidationError: the item is not an object with exactly those three keys.
+    """
+    where = f"expressions[{index}]"
+    if not isinstance(raw, dict) or set(raw) != _EXPRESSION_ITEM_KEYS:
+        raise ValidationError(f"{where} must be an object with exactly object, path and expression")
+    name, path, text = raw["object"], raw["path"], raw["expression"]
+    if not isinstance(name, str) or not name:
+        raise ValidationError(f"{where}.object must be an object Name, got {name!r}")
+    if not isinstance(path, str) or not _EXPRESSION_PATH.fullmatch(path):
+        raise ExpressionRefusal(
+            "expression.invalid_path",
+            f"{where}.path {path!r} must be a property path such as Length, "
+            ".Constraints.width or .AttachmentOffset.Base.z",
+        )
+    if text is not None:
+        _check_expression_text(text, where)
+    return {"object": name, "path": path, "expression": text}
+
+
+def _check_expression_text(text: object, where: str) -> None:
+    """Refuse an expression text FreeCAD would cut, rewrite or crash on.
+
+    :raises ExpressionRefusal: ``expression.invalid_text``.
+    """
+    if not isinstance(text, str) or not text.strip():
+        raise ExpressionRefusal(
+            "expression.invalid_text",
+            f"{where}.expression must be a non-empty string, or null to clear the binding",
+        )
+    if len(text) > _MAX_EXPRESSION_LENGTH:
+        raise ExpressionRefusal(
+            "expression.invalid_text",
+            f"{where}.expression has {len(text)} characters; the limit is {_MAX_EXPRESSION_LENGTH} "
+            "because FreeCAD ends the process on a very long chained expression",
+        )
+    for position, character in enumerate(text):
+        if _unstorable(character):
+            raise ExpressionRefusal(
+                "expression.invalid_text",
+                f"{where}.expression holds U+{ord(character):04X} at index {position}, a "
+                "character FreeCAD cuts or changes when it stores the expression",
+            )
+
+
+def _expression_specs(expressions: object) -> list[dict]:
+    """Return every request item, validated, in request order.
+
+    :raises ExpressionRefusal: one object and path appear twice.
+    :raises ValidationError: the list is empty or too long, or an item is malformed.
+    """
+    if not isinstance(expressions, list) or not 1 <= len(expressions) <= _MAX_EXPRESSIONS:
+        raise ValidationError(f"'expressions' must be a list of 1 to {_MAX_EXPRESSIONS} items")
+    specs = [_expression_spec(raw, index) for index, raw in enumerate(expressions)]
+    seen: set[tuple[str, str]] = set()
+    for spec in specs:
+        key = (spec["object"], _canonical_path(spec["path"]))
+        if key in seen:
+            raise ExpressionRefusal(
+                "expression.duplicate_path", f"{key[0]}.{key[1]} appears more than once"
+            )
+        seen.add(key)
+    return specs
+
+
+def _is_quantity(value: object) -> bool:
+    return hasattr(value, "getValueAs")
+
+
+def _is_numeric(value: object) -> bool:
+    return _is_quantity(value) or isinstance(value, (bool, int, float))
+
+
+def _magnitude(value: object) -> float:
+    """Return a number or a quantity as a float in FreeCAD's internal unit."""
+    return value.Value if _is_quantity(value) else float(value)
+
+
+def _path_value(obj: object, path: str) -> object:
+    """Read ``path`` on ``obj`` through FreeCAD's own path resolution, in the object's context."""
+    return obj.evalExpression("." + _canonical_path(path))
+
+
+def _value_problem(candidate: object, current: object) -> tuple[str, str] | None:
+    """Return ``(code, message)`` when ``candidate`` is a value FreeCAD would store wrongly.
+
+    FreeCAD stores an infinite value, a quantity of another dimension and a fraction on an integer
+    property without an error (probed on 1.1.4: ``1mm/0`` reads ``inf mm``, ``5 deg`` bound to a
+    length reads ``5 deg``, ``5 mm`` on a float reads ``5.0``, ``2.5`` on an integer reads ``3``).
+    A dimensionless quantity or a plain number takes the property's unit.
+    """
+    number = _magnitude(candidate)
+    if not math.isfinite(number):
+        return "expression.not_finite", f"the expression evaluates to {number}"
+    dimensioned = _is_quantity(candidate) and any(candidate.Unit.Signature)
+    if dimensioned and (not _is_quantity(current) or candidate.Unit != current.Unit):
+        return (
+            "expression.unit_mismatch",
+            f"the expression evaluates to {candidate}, which does not match the dimension of "
+            f"the property's value {current}",
+        )
+    if type(current) is int and number != round(number):
+        return (
+            "expression.not_integer",
+            f"the expression evaluates to {number}, which an integer property would round",
+        )
+    return None
+
+
+def _stored_expressions(obj: object) -> dict[str, str]:
+    """Return the object's bindings by canonical path."""
+    return {_canonical_path(path): text for path, text in obj.ExpressionEngine}
+
+
+def _check_expression_target(document: object, spec: dict, where: str) -> None:
+    """Check one item against the document without writing.
+
+    A clear is checked for its object only, so a binding on a path that no longer resolves can
+    still be removed.
+
+    :raises ExpressionRefusal: the path does not resolve to a writable number, or the expression
+        is not a number FreeCAD stores as written.
+    :raises ValidationError: the object is unknown.
+    """
+    obj = _resolve_object(document, spec["object"], f"{where}.object")
+    if spec["expression"] is None:
+        return
+    path = spec["path"]
+    if _canonical_path(path).endswith(".Value"):
+        raise ExpressionRefusal(
+            "expression.invalid_path",
+            f"{where}: bind the property itself, not its .Value: FreeCAD would keep a second "
+            "binding that its own property ignores",
+        )
+    root = _property_root(path)
+    try:
+        if root not in obj.PropertiesList:
+            raise LookupError(f"{obj.Name} has no property {root!r}")
+        current = _path_value(obj, path)
+    except Exception as exc:  # noqa: BLE001 - FreeCAD raises several types for an unresolved path
+        raise ExpressionRefusal(
+            "expression.invalid_path", f"{where}: {obj.Name} path {path!r} does not resolve: {exc}"
+        ) from None
+    if not _is_numeric(current):
+        raise ExpressionRefusal(
+            "expression.unsupported_property",
+            f"{where}: {obj.Name} {path!r} holds a {type(current).__name__}, not a number, "
+            "quantity or bool; bind a numeric leaf such as .Placement.Base.x",
+        )
+    if "ReadOnly" in obj.getPropertyStatus(root):
+        raise ExpressionRefusal(
+            "expression.unsupported_property", f"{where}: {obj.Name} {root!r} is read-only"
+        )
+    try:
+        candidate = obj.evalExpression(spec["expression"])
+    except Exception as exc:  # noqa: BLE001 - parse errors and unresolved references differ by type
+        raise ExpressionRefusal(
+            "expression.invalid_expression", f"{where}: {type(exc).__name__}: {exc}"
+        ) from None
+    if not _is_numeric(candidate):
+        raise ExpressionRefusal(
+            "expression.invalid_expression",
+            f"{where}: the expression evaluates to a {type(candidate).__name__}, not a number",
+        )
+    problem = _value_problem(candidate, current)
+    if problem is not None:
+        raise ExpressionRefusal(problem[0], f"{where}: {obj.Name} {path!r}: {problem[1]}")
+
+
+def _property_root(path: str) -> str:
+    """Return the property a path starts at: ``Constraints`` for ``.Constraints.width``."""
+    return re.split(r"[.\[]", _canonical_path(path))[0]
+
+
+def _changes_nothing(document: object, spec: dict) -> bool:
+    """Whether the item surely leaves its object as it is, judged before anything is written.
+
+    A bind of the stored text changes nothing. A clear changes nothing when no binding starts at
+    the same property: FreeCAD stores some paths under another spelling (``Constraints[2]`` as
+    ``.Constraints.<name>``), so a clear with a binding nearby is left to the bracket, which
+    compares the bindings before and after the write.
+    """
+    stored = _stored_expressions(document.getObject(spec["object"]))
+    if spec["expression"] is not None:
+        return stored.get(_canonical_path(spec["path"])) == spec["expression"]
+    return all(_property_root(key) != _property_root(spec["path"]) for key in stored)
+
+
+def _expression_state(document: object) -> dict[str, tuple]:
+    """Return every object's bindings, for the rollback proof: the shape fingerprint holds none."""
+    return {obj.Name: tuple(sorted(obj.ExpressionEngine)) for obj in document.Objects}
+
+
+def _value_row(document: object, spec: dict) -> dict:
+    """Return ``{object, path, value}``, the value read now; null with a ``reason`` if unread."""
+    row = {"object": spec["object"], "path": spec["path"]}
+    try:
+        number, unit, reason = scalar_reading(
+            _path_value(document.getObject(spec["object"]), spec["path"])
+        )
+    except Exception as exc:  # noqa: BLE001 - an unreadable value is reported, not raised
+        number, unit, reason = None, None, f"{type(exc).__name__}: {exc}"
+    row["value"] = {"value": number, "unit": unit} if unit and number is not None else number
+    if reason is not None:
+        row["reason"] = reason
+    return row
+
+
+def _unchanged_expression_envelope(rows: list[dict]) -> ResultEnvelope:
+    """The ``OK`` result of a call that changes nothing: no transaction, no mutation block."""
+    content = {"bound": [], "cleared": [], "unchanged": rows, "undo_steps": 0}
+    return {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": None,
+        "structured_content": content,
+        "text": f"{len(rows)} expression(s) already as requested; no undo step recorded, "
+        "so document_undo would revert an earlier step.",
+    }
+
+
+def feature_set_expression(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    expressions: list | None = None,
+    confirm: dict | None = None,
+    audit_sink: object = None,
+) -> ResultEnvelope:
+    """Bind or clear expressions on property paths, all in one transaction.
+
+    Each item is ``{object, path, expression}``: ``path`` names a numeric property or a numeric
+    leaf of one (``Length``, ``.Constraints.width``, ``.AttachmentOffset.Base.z``) and
+    ``expression`` is the text to bind, or ``null`` to clear the binding. ``bound``, ``cleared``
+    and ``unchanged`` list ``{object, path, value}`` in request order with the value read after
+    the recompute; ``undo_steps`` is the number of undo steps the call added. A call that changes
+    nothing opens no transaction and has no ``mutation`` block, so ``document_undo`` after it
+    would revert an earlier step.
+
+    A cycle that FreeCAD refuses at ``setExpression``, a binding that fails the recompute, and two
+    items that address the same stored binding abort the call; the rollback proof reads every
+    object's bindings back. An item whose text FreeCAD stores as the expression already bound
+    (``a*2`` for ``a * 2``) is ``unchanged``, found after the transaction opened.
+
+    :raises ValidationError: an unknown object, or a malformed list or item.
+    :raises ExpressionRefusal: a ``ValidationError`` whose ``code`` is one of
+        ``expression.invalid_path``, ``expression.unsupported_property``,
+        ``expression.invalid_text``, ``expression.invalid_expression``,
+        ``expression.not_finite``, ``expression.unit_mismatch``, ``expression.not_integer`` and
+        ``expression.duplicate_path``; the dispatcher puts it in ``detail.code``.
+    """
+
+    def check(document: object) -> list[dict]:
+        specs = _expression_specs(expressions)
+        for index, spec in enumerate(specs):
+            _check_expression_target(document, spec, f"expressions[{index}]")
+        return specs
+
+    def rows_when_nothing_changes(_handle: str, document: object) -> list[dict] | None:
+        specs = check(document)
+        if all(_changes_nothing(document, spec) for spec in specs):
+            return [_value_row(document, spec) for spec in specs]
+        return None
+
+    unchanged_rows = registry.with_document(doc, rows_when_nothing_changes)
+    if unchanged_rows is not None:
+        return _unchanged_expression_envelope(unchanged_rows)
+
+    applied: list[dict] = []
+
+    def precheck(document: object) -> None:
+        check(document)
+
+    def op(document: object) -> list[str]:
+        touched: list[str] = []
+        written: dict[tuple[str, str], int] = {}
+        for index, spec in enumerate(_expression_specs(expressions)):
+            if _changes_nothing(document, spec):
+                continue
+            obj = document.getObject(spec["object"])
+            before = _stored_expressions(obj)
+            try:
+                obj.setExpression(_canonical_path(spec["path"]), spec["expression"])
+            except Exception as exc:  # noqa: BLE001 - a cycle is refused here with a RuntimeError
+                raise RuntimeError(
+                    f"expressions[{index}] {spec['object']} {spec['path']}: {exc}"
+                ) from exc
+            after = _stored_expressions(obj)
+            for key in {k for k in before.keys() | after.keys() if before.get(k) != after.get(k)}:
+                if (obj.Name, key) in written:
+                    raise RuntimeError(
+                        f"expressions[{index}] and expressions[{written[obj.Name, key]}] "
+                        f"address the same binding, {obj.Name} {key}"
+                    )
+                written[obj.Name, key] = index
+            if before == after:
+                continue
+            applied.append(spec)
+            if obj.Name not in touched:
+                touched.append(obj.Name)
+        return touched
+
+    def report(document: object) -> dict:
+        content: dict = {"bound": [], "cleared": [], "unchanged": []}
+        for spec in _expression_specs(expressions):
+            if spec not in applied:
+                group = "unchanged"
+            else:
+                group = "bound" if spec["expression"] is not None else "cleared"
+            content[group].append(_value_row(document, spec))
+        # Undo is switched on inside the bracket when it can be; a document that stays at
+        # UndoMode 0 commits no step. The document's step count is no measure: it stops growing
+        # once the stack holds its 20 steps.
+        content["undo_steps"] = 1 if applied and document.UndoMode else 0
+        return content
+
+    params = {"doc": doc, "expressions": expressions, "confirm": confirm}
+    return _feature_mutation(
+        registry,
+        doc,
+        "",
+        "set expressions",
+        "feature_set_expression",
+        params,
+        op,
+        audit_sink,
+        precheck,
+        report,
+        _expression_state,
     )

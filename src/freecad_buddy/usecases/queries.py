@@ -1470,7 +1470,7 @@ _QUANTITY_UNITS = {"Length": "mm", "Angle": "deg"}
 _CELL_ERROR_PREFIX = "ERR: "
 
 
-def _scalar_reading(value: object) -> tuple[object, str | None, str | None]:
+def scalar_reading(value: object) -> tuple[object, str | None, str | None]:
     """Return ``(value, unit, reason)`` for one property or cell value.
 
     A ``Quantity`` is read in mm for a length and degrees for an angle, else in the preferred
@@ -1499,7 +1499,7 @@ def _varset_parameter_row(varset: object, prop: str) -> dict:
     type_id = varset.getTypeIdOfProperty(prop)
     row = {"name": prop, "type": _PARAMETER_TYPE_NAMES.get(type_id, type_id)}
     try:
-        value, unit, reason = _scalar_reading(getattr(varset, prop))
+        value, unit, reason = scalar_reading(getattr(varset, prop))
     except Exception as exc:  # noqa: BLE001 - an unreadable property is reported, not raised
         value, unit, reason = None, None, f"{type(exc).__name__}: {exc}"
     row.update(
@@ -1524,7 +1524,7 @@ def _spreadsheet_parameter_row(sheet: object, cell: str, alias: str) -> dict:
         if contents.startswith("=") and isinstance(raw, str) and raw.startswith(_CELL_ERROR_PREFIX):
             value, unit, reason = None, None, raw[len(_CELL_ERROR_PREFIX) :]
         else:
-            value, unit, reason = _scalar_reading(raw)
+            value, unit, reason = scalar_reading(raw)
     except Exception as exc:  # noqa: BLE001 - a cell that cannot be read is reported, not raised
         value, unit, reason = None, None, f"{type(exc).__name__}: {exc}"
     row.update({"value": value, "unit": unit})

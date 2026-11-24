@@ -882,6 +882,55 @@ def _feature_specs():
             "an expression drives). A length must not be negative and an angle must be "
             "within +-360 deg: FreeCAD would clamp them silently.",
         ),
+        _feature_method(
+            "feature_set_expression",
+            features.feature_set_expression,
+            _feature_schema(
+                {
+                    "expressions": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "object": {"type": "string", "description": "object Name"},
+                                "path": {
+                                    "type": "string",
+                                    "description": "numeric property path, e.g. Length, "
+                                    ".Constraints.width, .AttachmentOffset.Base.z, "
+                                    ".Placement.Base.y",
+                                },
+                                "expression": {
+                                    "type": ["string", "null"],
+                                    "description": "expression text, e.g. Params.width * 2; "
+                                    "null clears the binding",
+                                },
+                            },
+                            "required": ["object", "path", "expression"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                ["expressions"],
+            ),
+            "Bind or clear expressions on numeric property paths in one transaction, for example "
+            "a VarSet parameter on .Constraints.<name> of a sketch, a feature Length, or "
+            ".AttachmentOffset.Base.z. Result {bound, cleared, unchanged, undo_steps}: each row "
+            "is {object, path, value}, the value read after the recompute; an entry that already "
+            "holds the stored text is unchanged, and a call that changes nothing opens no "
+            "transaction (undo_steps 0), so document_undo would revert an earlier step. A "
+            "dependency cycle or a binding that fails the recompute aborts the whole call with a "
+            "proven rollback. Refused with INVALID_INPUT before it opens, with detail.code: "
+            "expression.invalid_path (not a property path, or it resolves to nothing), "
+            "expression.unsupported_property (not a number, quantity or bool: bind a leaf such "
+            "as .Placement.Base.x, not the whole Placement), expression.invalid_text (empty, a "
+            "control character, over 400 characters), expression.invalid_expression (parse "
+            "error or unknown reference), expression.not_finite (for example 1mm/0), "
+            "expression.unit_mismatch (5 deg on a length, or a unit on a plain number), "
+            "expression.not_integer (a fraction on an integer property) and "
+            "expression.duplicate_path.",
+        ),
     ]
 
 

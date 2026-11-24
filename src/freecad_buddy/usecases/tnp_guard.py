@@ -34,6 +34,7 @@ _MISSING_PREFIX = "?"
 # subsystem funnels through one of them, so one strategy covers all four.
 _LINK_SUB_TYPES = frozenset({"App::PropertyLinkSub", "App::PropertyLinkSubList"})
 _EXPRESSION_ENGINE_TYPE = "App::PropertyExpressionEngine"
+_EXPRESSION_ENGINE_PROP = "ExpressionEngine"
 
 # Sketch axes are pseudo-elements: FeatureSketchBased.cpp:1322-1340 resolves them through
 # Part2DObject::getAxis, and they have no representation in the sketch's shape, so getElement
@@ -435,7 +436,9 @@ def audit_references(
     :param snapshot: the pre-mutation ``snapshot_references`` result.
     :param written: the post-op, pre-recompute reading of the same references. A reference whose
         live value matches what the op wrote is the mutation's intended target and is excused the
-        entry-count comparison.
+        entry-count comparison. An expression binding absent from it and from the live reading,
+        on an owner that still exists, was removed by the op and passes; without a ``written``
+        reading no removal is excused.
     """
     version = _element_map_version_banner()
     live = snapshot_references(doc)
@@ -448,7 +451,7 @@ def audit_references(
             "findings": findings + _unsupported_findings(snapshot),
         }
 
-    findings += _reference_findings(doc, snapshot, live, written or [])
+    findings += _reference_findings(doc, snapshot, live, written)
     failing = [f for f in findings if f["verdict"] not in ("PASS", "RE_BASELINED")]
     return {
         "status": "FLAGGED" if failing else "CLEAN",
@@ -810,7 +813,7 @@ def _reference_findings(
     doc: object,
     snapshot: list[RefRecord],
     live: list[RefRecord],
-    written: list[RefRecord],
+    written: list[RefRecord] | None,
 ) -> list[RefFinding]:
     """Run the Layer-1/2 diff over every snapshotted record, skipping the entries Layer 0 reported.
 
@@ -823,17 +826,39 @@ def _reference_findings(
     grading the empty remainder would emit a spurious "names no element" PASS.
     """
     live_by_key = _pair_records(snapshot, live)
-    written_by_key = _pair_records(snapshot, written)
+    written_by_key = _pair_records(snapshot, written or [])
 
     findings: list[RefFinding] = []
     for key, record in _keyed(snapshot).items():
         paired = live_by_key.get(key)
+        if (
+            paired is None
+            and written is not None
+            and key not in written_by_key
+            and _is_expression_binding(record)
+            and doc.getObject(record["owner"]) is not None
+        ):
+            findings.append(
+                _finding(
+                    record,
+                    None,
+                    "PASS",
+                    1,
+                    f"{record['owner']}.{record['prop']} was cleared by the op",
+                )
+            )
+            continue
         if paired is not None and any(entry["missing"] for entry in paired["entries"]):
             record, paired = _without_missing_entries(record, paired)
             if paired is None:
                 continue
         findings.extend(_grade_record(doc, record, paired, written_by_key.get(key)))
     return findings
+
+
+def _is_expression_binding(record: RefRecord) -> bool:
+    """Whether ``record`` is one ``ExpressionEngine`` binding (see ``_expression_records``)."""
+    return record["prop"].startswith(f"{_EXPRESSION_ENGINE_PROP}[")
 
 
 def _without_missing_entries(
