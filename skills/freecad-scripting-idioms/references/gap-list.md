@@ -59,7 +59,7 @@ result = [o.Name for o in doc.Objects if o.Name not in before]
 ```
 
 `result` lists the new objects. By default a multi-body STEP creates an `App::Part` container (the Import preferences can merge
-the bodies or use a link group). `result` also lists `Origin` objects, which carry no shape.
+the bodies or use a link group). `result` also lists `Origin` objects, which carry no solid.
 The container's shape is the sum of all leaves, so measure each leaf solid with
 `query_mass_properties`, and check validity with `verify_shape` `is_valid_solid` on each leaf.
 
