@@ -59,6 +59,7 @@ EXPECTED_QUERY_TOOLS = {
     "query_object",
     "query_mass_properties",
     "query_interference",
+    "query_section",
     "query_dependencies",
     "query_sketch_info",
     "query_placement",
@@ -1458,3 +1459,22 @@ def test_Should_advertise_the_interference_input_bounds_When_the_catalog_is_read
     assert properties["pairs"]["items"]["minItems"] == properties["pairs"]["items"]["maxItems"] == 2
     assert schema["required"] == ["doc"]
     assert schema["additionalProperties"] is False
+
+
+def test_Should_advertise_the_section_input_bounds_When_the_catalog_is_read():
+    # Arrange
+    target = {spec.name: spec for spec in tool_specs()}["query_section"]
+
+    # Act
+    schema = target.input_schema
+
+    # Assert
+    points = schema["properties"]["points"]
+    assert schema["required"] == ["doc", "object", "plane"]
+    assert schema["additionalProperties"] is False
+    assert schema["properties"]["plane"]["required"] == ["normal", "offset"]
+    assert points["required"] == ["deflection"]
+    assert (
+        points["properties"]["max_points"]["minimum"],
+        points["properties"]["max_points"]["maximum"],
+    ) == (2, 5000)

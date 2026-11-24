@@ -1,0 +1,4 @@
+== rt1b_no_pole_guard
+  RED test_Should_refuse_a_coil_spring_When_its_bspline_face_has_too_many_poles 
+  RED test_Should_refuse_the_shape_When_the_pole_load_is_above_the_limit_by_one 
+  RESULT run=42 fail=1 err=1

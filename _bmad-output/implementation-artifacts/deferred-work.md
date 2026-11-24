@@ -2193,3 +2193,25 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `_bmad-output/implementation-artifacts/verify-13-7.md` (F2), `_bmad-output/implementation-artifacts/redteam-13-8.md` (RT-1).
   blocker: architecture decision under AD-27 (worker isolation, a watchdog that restarts the worker, or a documented limit); approval tier: architecture.
   unblock: the user decides the AD-27 direction; then a Story implements it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `skills/freecad-scripting-idioms/references/gap-list.md:38` still routes "Section or slice of a shape" to `shape.slice(...)` in `script_exec`, the method that returns no wires within 1e-5 mm of a face.
+  evidence: Review finding (Blind Hunter): the gap list says no typed tool covers sections; `query_section` now does, and `slice` gives false misses (probe in the spec).
+  blocker: skill routing to the new measure tools is Story 13-12 (plan: "Skill routing to the new measure, parameter and delete tools").
+  unblock: Story 13-12 replaces the row with `query_section` and drops the `slice` advice.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `query_section` and `query_interference` do not detect solids that touch or overlap inside one `Compound`: the section area counts each solid and touching solids merge into shared wire groups.
+  evidence: Probe: two stacked 10x10x5 boxes cut on the shared face read area 200; two boxes side by side cut at mid height give one closed and one open wire. Same class as the 13-7 entry on overlapping solids.
+  blocker: a compound self-check (`shape.check(True)` or pairwise solid checks) has no measured cost yet.
+  unblock: a Story that measures the check cost and adds a refusal code.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `queries.py` `_mm_quantity` is a third copy of the `{value, unit}` parser (`features.py:89`, `sketches.py:111`), and it is stricter (rejects extra keys).
+  evidence: Review finding (Blind Hunter, Duplicated Code). Sharing one helper edits `features.py` and `sketches.py`, outside this Story.
+  blocker: touching two other tool modules for a cosmetic gain; the stricter key check would change their behaviour.
+  unblock: a refactor Story that moves the parser to one module and decides on extra keys.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-8-query-section.md`
+  summary: `query_section` pole-load guard counts only BSpline and Bezier faces; surfaces of extrusion or revolution over a BSpline curve and offset surfaces over a BSpline surface are not counted.
+  evidence: Round-2 Edge Case Hunter: an OffsetSurface face has no `NbUPoles`, so it bypasses `_bspline_pole_load`. Cost of these surfaces in `Shape.section` was not measured.
+  blocker: no measurement of section cost on swept-curve and offset surfaces.
+  unblock: a probe of section time against basis-curve poles, then extend `_bspline_pole_load`.

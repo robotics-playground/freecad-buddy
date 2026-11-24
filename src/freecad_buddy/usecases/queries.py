@@ -584,11 +584,24 @@ def _queryable_shape(obj: object) -> object | None:
     return shape
 
 
+def _bbox_record(
+    xmin: float, ymin: float, zmin: float, xmax: float, ymax: float, zmax: float
+) -> dict:
+    """A bounding box as six mm Quantities, the record ``query_mass_properties`` returns."""
+    return {
+        "xmin": _quantity(xmin, "mm"),
+        "xmax": _quantity(xmax, "mm"),
+        "ymin": _quantity(ymin, "mm"),
+        "ymax": _quantity(ymax, "mm"),
+        "zmin": _quantity(zmin, "mm"),
+        "zmax": _quantity(zmax, "mm"),
+    }
+
+
 def _mass_record(obj: object, shape: object) -> dict:
     """One object's mass-properties record; ``volume`` and ``com`` are null for a non-solid."""
     metrics = shape_metrics(shape)
     is_solid = metrics["solid"]
-    xmin, ymin, zmin, xmax, ymax, zmax = metrics["bbox"]
     # CenterOfMass is meaningful only for a volumetric solid (and is unavailable on some shape
     # types, e.g. Part.Compound). Report null volume/com for a non-solid so an area/length
     # centroid is never presented as volumetric mass; bbox/area/counts stay valid. The com
@@ -600,14 +613,7 @@ def _mass_record(obj: object, shape: object) -> dict:
         "solid": is_solid,
         "volume": _quantity(metrics["volume"], "mm^3") if is_solid else None,
         "area": _quantity(metrics["area"], "mm^2"),
-        "bbox": {
-            "xmin": _quantity(xmin, "mm"),
-            "xmax": _quantity(xmax, "mm"),
-            "ymin": _quantity(ymin, "mm"),
-            "ymax": _quantity(ymax, "mm"),
-            "zmin": _quantity(zmin, "mm"),
-            "zmax": _quantity(zmax, "mm"),
-        },
+        "bbox": _bbox_record(*metrics["bbox"]),
         "com": None
         if com is None
         else {
@@ -745,18 +751,24 @@ def _interference_pairs(objects: list[str] | None, pairs: list[list[str]] | None
     return [(pair[0], pair[1]) for pair in pairs]
 
 
-def _interference_shape(document: object, name: str) -> object:
-    """The named object's shape, or raise ``ValidationError`` when it has no measurable shape.
+def _named_shape(document: object, name: str) -> object:
+    """The named object's own shape, or raise ``ValidationError`` when it has none.
 
-    A skipped object would read as "no overlap", so a missing, null or empty shape is refused.
+    A skipped object would read as "no overlap" and an empty shape as "no section", so a missing,
+    null or empty shape is refused.
     """
     obj = _resolve_object(document, name)
     shape = _queryable_shape(obj)
     if shape is None or not shape.BoundBox.isValid():
         raise ValidationError(f"object has no queryable shape: {name}")
+    return shape
+
+
+def _copied_queryable_shape(document: object, name: str) -> object:
+    """A copy of the named object's shape, for a call that runs booleans or a cut on it."""
     # ``Shape.common`` clears a BREP flag on its inputs, which would change a fresh fingerprint
     # digest of the document; the booleans and the distance run on a copy.
-    return shape.copy()
+    return _named_shape(document, name).copy()
 
 
 def _solid_volumes(shape: object):
@@ -830,15 +842,20 @@ def _measure_interference(
     return None, distance, True
 
 
-def _too_complex_envelope(message: str) -> ResultEnvelope:
-    """The refusal for a call whose boolean and distance cost would pass the query budget."""
+def _refusal_envelope(code: str, message: str) -> ResultEnvelope:
+    """An ``INVALID_INPUT`` result whose ``detail.code`` names the refusal (AD-17)."""
     return {
         "schema": "fcb.result-envelope/1",
         "status": "INVALID_INPUT",
-        "detail": {"code": "interference.too_complex", "message": message},
+        "detail": {"code": code, "message": message},
         "structured_content": {},
         "text": message,
     }
+
+
+def _too_complex_envelope(message: str) -> ResultEnvelope:
+    """The refusal for a call whose boolean and distance cost would pass the query budget."""
+    return _refusal_envelope("interference.too_complex", message)
 
 
 def _pair_complexity_refusal(
@@ -881,7 +898,7 @@ def query_interference(
 
     def read(_handle: str, document: object) -> ResultEnvelope:
         names = {name for pair in name_pairs for name in pair}
-        shapes = {name: _interference_shape(document, name) for name in sorted(names)}
+        shapes = {name: _copied_queryable_shape(document, name) for name in sorted(names)}
         measurable = {name: _is_measurable_solid(shape) for name, shape in shapes.items()}
         # The trust check runs once per object, not per pair: 20 plates and 190 pairs took 10.7 s
         # with it per object and 69.7 s with it per pair.
@@ -912,6 +929,378 @@ def query_interference(
             )
         structured = {"pairs": records}
         return _ok_envelope(structured, summarize_interference(structured))
+
+    return registry.with_document(doc, read)
+
+
+# Largest face count cut in one call. ``Shape.isValid``, ``Shape.section`` and ``Shape.common`` hold
+# the interpreter lock, so the 60 s marshal timeout cannot stop them, and on one solid they grow
+# with the square of the face count. Whole tool call on the development host, plane through a
+# regular prism or a plate with hexagonal holes: 1,002 faces -> 1.0 s, 2,002 -> 3.1 s, 3,002 ->
+# 6.1 s (prism); 1,806 -> 3.0 s, 3,006 -> 7.1 s, 4,206 -> 13 s (plate); 5,000-face prism 27 s,
+# 8,406-face plate 42.6 s, 9,992-face prism 95.7 s (red team). 3,000 keeps one call near 7 s.
+_MAX_SECTION_FACES = 3000
+# Largest sum, over the BSpline and Bezier faces of a shape, of the square of the face's pole count
+# (``NbUPoles * NbVPoles``). ``Shape.section`` on a swept BSpline face grows with the square of its
+# poles, with only 3 faces: a coil spring of 3 turns (246 poles) -> 0.8 s, 5 turns (414) -> 1.9 s,
+# 10 turns (822) -> 7.8 s, 30 turns (about 2,400) -> 112 s, 60 turns -> 210 s (red team). Many
+# small patches cost little: 1,000 NURBS cylinders (3,000 faces, 20,000 poles in all, load 135,000)
+# -> 11.8 s. 800 poles in one face (load 640,000) keep one call near 8 s. Surfaces of extrusion
+# or revolution over a BSpline curve are not counted (not measured).
+_MAX_BSPLINE_POLE_LOAD = 800**2
+# Largest wire count for which the area is measured. The area needs ``Shape.common`` and a face
+# built from the wires with ``FaceMakerBullseye``, and both grow with the square of the wire
+# count. ``common``: separate boxes 1,600 wires -> 4.7 s, 3,200 -> 16 s; a plate with 3,000 holes
+# -> 21 s and with 9,000 holes -> 103 s. ``FaceMakerBullseye``: separate cylinders 100 wires ->
+# 0.11 s, 300 -> 0.91 s, 600 -> 7.9 s; a plate with 600 holes -> 2.4 s. 300 wires keep both near
+# 2 s. Above it the area is null, never 0.
+_MAX_AREA_WIRES = 300
+# A plane within this distance of a planar face of the shape (``Precision::Confusion``), or within
+# the face's own tolerance when that is larger, lies on the face: ``Shape.section`` then returns the
+# inner edges of the face as well (a box with tolerance 1e-5 cut 1e-6 mm from a face gave an open
+# wire of 82.4 mm against a perimeter of 60 mm).
+_COINCIDENT_TOLERANCE_MM = 1e-7
+_BSPLINE_SURFACE_TYPES = ("Part::GeomBSplineSurface", "Part::GeomBezierSurface")
+# The area from ``Shape.common`` and the area bounded by the section wires must agree this closely.
+# On a section whose edges are approximated curves the two differ slightly (a NURBS cylinder of
+# radius 10: 314.157 against 313.931, 7e-4 relative); with a plane that confuses the kernel they
+# differ widely (a void floor: 400 against 300).
+_AREA_AGREEMENT_REL_TOL = 5e-3
+_MAX_POLYLINE_POINTS = 5000
+_MIN_POLYLINE_POINTS = 2
+_DEFAULT_POLYLINE_POINTS = 1000
+# ``Wire.discretize(Deflection=0)`` never returns, and a tiny deflection makes one wire cost
+# millions of points; a deflection under this share of the bounding-box diagonal is refused.
+_MIN_DEFLECTION_RATIO = 1e-6
+_AXIS_NORMALS = {"x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0), "z": (0.0, 0.0, 1.0)}
+
+
+def _is_finite_number(value: object) -> bool:
+    """Whether ``value`` is a finite int or float (a JSON integer beyond float range is not)."""
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
+
+def _mm_quantity(value: object, what: str) -> float:
+    """The magnitude of a finite ``{value, unit: "mm"}`` quantity, or raise ``ValidationError``."""
+    if not isinstance(value, dict) or set(value) != {"value", "unit"}:
+        raise ValidationError(f"{what} must be a {{value, unit}} quantity, got {value!r}")
+    magnitude = value["value"]
+    if not _is_finite_number(magnitude):
+        raise ValidationError(f"{what} value must be a finite number, got {magnitude!r}")
+    if value["unit"] != "mm":
+        raise ValidationError(f"{what} unit must be 'mm', got {value['unit']!r}")
+    return float(magnitude)
+
+
+def _section_plane(plane: object) -> tuple[tuple[float, float, float], float]:
+    """``(unit normal, offset in mm)`` of the cut plane ``normal . p = offset``."""
+    if not isinstance(plane, dict) or set(plane) != {"normal", "offset"}:
+        raise ValidationError("plane must be an object with 'normal' and 'offset'")
+    offset = _mm_quantity(plane["offset"], "plane.offset")
+    raw = plane["normal"]
+    if isinstance(raw, str):
+        if raw not in _AXIS_NORMALS:
+            raise ValidationError(
+                f"plane.normal must be 'x', 'y', 'z' or [nx, ny, nz], got {raw!r}"
+            )
+        return _AXIS_NORMALS[raw], offset
+    is_vector = isinstance(raw, list) and len(raw) == 3
+    if not is_vector or not all(_is_finite_number(item) for item in raw):
+        raise ValidationError("plane.normal must be 'x', 'y', 'z' or three finite numbers")
+    # Scaled by the largest component first: ``hypot`` of components near the float limit is inf
+    # and of subnormal ones is rounded, and a zero vector reaching ``Part.Plane`` aborts the
+    # process.
+    scale = max(abs(item) for item in raw)
+    if scale == 0:
+        raise ValidationError("plane.normal must not be the zero vector")
+    scaled = [item / scale for item in raw]
+    length = math.hypot(*scaled)
+    return (scaled[0] / length, scaled[1] / length, scaled[2] / length), offset
+
+
+def _section_points(points: object) -> tuple[float, int]:
+    """``(deflection in mm, max_points)`` of the polyline request."""
+    if not isinstance(points, dict) or "deflection" not in points:
+        raise ValidationError(
+            "points must be an object with 'deflection' and optional 'max_points'"
+        )
+    if set(points) - {"deflection", "max_points"}:
+        raise ValidationError("points accepts only 'deflection' and 'max_points'")
+    deflection = _mm_quantity(points["deflection"], "points.deflection")
+    if deflection <= 0.0:
+        raise ValidationError(f"points.deflection must be positive, got {deflection}")
+    limit = points.get("max_points", _DEFAULT_POLYLINE_POINTS)
+    if not isinstance(limit, int) or isinstance(limit, bool):
+        raise ValidationError(f"points.max_points must be an integer, got {limit!r}")
+    if not _MIN_POLYLINE_POINTS <= limit <= _MAX_POLYLINE_POINTS:
+        raise ValidationError(
+            f"points.max_points must be {_MIN_POLYLINE_POINTS} to {_MAX_POLYLINE_POINTS}"
+        )
+    return deflection, limit
+
+
+def _bspline_pole_load(shape: object) -> int:
+    """The sum over BSpline and Bezier faces of the square of ``NbUPoles * NbVPoles``."""
+    load = 0
+    for face in shape.Faces:
+        surface = face.Surface
+        if hasattr(surface, "NbUPoles"):
+            load += (surface.NbUPoles * surface.NbVPoles) ** 2
+    return load
+
+
+def _face_plane(face: object) -> object | None:
+    """The plane a planar face lies in, or ``None`` for a curved face.
+
+    A planar BSpline or Bezier face (a box after ``toNurbs()``) is found with ``findPlane``; the
+    other curved surfaces are not tried because the search costs time on every face.
+    """
+    surface = face.Surface
+    if surface.TypeId == "Part::GeomPlane":
+        return surface
+    if surface.TypeId in _BSPLINE_SURFACE_TYPES:
+        return face.findPlane()
+    return None
+
+
+def _plane_on_face(shape: object, normal: tuple[float, float, float], offset: float) -> bool:
+    """Whether the plane ``normal . p = offset`` coincides with a planar face of ``shape``.
+
+    A face coincides when its normal is parallel to ``normal`` closely enough that the two planes
+    stay within the tolerance across the face, and one of its vertices is on the plane. The
+    tolerance is ``_COINCIDENT_TOLERANCE_MM`` or the face's own tolerance, whichever is larger.
+    """
+    for face in shape.Faces:
+        plane = _face_plane(face)
+        if plane is None or not face.Vertexes:
+            continue
+        tolerance = max(_COINCIDENT_TOLERANCE_MM, face.Tolerance)
+        axis = plane.Axis
+        tilt = math.hypot(
+            axis.y * normal[2] - axis.z * normal[1],
+            axis.z * normal[0] - axis.x * normal[2],
+            axis.x * normal[1] - axis.y * normal[0],
+        )
+        if tilt * max(face.BoundBox.DiagonalLength, 1.0) > tolerance:
+            continue
+        point = face.Vertexes[0].Point
+        distance = normal[0] * point.x + normal[1] * point.y + normal[2] * point.z - offset
+        if abs(distance) <= tolerance:
+            return True
+    return False
+
+
+def _section_untrusted_reason(shape: object) -> str | None:
+    """Why the section kernel cannot be trusted on ``shape``, or ``None`` when it can.
+
+    A valid shell or face is cut. An invalid shape, a solid of non-positive volume (reversed) and a
+    shape with no face (a wire or edge cuts to points, never to wires) each read as an empty
+    section, which would pass for a plane that misses.
+    """
+    try:
+        if not shape.isValid():
+            return "the shape is not valid"
+        if not shape.Faces:
+            return "the shape has no face to cut"
+        for volume in _solid_volumes(shape):
+            if volume is not None and not (volume > 0 and math.isfinite(volume)):
+                return "the shape holds a solid with non-positive volume (reversed)"
+    except Exception:  # noqa: BLE001 -- a shape the kernel cannot even inspect is not cuttable
+        return "the shape cannot be inspected"
+    return None
+
+
+def _untrusted_envelope(name: str, reason: str) -> ResultEnvelope:
+    """The refusal for a shape the section kernel cannot be trusted on."""
+    return _refusal_envelope(
+        "section.untrusted_shape", f"object {name} cannot be sectioned: {reason}"
+    )
+
+
+def _section_plane_face(shape: object, normal: tuple[float, float, float], offset: float):
+    """A planar face on ``normal . p = offset`` that spans the whole shape."""
+    import FreeCAD
+    import Part
+
+    direction = FreeCAD.Vector(*normal)
+    box = shape.BoundBox
+    base = box.Center + direction * (offset - direction.dot(box.Center))
+    half = box.DiagonalLength + 1.0
+    return Part.Plane(base, direction).toShape(-half, half, -half, half)
+
+
+def _section_area(shape: object, plane_face: object) -> float | None:
+    """The area of the plane face inside ``shape``, or ``None`` when ``common`` gives none."""
+    try:
+        common = shape.common(plane_face)
+        if common.isNull() or not common.BoundBox.isValid():
+            return None
+        area = float(common.Area)
+    except Exception:  # noqa: BLE001 -- a failed boolean leaves the area unmeasured
+        return None
+    return area if area > 0 and math.isfinite(area) else None
+
+
+def _wire_face_area(wires: list) -> float | None:
+    """The area bounded by closed coplanar ``wires`` (holes respected), or ``None`` if not built."""
+    import Part
+
+    try:
+        area = float(Part.makeFace(wires, "Part::FaceMakerBullseye").Area)
+    except Exception:  # noqa: BLE001 -- a face the kernel cannot build leaves the area unmeasured
+        return None
+    return area if area > 0 and math.isfinite(area) else None
+
+
+def _checked_section_area(shape: object, plane_face: object, wires: list) -> float | None:
+    """The ``common`` area when the area bounded by the wires agrees with it, else ``None``.
+
+    The two come from different calls, so a plane that confuses ``Shape.section`` (inner edges of
+    a coincident face) or ``Shape.common`` makes them differ. A section the kernel loses in both
+    calls is not caught.
+    """
+    from_common = _section_area(shape, plane_face)
+    from_wires = _wire_face_area(wires)
+    if from_common is None or from_wires is None:
+        return None
+    if not math.isclose(from_common, from_wires, rel_tol=_AREA_AGREEMENT_REL_TOL):
+        return None
+    return from_common
+
+
+def _section_polylines(wires: list, deflection: float, max_points: int) -> tuple[list, bool]:
+    """Each wire as ``[[x, y, z], ...]`` up to ``max_points`` points; true when any is left out."""
+    polylines: list[list[list[float]]] = []
+    used = 0
+    for wire in wires:
+        remaining = max_points - used
+        if remaining < 2:
+            return polylines, True
+        vertices = wire.discretize(Deflection=deflection)
+        kept = vertices[:remaining]
+        polylines.append([[float(v.x), float(v.y), float(v.z)] for v in kept])
+        used += len(kept)
+        if len(kept) < len(vertices):
+            return polylines, True
+    return polylines, False
+
+
+def summarize_section(sc: dict) -> str:
+    """One line: wire counts, length and area (or unmeasured), plus a truncation note."""
+    length = shim.displayed(sc["length"]["value"])
+    area = sc["area"]
+    area_text = "area unmeasured" if area is None else f"area {shim.displayed(area['value'])} mm^2"
+    text = f"{sc['wires']} wire(s), {sc['closed_wires']} closed, length {length} mm, {area_text}."
+    return f"{text} Polylines truncated at max_points." if sc.get("truncated") else text
+
+
+def query_section(
+    registry: DocumentRegistry,
+    doc: str | None = None,
+    object: str | None = None,
+    plane: dict | None = None,
+    points: dict | None = None,
+) -> ResultEnvelope:
+    """Cut one object with a plane and report wire counts, length, area and bounding box.
+
+    The plane is ``normal . p = offset`` in the frame of the object's container: the object's own
+    ``Placement`` is applied (``obj.Shape``), the container's is not. The cut is ``Shape.section``
+    with a plane face on a copy of the shape; ``Shape.slice`` is not used because it returns no
+    wires for a plane within 1e-5 mm of a face. ``area`` is the area of the plane face inside the
+    shape (``Shape.common``), so holes and islands are right; it is ``null``, never 0, for a shape
+    that is not solids only, with an open wire, above ``_MAX_AREA_WIRES`` wires, when the boolean
+    gives nothing, and when the area bounded by the wires disagrees with the boolean's. A plane
+    that misses gives ``wires`` 0, ``area`` 0 and ``bbox`` null. Solids that overlap or
+    touch inside one compound are not detected: the area counts each solid and touching solids
+    share edges in the wires. With ``points`` each wire is discretised to ``deflection`` into
+    ``polylines``, stopping at ``max_points`` points in total (``truncated``). Returns
+    ``INVALID_INPUT`` with code ``section.untrusted_shape`` for an invalid, reversed or face-less
+    shape, ``section.too_complex`` above ``_MAX_SECTION_FACES`` faces or ``_MAX_BSPLINE_POLE_LOAD``
+    and ``section.plane_on_face`` for a plane that lies on a planar face. Numbers only.
+    """
+    if not isinstance(object, str) or not object:
+        raise ValidationError("object must be a non-empty object name")
+    normal, offset = _section_plane(plane)
+    request = None if points is None else _section_points(points)
+
+    def read(_handle: str, document: object) -> ResultEnvelope:
+        import Part
+
+        # The face limit is checked on the object's own shape: the copy and ``isValid`` of a shape
+        # of 240,000 faces took 9.6 s and 42 s with the interpreter lock held.
+        own_shape = _named_shape(document, object)
+        face_count = len(own_shape.Faces)
+        if face_count > _MAX_SECTION_FACES:
+            return _refusal_envelope(
+                "section.too_complex",
+                f"object {object} has {face_count} faces, limit {_MAX_SECTION_FACES}. "
+                "Section a simpler object.",
+            )
+        try:
+            pole_load = _bspline_pole_load(own_shape)
+        except Exception:  # noqa: BLE001 -- a face whose surface cannot be read is not cuttable
+            return _untrusted_envelope(object, "the shape cannot be inspected")
+        if pole_load > _MAX_BSPLINE_POLE_LOAD:
+            return _refusal_envelope(
+                "section.too_complex",
+                f"object {object} has a BSpline and Bezier pole load of {pole_load}, limit "
+                f"{_MAX_BSPLINE_POLE_LOAD}: the sum over its faces of the square of the pole "
+                "count (one face of 800 poles reaches it). Section a simpler object.",
+            )
+        shape = _copied_queryable_shape(document, object)
+        reason = _section_untrusted_reason(shape)
+        if reason is not None:
+            return _untrusted_envelope(object, reason)
+        try:
+            on_face = _plane_on_face(shape, normal, offset)
+        except Exception:  # noqa: BLE001 -- a face whose surface cannot be read is not cuttable
+            return _untrusted_envelope(object, "the shape cannot be inspected")
+        if on_face:
+            return _refusal_envelope(
+                "section.plane_on_face",
+                f"the plane lies on a face of {object}; offset it by a small amount "
+                "(1e-6 mm or more, more for a shape with a larger tolerance)",
+            )
+        if request is not None:
+            floor = shape.BoundBox.DiagonalLength * _MIN_DEFLECTION_RATIO
+            if request[0] < floor:
+                raise ValidationError(
+                    f"points.deflection {request[0]} is below the minimum {floor} mm "
+                    f"({_MIN_DEFLECTION_RATIO} of the object's bounding-box diagonal)"
+                )
+        plane_face = _section_plane_face(shape, normal, offset)
+        edges = shape.section(plane_face).Edges
+        wires = [Part.Wire(group) for group in Part.sortEdges(edges)]
+        closed = sum(1 for wire in wires if wire.isClosed())
+        solids_only = None not in list(_solid_volumes(shape))
+        if not wires:
+            area = 0.0
+        elif solids_only and closed == len(wires) and len(wires) <= _MAX_AREA_WIRES:
+            area = _checked_section_area(shape, plane_face, wires)
+        else:
+            area = None
+        structured: dict = {
+            "wires": len(wires),
+            "closed_wires": closed,
+            "area": None if area is None else _quantity(area, "mm^2"),
+            "length": _quantity(sum(float(wire.Length) for wire in wires), "mm"),
+            "bbox": None,
+        }
+        if edges:
+            # ``BoundBox`` bounds a BSpline edge by its poles (2 mm too wide on a 20 mm NURBS
+            # circle); the optimal box is exact.
+            hull = Part.Compound(edges).optimalBoundingBox()
+            structured["bbox"] = _bbox_record(
+                hull.XMin, hull.YMin, hull.ZMin, hull.XMax, hull.YMax, hull.ZMax
+            )
+        if request is not None:
+            structured["polylines"], structured["truncated"] = _section_polylines(wires, *request)
+        return _ok_envelope(structured, summarize_section(structured))
 
     return registry.with_document(doc, read)
 

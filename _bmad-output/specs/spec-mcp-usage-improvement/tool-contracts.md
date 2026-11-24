@@ -102,7 +102,12 @@ Output: `wires` (count), `closed_wires`, `area` (of the faces the closed wires b
 `length`, `bbox`; with `points`, `polylines: [[[x,y,z],…],…]` in mm, capped at `max_points`
 total with `truncated: bool`.
 
-Errors: a plane that misses the shape → `OK` with `wires: 0`.
+Errors: a plane that misses the shape → `OK` with `wires: 0`. A plane on a planar face →
+`INVALID_INPUT` `section.plane_on_face`. An invalid or reversed shape → `INVALID_INPUT`
+`section.untrusted_shape`; a valid shell or face is cut with `area` null. More than 3,000 faces
+or a BSpline pole load above 640,000 → `INVALID_INPUT` `section.too_complex`. `area` is null
+when it cannot be measured (open wire, more than 300 wires, or the cross-check against the
+closed wires fails). Cut by `Shape.section` with a plane face (`slice` misses planes near a face).
 
 ## T-3 Parameters and expressions
 

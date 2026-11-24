@@ -130,6 +130,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_object` | 0 | One object: type, label, properties, error state + `getStatusString()` | no |
 | `query_mass_properties` | 0 | Volume/area/bbox/COM + topology counts + `is_valid` for one object, or for 1 to 50 objects (`objects`) | no |
 | `query_interference` | 1 | Common volume and minimum distance for object pairs (`objects`: every pair, or `pairs`); `boolean_failed` flags a boolean that returned nothing at distance 0, so an empty result never reads as no overlap (numbers only, AD-35) | no |
+| `query_section` | 1 | Cross-section of one object at a plane: wire counts, length, area, bounding box and optional capped polylines; a plane that misses is `OK` with `wires` 0; `area` is null when unmeasured, never 0 (numbers only, AD-35) | no |
 | `query_dependencies` | 0 | `InList`/`OutList` dependency edges for object or whole doc (whole-doc `edges` capped at `max_edges`, truncation flagged) | no |
 | `query_sketch_info` | 0 | Sketch geometry + constraint listing (types, names, values, driving flags) | no |
 | `query_placement` | 0 | Local + global placement of an object | no |
@@ -207,19 +208,19 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | Namespace | P0 | P1 | P2 | P3 | Specified | Shipped |
 | --- | --- | --- | --- | --- | --- | --- |
 | `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
-| `query_` | 8 | 3 | — | — | 11 | 9 (`query_tree_children`, `query_parameters` planned) |
+| `query_` | 8 | 4 | — | — | 12 | 10 (`query_tree_children`, `query_parameters` planned) |
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
 | `feature_` | — | — | 11 | — | 11 | 11 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **51** | **46** |
+| **AI-visible total** (typed tools) | | | | | **52** | **47** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **46**; with `SCRIPT_EXEC_SPEC` that is 47 registered specs.
+The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **47**; with `SCRIPT_EXEC_SPEC` that is 48 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -357,6 +358,40 @@ Pair measurement by immutable `Name`; read-only, numbers only (AD-35: no pass or
 ```
 
 The one-line text counts a pair as overlapping only when its volume is non-zero at the result's display rounding, so the text and the numbers agree. It is a count line (`N pair(s), K overlapping, F boolean failed.`) plus one line per failed or overlapping pair. The call budget is 60 s. A pair whose face counts multiply to more than 150,000 is refused before any measurement with status `INVALID_INPUT` and `detail.code` `interference.too_complex`, naming the pair: `distToShape` holds the interpreter lock, so the 60 s marshal timeout cannot stop it (two 900-box compounds blocked the worker for minutes in the container). The limit comes from interleaved box compounds one millimetre apart, the slowest layout found: 129,600 → 9.5 s, 230,400 → 17.8 s, 360,000 → 29.4 s on a development host. A second limit is a deadline: between pairs the call reads a monotonic clock, and once 40 s have passed it stops and returns the same status and code with the message "stopped after k of n pairs; measure fewer pairs per call". The worst case is the 40 s deadline plus one pair at the per-pair limit (about 12 s), under the 60 s budget. Face counts are a poor cost proxy across layouts (87-face plates about 12 µs per unit, dense boxes about 80 µs), so the sum is bounded by time. 190 pairs of the 87-face plates run in 5.5 to 17 s and are measured. `Shape.common` and `distToShape` cost grows with face count: 190 pairs of 81-hole plates took 5.5 s disjoint and 17.1 s overlapping on a development host; a single `distToShape` between two 200-box compounds took 45 s.
+
+### 3.2.4 `query_section`
+
+Cross-section of one object by immutable `Name`; read-only, numbers only (AD-35). The plane is `normal . p = offset` in the frame of the object's container, like `query_interference`: the object's own `Placement` is applied (the shape is `obj.Shape`) and the container's is not, so a feature inside a `PartDesign::Body` is cut in the Body's local frame. `normal` is `"x"`, `"y"`, `"z"` or a finite non-zero `[nx, ny, nz]` (normalised by the tool, so `[0, 0, 5]` and `"z"` give one plane); `offset` is a mm Quantity. The cut is `Shape.section` of a copy of the shape with a plane face that spans the shape, and the wires come from `Part.sortEdges`. `Shape.slice` is not used: in FreeCAD 1.1.4 it returns no wires for a plane within 1e-5 mm of a face of a box and for the plane on its bottom face (offsets 0, 1e-9, 1e-7, 1e-6 and 1e-5 from the bottom, and 30 - 1e-5 from the top, read as a miss; 1e-4 from either face and the top face itself read correctly), and an empty list would read as a plane that misses. `Shape.section` gave one closed wire at every probed offset (0, 1e-9, 1e-7, 1e-6, 1e-4, 15, 30 - 1e-6, 30, 30 + 1e-7) and a miss at 31. It is wrong when the plane coincides with a planar face, because it then returns every edge of the face, inner ones included: on a mesh-derived box the one wire was open and 82.4 mm long (true perimeter 60 mm), and on the floor of a void the closed wires bounded 300 mm^2 while the area read 400. A plane within 1e-7 mm (`Precision::Confusion`), or within the face's own `Tolerance` when that is larger (a box with tolerance 1e-5 cut 1e-6 mm from a face gave the same open wire), of a planar face of the shape, with that face's normal parallel to it closely enough to stay within that distance across the face, therefore returns `INVALID_INPUT` with `detail.code` `section.plane_on_face` and the message "the plane lies on a face of <object>; offset it by a small amount". A planar BSpline or Bezier face (a box after `toNurbs()`) is found with `Shape.findPlane()`; other curved faces are not tried. The check runs after the trust check, so an invalid shape reads `section.untrusted_shape`. A plane 1e-6 mm or more from the face is cut when the tolerances are the default 1e-7. The tool refuses a shape the kernel cannot be trusted on, because its empty result would pass for a miss: an invalid shape, a solid with non-positive volume (a reversed solid) and a shape with no face (a wire or edge cuts to points) return `INVALID_INPUT` with `detail.code` `section.untrusted_shape`. A valid shell or face is cut: `wires`, `closed_wires`, `length` and `bbox` are measured and `area` is null. A shape above 3,000 faces, or whose BSpline and Bezier faces have a pole load above 640,000 (the sum over those faces of the square of `NbUPoles * NbVPoles`; 800 poles in one face), returns `INVALID_INPUT` with `detail.code` `section.too_complex`. Both are read on the object's own shape before the copy and `isValid` (a shape of 240,000 faces took 9.6 s to copy and 42 s to check). Surfaces of extrusion or revolution over a BSpline curve are not counted (not measured). Unknown name, a name with no shape, a null shape or an empty shape, a malformed plane or malformed points → `INVALID_INPUT` naming the cause.
+
+`wires` counts the section wires, `closed_wires` those with `isClosed()`, `length` sums their lengths. `area` is the area of `Shape.common` of the plane face and the shape, so holes and islands are right, and it is checked against the area of the face that `FaceMakerBullseye` builds from the closed wires (holes respected): the two must agree within a relative 5e-3 (the two differ by 7e-4 on a NURBS cylinder of radius 10, 314.157 against 313.931, and by 33% on the floor of a void, 400 against 300). It is 0 only when `wires` is 0. It is null, never 0, when wires exist and the shape is not solids only (a shell or a face), when any wire is open, when there are more than 300 wires (`common` and `FaceMakerBullseye` both grow with the square of the wire count), when `common` raises or returns nothing, when no face can be built from the wires, or when the two areas disagree: the area is unmeasured. The check does not catch a section that the kernel loses in both calls: on a valid 30-turn coil spring, `section` returns 50 of 60 crossings and `common` misses the same regions, so both give 157 mm^2 against about 188; the pole load limit refuses that spring. `bbox` is the optimal bounding box of the section edges (`Shape.optimalBoundingBox()`; `BoundBox` bounds a BSpline edge by its poles and read -12.08 for a NURBS circle of radius 10), in the `query_mass_properties` record shape, null when `wires` is 0. A plane that misses the shape is `OK` with `wires` 0, `closed_wires` 0, `area` 0, `length` 0 and `bbox` null. Not detected: solids that overlap or touch each other inside one `Compound` pass `isValid()`; `area` counts each solid (two stacked boxes cut on their shared face read twice one face) and touching solids share edges, so `Part.sortEdges` merges them into one wire group (two boxes side by side cut at mid height gave one closed and one open wire, and a length 10 mm short of the sum of the squares).
+
+With `points`, each wire is discretised with `deflection` (a mm Quantity, at least 1e-6 of the shape's bounding-box diagonal; `discretize(Deflection=0)` never returns, so a smaller value is `INVALID_INPUT`) into `polylines`, one `[[x, y, z], ...]` list per wire in mm and in wire order. `max_points` (2 to 5000, default 1000; a polyline of one point is not a line) caps the points over all wires: a wire is cut at the cap, no wire starts with fewer than 2 points left, and `truncated` is true when any point or wire is left out.
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "object": { "type": "string" },
+    "plane": { "type": "object", "properties": {
+      "normal": { "oneOf": [ { "enum": ["x", "y", "z"] },
+                  { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 } ] },
+      "offset": { "$ref": "#/$defs/Quantity" } },
+      "required": ["normal", "offset"], "additionalProperties": false },
+    "points": { "type": "object", "properties": {
+      "deflection": { "$ref": "#/$defs/Quantity" },
+      "max_points": { "type": "integer", "minimum": 2, "maximum": 5000, "default": 1000 } },
+      "required": ["deflection"], "additionalProperties": false }
+  }, "required": ["doc", "object", "plane"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "wires": { "type": "integer" }, "closed_wires": { "type": "integer" },
+    "length": { "$ref": "#/$defs/Quantity" },
+    "area": { "oneOf": [{ "$ref": "#/$defs/Quantity" }, { "type": "null" }] },
+    "bbox": { "oneOf": [{ "type": "object", "description": "xmin, xmax, ymin, ymax, zmin, zmax, each a Quantity in mm" }, { "type": "null" }] },
+    "polylines": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 } } },
+    "truncated": { "type": "boolean" }
+  }, "required": ["wires", "closed_wires", "length", "area", "bbox"] } }
+```
+
+The one-line text is `N wire(s), K closed, length L mm, area A mm^2.` (`area unmeasured` when null), plus `Polylines truncated at max_points.` when `truncated`. The call budget is 60 s. `Shape.isValid`, `Shape.section`, `Shape.common` and `FaceMakerBullseye` hold the interpreter lock, so the 60 s marshal timeout cannot stop them, and three limits bound the cost before the work (whole tool call on a development host unless noted). Face limit, 3,000 (cost on one solid grows with the square of the face count): regular prism 1,002 faces 1.0 s, 2,002 faces 3.1 s, 3,002 faces 6.1 s; plate with hexagonal holes 1,806 faces 3.0 s, 3,006 faces 7.1 s, 4,206 faces 13 s; a 5,000-face prism 27 s, an 8,406-face plate 42.6 s and a 9,992-face prism 95.7 s (red team). Pole load limit, 640,000 (`Shape.section` on a swept BSpline face grows with the square of its poles, with 3 faces): coil spring of 3 turns, 246 poles, 0.8 s; 5 turns, 414 poles, 1.9 s; 10 turns, 822 poles, 7.8 s; 30 turns 112 s; 60 turns 210 s (red team). 1,000 NURBS cylinders (3,000 faces, 20,000 poles in all, load 135,000) took 11.8 s. Wire limit for the area, 300: `common` on separate boxes 1,600 wires 4.7 s, 3,200 wires 16 s; a plate with 3,000 holes 21 s, 9,000 holes 103 s; `FaceMakerBullseye` on separate cylinders 100 wires 0.11 s, 300 wires 0.91 s, 600 wires 7.9 s. Measured at the limits: prism of 3,000 faces 6.1 s; plate with 495 holes (2,976 faces, area skipped) 4.7 s; plate with 290 holes (1,746 faces, area measured) 4.6 s; that plate beside a 5-turn spring 5.4 s; a spring at the pole limit about 8 s. One call stays under about 10 s. The pole load refusal names the measured load and the limit. The cut runs on a copy of the shape so the document's shapes are never modified.
 
 ### 3.3 `verify_shape`
 

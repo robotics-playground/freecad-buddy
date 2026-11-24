@@ -1,0 +1,136 @@
+[
+ {
+  "label": "spring 5 turns",
+  "build_status": "OK",
+  "build_s": 0.22,
+  "waited_for_bridge_s": null,
+  "faces_solids_poleload_valid": "[3, 1, 171396, True]",
+  "status": "OK",
+  "detail": null,
+  "sc": {
+   "wires": 10,
+   "closed_wires": 10,
+   "area": {
+    "value": 31.43,
+    "unit": "mm^2"
+   },
+   "length": {
+    "value": 62.84,
+    "unit": "mm"
+   },
+   "bbox": {
+    "xmin": {
+     "value": -20.99,
+     "unit": "mm"
+    },
+    "xmax": {
+     "value": 20.99,
+     "unit": "mm"
+    },
+    "ymin": {
+     "value": 0.5,
+     "unit": "mm"
+    },
+    "ymax": {
+     "value": 0.5,
+     "unit": "mm"
+    },
+    "zmin": {
+     "value": -0.98,
+     "unit": "mm"
+    },
+    "zmax": {
+     "value": 27.98,
+     "unit": "mm"
+    }
+   }
+  },
+  "text": "10 wire(s), 10 closed, length 62.84 mm, area 31.43 mm^2.",
+  "elapsed_s": 2.19,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.06,
+  "reference": {
+   "status": "OK",
+   "elapsed_s": 5.59,
+   "value": "'{\"wires\": 10, \"closed\": 10, \"length\": 62.84160645902323, \"common_area\": 31.425754189635107, \"bullseye_area\": 31.42187145576072}'"
+  }
+ },
+ {
+  "label": "spring 10 turns",
+  "build_status": "OK",
+  "build_s": 0.33,
+  "waited_for_bridge_s": null,
+  "faces_solids_poleload_valid": "[3, 1, 675684, True]",
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "section.too_complex",
+   "message": "object Shape1 has a BSpline and Bezier pole load of 675684, limit 640000: the sum over its faces of the square of the pole count (one face of 800 poles reaches it). Section a simpler object."
+  },
+  "sc": {},
+  "text": "object Shape1 has a BSpline and Bezier pole load of 675684, limit 640000: the sum over its faces of the square of the pole count (one face of 800 poles reaches it). Section a simpler object.",
+  "elapsed_s": 0.1,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.11,
+  "reference": {
+   "status": "OK",
+   "elapsed_s": 8.11,
+   "value": "'{\"wires\": 20, \"closed\": 20, \"length\": 125.68321291177168, \"common_area\": 62.851508889542615, \"bullseye_area\": 62.84374294930938}'"
+  }
+ },
+ {
+  "label": "spring 6 turns",
+  "build_status": "OK",
+  "build_s": 0.35,
+  "waited_for_bridge_s": null,
+  "faces_solids_poleload_valid": "[3, 1, 236196, True]",
+  "status": "OK",
+  "detail": null,
+  "sc": {
+   "wires": 12,
+   "closed_wires": 12,
+   "area": {
+    "value": 37.71,
+    "unit": "mm^2"
+   },
+   "length": {
+    "value": 75.41,
+    "unit": "mm"
+   },
+   "bbox": {
+    "xmin": {
+     "value": -20.99,
+     "unit": "mm"
+    },
+    "xmax": {
+     "value": 20.99,
+     "unit": "mm"
+    },
+    "ymin": {
+     "value": 0.5,
+     "unit": "mm"
+    },
+    "ymax": {
+     "value": 0.5,
+     "unit": "mm"
+    },
+    "zmin": {
+     "value": -0.98,
+     "unit": "mm"
+    },
+    "zmax": {
+     "value": 33.98,
+     "unit": "mm"
+    }
+   }
+  },
+  "text": "12 wire(s), 12 closed, length 75.41 mm, area 37.71 mm^2.",
+  "elapsed_s": 3.14,
+  "bridge_after": "OK",
+  "bridge_after_s": 0.11,
+  "reference": {
+   "status": "OK",
+   "elapsed_s": 14.71,
+   "value": "'{\"wires\": 12, \"closed\": 12, \"length\": 75.4099320675705, \"common_area\": 37.710909874087555, \"bullseye_area\": 37.706275294785456}'"
+  }
+ }
+]

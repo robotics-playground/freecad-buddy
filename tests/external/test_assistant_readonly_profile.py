@@ -45,6 +45,7 @@ EXPECTED_ALLOW_LIST = {
     "query_object",
     "query_mass_properties",
     "query_interference",
+    "query_section",
     "query_dependencies",
     "query_sketch_info",
     "query_placement",

@@ -122,3 +122,97 @@ No product defect.
 ## 7. Teardown
 
 Documents closed through `document_close`; `fcb-freecad stop` (status: no FreeCAD pid); `docker compose -f <copy>\...\compose.yaml down` (container and network removed). No host `freecadcmd` of mine left running. Worktree `D:\Work\Personal\Sources\fcb-verify-13-8` removed after this report.
+
+# Round 2
+
+Artifact: commit `f2548a20d21b4b974fc6da2c2daf3c33173e3cd8` (b29c92b4 triage fixes, f2548a20 lens fixes), compared with `d4a258e4`. Inputs: `triage-13-8-r2.md`, `redteam-13-8.md`, `quality-bar-13-8.md` (Q3 and Q6 for decision 31).
+Own copy: fresh detached worktree `D:\Work\Personal\Sources\fcb-verify-13-8` at that SHA (removed after the run).
+Evidence: `D:\Work\Personal\Sources\freecad-buddy\tests\uat\run\13-8-r2\`.
+
+**Verdict round 2: PASS.** No product defect found. Two fix rows have a guard test that cannot fail: RT-4 (the bbox test) and RT-3b (the open-wire condition). For RT-4, the old bbox call is exact on every plane the tool still accepts. For RT-3b, the RT-3a cross-check also catches an open wire, so removing the condition alone changes no result. Details in R2.2.
+
+## R2.1 Gates (in the copy)
+
+| Gate | Result |
+| --- | --- |
+| `uv run ruff check .` | All checks passed |
+| `ruff format --check` on `queries.py`, `tool_catalog.py`, `test_query_tools.py` | 3 files already formatted |
+| `check_imports.py`, `check_status_vocab.py`, `gen_schemas.py --check`, `check_skill_shape.py` | OK, OK, OK, exit 0 |
+| `uv run pytest tests/external -q` from Git Bash | **1866 passed, 4 skipped**, 0 failed (145 s) |
+| In-FreeCAD suite (host `freecadcmd`, private temp cfg; the wrapper asserts the import comes from the copy: `IMPORTED D:\Work/Personal/Sources/fcb-verify-13-8/src\...\queries.py`) | **953 run, 0 failures, 0 errors, 1 skip** (59 s) |
+| `QuerySectionTest` alone (baseline before mutants) | 42 run, 0 failures (37 s) |
+
+## R2.2 Each fix reverted: which test turns red
+
+Script `scripts/mutants2.py`: edit `queries.py` in the copy, run `QuerySectionTest` under host `freecadcmd`, restore the file byte for byte (`git status` clean after every run). Logs `mutants-part1.txt`, `mutants-rt1a.txt`, `mutants-rt1b.txt`.
+
+| Row | Revert | Result | Red tests |
+| --- | --- | --- | --- |
+| RT-1 face limit | `_MAX_SECTION_FACES = 10_000` (old value) | killed | `test_Should_finish_well_inside_the_query_budget_When_shapes_are_at_the_limits` (Prism: the 10,000-face prism runs past 30 s) |
+| RT-1 face guard | face check disabled (round-1 mutant c) | killed | `test_Should_refuse_a_prism_When_it_has_one_face_above_the_limit`; `test_Should_refuse_before_cutting_When_the_face_count_is_above_the_limit` |
+| RT-1 pole load | pole-load check disabled | killed (118 s run) | `test_Should_refuse_a_coil_spring_When_its_bspline_face_has_too_many_poles`; `test_Should_refuse_the_shape_When_the_pole_load_is_above_the_limit_by_one` (error) |
+| RT-2 worst-layout budget test / 300-wire area limit | `_MAX_AREA_WIRES = 1500` (old value) | killed | `..._finish_well_inside_the_query_budget_...` (Plate: 496 wires must give `area` null) |
+| RT-3a area cross-check | `_section_area` instead of `_checked_section_area` | killed | `test_Should_return_null_area_When_the_wires_and_the_boolean_disagree` |
+| RT-3b open wire gives null | `closed == len(wires)` condition removed | **survived** | none: `FaceMakerBullseye` cannot build a face from the open wire, so the RT-3a check already gives null |
+| RT-3a + RT-3b | both removed | killed | `test_Should_return_null_area_When_a_wire_is_open`; `..._wires_and_the_boolean_disagree` |
+| RT-4 `optimalBoundingBox` | `Part.Compound(edges).BoundBox` (old call) | **survived** | none, see the note below |
+| RT-5 plane on face | `on_face = False` | killed | `test_Should_refuse_the_plane_When_it_lies_on_a_planar_face`, all 13 subtests; `test_Should_refuse_as_untrusted_When_a_face_surface_cannot_be_read` |
+| RT-5 face tolerance | tolerance fixed at 1e-7 (face tolerance ignored) | killed | `..._refuse_the_plane_When_it_lies_on_a_planar_face` (LooseBox, z 1e-6) |
+| RT-5 BSpline planes | `findPlane` branch for BSpline/Bezier faces removed | killed | `..._refuse_the_plane_...` (NurbsBox z 0, z 30) |
+| R1 a | `slice` instead of `section` | killed | `test_Should_not_read_a_miss_When_the_plane_is_within_1e5_mm_of_a_face` (1e-6, 1e-5, 29.99999, 29.999999); `test_Should_return_null_area_When_a_wire_is_open` |
+| R1 b | `area = 0.0` instead of null | killed | open shell and face (2), shell, above-area-limit, wire-open, budget Plate (6 in all) |
+| R1 c | face guard disabled | killed | as in the RT-1 face guard row |
+| R1 d1 / d2 | no `max_points` cap / `truncated` forced false | killed | 2 / 4 polyline tests, as in round 1 |
+| R1 e | deflection floor disabled (only the input-validation test is run) | killed | `test_Should_raise_When_the_plane_or_points_are_malformed` subtest 14 |
+| R1 f | no `shape.copy()` | survived | equivalent mutant, as in round 1. The design wording is now fixed: "runs on a copy of the shape so the document's shapes are never modified" |
+
+RT-4 note (`scripts/probe_bbox.py`): I cut a NURBS cylinder, a NURBS sphere, a NURBS torus and an extruded BSpline profile at z 1e-6, z 2.5, z 15, x 3 and an oblique plane. In every case, `BoundBox` and `optimalBoundingBox()` of the section edges differ by 0.000000 mm (all edges are `BSplineCurve`). The red team's loose box (-12.08 against -10) was on a cap face (z 0), which RT-5 now refuses. The fix is correct and costs little. On every plane the tool still accepts, the old call gives the same box. So `test_Should_report_an_exact_bbox_When_the_section_edge_is_a_bspline` cannot fail when the fix is reverted. This is not a product defect.
+
+## R2.3 Live: red team shapes through the container bridge
+
+Setup:
+- Container rebuilt from the copy: `build_addon.py --release`, then `compose up -d --build`. The compose file mounts `D:\Work\Personal\Sources\fcb-verify-13-8 -> /repo`.
+- `fcb-freecad start`; healthz `freecad_pid` 600. Calls come from a host `uv` MCP client.
+- Scripts `timing_r2.py`, `timing_r2_springs.py`; results `timing_r2_part1.json`, `timing_r2_springs.json`.
+- Each shape is built with `script_exec`. The reference is a `script_exec` on the same plane that computes `section` + `sortEdges`, the `common` area and a `FaceMakerBullseye` area.
+
+| Shape | Faces / pole load | query_section | Elapsed | Reference (script) | Bridge after |
+| --- | --- | --- | --- | --- | --- |
+| Spring 30 turns, plane y 0.5 | 3 / 5,503,716 | `section.too_complex` (pole load, limit 640,000) | 0.10 s | — | OK |
+| Prism 9,990 sides | 9,992 / 0 | `section.too_complex` (faces, limit 3,000) | 0.09 s | — | OK |
+| Prism 2,898 sides, z 5 | 2,900 / 0 | OK: 1 wire, length 314.16, area 7853.98 | **6.83 s** | 1 wire, 314.159204, common 7853.975481, Bullseye 7853.975481 | OK 0.11 s |
+| Plate with 1,400 hex holes, z 5 | 8,406 | `section.too_complex` (faces) | 0.14 s | — | OK |
+| Spring 5 turns, y 0.5 | 3 / 171,396 | OK: 10 wires, 10 closed, length 62.84, area 31.43 | **2.19 s** | 10 / 10, 62.841606, common 31.425754, Bullseye 31.421871 | OK 0.06 s |
+| Spring 6 turns, y 0.5 (added: the largest spring under the limit) | 3 / 236,196 | OK: 12 wires, length 75.41, area 37.71 | **3.14 s** | 12 / 12, 75.409932, common 37.710910 | OK 0.11 s |
+| Spring 10 turns, y 0.5 | 3 / 675,684 | `section.too_complex` (pole load) | 0.10 s | 20 / 20, 125.683213, common 62.851509 (script 8.1 s) | OK 0.10 s |
+
+All accepted cases are far inside the 60 s budget. The worst is the 2,900-face prism at 6.8 s, which matches the "near 7 s" in the constant's comment. The tool's areas equal the script's `common` area at 2 decimals, and `common` and Bullseye agree within the 5e-3 tolerance.
+
+The 10-turn spring is refused by design: 822 poles squared is above 800 squared. In the container, the script's `section` + `common` on it took 8.1 s, so this refusal is conservative. That follows from decision 31; it is not a defect.
+
+Harness notes:
+- The 1,400-hole plate build (`plate.cut` of 1,400 prisms) ran past the 30 s `script_exec` timeout (39.7 s). The bridge answered again after 0.3 s.
+- The timeout marked the document "suspect", so the next `script_exec` builds were refused with `INVALID_INPUT` "document-suspect: a prior call timed out on this document; run a query_* read to confirm state before mutating". This is expected bridge behaviour. I ran a `query_tree_summary` read, closed the document, and ran the springs in a new document.
+
+## R2.4 CAP-1 replay, round-1 cases (container)
+
+`scripts/replay.py` unchanged; results `replay_r2.json`, `replay_r2-summary.txt`.
+
+- Box z 0 and box z 30 (planes on a face) now return `INVALID_INPUT` `section.plane_on_face`: "the plane lies on a face of Box; offset it by a small amount (1e-6 mm or more, more for a shape with a larger tolerance)". This is decision 31.
+- Box z 1e-6 and z 30 - 1e-6 are still cut: 1 wire, area 200, length 60. `slice` reads 0 wires at both.
+- Every other case gives the same numbers as round 1. These are: z 15, the miss at z 40, x 5, the oblique plane, the cylinder z 10 and x 0, the 4-hole plate, the bullseye, the shell (`area` null), the moved box hit and miss, the polylines cap 5 and the default polyline, and the refusals (reversed, zero normal, deflection 0 and below the floor, unknown object).
+- Fresh fingerprint digest before and after: `8062723987bfed3bd66cc3e7ccc9ceaa57c22d653a8d1779d0b5e99d0e1c7ada`, equal.
+- Screenshot `freecad-window-r2.png` checked: the same scene as round 1, tree with 7 objects, nothing unexpected.
+- `addon-r2.log` has no ERROR lines, only the two standard SECURITY warnings.
+
+## R2.5 Findings
+
+| Id | Severity | Finding | Route |
+| --- | --- | --- | --- |
+| V4 | low (test) | The RT-4 guard test cannot fail. On every plane the tool still accepts (no plane on a face), `BoundBox` of BSpline section edges was exact in every probe, so reverting to `BoundBox` turns nothing red. | accept. A test would need a case where `BoundBox` is loose off a face, and no probe found one. |
+| V5 | info (test) | The RT-3b revert (open wire allowed) survives alone because the RT-3a cross-check also gives null. With both removed, the open-wire test turns red. | accept: two layers, both covered together |
+| V6 | info | The 10-turn spring is refused (pole load 675,684 > 640,000), though its script section + common took 8.1 s in the container. | none: decision 31 accepts a conservative limit |
+
+## R2.6 Teardown
+
+Documents closed; `fcb-freecad stop`; `docker compose ... down` (container and network removed). No `freecadcmd` of mine running. The copy's `git status` was clean, then the worktree was removed.

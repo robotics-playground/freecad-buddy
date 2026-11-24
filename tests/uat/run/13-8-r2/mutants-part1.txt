@@ -1,0 +1,71 @@
+== a_slice_not_section
+  RED test_Should_not_read_a_miss_When_the_plane_is_within_1e5_mm_of_a_face (offset=1e-06) (offset=1e-06)
+  RED test_Should_not_read_a_miss_When_the_plane_is_within_1e5_mm_of_a_face (offset=1e-05) (offset=1e-05)
+  RED 99999) (offset=29.99999)
+  RED 999999) (offset=29.999999)
+  RED test_Should_return_null_area_When_a_wire_is_open 
+  RESULT run=42 fail=5 err=0
+== b_area_zero_not_null
+  RED test_Should_finish_well_inside_the_query_budget_When_shapes_are_at_the_limits (name='Plate') (name='Plate')
+  RED test_Should_return_null_area_When_a_wire_is_open 
+  RED test_Should_return_null_area_and_open_wires_When_a_face_or_an_open_shell_is_cut (name='Face') (name='Face')
+  RED test_Should_return_null_area_and_open_wires_When_a_face_or_an_open_shell_is_cut (name='OpenShell') (name='OpenShell')
+  RED test_Should_return_null_area_not_zero_When_the_wire_count_is_above_the_area_limit 
+  RED test_Should_return_wires_and_length_with_a_null_area_When_a_valid_shell_is_cut 
+  RESULT run=42 fail=6 err=0
+== c_no_face_limit
+  RED test_Should_refuse_a_prism_When_it_has_one_face_above_the_limit 
+  RED test_Should_refuse_before_cutting_When_the_face_count_is_above_the_limit 
+  RESULT run=42 fail=2 err=0
+== d1_no_max_points_cap
+  RED test_Should_drop_whole_wires_and_flag_truncation_When_the_cap_leaves_no_room 
+  RED test_Should_stop_at_max_points_and_flag_truncation_When_the_polyline_is_longer 
+  RESULT run=42 fail=2 err=0
+== d2_no_truncated_flag
+  RED test_Should_drop_the_next_wire_When_the_cap_leaves_fewer_than_two_points (cap=5) (cap=5)
+  RED test_Should_drop_the_next_wire_When_the_cap_leaves_fewer_than_two_points (cap=6) (cap=6)
+  RED test_Should_drop_whole_wires_and_flag_truncation_When_the_cap_leaves_no_room 
+  RED test_Should_stop_at_max_points_and_flag_truncation_When_the_polyline_is_longer 
+  RESULT run=42 fail=4 err=0
+== e_no_deflection_floor
+  RED test_Should_raise_When_the_plane_or_points_are_malformed (index=14) (index=14)
+  RESULT run=1 fail=1 err=0
+== f_no_shape_copy
+  RESULT run=42 fail=0 err=0
+== rt2_area_wires_1500
+  RED test_Should_finish_well_inside_the_query_budget_When_shapes_are_at_the_limits (name='Plate') (name='Plate')
+  RESULT run=42 fail=1 err=0
+== rt3a_no_area_cross_check
+  RED test_Should_return_null_area_When_the_wires_and_the_boolean_disagree 
+  RESULT run=42 fail=1 err=0
+== rt3b_open_wire_allowed
+  RESULT run=42 fail=0 err=0
+== rt3ab_both
+  RED test_Should_return_null_area_When_a_wire_is_open 
+  RED test_Should_return_null_area_When_the_wires_and_the_boolean_disagree 
+  RESULT run=42 fail=2 err=0
+== rt4_loose_bbox
+  RESULT run=42 fail=0 err=0
+== rt5_no_plane_on_face
+  RED 0) (name='Box', normal='z', offset=0.0)
+  RED test_Should_refuse_the_plane_When_it_lies_on_a_planar_face (name='Box', normal='z', offset=1e-09) (name='Box', normal='z', offset=1e-09)
+  RED test_Should_refuse_the_plane_When_it_lies_on_a_planar_face (name='Box', normal='z', offset=1e-07) (name='Box', normal='z', offset=1e-07)
+  RED 0) (name='Box', normal='z', offset=30.0)
+  RED 0) (name='Box', normal='x', offset=10.0)
+  RED 0) (name='Box', normal=[1e-10, 0, 1], offset=0.0)
+  RED 0) (name='Cylinder', normal='z', offset=30.0)
+  RED 0) (name='Hollow', normal='z', offset=5.0)
+  RED 0) (name='Hollow', normal=[0, 0, 0.001], offset=15.0)
+  RED 0) (name='Placed', normal='z', offset=130.0)
+  RED 0) (name='NurbsBox', normal='z', offset=0.0)
+  RED 0) (name='NurbsBox', normal='z', offset=30.0)
+  RED test_Should_refuse_the_plane_When_it_lies_on_a_planar_face (name='LooseBox', normal='z', offset=1e-06) (name='LooseBox', normal='z', offset=1e-06)
+  RED test_Should_refuse_as_untrusted_When_a_face_surface_cannot_be_read 
+  RESULT run=42 fail=13 err=1
+== rt5b_no_face_tolerance
+  RED test_Should_refuse_the_plane_When_it_lies_on_a_planar_face (name='LooseBox', normal='z', offset=1e-06) (name='LooseBox', normal='z', offset=1e-06)
+  RESULT run=42 fail=1 err=0
+== rt5c_no_bspline_plane
+  RED 0) (name='NurbsBox', normal='z', offset=0.0)
+  RED 0) (name='NurbsBox', normal='z', offset=30.0)
+  RESULT run=42 fail=2 err=0
