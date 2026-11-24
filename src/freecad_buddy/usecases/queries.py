@@ -686,6 +686,11 @@ _CONTACT_DISTANCE_MM = 1e-7
 # for minutes in the container). Realistic parts sit far below it: a plate with 81 holes has 87
 # faces.
 _MAX_PAIR_FACE_PRODUCT = 150_000
+# Largest sum of faces(a) x faces(b) over every measured pair of one call. The same dense layout
+# costs about 80 microseconds per unit (230,400 -> 17.8 s), so 300,000 keeps a call near 24 s,
+# well inside the 60 s budget even when one slow host doubles it. A call of 190 pairs of
+# 20-face parts totals 76,000.
+_MAX_TOTAL_FACE_PRODUCT = 300_000
 
 
 def summarize_interference(sc: dict) -> str:
@@ -822,13 +827,8 @@ def _measure_interference(
     return None, distance, True
 
 
-def _too_complex_envelope(name_a: str, name_b: str, face_counts: dict[str, int]) -> ResultEnvelope:
-    """The refusal for a pair whose boolean and distance cost would pass the query budget."""
-    message = (
-        f"pair {name_a}/{name_b} is too complex to measure: {face_counts[name_a]} and "
-        f"{face_counts[name_b]} faces, limit {_MAX_PAIR_FACE_PRODUCT} for their product. "
-        "Measure simpler shapes, or fewer faces per object."
-    )
+def _too_complex_envelope(message: str) -> ResultEnvelope:
+    """The refusal for a call whose boolean and distance cost would pass the query budget."""
     return {
         "schema": "fcb.result-envelope/1",
         "status": "INVALID_INPUT",
@@ -836,6 +836,30 @@ def _too_complex_envelope(name_a: str, name_b: str, face_counts: dict[str, int])
         "structured_content": {},
         "text": message,
     }
+
+
+def _complexity_refusal(
+    name_pairs: list[tuple[str, str]], face_counts: dict[str, int], measurable: dict[str, bool]
+) -> ResultEnvelope | None:
+    """A refusal when one pair, or the sum over all measured pairs, is above its face limit."""
+    total = 0
+    for name_a, name_b in name_pairs:
+        if not (measurable[name_a] and measurable[name_b]):
+            continue
+        work = face_counts[name_a] * face_counts[name_b]
+        if work > _MAX_PAIR_FACE_PRODUCT:
+            return _too_complex_envelope(
+                f"pair {name_a}/{name_b} is too complex to measure: {face_counts[name_a]} and "
+                f"{face_counts[name_b]} faces, limit {_MAX_PAIR_FACE_PRODUCT} for their product. "
+                "Measure simpler shapes, or fewer faces per object."
+            )
+        total += work
+    if total > _MAX_TOTAL_FACE_PRODUCT:
+        return _too_complex_envelope(
+            f"the call is too complex to measure: its pairs total {total} (faces of a times "
+            f"faces of b, summed), limit {_MAX_TOTAL_FACE_PRODUCT}. Query fewer pairs per call."
+        )
+    return None
 
 
 def query_interference(
@@ -854,7 +878,7 @@ def query_interference(
     distance is unknown: an empty result must never read as no overlap. Reports numbers only,
     never a verdict. Raises ``ValidationError`` for bad input, an unknown name, or an object with
     no shape, and returns ``INVALID_INPUT`` with code ``interference.too_complex`` for a pair above
-    ``_MAX_PAIR_FACE_PRODUCT``.
+    ``_MAX_PAIR_FACE_PRODUCT``, or a call above ``_MAX_TOTAL_FACE_PRODUCT``.
     """
     name_pairs = _interference_pairs(objects, pairs)
 
@@ -865,10 +889,9 @@ def query_interference(
         # The trust check runs once per object, not per pair: 20 plates and 190 pairs took 10.7 s
         # with it per object and 69.7 s with it per pair.
         face_counts = {name: len(shape.Faces) for name, shape in shapes.items()}
-        for name_a, name_b in name_pairs:
-            work = face_counts[name_a] * face_counts[name_b]
-            if measurable[name_a] and measurable[name_b] and work > _MAX_PAIR_FACE_PRODUCT:
-                return _too_complex_envelope(name_a, name_b, face_counts)
+        refusal = _complexity_refusal(name_pairs, face_counts, measurable)
+        if refusal is not None:
+            return refusal
         records = []
         for name_a, name_b in name_pairs:
             if measurable[name_a] and measurable[name_b]:

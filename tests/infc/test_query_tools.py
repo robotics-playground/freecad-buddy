@@ -1043,6 +1043,36 @@ class QueryInterferenceTest(unittest.TestCase):
         self.assertEqual(envelope["status"], "OK")
         self.assertFalse(envelope["structured_content"]["pairs"][0]["boolean_failed"])
 
+    def test_Should_refuse_the_call_naming_the_total_When_the_pairs_sum_above_the_limit(self):
+        # Arrange
+        for index in range(4):
+            self._add_box(f"Box{index}", index * 30)
+        target = self._dispatch()
+        names = [f"Box{index}" for index in range(4)]
+
+        # Act
+        with mock.patch.object(queries, "_MAX_TOTAL_FACE_PRODUCT", 6 * 36 - 1):
+            envelope = target.dispatch("query_interference", {"doc": self.handle, "objects": names})
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["code"], "interference.too_complex")
+        self.assertIn("pairs total 216", envelope["detail"]["message"])
+
+    def test_Should_measure_the_call_When_the_pairs_sum_to_the_limit(self):
+        # Arrange
+        for index in range(4):
+            self._add_box(f"Box{index}", index * 30)
+        names = [f"Box{index}" for index in range(4)]
+
+        # Act
+        with mock.patch.object(queries, "_MAX_TOTAL_FACE_PRODUCT", 6 * 36):
+            envelope = self._measure(objects=names)
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        self.assertEqual(len(envelope["structured_content"]["pairs"]), 6)
+
     def test_Should_leave_a_fresh_fingerprint_digest_equal_When_pairs_are_measured(self):
         # Arrange
         from freecad_buddy.usecases.fingerprint import fingerprint
