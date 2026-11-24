@@ -601,3 +601,165 @@ def test_should_treat_cache_as_empty_when_file_is_not_a_tool_list(
 
     # Assert
     assert names == []
+
+
+def _refreshed_proxy(
+    tools_file: Path, marker: Path, cache_path: Path, instructions: str | None
+) -> CacheProxy:
+    extra = [] if instructions is None else ["--instructions", instructions]
+    parameters = StdioServerParameters(
+        command=sys.executable, args=[*_fake_arguments(tools_file, marker), *extra]
+    )
+    target = CacheProxy(
+        Upstream(UpstreamSpec("fake", None, lambda: stdio_client(parameters))), "fake", cache_path
+    )
+    _run_and_close(target, target.refresh_once)
+    return target
+
+
+def _next_start_instructions(cache_path: Path) -> str | None:
+    return (
+        CacheProxy(Upstream(_unreachable_spec(), 5), "fake", cache_path)
+        .initialization_options()
+        .instructions
+    )
+
+
+def test_Should_serve_cached_upstream_instructions_When_a_later_proxy_starts_with_the_upstream_down(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    instructions = "Use typed tools first."
+
+    # Act
+    first = _refreshed_proxy(tools_file, marker, cache_path, instructions)
+
+    # Assert
+    assert first.initialization_options().instructions is None
+    assert _next_start_instructions(cache_path) == instructions
+
+
+def test_Should_serve_the_new_text_When_the_upstream_instructions_change(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    _refreshed_proxy(tools_file, marker, cache_path, "old text")
+
+    # Act
+    _refreshed_proxy(tools_file, marker, cache_path, "new text")
+
+    # Assert
+    assert _next_start_instructions(cache_path) == "new text"
+
+
+def test_Should_serve_no_instructions_When_the_upstream_stops_sending_them(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    _refreshed_proxy(tools_file, marker, cache_path, "old text")
+
+    # Act
+    _refreshed_proxy(tools_file, marker, cache_path, None)
+
+    # Assert
+    assert _next_start_instructions(cache_path) is None
+
+
+@pytest.mark.parametrize("content", [b"", bytes([0xFF, 0xFE, 0x80])], ids=["empty", "not-utf8"])
+def test_Should_serve_no_instructions_When_the_cache_file_is_unusable(
+    cache_path: Path, content: bytes
+) -> None:
+    # Arrange
+    instructions_path = cache_path.with_name("fake.instructions.txt")
+    instructions_path.parent.mkdir(parents=True)
+    instructions_path.write_bytes(content)
+
+    # Act
+    instructions = _next_start_instructions(cache_path)
+
+    # Assert
+    assert instructions is None
+
+
+def test_Should_serve_the_text_unchanged_When_the_upstream_text_has_crlf_line_endings(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    instructions = "line one\r\nline two"
+
+    # Act
+    _refreshed_proxy(tools_file, marker, cache_path, instructions)
+
+    # Assert
+    assert _next_start_instructions(cache_path) == instructions
+
+
+def test_Should_correct_the_file_When_another_relay_rewrote_it_after_this_relay_started(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    _refreshed_proxy(tools_file, marker, cache_path, "current text")
+    other_relay_text = "text from another upstream version"
+
+    class _OtherRelayWrites(CacheProxy):
+        async def refresh_once(self) -> None:
+            cache_path.with_name("fake.instructions.txt").write_bytes(other_relay_text.encode())
+            await super().refresh_once()
+
+    parameters = StdioServerParameters(
+        command=sys.executable,
+        args=[*_fake_arguments(tools_file, marker), "--instructions", "current text"],
+    )
+    target = _OtherRelayWrites(
+        Upstream(UpstreamSpec("fake", None, lambda: stdio_client(parameters))), "fake", cache_path
+    )
+
+    # Act
+    _run_and_close(target, target.refresh_once)
+
+    # Assert
+    assert _next_start_instructions(cache_path) == "current text"
+
+
+def test_Should_keep_the_event_loop_responsive_When_the_instructions_path_cannot_be_replaced(
+    tools_file: Path, marker: Path, cache_path: Path
+) -> None:
+    # Arrange
+    cache_path.with_name("fake.instructions.txt").mkdir(parents=True)
+    parameters = StdioServerParameters(
+        command=sys.executable,
+        args=[*_fake_arguments(tools_file, marker), "--instructions", "some text"],
+    )
+    target = CacheProxy(
+        Upstream(UpstreamSpec("fake", None, lambda: stdio_client(parameters))), "fake", cache_path
+    )
+    longest_stall = 0.0
+
+    async def ticker() -> None:
+        nonlocal longest_stall
+        previous = time.monotonic()
+        while True:
+            await asyncio.sleep(0.01)
+            now = time.monotonic()
+            longest_stall = max(longest_stall, now - previous - 0.01)
+            previous = now
+
+    async def act() -> None:
+        await target.refresh_once()  # connect first, so the timed part is only the cache write
+        watcher = asyncio.ensure_future(ticker())
+        try:
+            for _ in range(3):
+                await target.refresh_once()
+        finally:
+            watcher.cancel()
+
+    # Act
+    _run_and_close(target, act)
+
+    # Assert
+    assert longest_stall < 0.2
+    assert [tool["name"] for tool in json.loads(cache_path.read_text(encoding="utf-8"))] == [
+        "echo",
+        "fail",
+        "flaky",
+    ]

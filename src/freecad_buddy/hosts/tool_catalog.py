@@ -1065,7 +1065,7 @@ SCRIPT_EXEC_SPEC = ToolSpec(
     "`FreeCAD`/`App`, `Part`, `doc`; set `result` to return its repr. Raw: no transaction, "
     "fingerprint or rollback. Open and commit a transaction in the script so `document_undo` "
     "covers it, and check geometry with `verify_*` afterwards. Every call is audit-logged with "
-    "its source.",
+    "its source. Before using it, check the typed tool families in the server instructions.",
     timeout_s=30.0,
     mutating=True,
     audit_event="exec",

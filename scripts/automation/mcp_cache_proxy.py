@@ -184,12 +184,14 @@ class Upstream:
         self._lock = asyncio.Lock()
         self._current: _Connection | None = None
         self._last_used = 0.0
+        self.instructions: str | None = None
 
     async def _own(self, ready: asyncio.Future[ClientSession], stop: asyncio.Event) -> None:
         try:
             async with self._spec.open_transport() as streams:
                 async with ClientSession(streams[0], streams[1]) as session:
-                    await session.initialize()
+                    initialized = await session.initialize()
+                    self.instructions = initialized.instructions or None
                     ready.set_result(session)
                     await stop.wait()
         except asyncio.CancelledError:
@@ -389,8 +391,13 @@ class CacheProxy:
         self._server_name = server_name
         self._cache_path = cache_path
         self._tools = self._read_cache()
+        # The initialize result is sent once per client session, before any upstream connection
+        # exists while the container is down, so the upstream text is read back from the last run.
+        self._instructions_path = cache_path.with_name(f"{cache_path.stem}.instructions.txt")
         self._client_session: ServerSession | None = None
-        self.server: Server[Any] = Server(f"{server_name}-cache-proxy")
+        self.server: Server[Any] = Server(
+            f"{server_name}-cache-proxy", instructions=self._read_instructions()
+        )
         self.server.list_tools()(self._handle_list_tools)
         self.server.request_handlers[types.CallToolRequest] = self._handle_call_tool
 
@@ -411,14 +418,25 @@ class CacheProxy:
             return []
         return tools
 
+    def _read_instructions(self) -> str | None:
+        try:
+            # Bytes, so a line ending in the upstream text comes back unchanged.
+            return self._instructions_path.read_bytes().decode("utf-8") or None
+        except (OSError, ValueError):
+            return None
+
     def _write_cache(self, tools: list[dict[str, Any]]) -> None:
-        self._cache_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self._cache_path.with_name(f"{self._cache_path.name}.{uuid.uuid4().hex}.tmp")
-        temporary.write_text(json.dumps(tools, indent=2), encoding="utf-8")
+        self._replace_file(self._cache_path, json.dumps(tools, indent=2))
+
+    @staticmethod
+    def _replace_file(path: Path, text: str, newline: str | None = None) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
+        temporary.write_text(text, encoding="utf-8", newline=newline)
         # Windows refuses a replace while another process replaces or reads the same target.
         for attempt in range(CACHE_REPLACE_ATTEMPTS):
             try:
-                os.replace(temporary, self._cache_path)
+                os.replace(temporary, path)
                 return
             except PermissionError:
                 if attempt == CACHE_REPLACE_ATTEMPTS - 1:
@@ -441,8 +459,23 @@ class CacheProxy:
             result = _error_result(_unknown_outcome_text(self._server_name, str(error)))
         return types.ServerResult(result)
 
+    def _cache_instructions(self) -> None:
+        instructions = self._upstream.instructions
+        if instructions == self._read_instructions():
+            return
+        try:
+            if instructions is None:
+                self._instructions_path.unlink(missing_ok=True)
+            else:
+                self._replace_file(self._instructions_path, instructions, newline="")
+        except OSError:
+            # The tool list is the relay's main job; a failed text write must not block it.
+            LOGGER.warning("could not update %s", self._instructions_path, exc_info=True)
+
     async def refresh_once(self) -> None:
         tools = await self._upstream.list_tools()
+        # The replace retries with time.sleep; a thread keeps the event loop free for tool calls.
+        await asyncio.to_thread(self._cache_instructions)
         if tools == self._tools:
             return
         self._write_cache(tools)

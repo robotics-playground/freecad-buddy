@@ -23,9 +23,10 @@ parser.add_argument("--tools-file", type=Path, required=True)
 parser.add_argument("--marker", type=Path, required=True)
 parser.add_argument("--count-file", type=Path)
 parser.add_argument("--port", type=int)
+parser.add_argument("--instructions")
 arguments = parser.parse_args()
 
-app = FastMCP("fake-upstream", port=arguments.port or 8000)
+app = FastMCP("fake-upstream", instructions=arguments.instructions, port=arguments.port or 8000)
 low_level = app._mcp_server
 
 

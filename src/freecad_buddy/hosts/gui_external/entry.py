@@ -29,6 +29,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 
 from freecad_buddy.adapters.mcp_server import (
+    SERVER_INSTRUCTIONS,
     Capabilities,
     _to_call_result,
     registered_tools,
@@ -52,7 +53,7 @@ _EXIT_GRACE_S = 1.0
 
 def build_proxy_server(registry: MethodRegistry, caps: Capabilities) -> Server:
     """Wire tools/list + tools/call, running each blocking proxy call off the event loop."""
-    server: Server = Server("freecad-buddy-gui-external")
+    server: Server = Server("freecad-buddy-gui-external", instructions=SERVER_INSTRUCTIONS)
 
     @server.list_tools()
     async def _list_tools() -> list[types.Tool]:

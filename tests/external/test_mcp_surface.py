@@ -11,6 +11,7 @@ import asyncio
 import dataclasses
 import json
 import logging
+import re
 import threading
 import time
 from pathlib import Path
@@ -26,6 +27,7 @@ from freecad_buddy.adapters.marshal import (
     ThreadExecutor,
 )
 from freecad_buddy.adapters.mcp_server import (
+    SERVER_INSTRUCTIONS,
     Capabilities,
     _to_call_result,
     build_server,
@@ -1322,3 +1324,120 @@ def test_should_pass_the_live_display_precision_to_the_oracle_when_headless_veri
 
     # Assert
     assert seen["decimals"] == 4
+
+
+def test_Should_carry_the_shared_instructions_When_the_server_initializes():
+    # Arrange
+    caps = Capabilities(script_exec=False)
+    target = build_server(_registry(caps), caps, AuditSink(Path("unused.jsonl")))
+
+    # Act
+    options = target.create_initialization_options()
+
+    # Assert
+    assert options.instructions == SERVER_INSTRUCTIONS
+
+
+def test_Should_stay_within_250_words_When_the_instructions_are_counted():
+    # Arrange
+    text = SERVER_INSTRUCTIONS
+
+    # Act
+    word_count = len(text.split())
+
+    # Assert
+    assert word_count <= 250
+
+
+@pytest.mark.parametrize(
+    "client_specific", ["ToolSearch", "select:", "mcp__", "Claude", "Cursor", "Codex", "Gemini"]
+)
+def test_Should_hold_no_client_specific_text_When_the_instructions_are_read(client_specific):
+    # Arrange
+    text = SERVER_INSTRUCTIONS
+
+    # Act
+    found = client_specific in text
+
+    # Assert
+    assert found is False
+
+
+def test_Should_list_exactly_the_families_with_a_real_tool_When_the_instructions_are_parsed():
+    # Arrange
+    tool_names = [spec.name for spec in tool_specs()]
+    family_lines = [line for line in SERVER_INSTRUCTIONS.splitlines() if line.startswith("- ")]
+
+    # Act
+    listed = [
+        prefix
+        for line in family_lines
+        for prefix in re.findall(r"[a-z_]+_(?![a-z])", line.split(":", 1)[0])
+    ]
+
+    # Assert
+    assert sorted(listed) == sorted(
+        [
+            "document_",
+            "query_",
+            "verify_",
+            "export_",
+            "verify_export_",
+            "sketch_",
+            "feature_",
+            "preview_",
+            "view_",
+        ]
+    )
+    for prefix in listed:
+        assert any(name.startswith(prefix) for name in tool_names), prefix
+
+
+def test_Should_hold_the_two_t10_sentences_and_the_skill_names_When_the_instructions_are_read():
+    # Arrange
+    text = SERVER_INSTRUCTIONS
+    sentences = [
+        "Use a typed tool whenever one covers the operation.",
+        "Before a build, make the sketch_, feature_, query_ and verify_ tools available in "
+        "your client.",
+        "script_exec is for the gaps listed in the freecad-scripting-idioms skill.",
+    ]
+    skills = ["design-decomposition", "freecad-sketcher", "freecad-partdesign"]
+
+    # Act
+    missing = [item for item in [*sentences, *skills, "verification-thinking"] if item not in text]
+
+    # Assert
+    assert missing == []
+
+
+def test_Should_end_with_the_pointer_exactly_once_When_the_script_exec_description_is_read():
+    # Arrange
+    description = SCRIPT_EXEC_SPEC.description
+    pointer = " Before using it, check the typed tool families in the server instructions."
+
+    # Act
+    count = description.count(pointer)
+
+    # Assert
+    assert count == 1
+    assert description.endswith(pointer)
+    assert description.startswith(
+        "Run Python inside FreeCAD for an operation no typed tool covers."
+    )
+
+
+def test_Should_name_only_tools_that_exist_When_a_tool_shaped_token_is_in_the_instructions():
+    # Arrange
+    real_names = {spec.name for spec in tool_specs()} | {"script_exec"}
+    bare_prefixes = {
+        "document_", "query_", "verify_", "export_", "verify_export_",
+        "sketch_", "feature_", "preview_", "view_",
+    }  # fmt: skip
+    pattern = r"\b(?:document|query|verify|export|sketch|feature|preview|view)_[a-z0-9_]*"
+
+    # Act
+    tokens = set(re.findall(pattern, SERVER_INSTRUCTIONS)) - bare_prefixes
+
+    # Assert
+    assert tokens - real_names == set()
