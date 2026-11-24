@@ -52,6 +52,7 @@ EXPECTED_DOCUMENT_TOOLS = {
     "document_list",
     "document_recompute",
     "document_undo",
+    "document_object_delete",
 }
 
 EXPECTED_QUERY_TOOLS = {

@@ -1057,22 +1057,62 @@ _PREVIEW_INPUT_SCHEMA = {
 def preview_op_table() -> dict:
     """The ``{tool name: use-case function}`` table ``preview_dry_run`` may run.
 
-    Derived from the catalog's own ``sketch_*``/``feature_*`` spec lists intersected with the
-    matching module-level use-case functions, so a tool registered without becoming previewable
-    (or the reverse) is a mismatch the tests catch rather than a hand-maintained name list that
-    drifts. ``script_exec`` is excluded structurally: it is in neither spec list and carries
-    neither name prefix.
+    Derived from the catalog's own ``sketch_*``, ``feature_*`` and object-edit spec lists
+    intersected with the matching module-level use-case functions, so a tool registered without
+    becoming previewable (or the reverse) is a mismatch the tests catch rather than a
+    hand-maintained name list that drifts. ``script_exec`` is excluded structurally: it is in
+    none of the spec lists and carries neither name prefix.
 
     The entries are the bare use-case functions, not the wired handlers: the handlers close over
     the live registry, while the preview must supply its own document handle at call time.
     """
     table = {}
-    for spec in (*_sketch_specs(), *_feature_specs()):
+    for spec in (*_sketch_specs(), *_feature_specs(), *_object_edit_specs()):
         module = sketches if spec.name.startswith("sketch_") else features
         fn = getattr(module, spec.name, None)
         if fn is not None:
             table[spec.name] = fn
     return table
+
+
+def _object_edit_specs():
+    """The ``document_object_delete`` spec: a geometry mutation named for the document it edits.
+
+    Built with ``_feature_method`` and ``_feature_schema`` because it takes the same confirm gate
+    and runs the same bracket as a feature; its name keeps it out of the ``feature_`` family, so
+    ``preview_op_table`` reads this list as well.
+    """
+    return [
+        _feature_method(
+            "document_object_delete",
+            features.document_object_delete,
+            _feature_schema(
+                {
+                    "objects": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "string"},
+                        "description": "object Names to delete; a Body also takes its Group "
+                        "members, its Origin and the Origin features",
+                    },
+                    "with_dependents": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "also delete the objects that depend on the delete set",
+                    },
+                },
+                ["objects"],
+            ),
+            "Delete objects in one transaction; one document_undo restores them. An object "
+            "outside the delete set whose dependencies hold a deleted object is a dependent "
+            "(a pad of a deleted sketch, an object bound by an expression to a deleted VarSet): "
+            "with with_dependents false the call is refused with INVALID_INPUT code "
+            "delete.has_dependents naming them and nothing is deleted; with true they are deleted "
+            "too and listed in dependents. A Body takes its Group, Origin and Origin features. An "
+            "Origin or Origin feature named without its Body is refused (delete.origin_object). "
+            "Result {deleted, dependents}. Previewable with preview_dry_run.",
+        ),
+    ]
 
 
 def _preview_spec():
@@ -1748,6 +1788,7 @@ def tool_specs() -> list[ToolSpec]:
         ),
         *_sketch_specs(),
         *_feature_specs(),
+        *_object_edit_specs(),
         _preview_spec(),
     ]
 

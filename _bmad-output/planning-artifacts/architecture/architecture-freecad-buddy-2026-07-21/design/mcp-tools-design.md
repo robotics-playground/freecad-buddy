@@ -120,7 +120,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `document_list` | 0 | List open documents with handles, labels, transient flags | no |
 | `document_recompute` | 0 | Full recompute; report touched objects + per-object error states | yes *(L)* |
 | `document_undo` | 2 | Bridge-owned undo of the last committed transaction; fingerprint-verified (G2.3) | yes *(L)* |
-| `document_object_delete` | 2 | Delete an object (and report orphaned dependents) under AD-5 — **planned** | yes |
+| `document_object_delete` | 2 | Delete objects under AD-5; refuses when objects outside the set depend on them unless `with_dependents`; a Body takes its Group, Origin and Origin features (§3.7.2) | yes |
 
 ### `query_` — read-only introspection (zero mutation; Phase 1 assistant surface, G1.6)
 
@@ -208,7 +208,7 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 
 | Namespace | P0 | P1 | P2 | P3 | Specified | Shipped |
 | --- | --- | --- | --- | --- | --- | --- |
-| `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
+| `document_` | 6 | — | 2 | — | 8 | 8 |
 | `query_` | 8 | 4 | — | — | 12 | 11 (`query_tree_children` planned) |
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
@@ -216,12 +216,12 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `feature_` | — | — | 12 | — | 12 | 12 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **53** | **49** |
+| **AI-visible total** (typed tools) | | | | | **53** | **50** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The four planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **49**; with `SCRIPT_EXEC_SPEC` that is 50 registered specs.
+The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **50**; with `SCRIPT_EXEC_SPEC` that is 51 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -616,6 +616,36 @@ Refusals, all `INVALID_INPUT` before the bracket opens, with `detail.code` (AD-1
 The refusals are raised as `ParameterRefusal` (a `CodedValidationError`, a `ValidationError` carrying `code`) and `rpc_dispatch` maps one onto `INVALID_INPUT` with that `detail.code`, like every other tool's refusal, so `preview_dry_run` meets the same error. The dispatcher reads `code` from `CodedValidationError` only and only when it is a non-empty string; any other exception keeps its status as `detail.code` (an `OSError` from `script_exec` has an integer `code` that would break the envelope schema).
 
 Rollback proof: the shape fingerprint (AD-6) holds no VarSet property, so a parameters-only mutation leaves its digest unchanged and an abort that restored nothing would still compare equal. `run_mutation` therefore takes a `state_probe`; for this tool it reads, before the bracket and after an abort, every property of the VarSet (type, group, documentation, value, bound expression), or `None` while the object does not exist; the value of a Python-object or link property is not compared, because its repr carries an address (only its presence and type are). The rollback is `rolled_back_verified` only when the reading matches; otherwise the document is restored from the snapshot and read again, and a reading that still differs is `SPEC_FAILED` with `rolled_back` false. The general gap (a change to a VarSet or Spreadsheet that no shape reflects is invisible to the fingerprint and to `mutation.changed`) is open for an architecture decision.
+
+### 3.7.2 `document_object_delete`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "objects": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "object Names; a Body also takes its Group members, its Origin and the Origin features" },
+    "with_dependents": { "type": "boolean", "default": false },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "objects"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "deleted": { "type": "array", "items": { "type": "string" }, "description": "every removed object Name, document order" },
+    "dependents": { "type": "array", "items": { "type": "string" }, "description": "the ones removed only because with_dependents was true" },
+    "mutation": { "$ref": "#/$defs/MutationBlock" }
+  }, "required": ["deleted", "dependents"] } }
+```
+
+A dependent is an object outside the delete set whose `OutList` holds a deleted object (a pad of a deleted sketch, the next feature of a deleted pad through `BaseFeature`, an object an expression binds to a deleted VarSet). A container that holds the object only in its `Group` (a Body, Part or group) is not a dependent. With `with_dependents` false any dependent refuses the call, `INVALID_INPUT` with `detail.code` `delete.has_dependents`, naming the dependents, before the bracket opens. With true the closure of dependents (dependents of dependents too, and what a dependent Body owns) is deleted. An `App::Origin` or an Origin feature named without the Body or Part that owns it is refused with `delete.origin_object`. An unknown name or an empty list is `INVALID_INPUT` without a code. A child of a deleted `App::Part` or group is not deleted; it stays in the document outside the group. An `App::Part` or `Part::LocalCoordinateSystem` takes its origin objects like a Body.
+
+A feature of a Body that survives goes through `Body.removeObject` before `Document.removeObject`, so `Tip` moves to the previous solid feature (`Body.cpp` `Body::removeObject`); objects are removed latest first. The next feature of a deleted feature holds it in `BaseFeature`, so it is a dependent: deleting a feature in the middle of a Body needs `with_dependents` and takes every later feature with it (`Body::removeObject`'s relink of the next feature never runs for a survivor).
+
+The deleted names appear in `mutation.changed` with `volume` null (AD-6). `touched` names the deleted objects and each surviving Body that lost a member, so `post_verify` runs `verify_shape` on that Body.
+
+TNP audit: a deleted object that owned a reference (a pad's `Profile`, an expression binding) would grade `BROKEN` as a vanished owner. `run_mutation` takes the set of names the op deletes on purpose and `audit_references` excuses a record whose owner is in that set and absent from the document, in the manner of decision 014 (the exemption is keyed to what the op wrote). An owner that vanished any other way stays `BROKEN`.
+
+Rollback proof: the shape fingerprint holds no VarSet, Body or Origin, so a delete of shape-less objects leaves its digest unchanged. `state_probe` reads, per object, name, label, type, the names it depends on and, for a Body, `Tip` and `Group`; an abort that restored an object without its dependency reads as unproven and falls back to the snapshot.
+
+Undo: one transaction, one `document_undo` restores the objects, `Group`, `Tip`, `BaseFeature`, links and Visibility (measured on FreeCAD 1.1.4 for a Tip delete, a profile-sketch delete with dependents and a whole-Body delete). FreeCAD restores an object's `ExpressionEngine` text but not its dependency on the bound object: after the undo `OutList` lacks the target and a change to the source no longer drives the property (measured: `Pad.Length = VS.L`; `VS.L` 3 to 7 left the pad at 3). The same happens after `abortTransaction`. `shim.relink_expressions` clears and sets each binding of the objects the undo or the abort restored; it records no undo step and leaves the redo stack (measured: `UndoCount`, `RedoCount` equal before and after). A binding that cannot be set again is cleared by the failed attempt and is listed, with its text, in the `errors` of `document_undo`; after an abort the rollback proof reads the dependency back and falls back to the snapshot restore when it is missing.
+
+`preview_dry_run` accepts the tool: `preview_op_table` reads the object-edit spec list beside the `sketch_` and `feature_` lists.
 
 ### 3.8 `preview_dry_run` (AD-10)
 

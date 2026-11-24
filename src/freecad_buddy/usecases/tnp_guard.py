@@ -413,6 +413,7 @@ def audit_references(
     doc: object,
     snapshot: list[RefRecord],
     written: list[RefRecord] | None = None,
+    deleted: frozenset[str] = frozenset(),
 ) -> TnpAuditBlock:
     """Audit ``doc``'s references against ``snapshot`` and return a ``TnpAuditBlock``.
 
@@ -436,6 +437,9 @@ def audit_references(
     :param written: the post-op, pre-recompute reading of the same references. A reference whose
         live value matches what the op wrote is the mutation's intended target and is excused the
         entry-count comparison.
+    :param deleted: names of the objects the op deleted on purpose. A snapshotted record whose
+        owner is in this set and absent from ``doc`` is excused; an owner that vanished any other
+        way stays ``BROKEN``.
     """
     version = _element_map_version_banner()
     live = snapshot_references(doc)
@@ -448,7 +452,7 @@ def audit_references(
             "findings": findings + _unsupported_findings(snapshot),
         }
 
-    findings += _reference_findings(doc, snapshot, live, written or [])
+    findings += _reference_findings(doc, snapshot, live, written or [], deleted)
     failing = [f for f in findings if f["verdict"] not in ("PASS", "RE_BASELINED")]
     return {
         "status": "FLAGGED" if failing else "CLEAN",
@@ -811,6 +815,7 @@ def _reference_findings(
     snapshot: list[RefRecord],
     live: list[RefRecord],
     written: list[RefRecord],
+    deleted: frozenset[str] = frozenset(),
 ) -> list[RefFinding]:
     """Run the Layer-1/2 diff over every snapshotted record, skipping the entries Layer 0 reported.
 
@@ -821,6 +826,11 @@ def _reference_findings(
 
     A record whose every entry is missing is skipped outright: Layer 0 has reported all of it, and
     grading the empty remainder would emit a spurious "names no element" PASS.
+
+    A record whose owner the op deleted on purpose (``deleted``) and that is gone from ``doc`` is
+    excused: the delete set is what the op wrote, in the sense of decision 014. The owner must be
+    in the set AND absent, so a delete that did not happen, or an owner that vanished any other
+    way, still grades ``BROKEN``.
     """
     live_by_key = _pair_records(snapshot, live)
     written_by_key = _pair_records(snapshot, written)
@@ -832,6 +842,17 @@ def _reference_findings(
             record, paired = _without_missing_entries(record, paired)
             if paired is None:
                 continue
+        if paired is None and record["owner"] in deleted and doc.getObject(record["owner"]) is None:
+            findings.append(
+                _finding(
+                    record,
+                    None,
+                    "PASS",
+                    1,
+                    f"{record['owner']} was deleted by the operation",
+                )
+            )
+            continue
         findings.extend(_grade_record(doc, record, paired, written_by_key.get(key)))
     return findings
 
