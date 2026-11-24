@@ -1,0 +1,1 @@
+2026-11-24 10:52:57,269 tool list changed: 46 tools, sending tools/list_changed
