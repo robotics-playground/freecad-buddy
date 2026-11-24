@@ -105,10 +105,13 @@ def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None,
             oracle_legs = [
                 export_oracle.safe_oracle(
                     "trimesh_stl",
-                    lambda: export_oracle.stl_oracle(path, source["volume"], band, decimals),
+                    lambda: export_oracle.stl_oracle(
+                        path, source["volume"], band, decimals, facts.get("facet_counts")
+                    ),
                 ),
                 export_oracle.safe_oracle(
-                    "stdlib_stl", lambda: export_oracle.StdlibStlOracle().check(path)
+                    "stdlib_stl",
+                    lambda: export_oracle.StdlibStlOracle().check(path, facts.get("facet_counts")),
                 ),
             ]
         else:
@@ -116,7 +119,12 @@ def _mesh_verify_handler(doc_registry, export_registry, marshal: Marshal | None,
                 export_oracle.safe_oracle(
                     "lib3mf",
                     lambda: export_oracle.mesh3mf_oracle(
-                        path, source["is_mm"], source["volume"], band, decimals
+                        path,
+                        source["is_mm"],
+                        source["volume"],
+                        band,
+                        decimals,
+                        facts.get("objects"),
                     ),
                 ),
             ]
@@ -1625,7 +1633,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.export_step,
             120.0,
             _EXPORT_STEP_INPUT_SCHEMA,
-            "Write a shape to STEP (unit=MM, AP pinned); result verified:false.",
+            "Write shapes to STEP (unit=MM, AP pinned). Several objects: one product each, named "
+            "by Label. Omit objects for all visible solids; result verified:false.",
             mutating=True,
         ),
         _export_method(
@@ -1633,7 +1642,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.export_stl,
             120.0,
             _MESH_EXPORT_INPUT_SCHEMA,
-            "Write a shape to binary STL from one tessellation; result verified:false.",
+            "Write shapes to one merged binary STL from one tessellation. Omit objects for all "
+            "visible solids; result verified:false.",
             mutating=True,
         ),
         _export_method(
@@ -1641,7 +1651,8 @@ def tool_specs() -> list[ToolSpec]:
             exports.export_3mf,
             120.0,
             _MESH_EXPORT_INPUT_SCHEMA,
-            "Write a shape to 3MF from one tessellation; result verified:false.",
+            "Write shapes to 3MF from one tessellation. Several objects: one mesh object each, "
+            "named by Label. Omit objects for all visible solids; result verified:false.",
             mutating=True,
         ),
         _export_method(

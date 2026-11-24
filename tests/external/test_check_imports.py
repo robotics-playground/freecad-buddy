@@ -140,7 +140,7 @@ def test_adapters_importing_hosts_flagged(tmp_path):
 
 def test_freecad_app_whitelist_allowed_in_usecases(tmp_path):
     root = _make_tree(tmp_path, {
-        "usecases/ok.py": "import Part\nimport Sketcher\nimport MeshPart\n",
+        "usecases/ok.py": "import Part\nimport Sketcher\nimport MeshPart\nimport Import\n",
     })
     assert check_imports.check_tree(root) == []
 

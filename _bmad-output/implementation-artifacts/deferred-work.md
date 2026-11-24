@@ -2223,3 +2223,20 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-14-typed-verify-shape-check-schema.md`
   summary: No test sends a bad `verify_shape` check through the server's `tools/call` handler to pin the SDK's input validation and its message.
   evidence: Gap lens. Story 13-14 relies on the MCP SDK validating `inputSchema` before dispatch; its verifier checks this with one live call. A permanent test would catch an SDK change.
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: `export_step`, `export_stl` and `export_3mf` write `obj.Shape` in the object's own coordinates, so the placement of an `App::Part` that holds the object is not applied (one object or several).
+  evidence: measured on host FreeCAD 1.1: Box inside an `App::Part` placed at x=100 exports with `XMin` 0.0 in STEP for `shape.exportStep` and for `Import.export`; `getGlobalPlacement().Base.x` is 100.0. Pre-existing for the single-object path. Edge Hunter finding in the Story 13-5 review.
+  blocker: the intended behaviour (global or local coordinates) is a product decision; assemblies are not in SPEC-mcp-usage-improvement.
+  unblock: a decision on global coordinates, then a Story that applies `getGlobalPlacement()` to the shapes before export and verification.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: Default selection (omitted `objects`) ignores `App::Link` objects, which have no `Shape`.
+  evidence: Edge Hunter finding in the Story 13-5 review (low, not reproduced; Assembly workbench documents are outside the Phase 1 to 3 flows).
+  blocker: no reproduction document; assemblies are not in scope.
+  unblock: an assembly Story, or a measured report of a document that loses a solid this way.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-5-multi-object-export.md`
+  summary: `verify_export_step` fails `export_step.topology_counts` for a BooleanFragments object, in the single-object path and in the several-object path.
+  evidence: red team RT-7 (`_bmad-output/implementation-artifacts/redteam-13-5.md`): faces 25 against 19 on re-import, same on the single path (`bf_single`); not caused by Story 13-5.
+  blocker: needs a decision whether FreeCAD's re-import of fragments (split faces) is a verification fault or an expected difference.
+  unblock: a Story that measures the fragment topology on re-import and sets the count rule for compound results.

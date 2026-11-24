@@ -86,10 +86,25 @@ def _load_stl_facets(path: str) -> list[tuple]:
     return _read_ascii_stl_facets(data.decode("ascii", errors="ignore"))
 
 
+def _facet_groups(facets: list, facet_counts: list[int] | None) -> list[list]:
+    """Split ``facets`` into one list per exported object, or keep them as one list.
+
+    Counts that do not add up to the facet total cannot describe this file, so they are ignored.
+    """
+    if not facet_counts or sum(facet_counts) != len(facets):
+        return [facets]
+    groups = []
+    start = 0
+    for count in facet_counts:
+        groups.append(facets[start : start + count])
+        start += count
+    return groups
+
+
 class SecondStlOracle(Protocol):
     """A second, independent STL checker: returns ``{checks, ok}`` for a written STL file."""
 
-    def check(self, path: str) -> dict: ...
+    def check(self, path: str, facet_counts: list[int] | None = None) -> dict: ...
 
 
 class StdlibStlOracle:
@@ -120,9 +135,8 @@ class StdlibStlOracle:
         cz = ax * by - ay * bx
         return (cx * cx + cy * cy + cz * cz) <= 0.0
 
-    def check(self, path: str) -> dict:
-        """Return ``{checks: [...], ok: bool}`` for the STL at ``path``."""
-        facets = _load_stl_facets(path)
+    def _measure(self, facets: list[tuple]) -> tuple[int, bool, int]:
+        """Return ``(unpaired edge count, winding consistent, degenerate facet count)``."""
         edge_count: dict[tuple, int] = {}
         directed: set[tuple] = set()
         winding_ok = True
@@ -139,14 +153,26 @@ class StdlibStlOracle:
                     winding_ok = False
                 directed.add((a, b))
 
-        non_paired = [e for e, n in edge_count.items() if n != 2]
-        manifold_ok = len(non_paired) == 0 and len(facets) > 0
+        return sum(1 for n in edge_count.values() if n != 2), winding_ok, degenerate
+
+    def check(self, path: str, facet_counts: list[int] | None = None) -> dict:
+        """Return ``{checks: [...], ok: bool}`` for the STL at ``path``.
+
+        With ``facet_counts`` (the facet count of each exported object, in file order) each object
+        is checked alone, so objects that touch are not read as one non-manifold surface.
+        """
+        facets = _load_stl_facets(path)
+        measured = [self._measure(group) for group in _facet_groups(facets, facet_counts)]
+        non_paired = sum(unpaired for unpaired, _winding, _degenerate in measured)
+        winding_ok = all(winding for _unpaired, winding, _degenerate in measured)
+        degenerate = sum(count for _unpaired, _winding, count in measured)
+        manifold_ok = non_paired == 0 and len(facets) > 0
 
         checks = [
             {"id": "stl2.facets", "measured": len(facets), "passed": len(facets) > 0},
             {
                 "id": "stl2.manifold_edge_pairing",
-                "measured": len(non_paired),
+                "measured": non_paired,
                 "passed": manifold_ok,
             },
             {"id": "stl2.local_winding", "measured": winding_ok, "passed": winding_ok},
@@ -177,19 +203,52 @@ def stl_oracle(
     expected_volume: float,
     volume_band: float,
     decimals: int | None = DEFAULT_DISPLAY_DECIMALS,
+    facet_counts: list[int] | None = None,
 ) -> dict:
     """Run trimesh over an STL file; return ``{oracle, checks, ok}``.
 
     Checks ``is_watertight``, ``is_winding_consistent``, ``is_volume``, ``mesh.volume`` within
     the deflection-derived ``volume_band`` (never ±0.1 %), and an even Euler characteristic. The
-    volume deviation is compared as displayed at ``decimals`` places, or raw when ``None``.
+    volume deviation is compared as displayed at ``decimals`` places, or raw when ``None``. With
+    ``facet_counts`` (the facet count of each exported object, in file order) vertices are welded
+    inside one object only and the soundness checks hold for every object, so objects that touch
+    are not read as one non-manifold surface; the volume is the sum over the objects.
     """
     import trimesh
 
     # process=True welds the per-facet duplicated vertices FreeCAD's binary STL emits, so a
     # sound mesh reads back watertight; a real hole or non-manifold edge still fails to weld.
+    if facet_counts and len(facet_counts) > 1:
+        raw = trimesh.load(path, file_type="stl", process=False)
+        if sum(facet_counts) == len(raw.faces):
+            parts = []
+            start = 0
+            for count in facet_counts:
+                faces = raw.faces[start : start + count]
+                parts.append(trimesh.Trimesh(vertices=raw.vertices, faces=faces, process=True))
+                start += count
+            return _trimesh_checks(
+                _AllObjects(parts), expected_volume, volume_band, "trimesh_stl", decimals
+            )
     mesh = trimesh.load(path, file_type="stl", process=True)
     return _trimesh_checks(mesh, expected_volume, volume_band, "trimesh_stl", decimals)
+
+
+class _AllObjects:
+    """The trimesh properties ``_trimesh_checks`` reads, taken over several separate meshes.
+
+    The soundness flags hold only when they hold for every mesh and the volume is the sum. An odd
+    Euler characteristic in any mesh must fail the even-parity check, which a plain sum of two odd
+    values would hide, so the characteristic reports 1 when any mesh has an odd one.
+    """
+
+    def __init__(self, meshes: list) -> None:
+        self.is_watertight = all(bool(m.is_watertight) for m in meshes)
+        self.is_winding_consistent = all(bool(m.is_winding_consistent) for m in meshes)
+        self.is_volume = all(bool(m.is_volume) for m in meshes)
+        self.volume = sum(abs(float(m.volume)) for m in meshes)
+        eulers = [int(m.euler_number) for m in meshes]
+        self.euler_number = sum(eulers) if all(e % 2 == 0 for e in eulers) else 1
 
 
 def _trimesh_checks(
@@ -247,12 +306,60 @@ def _trimesh_from_lib3mf(mesh_obj):
     return trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
 
 
+def _concatenated_trimesh(meshes: list):
+    """Return one ``trimesh.Trimesh`` holding every lib3mf mesh, vertices kept per mesh."""
+    import trimesh
+
+    return trimesh.util.concatenate([_trimesh_from_lib3mf(mesh_obj) for mesh_obj in meshes])
+
+
+def _object_checks(meshes: list, objects: list[dict], decimals: int | None) -> list[dict]:
+    """Return the per-object checks of a multi-object 3MF, meshes matched to objects in order.
+
+    The count and name checks compare the file's mesh objects with the exported objects; each
+    object then gets a volume check within its own deflection band. The names are read from
+    the file, never assumed from the writer.
+    """
+    names = [str(mesh_obj.GetName()) for mesh_obj in meshes]
+    labels = [obj.get("file_name", obj["label"]) for obj in objects]
+    checks = [
+        {
+            "id": "lib3mf.object_count",
+            "measured": len(meshes),
+            "expected": len(objects),
+            "passed": len(meshes) == len(objects),
+        },
+        {
+            "id": "lib3mf.object_names",
+            "measured": names,
+            "expected": labels,
+            "passed": names == labels,
+        },
+    ]
+    for mesh_obj, obj in zip(meshes, objects):
+        volume = abs(float(_trimesh_from_lib3mf(mesh_obj).volume))
+        expected = abs(float(obj["volume"]))
+        deviation = displayed_deviation(volume, expected, decimals)
+        checks.append(
+            {
+                "id": f"trimesh_3mf.object_volume:{obj['name']}",
+                "measured": volume,
+                "expected": expected,
+                "tolerance": {"abs": float(obj["band"])},
+                "passed": deviation <= float(obj["band"]),
+                "detail": {"message": f"{obj['label']}: deviation {deviation} <= {obj['band']:g}"},
+            }
+        )
+    return checks
+
+
 def mesh3mf_oracle(
     path: str,
     source_is_mm: bool,
     expected_volume: float,
     volume_band: float,
     decimals: int | None = DEFAULT_DISPLAY_DECIMALS,
+    objects: list[dict] | None = None,
 ) -> dict:
     """Run the lib3mf container layer and a trimesh geometry layer over a 3MF file.
 
@@ -261,7 +368,10 @@ def mesh3mf_oracle(
     container (an open surface written as a model object, or a defect in any 2nd+ mesh, fails).
     The metadata count is reported as a non-verdict fact — missing metadata is not a declared 3MF
     fault, so it never drives FAIL. trimesh asserts the same geometry checks as the STL oracle,
-    built from the first lib3mf mesh's arrays. Returns ``{oracle, checks, ok}`` with both layers
+    built from the first lib3mf mesh's arrays. With ``objects`` (several exported objects, each
+    ``{name, label, volume, band}``) the geometry layer covers every mesh together against the
+    total, and the leg adds the object count, the object names, and one volume check per object
+    that names it. Returns ``{oracle, checks, ok}`` with both layers
     combined; a parse failure or missing mesh yields a single failed check.
     """
     import lib3mf
@@ -313,8 +423,13 @@ def mesh3mf_oracle(
         {"id": "lib3mf.metadata_present", "measured": metadata_count, "passed": True},
     ]
 
+    if objects:
+        checks.extend(_object_checks(meshes, objects, decimals))
+        trimesh_mesh = _concatenated_trimesh(meshes)
+    else:
+        trimesh_mesh = _trimesh_from_lib3mf(meshes[0])
     trimesh_leg = _trimesh_checks(
-        _trimesh_from_lib3mf(meshes[0]), expected_volume, volume_band, "trimesh_3mf", decimals
+        trimesh_mesh, expected_volume, volume_band, "trimesh_3mf", decimals
     )
     checks.extend(trimesh_leg["checks"])
     return {"oracle": "lib3mf", "checks": checks, "ok": all(c["passed"] for c in checks)}

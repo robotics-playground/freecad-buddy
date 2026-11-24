@@ -519,6 +519,85 @@ def restore_step_config(unit: str) -> None:
     Part.setStaticValue("write.step.schema", scheme)
 
 
+def export_step_objects(
+    items: list[tuple[str, object]], document_name: str, path: str
+) -> list[str]:
+    """Write ``(label, shape)`` pairs to one STEP file, one product per pair named by its label.
+
+    Each shape is copied into a scratch ``Part::Feature`` carrying the label, and ``Import.export``
+    writes those features. The OCAF writer shares one product between objects whose shapes share
+    their geometry (a simple copy, a link), which would give two objects one product name; the
+    copy gives every object its own geometry and so its own product. It also writes exactly the
+    shape the caller recorded, whatever a group holds that is hidden. The multi-solid shape of one
+    pair may become several products. The writer reads the same ``write.step.*`` statics
+    ``pin_step_config`` sets, so the caller pins and restores them. Writer options that otherwise
+    come from the operator's ``Mod/Import`` preferences are passed explicitly. Returns the label
+    each feature ended with, which FreeCAD makes unique within the scratch document. The writer
+    names the root product after the document's internal name, so the scratch document is named
+    ``<document_name>_export`` (FreeCAD adds a number when that name is taken). A feature has no
+    colours of its own, so the file carries none.
+    """
+    import Import
+
+    with _scratch_document(f"{document_name}_export") as doc:
+        features = []
+        for label, shape in items:
+            feature = doc.addObject("Part::Feature", "Part")
+            feature.Label = label
+            feature.Shape = shape.copy()
+            features.append(feature)
+        Import.export(features, path, exportHidden=True, legacy=False, keepPlacement=False)
+        return [feature.Label for feature in features]
+
+
+def read_step_leaves(path: str) -> list[dict]:
+    """Re-import a STEP file into a scratch document and return one fact record per product.
+
+    Each record holds the shape's ``volume``, ``valid``, ``faces``, ``edges`` and ``solids``, in
+    the order FreeCAD created the objects. A product that holds
+    several solids is split by FreeCAD into one leaf per solid. The reader options that otherwise
+    come from the operator's ``Mod/Import`` preferences (merge, hidden objects, link groups,
+    one document per assembly) are passed explicitly. The scratch document is closed before
+    return.
+    """
+    import Import
+
+    with _scratch_document("FCB_TMP_step_read") as doc:
+        Import.insert(path, doc.Name, importHidden=True, merge=False, useLinkGroup=False, mode=0)
+        leaves = []
+        for obj in doc.Objects:
+            if obj.TypeId != "Part::Feature":
+                continue
+            shape = obj.Shape
+            leaves.append(
+                {
+                    "volume": float(shape.Volume),
+                    "valid": bool(shape.isValid()),
+                    "faces": len(shape.Faces),
+                    "edges": len(shape.Edges),
+                    "solids": len(shape.Solids),
+                }
+            )
+        return leaves
+
+
+def export_meshes(meshes: list, path: str) -> None:
+    """Write each mesh as its own object of one mesh file (the format follows the extension).
+
+    ``Mesh.export`` takes document objects, so the meshes go into a scratch document as
+    ``Mesh::Feature`` objects first.
+    """
+    import Mesh
+
+    with _scratch_document("FCB_TMP_mesh_write") as doc:
+        features = []
+        for mesh in meshes:
+            feature = doc.addObject("Mesh::Feature", "Mesh")
+            feature.Mesh = mesh
+            features.append(feature)
+        Mesh.export(features, path)
+
+
 def capability_banner(
     render: Literal["gui_constructed", "offscreen", "none"] = "none",
 ) -> CapabilityBanner:

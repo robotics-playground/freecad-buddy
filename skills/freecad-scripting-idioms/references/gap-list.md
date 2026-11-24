@@ -18,6 +18,7 @@ report the operation as blocked.
 | Sketch geometry (line, circle, arc, point) and the `sketch_add_constraint` types, including a fixed point by `DistanceX` plus `DistanceY` | `sketch_*` |
 | PartDesign body, pad, pocket, hole, fillet, chamfer, revolve, pattern, mirror, datum | `feature_*` |
 | Write a boolean, number, quantity or enum property of any object (a feature, a VarSet, `Visibility`); lengths in mm, angles in degrees; a property driven by an expression is reset on recompute | `feature_set_parameters` |
+| Write one or several objects to one STEP, 3MF or STL file; omit `objects` for all visible solids | `export_step`, `export_3mf`, `export_stl`, then `verify_export_*` |
 
 ## Gaps
 
@@ -37,7 +38,6 @@ report the operation as blocked.
 | Measure across objects: interference volume, distance between shapes | none | `a.common(b).Volume`, `a.distToShape(b)` |
 | Section or slice of a shape | none | `shape.slice(...)` |
 | Scan faces or edges without a hole or datum query | none | iterate `shape.Faces`, `shape.Edges` |
-| Export several objects to one STEP, 3MF or STL file | none (`export_*` take one object) | `Import.export`, `Mesh.export` over a list |
 | Import a STEP file into a document | none | `Import.insert` (script below) |
 | Write measured data to a file | none | `json.dump` |
 | Run a tested helper or generator file | none | `exec` the file (conversion route, `code-cad-conversion`) |
