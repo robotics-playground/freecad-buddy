@@ -93,6 +93,22 @@ Round 1 (lenses review-blind-hunter-r1-s13-fu, review-edge-cases-hunter-r1-s13-f
 | Compound args, untrusted pair never fuses, BSpline touch untested (Blind) | low | reject | Compound-internal overlap is a documented non-goal; structure prevents the untrusted fuse; BSpline noise is not stable to pin |
 | `tool_catalog.py` edit forbidden by spec; tasks unchecked (Blind) | false | reject | Leader authorized the edit; the lens did not see the spec file, which has the tasks checked |
 
+Round RT (leader triage T1-T7) and round 2 (lenses review-blind-hunter-r2-s13-fu, review-edge-cases-hunter-r2-s13-fu, review-verification-gap-finder-r2-s13-fu).
+
+| Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- |
+| T1 nested solids pass the fuse proof | high | patch | Probe point under a face of each shape classified against the other (`_solids_interpenetrate`); nested sphere tests red first, probe-removed mutant red |
+| T2 stated limit wrong by 2/3 factor | medium | patch | Stated limit is 1.5e-12 everywhere; tests below (1.2e-12) and above (2.25e-12) the limit; tolerance 3e-12 and 5e-13 mutants red |
+| T3, T4, T5, T6 test doubles and gaps | medium/low | patch | Misleading fake renamed; fakes record fuse calls; above-sum case; `abs` mutant red |
+| T7 distToShape 108 s on a lid and 200 boxes | medium | patch | Section shows contact and the fuse proves touching: 1.4 s; 100 boxes 0.6 s; counter test red first |
+| Section shortcut returned distance 0 across a real gap inside the shape tolerance (Edge, Gap) | high | patch | Boxes 1.5e-7 mm apart and 1e-3 mm apart with tolerance 1e-2 read failed at distance 0; now the shortcut needs the fuse proof, else `distToShape`; test red first, mutant red |
+| Skill recipe gives 0 for nested solids (Gap) | medium | patch | Caution added to verification-kit and measuring-clearance |
+| "loses two thirds" wording, pin example, test name "twice", timing labels, min_distance wording in T-2 and design, probe limit text, constant comments, TC-17 setup and visual note, `_FakeSolid.section` (Blind, Edge, Gap) | low | patch | Fixed |
+| Section pass cost on disjoint pairs unmeasured (Blind) | low | patch | 0.01 s on 360 x 360 faces against 20 s |
+| 40 s promise vs one kernel call (Blind) | low | reject | Recorded as deferred work and decision 45 |
+| Curved probe raising on a valid contact (Blind) | low | reject | The result is the safe `boolean_failed` true |
+| subTest tearDown/setUp (Blind) | low | reject | Works; helper would add code |
+
 ## Design Notes
 
 Measured on FreeCAD 1.1.4, development host (scratch probes). Touch, volume sum minus fuse volume, relative: face, edge, vertex boxes 1e-16; at offset 1e5 and sizes 1 to 1,000 up to 1e-14; filleted box on box 3.5e-13; 64+64 boxes 1e-14. Noise grows with offset over size (box 0.01 at offset 1e6: 1.5e-10; BSpline loft on a plate: up to 1.1e-10). Overlap with empty `common`: 100 mm boxes at depth 1e-7 mm (1e-3 mm3) give 3.3e-10. Tolerance 1e-12: above analytic noise, below that overlap. Noisier touches stay unmeasured (safe side). Fuse cost: 0.35 s at 384 x 384 faces, against 19 s for `distToShape` on the same pair.

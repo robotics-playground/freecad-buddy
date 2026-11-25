@@ -17,7 +17,7 @@ Result `{pairs: [{a, b, common_volume, min_distance, boolean_failed}]}`.
 | --- | --- |
 | `common_volume` | overlap as `{value, unit: "mm^3"}`; a value of 0 with `boolean_failed` false is a measured zero overlap, which includes valid solids that only touch (the tool fuses them and compares volumes). An overlap of less than 1.5e-12 of the summed volume can read as touching |
 | `min_distance` | gap as `{value, unit: "mm"}`; 0 for solids that touch or overlap |
-| `boolean_failed` true | the overlap is **unmeasured**, `common_volume` is null, and a script that reads the same empty boolean as zero is wrong too. `min_distance` null: a shape is not a valid solid with positive volume. `min_distance` 0 (at most 1e-7 mm, the contact tolerance): the boolean returned nothing at contact and the fuse could not prove plain contact (for example a pair with BSpline faces, or a very small overlap in the contact band) |
+| `boolean_failed` true | the overlap is **unmeasured**, `common_volume` is null, and a script that reads the same empty boolean as zero is wrong too. `min_distance` null: a shape is not a valid solid with positive volume. `min_distance` 0 (at most 1e-7 mm, the contact tolerance): the boolean returned nothing at contact and the fuse could not prove plain contact (for example a pair with BSpline faces, a very small overlap in the contact band, or one solid nested in the other) |
 
 | Refusal | Cause | Fix |
 | --- | --- | --- |

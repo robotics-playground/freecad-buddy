@@ -695,15 +695,19 @@ _CONTACT_DISTANCE_MM = 1e-7
 # box on a box 3.5e-13; 64 boxes against 64 boxes 1e-14. The noise grows with offset over size (a
 # 0.01 mm box at offset 1e6 mm 1.5e-10; a BSpline loft on a plate up to 1.1e-10), and those pairs
 # stay unmeasured, which is the safe side. Two boxes of 100 mm overlapping by 1e-7 mm depth (1e-3
-# mm^3, ``common`` still empty) give 3.3e-10, so 1e-12 reads them as overlapping. The fuse loses two
-# thirds of a sub-tolerance overlap (measured on boxes of 100 and 1,000 mm), so an overlap of up to
-# 1.5e-12 of the summed volume (3e-3 mm^3 for two boxes of 1,000 mm) reads as touching.
+# mm^3, ``common`` still empty) give 3.3e-10, so 1e-12 reads them as overlapping. The volume gap
+# of the fuse is two thirds of a sub-tolerance overlap (measured on boxes of 100 and 1,000 mm), so
+# an overlap of up to 1.5e-12 of the summed volume (3e-3 mm^3 for two boxes of 1,000 mm) reads as
+# touching; one of 1.2e-12 reads as touching and one of 2.25e-12 as failed.
 _TOUCH_VOLUME_REL_TOL = 1e-12
-# Nested solids defeat the fuse proof: two spheres of radius 10 and 100 with the outer 1e-6 mm
-# larger and shifted 1e-6 mm give an empty ``common`` and a fuse of two unmerged solids with the
-# summed volume. A point this deep under a face of one shape is classified against the other
-# shape's solids; strictly inside means the solids interpenetrate. 1e-4 mm is far above the 1e-7
-# mm contact tolerance and below the thickness of any feature the shapes are expected to have.
+# Nested solids defeat the fuse proof: a sphere of radius 10 (or 100) inside a sphere 1e-6 mm larger
+# and shifted 1e-6 mm gives an empty ``common`` and a fuse of two unmerged solids with the summed
+# volume. A point this deep under a face of one shape is classified against the other shape's
+# solids; strictly inside means the solids interpenetrate. Depths from 1e-8 mm to 1e-4 mm all find
+# the nested spheres; 1e-4 mm is far above the 1e-7 mm contact tolerance. A part thinner than that
+# gives no probe point and an overlap seen only by the other faces of a solid, or by faces after
+# the first eight, is not found. The sample fractions are tried in order until one lies in the
+# trimmed face.
 # One point per face for at most eight faces per solid and only against the solids whose bounding
 # box holds the point, because a classification costs a pass over the other solid: every face of a
 # touching row of 64 boxes against 64 boxes took 14.7 s, and a lid against 200 boxes 54.5 s. With
@@ -856,13 +860,20 @@ def _measure_interference(
         return None, None, True
     if volume:
         return volume, 0.0, False
+    # ``distToShape`` collects every contact solution and grows steeply with the contacts (a lid on
+    # a row of 100 unit boxes 13.6 s, on 200 boxes 108 s). When a section finds the boundaries
+    # meeting and the fuse proves the pair touches, the distance is 0 and ``distToShape`` is
+    # skipped (section 0.2 s and the whole pair 1.4 s for the 200 boxes). A section also finds
+    # boundaries across a real gap inside the shapes' tolerance (1.5e-7 mm, or 1e-3 mm on shapes
+    # with a tolerance of 1e-2), where the fuse proof fails and ``distToShape`` still runs. The
+    # section costs 0.01 s on two disjoint compounds of 360 faces (``distToShape`` 20 s).
+    fuse_proof = None
+    if _boundaries_meet(shape_a, shape_b):
+        fuse_proof = _fuse_proves_touching(shape_a, shape_b)
+        if fuse_proof:
+            return 0.0, 0.0, False
     try:
-        # ``distToShape`` collects every contact solution and grows steeply with the contacts
-        # (a lid on a row of 100 unit boxes 13.6 s, on 200 boxes 108 s); a section that finds the
-        # boundaries meeting proves distance 0 in 0.2 s for the 200 boxes.
-        distance = 0.0 if _boundaries_meet(shape_a, shape_b) else None
-        if distance is None:
-            distance = float(shape_a.distToShape(shape_b)[0])
+        distance = float(shape_a.distToShape(shape_b)[0])
     except Exception:  # noqa: BLE001 -- a failed distance leaves the overlap unproven
         distance = None
     if distance is not None and not math.isfinite(distance):
@@ -871,7 +882,9 @@ def _measure_interference(
         return 0.0, distance, False
     if not empty and distance is not None:
         return 0.0, distance, False
-    if distance is not None and _fuse_proves_touching(shape_a, shape_b):
+    if fuse_proof is None and distance is not None:
+        fuse_proof = _fuse_proves_touching(shape_a, shape_b)
+    if distance is not None and fuse_proof:
         return 0.0, distance, False
     return None, distance, True
 

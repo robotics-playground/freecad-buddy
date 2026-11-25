@@ -467,12 +467,21 @@ class QueryObjectDisplayTest(unittest.TestCase):
         self.assertEqual(out, "Vector (6.0, 0.0, 1234.57)")
 
 
+class _EmptySection:
+    Edges = ()
+    Vertexes = ()
+
+
 class _FakeSolid:
     """A stand-in solid the interference trust check accepts; tests override the booleans."""
 
     ShapeType = "Solid"
     Volume = 1.0
     Solids = ()
+
+    @staticmethod
+    def section(other):
+        return _EmptySection()
 
     @staticmethod
     def isValid():
@@ -904,10 +913,6 @@ class QueryInterferenceTest(unittest.TestCase):
 
     def test_Should_measure_the_distance_When_the_section_is_empty_or_raises(self):
         # Arrange
-        class EmptySection:
-            Edges = ()
-            Vertexes = ()
-
         class Base(_FakeSolid):
             def common(self, other):
                 raise RuntimeError("boolean failed")
@@ -917,7 +922,7 @@ class QueryInterferenceTest(unittest.TestCase):
 
         class WithEmptySection(Base):
             def section(self, other):
-                return EmptySection()
+                return _EmptySection()
 
         class WithRaisingSection(Base):
             def section(self, other):
@@ -958,7 +963,68 @@ class QueryInterferenceTest(unittest.TestCase):
         # Assert
         self.assertEqual(result, (None, 0.0, True))
 
-    def test_Should_flag_a_failed_boolean_When_the_overlap_is_twice_the_stated_limit(self):
+    def test_Should_report_the_gap_When_disjoint_solids_lie_inside_the_section_tolerance(self):
+        # Arrange
+        cases = {
+            "gap just above the contact distance": (1.5e-7, None),
+            "loose shape tolerance": (1e-3, 1e-2),
+        }
+        for label, (gap, tolerance) in cases.items():
+            with self.subTest(case=label):
+                self.tearDown()
+                self.setUp()
+                first = Part.makeBox(10, 10, 10)
+                second = Part.makeBox(10, 10, 10, App.Vector(10 + gap, 0, 0))
+                if tolerance is not None:
+                    first.fixTolerance(tolerance)
+                    second.fixTolerance(tolerance)
+                self._add_shape("A", first)
+                self._add_shape("B", second)
+                self.assertTrue(
+                    queries._boundaries_meet(first.copy(), second.copy()),
+                    "the fixture needs a section that finds the boundaries",
+                )
+
+                # Act
+                envelope = self._measure(objects=["A", "B"])
+
+                # Assert
+                record = envelope["structured_content"]["pairs"][0]
+                self.assertFalse(record["boolean_failed"])
+                self.assertEqual(record["common_volume"]["value"], 0.0)
+                self.assertAlmostEqual(record["min_distance"]["value"], gap, delta=gap * 0.01)
+
+    def test_Should_report_zero_overlap_When_a_sphere_touches_a_box_at_a_point(self):
+        # Arrange
+        self._add_box("A")
+        self._add_shape("Ball", Part.makeSphere(5, App.Vector(5, 5, 15)))
+
+        # Act
+        envelope = self._measure(objects=["A", "Ball"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+
+    def test_Should_report_zero_overlap_When_the_overlap_is_below_the_stated_limit(self):
+        # Arrange
+        size = 100.0
+        depth = 2.4e-10
+        self._add_box("A", size=size)
+        self._add_box("B", size - depth, 0, 0, size=size)
+        common = self.document.A.Shape.copy().common(self.document.B.Shape.copy())
+        self.assertTrue(common.isNull() or not common.Volume, "the fixture needs an empty common")
+
+        # Act
+        envelope = self._measure(objects=["A", "B"])
+
+        # Assert
+        record = envelope["structured_content"]["pairs"][0]
+        self.assertFalse(record["boolean_failed"])
+        self.assertEqual(record["common_volume"]["value"], 0.0)
+
+    def test_Should_flag_a_failed_boolean_When_the_overlap_is_above_the_stated_limit(self):
         # Arrange
         size = 100.0
         depth = 4.5e-10

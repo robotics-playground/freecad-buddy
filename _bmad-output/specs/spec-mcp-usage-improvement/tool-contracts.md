@@ -81,7 +81,7 @@ is `{ "name", "shape": null }` and the call stays `OK`. The `object` path keeps 
 ```
 
 Exactly one of `objects` and `pairs`. `common_volume` uses `Shape.common`; `min_distance` uses
-`distToShape` and is 0 when the shapes touch or overlap. When `common` raises or returns an
+`distToShape` (0 when a section finds the boundaries meeting and the fuse proves the pair touches) and is 0 when the shapes touch or overlap. When `common` raises or returns an
 empty shape while `min_distance` is 0, a fuse cross-check runs: if the fuse is valid and its
 volume equals the sum of the two volumes within 1e-12 of that sum and no solid lies inside the
 other (a probe point just under a face of one shape is not strictly inside the other), the pair

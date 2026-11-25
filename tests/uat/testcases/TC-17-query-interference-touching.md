@@ -26,6 +26,9 @@ mcp script_exec { doc: <handle>, code: "import Part, FreeCAD as App\nV = App.Vec
 ```
 **And** FreeCAD's own kernel agrees the contact pairs touch — verify: `mcp script_exec { doc: <handle>, code: "a = doc.A.Shape\nresult = [abs(round(a.Volume + doc.getObject(n).Shape.Volume - a.fuse(doc.getObject(n).Shape).Volume, 9)) for n in ('Face', 'Edge', 'Vertex')]" }` returns `[0.0, 0.0, 0.0]` (`abs` folds the `-0.0` that FreeCAD 1.1.4 gives for the edge pair)  
 **And** the `Big1/Big2` overlap leaves `common` empty — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Big1.Shape.common(doc.Big2.Shape)\nresult = c.isNull() or not c.Volume" }` returns `True`  
+**And** the `Ball/Shell` pair leaves `common` empty and the fuse unmerged — verify: `mcp script_exec { doc: <handle>, code: "c = doc.Ball.Shape.common(doc.Shell.Shape)
+f = doc.Ball.Shape.fuse(doc.Shell.Shape)
+result = [bool(c.isNull() or not c.Volume), len(f.Solids)]" }` returns `[true, 2]`  
 **And** the before image is captured — verify: `mcp view_fit_viewport { doc: <handle> }` returns `OK`, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-17-01-before.png"}' | "$FCB_CUA" get_window_state`  
 
 **When** every pair is measured  
@@ -39,6 +42,6 @@ mcp query_interference { doc: <handle>, pairs: [["A", "Face"], ["A", "Edge"], ["
 **And** the sphere `Ball` inside the sphere `Shell` (outer radius 1e-6 mm larger, shifted 1e-6 mm; `common` empty, the fuse keeps two unmerged solids) is not read as zero — verify: for `Ball/Shell`, `boolean_failed` is `true` and `common_volume` is `null`  
 **And** the text counts agree — verify: `text` starts with `5 pair(s), 0 overlapping, 2 boolean failed.`  
 **And** the document is unchanged — verify: `mcp query_tree_summary { doc: <handle> }` lists the same eight objects with no `!` marker, and a fresh fingerprint digest read through `script_exec` (`from freecad_buddy.usecases.fingerprint import fingerprint; result = fingerprint(doc, fresh=True)["digest"]`) before and after the `query_interference` call is equal  
-**And** *(visual)* the viewport shows the boxes the numbers describe — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-17-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and list what the viewport shows: `A` with `Face`, `Edge` and `Vertex` meeting it face to face, edge to edge and corner to corner, and `Big1` beside `Big2`. A pair that the picture shows overlapping by more than a sliver, or a missing box, is a finding against the fixture or the tool. The judgement is on the pixels alone  
+**And** *(visual)* the viewport shows the boxes the numbers describe — verify: `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-17-01-after.png"}' | "$FCB_CUA" get_window_state`, then `Read` both PNGs and list what the viewport shows: `A` with `Face`, `Edge` and `Vertex` meeting it face to face, edge to edge and corner to corner, and `Big1` beside `Big2`; `Ball` is hidden inside `Shell`, so one sphere is visible and the picture cannot show the nesting (the numbers carry that claim). A pair that the picture shows overlapping by more than a sliver, or a missing box, is a finding against the fixture or the tool. The judgement is on the pixels alone  
 
 **Cleanup**: `mcp document_close { doc: <handle> }`

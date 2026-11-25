@@ -197,7 +197,7 @@ assert f.isValid() and f.Solids, "fuse failed: overlap unmeasured"
 result = round(a.Volume + b.Volume - f.Volume, 3)    # pass: <= 0.05 mm3
 ```
 
-The result is 0 for parts that only touch and the overlap volume for parts that overlap. An overlap
+The result is 0 for parts that only touch and the overlap volume for parts that overlap. It is also 0 when one solid lies inside the other and the fuse keeps both solids unmerged: check `b.isInside(a.CenterOfMass, 0, False)` for a convex part first. An overlap
 of less than 1.5e-12 of the summed volume can read as touching in the tool. For
 `interference.too_complex`, measure objects with fewer faces or send fewer pairs.
 
