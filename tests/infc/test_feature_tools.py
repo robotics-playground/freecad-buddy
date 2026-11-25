@@ -2487,6 +2487,36 @@ ARC_SPINE = STRAIGHT_SPINE + 30.0
 _VERTICAL = App.Rotation(App.Vector(1, 0, 0), 90)
 
 
+class _StubShape:
+    """A shape with only what the loft and sweep result check reads."""
+
+    def __init__(self, solids=1, volume=10.0, valid=True, faces=3, check_message=None):
+        self.Solids = [object()] * solids
+        self.Volume = volume
+        self.Faces = [object()] * faces
+        self.Edges = []
+        self._valid = valid
+        self._check_message = check_message
+
+    def isNull(self):
+        return False
+
+    def isValid(self):
+        return self._valid
+
+    def check(self, run_bop):
+        if self._check_message is not None:
+            raise ValueError(self._check_message)
+
+
+class _StubDocument:
+    def __init__(self, shape):
+        self._feature = type("Feature", (), {"Shape": shape, "BaseFeature": None})()
+
+    def getObject(self, name):
+        return self._feature
+
+
 class _LoftSweepFixture(_FeatureFixture):
     """Loft sections and sweep spines built as plain sketches in a Body."""
 
@@ -2958,7 +2988,9 @@ class LoftTest(_LoftSweepFixture):
         self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
         self.assertEqual(envelope["detail"]["code"], "loft.invalid_result")
         self.assertIn("removed no volume", envelope["detail"]["message"])
+        self.assertTrue(envelope["structured_content"]["mutation"]["rolled_back"])
         self.assertEqual(self.object_count(), before)
+        self.assertAlmostEqual(self.document().getObject("Body").Shape.Volume, PLATE_VOLUME, 4)
 
     def test_Should_refuse_before_the_bracket_When_a_subtractive_loft_has_no_solid_to_cut(self):
         # Arrange
@@ -2987,6 +3019,23 @@ class LoftTest(_LoftSweepFixture):
         # Assert
         self.assertEqual(hidden, [False, False])
         self.assertEqual(shown, [True, True])
+
+    def test_Should_write_closed_to_the_feature_When_the_result_check_is_off(self):
+        # Arrange
+        body = self.two_square_loft_body()
+        self.square(body, "Third", 0.0, 20.0, 40.0)
+        real_check = features._solid_result_check
+        features._solid_result_check = lambda *args, **kwargs: lambda document: None
+
+        # Act
+        try:
+            envelope = self.loft(sections=["Top", "Third"], ruled=False, closed=True)
+        finally:
+            features._solid_result_check = real_check
+
+        # Assert
+        self.assert_ok(envelope)
+        self.assertTrue(self.document().getObject("Lofted").Closed)
 
     def test_Should_reach_the_loft_When_preview_dry_run_names_it(self):
         # Arrange
@@ -3580,6 +3629,144 @@ class SweepTest(_LoftSweepFixture):
 
         # Assert
         self.assertTrue(helix.Visibility)
+
+    def test_Should_pass_a_check_that_reports_only_continuity_notes_When_the_result_is_clean(self):
+        # Arrange
+        message = (
+            "BOP check found the following errors:\n"
+            "Error in Edge: BOPAlgo GeomAbs_C0\nError in Face: BOPAlgo GeomAbs_C0\n"
+        )
+        shape = _StubShape(check_message=message)
+
+        # Act
+        outcome = features._require_clean_bop_check("W", shape, "sweep.invalid_result")
+
+        # Assert
+        self.assertIsNone(outcome)
+
+    def test_Should_fail_a_check_that_reports_a_real_defect_among_continuity_notes(self):
+        # Arrange
+        message = (
+            "BOP check found the following errors:\n"
+            "Error in Edge: BOPAlgo GeomAbs_C0\nError in Face: BOPAlgo SelfIntersect\n"
+        )
+        shape = _StubShape(check_message=message)
+
+        # Act
+        def act():
+            features._require_clean_bop_check("W", shape, "sweep.invalid_result")
+
+        # Assert
+        with self.assertRaises(transaction.RecomputeFailure) as caught:
+            act()
+        self.assertEqual(caught.exception.code, "sweep.invalid_result")
+        self.assertIn("SelfIntersect", str(caught.exception))
+
+    def test_Should_fail_the_result_When_the_shape_holds_more_than_one_solid(self):
+        # Arrange
+        check = features._solid_result_check("W", False, "sweep.invalid_result", [])
+        document = _StubDocument(_StubShape(solids=2))
+
+        # Act
+        def act():
+            check(document)
+
+        # Assert
+        with self.assertRaises(transaction.RecomputeFailure) as caught:
+            act()
+        self.assertIn("2 solids", str(caught.exception))
+
+    def test_Should_fail_the_result_When_the_shape_is_not_valid(self):
+        # Arrange
+        check = features._solid_result_check("W", False, "sweep.invalid_result", [])
+        document = _StubDocument(_StubShape(valid=False))
+
+        # Act
+        def act():
+            check(document)
+
+        # Assert
+        with self.assertRaises(transaction.RecomputeFailure) as caught:
+            act()
+        self.assertIn("invalid shape", str(caught.exception))
+
+    def test_Should_skip_the_boolean_check_When_the_result_has_more_faces_than_the_limit(self):
+        # Arrange
+        body = self.empty_body()
+        self.circle_sketch(body, "Ring", (0.0, 0.0), 10.0)
+        path = self._sketch(body, "Path", 0.0, _VERTICAL)
+        arc = Part.ArcOfCircle(
+            Part.Circle(App.Vector(-2, 0, 0), App.Vector(0, 0, 1), 2.0), 0.0, 1.5
+        )
+        path.addGeometry(arc, False)
+        path.addConstraint(Sketcher.Constraint("Coincident", 0, 1, -1, 1))
+        path.addConstraint(Sketcher.Constraint("PointOnObject", 0, 3, -1))
+        path.addConstraint(Sketcher.Constraint("Radius", 0, 2.0))
+        path.addConstraint(Sketcher.Constraint("Angle", 0, 1.5))
+        self.document().recompute()
+        real_limit = features._BOP_CHECK_MAX_FACES
+        features._BOP_CHECK_MAX_FACES = 0
+
+        # Act
+        try:
+            envelope = self.sweep()
+        finally:
+            features._BOP_CHECK_MAX_FACES = real_limit
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+
+    def test_Should_refuse_with_a_code_When_the_spine_needs_more_samples_than_the_limit(self):
+        # Arrange
+        body = self.empty_body()
+        self.circle_sketch(
+            body, "Ring", (10.0, 0.0), 1.5, rotation=App.Rotation(App.Vector(1, 0, 0), 90)
+        )
+        self.helix_object()
+        real_limit = features._SPINE_MAX_SAMPLES
+        features._SPINE_MAX_SAMPLES = 100
+
+        # Act
+        try:
+            with self.assertRaises(features.LoftSweepRefusal) as caught:
+                self.sweep(spine={"kind": "mapped_name", "object": "Helix"})
+            message = self.assert_rejected_pre_bracket(
+                self.object_count, self.sweep, spine={"kind": "mapped_name", "object": "Helix"}
+            )
+        finally:
+            features._SPINE_MAX_SAMPLES = real_limit
+
+        # Assert
+        self.assertEqual(caught.exception.code, "sweep.too_complex")
+        self.assertIn("tangent samples", message)
+
+    def test_Should_leave_the_sketches_visible_and_undo_usable_When_a_sweep_result_is_refused(self):
+        # Arrange
+        body = self.empty_body()
+        self.circle_sketch(body, "Ring", (0.0, 0.0), 3.0)
+        self.vertical_path(body, "Path", [10.0, -10.0])
+        self.rect_sketch(body, "Pocket", 0.0, 0.0, 8.0, 8.0)
+        envelope = self.sweep()
+
+        # Act
+        padded = features.feature_pad(
+            self.registry,
+            doc=self.handle,
+            body="Body",
+            profile="Pocket",
+            name="Block",
+            length=mm(5.0),
+        )
+        undone = self.registry.document_undo(doc=self.handle)
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        document = self.document()
+        self.assertTrue(document.getObject("Ring").Visibility)
+        self.assertTrue(document.getObject("Path").Visibility)
+        self.assert_ok(padded)
+        self.assertEqual(undone["status"], "OK", undone.get("detail"))
+        self.assertIsNone(document.getObject("Block"))
 
     def test_Should_reach_the_sweep_When_preview_dry_run_names_it(self):
         # Arrange

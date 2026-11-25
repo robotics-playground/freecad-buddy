@@ -125,3 +125,24 @@ Lenses: Blind Hunter ac866481e169b08a1 (opus, high), Edge Case Hunter afc3620d14
 - `uv run --extra dev ruff check`, `ruff format --check <changed files>`, `check_imports`, `gen_schemas --check`, `check_provenance` -- expected: pass
 - `uv run --extra dev pytest tests/external -q` (Git Bash) -- expected: pass
 - freecadcmd `tests/run_tests.py` with temp cfg and `FREECAD_USER_HOME` -- expected: pass
+
+### Round 2 (red team RT-1..RT-6, verifier F1/N1; decision 39)
+
+Lenses on d8968a1e..eaf97e18: Blind Hunter a2ea51fca45284212 (opus, high), Edge Case Hunter aaa624b060e455a28 (opus, high), Verification Gap a12cf48afbb4cbba6 (sonnet, medium).
+
+Round 2 fixes: loft cost is the sum of the larger section of each neighbouring pair squared (limit 1,000,000, section cap 500); sweep limit 3,000 units; a recompute check fails an invalid, multi-solid or zero-volume result as `loft.invalid_result` / `sweep.invalid_result`; subtractive loft and sweep with no base solid are refused (`*.nothing_to_subtract`); the spine tangent check samples eight times per pole; an unresolvable spine selector is `sweep.invalid_spine`; consumed sketches are hidden.
+
+| Lens | Finding | Verdict | Route and evidence |
+| --- | --- | --- | --- |
+| Blind, Edge | Boolean check runs on a Body that already holds BSpline faces and can hold the interpreter | high | patch: the check is skipped when the Body's earlier shape holds a BSpline-like edge (found while measuring: a 3-face sweep along a 25-turn helix did not finish `check(True)` in 50 s, so the check is also skipped for BSpline inputs) |
+| Gap | Face cap, `GeomAbs_` filter, sample cap and multi-solid rule untested | medium | patch: stub-shape tests, face-cap test, sample-cap test |
+| Gap, Edge | No successful closed loft test | medium | patch: probed 8 layouts, every closed loft built an invalid or self-intersecting solid in FreeCAD 1.1.4; the doc says so; a test with the result check off proves `Closed` is written |
+| Blind | Face cap 300 and sample cap unmeasured | medium | patch: 292-face loft with the check 3.1 s; 100 sections of 100 edges 2.9 s recompute, check 0.56 s |
+| Blind | "Exactly one solid" refuses what `Body.AllowCompound` allows | low | rejected: decision 39 and the triage row require one solid; the tools build one feature, and a second solid in a Body is outside CAP-9 |
+| Blind, Edge | Hidden sketches missing from the touched list | low | patch: `_hide` returns the names and `op` returns them |
+| Blind | Relative volume tolerance | low | patch: `max(1e-6, 1e-9 * volume)` |
+| Edge | Loose sketch gives `RECOMPUTE_ERROR` before `SPEC_FAILED` | medium | patch: design text corrected; fixture uses a buildable loose sketch |
+| Edge | Selector naming one analytic edge of a BSpline object skips the check | low | rejected: conservative (skips a check), documented |
+| Edge | Tip set but holds no solid is not refused as nothing to subtract | low | rejected: FreeCAD reports it at recompute; rollback proven |
+| Blind | Docstrings, annotation, `_has_curved_edge` name, helix pole counts | low | patch |
+| Blind | 500 sections of 44 edges unmeasured | low | rejected: 100 x 100 measured 2.9 s; sections are linear in cost units |

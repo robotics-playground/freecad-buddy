@@ -851,9 +851,9 @@ _LOFT_MAX_SECTIONS = 500
 # Sweep cost units are profile units times spine units. A profile edge counts its poles (1 for
 # any other curve); a spine edge counts 1 plus a tenth of its poles, rounded down. Recompute:
 # 100 profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s; a circle
-# along 10,000 lines 32 s through the tool; 250 edges along a 25-turn helix (10,000) 18 s. Whole
-# tool call at the limit: a circle along 3,000 lines 4.1 s; 30 edges along 100 lines 2.5 s; 8
-# edges along 375 lines 2.3 s; 35 edges along a 25-turn helix of 770 poles (2,730) 1.1 s.
+# along 10,000 lines 32 s through the tool; 250 edges along a 25-turn helix of 392 poles (10,000)
+# 18 s. Whole tool call at the limit: a circle along 3,000 lines 4.1 s; 30 edges along 100 lines
+# 2.5 s; 8 edges along 375 lines 2.3 s; 35 edges along a 25-turn helix of 770 poles (2,730) 1.1 s.
 _SWEEP_MAX_COST = 3000
 _SWEEP_POLES_PER_UNIT = 10
 
@@ -904,10 +904,12 @@ def _section_shape(document: object, name: object, what: str) -> object:
 
 
 def _require_base_to_subtract(document: object, body: object, subtractive: bool, tool: str) -> None:
-    """Refuse a subtractive feature in a Body that holds no solid yet.
+    """Refuse a subtractive loft or sweep in a Body that holds no solid yet.
 
     FreeCAD's loft adds its solid in that case instead of cutting, so the result would grow the
-    Body.
+    Body; its sweep fails at recompute.
+
+    :raises LoftSweepRefusal: ``loft.nothing_to_subtract`` or ``sweep.nothing_to_subtract``.
     """
     if subtractive and getattr(_resolve_body(document, body), "Tip", None) is None:
         raise LoftSweepRefusal(
@@ -919,14 +921,17 @@ def _require_base_to_subtract(document: object, body: object, subtractive: bool,
 # A built solid must add or remove at least this much volume (mm^3); a sweep whose spine lies in
 # the profile plane gives -1.4e-13.
 _MIN_VOLUME_CHANGE = 1e-6
+# Volumes of a large Body carry integration noise that grows with the volume.
+_RELATIVE_VOLUME_NOISE = 1e-9
 
 
 # The Boolean-operation check finds self-intersections that isValid() misses (a profile wider than
 # the bend of its spine). It holds the interpreter lock, and its time follows the geometry, not the
 # face count: a 1,002-face loft took 18.6 s, and a 3-face sweep along a 25-turn helix (770 poles)
-# did not finish in 50 s. It runs only when every input edge is analytic (no BSpline-like edge) and
-# the result has at most this many faces. A self-intersecting result built from BSpline inputs is
-# not detected.
+# did not finish in 50 s. It runs only when no input edge and no edge of the Body's earlier shape is
+# BSpline-like and the result has at most this many faces. A 292-face loft with the check took 3.1 s
+# as a whole call; 100 sections of 100 edges (102 faces) took 0.56 s for the check alone. A
+# self-intersecting result built from BSpline inputs is not detected.
 _BOP_CHECK_MAX_FACES = 300
 
 
@@ -950,7 +955,9 @@ def _require_clean_bop_check(feature_name: str, shape: object, code: str) -> Non
             ) from exc
 
 
-def _solid_result_check(feature_name: str, subtractive: bool, code: str, inputs: list[object]):
+def _solid_result_check(
+    feature_name: str, subtractive: bool, code: str, inputs: list[object]
+) -> Callable[[object], None]:
     """Return a recompute check that the new feature is a valid solid that changed the Body.
 
     FreeCAD reports a degenerate sweep or loft as up to date: a spine in the profile plane builds
@@ -973,32 +980,38 @@ def _solid_result_check(feature_name: str, subtractive: bool, code: str, inputs:
         base_shape = getattr(base, "Shape", None)
         base_volume = 0.0 if base_shape is None or base_shape.isNull() else base_shape.Volume
         changed = base_volume - shape.Volume if subtractive else shape.Volume - base_volume
-        if changed <= _MIN_VOLUME_CHANGE:
+        if changed <= max(
+            _MIN_VOLUME_CHANGE, _RELATIVE_VOLUME_NOISE * max(base_volume, shape.Volume)
+        ):
             verb = "removed" if subtractive else "added"
             raise transaction.RecomputeFailure(
                 code, f"{feature_name} {verb} no volume ({changed:g} mm^3)"
             )
-        if len(shape.Faces) <= _BOP_CHECK_MAX_FACES and not _has_curved_edge(document, inputs):
+        shapes = [getattr(document.getObject(name), "Shape", None) for name in inputs]
+        if len(shape.Faces) <= _BOP_CHECK_MAX_FACES and not _has_bspline_edge(
+            [*shapes, base_shape]
+        ):
             _require_clean_bop_check(feature_name, shape, code)
 
     return check
 
 
-def _has_curved_edge(document: object, names: list[object]) -> bool:
-    for name in names:
-        obj = document.getObject(name) if isinstance(name, str) else None
-        shape = getattr(obj, "Shape", None)
-        if shape is not None and not shape.isNull() and any(map(_edge_poles, shape.Edges)):
-            return True
-    return False
+def _has_bspline_edge(shapes: list[object]) -> bool:
+    return any(
+        shape is not None and not shape.isNull() and any(map(_edge_poles, shape.Edges))
+        for shape in shapes
+    )
 
 
-def _hide(document: object, names: list[object]) -> None:
-    """Hide the sketches a loft or sweep consumed, as the GUI does."""
+def _hide(document: object, names: list[object]) -> list[str]:
+    """Hide the sketches a loft or sweep consumed, as the GUI does; return the hidden names."""
+    hidden = []
     for name in names:
         obj = document.getObject(name) if isinstance(name, str) else None
         if obj is not None and str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
             obj.Visibility = False
+            hidden.append(obj.Name)
+    return hidden
 
 
 def _loft_sections(document: object, profile: object, sections: object) -> list[object]:
@@ -1071,8 +1084,9 @@ def feature_loft(
 
     :raises ValidationError: an input is unknown or not a sketch, or a flag is not a boolean.
     :raises LoftSweepRefusal: ``loft.invalid_sections`` (empty, repeated, or holding the
-        profile), ``loft.wire_count_mismatch``, ``loft.closed_needs_sections`` or
-        ``loft.too_complex`` (too many sections, or the sections cost more than the limit).
+        profile), ``loft.wire_count_mismatch``, ``loft.closed_needs_sections``,
+        ``loft.nothing_to_subtract`` or ``loft.too_complex`` (too many sections, or the sections
+        cost more than the limit).
     """
     _require_partdesign()
 
@@ -1105,8 +1119,8 @@ def feature_loft(
         feature.Sections = [(_resolve_sketch(document, s, "section"), [""]) for s in sections]
         feature.Ruled = ruled
         feature.Closed = closed
-        _hide(document, [profile, *sections])
-        return [feature.Name, body_obj.Name]
+        hidden = _hide(document, [profile, *sections])
+        return [feature.Name, body_obj.Name, *hidden]
 
     params = {
         "doc": doc,
@@ -1254,7 +1268,8 @@ def feature_sweep(
 
     :raises ValidationError: an input is unknown or not a sketch, or a flag is not a boolean.
     :raises LoftSweepRefusal: ``sweep.invalid_spine`` (the profile, a Body, or not an edge or
-        wire), ``sweep.invalid_mode``, ``sweep.too_complex`` or ``sweep.degenerate_spine``.
+        wire), ``sweep.invalid_mode``, ``sweep.nothing_to_subtract``, ``sweep.too_complex`` or
+        ``sweep.degenerate_spine``.
     """
     _require_partdesign()
 
@@ -1296,8 +1311,8 @@ def feature_sweep(
         obj, subelement, _ = _spine_target(document, spine)
         feature.Spine = (obj, [subelement])
         feature.Mode = _checked_enum(feature, "Mode", member(), "mode")
-        _hide(document, [profile, obj.Name])
-        return [feature.Name, body_obj.Name]
+        hidden = _hide(document, [profile, obj.Name])
+        return [feature.Name, body_obj.Name, *hidden]
 
     params = {
         "doc": doc,
