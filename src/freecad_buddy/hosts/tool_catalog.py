@@ -880,8 +880,9 @@ def _feature_specs():
                         "boolean for a boolean one, member string for an enumeration, string for "
                         "a string property such as Label, {base: {x, y, z}, rotation: {axis: "
                         "[x, y, z], angle}} for a Placement or AttachmentOffset (x, y, z and angle "
-                        "are {value, unit} Quantities in mm and deg, not bare numbers; omitted "
-                        "keys keep their value); validated against the live feature",
+                        "are {value, unit} Quantities in mm and deg, not bare numbers, x, y and z "
+                        "within +-1e9 mm; omitted keys keep their value); an integer within "
+                        "+-2147483647; validated against the live feature",
                     },
                 },
                 ["feature", "parameters"],
@@ -892,7 +893,9 @@ def _feature_specs():
             "FreeCAD makes unique is reported as label {requested, stored}. A written value the "
             "recompute reverts (an expression drives it, or it is clamped) fails as "
             "RECOMPUTE_ERROR parameters.value_overwritten and rolls back. A call that changes "
-            "only placements or strings already held opens no transaction (undo_steps 0). A call "
+            "only placements or strings already held opens no transaction (undo_steps 0). An OK "
+            "result reports each written placement as placements {property: {requested, "
+            "stored}}. A call "
             "whose parameters hold only Visibility (true/false) is display state and needs no "
             "confirm in any posture.",
         ),

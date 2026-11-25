@@ -155,6 +155,17 @@ Round 3 (blind a6bfb8fa3172353c2, edge a1d2efbdedff6878a, gap a39c40cbf481743d3)
 | 47 | tests for the boolean, enumeration and integer read-back | low | reject: existing success-path tests (`Type`, `Occurrences`, `Visibility`) run through the same read-back and pass |
 | 48 | negative length passes validation and fails after the bracket | low | reject: the call fails with a rollback and names the property; a pre-bracket rule would add a numeric rule outside the Story |
 
+### Red-team round (`redteam-13-16.md`)
+
+| # | Finding | Sev | Outcome |
+| --- | --- | --- | --- |
+| T1 | rollback probe reads floats at 15 significant digits; FreeCAD stores 16 decimals, so a value near 1/3000 or 0.5 deg reads as a failed rollback | high | patch: `_Reading` compares each float pair within `1e-15 * max(1, abs(a), abs(b))`. Measured over 300 random placements (1e-8 to 1e12) plus 1/3000, 0.5 deg and 0.1 + 0.2, saved and reopened: largest error 5.6e-17 absolute, 18 times inside the rule. Red first: `RollbackProofTest` small-values case |
+| T2 | base x or angle 10**400 raised `OverflowError` -> `RECOMPUTE_ERROR` | med | patch: `_is_finite` catches `OverflowError`; `INVALID_INPUT` naming the field; parser and bare-number tests |
+| T3 | no bound on a base component; 1e150 commits, then the fingerprint fails | med | patch: `parameters.out_of_range` above 1e9 mm. Measured: the fingerprint raises `FreeCADError` at 1e118 mm on a Body and a `Part::Box`, mass properties still read; 1e9 mm is nine orders inside |
+| T4 | stub test models a clamp FreeCAD never does; a real write of 2**31 fails inside the bracket | med | patch: integer writes beyond +-2147483647 refused before the bracket (`parameters.out_of_range`); stub test replaced by a real-property test; a recompute that lowers 2**31-1 by one is still reported (exact compare) |
+| T5 | OK placement result does not report the stored placement | low | patch: `placements: {property: {requested, stored}}`, stored in the wire shape |
+| L-2 | hidden-offset test uses a stub | low | comment states why the real state is not built |
+
 ## Verification
 
 **Commands:**

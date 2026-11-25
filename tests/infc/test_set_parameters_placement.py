@@ -96,6 +96,10 @@ class PlacementParserTest(_FeatureFixture):
             "axis too long for FreeCAD": rotation((1e200, 0, 0), 10.0),
             "axis too short for FreeCAD": rotation((1e-200, 0, 0), 10.0),
             "axis beyond the float range": rotation((10**400, 0, 0), 10.0),
+            "length beyond the float range": {"base": {"x": {"value": 10**400, "unit": "mm"}}},
+            "angle beyond the float range": {
+                "rotation": {"angle": {"value": 10**400, "unit": "deg"}}
+            },
             "axis without angle from no rotation": {"rotation": {"axis": [1, 0, 0]}},
             "unknown rotation key": {"rotation": {"quaternion": [0, 0, 0, 1]}},
             "zero axis": rotation((0, 0, 0), 10.0),
@@ -296,6 +300,56 @@ class _ResetsPlacement:
         obj.Placement = App.Placement()
         if self.reset_note:
             obj.Note = ""
+
+
+class _ResetsTiny:
+    """A Python feature whose recompute puts a ``Tiny`` above 0.1 back at zero."""
+
+    def execute(self, obj):
+        if obj.Tiny > 0.1:
+            obj.Tiny = 0.0
+
+
+class PlacementBoundTest(_PlacementFixture):
+    def test_Should_store_the_base_When_a_component_is_at_the_bound(self):
+        # Arrange
+        self.padded_body()
+
+        # Act
+        envelope = self.dispatch("Body", {"Placement": base(x=1e9)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        self.assertEqual(self.document().getObject("Body").Placement.Base.x, 1e9)
+
+    def test_Should_refuse_before_the_bracket_When_a_component_is_above_the_bound(self):
+        # Arrange
+        self.padded_body()
+
+        # Act
+        envelope = self.dispatch("Body", {"Placement": base(x=1e9 + 1.0)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT", envelope.get("detail"))
+        self.assertEqual(envelope["detail"]["code"], "parameters.out_of_range")
+        self.assertIn("Body.Placement.base.x", envelope["detail"]["message"])
+        self.assertEqual(self.document().getObject("Body").Placement.Base.x, 0.0)
+        self.assertEqual(_snapshot_leftovers(), [])
+
+    def test_Should_report_the_stored_placement_When_a_placement_is_written(self):
+        # Arrange
+        self.padded_body()
+
+        # Act
+        envelope = self.dispatch("Body", {"Placement": base(x=3.0)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
+        reported = envelope["structured_content"]["placements"]["Placement"]
+        self.assertEqual(reported["requested"], base(x=3.0))
+        self.assertEqual(reported["stored"]["base"]["x"], {"value": 3.0, "unit": "mm"})
+        self.assertEqual(reported["stored"]["base"]["y"], {"value": 0.0, "unit": "mm"})
+        self.assertAlmostEqual(reported["stored"]["rotation"]["angle"]["value"], 0.0)
 
 
 class OverwrittenValueTest(_PlacementFixture):
@@ -514,6 +568,8 @@ class _Stub:
 class ReadBackRuleTest(_FeatureFixture):
     def test_Should_accept_the_offset_When_an_attached_object_has_a_hidden_offset_status(self):
         # Arrange
+        # A stub, not the real state: FreeCAD hides the offset of an object attached before its
+        # support had a shape, which a document built in a test cannot reproduce cheaply.
         attached = _Stub(MapMode="FlatFace")
 
         # Act
@@ -534,16 +590,6 @@ class ReadBackRuleTest(_FeatureFixture):
         with self.assertRaises(features.ParameterRefusal):
             act()
 
-    def test_Should_report_a_difference_When_an_integer_is_off_by_one_in_a_billion(self):
-        # Arrange
-        stored = _Stub(Count=2**31 - 1)
-
-        # Act
-        holds = features._holds_written(stored, "Count", 2**31)
-
-        # Assert
-        self.assertFalse(holds)
-
     def test_Should_tell_two_small_readings_apart_When_they_differ_by_one_part_in_a_thousand(self):
         # Arrange
         before, after = 1e-7, 1.001e-7
@@ -554,6 +600,23 @@ class ReadBackRuleTest(_FeatureFixture):
         # Assert
         self.assertFalse(same)
 
+    def test_Should_read_a_stored_float_as_equal_When_it_differs_by_the_storage_error(self):
+        # Arrange
+        # 5.6e-17 is the largest error measured between a live value and the same value reopened
+        # from a saved file; a larger magnitude scales it.
+        cases = {
+            "small": (1.0 / 3000.0, 1.0 / 3000.0 + 6e-17),
+            "unit": (0.5, 0.5 + 5e-17),
+            "large": (1e8 / 3, 1e8 / 3 + 1e-8),
+        }
+        for label, (before, after) in cases.items():
+            with self.subTest(label):
+                # Act
+                same = features._comparable(before) == features._comparable(after)
+
+                # Assert
+                self.assertTrue(same)
+
     def test_Should_read_nan_as_equal_to_itself_When_the_probe_compares_two_readings(self):
         # Arrange
         nan = float("nan")
@@ -563,6 +626,48 @@ class ReadBackRuleTest(_FeatureFixture):
 
         # Assert
         self.assertEqual(first, second)
+
+
+class _DropsOne:
+    """A Python feature whose recompute lowers a ``Count`` above 1000 by one."""
+
+    def execute(self, obj):
+        if obj.Count > 1000:
+            obj.Count -= 1
+
+
+class IntegerWriteTest(_PlacementFixture):
+    def integer_feature(self):
+        feature = self.document().addObject("Part::FeaturePython", "Py")
+        feature.addProperty("App::PropertyInteger", "Count", "Meta")
+        feature.Proxy = _DropsOne()
+        self.document().recompute()
+        return feature
+
+    def test_Should_refuse_before_the_bracket_When_an_integer_exceeds_the_int32_range(self):
+        # Arrange
+        feature = self.integer_feature()
+
+        # Act
+        envelope = self.dispatch("Py", {"Count": 2**31})
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT", envelope.get("detail"))
+        self.assertEqual(envelope["detail"]["code"], "parameters.out_of_range")
+        self.assertEqual(feature.Count, 0)
+        self.assertEqual(_snapshot_leftovers(), [])
+
+    def test_Should_report_the_difference_When_a_recompute_lowers_a_large_integer_by_one(self):
+        # Arrange
+        self.integer_feature()
+
+        # Act
+        envelope = self.dispatch("Py", {"Count": 2**31 - 1})
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope.get("detail"))
+        self.assertEqual(envelope["detail"]["code"], "parameters.value_overwritten")
+        self.assertEqual(self.document().getObject("Py").Count, 0)
 
 
 class NumericWriteTest(_PlacementFixture):
@@ -590,6 +695,17 @@ class NumericWriteTest(_PlacementFixture):
         # Assert
         self.assertEqual(envelope["status"], "OK", envelope.get("detail"))
         self.assertAlmostEqual(cylinder.Angle.Value, 90.0)
+
+    def test_Should_refuse_the_number_When_it_is_beyond_the_float_range(self):
+        # Arrange
+        self.padded_body()
+
+        # Act
+        envelope = self.dispatch("Block", {"FuzzyTolerance": 10**400})
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT", envelope.get("detail"))
+        self.assertIn("FuzzyTolerance", envelope["detail"]["message"])
 
     def test_Should_store_the_float_When_a_unitless_float_is_written(self):
         # Arrange
@@ -632,6 +748,35 @@ class RollbackProofTest(_PlacementFixture):
         self.assertAlmostEqual(self.document().getObject("Py").Ratio, 0.3)
         self.assertAlmostEqual(self.document().getObject("Py").Size.Value, 0.3)
         self.assertAlmostEqual(self.document().getObject("Py").Big, 123456789.12345679, places=6)
+
+    def test_Should_prove_the_snapshot_restore_When_the_stored_values_are_small(self):
+        # Arrange
+        # FreeCAD stores 16 decimals, so a value near 3e-4 reopens with a relative error near
+        # 2e-13: a probe that reads 15 significant digits calls the restored document different.
+        feature = self.document().addObject("Part::FeaturePython", "Py")
+        feature.addProperty("App::PropertyFloat", "Ratio", "Meta")
+        feature.addProperty("App::PropertyLength", "Size", "Meta")
+        feature.addProperty("App::PropertyFloat", "Tiny", "Meta")
+        feature.Proxy = _ResetsTiny()
+        small = 1.0 / 3000.0
+        feature.Ratio = small
+        feature.Size = small
+        feature.Tiny = small
+        feature.Placement = placement(small, 0.0, 0.0, angle=0.5)
+        self.document().recompute()
+        self.document().UndoMode = 0
+
+        # Act
+        with mock.patch.object(shim, "enable_undo", return_value=False):
+            envelope = self.dispatch("Py", {"Tiny": 0.5, "Placement": base(x=7.0)})
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR", envelope)
+        block = envelope["structured_content"]["mutation"]
+        self.assertEqual(block["rollback_proven"], "rolled_back_via_snapshot")
+        restored = self.document().getObject("Py")
+        self.assertAlmostEqual(restored.Tiny, small, places=15)
+        self.assertAlmostEqual(restored.Placement.Base.x, small, places=15)
 
     def test_Should_restore_the_label_through_the_snapshot_When_abort_restores_nothing(self):
         # Arrange
