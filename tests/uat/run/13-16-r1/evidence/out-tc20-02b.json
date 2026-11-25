@@ -1,0 +1,128 @@
+[
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g"
+  },
+  "seconds": 0.167,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g",
+    "name": "tc20_label",
+    "undone": "buddy: set parameters on Profile 6",
+    "fingerprint_before": "ff6365b2961a6714c6b621fdcb31234a2054fc3c50d48f4e83d2a403d62539bc",
+    "fingerprint_after": "6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile",
+     "Block"
+    ],
+    "undo_count": 2,
+    "errors": []
+   },
+   "text": "Undid 'buddy: set parameters on Profile 6' on tc20_label: no pre-op digest supplied to compare against (ff6365b2961a -> 6f84d60fe682).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:lhPDAFdJXyZ5a1EibTKc5g\",\"name\":\"tc20_label\",\"undone\":\"buddy: set parameters on Profile 6\",\"fingerprint_before\":\"ff6365b2961a6714c6b621fdcb31234a2054fc3c50d48f4e83d2a403d62539bc\",\"fingerprint_after\":\"6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\",\"matches_pre_op\":null,\"restored_objects\":[\"Body\",\"Origin\",\"X_Axis\",\"Y_Axis\",\"Z_Axis\",\"XY_Plane\",\"XZ_Plane\",\"YZ_Plane\",\"Origin001\",\"Profile\",\"Block\"],\"undo_count\":2,\"errors\":[]},\"text\":\"Undid 'buddy: set parameters on Profile 6' on tc20_label: no pre-op digest supplied to compare against (ff6365b2961a -> 6f84d60fe682).\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g"
+  },
+  "seconds": 0.075,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g",
+    "name": "tc20_label",
+    "undone": "buddy: set parameters on Block 5",
+    "fingerprint_before": "6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b",
+    "fingerprint_after": "6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "Body",
+     "Origin",
+     "X_Axis",
+     "Y_Axis",
+     "Z_Axis",
+     "XY_Plane",
+     "XZ_Plane",
+     "YZ_Plane",
+     "Origin001",
+     "Profile",
+     "Block"
+    ],
+    "undo_count": 1,
+    "errors": []
+   },
+   "text": "Undid 'buddy: set parameters on Block 5' on tc20_label: no pre-op digest supplied to compare against (6f84d60fe682 -> 6f84d60fe682).",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:lhPDAFdJXyZ5a1EibTKc5g\",\"name\":\"tc20_label\",\"undone\":\"buddy: set parameters on Block 5\",\"fingerprint_before\":\"6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\",\"fingerprint_after\":\"6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\",\"matches_pre_op\":null,\"restored_objects\":[\"Body\",\"Origin\",\"X_Axis\",\"Y_Axis\",\"Z_Axis\",\"XY_Plane\",\"XZ_Plane\",\"YZ_Plane\",\"Origin001\",\"Profile\",\"Block\"],\"undo_count\":1,\"errors\":[]},\"text\":\"Undid 'buddy: set parameters on Block 5' on tc20_label: no pre-op digest supplied to compare against (6f84d60fe682 -> 6f84d60fe682).\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g",
+   "code": "result = [doc.Block.Label, doc.Profile.Placement.Base.z]"
+  },
+  "seconds": 0.018,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g",
+    "stdout": "",
+    "value_repr": "['Block', 0.0]",
+    "fingerprint_before": "6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b",
+    "fingerprint_after": "6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:lhPDAFdJXyZ5a1EibTKc5g\nfingerprint_after: 6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\nfingerprint_before: 6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: ['Block', 0.0]\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:lhPDAFdJXyZ5a1EibTKc5g\",\"stdout\":\"\",\"value_repr\":\"['Block', 0.0]\",\"fingerprint_before\":\"6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\",\"fingerprint_after\":\"6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:lhPDAFdJXyZ5a1EibTKc5g\\nfingerprint_after: 6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\\nfingerprint_before: 6f84d60fe6827fac91ce0871c8fc4cd99e3e2fd8498411efeccc78ec9a77bd2b\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: ['Block', 0.0]\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\",\"framing\":{\"fits\":true,\"ratio\":0.95,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ }
+]

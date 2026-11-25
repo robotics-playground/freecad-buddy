@@ -1,0 +1,112 @@
+[
+ {
+  "tool": "document_list",
+  "args": {}
+ },
+ {
+  "tool": "document_create",
+  "args": {
+   "label": "tc20_place"
+  }
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "import Part, Sketcher, FreeCAD as App\nV = App.Vector\nbody = doc.addObject('PartDesign::Body', 'Body')\nsk = body.newObject('Sketcher::SketchObject', 'Profile')\nsk.AttachmentSupport = [(body.Origin.OriginFeatures[3], '')]\nsk.MapMode = 'FlatFace'\nfor i, (a, b) in enumerate([((0,0),(8,0)), ((8,0),(8,16)), ((8,16),(0,16)), ((0,16),(0,0))]):\n    sk.addGeometry(Part.LineSegment(V(a[0], a[1], 0), V(b[0], b[1], 0)))\nfor i in range(4):\n    sk.addConstraint(Sketcher.Constraint('Coincident', i, 2, (i + 1) % 4, 1))\nfor i in (0, 2):\n    sk.addConstraint(Sketcher.Constraint('Horizontal', i))\nfor i in (1, 3):\n    sk.addConstraint(Sketcher.Constraint('Vertical', i))\nsk.addConstraint(Sketcher.Constraint('DistanceX', -1, 1, 0, 1, 0))\nsk.addConstraint(Sketcher.Constraint('DistanceY', -1, 1, 0, 1, 0))\nsk.addConstraint(Sketcher.Constraint('DistanceX', 0, 1, 0, 2, 8))\nsk.addConstraint(Sketcher.Constraint('DistanceY', 1, 1, 1, 2, 16))\ndoc.recompute()\npad = body.newObject('PartDesign::Pad', 'Block')\npad.Profile = sk\npad.Length = 5\ndoc.recompute()\nresult = ('built', sk.FullyConstrained)"
+  }
+ },
+ {
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "$DOC"
+  }
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "import FreeCAD as App\ndoc.Body.Placement = App.Placement(App.Vector(1, 2, 3), App.Rotation(App.Vector(0, 0, 1), 90))\ndoc.recompute()\nresult = [tuple(doc.Body.Placement.Base), round(doc.Body.Placement.Rotation.Angle * 57.29577951308232, 6)]"
+  }
+ },
+ {
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "$DOC"
+  }
+ },
+ {
+  "shell": "export MSYS_NO_PATHCONV=1; echo '{\"pid\":559,\"window_id\":41943133,\"screenshot_out_file\":\"/repo/tests/uat/run/13-16-r1/evidence/tc-20-01-before.png\"}' | docker exec -i -u cua fcb-desktop bash -c 'eval \"$(fcb-session-env)\"; /usr/local/bin/cua-driver call get_window_state' | grep -o '\"screenshot_file_path\"[^,]*'"
+ },
+ {
+  "tool": "feature_set_parameters",
+  "args": {
+   "doc": "$DOC",
+   "feature": "Body",
+   "parameters": {
+    "Placement": {
+     "base": {
+      "x": {
+       "value": 10,
+       "unit": "mm"
+      }
+     }
+    }
+   }
+  }
+ },
+ {
+  "tool": "query_placement",
+  "args": {
+   "doc": "$DOC",
+   "object": "Body"
+  }
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "result = [tuple(doc.Body.Placement.Base), round(doc.Body.Placement.Rotation.Angle * 57.29577951308232, 6)]"
+  }
+ },
+ {
+  "tool": "feature_set_parameters",
+  "args": {
+   "doc": "$DOC",
+   "feature": "Body",
+   "parameters": {
+    "Placement": {
+     "base": {
+      "x": {
+       "value": 10,
+       "unit": "mm"
+      }
+     }
+    }
+   }
+  }
+ },
+ {
+  "shell": "export MSYS_NO_PATHCONV=1; echo '{\"pid\":559,\"window_id\":41943133,\"screenshot_out_file\":\"/repo/tests/uat/run/13-16-r1/evidence/tc-20-01-after.png\"}' | docker exec -i -u cua fcb-desktop bash -c 'eval \"$(fcb-session-env)\"; /usr/local/bin/cua-driver call get_window_state' | grep -o '\"screenshot_file_path\"[^,]*'"
+ },
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "$DOC"
+  }
+ },
+ {
+  "tool": "query_placement",
+  "args": {
+   "doc": "$DOC",
+   "object": "Body"
+  }
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "result = [tuple(doc.Body.Placement.Base), round(doc.Body.Placement.Rotation.Angle * 57.29577951308232, 6)]"
+  }
+ }
+]
