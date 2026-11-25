@@ -1,0 +1,433 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "UndoOff"
+  },
+  "seconds": 0.345,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+    "name": "UndoOff",
+    "label": "UndoOff"
+   },
+   "text": "doc: fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\nlabel: UndoOff\nname: UndoOff"
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\",\"name\":\"UndoOff\",\"label\":\"UndoOff\"},\"text\":\"doc: fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\\nlabel: UndoOff\\nname: UndoOff\"}"
+  ]
+ },
+ {
+  "name": "fx1",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+   "code": "FreeCAD.closeActiveTransaction()\ndoc.addObject('Part::Box', 'Box')\ndoc.recompute()"
+  },
+  "seconds": 0.046,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "changed": [
+     {
+      "name": "Box",
+      "volume": 1000.0,
+      "area": 600.0,
+      "com": [
+       5.0,
+       5.0,
+       5.0
+      ]
+     }
+    ],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [1 items]\ndoc: fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: None\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"changed\":[{\"name\":\"Box\",\"volume\":1000.0,\"area\":600.0,\"com\":[5.0,5.0,5.0]}],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [1 items]\\ndoc: fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\\nfingerprint_after: 07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\\nfingerprint_before: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: None\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "preview",
+  "tool": "preview_dry_run",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+   "operation": {
+    "tool": "feature_body_create",
+    "args": {
+     "name": "Probe"
+    }
+   }
+  },
+  "seconds": 0.715,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "preview_id": "fcb-preview:eyJhcmdzX2RpZ2VzdCI6IjExMjZhZGQ3NGU3ZTNhOTQ0NWJlODM4NjRiNzEwZjNjZjY1NTU3MTExYzMzZjViZmNjMmRhNGQ5ZDM0ZDlmOTkiLCJkb2MiOiJmY2ItZG9jOm1wMzJ2bnhmeVI0VlM3Qk5PLXBtTFEiLCJleHAiOjE3OTU2MjMwMzEsImZpbmdlcnByaW50X2JlZm9yZSI6IjA3YTIzNDg0NzEzZWM1ZjI4NDcxZTNhMjY2ODc4NWUzMDk1MjMxYWNkZmU3Mzc4ZDk0OGQyZmMxYjg0ZDdjMTQiLCJqdGkiOiJGUnFUTE1lWDVaNno2bnU3WFZfMWJnIiwidG9vbCI6ImZlYXR1cmVfYm9keV9jcmVhdGUifQ.zfIJ-XC6p_omGeZHCmJQBWxt568kHhG1W0v2Z3zda5s",
+    "diff": {
+     "schema": "fcb.geometry-diff/2",
+     "op": {
+      "tool": "feature_body_create"
+     },
+     "doc": {
+      "handle": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ"
+     },
+     "deltas": {
+      "volume": {
+       "before": 1000.0,
+       "after": 1000.0,
+       "delta": 0.0,
+       "units": "mm^3"
+      },
+      "area": {
+       "before": 600.0,
+       "after": 600.0,
+       "delta": 0.0,
+       "units": "mm^2"
+      },
+      "bbox": {
+       "before": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        10.0,
+        10.0
+       ],
+       "after": [
+        0.0,
+        0.0,
+        0.0,
+        10.0,
+        10.0,
+        10.0
+       ],
+       "center_shift": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "units": "mm"
+      },
+      "com": {
+       "before": [
+        5.0,
+        5.0,
+        5.0
+       ],
+       "after": [
+        5.0,
+        5.0,
+        5.0
+       ],
+       "shift": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "units": "mm"
+      }
+     },
+     "counts": {
+      "faces": {
+       "before": 6,
+       "after": 6,
+       "delta": 0
+      },
+      "edges": {
+       "before": 12,
+       "after": 12,
+       "delta": 0
+      },
+      "vertices": {
+       "before": 8,
+       "after": 8,
+       "delta": 0
+      },
+      "solids": {
+       "before": 1,
+       "after": 1,
+       "delta": 0
+      }
+     },
+     "touched": [
+      "Probe"
+     ],
+     "new": [
+      "Origin",
+      "Origin001",
+      "Probe",
+      "XY_Plane",
+      "XZ_Plane",
+      "X_Axis",
+      "YZ_Plane",
+      "Y_Axis",
+      "Z_Axis"
+     ],
+     "deleted": [],
+     "validity": {
+      "is_valid": true,
+      "recompute_clean": true,
+      "recompute_errors": [],
+      "pre_existing_errors": [],
+      "status": "OK",
+      "explanation": null
+     },
+     "tnp_precheck": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {},
+      "findings": []
+     },
+     "fingerprint_before": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+     "render": {
+      "available": true,
+      "reason": null
+     }
+    },
+    "expires_at": "2026-11-25T16:10:31.150428+00:00"
+   },
+   "text": "Preview: volume +0.0 mm^3, faces +0, valid=True, tnp=CLEAN.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"preview_id\":\"fcb-preview:eyJhcmdzX2RpZ2VzdCI6IjExMjZhZGQ3NGU3ZTNhOTQ0NWJlODM4NjRiNzEwZjNjZjY1NTU3MTExYzMzZjViZmNjMmRhNGQ5ZDM0ZDlmOTkiLCJkb2MiOiJmY2ItZG9jOm1wMzJ2bnhmeVI0VlM3Qk5PLXBtTFEiLCJleHAiOjE3OTU2MjMwMzEsImZpbmdlcnByaW50X2JlZm9yZSI6IjA3YTIzNDg0NzEzZWM1ZjI4NDcxZTNhMjY2ODc4NWUzMDk1MjMxYWNkZmU3Mzc4ZDk0OGQyZmMxYjg0ZDdjMTQiLCJqdGkiOiJGUnFUTE1lWDVaNno2bnU3WFZfMWJnIiwidG9vbCI6ImZlYXR1cmVfYm9keV9jcmVhdGUifQ.zfIJ-XC6p_omGeZHCmJQBWxt568kHhG1W0v2Z3zda5s\",\"diff\":{\"schema\":\"fcb.geometry-diff/2\",\"op\":{\"tool\":\"feature_body_create\"},\"doc\":{\"handle\":\"fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\"},\"deltas\":{\"volume\":{\"before\":1000.0,\"after\":1000.0,\"delta\":0.0,\"units\":\"mm^3\"},\"area\":{\"before\":600.0,\"after\":600.0,\"delta\":0.0,\"units\":\"mm^2\"},\"bbox\":{\"before\":[0.0,0.0,0.0,10.0,10.0,10.0],\"after\":[0.0,0.0,0.0,10.0,10.0,10.0],\"center_shift\":[0.0,0.0,0.0],\"units\":\"mm\"},\"com\":{\"before\":[5.0,5.0,5.0],\"after\":[5.0,5.0,5.0],\"shift\":[0.0,0.0,0.0],\"units\":\"mm\"}},\"counts\":{\"faces\":{\"before\":6,\"after\":6,\"delta\":0},\"edges\":{\"before\":12,\"after\":12,\"delta\":0},\"vertices\":{\"before\":8,\"after\":8,\"delta\":0},\"solids\":{\"before\":1,\"after\":1,\"delta\":0}},\"touched\":[\"Probe\"],\"new\":[\"Origin\",\"Origin001\",\"Probe\",\"XY_Plane\",\"XZ_Plane\",\"X_Axis\",\"YZ_Plane\",\"Y_Axis\",\"Z_Axis\"],\"deleted\":[],\"validity\":{\"is_valid\":true,\"recompute_clean\":true,\"recompute_errors\":[],\"pre_existing_errors\":[],\"status\":\"OK\",\"explanation\":null},\"tnp_precheck\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"fingerprint_before\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"render\":{\"available\":true,\"reason\":null}},\"expires_at\":\"2026-11-25T16:10:31.150428+00:00\"},\"text\":\"Preview: volume +0.0 mm^3, faces +0, valid=True, tnp=CLEAN.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "body",
+  "tool": "feature_body_create",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+   "name": "Probe",
+   "confirm": {
+    "preview_id": "fcb-preview:eyJhcmdzX2RpZ2VzdCI6IjExMjZhZGQ3NGU3ZTNhOTQ0NWJlODM4NjRiNzEwZjNjZjY1NTU3MTExYzMzZjViZmNjMmRhNGQ5ZDM0ZDlmOTkiLCJkb2MiOiJmY2ItZG9jOm1wMzJ2bnhmeVI0VlM3Qk5PLXBtTFEiLCJleHAiOjE3OTU2MjMwMzEsImZpbmdlcnByaW50X2JlZm9yZSI6IjA3YTIzNDg0NzEzZWM1ZjI4NDcxZTNhMjY2ODc4NWUzMDk1MjMxYWNkZmU3Mzc4ZDk0OGQyZmMxYjg0ZDdjMTQiLCJqdGkiOiJGUnFUTE1lWDVaNno2bnU3WFZfMWJnIiwidG9vbCI6ImZlYXR1cmVfYm9keV9jcmVhdGUifQ.zfIJ-XC6p_omGeZHCmJQBWxt568kHhG1W0v2Z3zda5s"
+   }
+  },
+  "seconds": 0.123,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "mutation": {
+     "schema": "fcb.mutation/2",
+     "fingerprint_before": {
+      "digest": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+      "serializer": "exportBinary"
+     },
+     "fingerprint_after": {
+      "digest": "3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1",
+      "serializer": "exportBinary"
+     },
+     "changed": [
+      {
+       "name": "Probe",
+       "volume": 0.0,
+       "area": 0.0,
+       "com": [
+        0.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "post_verify": {
+      "recompute_clean": true,
+      "is_valid": true,
+      "fully_constrained": null,
+      "tnp_audit": {
+       "status": "CLEAN",
+       "element_map_version": "15.70200.5",
+       "counts": {},
+       "findings": []
+      },
+      "passed": true,
+      "explanation": null
+     },
+     "rolled_back": false,
+     "rollback_proven": null,
+     "touched": [
+      "Probe"
+     ]
+    },
+    "feature": "Probe",
+    "feature_state": {
+     "schema": "fcb.feature-state/1",
+     "feature": "Probe",
+     "readable": false
+    }
+   },
+   "text": "Mutation committed; fingerprint 3e624caedd24.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Probe\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Probe\"]},\"feature\":\"Probe\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Probe\",\"readable\":false}},\"text\":\"Mutation committed; fingerprint 3e624caedd24.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "fx2",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+   "recompute": false,
+   "code": "FreeCAD.closeActiveTransaction()\ndoc.getObject('Box').Length = 0"
+  },
+  "seconds": 0.025,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_before": "3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1",
+    "fingerprint_after": "3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1",
+    "changed": [],
+    "new_errors": [],
+    "undo_steps": 0
+   },
+   "text": "changed: [0 items]\ndoc: fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\nfingerprint_after: 3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\nfingerprint_before: 3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\nnew_errors: [0 items]\nstdout: \nundo_steps: 0\nvalue_repr: None\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": 2.41,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\",\"stdout\":\"\",\"value_repr\":null,\"fingerprint_before\":\"3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\",\"fingerprint_after\":\"3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\",\"changed\":[],\"new_errors\":[],\"undo_steps\":0},\"text\":\"changed: [0 items]\\ndoc: fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\\nfingerprint_after: 3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\\nfingerprint_before: 3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\\nnew_errors: [0 items]\\nstdout: \\nundo_steps: 0\\nvalue_repr: None\\nundo_steps 0: this call recorded no undo step, so document_undo would revert an earlier step\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.41,\"checked\":\"computed\",\"stale_reason\":null}}"
+  ]
+ },
+ {
+  "name": "undo",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ"
+  },
+  "seconds": 0.089,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "RECOMPUTE_ERROR",
+   "detail": {
+    "code": "recompute.failed_objects",
+    "message": "Box: ['Touched', 'Invalid']",
+    "objects": [
+     "Box"
+    ]
+   },
+   "structured_content": {
+    "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+    "name": "UndoOff",
+    "undone": "buddy: create body Probe",
+    "fingerprint_before": "3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1",
+    "fingerprint_after": "07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14",
+    "matches_pre_op": null,
+    "restored_objects": [
+     "Box"
+    ],
+    "undo_count": 0,
+    "errors": [
+     {
+      "name": "Box",
+      "error": [
+       "Touched",
+       "Invalid"
+      ]
+     }
+    ]
+   },
+   "text": "Recompute UndoOff: 1 error(s): Box."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"RECOMPUTE_ERROR\",\"detail\":{\"code\":\"recompute.failed_objects\",\"message\":\"Box: ['Touched', 'Invalid']\",\"objects\":[\"Box\"]},\"structured_content\":{\"doc\":\"fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\",\"name\":\"UndoOff\",\"undone\":\"buddy: create body Probe\",\"fingerprint_before\":\"3e624caedd24f8d16599be2b2ada1405be767626587575705e6190546733b5f1\",\"fingerprint_after\":\"07a23484713ec5f28471e3a2668785e3095231acdfe7378d948d2fc1b84d7c14\",\"matches_pre_op\":null,\"restored_objects\":[\"Box\"],\"undo_count\":0,\"errors\":[{\"name\":\"Box\",\"error\":[\"Touched\",\"Invalid\"]}]},\"text\":\"Recompute UndoOff: 1 error(s): Box.\"}"
+  ]
+ },
+ {
+  "name": "undo_again",
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ"
+  },
+  "seconds": 0.059,
+  "isError": true,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "nothing to undo on UndoOff: the undo stack is empty",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 171, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1970, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 666, in document_undo\n    raise ValidationError(\nfreecad_buddy.usecases.documents.ValidationError: nothing to undo on UndoOff: the undo stack is empty\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"INVALID_INPUT\",\"message\":\"nothing to undo on UndoOff: the undo stack is empty\",\"data\":{\"exception\":\"ValidationError\",\"traceback\":\"Traceback (most recent call last):\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\\\", line 171, in _invoke\\n    return method.handler(**params)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\\\", line 1970, in handler\\n    envelope = raw(**params)\\n               ^^^^^^^^^^^^^\\n  File \\\"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\\\", line 666, in document_undo\\n    raise ValidationError(\\nfreecad_buddy.usecases.documents.ValidationError: nothing to undo on UndoOff: the undo stack is empty\\n\"}},\"structured_content\":{},\"text\":\"\"}"
+  ]
+ },
+ {
+  "name": "close",
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ"
+  },
+  "seconds": 0.072,
+  "isError": false,
+  "structuredContent": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:mp32vnxfyR4VS7BNO-pmLQ",
+    "name": "UndoOff",
+    "closed": true
+   },
+   "text": "Closed UndoOff (doc=fcb-doc:mp32vnxfyR4VS7BNO-pmLQ)."
+  },
+  "text": [
+   "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:mp32vnxfyR4VS7BNO-pmLQ\",\"name\":\"UndoOff\",\"closed\":true},\"text\":\"Closed UndoOff (doc=fcb-doc:mp32vnxfyR4VS7BNO-pmLQ).\"}"
+  ]
+ }
+]

@@ -65,7 +65,7 @@
     {
       "step": "build",
       "path": "status",
-      "equals": "OK"
+      "equals": "RECOMPUTE_ERROR"
     },
     {
       "step": "grade",

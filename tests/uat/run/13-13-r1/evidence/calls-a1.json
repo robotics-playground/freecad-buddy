@@ -1,0 +1,34 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313Core"
+  }
+ },
+ {
+  "name": "mkbox",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "b = doc.addObject('Part::Box', 'Box')\nresult = b.Name"
+  }
+ },
+ {
+  "name": "write",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "doc.getObject('Box').Length = 25"
+  }
+ },
+ {
+  "name": "names1",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "recompute": false,
+   "code": "result = list(doc.UndoNames)"
+  }
+ }
+]

@@ -80,6 +80,23 @@ def wrote_own_audit(envelope: ResultEnvelope) -> bool:
     return isinstance(content, dict) and isinstance(content.get("mutation"), dict)
 
 
+def exec_digests(envelope: ResultEnvelope) -> tuple[str | None, str | None]:
+    """The ``(fingerprint_before, fingerprint_after)`` digests a ``script_exec`` result carries.
+
+    ``script_exec`` writes no audit line itself (the dispatch boundary does), so its ``after`` line
+    reads both digests from the result. A result without them, such as a ``TIMEOUT`` envelope,
+    gives ``None`` for each.
+    """
+    content = envelope.get("structured_content")
+    if not isinstance(content, dict):
+        return None, None
+    before, after = content.get("fingerprint_before"), content.get("fingerprint_after")
+    return (
+        before if isinstance(before, str) else None,
+        after if isinstance(after, str) else None,
+    )
+
+
 def _refusal_code(exc: BaseException) -> str | None:
     """The ``detail.code`` a project refusal names, or ``None`` for any other exception.
 

@@ -1,0 +1,96 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313R2"
+  }
+ },
+ {
+  "name": "mkbox",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "b = doc.addObject('Part::Box', 'Box')\nresult = b.Name"
+  }
+ },
+ {
+  "name": "write",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "doc.getObject('Box').Length = 25"
+  }
+ },
+ {
+  "name": "undo",
+  "tool": "document_undo",
+  "args": {
+   "doc": "$DOC",
+   "expect_fingerprint": "$write.structured_content.fingerprint_before"
+  }
+ },
+ {
+  "name": "len_after_undo",
+  "tool": "query_object",
+  "args": {
+   "doc": "$DOC",
+   "object": "Box"
+  }
+ },
+ {
+  "name": "sysexit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "raise SystemExit(3)"
+  }
+ },
+ {
+  "shell": "curl -fsS http://127.0.0.1:18765/healthz"
+ },
+ {
+  "name": "raise_after_write",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "doc.getObject('Box').Height = 30\nraise ValueError('boom after write')"
+  }
+ },
+ {
+  "name": "repr_sysexit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "class R:\n    def __repr__(self):\n        raise SystemExit(7)\ndoc.getObject('Box').Width = 12\nresult = R()"
+  }
+ },
+ {
+  "name": "str_sysexit",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "class E(Exception):\n    def __str__(self):\n        raise SystemExit(8)\nraise E()"
+  }
+ },
+ {
+  "name": "stdout_closed",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "print('kept line')\nimport sys\nsys.stdout.close()"
+  }
+ },
+ {
+  "shell": "curl -fsS http://127.0.0.1:18765/healthz"
+ },
+ {
+  "name": "served",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "recompute": false,
+   "code": "result = [list(doc.UndoNames), doc.getObject('Box').Width.Value, doc.getObject('Box').Height.Value]"
+  }
+ }
+]

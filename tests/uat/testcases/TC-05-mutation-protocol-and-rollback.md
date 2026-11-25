@@ -20,8 +20,8 @@ refuse, or to patch a bridge function for one call so a fault path becomes reach
 is on by default. It is off when `FREECAD_BUDDY_SCRIPT_EXEC=0` is set or the **Allow script_exec**
 preference (`ScriptExec`) is cleared, and when `FREECAD_BUDDY_UNATTENDED=1` is set without
 `FREECAD_BUDDY_SCRIPT_EXEC_UNATTENDED=1`. When it is off, those scenarios are not-exercised.
-`script_exec` opens no transaction, so `document_undo` never reverts what it did: each patch restores
-itself after one call, and each Cleanup restores what the scenario changed.
+`script_exec` runs in its own bracket, so one `document_undo` reverts a write it made. Each patch
+restores itself after one call, and each Cleanup restores what the scenario changed.
 
 ## Preconditions
 

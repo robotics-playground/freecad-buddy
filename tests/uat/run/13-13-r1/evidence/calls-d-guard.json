@@ -1,0 +1,51 @@
+[
+ {
+  "name": "create",
+  "tool": "document_create",
+  "args": {
+   "label": "V1313Guard"
+  }
+ },
+ {
+  "name": "mkbox",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "doc.addObject('Part::Box', 'Box')\nresult = list(doc.UndoNames)"
+  }
+ },
+ {
+  "name": "register",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "code": "import FreeCADGui\nfrom PySide import QtCore\nfrom freecad_buddy.usecases import script_exec as se\nNAME = doc.Name\nclass _Probe:\n    def GetResources(self):\n        return {\"MenuText\": \"FCB guard probe\"}\n    def IsActive(self):\n        return True\n    def Activated(self):\n        d = FreeCAD.getDocument(NAME)\n        rec = {\"guarded_active_before\": FreeCAD.getActiveTransaction()}\n        env = se._run_bracket(\"probe\", d, \"doc.getObject('Box').Width = 17\", True)\n        sc = env[\"structured_content\"]\n        rec.update(status=env[\"status\"], undo_steps=sc[\"undo_steps\"], changed=sc[\"changed\"], text=env[\"text\"],\n                   active_inside_after_bracket=FreeCAD.getActiveTransaction(), undo_names_inside=list(d.UndoNames))\n        d.getObject('Box').Height = 21\n        rec[\"undo_names_after_second_write_inside\"] = list(d.UndoNames)\n        FreeCAD._fcb_probe = rec\ndef _fire():\n    FreeCADGui.runCommand(\"FCB_GuardProbe\")\n    d = FreeCAD.getDocument(NAME)\n    FreeCAD._fcb_probe[\"active_after_command\"] = FreeCAD.getActiveTransaction()\n    FreeCAD._fcb_probe[\"undo_names_after_command\"] = list(d.UndoNames)\nFreeCADGui.addCommand(\"FCB_GuardProbe\", _Probe())\nQtCore.QTimer.singleShot(1500, _fire)\nresult = \"registered\""
+  }
+ },
+ {
+  "shell": "sleep 6"
+ },
+ {
+  "name": "read",
+  "tool": "script_exec",
+  "args": {
+   "doc": "$DOC",
+   "recompute": false,
+   "code": "result = getattr(FreeCAD, '_fcb_probe', None)"
+  }
+ },
+ {
+  "name": "tree",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "$DOC"
+  }
+ },
+ {
+  "name": "close",
+  "tool": "document_close",
+  "args": {
+   "doc": "$DOC"
+  }
+ }
+]

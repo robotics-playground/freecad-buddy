@@ -1,0 +1,4 @@
+[{"shell":"sleep 8"},
+ {"name":"fail_gui2","tool":"script_exec","args":{"doc":"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg","code":"import sys\nsys.stderr.write('stderr line from script\n')\nraise KeyError('second gui probe')"}},
+ {"name":"fail_gui3","tool":"script_exec","args":{"doc":"fcb-doc:z6A11dS_mT4o4HHJ9KCAYg","code":"raise SystemExit(5)"}},
+ {"shell":"sleep 1"}]
