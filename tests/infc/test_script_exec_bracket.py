@@ -941,6 +941,19 @@ class UndoNoteTest(_BracketFixture):
         # Assert
         self.assertIn("the script undid steps itself", envelope["text"])
 
+    def test_Should_not_note_an_undo_When_the_script_adds_two_entries_to_a_stack_of_19(self):
+        # Arrange
+        for index in range(19):
+            self.run_script(f"doc.Box.Height = {index + 30}")
+        code = "doc.Box.Length = 11\ndoc.openTransaction('own')\ndoc.Box.Width = 5"
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        self.assertEqual(len(self.undo_names()), 20)
+        self.assertNotIn("undid steps", envelope["text"])
+
     def test_Should_not_note_an_undo_by_the_script_When_the_script_only_writes(self):
         # Arrange
         self.run_script("doc.Box.Length = 11")
