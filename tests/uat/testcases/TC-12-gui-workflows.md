@@ -406,16 +406,15 @@ Close the document in the GUI and discard changes.
 
 A GUI property-editor edit recomputes at once on FreeCAD 1.1.x, and `verify_recompute` recomputes
 before it reads (`verify.py:435-437`), so neither can leave or observe a pending recompute. The
-**Touched route** does: `script_exec` sets a property and does not recompute
-(`script_exec.py:19-67`). `script_exec` opens no transaction, so `document_undo` does not revert it;
-the document is closed without saving.
+**Touched route** does: `script_exec` with `recompute:false` sets a property and the bracket does not
+recompute it. The document is closed without saving.
 
 **Given** a scratch document with a padded body is open, built over MCP — verify: `mcp document_create {label:"TC1207"}`, `feature_body_create`, `sketch_create` on XY, `sketch_add_geometry` with a fully constrained 20 x 10 mm rectangle, and `feature_pad` with `length:{value:5, unit:"mm"}` each return `OK`; `mcp query_mass_properties {doc:<handle>, object:"Pad"}` returns `volume` `1000.0`  
 **And** the document is clean — verify: `mcp verify_recompute {doc:<handle>}` returns `OK` with `subject.failing_objects` empty, and a snapshot shows the toolbar `Recompute` button disabled  
 
 **When** the document is made dirty without a recompute through the Touched route  
 ```bash
-mcp script_exec {doc:<handle>, code:"doc.getObject('Pad').Length = 8\nresult = doc.getObject('Pad').State"}
+mcp script_exec {doc:<handle>, recompute:false, code:"doc.getObject('Pad').Length = 8\nresult = doc.getObject('Pad').State"}
 ```
 **And** the dirty state is captured  
 ```bash
@@ -449,7 +448,7 @@ mcp query_mass_properties {doc:<handle>, object:"Pad"}
 rm -f $RUN_DIR/evidence/tc-12-07-props.png
 mcp document_close {doc:<handle>}
 ```
-Do not save. `document_undo` does not revert a `script_exec` change.
+Do not save.
 
 ---
 

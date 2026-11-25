@@ -52,10 +52,8 @@ report the operation as blocked.
 ```python
 import Import
 before = {o.Name for o in doc.Objects}
-doc.openTransaction("import step")
 try:
     Import.insert(r"D:/path/part.step", doc.Name)
-    doc.commitTransaction()
 except Exception:
     doc.abortTransaction()
     raise

@@ -498,9 +498,9 @@ mcp document_close {doc:<handle>}
 **Given** a scratch document with a padded box is open — verify: `mcp document_create {label:"tc-06-10"}` returns a handle; a Body, a fully constrained 20 x 10 mm rectangle `BoxSketch` on XY (built as in TC-03-04) and a 10 mm `feature_pad` named `BoxPad` all return `OK`; `mcp query_mass_properties {doc:<handle>, object:"BoxPad"}` returns `volume` = `2000.0`  
 **And** the document is clean to start — verify: `mcp query_screenshot {doc:<handle>}` returns `render.dirty_document` false  
 
-**When** a driving parameter is changed without a recompute. No typed tool can do this: every typed mutation recomputes inside its bracket. `script_exec` sets the property and does not recompute, and it opens no transaction  
+**When** a driving parameter is changed without a recompute. No typed tool can do this: every typed mutation recomputes inside its bracket. `script_exec` sets the property with `recompute:false`, so the bracket does not recompute and the object stays Touched  
 ```bash
-mcp script_exec {doc:<handle>, code:"doc.getObject('BoxPad').Length = 25\nresult = doc.getObject('BoxPad').State"}
+mcp script_exec {doc:<handle>, recompute:false, code:"doc.getObject('BoxPad').Length = 25\nresult = doc.getObject('BoxPad').State"}
 ```
 **And** it is rendered  
 ```bash
@@ -531,7 +531,7 @@ rm -f "$RUN_DIR/evidence/tc-06-10-"*.png
 ```bash
 mcp document_close {doc:<handle>}
 ```
-Close without saving. `script_exec` opens no transaction, so `document_undo` does not revert the length change.
+Close without saving.
 
 ---
 

@@ -467,7 +467,7 @@ suspect, so once the body returns, a mutation on the same document is served.
 
 **Given** a new document `H` is created on the H1 session with `document_create`, and an object whose recompute takes about 130 s is added to it with `script_exec`. That is longer than the 120 s budget of `verify_recompute`. The new object is touched, and `verify_recompute` recomputes the document before it reads it (`usecases/verify.py:436-437`)  
 ```
-mcp script_exec { doc: <H>, code: "import time, Part\nclass Slow:\n    def __init__(self, obj):\n        obj.Proxy = self\n    def execute(self, obj):\n        time.sleep(130)\n        obj.Shape = Part.makeBox(10, 10, 10)\nSlow(doc.addObject('Part::FeaturePython', 'Slow'))\nresult = 'built'" }
+mcp script_exec { doc: <H>, recompute: false, code: "import time, Part\nclass Slow:\n    def __init__(self, obj):\n        obj.Proxy = self\n    def execute(self, obj):\n        time.sleep(130)\n        obj.Shape = Part.makeBox(10, 10, 10)\nSlow(doc.addObject('Part::FeaturePython', 'Slow'))\nresult = 'built'" }
 ```
 **And** no abandoned body is running — verify: `query_tree_summary { doc: <H> }` returns `OK`  
 **And** a golden model is open in the GUI as `<G>`, framed, and captured, so the GUI capture has an untouched subject — verify: run Show All, then `mcp view_fit_viewport { doc: "<G>" }` returns `OK`; if it does not, fit through the GUI instead with the **Fit All** toolbar button resolved by `element_token` from a fresh `get_window_state` snapshot (`invoke_menu(["View","Fit All"])` is refused on FreeCAD 1.1.x with `menu_path_unavailable`; the toolbar click returns `route: "accessibility"` and reframes the view), which touches none of the code under test, then `echo '{"pid":<pid>,"window_id":<wid>,"screenshot_out_file":"$RUN_DIR/evidence/tc-10-11-before.png"}' | "$FCB_CUA" get_window_state`  
@@ -478,7 +478,7 @@ mcp verify_recompute { doc: <H> }
 ```
 **And** a MUTATING call is issued on the same handle at once, while the body still runs  
 ```
-mcp script_exec { doc: <H>, code: "b = doc.addObject('Part::Box', 'AcceptedAfterRead'); b.Placement.Base.x = 15; result = 'ran'" }
+mcp script_exec { doc: <H>, recompute: false, code: "b = doc.addObject('Part::Box', 'AcceptedAfterRead'); b.Placement.Base.x = 15; result = 'ran'" }
 ```
 **And** the client waits until the body has returned, about 140 s after the first call started, and issues the same mutating call again  
 

@@ -400,12 +400,12 @@ Do not save.
 
 No fault-injection fixture carries a FreeCAD error state: their defects are geometric, on valid
 static `Part::Feature` objects. So the broken object is built here. `script_exec` writes an invalid
-pad length and recomputes, which leaves the pad in an error state that both FreeCAD and the bridge
-must report. `script_exec` opens no transaction, so the document is closed without saving.
+pad length; its bracket recompute leaves the pad in an error state that both FreeCAD and the bridge
+must report. The document is closed without saving.
 
 **Given** a scratch document with a padded body is open, built over MCP — verify: `mcp document_create {label:"TC13Err"}`, `feature_body_create`, `sketch_create` on XY, `sketch_add_geometry` with a fully constrained 30 x 20 mm rectangle, and `feature_pad` with `length:{value:5, unit:"mm"}` each return `OK`  
 **And** the clean control is recorded first — verify: `mcp query_object {doc:<handle>, object:"Pad"}` returns a null `error`, `mcp verify_recompute {doc:<handle>}` returns `OK` with `subject.failing_objects` empty, and a tree snapshot shows no marker on the `Pad` row  
-**And** the pad is broken through `script_exec` — verify: the call below returns `OK` and its `value_repr` names an error state (`Invalid` or `Error`)  
+**And** the pad is broken through `script_exec` — verify: the call below returns `RECOMPUTE_ERROR` with `structured_content.new_errors` `["Pad"]`, the change is kept, and its `value_repr` names an error state (`Invalid` or `Error`)  
 ```bash
 mcp script_exec {doc:<handle>, code:"doc.getObject('Pad').Length = 0\ndoc.recompute()\nresult = doc.getObject('Pad').State"}
 ```
@@ -440,7 +440,7 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 ```bash
 mcp document_close {doc:<handle>}
 ```
-Do not save. `TC13Err` is a scratch document, and `document_undo` does not revert a `script_exec` change.
+Do not save. `TC13Err` is a scratch document.
 
 ---
 
@@ -898,17 +898,16 @@ Do not save.
 **Design Ref**: `verification-design.md` §6.3 (recompute grading), `integration-mcp-freecad.md` §3 (GUI mode, addon lifecycle)
 
 A typed mutation and a GUI property edit both recompute at once, so neither leaves a pending
-recompute. The **Touched route** does: `script_exec` sets a property and does not recompute
-(`script_exec.py:19-67`). `verify_recompute` recomputes before it reads (`verify.py:435-437`), so
+recompute. The **Touched route** does: `script_exec` with `recompute:false` sets a property and the bracket does not
+recompute it. `verify_recompute` recomputes before it reads (`verify.py:435-437`), so
 it can never see a Touched object and is not used as the dirty probe here. The MCP-side dirty
 probe is `query_screenshot`, which reads object state without a recompute
-(`screenshot.py:164-170`). `script_exec` opens no transaction: `document_undo` does not revert it,
-so the document is closed without saving.
+(`screenshot.py:164-170`). The document is closed without saving.
 
 **Given** `TC13Pad` is open with its 5 mm `Pad`, built with the TC-13-10 Given and pad call — verify: `mcp query_mass_properties {doc:<handle>, object:"Pad"}` returns `volume` `3000.0`  
 **And** the document has a pending recompute, set through the Touched route — verify: the call below returns `OK` with `value_repr` `['Touched']`  
 ```bash
-mcp script_exec {doc:<handle>, code:"doc.getObject('Pad').Length = 12\nresult = doc.getObject('Pad').State"}
+mcp script_exec {doc:<handle>, recompute:false, code:"doc.getObject('Pad').Length = 12\nresult = doc.getObject('Pad').State"}
 ```
 
 **When** the dirty state is recorded from MCP and the tree markers from the GUI  
@@ -947,7 +946,7 @@ echo '{"pid":<PID>,"window_id":<WID>,"screenshot_out_file":"$RUN_DIR/evidence/tc
 ```bash
 mcp document_close {doc:<handle>}
 ```
-Do not save. `document_undo` does not revert a `script_exec` change.
+Do not save.
 
 ---
 

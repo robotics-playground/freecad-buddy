@@ -2,10 +2,10 @@
 title: 'script_exec observe-only bracket and error status'
 type: 'feature'
 created: '2026-11-24'
-status: 'draft'
+status: 'in-progress'
 route: 'dispatch'
 review_loop_iteration: 0
-baseline_commit: '28586faa3fb3c316b361e48df2a626ef0cf55a0e'
+baseline_commit: '7549c1d4'
 context:
   - '{project-root}/_bmad-output/specs/spec-mcp-usage-improvement/tool-contracts.md'
   - '{project-root}/.knowledge-base/technical/standards/freecad/source-verify.md'
@@ -84,12 +84,9 @@ Fix = add `recompute: false` (decision 4) unless stated. Text "opens no transact
 | TC-05:279, :311, TC-08:837 | Set `UndoMode 0` and patch `shim.enable_undo` | None while `enable_undo` runs only before the script and `False` is tolerated |
 | TC-12:361, :385 | Read `UndoNames`; first entry must start `buddy: ` | None, and only because of the case-2 close step: without it the leaked name hijacks the next GUI change |
 
-## Open Questions
+**Decisions (user, 2026-11-25, epic-13-decisions 42, 43):** add the `undo_steps` field; the `script_exec` envelope skips the framing cache; a failed bracket phase gives `SPEC_FAILED` before the script, `RECOMPUTE_ERROR` after it, and `OK` with null `fingerprint_after` when the document is gone; the AD-27 wording "for `script_exec` the late return commits; nothing aborts it" is approved.
 
-- New result field `undo_steps` (T-6 lists none): needed for cases 2, 4, 8. Options: add it (recommended; additive under AD-28) / leave the cases to the `text` only.
-- Cache bypass for the framing read after `script_exec` (case 20): options: bypass (recommended; one projection per call) / leave the stale verdict and record a deferred entry.
-- Status for a failed bracket phase (cases 10, 11, 12): options: `SPEC_FAILED` before the script, `RECOMPUTE_ERROR` after, `OK` with null fingerprint when the document is gone (recommended; keeps the closed status set) / `INVALID_INPUT` for a closed document.
-- AD-27 sentence (case 17) is an architecture-tier edit in `ARCHITECTURE-SPINE.md`: approve the wording "for `script_exec` the late return commits; nothing aborts it".
+</frozen-after-approval>
 
 ## Code Map
 
@@ -106,13 +103,13 @@ Fix = add `recompute: false` (decision 4) unless stated. Text "opens no transact
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `script_exec.py` -- bracket and rules 1-19 -- implements T-6
-- [ ] `tool_catalog.py` -- `recompute` input, description, framing bypass
-- [ ] `rpc_listener.py`, `mcp_server.py` -- exec `after` line carries both digests
-- [ ] skill and design text -- reverse "runs raw"; AD-5 other-document sentence; AD-27 wording
-- [ ] `tests/infc/test_script_exec_bracket.py`, `tests/external/*` -- one test per matrix row `test_Should_<outcome>_When_<condition>`
-- [ ] `tests/uat/testcases/*` -- fixtures table
-- [ ] `deferred-work.md` -- as in Code Map
+- [x] `script_exec.py` -- bracket and rules 1-19 -- implements T-6
+- [x] `tool_catalog.py` -- `recompute` input, description, framing bypass
+- [x] `rpc_listener.py`, `mcp_server.py` -- exec `after` line carries both digests
+- [x] skill and design text -- reverse "runs raw"; AD-5 other-document sentence; AD-27 wording
+- [x] `tests/infc/test_script_exec_bracket.py`, `tests/external/*` -- one test per matrix row `test_Should_<outcome>_When_<condition>`
+- [x] `tests/uat/testcases/*` -- fixtures table
+- [x] `deferred-work.md` -- as in Code Map
 
 **Acceptance Criteria:**
 - Given a script that writes one property, when run, then `OK`, `changed` names the object, `undo_steps` is 1 and one `document_undo` with `expect_fingerprint` = `fingerprint_before` gives `matches_pre_op` true.

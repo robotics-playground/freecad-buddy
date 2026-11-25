@@ -245,7 +245,7 @@ def test_should_wrap_every_registered_method_in_the_framing_wrapper():
     source = inspect.getsource(tool_catalog.build_inline_handlers)
 
     # Act
-    wrapped = "with_framing(raw, doc_registry, viewport_port)" in source
+    wrapped = "with_framing(raw, doc_registry, viewport_port" in source
 
     # Assert
     assert wrapped, "build_inline_handlers no longer applies with_framing to every spec"

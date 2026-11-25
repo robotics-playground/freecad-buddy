@@ -8,6 +8,7 @@ because "omit on failure" is the rule a future tool is most likely to erode one 
 
 from __future__ import annotations
 
+import inspect
 import json
 from pathlib import Path
 
@@ -612,3 +613,55 @@ def test_should_report_no_digest_when_the_envelope_carries_none():
 
     # Assert
     assert digest is None
+
+
+def test_should_measure_again_when_the_wrapper_is_fresh_and_the_cache_key_is_unchanged():
+    # Arrange: a Visibility-only script leaves the geometry digest, camera and size equal.
+    view = _FakeView()
+    document = _document()
+    registry = _FakeRegistry(document)
+    port = _FakeViewportPort(view)
+    result = _envelope(structured={"fingerprint_after": "digest-1"})
+    raw = lambda **_params: dict(result)  # noqa: E731
+    cached = tool_catalog.with_framing(raw, registry, port)
+    fresh = tool_catalog.with_framing(raw, registry, port, fresh=True)
+    cached(doc=_HANDLE)
+    projections_before = view.projections
+
+    # Act
+    served = fresh(doc=_HANDLE)
+
+    # Assert
+    assert served["framing"]["checked"] == "computed"
+    assert view.projections > projections_before
+
+
+def test_should_store_the_fresh_verdict_when_a_cached_call_follows_a_fresh_one():
+    # Arrange
+    view = _FakeView()
+    registry = _FakeRegistry(_document())
+    port = _FakeViewportPort(view)
+    result = _envelope(structured={"fingerprint_after": "digest-1"})
+    raw = lambda **_params: dict(result)  # noqa: E731
+    cached = tool_catalog.with_framing(raw, registry, port)
+    fresh = tool_catalog.with_framing(raw, registry, port, fresh=True)
+    fresh(doc=_HANDLE)
+    projections_after_fresh = view.projections
+
+    # Act
+    served = cached(doc=_HANDLE)
+
+    # Assert
+    assert served["framing"]["checked"] == "cached"
+    assert view.projections == projections_after_fresh
+
+
+def test_should_register_script_exec_with_a_fresh_framing_read():
+    # Arrange
+    source = inspect.getsource(tool_catalog.build_inline_handlers)
+
+    # Act
+    wiring = 'fresh=spec.name == "script_exec"'
+
+    # Assert
+    assert wiring in source

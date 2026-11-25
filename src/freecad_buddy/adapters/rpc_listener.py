@@ -28,7 +28,12 @@ from pathlib import Path
 from typing import Callable
 
 from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout
-from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited, wrote_own_audit
+from freecad_buddy.adapters.rpc_dispatch import (
+    MethodRegistry,
+    exec_digests,
+    is_audited,
+    wrote_own_audit,
+)
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import confirm, view_fit
 from freecad_buddy.usecases.process import pid_alive
@@ -471,9 +476,9 @@ class RpcListener:
         doc_str = doc if isinstance(doc, str) else None
         audit = self._audit if audited else None
         # A mutating call's pair is written after dispatch so a bracketed mutation, which wrote
-        # its own joinable pair, gets no second one. script_exec (mutating, but never bracketed)
-        # and every non-mutating audited call (preview_dry_run) record their `before` line ahead
-        # of execution, so the line survives a call that never returns.
+        # its own joinable pair, gets no second one. script_exec (mutating, but its own bracket
+        # writes no lines) and every non-mutating audited call (preview_dry_run) record their
+        # `before` line ahead of execution, so the line survives a call that never returns.
         before_first = audit is not None and (not mutating or event == "exec")
         if before_first:
             self._audit_safe(audit.before, event, name, doc_str, params)
@@ -489,7 +494,8 @@ class RpcListener:
         if audit is not None and not (mutating and wrote_own_audit(env)):
             if not before_first:
                 self._audit_safe(audit.before, event, name, doc_str, params)
-            self._audit_safe(audit.after, event, name, doc_str, params, env.get("status"))
+            digests = exec_digests(env) if event == "exec" else (None, None)
+            self._audit_safe(audit.after, event, name, doc_str, params, env.get("status"), *digests)
 
         self._update_suspect(method, mutating, doc, env)
         return env

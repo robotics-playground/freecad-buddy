@@ -598,6 +598,7 @@ status: done 2026-07-24
 - source_spec: `spec-dw-22-headless-bounded-debug-exec.md`
   summary: `debug_exec` holds the non-reentrant `DocumentRegistry._lock` for the entire duration of its `exec(code)` body, so a wedged operator body permanently blocks all 16 `with_document` call sites, making the document-suspect flag unclearable in-process.
   evidence: `usecases/documents.py` declares `self._lock = threading.Lock()` and `with_document` holds it across `fn(handle, document)`; `usecases/debug_exec.py` passes its whole `exec` body as that `fn`. Every read/verify/export/screenshot use case resolves its document through `with_document`, so an abandoned exec body blocks all of them. The DW-22 gate refuses *mutations* on a suspect handle and directs the operator to run a `query_*` read to clear the flag — but that read takes the same lock and will itself block until its budget expires, returning `TIMEOUT` instead of the `OK` that clears the flag. The suspect state is therefore terminal for the process, and DW-22's fix is a prompt diagnosis rather than a recovery. Pre-existing lock design, surfaced by DW-22 rather than caused by it; out of scope there because the recorded decision explicitly rejects forcible termination and scopes the work to host/adapter wiring. Fix would need the exec body to run outside the registry lock (resolve the handle, release, then exec) or a bounded `acquire(timeout=...)` that returns `INVALID_INPUT` rather than blocking.
+  note: Story 13-13 `script_exec` also takes both fingerprints inside this lock. Measured added time (freecadcmd): 32 objects 0.03 to 0.4 s, 184 objects 0.02 to 2.0 s, 30 objects x 406 faces 5.7 to 6.9 s (`tests/infc/test_script_exec_bracket.py` prints it); the budget stays 30 s.
 
 - source_spec: `spec-dw-22-headless-bounded-debug-exec.md`
   summary: `mcp_server.py` assigns `__all__` twice — the list at the top of the module is dead because the one at the bottom silently replaces it.
@@ -1919,6 +1920,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: A failing `script_exec` posts its full Python traceback as a GUI notification in the human's FreeCAD (badge and pop-up), the same channel that the TC-08-02 fix closes for a failing preview.
   evidence: Run P5 observation (a); `tests/uat/run/2026-10-23-02/evidence/tc-08-12-notifications.png` ("Box: Length of box too small" plus traceback) (`bugs.md` N-13).
+  resolution: code done by Story 13-13: `script_exec` catches the script exception and returns `INVALID_INPUT` `exec.python_error`; nothing is written to `sys.stderr` (test `test_Should_report_the_partial_change_and_no_stderr_When_a_script_raises_after_a_write`). Open until the GUI check: the verifier confirms no notification badge in the container FreeCAD (TC-08-12 style run).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-10-8-d-uat-gate-1-run.md`
   summary: `query_tree_summary` reports "2 objects, 2 shown" while one of the two lines carries the `-` hidden marker, so the "shown" count disagrees with the tree it prints.
@@ -2134,6 +2136,7 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-2-script-exec-role-docs.md`
   summary: Define the observe-only `script_exec` bracket for the cases the amended AD-5 leaves open: the bridge transaction after a `TIMEOUT` late return, a script that aborts, undoes or commits its own transaction, an empty transaction that FreeCAD drops (so one `document_undo` reverts an earlier step), the transaction name for a blank, comment or very long first code line, a script that changes only another document (the bridge transaction on `doc` closes empty and FreeCAD's application-wide transaction stays open on the other document), a script that fails the bracket itself (fingerprint, `openTransaction` refused, recompute or commit raising), a script that closes its document or raises `SystemExit`, whether the bracket registers both fingerprints so `document_undo` matches on invariants (`result_projection.remember`), the AD-32 framing cache key after a Visibility-only script, and whether the RPC `contract_version` bumps when a script exception moves from `RECOMPUTE_ERROR` to `INVALID_INPUT` (AD-28).
   evidence: Review of Story 13-2 (edge-case and blind lenses). AD-27 aborts the in-flight AD-5 transaction with rollback proved; AD-5 now says `script_exec` never rolls back after it returns; the two meet only at TIMEOUT. Settle in the Story 13-13 spec checkpoint with a measured FreeCAD run for each case.
+  resolution: resolved by Story 13-13 (spec `spec-13-13-script-exec-bracket.md`): the 21 cases are measured in FreeCAD 1.1.4 and ruled in the spec matrix; `usecases/script_exec.py` implements them (`tests/infc/test_script_exec_bracket.py`); AD-5 other-document sentence corrected and AD-27 reads "for `script_exec` the late return commits; nothing aborts it" (decision 43). The GIL-holding long-call limit stays documented (decision 45).
 
 - source_spec: `_bmad-output/implementation-artifacts/spec-13-4-skill-routing-gap-list.md`
   summary: `skills/urdf-export` and `skills/sdf-export` name MCP tools that do not exist in `tool_specs()`; an agent that follows them calls a missing tool.
@@ -2332,3 +2335,15 @@ Validated with a real `Draft202012Validator` rather than by reading the keywords
   evidence: `verify-13-18.md` "Round 2" R2-R1; design `mcp-tools-design.md` §3.7.4.
   blocker: no bounded-cost self-intersection check for BSpline results is known.
   unblock: a measured check with a time bound, or the AD-27 bridge-recovery decision (worker isolation would allow a timed check).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-13-script-exec-bracket.md`
+  summary: `feature_set_parameters {"Visibility"}` leaves the AD-6 fingerprint digest unchanged, so the AD-32 framing cache (key: digest, camera, viewport size) serves the old verdict after a Visibility-only change. `script_exec` avoids it with a fresh framing read; the typed tool does not.
+  evidence: spec case 20: `fingerprint_after` equals `fingerprint_before` after a Visibility-only script; `usecases/framing.py` `_cache_key`; `hosts/tool_catalog.py` `with_framing`.
+  blocker: none; a small fix in the next run.
+  unblock: give `with_framing` a fresh read for `feature_set_parameters` calls that write `Visibility`, or add a visibility component to the cache key.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-13-13-script-exec-bracket.md`
+  summary: After a `TIMEOUT`, the late body of a `script_exec` call still commits (AD-27) but writes no audit line: the `TIMEOUT` `after` line is the only record, and it carries no digests.
+  evidence: decision 19 (the use case writes no audit line); `adapters/rpc_listener.py` `_handle_request`; spec case 17.
+  blocker: the adapter returns to the caller at the timeout and holds no hook for the late return.
+  unblock: a callback that the late body invokes after its commit, or the AD-27 bridge-recovery Story (decision 45).

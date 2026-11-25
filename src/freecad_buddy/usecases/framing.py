@@ -211,6 +211,7 @@ def read_framing(
     viewport_port: ViewportPort | None,
     doc: str | None = None,
     geometry: str | None = None,
+    fresh: bool = False,
 ) -> FramingVerdict | None:
     """Measure whether ``doc``'s visible model fits its live viewport.
 
@@ -228,6 +229,8 @@ def read_framing(
         unverified rather than claiming a freshness the bridge cannot prove. ``fingerprint()``
         is never called here: it serializes every shape and would cost more than the projection
         this cache exists to avoid.
+    :param fresh: measure again whatever the cache holds, and store the result. For a call whose
+        geometry digest cannot see its change (a ``script_exec`` that only toggles ``Visibility``).
     """
     if viewport_port is None:
         return None
@@ -239,6 +242,8 @@ def read_framing(
         view = viewport_port.view(document)
         if view is None:
             return None
+        if fresh:
+            return _measured_verdict(handle, document, view, geometry)
         return _cached_verdict(handle, document, view, geometry)
 
     return registry.with_document(doc, read)
@@ -262,6 +267,14 @@ def _cached_verdict(
     entry = _CACHE.get(handle)
     if entry is not None and entry.view is view and entry.key == key:
         return _as_cached(entry.verdict, unread)
+    return _measured_verdict(handle, document, view, geometry)
+
+
+def _measured_verdict(
+    handle: str, document: object, view: object, geometry: str | None
+) -> FramingVerdict:
+    """``measure_framing``, stored under the current key so a later cache hit sees this verdict."""
+    key, _unread = _cache_key(view, geometry)
     verdict = measure_framing(document, view)
     _CACHE.put(handle, key, verdict, view)
     return verdict
