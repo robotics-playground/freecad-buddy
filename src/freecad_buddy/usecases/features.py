@@ -835,22 +835,26 @@ def feature_revolve(
 # a slow one; the request is measured and refused before the bracket instead. Timings are whole
 # `recompute` calls on a development host, FreeCAD 1.1.4.
 #
-# Loft cost units are the edges of the profile and every section, a BSpline counting its poles:
-# 50 sections of 100 line edges (5,000) 1.6 s; 100 of 200 (20,000) 11 s; 200 of 300 (60,000) 49 s;
-# 20 closed BSplines of 200 poles (4,000) 1.6 s; 40 of 400 poles (16,000) 23 s. Accepted at the
-# limit: 40 sections of 200 line edges (8,000) 4.9 s; 19 BSplines of 400 poles (7,619) 4.0 s;
-# 39 of 200 poles (7,839) 6.7 s.
-_LOFT_MAX_COST = 8000
-# Sections are bounded on their own, because one-edge sections cost one unit each: smooth loft
-# of 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s.
+# A loft section has a size: its edges, a BSpline edge counting its poles. ThruSections cost grows
+# with the square of the larger section of each neighbouring pair, so the loft cost is the sum of
+# max(size, next size) squared over consecutive sections (the last back to the first when
+# closed). Measured recompute, smooth: circle to 1,000-gon (1,000,000) 9.3 s; circle to 1,400-gon
+# (1,960,000) 20 s; two 1,000-gons (1,000,000) 5.7 s; two 1,400-gons 11 s; two 2,000-gons 24 s;
+# 40 sections of 200 edges (1,560,000) 4.6 s; 500 sections of 16 edges (128,000) 0.64 s. A
+# circle to an n-gon is the slowest layout, so the limit is set on it. Whole tool call at the
+# limit: circle to 1,000-gon 10.7 s; two 1,000-gons 8.0 s; 24 sections of 200 edges (920,000)
+# 5.2 s.
+_LOFT_MAX_COST = 1_000_000
+# Sections are bounded on their own, because the tool call also spends time per section:
+# smooth loft of 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s.
 _LOFT_MAX_SECTIONS = 500
 # Sweep cost units are profile units times spine units. A profile edge counts its poles (1 for
-# any other curve); a spine edge counts 1 plus a tenth of its poles, rounded down. A 200-pole
-# BSpline profile along a 20-turn helix of 194 poles (4,020) took 1.3 s. Line profiles: 100
-# profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s;
-# 8 along 400 (3,200) 1.1 s; 200 along a 20-turn helix of 194 poles (4,000) 4.2 s; 400 along a
-# 25-turn helix of 392 poles (16,000) 8.7 s.
-_SWEEP_MAX_COST = 10000
+# any other curve); a spine edge counts 1 plus a tenth of its poles, rounded down. Recompute:
+# 100 profile edges along 100 spine lines (10,000) 5.8 s; 200 along 200 (40,000) 69 s; a circle
+# along 10,000 lines 32 s through the tool; 250 edges along a 25-turn helix (10,000) 18 s. Whole
+# tool call at the limit: a circle along 3,000 lines 4.1 s; 30 edges along 100 lines 2.5 s; 8
+# edges along 375 lines 2.3 s; 35 edges along a 25-turn helix of 770 poles (2,730) 1.1 s.
+_SWEEP_MAX_COST = 3000
 _SWEEP_POLES_PER_UNIT = 10
 
 # Only BSpline-like spine edges are sampled (a line or an analytic curve cannot reverse), and at
@@ -861,6 +865,12 @@ _SWEEP_POLES_PER_UNIT = 10
 # legitimate spine tried (helix, sine, hairpin, circle, 100-segment polyline) stays above 0.98.
 _SPINE_TANGENT_SAMPLES = 400
 _SPINE_MAX_SAMPLED_EDGES = 100
+# A long helix turns a quarter turn between two of 400 samples after about 100 turns, which
+# reads as a reversal, so an edge is sampled eight times per pole (a pole spans well under a
+# quarter turn) when that is more than 400: a 120-turn helix of 3,330 poles builds valid in
+# 0.85 s. The total is bounded.
+_SPINE_SAMPLES_PER_POLE = 8
+_SPINE_MAX_SAMPLES = 100_000
 
 _SWEEP_MODES = {"standard": "Standard", "frenet": "Frenet"}
 _SPINE_SHAPE_TYPES = frozenset({"Edge", "Wire"})
@@ -891,6 +901,104 @@ def _section_shape(document: object, name: object, what: str) -> object:
     if not shape.Wires:
         raise ValidationError(f"{what} {name} carries no wire")
     return shape
+
+
+def _require_base_to_subtract(document: object, body: object, subtractive: bool, tool: str) -> None:
+    """Refuse a subtractive feature in a Body that holds no solid yet.
+
+    FreeCAD's loft adds its solid in that case instead of cutting, so the result would grow the
+    Body.
+    """
+    if subtractive and getattr(_resolve_body(document, body), "Tip", None) is None:
+        raise LoftSweepRefusal(
+            f"{tool}.nothing_to_subtract",
+            f"subtractive {tool} needs a solid in the Body to cut from: {body} holds none",
+        )
+
+
+# A built solid must add or remove at least this much volume (mm^3); a sweep whose spine lies in
+# the profile plane gives -1.4e-13.
+_MIN_VOLUME_CHANGE = 1e-6
+
+
+# The Boolean-operation check finds self-intersections that isValid() misses (a profile wider than
+# the bend of its spine). It holds the interpreter lock, and its time follows the geometry, not the
+# face count: a 1,002-face loft took 18.6 s, and a 3-face sweep along a 25-turn helix (770 poles)
+# did not finish in 50 s. It runs only when every input edge is analytic (no BSpline-like edge) and
+# the result has at most this many faces. A self-intersecting result built from BSpline inputs is
+# not detected.
+_BOP_CHECK_MAX_FACES = 300
+
+
+def _require_clean_bop_check(feature_name: str, shape: object, code: str) -> None:
+    """Fail on a Boolean-operation check error, ignoring continuity notes.
+
+    A smooth BSpline sweep reports ``BOPAlgo GeomAbs_C0`` for edges and faces of a valid solid;
+    those lines are notes about continuity, not defects.
+    """
+    try:
+        shape.check(True)
+    except Exception as exc:  # noqa: BLE001 - FreeCAD raises one error carrying every finding
+        lines = [
+            line
+            for line in str(exc).splitlines()
+            if line.strip() and "following errors" not in line
+        ]
+        if not lines or any("GeomAbs_" not in line for line in lines):
+            raise transaction.RecomputeFailure(
+                code, f"{feature_name} fails the shape check: {exc}"
+            ) from exc
+
+
+def _solid_result_check(feature_name: str, subtractive: bool, code: str, inputs: list[object]):
+    """Return a recompute check that the new feature is a valid solid that changed the Body.
+
+    FreeCAD reports a degenerate sweep or loft as up to date: a spine in the profile plane builds
+    a zero-volume shape, a subtractive cut that misses the Body removes nothing, and a
+    self-intersecting sweep leaves a shape that fails the Boolean-operation check.
+    """
+
+    def check(document: object) -> None:
+        feature = document.getObject(feature_name)
+        shape = getattr(feature, "Shape", None)
+        if shape is None or shape.isNull():
+            raise transaction.RecomputeFailure(code, f"{feature_name} built no shape")
+        if not shape.isValid():
+            raise transaction.RecomputeFailure(code, f"{feature_name} built an invalid shape")
+        if len(shape.Solids) != 1:
+            raise transaction.RecomputeFailure(
+                code, f"{feature_name} built {len(shape.Solids)} solids, not one"
+            )
+        base = getattr(feature, "BaseFeature", None)
+        base_shape = getattr(base, "Shape", None)
+        base_volume = 0.0 if base_shape is None or base_shape.isNull() else base_shape.Volume
+        changed = base_volume - shape.Volume if subtractive else shape.Volume - base_volume
+        if changed <= _MIN_VOLUME_CHANGE:
+            verb = "removed" if subtractive else "added"
+            raise transaction.RecomputeFailure(
+                code, f"{feature_name} {verb} no volume ({changed:g} mm^3)"
+            )
+        if len(shape.Faces) <= _BOP_CHECK_MAX_FACES and not _has_curved_edge(document, inputs):
+            _require_clean_bop_check(feature_name, shape, code)
+
+    return check
+
+
+def _has_curved_edge(document: object, names: list[object]) -> bool:
+    for name in names:
+        obj = document.getObject(name) if isinstance(name, str) else None
+        shape = getattr(obj, "Shape", None)
+        if shape is not None and not shape.isNull() and any(map(_edge_poles, shape.Edges)):
+            return True
+    return False
+
+
+def _hide(document: object, names: list[object]) -> None:
+    """Hide the sketches a loft or sweep consumed, as the GUI does."""
+    for name in names:
+        obj = document.getObject(name) if isinstance(name, str) else None
+        if obj is not None and str(getattr(obj, "TypeId", "")).startswith("Sketcher::"):
+            obj.Visibility = False
 
 
 def _loft_sections(document: object, profile: object, sections: object) -> list[object]:
@@ -930,8 +1038,16 @@ def _loft_sections(document: object, profile: object, sections: object) -> list[
     return shapes
 
 
-def _loft_cost(shapes: list[object]) -> int:
-    return sum(_edge_poles(edge) or 1 for shape in shapes for edge in shape.Edges)
+def _section_size(shape: object) -> int:
+    return sum(_edge_poles(edge) or 1 for edge in shape.Edges)
+
+
+def _loft_cost(shapes: list[object], closed: bool = False) -> int:
+    sizes = [_section_size(shape) for shape in shapes]
+    pairs = list(zip(sizes, sizes[1:]))
+    if closed and len(sizes) > 2:
+        pairs.append((sizes[-1], sizes[0]))
+    return sum(max(pair) ** 2 for pair in pairs)
 
 
 def feature_loft(
@@ -971,13 +1087,15 @@ def feature_loft(
                 "loft.closed_needs_sections",
                 "closed needs at least 2 sections: FreeCAD ignores it for a single section",
             )
-        cost = _loft_cost([_section_shape(document, profile, "profile"), *shapes])
+        cost = _loft_cost([_section_shape(document, profile, "profile"), *shapes], closed)
         if cost > _LOFT_MAX_COST:
             raise LoftSweepRefusal(
                 "loft.too_complex",
-                f"the profile and sections hold {cost} edge units (a BSpline counts its poles), "
-                f"above the limit of {_LOFT_MAX_COST}: loft fewer or simpler sections",
+                f"the sections cost {cost} units (the larger section of each neighbouring pair, "
+                f"squared; a BSpline edge counts its poles), above the limit of {_LOFT_MAX_COST}: "
+                "loft fewer or simpler sections",
             )
+        _require_base_to_subtract(document, body, subtractive, "loft")
 
     def op(document: object) -> list[str]:
         body_obj = _resolve_body(document, body)
@@ -987,6 +1105,7 @@ def feature_loft(
         feature.Sections = [(_resolve_sketch(document, s, "section"), [""]) for s in sections]
         feature.Ruled = ruled
         feature.Closed = closed
+        _hide(document, [profile, *sections])
         return [feature.Name, body_obj.Name]
 
     params = {
@@ -1010,6 +1129,9 @@ def feature_loft(
         op,
         audit_sink,
         precheck,
+        recompute_check=_solid_result_check(
+            name, subtractive, "loft.invalid_result", [profile, *sections]
+        ),
     )
 
 
@@ -1036,7 +1158,9 @@ def _spine_target(document: object, spine: object) -> tuple[object, str, list[ob
         try:
             element = shape.getElement(subelement)
         except Exception as exc:  # noqa: BLE001 - an unresolvable subelement is caller input
-            raise ValidationError(f"unresolvable spine selector {subelement!r}: {exc}") from exc
+            raise LoftSweepRefusal(
+                "sweep.invalid_spine", f"unresolvable spine selector {subelement!r}: {exc}"
+            ) from exc
         if getattr(element, "ShapeType", "") != "Edge":
             raise LoftSweepRefusal(
                 "sweep.invalid_spine",
@@ -1055,6 +1179,10 @@ def _spine_target(document: object, spine: object) -> tuple[object, str, list[ob
     return obj, "", list(shape.Edges)
 
 
+def _spine_name(spine: object) -> object:
+    return spine.get("object") if isinstance(spine, dict) else spine
+
+
 def _check_spine_tangents(edges: list[object]) -> None:
     """Refuse a spine edge whose direction reverses between two samples.
 
@@ -1068,11 +1196,20 @@ def _check_spine_tangents(edges: list[object]) -> None:
             f"the spine holds {len(curved)} BSpline edges, above the limit of "
             f"{_SPINE_MAX_SAMPLED_EDGES}: use fewer spine edges",
         )
-    for edge in curved:
+    samples = [
+        max(_SPINE_TANGENT_SAMPLES, _SPINE_SAMPLES_PER_POLE * _edge_poles(edge)) for edge in curved
+    ]
+    if sum(samples) > _SPINE_MAX_SAMPLES:
+        raise LoftSweepRefusal(
+            "sweep.too_complex",
+            f"the spine needs {sum(samples)} tangent samples, above the limit of "
+            f"{_SPINE_MAX_SAMPLES}: use fewer or simpler spine edges",
+        )
+    for edge, count in zip(curved, samples, strict=True):
         first, last = edge.ParameterRange
         previous = None
-        for index in range(_SPINE_TANGENT_SAMPLES + 1):
-            parameter = first + (last - first) * index / _SPINE_TANGENT_SAMPLES
+        for index in range(count + 1):
+            parameter = first + (last - first) * index / count
             try:
                 tangent = edge.tangentAt(parameter)
             except Exception as exc:  # noqa: BLE001 - no tangent means zero velocity
@@ -1148,6 +1285,7 @@ def feature_sweep(
                 f"the profile and spine cost {cost} units (profile units times spine units), "
                 f"above the limit of {_SWEEP_MAX_COST}: use a simpler profile or spine",
             )
+        _require_base_to_subtract(document, body, subtractive, "sweep")
         _check_spine_tangents(edges)
 
     def op(document: object) -> list[str]:
@@ -1158,6 +1296,7 @@ def feature_sweep(
         obj, subelement, _ = _spine_target(document, spine)
         feature.Spine = (obj, [subelement])
         feature.Mode = _checked_enum(feature, "Mode", member(), "mode")
+        _hide(document, [profile, obj.Name])
         return [feature.Name, body_obj.Name]
 
     params = {
@@ -1180,6 +1319,9 @@ def feature_sweep(
         op,
         audit_sink,
         precheck,
+        recompute_check=_solid_result_check(
+            name, subtractive, "sweep.invalid_result", [profile, _spine_name(spine)]
+        ),
     )
 
 
