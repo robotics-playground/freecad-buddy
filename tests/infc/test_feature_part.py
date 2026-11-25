@@ -1359,6 +1359,27 @@ class PartBooleanRefusalTest(_PartFixture):
         # Assert
         self.assert_ok(envelope)
 
+    def test_Should_refuse_overlapping_solids_inside_one_tool_When_the_pair_limit_is_lowered(self):
+        # Arrange
+        # Four boxes that all overlap hold 6 pairs inside one input and 4 pairs meet the base, so
+        # only the in-input count can refuse at a limit of 5.
+        # The boolean itself is cheap, so a missing count fails by assertion and not by a hang.
+        self.add_box("A", x=100.0)
+        overlapping = Part.Compound([Part.makeBox(4, 4, 4, App.Vector(i, 0, 0)) for i in range(4)])
+        self.add_shape("Tool", overlapping)
+        limit = features._PART_BOOLEAN_MAX_SOLID_PAIRS
+        features._PART_BOOLEAN_MAX_SOLID_PAIRS = 5
+        try:
+            # Act and Assert
+            message = self.assert_refusal(
+                lambda: self.boolean(tools=["Tool"]), "part_boolean.too_complex"
+            )
+        finally:
+            features._PART_BOOLEAN_MAX_SOLID_PAIRS = limit
+        self.assertIn("4 solid pairs across the inputs", message)
+        self.assertIn("at least", message)
+        self.assertIn("overlapping inside one input", message)
+
     def test_Should_never_call_partdesign_When_a_boolean_runs(self):
         # Arrange
         self.two_cubes()
