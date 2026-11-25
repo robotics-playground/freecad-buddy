@@ -18,7 +18,7 @@ import FreeCAD as App
 import Part
 import Sketcher
 
-from freecad_buddy.usecases import confirm, features, fingerprint, shim, transaction
+from freecad_buddy.usecases import confirm, features, fingerprint, shim, tnp_guard, transaction
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError, temp_dir
 from infc.rollback_plant import abort_proof_mismatch
 
@@ -2107,6 +2107,8 @@ class SetParametersTest(_FeatureFixture):
         block = envelope["structured_content"]["mutation"]
         self.assertFalse(block["rolled_back"])
         self.assertEqual(block["post_verify"]["tnp_audit"]["status"], "CLEAN")
+        recorded = {(r["owner"], r["prop"]) for r in tnp_guard.snapshot_references(document)}
+        self.assertIn(("TopDatum", "AttachmentSupport"), recorded)
         self.assertAlmostEqual(document.getObject("TopDatum").Placement.Base.z, 8.0, places=6)
 
     def test_editing_an_enumerated_property_checks_the_live_enum(self):

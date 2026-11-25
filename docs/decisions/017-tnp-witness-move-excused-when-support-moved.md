@@ -6,10 +6,11 @@ Layer 1 does not grade a moved witness `REPOINTED` when all of these hold:
 
 - FreeCAD calls it the same element: the mapped name is equal and the history source
   `(sourceTag, sourceName)` is equal on both sides, and neither side is unreadable.
-- The support changed: the whole target shape's witness differs from the snapshot beyond the
-  element tolerance.
-- The element moved no farther than the support did on each axis: per axis, the larger of the
-  two bounding-box face shifts of the element is at most that of the support.
+- The support changed: the whole target shape's witness differs beyond the element tolerance
+  from the baseline. The baseline is the snapshot, or the op-written reading when the record's
+  value equals what the op wrote (the path `run_mutation` takes for an unchanged reference).
+- The element moved the way the support moved and no farther: per axis, each signed shift of the
+  element's two bounding-box faces lies between zero and the support's own face shifts.
 
 The excused entry still goes to Layer 2. Every other witness move stays `REPOINTED`.
 
@@ -29,9 +30,9 @@ Layer-1 detector of a re-point that keeps the mapped name. The distance bound ke
 witness shift larger than the support move stays `REPOINTED`
 (`test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record`).
 
-The bound is per axis, so a witness shifted along an axis the support did not move on stays
-`REPOINTED`. A single maximum over all axes would excuse a 5 mm shift in X beside a support that
-grew 5 mm in Z.
+The bound is per axis and signed, so a witness shifted along an axis the support did not move on,
+or against the direction the support grew, stays `REPOINTED`. A single maximum over all axes would
+excuse a 5 mm shift in X beside a support that grew 5 mm in Z.
 
 ## Accepted residual
 
@@ -41,19 +42,22 @@ accepted it on 2026-11-25. Dropping the bound would also pass a witness tamper o
 support really changed.
 
 A second residual runs the other way: when the support moves a long way, a tampered witness that
-keeps the mapped name and the history source and moves no farther than that on each axis is
-excused. FreeCAD must still report that name and history as the same element, so the excused move
-needs two independent identity signals to agree.
+keeps the mapped name and the history source and moves inside that range is excused. The history
+source is decoded from the mapped name (`ElementMap.cpp`), so the two are one identity signal,
+not two; the excuse rests on FreeCAD reporting the same mapped name.
+
+A support that moves by rotation can move an element farther on an axis than the support's
+bounding-box faces. That stays `REPOINTED`: a false positive on the safe side.
 
 ## Alternatives considered
 
 - **Exempt by owner, or by "same support and same mapped name".** Rejected: it disables the
   witness check, the only Layer-1 detector of a re-point that keeps the mapped name (see 014 for
   the same granularity mistake on the entry-count check).
-- **Whitelist `AttachmentSupport` only.** Rejected by decision 40: it needs a property-name list
+- **Whitelist `AttachmentSupport` only.** Rejected by epic decision 40 (`epic-13-decisions.md`): it needs a property-name list
   and leaves the `Fillet.Base` false positive.
-- **One maximum over all six bounding-box components.** Replaced by the per-axis bound after
-  review: it ignores direction.
+- **One maximum over all six bounding-box components, or per-axis magnitudes.** Replaced by the
+  signed per-axis bound after review: they ignore direction.
 
 ## Related
 

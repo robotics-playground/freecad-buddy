@@ -55,6 +55,9 @@ _WITNESS_EPSILON = 1e-7
 # AttributeError for it.
 Witness = tuple[str, float, float, float, float, float, float]
 
+# Signed bounding-box face shifts per axis, (minimum face, maximum face) for x, y and z.
+AxisShifts = tuple[tuple[float, float], tuple[float, float], tuple[float, float]]
+
 # A record's identity within one document: owner name, property name, target object name, and the
 # occurrence index of that triple. A PropertyLinkSubList emits one record per (target, subs) pair,
 # so the target is part of the identity; the index disambiguates a property that links the same
@@ -197,39 +200,35 @@ def _element_tolerance(element: object) -> float:
         return _WITNESS_EPSILON
 
 
-# Per-axis travel of a witness: (x, y, z), each the larger of the two bounding-box faces' shift.
-AxisTravel = tuple[float, float, float]
+def _axis_shifts(before: Witness | None, after: Witness | None) -> AxisShifts | None:
+    """Return the signed shift of a witness's bounding-box faces per axis, or ``None``.
 
-
-def _axis_travel(before: Witness | None, after: Witness | None) -> AxisTravel | None:
-    """Return how far a witness moved along each axis, or ``None`` when it is not comparable.
-
-    An axis travel is the larger of its minimum-face and maximum-face shifts, so a face that grows
-    from one side and a face that slides both read as the distance their extent moved. Not
+    Each axis carries ``(minimum-face shift, maximum-face shift)``, after minus before. The sign is
+    kept so that a face that grew upward and a face that moved downward stay different. Not
     comparable: a side that could not be read, a changed ``ShapeType``, or a non-finite component
     (NaN, infinity). Callers read ``None`` as "no bound", never as "no movement".
     """
     if before is None or after is None or before[0] != after[0]:
         return None
-    deltas = [abs(a - b) for a, b in zip(before[1:], after[1:])]
+    deltas = [a - b for a, b in zip(after[1:], before[1:])]
     if not all(math.isfinite(delta) for delta in deltas):
         return None
-    return (max(deltas[0], deltas[3]), max(deltas[1], deltas[4]), max(deltas[2], deltas[5]))
+    return ((deltas[0], deltas[3]), (deltas[1], deltas[4]), (deltas[2], deltas[5]))
 
 
 def _follows_support(
-    before: RefEntry, after: RefEntry, support_travel: AxisTravel | None, tolerance: float
+    before: RefEntry, after: RefEntry, support_shift: AxisShifts | None, tolerance: float
 ) -> bool:
     """Whether a moved witness is the same element carried along by its support object.
 
     FreeCAD itself must call it the same element — an equal mapped name and an equal history
     source on both sides, neither unreadable — and the support object must really have changed.
-    The element may then have moved no farther than the support did on each axis. Bounding the
-    axes separately keeps a tampered witness that shifts along an axis the support did not move on
-    graded ``REPOINTED``, and so does an element that moved farther than its whole support.
+    Each face shift of the element must then lie between zero and the support's own face shifts on
+    that axis, so the element moves the way the support grew and no farther. A shift along an axis
+    the support did not move on, or against its direction, stays ``REPOINTED``.
     """
-    element_travel = _axis_travel(before["witness"], after["witness"])
-    if element_travel is None or support_travel is None:
+    element_shift = _axis_shifts(before["witness"], after["witness"])
+    if element_shift is None or support_shift is None:
         return False
     same_element = (
         before["mapped"] is not None
@@ -237,11 +236,13 @@ def _follows_support(
         and before["history"] is not None
         and before["history"] == after["history"]
     )
-    return (
-        same_element
-        and max(support_travel) > tolerance
-        and all(e <= s + tolerance for e, s in zip(element_travel, support_travel))
+    support_moved = any(abs(shift) > tolerance for axis in support_shift for shift in axis)
+    inside_support_shift = all(
+        min(0.0, *support_axis) - tolerance <= shift <= max(0.0, *support_axis) + tolerance
+        for element_axis, support_axis in zip(element_shift, support_shift)
+        for shift in element_axis
     )
+    return same_element and support_moved and inside_support_shift
 
 
 def _witness_moved(before: Witness | None, after: Witness | None, tolerance: float) -> bool:
@@ -496,8 +497,8 @@ def audit_references(
     ``ElementMapVersion`` bump adds a ``RE_BASELINED`` annotation, a lost entry is ``DROPPED``,
     and per entry a non-resolving element is ``BROKEN`` while a changed mapped name or a moved
     witness is ``REPOINTED`` (a witness move is excused when the same element rode a support that
-    moved at least as far on every axis). Layer 2 cross-checks the ancestry of the entries Layer 1
-    left ambiguous, reporting ``REPOINTED`` on a divergent ``(sourceTag, sourceName)`` and
+    moved the same way and at least as far). Layer 2 cross-checks the ancestry of the entries
+    Layer 1 left ambiguous, reporting ``REPOINTED`` on a divergent ``(sourceTag, sourceName)`` and
     abstaining where no history is available.
 
     ``status`` is ``UNSUPPORTED`` when ``shim.element_map_available()`` is false (no reference
@@ -744,7 +745,7 @@ def _grade_entry(
     record: RefRecord,
     before: RefEntry,
     after: RefEntry,
-    support_travel: AxisTravel | None,
+    support_shift: AxisShifts | None,
 ) -> RefFinding:
     """Layer 1: grade one entry, escalating to Layer 2 only where Layer 1 is ambiguous.
 
@@ -753,8 +754,8 @@ def _grade_entry(
     ``REPOINTED``; a witness moved beyond the element's own tolerance is ``REPOINTED`` unless
     ``_follows_support`` excuses it. An entry surviving all four resolves and matches on name and
     either matches on witness or moved with its support — the design's definition of ambiguous —
-    so Layer 2 grades it. ``support_travel`` is how far the record's whole target shape moved on
-    each axis.
+    so Layer 2 grades it. ``support_shift`` is how the record's whole target shape moved on each
+    axis.
     """
     name = _entry_name(before)
     if not name:
@@ -780,7 +781,7 @@ def _grade_entry(
 
     tolerance = _element_tolerance(element) if element is not None else _WITNESS_EPSILON
     if _witness_moved(before["witness"], after["witness"], tolerance) and not _follows_support(
-        before, after, support_travel, tolerance
+        before, after, support_shift, tolerance
     ):
         return _finding(
             record,
@@ -812,8 +813,8 @@ def _grade_entries(
                 record, None, "PASS", 1, f"{record['owner']}.{record['prop']} names no element"
             )
         ]
-    support_travel = _axis_travel(baseline["target_witness"], live["target_witness"])
-    return [_grade_entry(doc, record, b, a, support_travel) for b, a in zip(before, after)]
+    support_shift = _axis_shifts(baseline["target_witness"], live["target_witness"])
+    return [_grade_entry(doc, record, b, a, support_shift) for b, a in zip(before, after)]
 
 
 def _grade_record(

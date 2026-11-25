@@ -71,7 +71,7 @@ User answers, 2026-11-25 (epic decision 40):
 ## Implementation Notes
 
 - `RefRecord.target_witness` holds the whole target shape's witness, read once per target per `snapshot_references` walk.
-- `_axis_travel` returns the per-axis travel, or `None` for an unreadable side, a type change or a non-finite component. `_follows_support` reads `None` as "not excused".
+- `_axis_shifts` returns the signed per-axis face shifts, or `None` for an unreadable side, a type change or a non-finite component. `_follows_support` reads `None` as "not excused".
 - `_grade_entries` takes the baseline and live records so it can compute the support travel once per record.
 - The G2 scorer refreshed `validator_sha` for `audit_references` in `benchmarks/_registry/validators.yaml`; sensitivity 1.0, false alarm 0.0, n=3 are unchanged.
 
@@ -98,9 +98,25 @@ Round 1 (three lenses, opus). Verdict, route, evidence.
 | 13 | Unreadable target shape drops the whole record (edge) | low | patch | `_support_witness` returns `None` on an exception, as `_witness` does. |
 | 14 | Support `ShapeType` change keeps `REPOINTED` (edge) | low | rejected | Safe direction; the excuse needs a readable, same-type support. A type change is not a reachable edit of a Pad. |
 
+Round 2 (three lenses, opus, on the round-1 fix batch).
+
+| # | Finding | Verdict | Route | Evidence |
+| --- | --- | --- | --- | --- |
+| R2-1 | Per-axis bound ignores sign: an element moving -5 beside a support growing +5 is excused (blind, edge) | medium | patch | `test_Should_flag_repointed_When_the_element_moved_against_the_direction_of_its_support` was red; signed shifts and an interval test now. |
+| R2-2 | Written-baseline test cannot fail if the baseline is swapped (blind) | medium | patch | New `test_Should_grade_against_the_written_support_When_the_op_wrote_the_reference` plants NaN in the written support only; red under the swap mutant. |
+| R2-3 | NaN test does not kill the dropped `isfinite` guard (blind, gap) | low | patch | NaN moved to a maximum-face position; red under the mutant. |
+| R2-4 | Per-axis rule never exercised on real geometry (blind) | low | patch | New cross-axis audit test. |
+| R2-5 | `_support_witness` exception guard untested (blind, gap) | low | patch | Stub with a raising `Shape`; red under the mutant. |
+| R2-6 | Minimum-face half of the travel never checked (gap) | low | patch | Unit cases plus a reversed-pad audit test. The shipped code was already correct. |
+| R2-7 | End-to-end test passes if the datum is never recorded (blind) | low | patch | Asserts the datum record exists in the snapshot. |
+| R2-8 | Decision 017: "two independent identity signals" is wrong (blind) | low | patch | History source is decoded from the mapped name; text corrected in 017 and the design. |
+| R2-9 | Decision 017 names the snapshot, production uses the written reading (blind) | low | patch | Baseline sentence corrected. |
+| R2-10 | Second residual missing from the design; "decision 40" ambiguous; alias placement (blind) | low | patch | Design text, `epic-13-decisions.md` pointer, alias moved beside `Witness`. |
+| R2-11 | Rotated support moves an element beyond its bounding-box faces (edge) | low | rejected | A false positive on the safe side; documented as a residual in 017, a fix needs the support frame and adds complexity. |
+
 ## Design Notes
 
-Why the support-movement bound (not only "support changed"): measured on the prototype, "support changed" alone passed `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (witness +500 beside a real pad shrink). Bound check: per axis, `element travel <= support travel`, where an axis travel is the larger of the two bounding-box face shifts; same `ShapeType`; a non-finite value reads as not bounded.
+Why the support-movement bound (not only "support changed"): measured on the prototype, "support changed" alone passed `test_a_missing_entry_does_not_suppress_a_repoint_on_the_same_record` (witness +500 beside a real pad shrink). Bound check: per axis, each signed shift of the element's two bounding-box faces lies between zero and the support's own two face shifts; same `ShapeType`; a non-finite value reads as not bounded.
 
 ## Verification
 

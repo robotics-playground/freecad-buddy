@@ -1310,7 +1310,7 @@ class SupportFollowTest(_BodyFixture):
         snapshot = tnp_guard.snapshot_references(self.document)
         record = self._datum_record(snapshot)
         support = record["target_witness"]
-        record["target_witness"] = (support[0], float("nan")) + support[2:]
+        record["target_witness"] = support[:4] + (float("nan"),) + support[5:]
         self._grow_pad()
 
         # Act
@@ -1347,36 +1347,129 @@ class SupportFollowTest(_BodyFixture):
         self.assertEqual(record["target_witness"][0], "Solid")
         self.assertEqual(record["target_witness"][6], PAD_LENGTH)
 
+    def test_Should_flag_repointed_When_the_element_moved_against_the_direction_of_its_support(
+        self,
+    ):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        witness = list(entry["witness"])
+        # The face really rises 5 mm; a snapshot 10 mm higher makes the element appear to fall 5 mm.
+        witness[3] += 2 * 5.0
+        witness[6] += 2 * 5.0
+        entry["witness"] = tuple(witness)
+        self._grow_pad()
 
-class AxisTravelTest(unittest.TestCase):
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_flag_repointed_When_the_element_moved_along_an_axis_the_support_did_not(self):
+        # Arrange
+        self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        entry = self._datum_record(snapshot)["entries"][0]
+        witness = list(entry["witness"])
+        witness[1] -= 5.0
+        witness[4] -= 5.0
+        entry["witness"] = tuple(witness)
+        self._grow_pad()
+
+        # Act
+        _, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_grade_against_the_written_support_When_the_op_wrote_the_reference(self):
+        # Arrange
+        datum = self._attach_datum_to_top_face()
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self.pad.Length = PAD_LENGTH + 5.0
+        written = tnp_guard.snapshot_references(self.document)
+        record = self._datum_record(written)
+        support = record["target_witness"]
+        record["target_witness"] = support[:4] + (float("nan"),) + support[5:]
+        self.document.recompute()
+
+        # Act
+        findings = self._findings(self._audit(snapshot, written), datum.Name, "AttachmentSupport")
+
+        # Assert
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("REPOINTED", 1)])
+
+    def test_Should_pass_the_datum_When_the_pad_grows_toward_the_negative_side(self):
+        # Arrange
+        self.pad.Reversed = True
+        self.document.recompute()
+        datum = self._attach_datum(_plane_name(self.pad.Shape, self.AXIS_Z, -PAD_LENGTH))
+        snapshot = tnp_guard.snapshot_references(self.document)
+        self._grow_pad()
+
+        # Act
+        audit, findings = self._datum_findings(snapshot)
+
+        # Assert
+        self.assertAlmostEqual(datum.Placement.Base.z, -(PAD_LENGTH + 5.0), places=6)
+        self.assertEqual(audit["status"], "CLEAN")
+        self.assertEqual([(f["verdict"], f["layer"]) for f in findings], [("PASS", 2)])
+
+    def test_Should_record_the_datum_without_a_support_witness_When_the_shape_is_unreadable(self):
+        # Arrange
+        class _UnreadableShape:
+            @property
+            def Shape(self):
+                raise RuntimeError("shape unreadable")
+
+        # Act
+        witness = tnp_guard._support_witness(_UnreadableShape())
+
+        # Assert
+        self.assertIsNone(witness)
+
+
+class AxisShiftsTest(unittest.TestCase):
     BOX = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 10.0)
 
-    def test_Should_return_zero_on_every_axis_When_both_witnesses_are_equal(self):
+    def test_Should_return_zero_shifts_When_both_witnesses_are_equal(self):
         # Arrange
         before = after = self.BOX
 
         # Act
-        result = tnp_guard._axis_travel(before, after)
+        result = tnp_guard._axis_shifts(before, after)
 
         # Assert
-        self.assertEqual(result, (0.0, 0.0, 0.0))
+        self.assertEqual(result, ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0)))
 
-    def test_Should_return_the_larger_face_shift_per_axis_When_a_witness_moved(self):
+    def test_Should_return_the_signed_face_shifts_When_the_maximum_face_moved(self):
         # Arrange
-        after = ("Solid", 0.0, 0.0, 2.0, 20.0, 20.0, 15.0)
+        after = ("Solid", 0.0, 0.0, 0.0, 20.0, 20.0, 15.0)
 
         # Act
-        result = tnp_guard._axis_travel(self.BOX, after)
+        result = tnp_guard._axis_shifts(self.BOX, after)
 
         # Assert
-        self.assertEqual(result, (0.0, 0.0, 5.0))
+        self.assertEqual(result, ((0.0, 0.0), (0.0, 0.0), (0.0, 5.0)))
+
+    def test_Should_return_the_signed_face_shifts_When_only_the_minimum_face_moved(self):
+        # Arrange
+        after = ("Solid", 0.0, 0.0, -5.0, 20.0, 20.0, 10.0)
+
+        # Act
+        result = tnp_guard._axis_shifts(self.BOX, after)
+
+        # Assert
+        self.assertEqual(result, ((0.0, 0.0), (0.0, 0.0), (-5.0, 0.0)))
 
     def test_Should_return_none_When_a_side_is_unreadable(self):
         # Arrange
         before, after = self.BOX, None
 
         # Act
-        result = tnp_guard._axis_travel(before, after)
+        result = tnp_guard._axis_shifts(before, after)
 
         # Assert
         self.assertIsNone(result)
@@ -1386,7 +1479,7 @@ class AxisTravelTest(unittest.TestCase):
         after = ("Compound",) + self.BOX[1:]
 
         # Act
-        result = tnp_guard._axis_travel(self.BOX, after)
+        result = tnp_guard._axis_shifts(self.BOX, after)
 
         # Assert
         self.assertIsNone(result)
@@ -1398,8 +1491,8 @@ class AxisTravelTest(unittest.TestCase):
 
         # Act
         results = [
-            tnp_guard._axis_travel(self.BOX, not_a_number),
-            tnp_guard._axis_travel(self.BOX, infinite),
+            tnp_guard._axis_shifts(self.BOX, not_a_number),
+            tnp_guard._axis_shifts(self.BOX, infinite),
         ]
 
         # Assert
@@ -1409,7 +1502,8 @@ class AxisTravelTest(unittest.TestCase):
 class FollowsSupportTest(unittest.TestCase):
     WITNESS = ("Face", 0.0, 0.0, 10.0, 20.0, 20.0, 10.0)
     HISTORY = (7, "g1;SKT")
-    UP_FIVE = (0.0, 0.0, 5.0)
+    GREW_UP_FIVE = ((0.0, 0.0), (0.0, 0.0), (0.0, 5.0))
+    GREW_DOWN_FIVE = ((0.0, 0.0), (0.0, 0.0), (-5.0, 0.0))
 
     def _entry(self, shift=(0.0, 0.0, 0.0), mapped=";a;", history=HISTORY):
         dx, dy, dz = shift
@@ -1430,12 +1524,22 @@ class FollowsSupportTest(unittest.TestCase):
             "history": history,
         }
 
-    def test_Should_excuse_the_move_When_the_same_element_moved_no_farther_than_its_support(self):
+    def test_Should_excuse_the_move_When_the_same_element_moved_with_its_support(self):
         # Arrange
-        before, after = self._entry(), self._entry(shift=self.UP_FIVE)
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 5.0))
 
         # Act
-        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_Should_excuse_the_move_When_the_support_grew_on_its_minimum_side(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, -5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_DOWN_FIVE, 1e-7)
 
         # Assert
         self.assertTrue(result)
@@ -1443,16 +1547,17 @@ class FollowsSupportTest(unittest.TestCase):
     def test_Should_not_excuse_the_move_When_the_support_did_not_change(self):
         # Arrange
         before, after = self._entry(), self._entry(shift=(0.0, 0.0, 0.5))
+        unmoved = ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0))
 
         # Act
-        result = tnp_guard._follows_support(before, after, (0.0, 0.0, 0.0), 1.0)
+        result = tnp_guard._follows_support(before, after, unmoved, 1.0)
 
         # Assert
         self.assertFalse(result)
 
-    def test_Should_not_excuse_the_move_When_the_support_travel_is_unknown(self):
+    def test_Should_not_excuse_the_move_When_the_support_shift_is_unknown(self):
         # Arrange
-        before, after = self._entry(), self._entry(shift=self.UP_FIVE)
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, 5.0))
 
         # Act
         result = tnp_guard._follows_support(before, after, None, 1e-7)
@@ -1465,7 +1570,7 @@ class FollowsSupportTest(unittest.TestCase):
         before, after = self._entry(), self._entry(shift=(0.0, 0.0, 6.0))
 
         # Act
-        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
 
         # Assert
         self.assertFalse(result)
@@ -1477,7 +1582,17 @@ class FollowsSupportTest(unittest.TestCase):
         before, after = self._entry(), self._entry(shift=(5.0, 0.0, 0.0))
 
         # Act
-        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
+
+        # Assert
+        self.assertFalse(result)
+
+    def test_Should_not_excuse_the_move_When_it_runs_against_the_direction_of_the_support(self):
+        # Arrange
+        before, after = self._entry(), self._entry(shift=(0.0, 0.0, -5.0))
+
+        # Act
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
 
         # Assert
         self.assertFalse(result)
@@ -1485,10 +1600,10 @@ class FollowsSupportTest(unittest.TestCase):
     def test_Should_not_excuse_the_move_When_neither_side_has_a_history(self):
         # Arrange
         before = self._entry(history=None)
-        after = self._entry(shift=self.UP_FIVE, history=None)
+        after = self._entry(shift=(0.0, 0.0, 5.0), history=None)
 
         # Act
-        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
 
         # Assert
         self.assertFalse(result)
@@ -1496,10 +1611,10 @@ class FollowsSupportTest(unittest.TestCase):
     def test_Should_not_excuse_the_move_When_neither_side_has_a_mapped_name(self):
         # Arrange
         before = self._entry(mapped=None)
-        after = self._entry(shift=self.UP_FIVE, mapped=None)
+        after = self._entry(shift=(0.0, 0.0, 5.0), mapped=None)
 
         # Act
-        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
 
         # Assert
         self.assertFalse(result)
@@ -1507,10 +1622,10 @@ class FollowsSupportTest(unittest.TestCase):
     def test_Should_not_excuse_the_move_When_the_history_source_differs(self):
         # Arrange
         before = self._entry()
-        after = self._entry(shift=self.UP_FIVE, history=(8, "other"))
+        after = self._entry(shift=(0.0, 0.0, 5.0), history=(8, "other"))
 
         # Act
-        result = tnp_guard._follows_support(before, after, self.UP_FIVE, 1e-7)
+        result = tnp_guard._follows_support(before, after, self.GREW_UP_FIVE, 1e-7)
 
         # Assert
         self.assertFalse(result)
