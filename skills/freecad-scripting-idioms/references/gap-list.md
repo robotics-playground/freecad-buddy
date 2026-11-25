@@ -50,9 +50,10 @@ A typed refusal is not a gap. Each names its repair:
 
 - `part_boolean.not_top_level`: use the Body or a document-level solid; move a Body out of an
   `App::Part` first.
-- `part_boolean.untrusted_shape`: run `document_recompute` when the input is stale, else
-  repair the input (`verify_shape`).
-- `part_boolean.too_complex` (above 3,000 faces or 1,000 solid pairs across the inputs),
+- `part_boolean.untrusted_shape`: run `document_recompute` when the input, or an object it is
+  built from, is stale (the message names it), else repair the input (`verify_shape`).
+- `part_boolean.too_complex` (above 3,000 faces or 1,000 solid pairs, counted across the inputs
+  and inside each input),
   `loft.too_complex`, `sweep.too_complex`: split the operation, or simplify an input that is large alone.
 - `part_boolean.empty_result`, `part_boolean.invalid_result`, `loft.invalid_result`,
   `sweep.invalid_result`: change the inputs so the result has volume and is valid; the call
@@ -60,7 +61,8 @@ A typed refusal is not a gap. Each names its repair:
 - `sweep.degenerate_spine`: split the edge that doubles back.
 
 Any other `detail.code` refusal (`part_primitive.*`, `part_boolean.invalid_input`, `loft.*`,
-`sweep.invalid_*`) names the input to correct. A script that repeats a call skips the guard, and FreeCAD then returns a wrong number or
+`sweep.invalid_*`) names the input to correct. The limits are measured on common shapes; near-tangent curved crossings and slanted packed
+tools can still run long (`mcp-tools-design.md` §3.7.5). A script that repeats a call skips the guard, and FreeCAD then returns a wrong number or
 holds the bridge for minutes.
 
 ## STEP import script
