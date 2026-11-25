@@ -9,11 +9,13 @@ Handover for the next leader run of `SPEC-mcp-usage-improvement` (`_bmad-output/
 | Integration branch | `feat/epic-13-mcp-usage-improvement`, checked out in worktree `D:/Work/Personal/Sources/freecad-buddy-int` (the leader merges there). Not pushed. |
 | Main tree | `D:/Work/Personal/Sources/freecad-buddy` on a Story branch (builders use it). |
 | Base of the epic | `bd122f2` on `fix/uat-gate-1-failures` (65 commits ahead of `main`, unmerged). A merge to `main` and any push need the user. |
-| Stories done (merged) | 13-1, 13-2, 13-3, 13-4, 13-5, 13-6, 13-7, 13-8, 13-9, 13-10, 13-11, 13-14, 13-20 (13 of 20) |
-| Stories in review | 13-12 (skills, branch `story/13-12-skill-routing-measure` @ 4333288b), 13-18 (loft/sweep, branch `story/13-18-loft-sweep` @ d8968a1e, worktree `wt-13-18`). The leader finishes these two in this run if time allows; check `sprint-status.yaml` and the ledgers for their final state. |
+| Stories done (merged) | 13-1 .. 13-12, 13-14, 13-18, 13-20 (15 of 20) |
+| Stories in review | none |
 | Specs waiting for the user | 13-13 (`wt-13-13` @ f2887033), 13-15 (`wt-13-15` @ bfc02cf3), 13-17 (`wt-13-17` @ 88b52fc4). No product code on those branches. |
 | Not started | 13-16 (depends on 13-15), 13-19 (depends on 13-16, 13-17, 13-18) |
-| Last full gate run on the integration head | after the 13-10 merge: ruff, check_imports, gen_schemas, check_provenance pass; external 2106 passed / 1 intermittent timing failure (deferred); infc 1186 OK |
+| Last full gate run on the integration head | final head after the 13-18 merge (records commit 9448ac5f): ruff, check_imports, gen_schemas --check, check_provenance, check_skill_shape pass; external 2109 passed, 0 failed (6 skipped); infc 1254 OK (1 skipped) |
+| Agents alive | none (all shut down) |
+| Worktrees left | `wt-13-13`, `wt-13-15`, `wt-13-17` (spec branches); main tree on `story/13-12-skill-routing-measure` (merged; switch it to a new branch from feat before the next builder) |
 
 ## Decisions waiting for the user
 
@@ -35,9 +37,10 @@ Ask these in one message at the start of the next run (each has a recommendation
 2. 13-13: a fresh builder implements the approved spec (spine edits first if decision 4 is yes). Note: 13-10 already added `transaction.RecomputeFailure` and the application-transaction close in `run_mutation` (L14); 13-13 reuses them.
 3. 13-15: a fresh builder implements the approved rule. Then 13-16 (placement and string writes in `feature_set_parameters`; placement shape shared with 13-17).
 4. 13-17: a fresh builder implements the approved spec (after 13-16 for the placement parser).
-5. 13-19: skill routing to Part, loft, sweep and placement tools; closes `deferred-work.md:1654`; finishes the gap list; the `docs/intent.md` edit lands with 13-17.
-6. If decision 2 is (b): a small follow-up on `query_interference`.
-7. Epic close: re-score validators once on the final head; full gates; container UAT smoke of the new tools; CAP-6 live Claude Code session (first tool load holds typed tools; "is it done?" loads `verification-thinking`); retrospective (`bmad-retrospective`); action item about 2026-12-23: run `scripts/automation/usage_report.py` on the following month (decision 3 targets).
+5. Small follow-up from 13-18 (deferred entry: sweep-limit boundary test, closed-loft doc wording, timing comments).
+6. 13-19: skill routing to Part, loft, sweep and placement tools; closes `deferred-work.md:1654`; finishes the gap list; the `docs/intent.md` edit lands with 13-17.
+7. If decision 2 is (b): a small follow-up on `query_interference`.
+8. Epic close: re-score validators once on the final head; full gates; container UAT smoke of the new tools; CAP-6 live Claude Code session (first tool load holds typed tools; "is it done?" loads `verification-thinking`); retrospective (`bmad-retrospective`); action item about 2026-12-23: run `scripts/automation/usage_report.py` on the following month (decision 3 targets).
 
 ## Process that worked (keep it)
 
