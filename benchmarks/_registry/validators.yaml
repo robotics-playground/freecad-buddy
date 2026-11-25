@@ -6,10 +6,10 @@ verify_shape:
   suite: g0/fault-injection/
   validator_sha: "d66cbe4222b04de737784f2789d4dc05fb8dcbe2b719b49901d58f6eeb8a5668"
   last_run:
-    run_id: fr-2026-11-24-1
+    run_id: fr-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-11-24
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.7412
@@ -19,12 +19,12 @@ verify_shape:
 
 verify_export_stl:
   suite: g0/export-fault-injection/
-  validator_sha: "ac477d9ad268de8a7ed683224c756361bd0598e325cd0ac3136310fcd10806f4"
+  validator_sha: "f78af8ca27973b39d8da4418a2a48fe8a74c4656542a5b6a815a31fb521c0235"
   last_run:
-    run_id: er-2026-10-08-1
+    run_id: er-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.7225
@@ -34,12 +34,12 @@ verify_export_stl:
 
 verify_export_3mf:
   suite: g0/export-fault-injection/
-  validator_sha: "ac477d9ad268de8a7ed683224c756361bd0598e325cd0ac3136310fcd10806f4"
+  validator_sha: "f78af8ca27973b39d8da4418a2a48fe8a74c4656542a5b6a815a31fb521c0235"
   last_run:
-    run_id: er-2026-10-08-1
+    run_id: er-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.7225
@@ -49,12 +49,12 @@ verify_export_3mf:
 
 verify_export_step:
   suite: g0/export-fault-injection/
-  validator_sha: "ac477d9ad268de8a7ed683224c756361bd0598e325cd0ac3136310fcd10806f4"
+  validator_sha: "f78af8ca27973b39d8da4418a2a48fe8a74c4656542a5b6a815a31fb521c0235"
   last_run:
-    run_id: er-2026-10-08-1
+    run_id: er-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-08
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.7412
@@ -66,10 +66,10 @@ grader:
   suite: g1/fault-injection/
   validator_sha: "ebc364c45a681601cfbb7fdfb7b93775f9072e98ed35285ff194aeaa1c992d47"
   last_run:
-    run_id: gr-2026-10-03-1
+    run_id: gr-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-03
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.8064
@@ -81,10 +81,10 @@ assertions:
   suite: g2/fault-injection/
   validator_sha: "b417250ab76e782b096d05d4eb6148bcd5621c633d280ea9a503ef31e6ad5f9c"
   last_run:
-    run_id: g2-2026-11-25-1
+    run_id: g2-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-11-25
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.6756
@@ -96,10 +96,10 @@ audit_references:
   suite: g2/fault-injection/
   validator_sha: "694f354c3fb6d20555a32ef27c8dbbe64e1029297448abfe6fe1cbf32cca04eb"
   last_run:
-    run_id: g2-2026-11-25-1
+    run_id: g2-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-11-25
+    date: 2026-11-26
     skipped_cases: 4
     wilson_ci:
       rate: 1.0
@@ -112,10 +112,10 @@ fingerprint:
   suite: g2/fault-injection/
   validator_sha: "a80e01b3702bd6a493890f957c3d6dfdff3eed4c14050e697c08b0d9a9598096"
   last_run:
-    run_id: g2-2026-11-25-1
+    run_id: g2-2026-11-26-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-11-25
+    date: 2026-11-26
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
@@ -128,10 +128,10 @@ run_mutation:
   suite: g2/fault-injection/
   validator_sha: "393e415dc57c48ec0da3f2fdefde666c238dc94b90fb3b7706962686bdff477e"
   last_run:
-    run_id: g2-2026-11-25-1
+    run_id: g2-2026-11-26-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-11-25
+    date: 2026-11-26
     not_scored: "no driveable planted defect: 2 clean control(s) ran and 2 planted case(s) were skipped, so sensitivity is unmeasured rather than zero"
     skipped_cases: 2
     wilson_ci:
@@ -145,10 +145,10 @@ verify_sketch:
   suite: g2/fault-injection/
   validator_sha: "76f9bc2adff2eba5d14c7541db838042017028af7477e24323a4d64b7f50c278"
   last_run:
-    run_id: g2-2026-11-25-1
+    run_id: g2-2026-11-26-1
     sensitivity: 0.0
     false_alarm: 0.0
-    date: 2026-11-25
+    date: 2026-11-26
     not_scored: "no fault case targets this validator"
     wilson_ci:
       rate: 0.0
@@ -161,10 +161,10 @@ verify_render_tone:
   suite: g0/render-fault-injection/
   validator_sha: "016f1204c553a3f58ba0de51eaebb61a8658511f1a3606a85b2d9bb6ffefac7a"
   last_run:
-    run_id: rt-2026-10-03-1
+    run_id: rt-2026-11-26-1
     sensitivity: 1.0
     false_alarm: 0.0
-    date: 2026-10-03
+    date: 2026-11-26
     wilson_ci:
       rate: 1.0
       low: 0.6097

@@ -1,0 +1,21 @@
+g3: 20 dev specs, 10 planted plans + 4 controls, 2 threat counters
+  spec_count         OK
+  spec_vocabulary    OK
+  spec_selectors     OK
+  spec_derivations   OK
+  provenance         OK
+  fault_shape        OK
+  fault_mapping      OK
+  plan_steps         OK
+  planted_steps      OK
+  fault_counts       OK
+  threat_coverage    OK
+  reuse_survey       OK
+G3.E entry items:
+  G3.E.1 [4.1] OK (structural check only; the honest stub failure is checked by the CI G3 stub step and test_should_fail_all_six_criteria_with_invalid_input_when_run_against_the_stub)
+  G3.E.2 [4.1] OK (structural check only)
+  G3.E.3 [4.2b] INVALID_INPUT (no --frames-evidence directory given)
+  G3.E.4 [4.2b] OK (sensitivity 1.0, false alarm 0.0, validator_sha ec64cb67c715)
+  G3.E.5 [4.3] INVALID_INPUT (owned by Story 4.3, not landed)
+  G3.E.6 [6.5] INVALID_INPUT (owned by Story 6.5, not landed)
+  G3.E.7 [4.1] OK (structural check only)

@@ -1,0 +1,18 @@
+  g0-render-all-black-face             DETECT      DETECTED
+  g0-render-all-white-render           DETECT      DETECTED
+  g0-render-captured-white-face-front  DETECT      DETECTED
+  g0-render-clean-control-back         PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-bottom       PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-custom       PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-front        PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-iso          PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-left         PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-right        PASS_CLEAN  PASS_CLEAN
+  g0-render-clean-control-top          PASS_CLEAN  PASS_CLEAN
+  g0-render-low-contrast-face          DETECT      DETECTED
+  g0-render-near-black-face            DETECT      DETECTED
+  g0-render-near-white-face            DETECT      DETECTED
+  planted=6 detected=6 sensitivity=1.000
+  controls=8 flagged=0 false_alarm=0.000
+  wilson_ci=[0.610, 1.000]
+  wrote D:\Work\Personal\Sources\freecad-buddy-int\benchmarks\_registry\validators.yaml

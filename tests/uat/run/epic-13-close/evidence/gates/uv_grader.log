@@ -1,0 +1,24 @@
+  g1-control-bracket-altkeyword      PASS_CLEAN  pass=True  PASS_CLEAN
+  g1-control-bracket-correct         PASS_CLEAN  pass=True  PASS_CLEAN
+  g1-control-housing-correct         PASS_CLEAN  pass=True  PASS_CLEAN
+  g1-control-spacer-correct          PASS_CLEAN  pass=True  PASS_CLEAN
+  g1-fault-and-discriminator-boss    DETECT      pass=False DETECTED
+  g1-fault-and-discriminator-bosspad DETECT      pass=False DETECTED
+  g1-fault-and-discriminator-capnotch DETECT      pass=False DETECTED
+  g1-fault-and-discriminator-flange  DETECT      pass=False DETECTED
+  g1-fault-vague-bracketslot         DETECT      pass=False DETECTED
+  g1-fault-vague-frame               DETECT      pass=False DETECTED
+  g1-fault-vague-panel               DETECT      pass=False DETECTED
+  g1-fault-vague-riser               DETECT      pass=False DETECTED
+  g1-fault-wrong-cause-cover         DETECT      pass=False DETECTED
+  g1-fault-wrong-cause-pillar        DETECT      pass=False DETECTED
+  g1-fault-wrong-cause-shim          DETECT      pass=False DETECTED
+  g1-fault-wrong-cause-spacer        DETECT      pass=False DETECTED
+  g1-fault-wrong-object-bracket      DETECT      pass=False DETECTED
+  g1-fault-wrong-object-housing      DETECT      pass=False DETECTED
+  g1-fault-wrong-object-lug          DETECT      pass=False DETECTED
+  g1-fault-wrong-object-webpad       DETECT      pass=False DETECTED
+  planted=16 detected=16 sensitivity=1.000
+  controls=4 flagged=0 false_alarm=0.000
+  wilson_ci=[0.806, 1.000]
+  wrote D:\Work\Personal\Sources\freecad-buddy-int\benchmarks\_registry\validators.yaml

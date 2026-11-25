@@ -1,0 +1,12 @@
+  assertions         planted= 8 controls= 3 materialized=11
+  audit_references   planted= 7 controls= 6 materialized=13
+  fingerprint        planted= 0 controls= 0 materialized= 0
+                     no fault case targets this validator
+  run_mutation       planted= 2 controls= 2 materialized= 4
+  verify_sketch      planted= 0 controls= 0 materialized= 0
+                     no fault case targets this validator
+  NOT SCORED HERE: planting a fault means running its planted_op through the production
+  mutation path, which needs a live FreeCAD document. This process has none, so no
+  sensitivity, false_alarm or wilson_ci is computed and validators.yaml is not written.
+  Run the in-FreeCAD scorer for the real numbers:
+    FREECAD_BUDDY_RUN_FAULT_SCORER=1 FreeCADCmd benchmarks/g2/fault-injection/score_g2_infc.py

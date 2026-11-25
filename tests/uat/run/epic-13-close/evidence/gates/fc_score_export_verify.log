@@ -1,0 +1,25 @@
+FreeCAD 1.1.4, Libs: 1.1.4R20260928 (Git shallow)
+(C) 2001-2026 FreeCAD contributors
+FreeCAD is free and open-source software licensed under the terms of LGPL2+ license.
+   Message: invalid document structure
+Malformed Parameter document: Root group not found
+Malformed Parameter document: Root group not found in file C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-epic-13\system.cfg.
+Continue with an empty configuration.
+   Message: invalid document structure
+Malformed Parameter document: Root group not found
+Malformed Parameter document: Root group not found in file C:\Users\thuan\AppData\Local\Temp\claude\3d3814eab912640f\17c8e5ee-89aa-4e27-ba05-1fe1774e804a\scratchpad\verifier-epic-13\user.cfg.
+Continue with an empty configuration.
+  verify_export_step   g0-export-step-clean-control PASS_CLEAN  PASS_CLEAN
+  verify_export_step   g0-export-step-compsolid     DETECT      DETECTED
+  verify_export_step   g0-export-step-cut-notch     DETECT      DETECTED
+  verify_export_step   g0-export-step-dropped-solid DETECT      DETECTED
+  verify_export_step   g0-export-step-fused-overlap DETECT      DETECTED
+  verify_export_step   g0-export-step-loose-face    DETECT      DETECTED
+  verify_export_step   g0-export-step-open-shell    DETECT      DETECTED
+  verify_export_step   g0-export-step-scaled-half-box DETECT      DETECTED
+  verify_export_step   g0-export-step-schema-lie    DETECT      DETECTED
+  verify_export_step   g0-export-step-shell-no-solid DETECT      DETECTED
+  verify_export_step   g0-export-step-unit-lie      DETECT      DETECTED
+  verify_export_step   g0-export-step-unrefined-fuse DETECT      DETECTED
+  verify_export_step: sensitivity=1.000 false_alarm=0.000 wilson=[0.741, 1.000]
+  wrote D:\Work\Personal\Sources\freecad-buddy-int\benchmarks\_registry\validators.yaml (verify_export_step)

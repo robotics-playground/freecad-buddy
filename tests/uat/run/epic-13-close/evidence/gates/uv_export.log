@@ -1,0 +1,27 @@
+D:\Work\Personal\Sources\freecad-buddy-int\.venv\Lib\site-packages\trimesh\triangles.py:302: RuntimeWarning: invalid value encountered in divide
+  center_mass = integrated[1:4] / volume
+  verify_export_stl    g0-export-stl-appended-degenerate DETECT      DETECTED
+  verify_export_stl    g0-export-stl-clean-control  PASS_CLEAN  PASS_CLEAN
+  verify_export_stl    g0-export-stl-collapsed-facet DETECT      DETECTED
+  verify_export_stl    g0-export-stl-duplicated-shell DETECT      DETECTED
+  verify_export_stl    g0-export-stl-flipped-normals DETECT      DETECTED
+  verify_export_stl    g0-export-stl-hole           DETECT      DETECTED
+  verify_export_stl    g0-export-stl-missing-face   DETECT      DETECTED
+  verify_export_stl    g0-export-stl-non-manifold   DETECT      DETECTED
+  verify_export_stl    g0-export-stl-scaled-mesh    DETECT      DETECTED
+  verify_export_stl    g0-export-stl-shifted-vertex DETECT      DETECTED
+  verify_export_stl    g0-export-stl-truncated-coordinates DETECT      DETECTED
+  verify_export_stl: sensitivity=1.000 false_alarm=0.000 wilson=[0.722, 1.000]
+  verify_export_3mf    g0-export-3mf-clean-control  PASS_CLEAN  PASS_CLEAN
+  verify_export_3mf    g0-export-3mf-corrupt-container DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-corrupt-vertex DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-duplicated-triangle DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-malformed-transform DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-missing-model-part DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-missing-triangle DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-second-non-manifold-object DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-type-model-lie DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-unit-lie       DETECT      DETECTED
+  verify_export_3mf    g0-export-3mf-vertex-index-out-of-range DETECT      DETECTED
+  verify_export_3mf: sensitivity=1.000 false_alarm=0.000 wilson=[0.722, 1.000]
+  wrote D:\Work\Personal\Sources\freecad-buddy-int\benchmarks\_registry\validators.yaml (verify_export_stl, verify_export_3mf)
