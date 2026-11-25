@@ -189,6 +189,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `feature_datum` | 2 | Create datum plane/axis/point/CS (TNP-defensive referencing) | yes |
 | `feature_set_parameters` | 2 | Edit feature properties / driving dimensions (parameter-editability path) | yes |
 | `feature_parameters_define` | 2 | Create a VarSet when missing and add or update typed parameters on it (`length`, `angle`, `float`, `integer`, `bool`, `string`); refuses a name the expression parser reads as a unit or constant | yes |
+| `feature_set_expression` | 2 | Bind or clear expressions on numeric property paths (`Length`, `.Constraints.<name>`, `.AttachmentOffset.Base.z`), all items in one transaction; refuses a binding FreeCAD would store wrongly (a unit of another dimension, an infinite value, a dead path, a text that crashes the parser) | yes |
 
 ### `preview_` — dry-run channel (AD-10)
 
@@ -213,15 +214,15 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
-| `feature_` | — | — | 12 | — | 12 | 12 |
+| `feature_` | — | — | 13 | — | 13 | 13 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **53** | **50** |
+| **AI-visible total** (typed tools) | | | | | **54** | **51** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **50**; with `SCRIPT_EXEC_SPEC` that is 51 registered specs.
+The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **51**; with `SCRIPT_EXEC_SPEC` that is 52 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -646,6 +647,53 @@ Rollback proof: the shape fingerprint holds no VarSet, Body or Origin, so a dele
 Undo: one transaction, one `document_undo` restores the objects, `Group`, `Tip`, `BaseFeature`, links and Visibility (measured on FreeCAD 1.1.4 for a Tip delete, a profile-sketch delete with dependents and a whole-Body delete). FreeCAD restores an object's `ExpressionEngine` text but not its dependency on the bound object: after the undo `OutList` lacks the target and a change to the source no longer drives the property (measured: `Pad.Length = VS.L`; `VS.L` 3 to 7 left the pad at 3). The same happens after `abortTransaction`. `shim.relink_expressions` clears and sets each binding of the objects the undo or the abort restored; it records no undo step and leaves the redo stack (measured: `UndoCount`, `RedoCount` equal before and after). A binding that cannot be set again is cleared by the failed attempt and is listed, with its text, in the `errors` of `document_undo`; after an abort the rollback proof reads the dependency back and falls back to the snapshot restore when it is missing.
 
 `preview_dry_run` accepts the tool: `preview_op_table` reads the object-edit spec list beside the `sketch_` and `feature_` lists.
+
+### 3.7.3 `feature_set_expression`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "expressions": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "type": "object", "properties": {
+      "object": { "type": "string", "description": "object Name" },
+      "path": { "type": "string", "description": "numeric property path, e.g. Length, .Constraints.width, .AttachmentOffset.Base.z, .Placement.Base.y" },
+      "expression": { "type": ["string", "null"], "description": "expression text; null clears the binding" } },
+      "required": ["object", "path", "expression"], "additionalProperties": false } },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "expressions"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "bound": { "type": "array", "items": { "type": "object", "description": "{object, path, value, reason?}" } },
+    "cleared": { "type": "array", "items": { "type": "object" } },
+    "unchanged": { "type": "array", "items": { "type": "object" } },
+    "undo_steps": { "type": "integer", "description": "undo steps the call added: 1, or 0 when it changed nothing" },
+    "mutation": { "$ref": "#/$defs/MutationBlock", "description": "absent when the call changed nothing and opened no transaction" }
+  }, "required": ["bound", "cleared", "unchanged", "undo_steps"] } }
+```
+
+All items run in one AD-5 transaction. A row of `bound`, `cleared` or `unchanged` is `{object, path, value}`: `value` is the property's value read after the recompute, as `{value, unit}` for a quantity or a scalar, null with a `reason` when it cannot be read (AD-35). An item that clears a path with no binding on its property, or gives the stored text, is `unchanged`; a call whose every item is `unchanged` opens no transaction and has no `mutation` block, because FreeCAD records no undo step for it and `document_undo` would revert an earlier step (`undo_steps: 0`). A text that FreeCAD stores as the expression already bound (`a*2` for `a * 2`), and a clear by another spelling of the stored path (`.Constraints[2]` for `.Constraints.<name>`), are told apart from a real change only by reading the bindings before and after the write; such an item is `unchanged` too, and a call made only of them has a `mutation` block with `undo_steps: 0`. `undo_steps` is 1 when the call's own transaction heads the document's undo list afterwards, else 0. Each call names its transaction with a running number, because the document's step count stops growing at 20 steps and cannot show a new step. A call made only of `unchanged` items on a document with touched objects can still record a step (the bracket's recompute writes inside the transaction), and `undo_steps` then reads 1.
+
+`path` matches `^\.?[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$` and must resolve, through `evalExpression`, to a number, a quantity or a bool. A numeric leaf of a Placement (`.AttachmentOffset.Base.z`, `.Placement.Base.x`) and a sketch datum (`.Constraints.<name>`, `.Constraints[<index>]`) qualify; a whole Placement, a Shape, a string or a list does not. A touched sketch is verified like every sketch mutation, so it must be fully constrained. A clear checks only that the object exists, so a binding on a path that no longer resolves, or on a property that is not numeric, can still be removed.
+
+Refusals, all `INVALID_INPUT` before the bracket opens, with `detail.code` (AD-17); FreeCAD accepts each of these cases without an error (probed on 1.1.4):
+
+- `expression.invalid_path`: the path does not match the pattern, names no property, resolves to nothing (`Length.x` is stored and never applies), or ends in `.Value` (FreeCAD stores `.Length.Value` as a second binding that `Length` ignores, and it evaluates to a plain number, which hides a unit mismatch).
+- `expression.unsupported_property`: the path resolves to a value that is not a number, a quantity or a bool (`Placement`, `Shape`, `Label`, `Constraints`), its property has `ReadOnly` status, the object is a spreadsheet (FreeCAD ignores a binding on a cell and drops it on save; set the cell contents), the property is a shape (`.Shape.Volume`), or the property is `AttachmentOffset` of an object that is not attached (FreeCAD hides and ignores it, `AttachExtension.cpp`).
+- `expression.invalid_text`: empty, longer than 400 characters, or holding a character FreeCAD cuts or rewrites (the set of `feature_parameters_define`). The limit exists because FreeCAD ends the process while it parses a long chained expression: `1*` x 600 terms (1,200 characters) and `1&&` x 550 crash, `1+` x 900 crashes; 400 characters allow 200 two-character terms.
+- `expression.invalid_expression`: a parse error or an unresolved reference (`Nope.x` is stored and fails the recompute), or a text that does not evaluate to a number. The message is FreeCAD's.
+- `expression.not_finite`: the expression evaluates to `inf` or `nan` (`1 mm / 0` is stored and reads `inf mm`).
+- `expression.unit_mismatch`: a quantity of another dimension than the property (`5 deg` on a length is stored and reads `5 deg`), or a dimensioned quantity on a property that holds a plain number (`5 mm` on a float reads `5.0`, the unit lost). A plain number or a dimensionless quantity takes the property's unit.
+- `expression.not_integer`: a fraction bound to an integer property, which FreeCAD rounds (`2.5` reads `3`).
+- `expression.range_unsupported`: the text holds a cell range (`A1:B2`, `Sheet.A1:Sheet.B2`, `$A$1:$B$2`). FreeCAD evaluates a range cell by cell while the call holds the interpreter lock: `sum(C1:ZZ16384)+sum(C1:ZZ16384)` (31 characters) held one call for 1,087 s, so the character limit bounds parsing and this refusal bounds evaluation. A ternary that compares two cell references matches too.
+- `expression.value_out_of_range`: FreeCAD would not keep the value. `setPathValue` skips the range a plain assignment enforces, so a `App::PropertyLength` below 0 and an `App::PropertyAngle` beyond +-360 are refused by type (a pad of -5 mm flips below its sketch), and any other root property is probed: the value is assigned to a scratch object of the same type and read back (a revolution angle of 400 reads 360; an integer past int32 reads back changed). The same code is raised after the recompute, with status `RECOMPUTE_ERROR` and a rollback, when a binding anywhere in the document reads another value than its expression evaluates to and did not before the call (an existing binding that a new one drives out of range).
+- `expression.duplicate_path`: one object and path twice in the request (a leading dot is the same path). Two spellings of one stored binding are found inside the bracket, which aborts the call.
+- Without an `expression.*` code: an unknown object, a malformed item or key, and a list outside 1 to 100.
+
+Every refusal above checks one item against the document as it is before the call. A value that turns infinite or wrong only because another item of the same batch, or an existing binding that the call drives, changed an input is caught after the bracket's recompute (`recompute_check` of `run_mutation`): the call rolls back with `RECOMPUTE_ERROR` and `detail.code` `expression.not_finite` or `expression.value_out_of_range`. The op itself does not recompute, because the bracket reads the written references right after it, and a recompute inside the op would hide a silent edge drop from the TNP audit.
+
+A dependency cycle is refused by FreeCAD at `setExpression` (`cyclic reference`, `creates a cyclic dependency`) and ends the call with status `RECOMPUTE_ERROR` and `detail.code` `expression.cycle` (the op raises `transaction.RecomputeFailure(code, message)`, which the bracket maps to that status and code). A binding that fails the recompute leaves the object invalid. Both abort the whole call inside the bracket: the transaction is aborted, the document is verified against the pre-call state, and the first `rolled_back_*` proof applies. The shape fingerprint (AD-6) holds no binding, so the proof also reads every object's `ExpressionEngine` back (`state_probe`, as `feature_parameters_define` does).
+
+TNP guard: a binding is a reference record `ExpressionEngine[<path>]`. A new binding is not in the snapshot and a replaced one grades `PASS`. A cleared one is absent from the live reading; it grades `PASS` only when this op reported removing it (`removed_bindings`, the `(owner, record)` pairs the op filled while it wrote), the op's post-op reading lacks it too and its owner still exists (the written-value rule of decision 014), never because the owner was touched. A binding that disappears during the recompute, a binding another tool removes (`sketch_remove_geometry` on a constraint that carries one still grades `BROKEN`, as before), an owner removed from the document, and a call that passes no written reading all grade as before.
+
+The bracket also closes the application-level transaction after every commit and abort (`shim.close_pending_transaction`). `Document::openTransaction` only names the application's active transaction and the document's own opens on the first change, so an op that wrote nothing left it open and the next change by any caller joined it (`document_undo` then refused).
 
 ### 3.8 `preview_dry_run` (AD-10)
 

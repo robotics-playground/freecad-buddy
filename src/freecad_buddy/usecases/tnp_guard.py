@@ -4,7 +4,7 @@
 reference-holding subsystems (Sketcher external geometry, attachment/datums, PartDesign
 profile/base, expression-engine dependencies), capturing the owner's ``ElementMapVersion``, each
 entry's subname, its resolved mapped shadow, a geometric witness and its element ancestry.
-``audit_references(doc, snapshot, written)`` runs the Layer-0 validity sweep over
+``audit_references(doc, snapshot, written, removed_bindings)`` runs the Layer-0 validity sweep over
 ``isValid()``/``getStatusString()``, then the Layer-1 per-entry diff (resolution, mapped name,
 witness, entry count, ``ElementMapVersion`` re-baseline) and the Layer-2 ancestry cross-check over
 the entries Layer 1 left ambiguous, returning a ``TnpAuditBlock``.
@@ -20,6 +20,7 @@ never imported here — the document and its objects are passed in.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from typing import TypedDict
 
 from freecad_buddy.contracts import RefFinding, RefVerdict, TnpAuditBlock
@@ -414,6 +415,7 @@ def audit_references(
     snapshot: list[RefRecord],
     written: list[RefRecord] | None = None,
     deleted: frozenset[str] = frozenset(),
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> TnpAuditBlock:
     """Audit ``doc``'s references against ``snapshot`` and return a ``TnpAuditBlock``.
 
@@ -440,6 +442,10 @@ def audit_references(
     :param deleted: names of the objects the op deleted on purpose. A snapshotted record whose
         owner is in this set and absent from ``doc`` is excused; an owner that vanished any other
         way stays ``BROKEN``.
+    :param removed_bindings: ``(owner, record prop)`` of each expression binding the op reports
+        it removed. Such a binding, absent from ``written`` and from the live reading on an owner
+        that still exists, passes; a binding removed by anything else grades ``BROKEN``, as does
+        every removal when no ``written`` reading is given.
     """
     version = _element_map_version_banner()
     live = snapshot_references(doc)
@@ -452,7 +458,7 @@ def audit_references(
             "findings": findings + _unsupported_findings(snapshot),
         }
 
-    findings += _reference_findings(doc, snapshot, live, written or [], deleted)
+    findings += _reference_findings(doc, snapshot, live, written, deleted, removed_bindings)
     failing = [f for f in findings if f["verdict"] not in ("PASS", "RE_BASELINED")]
     return {
         "status": "FLAGGED" if failing else "CLEAN",
@@ -814,8 +820,9 @@ def _reference_findings(
     doc: object,
     snapshot: list[RefRecord],
     live: list[RefRecord],
-    written: list[RefRecord],
+    written: list[RefRecord] | None,
     deleted: frozenset[str] = frozenset(),
+    removed_bindings: Collection[tuple[str, str]] = (),
 ) -> list[RefFinding]:
     """Run the Layer-1/2 diff over every snapshotted record, skipping the entries Layer 0 reported.
 
@@ -833,11 +840,28 @@ def _reference_findings(
     way, still grades ``BROKEN``.
     """
     live_by_key = _pair_records(snapshot, live)
-    written_by_key = _pair_records(snapshot, written)
+    written_by_key = _pair_records(snapshot, written or [])
 
     findings: list[RefFinding] = []
     for key, record in _keyed(snapshot).items():
         paired = live_by_key.get(key)
+        if (
+            paired is None
+            and written is not None
+            and key not in written_by_key
+            and (record["owner"], record["prop"]) in removed_bindings
+            and doc.getObject(record["owner"]) is not None
+        ):
+            findings.append(
+                _finding(
+                    record,
+                    None,
+                    "PASS",
+                    1,
+                    f"{record['owner']}.{record['prop']} was cleared by the op",
+                )
+            )
+            continue
         if paired is not None and any(entry["missing"] for entry in paired["entries"]):
             record, paired = _without_missing_entries(record, paired)
             if paired is None:
