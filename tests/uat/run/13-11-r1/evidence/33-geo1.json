@@ -1,0 +1,79 @@
+{
+ "tool": "sketch_add_geometry",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "sketch": "SkA",
+  "geometry": [
+   {
+    "kind": "circle",
+    "center": [
+     0,
+     0
+    ],
+    "radius": {
+     "value": 10,
+     "unit": "mm"
+    }
+   }
+  ]
+ },
+ "isError": true,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "SPEC_FAILED",
+  "detail": {
+   "code": "mutation.spec_failed",
+   "message": "verify_sketch failed on SkA (dof=3): sketch.fully_constrained"
+  },
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "e8fdb6b8c861a9461c28b32f10f06e1619b35f4e296993fb19fd90e1ffe79f80",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "e8fdb6b8c861a9461c28b32f10f06e1619b35f4e296993fb19fd90e1ffe79f80",
+     "serializer": "exportBinary"
+    },
+    "changed": [],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": false,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {},
+      "findings": []
+     },
+     "passed": false,
+     "explanation": "verify_sketch failed on SkA (dof=3): sketch.fully_constrained"
+    },
+    "rolled_back": true,
+    "rollback_proven": "rolled_back_verified",
+    "touched": [
+     "SkA"
+    ]
+   },
+   "sketch": "SkA",
+   "sketch_state": {
+    "schema": "fcb.sketch-state/1",
+    "sketch": "SkA",
+    "readable": true,
+    "dof": 0,
+    "fully_constrained": true,
+    "geometry_count": 0,
+    "constraint_count": 0,
+    "conflicting": [],
+    "malformed": [],
+    "redundant": [],
+    "partially_redundant": [],
+    "solver_status_code": 0
+   },
+   "geo_ids": [],
+   "constraint_ids": []
+  },
+  "text": "Mutation rolled back (rolled_back_verified): verify_sketch failed on SkA (dof=3): sketch.fully_constrained"
+ }
+}

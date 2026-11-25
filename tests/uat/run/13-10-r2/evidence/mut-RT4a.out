@@ -1,0 +1,6 @@
+ran=82 failures=5 errors=0
+RED infc.test_feature_expressions.RoundTwoRefusalTest.test_Should_refuse_with_the_range_code_When_a_pad_length_is_negative ::  : {'code': 'mutation.recompute_error', 'message': 'recompute left 1 object(s) invalid: Pad: No object linked'}
+RED infc.test_feature_expressions.RoundTwoRefusalTest.test_Should_refuse_with_the_range_code_When_a_percent_parameter_exceeds_100 :: + INVALID_INPUT
+RED infc.test_feature_expressions.RoundTwoRefusalTest.test_Should_refuse_with_the_range_code_When_a_revolution_angle_exceeds_a_full_turn ::  : {'code': 'mutation.recompute_error', 'message': 'recompute left 1 object(s) invalid: Rev: No object linked'}
+RED infc.test_feature_expressions.RoundTwoRefusalTest.test_Should_refuse_with_the_range_code_When_an_integer_leaves_the_int32_range (text='3000000000') ::  : {'code': 'expression.value_out_of_range', 'message': "Params count reads -2147483648 but '3000000000' evaluates to 3000000000.0; FreeCAD stored another value"}
+RED infc.test_feature_expressions.RoundTwoRefusalTest.test_Should_refuse_with_the_range_code_When_an_integer_leaves_the_int32_range (text='-3000000000') ::  : {'code': 'expression.value_out_of_range', 'message': "Params count reads -2147483648 but '-3000000000' evaluates to -3000000000.0; FreeCAD stored another value"}

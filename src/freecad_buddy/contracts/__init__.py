@@ -8,6 +8,11 @@ from freecad_buddy.contracts.assertions import (
     ASSERTION_FNS,
     AnchorFrame,
     AnchorFrameKind,
+    CHECK_COMMON_KEYS,
+    CHECK_OPTIONAL_KEYS,
+    CHECK_REQUIRED_KEYS,
+    SHAPE_CHECK_FNS,
+    VERIFY_SHAPE_FNS,
     AssertionFn,
     DeclaredAnchorFrame,
 )
@@ -119,6 +124,11 @@ from freecad_buddy.contracts.status import ErrorDetail, JobState, TerminalStatus
 __all__ = [
     "ANCHOR_FRAME_KINDS",
     "ASSERTION_FNS",
+    "CHECK_COMMON_KEYS",
+    "CHECK_OPTIONAL_KEYS",
+    "CHECK_REQUIRED_KEYS",
+    "SHAPE_CHECK_FNS",
+    "VERIFY_SHAPE_FNS",
     "AnchorFrame",
     "AnchorFrameKind",
     "ApprovalRecord",

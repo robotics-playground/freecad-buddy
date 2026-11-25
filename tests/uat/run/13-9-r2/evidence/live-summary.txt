@@ -1,0 +1,18 @@
+[create] document_create status=OK code=None msg= | {}
+[define1] feature_parameters_define status=OK code=None msg= | {"added": ["note", "width"], "updated": [], "unchanged": [], "undo_steps": 1}
+[user_box] script_exec status=OK code=None msg= | {"stdout": "UndoCount 2 UserBox True\n"}
+[define_noop] feature_parameters_define status=OK code=None msg= | {"added": [], "updated": [], "unchanged": ["note", "width"], "undo_steps": 0}
+[probe_after_noop] script_exec status=OK code=None msg= | {"stdout": "UndoCount 2 UserBox True note 'rev A'\n"}
+[define_partial] feature_parameters_define status=OK code=None msg= | {"added": [], "updated": ["width"], "unchanged": ["note"], "undo_steps": 1}
+[undo_partial] document_undo status=OK code=None msg= | {"undone": "buddy: define parameters on Params", "matches_pre_op": null}
+[probe_after_partial_undo] script_exec status=OK code=None msg= | {"stdout": "UndoCount 2 UserBox True note 'rev A'\n"}
+[define_noop2] feature_parameters_define status=OK code=None msg= | {"added": [], "updated": [], "unchanged": ["note", "width"], "undo_steps": 0}
+[undo_after_noop] document_undo status=OK code=None msg= | {"undone": "user box", "matches_pre_op": null}
+[probe_after_noop_undo] script_exec status=OK code=None msg= | {"stdout": "UndoCount 1 UserBox False note 'rev A'\n"}
+[meta_change] feature_parameters_define status=INVALID_INPUT code='parameters.metadata_immutable' msg=Params.note exists with group 'Parameters'; FreeCAD does not undo a group change, so it is set only when the p | {}
+[nul_string] feature_parameters_define status=INVALID_INPUT code='parameters.invalid_string' msg=parameters[0].value holds U+0000 at index 5, a character FreeCAD cuts or changes when it stores the string | {}
+[varset_W] feature_parameters_define status=INVALID_INPUT code='parameters.unit_symbol_name' msg=varset 'W' is a unit or constant to FreeCAD's expression parser, so no expression could name it; choose anothe | {}
+[shape_name] feature_parameters_define status=INVALID_INPUT code='parameters.reserved_name' msg=parameters[0].name 'Shape' is a name a VarSet or an expression already uses | {}
+[exec_oserror] script_exec status=RECOMPUTE_ERROR code='RECOMPUTE_ERROR' msg=[Errno 5] access denied | {}
+[exec_code_method] script_exec status=RECOMPUTE_ERROR code='RECOMPUTE_ERROR' msg=boom | {}
+[query] query_parameters status=OK code=None msg= | {}

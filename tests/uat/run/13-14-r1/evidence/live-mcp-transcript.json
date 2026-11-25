@@ -1,0 +1,1727 @@
+[
+  {
+    "label": "tools/list verify_shape",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "doc": {
+          "type": "string",
+          "description": "opaque fcb-doc handle"
+        },
+        "object": {
+          "type": "string",
+          "description": "immutable Name; required when the document has more than one shape-bearing object"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "angle_between"
+                  },
+                  "expect": {
+                    "type": "number"
+                  },
+                  "select_a": {
+                    "type": "object",
+                    "properties": {
+                      "hole": {
+                        "type": "object",
+                        "properties": {
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "face": {
+                        "type": "object",
+                        "properties": {
+                          "normal": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          },
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "minProperties": 1,
+                        "maxProperties": 1,
+                        "additionalProperties": false
+                      }
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "additionalProperties": false
+                  },
+                  "select_b": {
+                    "type": "object",
+                    "properties": {
+                      "hole": {
+                        "type": "object",
+                        "properties": {
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "face": {
+                        "type": "object",
+                        "properties": {
+                          "normal": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          },
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "minProperties": 1,
+                        "maxProperties": 1,
+                        "additionalProperties": false
+                      }
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "additionalProperties": false
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect",
+                  "select_a",
+                  "select_b"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "count_cylindrical_holes"
+                  },
+                  "expect": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "diameter": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "axis": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "not": {
+                          "const": [
+                            0,
+                            0,
+                            0
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "distance_between"
+                  },
+                  "expect": {
+                    "type": "number"
+                  },
+                  "select_a": {
+                    "type": "object",
+                    "properties": {
+                      "hole": {
+                        "type": "object",
+                        "properties": {
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "face": {
+                        "type": "object",
+                        "properties": {
+                          "normal": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          },
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "minProperties": 1,
+                        "maxProperties": 1,
+                        "additionalProperties": false
+                      }
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "additionalProperties": false
+                  },
+                  "select_b": {
+                    "type": "object",
+                    "properties": {
+                      "hole": {
+                        "type": "object",
+                        "properties": {
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "face": {
+                        "type": "object",
+                        "properties": {
+                          "normal": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          },
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "minProperties": 1,
+                        "maxProperties": 1,
+                        "additionalProperties": false
+                      }
+                    },
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "additionalProperties": false
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect",
+                  "select_a",
+                  "select_b"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "expect_bbox"
+                  },
+                  "expect": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "expect_extent"
+                  },
+                  "expect": {
+                    "type": "number"
+                  },
+                  "direction": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "not": {
+                      "const": [
+                        0,
+                        0,
+                        0
+                      ]
+                    }
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect",
+                  "direction"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "expect_solid_count"
+                  },
+                  "expect": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "expect_valid"
+                  },
+                  "expect": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "expect_volume"
+                  },
+                  "expect": {
+                    "type": "number"
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "expect_watertight"
+                  },
+                  "expect": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "hole_diameter"
+                  },
+                  "expect": {
+                    "type": "number"
+                  },
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "diameter": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "axis": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "not": {
+                          "const": [
+                            0,
+                            0,
+                            0
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "hole_position"
+                  },
+                  "expect": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "diameter": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "axis": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "not": {
+                          "const": [
+                            0,
+                            0,
+                            0
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "hole_spacing"
+                  },
+                  "expect": {
+                    "type": [
+                      "number",
+                      "array"
+                    ],
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 1
+                  },
+                  "pattern": {},
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "diameter": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "axis": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "not": {
+                          "const": [
+                            0,
+                            0,
+                            0
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "hole_spacing"
+                  },
+                  "expect": {
+                    "type": "number"
+                  },
+                  "pattern": {},
+                  "select_a": {
+                    "type": "object",
+                    "properties": {
+                      "hole": {
+                        "type": "object",
+                        "properties": {
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "hole"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "select_b": {
+                    "type": "object",
+                    "properties": {
+                      "hole": {
+                        "type": "object",
+                        "properties": {
+                          "diameter": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 3,
+                            "maxItems": 3,
+                            "not": {
+                              "const": [
+                                0,
+                                0,
+                                0
+                              ]
+                            }
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "hole"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "tol": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "properties": {
+                      "abs": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      },
+                      "rel": {
+                        "type": [
+                          "number",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect",
+                  "select_a",
+                  "select_b"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "hole_through"
+                  },
+                  "expect": {
+                    "type": "boolean"
+                  },
+                  "select": {
+                    "type": "object",
+                    "properties": {
+                      "diameter": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      },
+                      "axis": {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "not": {
+                          "const": [
+                            0,
+                            0,
+                            0
+                          ]
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "fn": {
+                    "const": "is_valid_solid"
+                  },
+                  "expect": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "fn",
+                  "expect"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "{fn, expect, ...}; keys per fn: angle_between {expect, select_a, select_b, tol}; count_cylindrical_holes {expect, select}; distance_between {expect, select_a, select_b, tol}; expect_bbox {expect, tol}; expect_extent {expect, direction, tol}; expect_solid_count {expect}; expect_valid {expect}; expect_volume {expect, tol}; expect_watertight {expect}; hole_diameter {expect, select, tol}; hole_position {expect, select, tol}; hole_spacing {expect, pattern, select, select_a, select_b, tol}; hole_through {expect, select}; is_valid_solid {expect}"
+          }
+        },
+        "anchor_frame": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "base_sketch_plane",
+                "largest_planar_face",
+                "named_datum"
+              ]
+            },
+            "ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "doc"
+      ],
+      "additionalProperties": false
+    },
+    "description": "Measure a shape against the closed assertion vocabulary (is_valid_solid, count_cylindrical_holes, hole_diameter/position/spacing/through, distance_between, angle_between, expect_bbox/extent/volume, expect_solid_count/valid/watertight) in an anchor_frame {kind: named_datum|base_sketch_plane|largest_planar_face, ref}. Each check is {fn, expect, ...} with only the keys its fn takes. Omit object only when the document has one shape-bearing object; otherwise the call is refused naming them."
+  },
+  {
+    "label": "create doc",
+    "tool": "document_create",
+    "args": {
+      "label": "V1314"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"doc\":\"fcb-doc:stvbRYN_TmtTSf1-5_AjqA\",\"name\":\"V1314\",\"label\":\"V1314\"},\"text\":\"doc: fcb-doc:stvbRYN_TmtTSf1-5_AjqA\\nlabel: V1314\\nname: V1314\"}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": null,
+        "structured_content": {
+          "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+          "name": "V1314",
+          "label": "V1314"
+        },
+        "text": "doc: fcb-doc:stvbRYN_TmtTSf1-5_AjqA\nlabel: V1314\nname: V1314"
+      },
+      "isError": false
+    }
+  },
+  {
+    "label": "resolved handle",
+    "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA"
+  },
+  {
+    "label": "L1 schema failure {type: is_valid_solid}",
+    "tool": "verify_shape",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "checks": [
+        {
+          "type": "is_valid_solid"
+        }
+      ]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: {'type': 'is_valid_solid'} is not valid under any of the given schemas"
+        }
+      ],
+      "isError": true
+    }
+  },
+  {
+    "label": "L1b schema failure expect_extent without direction",
+    "tool": "verify_shape",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "checks": [
+        {
+          "fn": "expect_extent",
+          "expect": 5
+        }
+      ]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Input validation error: {'fn': 'expect_extent', 'expect': 5} is not valid under any of the given schemas"
+        }
+      ],
+      "isError": true
+    }
+  },
+  {
+    "label": "body",
+    "tool": "feature_body_create",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "name": "Body"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Body\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":null,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Body\"]},\"feature\":\"Body\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Body\",\"readable\":false}},\"text\":\"Mutation committed; fingerprint 283569b3f782.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": null,
+        "structured_content": {
+          "mutation": {
+            "schema": "fcb.mutation/2",
+            "fingerprint_before": {
+              "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "serializer": "exportBinary"
+            },
+            "fingerprint_after": {
+              "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+              "serializer": "exportBinary"
+            },
+            "changed": [
+              {
+                "name": "Body",
+                "volume": 0.0,
+                "area": 0.0,
+                "com": [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            ],
+            "post_verify": {
+              "recompute_clean": true,
+              "is_valid": true,
+              "fully_constrained": null,
+              "tnp_audit": {
+                "status": "CLEAN",
+                "element_map_version": "15.70200.5",
+                "counts": {},
+                "findings": []
+              },
+              "passed": true,
+              "explanation": null
+            },
+            "rolled_back": false,
+            "rollback_proven": null,
+            "touched": [
+              "Body"
+            ]
+          },
+          "feature": "Body",
+          "feature_state": {
+            "schema": "fcb.feature-state/1",
+            "feature": "Body",
+            "readable": false
+          }
+        },
+        "text": "Mutation committed; fingerprint 283569b3f782.",
+        "framing": {
+          "fits": null,
+          "ratio": null,
+          "checked": "unavailable",
+          "stale_reason": "no visible shape-bearing objects to measure"
+        }
+      },
+      "isError": false
+    }
+  },
+  {
+    "label": "sketch",
+    "tool": "sketch_create",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "name": "Sketch",
+      "plane": "XY",
+      "body": "Body"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Sketch\",\"volume\":0.0,\"area\":0.0,\"com\":[0.0,0.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Sketch\"]},\"sketch\":\"Sketch\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Sketch\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":0,\"constraint_count\":0,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0}},\"text\":\"Mutation committed; fingerprint 3f7a8ffb0fe0.\",\"framing\":{\"fits\":null,\"ratio\":null,\"checked\":\"unavailable\",\"stale_reason\":\"no visible shape-bearing objects to measure\"}}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": null,
+        "structured_content": {
+          "mutation": {
+            "schema": "fcb.mutation/2",
+            "fingerprint_before": {
+              "digest": "283569b3f78233cacadd208e597407eecb7eefe09151a7e7d7e9914a912d0338",
+              "serializer": "exportBinary"
+            },
+            "fingerprint_after": {
+              "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+              "serializer": "exportBinary"
+            },
+            "changed": [
+              {
+                "name": "Sketch",
+                "volume": 0.0,
+                "area": 0.0,
+                "com": [
+                  0.0,
+                  0.0,
+                  0.0
+                ]
+              }
+            ],
+            "post_verify": {
+              "recompute_clean": true,
+              "is_valid": true,
+              "fully_constrained": true,
+              "tnp_audit": {
+                "status": "CLEAN",
+                "element_map_version": "15.70200.5",
+                "counts": {},
+                "findings": []
+              },
+              "passed": true,
+              "explanation": null
+            },
+            "rolled_back": false,
+            "rollback_proven": null,
+            "touched": [
+              "Sketch"
+            ]
+          },
+          "sketch": "Sketch",
+          "sketch_state": {
+            "schema": "fcb.sketch-state/1",
+            "sketch": "Sketch",
+            "readable": true,
+            "dof": 0,
+            "fully_constrained": true,
+            "geometry_count": 0,
+            "constraint_count": 0,
+            "conflicting": [],
+            "malformed": [],
+            "redundant": [],
+            "partially_redundant": [],
+            "solver_status_code": 0
+          }
+        },
+        "text": "Mutation committed; fingerprint 3f7a8ffb0fe0.",
+        "framing": {
+          "fits": null,
+          "ratio": null,
+          "checked": "unavailable",
+          "stale_reason": "no visible shape-bearing objects to measure"
+        }
+      },
+      "isError": false
+    }
+  },
+  {
+    "label": "rectangle",
+    "tool": "sketch_add_geometry",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "sketch": "Sketch",
+      "geometry": [
+        {
+          "kind": "line_segment",
+          "start": [
+            0,
+            0
+          ],
+          "end": [
+            20,
+            0
+          ]
+        },
+        {
+          "kind": "line_segment",
+          "start": [
+            20,
+            0
+          ],
+          "end": [
+            20,
+            10
+          ]
+        },
+        {
+          "kind": "line_segment",
+          "start": [
+            20,
+            10
+          ],
+          "end": [
+            0,
+            10
+          ]
+        },
+        {
+          "kind": "line_segment",
+          "start": [
+            0,
+            10
+          ],
+          "end": [
+            0,
+            0
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "type": "Coincident",
+          "first": 0,
+          "first_pos": 2,
+          "second": 1,
+          "second_pos": 1
+        },
+        {
+          "type": "Coincident",
+          "first": 1,
+          "first_pos": 2,
+          "second": 2,
+          "second_pos": 1
+        },
+        {
+          "type": "Coincident",
+          "first": 2,
+          "first_pos": 2,
+          "second": 3,
+          "second_pos": 1
+        },
+        {
+          "type": "Coincident",
+          "first": 3,
+          "first_pos": 2,
+          "second": 0,
+          "second_pos": 1
+        },
+        {
+          "type": "Horizontal",
+          "first": 0
+        },
+        {
+          "type": "Horizontal",
+          "first": 2
+        },
+        {
+          "type": "Vertical",
+          "first": 1
+        },
+        {
+          "type": "Vertical",
+          "first": 3
+        },
+        {
+          "type": "Coincident",
+          "first": 0,
+          "first_pos": 1,
+          "second": -1,
+          "second_pos": 1
+        },
+        {
+          "type": "DistanceX",
+          "first": 0,
+          "first_pos": 1,
+          "second": 0,
+          "second_pos": 2,
+          "value": {
+            "value": 20,
+            "unit": "mm"
+          }
+        },
+        {
+          "type": "DistanceY",
+          "first": 1,
+          "first_pos": 1,
+          "second": 1,
+          "second_pos": 2,
+          "value": {
+            "value": 10,
+            "unit": "mm"
+          }
+        }
+      ]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"0605c302dc8fe04891863b2e6b99d6a2a151968b085d112ca196e8e1589dbf98\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Sketch\",\"volume\":0.0,\"area\":0.0,\"com\":[10.0,5.0,0.0]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Sketch\"]},\"sketch\":\"Sketch\",\"sketch_state\":{\"schema\":\"fcb.sketch-state/1\",\"sketch\":\"Sketch\",\"readable\":true,\"dof\":0,\"fully_constrained\":true,\"geometry_count\":4,\"constraint_count\":11,\"conflicting\":[],\"malformed\":[],\"redundant\":[],\"partially_redundant\":[],\"solver_status_code\":0},\"geo_ids\":[0,1,2,3],\"constraint_ids\":[1,2,3,4,5,6,7,8,9,10,11]},\"text\":\"Mutation committed; fingerprint 0605c302dc8f.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": null,
+        "structured_content": {
+          "mutation": {
+            "schema": "fcb.mutation/2",
+            "fingerprint_before": {
+              "digest": "3f7a8ffb0fe0fe06c48e09d4811fa3eafa0f37f4b81c5999e921d225fbcbf4b2",
+              "serializer": "exportBinary"
+            },
+            "fingerprint_after": {
+              "digest": "0605c302dc8fe04891863b2e6b99d6a2a151968b085d112ca196e8e1589dbf98",
+              "serializer": "exportBinary"
+            },
+            "changed": [
+              {
+                "name": "Sketch",
+                "volume": 0.0,
+                "area": 0.0,
+                "com": [
+                  10.0,
+                  5.0,
+                  0.0
+                ]
+              }
+            ],
+            "post_verify": {
+              "recompute_clean": true,
+              "is_valid": true,
+              "fully_constrained": true,
+              "tnp_audit": {
+                "status": "CLEAN",
+                "element_map_version": "15.70200.5",
+                "counts": {},
+                "findings": []
+              },
+              "passed": true,
+              "explanation": null
+            },
+            "rolled_back": false,
+            "rollback_proven": null,
+            "touched": [
+              "Sketch"
+            ]
+          },
+          "sketch": "Sketch",
+          "sketch_state": {
+            "schema": "fcb.sketch-state/1",
+            "sketch": "Sketch",
+            "readable": true,
+            "dof": 0,
+            "fully_constrained": true,
+            "geometry_count": 4,
+            "constraint_count": 11,
+            "conflicting": [],
+            "malformed": [],
+            "redundant": [],
+            "partially_redundant": [],
+            "solver_status_code": 0
+          },
+          "geo_ids": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "constraint_ids": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        },
+        "text": "Mutation committed; fingerprint 0605c302dc8f.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+        "framing": {
+          "fits": false,
+          "ratio": 2.72,
+          "checked": "computed",
+          "stale_reason": null
+        }
+      },
+      "isError": false
+    }
+  },
+  {
+    "label": "pad",
+    "tool": "feature_pad",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "body": "Body",
+      "profile": "Sketch",
+      "name": "Pad",
+      "length": {
+        "value": 5,
+        "unit": "mm"
+      }
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"mutation\":{\"schema\":\"fcb.mutation/2\",\"fingerprint_before\":{\"digest\":\"0605c302dc8fe04891863b2e6b99d6a2a151968b085d112ca196e8e1589dbf98\",\"serializer\":\"exportBinary\"},\"fingerprint_after\":{\"digest\":\"1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56\",\"serializer\":\"exportBinary\"},\"changed\":[{\"name\":\"Body\",\"volume\":1000.0,\"area\":700.0,\"com\":[10.0,5.0,2.5]},{\"name\":\"Pad\",\"volume\":1000.0,\"area\":700.0,\"com\":[10.0,5.0,2.5]}],\"post_verify\":{\"recompute_clean\":true,\"is_valid\":true,\"fully_constrained\":true,\"tnp_audit\":{\"status\":\"CLEAN\",\"element_map_version\":\"15.70200.5\",\"counts\":{},\"findings\":[]},\"passed\":true,\"explanation\":null},\"rolled_back\":false,\"rollback_proven\":null,\"touched\":[\"Pad\",\"Body\"]},\"feature\":\"Pad\",\"feature_state\":{\"schema\":\"fcb.feature-state/1\",\"feature\":\"Pad\",\"readable\":true,\"body\":\"Body\",\"is_tip\":true,\"shape_summary\":{\"solid_count\":1,\"face_count\":6,\"edge_count\":12,\"vertex_count\":8,\"is_valid\":true,\"volume\":1000.0,\"area\":700.0,\"bbox\":[20.0,10.0,5.0]}}},\"text\":\"Mutation committed; fingerprint 1589f809660e.\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": null,
+        "structured_content": {
+          "mutation": {
+            "schema": "fcb.mutation/2",
+            "fingerprint_before": {
+              "digest": "0605c302dc8fe04891863b2e6b99d6a2a151968b085d112ca196e8e1589dbf98",
+              "serializer": "exportBinary"
+            },
+            "fingerprint_after": {
+              "digest": "1589f809660ec056598321ab90d7fa450baa2cf397ffafa0534c7b55dfa76c56",
+              "serializer": "exportBinary"
+            },
+            "changed": [
+              {
+                "name": "Body",
+                "volume": 1000.0,
+                "area": 700.0,
+                "com": [
+                  10.0,
+                  5.0,
+                  2.5
+                ]
+              },
+              {
+                "name": "Pad",
+                "volume": 1000.0,
+                "area": 700.0,
+                "com": [
+                  10.0,
+                  5.0,
+                  2.5
+                ]
+              }
+            ],
+            "post_verify": {
+              "recompute_clean": true,
+              "is_valid": true,
+              "fully_constrained": true,
+              "tnp_audit": {
+                "status": "CLEAN",
+                "element_map_version": "15.70200.5",
+                "counts": {},
+                "findings": []
+              },
+              "passed": true,
+              "explanation": null
+            },
+            "rolled_back": false,
+            "rollback_proven": null,
+            "touched": [
+              "Pad",
+              "Body"
+            ]
+          },
+          "feature": "Pad",
+          "feature_state": {
+            "schema": "fcb.feature-state/1",
+            "feature": "Pad",
+            "readable": true,
+            "body": "Body",
+            "is_tip": true,
+            "shape_summary": {
+              "solid_count": 1,
+              "face_count": 6,
+              "edge_count": 12,
+              "vertex_count": 8,
+              "is_valid": true,
+              "volume": 1000.0,
+              "area": 700.0,
+              "bbox": [
+                20.0,
+                10.0,
+                5.0
+              ]
+            }
+          }
+        },
+        "text": "Mutation committed; fingerprint 1589f809660e.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+        "framing": {
+          "fits": false,
+          "ratio": 2.72,
+          "checked": "computed",
+          "stale_reason": null
+        }
+      },
+      "isError": false
+    }
+  },
+  {
+    "label": "L2 omitted object on Body+Sketch+Pad",
+    "tool": "verify_shape",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA"
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"INVALID_INPUT\",\"detail\":{\"code\":\"verify_shape.object_required\",\"message\":\"object is required: document has 3 shape objects: Body (Body), Sketch (Sketch), Pad (Pad)\",\"objects\":[\"Body\",\"Sketch\",\"Pad\"]},\"structured_content\":{},\"text\":\"object is required: document has 3 shape objects: Body (Body), Sketch (Sketch), Pad (Pad)\"}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "INVALID_INPUT",
+        "detail": {
+          "code": "verify_shape.object_required",
+          "message": "object is required: document has 3 shape objects: Body (Body), Sketch (Sketch), Pad (Pad)",
+          "objects": [
+            "Body",
+            "Sketch",
+            "Pad"
+          ]
+        },
+        "structured_content": {},
+        "text": "object is required: document has 3 shape objects: Body (Body), Sketch (Sketch), Pad (Pad)"
+      },
+      "isError": true
+    }
+  },
+  {
+    "label": "L3 valid call on Pad",
+    "tool": "verify_shape",
+    "args": {
+      "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA",
+      "object": "Pad",
+      "checks": [
+        {
+          "fn": "is_valid_solid",
+          "expect": true
+        },
+        {
+          "fn": "expect_volume",
+          "expect": 1000,
+          "tol": {
+            "abs": 0.01
+          }
+        },
+        {
+          "fn": "expect_extent",
+          "expect": 5,
+          "direction": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "fn": "expect_solid_count",
+          "expect": 1
+        }
+      ]
+    },
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"schema\":\"fcb.result-envelope/1\",\"status\":\"OK\",\"detail\":null,\"structured_content\":{\"subject\":{\"object\":\"Pad\"},\"checks\":[{\"id\":\"assert.is_valid_solid\",\"measured\":true,\"expected\":true,\"tolerance\":null,\"passed\":true,\"detail\":{\"message\":\"isValid=True solids=1\"}},{\"id\":\"assert.expect_volume\",\"measured\":1000.0,\"expected\":1000,\"tolerance\":{\"abs\":0.01},\"passed\":true,\"detail\":{\"message\":\"|1000.0 - 1000.0| = 0.0 <= 0.01 mm^3\"}},{\"id\":\"assert.expect_extent\",\"measured\":5.0,\"expected\":5,\"tolerance\":null,\"passed\":true,\"detail\":{\"message\":\"extent along [0.0, 0.0, 1.0]: |5.0 - 5.0| = 0.0 <= 0.05\"}},{\"id\":\"shape.solid_count\",\"measured\":1,\"expected\":1,\"tolerance\":null,\"passed\":true,\"detail\":{\"message\":\"solids 1 vs 1\"}}],\"schema\":\"fcb.validation-report/1\",\"banner\":{\"freecad_version\":\"1.1.4\",\"element_map_version\":15,\"anchor_frame\":{\"kind\":\"global\",\"ref\":null,\"entity\":null,\"origin\":[0.0,0.0,0.0],\"axes\":[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]],\"units\":\"mm\"}},\"verdict\":\"OK\"},\"text\":\"Pad: shape checks passed (OK).\\n\\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\",\"framing\":{\"fits\":false,\"ratio\":2.72,\"checked\":\"computed\",\"stale_reason\":null}}"
+        }
+      ],
+      "structuredContent": {
+        "schema": "fcb.result-envelope/1",
+        "status": "OK",
+        "detail": null,
+        "structured_content": {
+          "subject": {
+            "object": "Pad"
+          },
+          "checks": [
+            {
+              "id": "assert.is_valid_solid",
+              "measured": true,
+              "expected": true,
+              "tolerance": null,
+              "passed": true,
+              "detail": {
+                "message": "isValid=True solids=1"
+              }
+            },
+            {
+              "id": "assert.expect_volume",
+              "measured": 1000.0,
+              "expected": 1000,
+              "tolerance": {
+                "abs": 0.01
+              },
+              "passed": true,
+              "detail": {
+                "message": "|1000.0 - 1000.0| = 0.0 <= 0.01 mm^3"
+              }
+            },
+            {
+              "id": "assert.expect_extent",
+              "measured": 5.0,
+              "expected": 5,
+              "tolerance": null,
+              "passed": true,
+              "detail": {
+                "message": "extent along [0.0, 0.0, 1.0]: |5.0 - 5.0| = 0.0 <= 0.05"
+              }
+            },
+            {
+              "id": "shape.solid_count",
+              "measured": 1,
+              "expected": 1,
+              "tolerance": null,
+              "passed": true,
+              "detail": {
+                "message": "solids 1 vs 1"
+              }
+            }
+          ],
+          "schema": "fcb.validation-report/1",
+          "banner": {
+            "freecad_version": "1.1.4",
+            "element_map_version": 15,
+            "anchor_frame": {
+              "kind": "global",
+              "ref": null,
+              "entity": null,
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "axes": [
+                [
+                  1.0,
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.0,
+                  1.0,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0,
+                  1.0
+                ]
+              ],
+              "units": "mm"
+            }
+          },
+          "verdict": "OK"
+        },
+        "text": "Pad: shape checks passed (OK).\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+        "framing": {
+          "fits": false,
+          "ratio": 2.72,
+          "checked": "computed",
+          "stale_reason": null
+        }
+      },
+      "isError": false
+    }
+  },
+  {
+    "label": "doc handle for teardown",
+    "doc": "fcb-doc:stvbRYN_TmtTSf1-5_AjqA"
+  }
+]

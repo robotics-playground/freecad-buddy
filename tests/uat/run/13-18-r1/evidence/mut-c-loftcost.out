@@ -1,0 +1,6 @@
+label=c-loftcost rc=0 elapsed=2s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+FAIL: test_Should_refuse_with_a_code_When_the_sections_cost_more_than_the_limit (infc.test_feature_tools.LoftTest.test_Should_refuse_with_a_code_When_the_sections_cost_more_than_the_limit)
+AssertionError: LoftSweepRefusal not raised
+RESULT fail=1 error=0 run=46
+RED infc.test_feature_tools.LoftTest.test_Should_refuse_with_a_code_When_the_sections_cost_more_than_the_limit

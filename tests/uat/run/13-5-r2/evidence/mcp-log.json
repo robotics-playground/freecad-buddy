@@ -1,0 +1,2647 @@
+[
+ {
+  "step": "pre",
+  "tool": "query_capabilities",
+  "args": {},
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "freecad_version": "1.1.4",
+    "element_map_available": true,
+    "serializer": "exportBinary",
+    "varset_backend": "varset",
+    "render": "gui_constructed",
+    "sketcher_available": true,
+    "partdesign_available": true,
+    "enums": {
+     "PartDesign::Pad": {
+      "Type": [
+       "Length",
+       "UpToLast",
+       "UpToFirst",
+       "UpToFace",
+       "?TwoLengths",
+       "UpToShape"
+      ]
+     },
+     "PartDesign::Pocket": {
+      "Type": [
+       "Length",
+       "ThroughAll",
+       "UpToFirst",
+       "UpToFace",
+       "?TwoLengths",
+       "UpToShape"
+      ]
+     },
+     "PartDesign::Revolution": {
+      "Type": [
+       "Angle",
+       "UpToLast",
+       "UpToFirst",
+       "UpToFace",
+       "TwoAngles"
+      ]
+     },
+     "PartDesign::Hole": {
+      "ThreadType": [
+       "None",
+       "ISOMetricProfile",
+       "ISOMetricFineProfile",
+       "UNC",
+       "UNF",
+       "UNEF",
+       "NPT",
+       "BSP",
+       "BSW",
+       "BSF",
+       "ISOTyre"
+      ],
+      "HoleCutType": [
+       "None",
+       "Counterbore",
+       "Countersink",
+       "Counterdrill"
+      ],
+      "DepthType": [
+       "Dimension",
+       "ThroughAll"
+      ]
+     },
+     "PartDesign::Chamfer": {
+      "ChamferType": [
+       "Equal distance",
+       "Two distances",
+       "Distance and Angle"
+      ]
+     },
+     "PartDesign::LinearPattern": {
+      "Mode": [
+       "Extent",
+       "Spacing"
+      ],
+      "TransformMode": [
+       "Features",
+       "Whole shape"
+      ]
+     },
+     "PartDesign::PolarPattern": {
+      "Mode": [
+       "Extent",
+       "Spacing"
+      ]
+     }
+    },
+    "exec_enabled": true
+   },
+   "text": "element_map_available: True\nenums: {7 fields}\nexec_enabled: True\nfreecad_version: 1.1.4\npartdesign_available: True\nrender: gui_constructed\nserializer: exportBinary\nsketcher_available: True\nvarset_backend: varset"
+  }
+ },
+ {
+  "step": "11.given",
+  "tool": "document_create",
+  "args": {
+   "label": "tc07_three_bodies"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+    "name": "tc07_three_bodies",
+    "label": "tc07_three_bodies"
+   },
+   "text": "doc: fcb-doc:ERgQJdf336zR-jR4ee0org\nlabel: tc07_three_bodies\nname: tc07_three_bodies"
+  }
+ },
+ {
+  "step": "11.given",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "code": "a = doc.addObject('Part::Box', 'BoxA'); a.Label = 'Alpha'; b = doc.addObject('Part::Cylinder', 'Cyl'); b.Label = 'Beta'; b.Placement.Base = App.Vector(30, 0, 0); c = doc.addObject('Part::Sphere', 'Sph'); c.Label = 'Gamma'; c.Placement.Base = App.Vector(0, 60, 0); doc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:ERgQJdf336zR-jR4ee0org\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.given",
+  "tool": "query_tree_summary",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org"
+  },
+  "result": {
+   "text": "OK: 3 objects, 3 shown.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.\nframing: does not fit, computed\nv [BOX] BoxA \"Alpha\"\nv [CYLINDER] Cyl \"Beta\"\nv [SPHERE] Sph \"Gamma\"",
+   "is_error": false
+  }
+ },
+ {
+  "step": "11.given",
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc07_three_bodies",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc07_three_bodies'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.when",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.step",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:6edUD3fHU2qEgLY6ue_5vQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.step",
+    "bytes": 13965,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.when",
+  "tool": "export_stl",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.stl",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:nvx9qL-ONdPqnFnzjvzklQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.stl",
+    "bytes": 31384,
+    "facets": 626,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STL export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.stl.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.when",
+  "tool": "export_3mf",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.3mf",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:ohPMAjmRMG2whcsUStV1aQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.3mf",
+    "bytes": 24459,
+    "facets": 626,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "3MF export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.3mf.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.then",
+  "tool": "verify_export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:6edUD3fHU2qEgLY6ue_5vQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "export_id": "fcb-export:6edUD3fHU2qEgLY6ue_5vQ",
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.step"
+    },
+    "checks": [
+     {
+      "id": "export_step.volume",
+      "measured": 1649.26,
+      "expected": 1649.26,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "|1649.26 - 1649.26| = 0.0 <= 1.64926"
+      }
+     },
+     {
+      "id": "export_step.valid",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "isValid() True"
+      }
+     },
+     {
+      "id": "export_step.topology_counts",
+      "measured": {
+       "faces": 10,
+       "edges": 18,
+       "solids": 3
+      },
+      "expected": {
+       "faces": 10,
+       "edges": 18,
+       "solids": 3
+      },
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "faces 10 vs 10, edges 18 vs 18, solids 3 vs 3"
+      }
+     },
+     {
+      "id": "export_step.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Alpha: |1000.0 - 1000.0| = 0.0 <= 1"
+      }
+     },
+     {
+      "id": "export_step.object_volume:Cyl",
+      "measured": 125.66,
+      "expected": 125.66,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Beta: |125.66 - 125.66| = 0.0 <= 0.125664"
+      }
+     },
+     {
+      "id": "export_step.object_volume:Sph",
+      "measured": 523.6,
+      "expected": 523.6,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Gamma: |523.6 - 523.6| = 0.0 <= 0.523599"
+      }
+     },
+     {
+      "id": "export_step.objects_matched",
+      "measured": 3,
+      "expected": 3,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "3 products for 3 objects"
+      }
+     },
+     {
+      "id": "export_step.object_names",
+      "measured": [
+       "Alpha",
+       "Beta",
+       "Gamma",
+       "tc07_three_bodies_export"
+      ],
+      "expected": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "all named"
+      }
+     },
+     {
+      "id": "export_step.schema",
+      "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+      }
+     }
+    ],
+    "format": "step",
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "OK"
+   },
+   "text": "STEP export OK -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.then",
+  "tool": "verify_export_stl",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:nvx9qL-ONdPqnFnzjvzklQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "schema": "fcb.validation-report/1",
+    "subject": {
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.stl"
+    },
+    "checks": [
+     {
+      "id": "trimesh_stl.watertight",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.winding_consistent",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.is_volume",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.volume_band",
+      "measured": 1634.03,
+      "expected": 1649.26,
+      "tolerance": {
+       "abs": 70.99704751541928
+      },
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.euler",
+      "measured": 6,
+      "passed": true
+     },
+     {
+      "id": "stl2.facets",
+      "measured": 626,
+      "passed": true
+     },
+     {
+      "id": "stl2.manifold_edge_pairing",
+      "measured": 0,
+      "passed": true
+     },
+     {
+      "id": "stl2.local_winding",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "stl2.non_degenerate",
+      "measured": 0,
+      "passed": true
+     },
+     {
+      "id": "self_read.facet_count",
+      "measured": 626,
+      "expected": 626,
+      "passed": true,
+      "detail": {
+       "message": "facets 626 vs 626"
+      }
+     },
+     {
+      "id": "self_read.vertex_count",
+      "measured": 319,
+      "expected": 319,
+      "passed": true,
+      "detail": {
+       "message": "vertices 319 vs 319"
+      }
+     },
+     {
+      "id": "oracle.agreement",
+      "measured": {
+       "trimesh_stl": true,
+       "stdlib_stl": true
+      },
+      "passed": true,
+      "detail": {
+       "message": "oracles agree"
+      }
+     }
+    ],
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "volume_band": 71.0,
+    "tess": {
+     "linear": 0.1,
+     "angular": 0.5
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [12 items]\nschema: fcb.validation-report/1\nsubject: {1 fields}\ntess: {2 fields}\nverdict: OK\nvolume_band: 71.0"
+  }
+ },
+ {
+  "step": "11.then",
+  "tool": "verify_export_3mf",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:ohPMAjmRMG2whcsUStV1aQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "schema": "fcb.validation-report/1",
+    "subject": {
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.3mf"
+    },
+    "checks": [
+     {
+      "id": "lib3mf.parses",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.unit_millimeter",
+      "measured": {
+       "unit": 1,
+       "source_is_mm": true
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.manifold_and_oriented",
+      "measured": {
+       "meshes": 3,
+       "non_manifold": 0
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.metadata_present",
+      "measured": 1,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.object_count",
+      "measured": 3,
+      "expected": 3,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.object_names",
+      "measured": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "expected": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "abs": 39.99999999999999
+      },
+      "passed": true,
+      "detail": {
+       "message": "Alpha: deviation 0.0 <= 40"
+      }
+     },
+     {
+      "id": "trimesh_3mf.object_volume:Cyl",
+      "measured": 124.44,
+      "expected": 125.66,
+      "tolerance": {
+       "abs": 10.053096491487336
+      },
+      "passed": true,
+      "detail": {
+       "message": "Beta: deviation 1.22 <= 10.0531"
+      }
+     },
+     {
+      "id": "trimesh_3mf.object_volume:Sph",
+      "measured": 509.58,
+      "expected": 523.6,
+      "tolerance": {
+       "abs": 20.943951023931948
+      },
+      "passed": true,
+      "detail": {
+       "message": "Gamma: deviation 14.02 <= 20.944"
+      }
+     },
+     {
+      "id": "trimesh_3mf.watertight",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.winding_consistent",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.is_volume",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.volume_band",
+      "measured": 1634.03,
+      "expected": 1649.26,
+      "tolerance": {
+       "abs": 70.99704751541928
+      },
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.euler",
+      "measured": 6,
+      "passed": true
+     },
+     {
+      "id": "self_read.facet_count",
+      "measured": 626,
+      "expected": 626,
+      "passed": true,
+      "detail": {
+       "message": "facets 626 vs 626"
+      }
+     },
+     {
+      "id": "self_read.vertex_count",
+      "measured": 319,
+      "expected": 319,
+      "passed": true,
+      "detail": {
+       "message": "vertices 319 vs 319"
+      }
+     },
+     {
+      "id": "oracle.agreement",
+      "measured": {
+       "lib3mf": true
+      },
+      "passed": true,
+      "detail": {
+       "message": "oracles agree"
+      }
+     }
+    ],
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "volume_band": 71.0,
+    "tess": {
+     "linear": 0.1,
+     "angular": 0.5
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [17 items]\nschema: fcb.validation-report/1\nsubject: {1 fields}\ntess: {2 fields}\nverdict: OK\nvolume_band: 71.0"
+  }
+ },
+ {
+  "step": "11.hidden_body",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "code": "body = doc.addObject('PartDesign::Body', 'Hid'); body.newObject('PartDesign::AdditiveBox', 'HidBox'); doc.recompute(); body.Visibility = False"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:ERgQJdf336zR-jR4ee0org\nfingerprint_after: None\nstdout: \nvalue_repr: None",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.hidden_body",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "code": "result = {o.Name: bool(o.Visibility) for o in doc.Objects if o.Name in ('Hid', 'HidBox')}"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+    "stdout": "",
+    "value_repr": "{'Hid': False, 'HidBox': True}",
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:ERgQJdf336zR-jR4ee0org\nfingerprint_after: None\nstdout: \nvalue_repr: {'Hid': False, 'HidBox': True}",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.hidden_body",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-hidden-body.step"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:iAccK0q8OOxClU6cUD7wZA",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-hidden-body.step",
+    "bytes": 13965,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-hidden-body.step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.omitted",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.step"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:joWdVBo_xxWluE8NOEjS3A",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.step",
+    "bytes": 13965,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.omitted",
+  "tool": "verify_export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:joWdVBo_xxWluE8NOEjS3A"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "export_id": "fcb-export:joWdVBo_xxWluE8NOEjS3A",
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.step"
+    },
+    "checks": [
+     {
+      "id": "export_step.volume",
+      "measured": 1649.26,
+      "expected": 1649.26,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "|1649.26 - 1649.26| = 0.0 <= 1.64926"
+      }
+     },
+     {
+      "id": "export_step.valid",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "isValid() True"
+      }
+     },
+     {
+      "id": "export_step.topology_counts",
+      "measured": {
+       "faces": 10,
+       "edges": 18,
+       "solids": 3
+      },
+      "expected": {
+       "faces": 10,
+       "edges": 18,
+       "solids": 3
+      },
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "faces 10 vs 10, edges 18 vs 18, solids 3 vs 3"
+      }
+     },
+     {
+      "id": "export_step.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Alpha: |1000.0 - 1000.0| = 0.0 <= 1"
+      }
+     },
+     {
+      "id": "export_step.object_volume:Cyl",
+      "measured": 125.66,
+      "expected": 125.66,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Beta: |125.66 - 125.66| = 0.0 <= 0.125664"
+      }
+     },
+     {
+      "id": "export_step.object_volume:Sph",
+      "measured": 523.6,
+      "expected": 523.6,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Gamma: |523.6 - 523.6| = 0.0 <= 0.523599"
+      }
+     },
+     {
+      "id": "export_step.objects_matched",
+      "measured": 3,
+      "expected": 3,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "3 products for 3 objects"
+      }
+     },
+     {
+      "id": "export_step.object_names",
+      "measured": [
+       "Alpha",
+       "Beta",
+       "Gamma",
+       "tc07_three_bodies_export"
+      ],
+      "expected": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "all named"
+      }
+     },
+     {
+      "id": "export_step.schema",
+      "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+      }
+     }
+    ],
+    "format": "step",
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "OK"
+   },
+   "text": "STEP export OK -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.omitted",
+  "tool": "export_stl",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.stl"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:h_eD82DqqPSiTF4DZUc9ZQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.stl",
+    "bytes": 31384,
+    "facets": 626,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STL export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.stl.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.omitted",
+  "tool": "verify_export_stl",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:h_eD82DqqPSiTF4DZUc9ZQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "schema": "fcb.validation-report/1",
+    "subject": {
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.stl"
+    },
+    "checks": [
+     {
+      "id": "trimesh_stl.watertight",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.winding_consistent",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.is_volume",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.volume_band",
+      "measured": 1634.03,
+      "expected": 1649.26,
+      "tolerance": {
+       "abs": 70.99704751541928
+      },
+      "passed": true
+     },
+     {
+      "id": "trimesh_stl.euler",
+      "measured": 6,
+      "passed": true
+     },
+     {
+      "id": "stl2.facets",
+      "measured": 626,
+      "passed": true
+     },
+     {
+      "id": "stl2.manifold_edge_pairing",
+      "measured": 0,
+      "passed": true
+     },
+     {
+      "id": "stl2.local_winding",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "stl2.non_degenerate",
+      "measured": 0,
+      "passed": true
+     },
+     {
+      "id": "self_read.facet_count",
+      "measured": 626,
+      "expected": 626,
+      "passed": true,
+      "detail": {
+       "message": "facets 626 vs 626"
+      }
+     },
+     {
+      "id": "self_read.vertex_count",
+      "measured": 319,
+      "expected": 319,
+      "passed": true,
+      "detail": {
+       "message": "vertices 319 vs 319"
+      }
+     },
+     {
+      "id": "oracle.agreement",
+      "measured": {
+       "trimesh_stl": true,
+       "stdlib_stl": true
+      },
+      "passed": true,
+      "detail": {
+       "message": "oracles agree"
+      }
+     }
+    ],
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "volume_band": 71.0,
+    "tess": {
+     "linear": 0.1,
+     "angular": 0.5
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [12 items]\nschema: fcb.validation-report/1\nsubject: {1 fields}\ntess: {2 fields}\nverdict: OK\nvolume_band: 71.0"
+  }
+ },
+ {
+  "step": "11.omitted",
+  "tool": "export_3mf",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.3mf"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:0Z-tnAmNfuw99IoDXtshWw",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.3mf",
+    "bytes": 24459,
+    "facets": 626,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "3MF export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.3mf.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.omitted",
+  "tool": "verify_export_3mf",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:0Z-tnAmNfuw99IoDXtshWw"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "schema": "fcb.validation-report/1",
+    "subject": {
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-omitted.3mf"
+    },
+    "checks": [
+     {
+      "id": "lib3mf.parses",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.unit_millimeter",
+      "measured": {
+       "unit": 1,
+       "source_is_mm": true
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.manifold_and_oriented",
+      "measured": {
+       "meshes": 3,
+       "non_manifold": 0
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.metadata_present",
+      "measured": 1,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.object_count",
+      "measured": 3,
+      "expected": 3,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.object_names",
+      "measured": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "expected": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "abs": 39.99999999999999
+      },
+      "passed": true,
+      "detail": {
+       "message": "Alpha: deviation 0.0 <= 40"
+      }
+     },
+     {
+      "id": "trimesh_3mf.object_volume:Cyl",
+      "measured": 124.44,
+      "expected": 125.66,
+      "tolerance": {
+       "abs": 10.053096491487336
+      },
+      "passed": true,
+      "detail": {
+       "message": "Beta: deviation 1.22 <= 10.0531"
+      }
+     },
+     {
+      "id": "trimesh_3mf.object_volume:Sph",
+      "measured": 509.58,
+      "expected": 523.6,
+      "tolerance": {
+       "abs": 20.943951023931948
+      },
+      "passed": true,
+      "detail": {
+       "message": "Gamma: deviation 14.02 <= 20.944"
+      }
+     },
+     {
+      "id": "trimesh_3mf.watertight",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.winding_consistent",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.is_volume",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.volume_band",
+      "measured": 1634.03,
+      "expected": 1649.26,
+      "tolerance": {
+       "abs": 70.99704751541928
+      },
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.euler",
+      "measured": 6,
+      "passed": true
+     },
+     {
+      "id": "self_read.facet_count",
+      "measured": 626,
+      "expected": 626,
+      "passed": true,
+      "detail": {
+       "message": "facets 626 vs 626"
+      }
+     },
+     {
+      "id": "self_read.vertex_count",
+      "measured": 319,
+      "expected": 319,
+      "passed": true,
+      "detail": {
+       "message": "vertices 319 vs 319"
+      }
+     },
+     {
+      "id": "oracle.agreement",
+      "measured": {
+       "lib3mf": true
+      },
+      "passed": true,
+      "detail": {
+       "message": "oracles agree"
+      }
+     }
+    ],
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "volume_band": 71.0,
+    "tess": {
+     "linear": 0.1,
+     "angular": 0.5
+    },
+    "verdict": "OK"
+   },
+   "text": "banner: {2 fields}\nchecks: [17 items]\nschema: fcb.validation-report/1\nsubject: {1 fields}\ntess: {2 fields}\nverdict: OK\nvolume_band: 71.0"
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "document_create",
+  "args": {
+   "label": "tc07_planted_source"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw",
+    "name": "tc07_planted_source",
+    "label": "tc07_planted_source"
+   },
+   "text": "doc: fcb-doc:OSudjHUWhtZ5aJRK06GrXw\nlabel: tc07_planted_source\nname: tc07_planted_source"
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw",
+   "code": "a = doc.addObject('Part::Box', 'BoxA'); a.Label = 'Alpha'; b = doc.addObject('Part::Cylinder', 'Cyl'); b.Label = 'Beta'; b.Placement.Base = App.Vector(30, 0, 0); c = doc.addObject('Part::Sphere', 'Sph'); c.Label = 'Gamma'; c.Placement.Base = App.Vector(0, 60, 0); b.Height = 20; doc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:OSudjHUWhtZ5aJRK06GrXw\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-wrong.step",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:pZy2GVDUSA2zyOReNwSOmA",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-wrong.step",
+    "bytes": 13970,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-wrong.step.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.step",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:c1WzM8Nfcc14YksG5J9q9g",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.step",
+    "bytes": 13968,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.step.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "verify_export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:c1WzM8Nfcc14YksG5J9q9g"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "SPEC_FAILED",
+    "message": "export_step.volume; export_step.object_volume:Cyl",
+    "objects": []
+   },
+   "structured_content": {
+    "subject": {
+     "export_id": "fcb-export:c1WzM8Nfcc14YksG5J9q9g",
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.step"
+    },
+    "checks": [
+     {
+      "id": "export_step.volume",
+      "measured": 1774.93,
+      "expected": 1649.26,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": false,
+      "detail": {
+       "message": "|1774.93 - 1649.26| = 125.66 <= 1.64926"
+      }
+     },
+     {
+      "id": "export_step.valid",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "isValid() True"
+      }
+     },
+     {
+      "id": "export_step.topology_counts",
+      "measured": {
+       "faces": 10,
+       "edges": 18,
+       "solids": 3
+      },
+      "expected": {
+       "faces": 10,
+       "edges": 18,
+       "solids": 3
+      },
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "faces 10 vs 10, edges 18 vs 18, solids 3 vs 3"
+      }
+     },
+     {
+      "id": "export_step.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Alpha: |1000.0 - 1000.0| = 0.0 <= 1"
+      }
+     },
+     {
+      "id": "export_step.object_volume:Cyl",
+      "measured": 251.33,
+      "expected": 125.66,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": false,
+      "detail": {
+       "message": "Beta: |251.33 - 125.66| = 125.66 <= 0.125664"
+      }
+     },
+     {
+      "id": "export_step.object_volume:Sph",
+      "measured": 523.6,
+      "expected": 523.6,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "Gamma: |523.6 - 523.6| = 0.0 <= 0.523599"
+      }
+     },
+     {
+      "id": "export_step.objects_matched",
+      "measured": 3,
+      "expected": 3,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "3 products for 3 objects"
+      }
+     },
+     {
+      "id": "export_step.object_names",
+      "measured": [
+       "Alpha",
+       "Beta",
+       "Gamma",
+       "tc07_planted_source_export"
+      ],
+      "expected": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "all named"
+      }
+     },
+     {
+      "id": "export_step.schema",
+      "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+      }
+     }
+    ],
+    "format": "step",
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "SPEC_FAILED"
+   },
+   "text": "STEP export SPEC_FAILED -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.step."
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "export_3mf",
+  "args": {
+   "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-wrong.3mf",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:GUinkL_LqpFkvqdysBODuQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-wrong.3mf",
+    "bytes": 23662,
+    "facets": 626,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "3MF export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-wrong.3mf.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "export_3mf",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.3mf",
+   "objects": [
+    "BoxA",
+    "Cyl",
+    "Sph"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:y0zFePzt6-QK3gH2vR8Big",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.3mf",
+    "bytes": 24459,
+    "facets": 626,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "Cyl",
+     "Sph"
+    ]
+   },
+   "text": "3MF export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.3mf.",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "verify_export_3mf",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "export_id": "fcb-export:y0zFePzt6-QK3gH2vR8Big"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "SPEC_FAILED",
+   "detail": {
+    "code": "SPEC_FAILED",
+    "message": "trimesh_3mf.object_volume:Cyl; trimesh_3mf.volume_band",
+    "objects": []
+   },
+   "structured_content": {
+    "schema": "fcb.validation-report/1",
+    "subject": {
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-planted.3mf"
+    },
+    "checks": [
+     {
+      "id": "lib3mf.parses",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.unit_millimeter",
+      "measured": {
+       "unit": 1,
+       "source_is_mm": true
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.manifold_and_oriented",
+      "measured": {
+       "meshes": 3,
+       "non_manifold": 0
+      },
+      "passed": true
+     },
+     {
+      "id": "lib3mf.metadata_present",
+      "measured": 1,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.object_count",
+      "measured": 3,
+      "expected": 3,
+      "passed": true
+     },
+     {
+      "id": "lib3mf.object_names",
+      "measured": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "expected": [
+       "Alpha",
+       "Beta",
+       "Gamma"
+      ],
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "abs": 39.99999999999999
+      },
+      "passed": true,
+      "detail": {
+       "message": "Alpha: deviation 0.0 <= 40"
+      }
+     },
+     {
+      "id": "trimesh_3mf.object_volume:Cyl",
+      "measured": 248.89,
+      "expected": 125.66,
+      "tolerance": {
+       "abs": 10.053096491487336
+      },
+      "passed": false,
+      "detail": {
+       "message": "Beta: deviation 123.22 <= 10.0531"
+      }
+     },
+     {
+      "id": "trimesh_3mf.object_volume:Sph",
+      "measured": 509.58,
+      "expected": 523.6,
+      "tolerance": {
+       "abs": 20.943951023931948
+      },
+      "passed": true,
+      "detail": {
+       "message": "Gamma: deviation 14.02 <= 20.944"
+      }
+     },
+     {
+      "id": "trimesh_3mf.watertight",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.winding_consistent",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.is_volume",
+      "measured": true,
+      "passed": true
+     },
+     {
+      "id": "trimesh_3mf.volume_band",
+      "measured": 1758.47,
+      "expected": 1649.26,
+      "tolerance": {
+       "abs": 70.99704751541928
+      },
+      "passed": false
+     },
+     {
+      "id": "trimesh_3mf.euler",
+      "measured": 6,
+      "passed": true
+     },
+     {
+      "id": "self_read.facet_count",
+      "measured": 626,
+      "expected": 626,
+      "passed": true,
+      "detail": {
+       "message": "facets 626 vs 626"
+      }
+     },
+     {
+      "id": "self_read.vertex_count",
+      "measured": 319,
+      "expected": 319,
+      "passed": true,
+      "detail": {
+       "message": "vertices 319 vs 319"
+      }
+     },
+     {
+      "id": "oracle.agreement",
+      "measured": {
+       "lib3mf": false
+      },
+      "passed": true,
+      "detail": {
+       "message": "oracles agree"
+      }
+     }
+    ],
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "volume_band": 71.0,
+    "tess": {
+     "linear": 0.1,
+     "angular": 0.5
+    },
+    "verdict": "SPEC_FAILED"
+   },
+   "text": "banner: {2 fields}\nchecks: [17 items]\nschema: fcb.validation-report/1\nsubject: {1 fields}\ntess: {2 fields}\nverdict: SPEC_FAILED\nvolume_band: 71.0"
+  }
+ },
+ {
+  "step": "11.planted",
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:OSudjHUWhtZ5aJRK06GrXw",
+    "name": "tc07_planted_source",
+    "closed": true
+   },
+   "text": "Closed tc07_planted_source (doc=fcb-doc:OSudjHUWhtZ5aJRK06GrXw)."
+  }
+ },
+ {
+  "step": "11.unknown",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:ERgQJdf336zR-jR4ee0org",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-bad.step",
+   "objects": [
+    "BoxA",
+    "NoSuchObject"
+   ]
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "unknown object: NoSuchObject",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1440, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 862, in <lambda>\n    return lambda **p: fn(doc_registry, export_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/exports.py\", line 321, in export_step\n    return registry.with_document(doc, write)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/exports.py\", line 283, in write\n    objs = _resolve_export_objects(document, objects)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/exports.py\", line 123, in _resolve_export_objects\n    raise ValidationError(f\"unknown object: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object: NoSuchObject\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "11.empty",
+  "tool": "document_create",
+  "args": {
+   "label": "tc07_empty"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:as2tD_6wkdsiO6YYarpbyg",
+    "name": "tc07_empty",
+    "label": "tc07_empty"
+   },
+   "text": "doc: fcb-doc:as2tD_6wkdsiO6YYarpbyg\nlabel: tc07_empty\nname: tc07_empty"
+  }
+ },
+ {
+  "step": "11.empty",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:as2tD_6wkdsiO6YYarpbyg",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-empty.step"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "INVALID_INPUT",
+   "detail": {
+    "code": "INVALID_INPUT",
+    "message": "document has no objects to export",
+    "data": {
+     "exception": "ValidationError",
+     "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 143, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1440, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 862, in <lambda>\n    return lambda **p: fn(doc_registry, export_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/exports.py\", line 321, in export_step\n    return registry.with_document(doc, write)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 418, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/exports.py\", line 283, in write\n    objs = _resolve_export_objects(document, objects)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/exports.py\", line 127, in _resolve_export_objects\n    raise ValidationError(\"document has no objects to export\")\nfreecad_buddy.usecases.documents.ValidationError: document has no objects to export\n"
+    }
+   },
+   "structured_content": {},
+   "text": ""
+  }
+ },
+ {
+  "step": "11.empty",
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:as2tD_6wkdsiO6YYarpbyg"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:as2tD_6wkdsiO6YYarpbyg",
+    "name": "tc07_empty",
+    "closed": true
+   },
+   "text": "Closed tc07_empty (doc=fcb-doc:as2tD_6wkdsiO6YYarpbyg)."
+  }
+ },
+ {
+  "step": "11.reimport",
+  "tool": "document_create",
+  "args": {
+   "label": "tc07_11_rt"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:JuBFQBXAZtNxIEQCR5YGAg",
+    "name": "tc07_11_rt",
+    "label": "tc07_11_rt"
+   },
+   "text": "doc: fcb-doc:JuBFQBXAZtNxIEQCR5YGAg\nlabel: tc07_11_rt\nname: tc07_11_rt"
+  }
+ },
+ {
+  "step": "11.reimport",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:JuBFQBXAZtNxIEQCR5YGAg",
+   "code": "o = doc.addObject('Part::Feature', 'Reimport'); o.Shape = Part.read(r'/repo/tests/uat/run/13-5-r2/evidence/tc-07-11-three.step'); doc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:JuBFQBXAZtNxIEQCR5YGAg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:JuBFQBXAZtNxIEQCR5YGAg\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.reimport",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:JuBFQBXAZtNxIEQCR5YGAg",
+   "object": "Reimport"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Reimport",
+    "solid": true,
+    "volume": {
+     "value": 1649.26,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 1064.96,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": -4.96,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 32.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": -1.99,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 64.96,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": -5.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 10.0,
+      "unit": "mm"
+     }
+    },
+    "com": null,
+    "counts": {
+     "faces": 10,
+     "edges": 18,
+     "vertices": 12,
+     "solids": 3
+    }
+   },
+   "text": "Reimport: volume 1649.26 mm^3 (solid), 10 faces, 18 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "11.reimport",
+  "tool": "document_close",
+  "args": {
+   "doc": "fcb-doc:JuBFQBXAZtNxIEQCR5YGAg"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:JuBFQBXAZtNxIEQCR5YGAg",
+    "name": "tc07_11_rt",
+    "closed": true
+   },
+   "text": "Closed tc07_11_rt (doc=fcb-doc:JuBFQBXAZtNxIEQCR5YGAg)."
+  }
+ },
+ {
+  "step": "12.given",
+  "tool": "document_open",
+  "args": {
+   "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:Ed8ZoFW07pUAl4peRoyWZg",
+    "name": "box_10_20_30",
+    "label": "box-10-20-30",
+    "path": "/repo/benchmarks/g0/golden-models/box-10-20-30.FCStd"
+   },
+   "text": "Opened box-10-20-30 -> fcb-doc:Ed8ZoFW07pUAl4peRoyWZg."
+  }
+ },
+ {
+  "step": "12.when",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:Ed8ZoFW07pUAl4peRoyWZg",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default.step"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:sxdCCJTOwJluM_wTy8kquQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default.step",
+    "bytes": 6886,
+    "verified": false,
+    "objects": [
+     "Box"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default.step.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "12.then",
+  "tool": "verify_export_step",
+  "args": {
+   "doc": "fcb-doc:Ed8ZoFW07pUAl4peRoyWZg",
+   "export_id": "fcb-export:sxdCCJTOwJluM_wTy8kquQ"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "export_id": "fcb-export:sxdCCJTOwJluM_wTy8kquQ",
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default.step"
+    },
+    "checks": [
+     {
+      "id": "export_step.volume",
+      "measured": 6000.0,
+      "expected": 6000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "|6000.0 - 6000.0| = 0.0 <= 6"
+      }
+     },
+     {
+      "id": "export_step.valid",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "isValid() True"
+      }
+     },
+     {
+      "id": "export_step.topology_counts",
+      "measured": {
+       "faces": 6,
+       "edges": 12,
+       "solids": 1
+      },
+      "expected": {
+       "faces": 6,
+       "edges": 12,
+       "solids": 1
+      },
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "faces 6 vs 6, edges 12 vs 12, solids 1 vs 1"
+      }
+     },
+     {
+      "id": "export_step.schema",
+      "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+      }
+     }
+    ],
+    "format": "step",
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "OK"
+   },
+   "text": "STEP export OK -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default.step.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "12.empty_list",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:Ed8ZoFW07pUAl4peRoyWZg",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-empty-list.step",
+   "objects": []
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:dQX5K-udwb-I7z-51LcL7g",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-empty-list.step",
+    "bytes": 6886,
+    "verified": false,
+    "objects": [
+     "Box"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-empty-list.step.",
+   "framing": {
+    "fits": null,
+    "ratio": null,
+    "checked": "unavailable",
+    "stale_reason": "no visible shape-bearing objects to measure"
+   }
+  }
+ },
+ {
+  "step": "12.two",
+  "tool": "document_create",
+  "args": {
+   "label": "tc07_two_objects"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+    "name": "tc07_two_objects",
+    "label": "tc07_two_objects"
+   },
+   "text": "doc: fcb-doc:hSHVagvEXO-hhihSKCYlzw\nlabel: tc07_two_objects\nname: tc07_two_objects"
+  }
+ },
+ {
+  "step": "12.two",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+   "code": "doc.addObject('Part::Box', 'BoxA'); b = doc.addObject('Part::Box', 'BoxB'); b.Placement.Base = App.Vector(20, 0, 0); doc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:hSHVagvEXO-hhihSKCYlzw\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "12.two",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:VSeLsOLpqrKjsn8-vOoTTA",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step",
+    "bytes": 15359,
+    "verified": false,
+    "objects": [
+     "BoxA",
+     "BoxB"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "12.two",
+  "tool": "verify_export_step",
+  "args": {
+   "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+   "export_id": "fcb-export:VSeLsOLpqrKjsn8-vOoTTA"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "subject": {
+     "export_id": "fcb-export:VSeLsOLpqrKjsn8-vOoTTA",
+     "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step"
+    },
+    "checks": [
+     {
+      "id": "export_step.volume",
+      "measured": 2000.0,
+      "expected": 2000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "|2000.0 - 2000.0| = 0.0 <= 2"
+      }
+     },
+     {
+      "id": "export_step.valid",
+      "measured": true,
+      "expected": true,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "isValid() True"
+      }
+     },
+     {
+      "id": "export_step.topology_counts",
+      "measured": {
+       "faces": 12,
+       "edges": 24,
+       "solids": 2
+      },
+      "expected": {
+       "faces": 12,
+       "edges": 24,
+       "solids": 2
+      },
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "faces 12 vs 12, edges 24 vs 24, solids 2 vs 2"
+      }
+     },
+     {
+      "id": "export_step.object_volume:BoxA",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "BoxA: |1000.0 - 1000.0| = 0.0 <= 1"
+      }
+     },
+     {
+      "id": "export_step.object_volume:BoxB",
+      "measured": 1000.0,
+      "expected": 1000.0,
+      "tolerance": {
+       "rel": 0.001
+      },
+      "passed": true,
+      "detail": {
+       "message": "BoxB: |1000.0 - 1000.0| = 0.0 <= 1"
+      }
+     },
+     {
+      "id": "export_step.objects_matched",
+      "measured": 2,
+      "expected": 2,
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "2 products for 2 objects"
+      }
+     },
+     {
+      "id": "export_step.object_names",
+      "measured": [
+       "BoxA",
+       "BoxB",
+       "tc07_two_objects_export"
+      ],
+      "expected": [
+       "BoxA",
+       "BoxB"
+      ],
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "all named"
+      }
+     },
+     {
+      "id": "export_step.schema",
+      "measured": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "expected": "AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF",
+      "tolerance": null,
+      "passed": true,
+      "detail": {
+       "message": "FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF vs AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF for AP242"
+      }
+     }
+    ],
+    "format": "step",
+    "schema": "fcb.validation-report/1",
+    "banner": {
+     "freecad_version": "1.1.4",
+     "element_map_version": 15
+    },
+    "verdict": "OK"
+   },
+   "text": "STEP export OK -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "12.hidden",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+   "code": "doc.getObject('BoxB').Visibility = False"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:hSHVagvEXO-hhihSKCYlzw\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "12.hidden",
+  "tool": "export_step",
+  "args": {
+   "doc": "fcb-doc:hSHVagvEXO-hhihSKCYlzw",
+   "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "export_id": "fcb-export:YlGjovRwQFj023OGGaDshQ",
+    "path": "/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step",
+    "bytes": 6886,
+    "verified": false,
+    "objects": [
+     "BoxA"
+    ]
+   },
+   "text": "STEP export written -> /repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default-compound.step.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "cached",
+    "stale_reason": "served from cache; unverified key component(s): geometry"
+   }
+  }
+ },
+ {
+  "step": "12.reimport",
+  "tool": "document_create",
+  "args": {
+   "label": "tc07_12_rt"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:1y6rfIa1MADWinEP0c-tOg",
+    "name": "tc07_12_rt",
+    "label": "tc07_12_rt"
+   },
+   "text": "doc: fcb-doc:1y6rfIa1MADWinEP0c-tOg\nlabel: tc07_12_rt\nname: tc07_12_rt"
+  }
+ },
+ {
+  "step": "12.reimport",
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:1y6rfIa1MADWinEP0c-tOg",
+   "code": "o = doc.addObject('Part::Feature', 'Reimport'); o.Shape = Part.read(r'/repo/tests/uat/run/13-5-r2/evidence/tc-07-12-default.step'); doc.recompute()"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "doc": "fcb-doc:1y6rfIa1MADWinEP0c-tOg",
+    "stdout": "",
+    "value_repr": null,
+    "fingerprint_after": null
+   },
+   "text": "doc: fcb-doc:1y6rfIa1MADWinEP0c-tOg\nfingerprint_after: None\nstdout: \nvalue_repr: None\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "12.reimport",
+  "tool": "query_mass_properties",
+  "args": {
+   "doc": "fcb-doc:1y6rfIa1MADWinEP0c-tOg",
+   "object": "Reimport"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "name": "Reimport",
+    "solid": true,
+    "volume": {
+     "value": 6000.0,
+     "unit": "mm^3"
+    },
+    "area": {
+     "value": 2200.0,
+     "unit": "mm^2"
+    },
+    "bbox": {
+     "xmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "xmax": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "ymin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "ymax": {
+      "value": 20.0,
+      "unit": "mm"
+     },
+     "zmin": {
+      "value": 0.0,
+      "unit": "mm"
+     },
+     "zmax": {
+      "value": 30.0,
+      "unit": "mm"
+     }
+    },
+    "com": {
+     "x": {
+      "value": 5.0,
+      "unit": "mm"
+     },
+     "y": {
+      "value": 10.0,
+      "unit": "mm"
+     },
+     "z": {
+      "value": 15.0,
+      "unit": "mm"
+     }
+    },
+    "counts": {
+     "faces": 6,
+     "edges": 12,
+     "vertices": 8,
+     "solids": 1
+    }
+   },
+   "text": "Reimport: volume 6000.0 mm^3 (solid), 6 faces, 12 edges.\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+   "framing": {
+    "fits": false,
+    "ratio": null,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ },
+ {
+  "step": "12.visual",
+  "tool": "view_fit_viewport",
+  "args": {
+   "doc": "fcb-doc:1y6rfIa1MADWinEP0c-tOg"
+  },
+  "result": {
+   "schema": "fcb.result-envelope/1",
+   "status": "OK",
+   "detail": null,
+   "structured_content": {
+    "fitted": true,
+    "document": "tc07_12_rt",
+    "camera_recorded": true
+   },
+   "text": "fitted the live viewport to 'tc07_12_rt'",
+   "framing": {
+    "fits": true,
+    "ratio": 0.95,
+    "checked": "computed",
+    "stale_reason": null
+   }
+  }
+ }
+]

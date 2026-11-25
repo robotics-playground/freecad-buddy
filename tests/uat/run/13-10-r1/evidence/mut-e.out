@@ -1,0 +1,4 @@
+ran=56 failures=3 errors=0
+RED infc.test_feature_expressions.NoChangeTest.test_Should_open_no_transaction_When_an_unbound_path_is_cleared :: AssertionError: 1 != 0
+RED infc.test_feature_expressions.NoChangeTest.test_Should_open_no_transaction_and_report_zero_undo_steps_When_the_stored_text_is_given :: AssertionError: 1 != 0
+RED infc.test_feature_expressions.NoChangeTest.test_Should_revert_the_earlier_step_When_undo_follows_a_call_that_changed_nothing :: AssertionError: 1 != 0

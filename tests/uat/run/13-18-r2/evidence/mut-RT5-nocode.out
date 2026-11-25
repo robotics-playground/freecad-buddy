@@ -1,0 +1,7 @@
+label=RT5-nocode rc=0 elapsed=8s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+ERROR: test_Should_carry_the_documented_code_When_a_sweep_refusal_names_one (infc.test_feature_tools.SweepTest.test_Should_carry_the_documented_code_When_a_sweep_refusal_names_one) [unresolvable edge]
+IndexError: Shape index 9 out of bound 1
+freecad_buddy.usecases.documents.ValidationError: unresolvable spine selector 'Edge9': Shape index 9 out of bound 1
+RESULT fail=0 error=1 run=68
+RED infc.test_feature_tools.SweepTest.test_Should_carry_the_documented_code_When_a_sweep_refusal_names_one [unresolvable edge]

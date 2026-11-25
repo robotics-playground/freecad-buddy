@@ -31,6 +31,7 @@ from freecad_buddy.adapters.marshal import Marshal, MarshalTimeout
 from freecad_buddy.adapters.rpc_dispatch import MethodRegistry, is_audited, wrote_own_audit
 from freecad_buddy.contracts import ResultEnvelope, mirror_text
 from freecad_buddy.usecases import confirm, view_fit
+from freecad_buddy.usecases.process import pid_alive
 from freecad_buddy.contracts.rpc import (
     RPC_BUSY_MESSAGE,
     RPC_ERROR_NO_HANDSHAKE,
@@ -41,6 +42,7 @@ from freecad_buddy.contracts.rpc import (
 logger = logging.getLogger("freecad_buddy.rpc_listener")
 
 _MAX_FRAME_BYTES = 16 * 1024 * 1024
+_DISCOVERY_FILE_LIMIT_BYTES = 64 * 1024
 _SUPPORTED_VERSIONS = ["1"]
 # The client's own hello budget (rpc_client._HELLO_TIMEOUT_S): a client that has not sent its
 # hello by then has given up, and the accept thread must not wait longer on it.
@@ -243,6 +245,7 @@ class RpcListener:
         }
         directory = self._discovery_dir()
         directory.mkdir(parents=True, exist_ok=True)
+        self._sweep_orphan_discovery(directory)
         path = directory / f"rpc-{os.getpid()}.json"
         path.write_text(json.dumps(record), encoding="utf-8")
         # On POSIX this sets owner-only mode. On Windows chmod sets only the read-only bit, which
@@ -254,6 +257,46 @@ class RpcListener:
         except OSError:
             pass
         self._discovery_path = path
+
+    @staticmethod
+    def _sweep_orphan_discovery(directory: Path) -> None:
+        """Delete the ``rpc-<pid>.json`` files of processes that are gone.
+
+        A file is deleted only when its JSON ``pid`` is an integer that ``pid_alive`` reports dead.
+        ``pid_alive`` answers True on access denied and on a reused pid, so such files stay.
+        An unreadable file or one with a non-integer ``pid`` also stays: deleting on doubt could
+        remove the record of a live bridge.
+        """
+        try:
+            paths = list(directory.glob("rpc-*.json"))
+        except OSError:
+            return
+        for path in paths:
+            try:
+                RpcListener._sweep_one(path)
+            except Exception as error:  # noqa: BLE001 - a bad file must never stop the bridge start
+                logger.warning("discovery sweep kept %s after %s", path.name, type(error).__name__)
+
+    @staticmethod
+    def _sweep_one(path: Path) -> None:
+        # A discovery file holds a few hundred bytes. A larger file, or one that is not a regular
+        # file (a FIFO would block the read), is not ours to judge.
+        if not path.is_file() or path.stat().st_size > _DISCOVERY_FILE_LIMIT_BYTES:
+            return
+        try:
+            pid = json.loads(path.read_text(encoding="utf-8")).get("pid")
+        except (OSError, ValueError, AttributeError):
+            return
+        if not isinstance(pid, int) or isinstance(pid, bool):
+            return
+        # On POSIX a pid beyond the platform's range makes pid_alive raise; the caller then
+        # keeps the file.
+        if pid == os.getpid() or pid_alive(pid):
+            return
+        try:
+            path.unlink()
+        except OSError:
+            pass
 
     def _delete_discovery(self) -> None:
         path = self._discovery_path

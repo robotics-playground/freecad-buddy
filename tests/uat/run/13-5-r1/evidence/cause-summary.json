@@ -1,0 +1,173 @@
+{
+ "raw_export": "OK",
+ "one_object_3mf": {
+  "write": "OK",
+  "verify": "OK",
+  "checks": [
+   [
+    "lib3mf.parses",
+    true
+   ],
+   [
+    "lib3mf.unit_millimeter",
+    true
+   ],
+   [
+    "lib3mf.manifold_and_oriented",
+    true
+   ],
+   [
+    "lib3mf.metadata_present",
+    true
+   ],
+   [
+    "trimesh_3mf.watertight",
+    true
+   ],
+   [
+    "trimesh_3mf.winding_consistent",
+    true
+   ],
+   [
+    "trimesh_3mf.is_volume",
+    true
+   ],
+   [
+    "trimesh_3mf.volume_band",
+    true
+   ],
+   [
+    "trimesh_3mf.euler",
+    true
+   ],
+   [
+    "self_read.facet_count",
+    true
+   ],
+   [
+    "self_read.vertex_count",
+    true
+   ],
+   [
+    "oracle.agreement",
+    true
+   ]
+  ]
+ },
+ "cause-raw-three.3mf": {
+  "png_defaults": 3,
+  "parts": [
+   "3D/3dmodel.model",
+   "_rels/.rels",
+   "[Content_Types].xml",
+   "Metadata/thumbnail.png",
+   "Metadata/thumbnail1.png",
+   "Metadata/thumbnail2.png"
+  ]
+ },
+ "cause-raw-one.3mf": {
+  "png_defaults": 1,
+  "parts": [
+   "3D/3dmodel.model",
+   "_rels/.rels",
+   "[Content_Types].xml",
+   "Metadata/thumbnail.png"
+  ]
+ },
+ "tc-07-11-three.3mf": {
+  "png_defaults": 3,
+  "parts": [
+   "3D/3dmodel.model",
+   "_rels/.rels",
+   "[Content_Types].xml",
+   "Metadata/thumbnail.png",
+   "Metadata/thumbnail1.png",
+   "Metadata/thumbnail2.png"
+  ]
+ },
+ "dedup_oracle": {
+  "ok": true,
+  "checks": [
+   [
+    "lib3mf.parses",
+    true,
+    true
+   ],
+   [
+    "lib3mf.unit_millimeter",
+    true,
+    {
+     "unit": 1,
+     "source_is_mm": true
+    }
+   ],
+   [
+    "lib3mf.manifold_and_oriented",
+    true,
+    {
+     "meshes": 3,
+     "non_manifold": 0
+    }
+   ],
+   [
+    "lib3mf.metadata_present",
+    true,
+    1
+   ],
+   [
+    "lib3mf.object_count",
+    true,
+    3
+   ],
+   [
+    "lib3mf.object_names",
+    true,
+    [
+     "Alpha",
+     "Beta",
+     "Gamma"
+    ]
+   ],
+   [
+    "trimesh_3mf.object_volume:BoxA",
+    true,
+    1000.0
+   ],
+   [
+    "trimesh_3mf.object_volume:Cyl",
+    true,
+    124.44372197432817
+   ],
+   [
+    "trimesh_3mf.object_volume:Sph",
+    true,
+    509.58201178234646
+   ],
+   [
+    "trimesh_3mf.watertight",
+    true,
+    true
+   ],
+   [
+    "trimesh_3mf.winding_consistent",
+    true,
+    true
+   ],
+   [
+    "trimesh_3mf.is_volume",
+    true,
+    true
+   ],
+   [
+    "trimesh_3mf.volume_band",
+    true,
+    1634.0257337566748
+   ],
+   [
+    "trimesh_3mf.euler",
+    true,
+    6
+   ]
+  ]
+ }
+}

@@ -1,0 +1,78 @@
+{
+ "tool": "document_object_delete",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "objects": [
+   "PadB"
+  ]
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "2f76350a064498fd8cc6fc23f397f43fde6d40e569cebf0099c5409baec7a041",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "b54b58f14c5088bcf01ff58cf58eb958f968649f1a466c44e572a6da1833fce9",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 1570.8,
+      "area": 942.48,
+      "com": [
+       0.0,
+       0.0,
+       2.5
+      ]
+     },
+     {
+      "name": "PadB",
+      "volume": null,
+      "area": null,
+      "com": null
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": null,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "PASS": 2
+      },
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "PadB",
+     "Body"
+    ]
+   },
+   "deleted": [
+    "PadB"
+   ],
+   "dependents": []
+  },
+  "text": "Mutation committed; fingerprint b54b58f14c50.",
+  "framing": {
+   "fits": true,
+   "ratio": 0.54,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

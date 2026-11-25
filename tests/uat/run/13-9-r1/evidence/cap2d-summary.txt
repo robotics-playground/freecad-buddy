@@ -1,0 +1,17 @@
+define {'varset': 'Params', 'added': ['width', 'height', 'shift'], 'updated': []}
+bind stdout (script_exec used ONLY for expression binding; Story 13-10 not built): [('.AttachmentOffset.Base.x', 'Params.shift'), ('.Constraints.width', 'Params.width')] [('Length', 'Params.height')] 1599.9999999999995
+
+query1 [('height', 10.0, 'mm'), ('shift', 5.0, 'mm'), ('width', 20.0, 'mm')] bindings= [('Pad', 'Length', 'Params.height'), ('Profile', '.AttachmentOffset.Base.x', 'Params.shift'), ('Profile', '.Constraints.width', 'Params.width')] {'varset_parameters': 3, 'spreadsheet_parameters': 0, 'bindings': 3} truncated False
+query2 [('height', 15.0, 'mm'), ('shift', 8.0, 'mm'), ('width', 30.0, 'mm')] bindings= [('Pad', 'Length', 'Params.height'), ('Profile', '.AttachmentOffset.Base.x', 'Params.shift'), ('Profile', '.Constraints.width', 'Params.width')] {'varset_parameters': 3, 'spreadsheet_parameters': 0, 'bindings': 3} truncated False
+query3 [('height', 10.0, 'mm'), ('shift', 5.0, 'mm'), ('width', 20.0, 'mm')] bindings= [('Pad', 'Length', 'Params.height'), ('Profile', '.AttachmentOffset.Base.x', 'Params.shift'), ('Profile', '.Constraints.width', 'Params.width')] {'varset_parameters': 3, 'spreadsheet_parameters': 0, 'bindings': 3} truncated False
+query4 [('height', 10.0, 'mm'), ('shift', 5.0, 'mm'), ('width', 20.0, 'mm')] bindings= [('Pad', 'Length', 'Params.height'), ('Profile', '.AttachmentOffset.Base.x', 'Params.shift'), ('Profile', '.Constraints.width', 'Params.width')] {'varset_parameters': 3, 'spreadsheet_parameters': 0, 'bindings': 3} truncated False
+mass1 ({'xmin': 5.0, 'xmax': 25.0, 'ymin': 0.0, 'ymax': 8.0, 'zmin': 0.0, 'zmax': 10.0}, 1600.0)
+mass2 ({'xmin': 8.0, 'xmax': 38.0, 'ymin': 0.0, 'ymax': 8.0, 'zmin': 0.0, 'zmax': 15.0}, 3600.0)
+mass3 ({'xmin': 5.0, 'xmax': 25.0, 'ymin': 0.0, 'ymax': 8.0, 'zmin': 0.0, 'zmax': 10.0}, 1600.0)
+edit {'varset': 'Params', 'added': [], 'updated': ['width', 'height', 'shift']} fp_before b48d72056b247f46 fp_after 0fcf115cda05306a
+edit changed [('Body', 3600.0, [23.0, 4.0, 7.5]), ('Pad', 3600.0, [23.0, 4.0, 7.5]), ('Profile', 0.0, [23.0, 4.0, 0.0])] post_verify.passed True tnp CLEAN touched ['Params']
+undo {'undone': 'buddy: define parameters on Params', 'fingerprint_before': '0fcf115cda05306a4fb882b31fd0b56ac54a21848ed15a1c2d0fdd75a9d06550', 'fingerprint_after': 'b48d72056b247f46d998102dec177ed51f3a408418363a824959013cda537e21', 'matches_pre_op': True, 'errors': []}
+refuse_unit INVALID_INPUT parameters.unit_symbol_name parameters[0].name 'W' is a unit or constant to FreeCAD's expression parser, so any expression that 
+refuse_type INVALID_INPUT parameters.type_conflict Params.width is a App::PropertyLength; a float parameter is a App::PropertyFloat
+refuse_negative INVALID_INPUT INVALID_INPUT parameters[0].value must not be negative, got -1.0 mm
+refuse_not_varset INVALID_INPUT parameters.not_a_varset Pad is a PartDesign::Pad, not an App::VarSet

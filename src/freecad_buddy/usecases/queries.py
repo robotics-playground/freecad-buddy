@@ -18,6 +18,7 @@ from typing import Literal
 from freecad_buddy.contracts import CapabilityBanner, ResultEnvelope, summary_text
 from freecad_buddy.usecases import shim
 from freecad_buddy.usecases.documents import DocumentRegistry, ValidationError
+from freecad_buddy.usecases.parameter_types import PARAMETER_PROPERTY_TYPES
 from freecad_buddy.usecases.tree_text import (
     LINE_CAP,
     TreeNode,
@@ -1449,5 +1450,157 @@ def query_placement(
             "global": _placement_dict(global_placement),
         }
         return _ok_envelope(structured, summarize_placement(structured))
+
+    return registry.with_document(doc, read)
+
+
+_VARSET_TYPE_ID = "App::VarSet"
+_SPREADSHEET_TYPE_ID = "Spreadsheet::Sheet"
+_PARAMETER_TYPE_NAMES = {type_id: name for name, type_id in PARAMETER_PROPERTY_TYPES.items()}
+
+# Rows returned per list. A document holds a handful of parameters and bindings; the cap keeps a
+# generated model with thousands of expressions from filling the agent's context.
+_MAX_PARAMETER_ROWS = 500
+
+_QUANTITY_UNITS = {"Length": "mm", "Angle": "deg"}
+
+# ``Spreadsheet.get`` returns a failed formula's error as a string with this prefix (probed on
+# FreeCAD 1.1.4: ``=1/0`` reads ``"ERR: division by zero..."``). A text cell holding the same
+# words has contents that do not start with ``=``, so only a formula is read as an error.
+_CELL_ERROR_PREFIX = "ERR: "
+
+
+def scalar_reading(value: object) -> tuple[object, str | None, str | None]:
+    """Return ``(value, unit, reason)`` for one property or cell value.
+
+    A ``Quantity`` is read in mm for a length and degrees for an angle, else in the preferred
+    unit of the active unit schema, with ``unit`` null for a dimensionless one. A number that is
+    not finite, or a value of a kind this tool does not report, gives ``None`` with the reason:
+    unmeasured, never 0.
+    """
+    if hasattr(value, "getValueAs"):
+        unit = _QUANTITY_UNITS.get(str(value.Unit.Type)) or value.getUserPreferred()[2]
+        # ``getValueAs("")`` on a dimensionless quantity returns about 1e308 (probed on 1.1.4).
+        number = float(value.getValueAs(unit) if unit else value.Value)
+        if not math.isfinite(number):
+            return None, unit or None, "the value is not finite"
+        return number, unit or None, None
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return None, None, "the value is not finite"
+        return value, None, None
+    if isinstance(value, (bool, int, str)):
+        return value, None, None
+    return None, None, f"a {type(value).__name__} value is not reported"
+
+
+def _varset_parameter_row(varset: object, prop: str) -> dict:
+    """One VarSet property as ``{name, type, value, unit, group, description}``."""
+    type_id = varset.getTypeIdOfProperty(prop)
+    row = {"name": prop, "type": _PARAMETER_TYPE_NAMES.get(type_id, type_id)}
+    try:
+        value, unit, reason = scalar_reading(getattr(varset, prop))
+    except Exception as exc:  # noqa: BLE001 - an unreadable property is reported, not raised
+        value, unit, reason = None, None, f"{type(exc).__name__}: {exc}"
+    row.update(
+        {
+            "value": value,
+            "unit": unit,
+            "group": varset.getGroupOfProperty(prop),
+            "description": varset.getDocumentationOfProperty(prop),
+        }
+    )
+    if reason is not None:
+        row["reason"] = reason
+    return row
+
+
+def _spreadsheet_parameter_row(sheet: object, cell: str, alias: str) -> dict:
+    """One aliased spreadsheet cell as ``{name, cell, contents, value, unit}``."""
+    contents = sheet.getContents(cell)
+    row = {"name": alias, "cell": cell, "contents": contents}
+    try:
+        raw = sheet.get(cell)
+        if contents.startswith("=") and isinstance(raw, str) and raw.startswith(_CELL_ERROR_PREFIX):
+            value, unit, reason = None, None, raw[len(_CELL_ERROR_PREFIX) :]
+        else:
+            value, unit, reason = scalar_reading(raw)
+    except Exception as exc:  # noqa: BLE001 - a cell that cannot be read is reported, not raised
+        value, unit, reason = None, None, f"{type(exc).__name__}: {exc}"
+    row.update({"value": value, "unit": unit})
+    if reason is not None:
+        row["reason"] = reason
+    return row
+
+
+def _parameter_lists(document: object, objects: list) -> tuple[dict, dict]:
+    """Read the VarSet, spreadsheet and binding lists; return ``(lists, totals)``.
+
+    Each list holds at most ``_MAX_PARAMETER_ROWS`` rows and ``totals`` counts every row, so a cut
+    is visible.
+    """
+    builtin = shim.varset_builtin_properties()
+    varsets: list[dict] = []
+    sheets: list[dict] = []
+    bindings: list[dict] = []
+    totals = {"varset_parameters": 0, "spreadsheet_parameters": 0, "bindings": 0}
+    for obj in objects:
+        if obj.TypeId == _VARSET_TYPE_ID:
+            names = [prop for prop in obj.PropertiesList if prop not in builtin]
+            rows = []
+            for prop in names:
+                if totals["varset_parameters"] < _MAX_PARAMETER_ROWS:
+                    rows.append(_varset_parameter_row(obj, prop))
+                totals["varset_parameters"] += 1
+            varsets.append({"object": obj.Name, "label": obj.Label, "parameters": rows})
+        elif obj.TypeId == _SPREADSHEET_TYPE_ID:
+            rows = []
+            for cell in sorted(obj.getUsedCells()):
+                alias = obj.getAlias(cell)
+                if not alias:
+                    continue
+                if totals["spreadsheet_parameters"] < _MAX_PARAMETER_ROWS:
+                    rows.append(_spreadsheet_parameter_row(obj, cell, alias))
+                totals["spreadsheet_parameters"] += 1
+            sheets.append({"object": obj.Name, "label": obj.Label, "parameters": rows})
+        for path, expression in list(getattr(obj, "ExpressionEngine", None) or []):
+            if totals["bindings"] < _MAX_PARAMETER_ROWS:
+                bindings.append({"object": obj.Name, "path": path, "expression": expression})
+            totals["bindings"] += 1
+    return {"varsets": varsets, "spreadsheets": sheets, "bindings": bindings}, totals
+
+
+def summarize_parameters(sc: dict) -> str:
+    """One-line parameters summary: the three totals, and a note when a list was cut."""
+    totals = sc.get("totals") or {}
+    line = (
+        f"{totals.get('varset_parameters', '?')} VarSet parameter(s) in "
+        f"{len(sc.get('varsets') or [])} VarSet(s), "
+        f"{totals.get('spreadsheet_parameters', '?')} spreadsheet parameter(s), "
+        f"{totals.get('bindings', '?')} binding(s)."
+    )
+    return f"{line} Lists truncated at {_MAX_PARAMETER_ROWS} rows." if sc.get("truncated") else line
+
+
+def query_parameters(registry: DocumentRegistry, doc: str | None = None) -> ResultEnvelope:
+    """Report the document's VarSet parameters, aliased spreadsheet cells and expression bindings.
+
+    ``varsets`` lists every non-built-in property of each ``App::VarSet``. ``spreadsheets`` lists
+    the aliased cells of each ``Spreadsheet::Sheet``; a cell without an alias is not a named
+    parameter and is left out. ``bindings`` lists every ``{object, path, expression}`` held in an
+    ``ExpressionEngine``. A value that cannot be read is ``null`` with a ``reason``.
+
+    Each list holds at most 500 rows; ``totals`` counts them all and ``truncated`` is true when a
+    list was cut. The call reads property values without a recompute and writes nothing.
+    """
+
+    def read(_handle: str, document: object) -> ResultEnvelope:
+        lists, totals = _parameter_lists(document, sorted(document.Objects, key=lambda o: o.Name))
+        structured = {
+            **lists,
+            "totals": totals,
+            "truncated": any(count > _MAX_PARAMETER_ROWS for count in totals.values()),
+        }
+        return _ok_envelope(structured, summarize_parameters(structured))
 
     return registry.with_document(doc, read)

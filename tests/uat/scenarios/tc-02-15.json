@@ -134,7 +134,7 @@
     {
       "step": "tree",
       "path": "text",
-      "equals": "INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "object",
@@ -144,7 +144,7 @@
     {
       "step": "object",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "object",
@@ -164,7 +164,7 @@
     {
       "step": "mass_stale",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "mass_stale",
@@ -184,7 +184,7 @@
     {
       "step": "dependencies",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "dependencies",
@@ -204,7 +204,7 @@
     {
       "step": "placement",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "placement",
@@ -224,7 +224,7 @@
     {
       "step": "sketch",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "sketch",
@@ -244,7 +244,7 @@
     {
       "step": "save",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "save",
@@ -264,7 +264,7 @@
     {
       "step": "close",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "close",
@@ -284,7 +284,7 @@
     {
       "step": "recompute",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "recompute",
@@ -304,7 +304,7 @@
     {
       "step": "undo",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "undo",
@@ -324,7 +324,7 @@
     {
       "step": "shape",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "shape",
@@ -344,7 +344,7 @@
     {
       "step": "screenshot",
       "path": "detail.message",
-      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle"
+      "equals": "unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles"
     },
     {
       "step": "screenshot",
@@ -389,5 +389,5 @@
       }
     }
   },
-  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: the query_tree_summary refusal is one isError text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle` with no schema, detail or structuredContent (mcp-tools-design.md:60), and the other eleven tools carry schema and detail.code (raw RPC or second client); addon.log has no access violation, segfault or swig line (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action)."
+  "agent_check": "The test case frames the model with the GUI Fit All toolbar button, which the runner cannot press; click Fit All, capture the window and judge its visual Then. The script does not check these Thens; check each one in the gate run: the query_tree_summary refusal is one isError text line `INVALID_INPUT: unknown or stale document handle: fcb-doc:not-a-real-handle; call document_list for the current handles` with no schema, detail or structuredContent (mcp-tools-design.md:60), and the other eleven tools carry schema and detail.code (raw RPC or second client); addon.log has no access violation, segfault or swig line (log or audit read); Given: baseline framed with GUI Fit All and a before capture (GUI action)."
 }

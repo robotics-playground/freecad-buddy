@@ -1,0 +1,212 @@
+{
+ "baseline": {
+  "infc": [
+   [
+    "INFC_RESULT 59 0 0"
+   ],
+   []
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 17.67s"
+   ],
+   []
+  ]
+ },
+ "D-1 content types kept as written": {
+  "infc": [
+   [
+    "INFC_RESULT 59 0 0"
+   ],
+   []
+  ],
+  "external": [
+   [
+    "2 failed, 121 passed, 1 warning in 19.35s"
+   ],
+   [
+    "tests/external/test_exports_3mf_names.py::test_Should_read_the_archive_with_lib3mf_When_the_gui_writer_repeated_the_png_type",
+    "tests/external/test_exports_3mf_names.py::test_Should_read_every_name_with_lib3mf_When_a_real_gui_written_archive_is_named"
+   ]
+  ]
+ },
+ "RT-1 own Visibility only (groups ignored)": {
+  "infc": [
+   [
+    "INFC_RESULT 59 3 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_export_only_the_cut_When_a_boolean_hides_two_bodies_in_the_gui_way",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_skip_a_solid_inside_a_hidden_part_When_objects_are_omitted",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_skip_the_tip_of_a_hidden_body_When_objects_are_omitted"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.22s"
+   ],
+   []
+  ]
+ },
+ "RT-2 mirror consumes its source": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_export_a_visible_mirror_source_with_the_mirror_When_objects_are_omitted"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.14s"
+   ],
+   []
+  ]
+ },
+ "RT-3/RT-6 control characters kept, old character references": {
+  "infc": [
+   [
+    "INFC_RESULT 59 0 0"
+   ],
+   []
+  ],
+  "external": [
+   [
+    "5 failed, 118 passed, 1 warning in 3.28s"
+   ],
+   [
+    "tests/external/test_exports_3mf_names.py::test_Should_read_the_name_with_lib3mf_as_spaces_When_a_label_holds_a_control_character[one\\ntwo]",
+    "tests/external/test_exports_3mf_names.py::test_Should_read_the_name_with_lib3mf_as_spaces_When_a_label_holds_a_control_character[tab\\there]",
+    "tests/external/test_exports_3mf_names.py::test_Should_read_the_name_with_lib3mf_as_spaces_When_a_label_holds_a_control_character[bell\\x07x]",
+    "tests/external/test_exports_3mf_names.py::test_Should_read_the_name_with_lib3mf_as_spaces_When_a_label_holds_a_control_character[cr\\rlf]",
+    "tests/external/test_exports_3mf_names.py::test_Should_expect_the_file_name_When_an_object_label_holds_a_control_character"
+   ]
+  ]
+ },
+ "RT-4 shared shape not copied": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_name_each_object_and_verify_When_two_objects_share_one_shape"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.22s"
+   ],
+   []
+  ]
+ },
+ "RT-4+RT-5 writer back to Import.export(objects)": {
+  "infc": [
+   [
+    "INFC_RESULT 59 4 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_grade_only_the_solids_When_an_object_holds_a_solid_and_a_loose_face",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_name_each_object_and_verify_When_two_objects_share_one_shape",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_name_the_product_after_the_object_name_When_a_label_is_empty",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_write_what_it_recorded_When_a_selected_part_holds_a_hidden_child"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.29s"
+   ],
+   []
+  ]
+ },
+ "RT-7 whole shape graded (solid + loose face)": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_grade_only_the_solids_When_an_object_holds_a_solid_and_a_loose_face"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.19s"
+   ],
+   []
+  ]
+ },
+ "L-1 STEP name check not added": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 2"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_fail_the_name_check_When_a_recorded_product_name_is_not_in_the_file",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_name_each_object_and_verify_When_two_objects_share_one_shape",
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_pass_the_name_check_When_labels_are_long_or_hold_special_characters"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.21s"
+   ],
+   []
+  ]
+ },
+ "r2 STEP escapes not decoded": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_pass_the_name_check_When_labels_are_long_or_hold_special_characters"
+   ]
+  ],
+  "external": [
+   [
+    "5 failed, 118 passed, 1 warning in 2.36s"
+   ],
+   [
+    "tests/external/test_exports_step_names.py::test_Should_decode_the_escape_the_writer_used_When_a_name_has_a_special_character['Al''pha'-Al'pha]",
+    "tests/external/test_exports_step_names.py::test_Should_decode_the_escape_the_writer_used_When_a_name_has_a_special_character['back\\\\\\\\slash'-back\\\\slash]",
+    "tests/external/test_exports_step_names.py::test_Should_decode_the_escape_the_writer_used_When_a_name_has_a_special_character['tab\\\\T\\\\here'-tab\\there]",
+    "tests/external/test_exports_step_names.py::test_Should_decode_the_escape_the_writer_used_When_a_name_has_a_special_character['line\\\\N\\\\break'-line\\nbreak]",
+    "tests/external/test_exports_step_names.py::test_Should_decode_the_escape_the_writer_used_When_a_name_has_a_special_character['\\\\\\\\N\\\\\\\\'-\\\\N\\\\]"
+   ]
+  ]
+ },
+ "r2 wrapped lines not joined": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_pass_the_name_check_When_labels_are_long_or_hold_special_characters"
+   ]
+  ],
+  "external": [
+   [
+    "1 failed, 122 passed, 1 warning in 2.35s"
+   ],
+   [
+    "tests/external/test_exports_step_names.py::test_Should_join_a_name_the_writer_wrapped_across_lines"
+   ]
+  ]
+ },
+ "r2 root product not named after document": {
+  "infc": [
+   [
+    "INFC_RESULT 59 1 0"
+   ],
+   [
+    "infc.test_export_tools.MultiObjectExportTest.test_Should_name_the_root_product_after_the_document_When_several_objects_go_to_step"
+   ]
+  ],
+  "external": [
+   [
+    "123 passed, 1 warning in 2.16s"
+   ],
+   []
+  ]
+ }
+}

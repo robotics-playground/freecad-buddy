@@ -1,0 +1,2 @@
+ran=56 failures=1 errors=0
+RED infc.test_tnp_guard.ExpressionBindingTest.test_Should_flag_broken_When_a_binding_vanishes_after_the_op_wrote_it :: + FLAGGED

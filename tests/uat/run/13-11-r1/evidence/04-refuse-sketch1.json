@@ -1,0 +1,24 @@
+{
+ "tool": "document_object_delete",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "objects": [
+   "Sketch1"
+  ]
+ },
+ "isError": true,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "delete.has_dependents",
+   "message": "objects that depend on the delete set: Pad1; pass with_dependents true to delete them too",
+   "data": {
+    "exception": "ObjectDeleteRefusal",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1820, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2505, in document_object_delete\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 421, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 388, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2473, in precheck\n    plan[\"deleted\"], plan[\"dependents\"] = _delete_plan(document, objects, with_dependents)\n                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2406, in _delete_plan\n    raise ObjectDeleteRefusal(\nfreecad_buddy.usecases.features.ObjectDeleteRefusal: objects that depend on the delete set: Pad1; pass with_dependents true to delete them too\n"
+   }
+  },
+  "structured_content": {},
+  "text": ""
+ }
+}

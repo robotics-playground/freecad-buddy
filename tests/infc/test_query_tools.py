@@ -1903,5 +1903,318 @@ class QuerySectionTest(unittest.TestCase):
         self.assertEqual(text, "1 wire(s), 1 closed, length 60.0 mm, area 200.0 mm^2.")
 
 
+class QueryParametersTest(unittest.TestCase):
+    def setUp(self):
+        self.registry = DocumentRegistry()
+        self.handle = self.registry.document_create("query_parameters")["structured_content"]["doc"]
+        _, self.document = self.registry.with_document(self.handle, lambda h, d: (h, d))
+
+    def tearDown(self):
+        for name in list(App.listDocuments().keys()):
+            App.closeDocument(name)
+
+    def _varset(self):
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyLength", "width", "Size", "overall width")
+        varset.width = App.Units.Quantity("12.5 mm")
+        varset.addProperty("App::PropertyAngle", "tilt", "Parameters")
+        varset.tilt = App.Units.Quantity("30 deg")
+        varset.addProperty("App::PropertyInteger", "count", "Parameters")
+        varset.count = 4
+        varset.addProperty("App::PropertyBool", "hollow", "Parameters")
+        varset.hollow = True
+        varset.addProperty("App::PropertyString", "note", "Parameters")
+        varset.note = "rev A"
+        return varset
+
+    def _sheet(self):
+        sheet = self.document.addObject("Spreadsheet::Sheet", "Sheet")
+        sheet.set("A1", "10 mm")
+        sheet.setAlias("A1", "plate")
+        sheet.set("A2", "=plate * 2")
+        sheet.set("B1", "3")
+        sheet.setAlias("B1", "holes")
+        sheet.set("C1", "hello")
+        sheet.setAlias("C1", "label")
+        sheet.set("D1", "=1/0")
+        sheet.setAlias("D1", "broken")
+        self.document.recompute()
+        return sheet
+
+    def _query(self):
+        return queries.query_parameters(self.registry, doc=self.handle)
+
+    def test_Should_list_every_varset_property_with_value_unit_group_and_description_When_read(
+        self,
+    ):
+        # Arrange
+        self._varset()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        self.assertEqual(envelope["status"], "OK")
+        rows = {
+            row["name"]: row for row in envelope["structured_content"]["varsets"][0]["parameters"]
+        }
+        self.assertEqual(sorted(rows), ["count", "hollow", "note", "tilt", "width"])
+        self.assertEqual(
+            rows["width"],
+            {
+                "name": "width",
+                "type": "length",
+                "value": 12.5,
+                "unit": "mm",
+                "group": "Size",
+                "description": "overall width",
+            },
+        )
+        self.assertEqual((rows["tilt"]["value"], rows["tilt"]["unit"]), (30.0, "deg"))
+        self.assertEqual((rows["count"]["type"], rows["count"]["value"]), ("integer", 4))
+        self.assertEqual((rows["hollow"]["type"], rows["hollow"]["value"]), ("bool", True))
+        self.assertEqual((rows["note"]["type"], rows["note"]["value"]), ("string", "rev A"))
+        self.assertEqual(envelope["structured_content"]["varsets"][0]["object"], "Params")
+
+    def test_Should_list_only_aliased_cells_with_their_contents_When_a_sheet_exists(self):
+        # Arrange
+        self._sheet()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        rows = {
+            row["name"]: row
+            for row in envelope["structured_content"]["spreadsheets"][0]["parameters"]
+        }
+        self.assertEqual(sorted(rows), ["broken", "holes", "label", "plate"])
+        self.assertEqual(
+            rows["plate"],
+            {"name": "plate", "cell": "A1", "contents": "=10 mm", "value": 10.0, "unit": "mm"},
+        )
+        self.assertEqual((rows["holes"]["value"], rows["holes"]["unit"]), (3, None))
+        self.assertEqual(rows["label"]["value"], "hello")
+
+    def test_Should_report_null_with_a_reason_When_a_cell_is_in_error(self):
+        # Arrange
+        self._sheet()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        rows = {
+            row["name"]: row
+            for row in envelope["structured_content"]["spreadsheets"][0]["parameters"]
+        }
+        self.assertIsNone(rows["broken"]["value"])
+        self.assertTrue(rows["broken"]["reason"])
+        self.assertNotIn("reason", rows["plate"])
+
+    def test_Should_keep_a_text_cell_that_starts_with_err_When_it_is_not_a_formula(self):
+        # Arrange
+        sheet = self.document.addObject("Spreadsheet::Sheet", "Sheet")
+        sheet.set("A1", "'ERR: a label")
+        sheet.setAlias("A1", "label")
+        self.document.recompute()
+
+        # Act
+        row = self._query()["structured_content"]["spreadsheets"][0]["parameters"][0]
+
+        # Assert
+        self.assertEqual(row["value"], "ERR: a label")
+        self.assertNotIn("reason", row)
+
+    def test_Should_list_every_expression_binding_When_objects_are_bound(self):
+        # Arrange
+        self._varset()
+        self._sheet()
+        box = self.document.addObject("Part::Box", "Box")
+        box.setExpression("Length", "Params.width")
+        box.setExpression("Width", "Sheet.plate")
+        self.document.recompute()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        self.assertEqual(
+            envelope["structured_content"]["bindings"],
+            [
+                {"object": "Box", "path": "Length", "expression": "Params.width"},
+                {"object": "Box", "path": "Width", "expression": "Sheet.plate"},
+            ],
+        )
+
+    def test_Should_report_null_with_a_reason_When_a_property_is_not_a_scalar(self):
+        # Arrange
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyVector", "offset", "Parameters")
+        varset.addProperty("App::PropertyFloat", "huge", "Parameters")
+        varset.huge = float("inf")
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        rows = {
+            row["name"]: row for row in envelope["structured_content"]["varsets"][0]["parameters"]
+        }
+        self.assertIsNone(rows["offset"]["value"])
+        self.assertIn("Vector", rows["offset"]["reason"])
+        self.assertIsNone(rows["huge"]["value"])
+        self.assertIn("finite", rows["huge"]["reason"])
+
+    def test_Should_return_empty_lists_When_the_document_holds_no_parameters(self):
+        # Arrange
+        self.document.addObject("Part::Box", "Box")
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(
+            (content["varsets"], content["spreadsheets"], content["bindings"]), ([], [], [])
+        )
+        self.assertFalse(content["truncated"])
+
+    def test_Should_cut_a_list_at_500_rows_and_say_so_When_a_varset_holds_more(self):
+        # Arrange
+        varset = self.document.addObject("App::VarSet", "Params")
+        for index in range(501):
+            varset.addProperty("App::PropertyInteger", f"p{index}", "Parameters")
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        content = envelope["structured_content"]
+        self.assertEqual(len(content["varsets"][0]["parameters"]), 500)
+        self.assertEqual(content["totals"]["varset_parameters"], 501)
+        self.assertTrue(content["truncated"])
+        self.assertIn("truncated", envelope["text"])
+
+    def test_Should_cut_the_spreadsheet_and_binding_lists_at_500_rows_When_a_document_holds_more(
+        self,
+    ):
+        # Arrange
+        sheet = self.document.addObject("Spreadsheet::Sheet", "Sheet")
+        holder = self.document.addObject("App::VarSet", "Holder")
+        for index in range(501):
+            sheet.set(f"A{index + 1}", str(index))
+            sheet.setAlias(f"A{index + 1}", f"cell{index}")
+            holder.addProperty("App::PropertyInteger", f"p{index}", "Parameters")
+            holder.setExpression(f"p{index}", str(index))
+
+        # Act
+        content = self._query()["structured_content"]
+
+        # Assert
+        self.assertEqual(len(content["spreadsheets"][0]["parameters"]), 500)
+        self.assertEqual(content["totals"]["spreadsheet_parameters"], 501)
+        self.assertEqual(len(content["bindings"]), 500)
+        self.assertEqual(content["totals"]["bindings"], 501)
+        self.assertTrue(content["truncated"])
+
+    def test_Should_list_a_sketch_constraint_binding_When_a_named_constraint_is_bound(self):
+        # Arrange
+        self._varset()
+        sketch = self.document.addObject("Sketcher::SketchObject", "Sketch")
+        sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(5, 0, 0)), False)
+        index = sketch.addConstraint(Sketcher.Constraint("DistanceX", 0, 1, 0, 2, 5.0))
+        sketch.renameConstraint(index, "span")
+        sketch.setExpression(".Constraints.span", "Params.width")
+        self.document.recompute()
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        self.assertEqual(
+            envelope["structured_content"]["bindings"],
+            [{"object": "Sketch", "path": ".Constraints.span", "expression": "Params.width"}],
+        )
+
+    def test_Should_read_a_dimensionless_quantity_as_its_number_When_the_unit_is_empty(self):
+        # Arrange
+        varset = self.document.addObject("App::VarSet", "Params")
+        varset.addProperty("App::PropertyQuantity", "ratio", "Parameters")
+        varset.ratio = 2.5
+
+        # Act
+        row = self._query()["structured_content"]["varsets"][0]["parameters"][0]
+
+        # Assert
+        self.assertEqual((row["value"], row["unit"]), (2.5, None))
+
+    def test_Should_leave_the_document_untouched_When_read(self):
+        # Arrange
+        self._varset()
+        self._sheet()
+        box = self.document.addObject("Part::Box", "Box")
+        box.setExpression("Length", "Params.width")
+        self.document.recompute()
+        box.Width = 3.0
+        states_before = {obj.Name: list(obj.State) for obj in self.document.Objects}
+        digest_before = fingerprint(self.document, fresh=True)["digest"]
+        undo_before = self.document.UndoCount
+
+        # Act
+        self._query()
+
+        # Assert
+        self.assertIn("Touched", states_before["Box"])
+        self.assertEqual(
+            {obj.Name: list(obj.State) for obj in self.document.Objects}, states_before
+        )
+        self.assertEqual(fingerprint(self.document, fresh=True)["digest"], digest_before)
+        self.assertEqual(self.document.UndoCount, undo_before)
+        self.assertEqual(box.Width.getValueAs("mm"), 3.0)
+
+    def test_Should_read_a_value_just_written_When_called_after_feature_parameters_define(self):
+        # Arrange
+        from freecad_buddy.usecases import confirm, features
+
+        posture = confirm.set_auto_approve(True)
+        self.addCleanup(confirm.set_auto_approve, posture)
+        features.feature_parameters_define(
+            self.registry,
+            doc=self.handle,
+            varset="Params",
+            parameters=[{"name": "width", "type": "length", "value": {"value": 7, "unit": "mm"}}],
+        )
+
+        # Act
+        envelope = self._query()
+
+        # Assert
+        row = envelope["structured_content"]["varsets"][0]["parameters"][0]
+        self.assertEqual(
+            (row["name"], row["type"], row["value"], row["unit"]), ("width", "length", 7.0, "mm")
+        )
+
+    def test_Should_raise_a_validation_error_When_the_document_is_unknown(self):
+        # Act
+        act = lambda: queries.query_parameters(self.registry, doc="nope")  # noqa: E731
+
+        # Assert
+        with self.assertRaises(ValidationError):
+            act()
+
+    def test_Should_summarize_the_totals_When_read(self):
+        # Arrange
+        self._varset()
+
+        # Act
+        text = self._query()["text"]
+
+        # Assert
+        self.assertEqual(
+            text, "5 VarSet parameter(s) in 1 VarSet(s), 0 spreadsheet parameter(s), 0 binding(s)."
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

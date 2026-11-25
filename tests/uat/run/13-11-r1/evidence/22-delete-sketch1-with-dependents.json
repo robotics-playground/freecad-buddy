@@ -1,0 +1,98 @@
+{
+ "tool": "document_object_delete",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "objects": [
+   "Sketch1"
+  ],
+  "with_dependents": true
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "05f5a5457275bd01be9ff8e8344d12800688d390d0553b1849a063bb1ba73626",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "f3cc2c02027ddc5642ca99a9b5be4f06f64fce0ac7e394097fd1c51f1e174d20",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "Body",
+      "volume": 0.0,
+      "area": 0.0,
+      "com": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "name": "Pad1",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "Pad2",
+      "volume": null,
+      "area": null,
+      "com": null
+     },
+     {
+      "name": "Sketch1",
+      "volume": null,
+      "area": null,
+      "com": null
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": null,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {
+       "PASS": 7
+      },
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "Sketch1",
+     "Pad1",
+     "Pad2",
+     "Body"
+    ]
+   },
+   "deleted": [
+    "Sketch1",
+    "Pad1",
+    "Pad2"
+   ],
+   "dependents": [
+    "Pad1",
+    "Pad2"
+   ]
+  },
+  "text": "Mutation committed; fingerprint f3cc2c02027d.",
+  "framing": {
+   "fits": true,
+   "ratio": 0.76,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

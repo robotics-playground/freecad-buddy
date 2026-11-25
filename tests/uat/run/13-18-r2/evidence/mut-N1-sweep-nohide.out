@@ -1,0 +1,6 @@
+label=N1-sweep-nohide rc=0 elapsed=8s
+FEATURES_FILE=D:\Work\Personal\Sources\fcb-verify-13-18\src\freecad_buddy\usecases\features.py
+FAIL: test_Should_hide_the_consumed_sketches_When_a_sweep_commits_and_show_them_on_undo (infc.test_feature_tools.SweepTest.test_Should_hide_the_consumed_sketches_When_a_sweep_commits_and_show_them_on_undo)
+AssertionError: Lists differ: [True, True] != [False, False]
+RESULT fail=1 error=0 run=68
+RED infc.test_feature_tools.SweepTest.test_Should_hide_the_consumed_sketches_When_a_sweep_commits_and_show_them_on_undo

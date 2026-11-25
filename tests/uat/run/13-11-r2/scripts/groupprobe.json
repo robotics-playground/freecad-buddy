@@ -1,0 +1,65 @@
+[
+ {
+  "case": "DocumentObjectGroupPython member",
+  "status": "OK",
+  "code": null,
+  "message": null,
+  "deleted": [
+   "Box"
+  ],
+  "after": {
+   "G.Group": []
+  }
+ },
+ {
+  "case": "Fem::FemAnalysis member",
+  "status": "OK",
+  "code": null,
+  "message": null,
+  "deleted": [
+   "Box"
+  ],
+  "after": {
+   "Analysis.Group": []
+  }
+ },
+ {
+  "case": "Assembly::AssemblyObject member",
+  "status": "OK",
+  "code": null,
+  "message": null,
+  "deleted": [
+   "Box"
+  ],
+  "after": {
+   "Assembly.Group": [],
+   "ext": true
+  }
+ },
+ {
+  "case": "GroupExtensionPython holder with PropertyLink to its member",
+  "status": "OK",
+  "code": null,
+  "message": null,
+  "deleted": [
+   "Box"
+  ],
+  "after": {
+   "Holder.Source": null,
+   "Holder.Group": []
+  }
+ },
+ {
+  "case": "Fem::FemPostPipeline filter member",
+  "status": "OK",
+  "code": null,
+  "message": null,
+  "deleted": [
+   "Clip"
+  ],
+  "after": {
+   "Pipeline.Group": [],
+   "hasGroupExt": true
+  }
+ }
+]

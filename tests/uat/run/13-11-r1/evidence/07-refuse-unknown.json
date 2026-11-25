@@ -1,0 +1,24 @@
+{
+ "tool": "document_object_delete",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "objects": [
+   "Nope"
+  ]
+ },
+ "isError": true,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "INVALID_INPUT",
+  "detail": {
+   "code": "INVALID_INPUT",
+   "message": "unknown object in objects: Nope",
+   "data": {
+    "exception": "ValidationError",
+    "traceback": "Traceback (most recent call last):\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/adapters/rpc_dispatch.py\", line 154, in _invoke\n    return method.handler(**params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 1820, in handler\n    envelope = raw(**params)\n               ^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/hosts/tool_catalog.py\", line 587, in <lambda>\n    return lambda **p: fn(doc_registry, **p)\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2505, in document_object_delete\n    return _feature_mutation(\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 421, in _feature_mutation\n    _, envelope = registry.with_document(doc, call)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/documents.py\", line 432, in with_document\n    return fn(handle, document)\n           ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 388, in call\n    precheck(document)\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2473, in precheck\n    plan[\"deleted\"], plan[\"dependents\"] = _delete_plan(document, objects, with_dependents)\n                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2394, in _delete_plan\n    requested = {_resolve_object(document, name, \"objects\").Name for name in objects}\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 2394, in <setcomp>\n    requested = {_resolve_object(document, name, \"objects\").Name for name in objects}\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/cua/.local/share/FreeCAD/v1-1/Mod/FreeCADBuddy/./freecad_buddy/usecases/features.py\", line 187, in _resolve_object\n    raise ValidationError(f\"unknown object in {what}: {name}\")\nfreecad_buddy.usecases.documents.ValidationError: unknown object in objects: Nope\n"
+   }
+  },
+  "structured_content": {},
+  "text": ""
+ }
+}

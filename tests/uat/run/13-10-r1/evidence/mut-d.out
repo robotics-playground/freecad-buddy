@@ -1,0 +1,2 @@
+ran=40 failures=1 errors=0
+RED infc.test_feature_expressions.RefusalTest.test_Should_refuse_with_the_invalid_text_code_When_the_text_cannot_be_stored (length=401) :: + INVALID_INPUT

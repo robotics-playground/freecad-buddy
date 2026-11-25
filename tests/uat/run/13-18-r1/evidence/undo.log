@@ -1,0 +1,6 @@
+[LoftPart.undo] document_undo status=OK code=None elapsed=0.152 undo_steps=None rolled_back=None msg= text=None
+[LoftPart.tree] query_tree_summary status=None code=None elapsed=0.103 undo_steps=None rolled_back=None msg= text=['OK: 12 objects, 1 shown.\nframing: fits, ratio 0.98, computed\nv [BODY] Body (+4)']
+[SweepPart.undo] document_undo status=OK code=None elapsed=0.023 undo_steps=None rolled_back=None msg= text=None
+[SweepPart.tree] query_tree_summary status=None code=None elapsed=0.106 undo_steps=None rolled_back=None msg= text=['OK: 11 objects, 1 shown.\nframing: fits, ratio 0.9, computed\nv [BODY] Body (+3)']
+[GroovePart.undo] document_undo status=OK code=None elapsed=0.071 undo_steps=None rolled_back=None msg= text=None
+[GroovePart.tree] query_tree_summary status=None code=None elapsed=0.058 undo_steps=None rolled_back=None msg= text=['OK: 13 objects, 1 shown.\nframing: fits, ratio 0.69, computed\nv [BODY] Body (+4)']

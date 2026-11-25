@@ -1,0 +1,22 @@
+--- after start: 2026-11-24T07:02:13Z
+total 36
+drwxr-xr-x 2 cua cua 4096 Nov 24 07:01 .
+drwxr-xr-x 1 cua cua 4096 Nov 24 07:00 ..
+-rw-r--r-- 1 cua cua 2049 Nov 24 07:01 addon.log
+-rw-r--r-- 1 cua cua  219 Nov 24 07:02 mcp-proxy.log
+-rw-r--r-- 1 cua cua 1239 Nov 24 07:01 provision.log
+-rw-r--r-- 1 cua cua   61 Nov 24 07:00 rpc-1.json
+-rw------- 1 cua cua  217 Nov 24 07:00 rpc-636.json
+-rw-r--r-- 1 cua cua    9 Nov 24 07:00 rpc-777777.json
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-1.json: {"schema":1,"pid":1,"host":"127.0.0.1","port":1,"token": "<redacted>"}
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-636.json: {"schema": 1, "pid": 636, "host": "127.0.0.1", "port": 39733, "token": "<redacted>", "contract_version": "1", "freecad_version": "1.1.4", "started": "2026-11-24T07:00:
+/home/cua/.local/share/FreeCAD/v1-1/freecad-buddy/rpc-777777.json: not json
+--- checks
+rpc-999999.json absent
+rpc-1.json present
+rpc-777777.json present
+own file: addon.log
+mcp-proxy.log
+provision.log
+rpc-636.json
+freecad pids: 847,859

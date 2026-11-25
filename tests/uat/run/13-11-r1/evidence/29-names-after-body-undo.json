@@ -1,0 +1,26 @@
+{
+ "tool": "script_exec",
+ "args": {
+  "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+  "code": "result = {\"objects\": [o.Name for o in doc.Objects], \"UndoCount\": doc.UndoCount, \"RedoCount\": doc.RedoCount}\n"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "doc": "fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA",
+   "stdout": "",
+   "value_repr": "{'objects': ['Body', 'Origin', 'X_Axis', 'Y_Axis', 'Z_Axis', 'XY_Plane', 'XZ_Plane', 'YZ_Plane', 'Origin001', 'Sketch2', 'VS', 'Pad2', 'Pad1', 'Sketch1', 'Pad3', 'Sketch3', 'Origin003', 'YZ_Plane001', 'XZ_Plane001', 'XY_Plane001', 'Z_Axis001', 'Y_Axis001', 'X_Axis001', 'Origin002', 'Body001'], 'UndoCount': 2, 'RedoCount': 1}",
+   "fingerprint_after": null
+  },
+  "text": "doc: fcb-doc:ERKEjRRA4HJOMQ6wlW6TXA\nfingerprint_after: None\nstdout: \nvalue_repr: <326 chars>\n\nWarning: the model does not fully fit the live viewport, so the human is seeing only part of it. Call view_fit_viewport to fit it, if they need to see this change.",
+  "framing": {
+   "fits": false,
+   "ratio": 0.99,
+   "checked": "computed",
+   "stale_reason": null
+  }
+ }
+}

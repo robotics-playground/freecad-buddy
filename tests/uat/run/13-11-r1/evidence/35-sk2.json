@@ -1,0 +1,80 @@
+{
+ "tool": "sketch_create",
+ "args": {
+  "doc": "fcb-doc:dYgwCWXxb154oXxBatWDhg",
+  "name": "SkB",
+  "plane": "XY",
+  "body": "Body"
+ },
+ "isError": false,
+ "result": {
+  "schema": "fcb.result-envelope/1",
+  "status": "OK",
+  "detail": null,
+  "structured_content": {
+   "mutation": {
+    "schema": "fcb.mutation/2",
+    "fingerprint_before": {
+     "digest": "e8fdb6b8c861a9461c28b32f10f06e1619b35f4e296993fb19fd90e1ffe79f80",
+     "serializer": "exportBinary"
+    },
+    "fingerprint_after": {
+     "digest": "88b8e9156d4c1c32046da66be6d38fa83d1a6d1e4730a43dab90e573d97c9dbb",
+     "serializer": "exportBinary"
+    },
+    "changed": [
+     {
+      "name": "SkB",
+      "volume": 0.0,
+      "area": 0.0,
+      "com": [
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    ],
+    "post_verify": {
+     "recompute_clean": true,
+     "is_valid": true,
+     "fully_constrained": true,
+     "tnp_audit": {
+      "status": "CLEAN",
+      "element_map_version": "15.70200.5",
+      "counts": {},
+      "findings": []
+     },
+     "passed": true,
+     "explanation": null
+    },
+    "rolled_back": false,
+    "rollback_proven": null,
+    "touched": [
+     "SkB"
+    ]
+   },
+   "sketch": "SkB",
+   "sketch_state": {
+    "schema": "fcb.sketch-state/1",
+    "sketch": "SkB",
+    "readable": true,
+    "dof": 0,
+    "fully_constrained": true,
+    "geometry_count": 0,
+    "constraint_count": 0,
+    "conflicting": [],
+    "malformed": [],
+    "redundant": [],
+    "partially_redundant": [],
+    "solver_status_code": 0
+   }
+  },
+  "text": "Mutation committed; fingerprint 88b8e9156d4c.",
+  "framing": {
+   "fits": null,
+   "ratio": null,
+   "checked": "unavailable",
+   "stale_reason": "no visible shape-bearing objects to measure"
+  }
+ }
+}

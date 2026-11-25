@@ -120,7 +120,7 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `document_list` | 0 | List open documents with handles, labels, transient flags | no |
 | `document_recompute` | 0 | Full recompute; report touched objects + per-object error states | yes *(L)* |
 | `document_undo` | 2 | Bridge-owned undo of the last committed transaction; fingerprint-verified (G2.3) | yes *(L)* |
-| `document_object_delete` | 2 | Delete an object (and report orphaned dependents) under AD-5 — **planned** | yes |
+| `document_object_delete` | 2 | Delete objects under AD-5; refuses when objects outside the set depend on them unless `with_dependents`; a Body takes its Group, Origin and Origin features (§3.7.2) | yes |
 
 ### `query_` — read-only introspection (zero mutation; Phase 1 assistant surface, G1.6)
 
@@ -137,15 +137,15 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `query_capabilities` | 0 | Runtime capability probes (AD-11): FreeCAD version, `ElementMapVersion`, element-map availability, render capability, `script_exec` state | no |
 | `query_screenshot` | 0 | Capability-gated render to PNG (`resource_link`, ≤1920 px) with **view control**: include/exclude objects, per-object transparency/color override, focus-on-element camera framing, highlight (§3.9). Constructed-scene render — never mutates document or user viewport; renders a document with a pending/broken recompute (`render.dirty_document: true`) rather than hard-failing. Reports unavailable when no GL — never fails hard | no |
 | `query_tree_children` | 1 | Paged expansion of a single node's children (offset/limit within one level); `query_tree_summary` owns focus/expand/depth/reveal navigation — **planned** | no |
-| `query_parameters` | 1 | Driving dimensions / VarSet-or-Spreadsheet parameters and expressions (shim façade, AD-11) — **planned** | no |
+| `query_parameters` | 1 | VarSet properties, aliased Spreadsheet cells and every expression binding of the document, each list capped at 500 rows with totals; an unreadable value is null with a reason (numbers only, AD-35) | no |
 
 ### `export_` — artifact output (AD-9: each pairs with its `verify_export_*`)
 
 | Tool | Phase | Purpose | Mut |
 | --- | --- | --- | --- |
 | `export_step` | 0 | Write STEP AP214/AP242, `write.step.unit=MM` pinned per call | no |
-| `export_stl` | 0 | Write STL via `MeshPart.meshFromShape` (linear + angular deflection) | no |
-| `export_3mf` | 0 | Write 3MF from the same single tessellation source as STL | no |
+| `export_stl` | 0 | Write STL via `MeshPart.meshFromShape` (linear + angular deflection); several objects merge into one mesh | no |
+| `export_3mf` | 0 | Write 3MF from the same single tessellation source as STL; one named mesh object per object | no |
 
 ### `verify_` — deterministic verification (read-only; AD-13: never the producing agent)
 
@@ -181,6 +181,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `feature_pad` | 2 | Pad a sketch profile | yes |
 | `feature_pocket` | 2 | Pocket from a sketch profile | yes |
 | `feature_revolve` | 2 | Revolution from profile + axis | yes |
+| `feature_loft` | 2 | Additive or subtractive loft through a profile sketch and section sketches (§3.7.3) | yes |
+| `feature_sweep` | 2 | Additive or subtractive sweep of a profile sketch along a spine (§3.7.3) | yes |
 | `feature_hole` | 2 | PartDesign Hole (thread metadata is hint-only for verification) | yes |
 | `feature_fillet` | 2 | Fillet selected edges (selector objects) | yes |
 | `feature_chamfer` | 2 | Chamfer selected edges | yes |
@@ -188,6 +190,8 @@ Fingerprints carry their serializer tag; cross-tag comparison is banned (AD-6). 
 | `feature_mirror` | 2 | Mirror features across plane/datum | yes |
 | `feature_datum` | 2 | Create datum plane/axis/point/CS (TNP-defensive referencing) | yes |
 | `feature_set_parameters` | 2 | Edit feature properties / driving dimensions (parameter-editability path) | yes |
+| `feature_parameters_define` | 2 | Create a VarSet when missing and add or update typed parameters on it (`length`, `angle`, `float`, `integer`, `bool`, `string`); refuses a name the expression parser reads as a unit or constant | yes |
+| `feature_set_expression` | 2 | Bind or clear expressions on numeric property paths (`Length`, `.Constraints.<name>`, `.AttachmentOffset.Base.z`), all items in one transaction; refuses a binding FreeCAD would store wrongly (a unit of another dimension, an infinite value, a dead path, a text that crashes the parser) | yes |
 
 ### `preview_` — dry-run channel (AD-10)
 
@@ -207,20 +211,20 @@ Specified vs shipped. "Shipped" = returned by `hosts/tool_catalog.py:tool_specs(
 
 | Namespace | P0 | P1 | P2 | P3 | Specified | Shipped |
 | --- | --- | --- | --- | --- | --- | --- |
-| `document_` | 6 | — | 2 | — | 8 | 7 (`document_object_delete` planned) |
-| `query_` | 8 | 4 | — | — | 12 | 10 (`query_tree_children`, `query_parameters` planned) |
+| `document_` | 6 | — | 2 | — | 8 | 8 |
+| `query_` | 8 | 4 | — | — | 12 | 11 (`query_tree_children` planned) |
 | `export_` | 3 | — | — | — | 3 | 3 |
 | `verify_` | 7 | — | 1 | — | 8 | 6 (`verify_fingerprint`, `verify_references` planned) |
 | `sketch_` | — | — | 8 | — | 8 | 8 |
-| `feature_` | — | — | 11 | — | 11 | 11 |
+| `feature_` | — | — | 15 | — | 15 | 15 |
 | `preview_` | — | — | 1 | — | 1 | 1 |
 | `view_` | — | — | — | — | 1 | 1 |
-| **AI-visible total** (typed tools) | | | | | **52** | **47** |
+| **AI-visible total** (typed tools) | | | | | **56** | **53** |
 | `script_exec` (escape route, outside `tool_specs()`) | 1 | — | — | — | 1 | 1 |
 
 **G0.2 satisfied:** Phase 0 = **17** tools across `query_`/`document_`/`export_` (8+6+3) — ≥15 on the gate's literal namespace set; **24 AI-visible** including `verify_`, plus `script_exec` (registered by default, gated by §5, kept outside `tool_specs()` so the G0.2 count is unchanged) = 25 registered specs at P0. Every tool ships JSON `inputSchema` + `outputSchema` + docstring (G0.2 pass rule), except that a `text_blocks` tool (`query_tree_summary`) ships no `outputSchema`.
 
-The five planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **47**; with `SCRIPT_EXEC_SPEC` that is 48 registered specs.
+The three planned tools are Phase 1/2 scope and their absence is expected at this point in the build; they are listed so the table cannot be misread as a shipped inventory. `tool_specs()` returns **53**; with `SCRIPT_EXEC_SPEC` that is 54 registered specs.
 
 Not in this table, by design: the `internal=True` RPC-only methods (`export_self_read_stl`, `export_self_read_3mf`). They carry the `export_` prefix and exist because the mesh oracles live outside FreeCAD (AD-9/AD-12), but they are never MCP tools and never reach the AI surface (spine Conventions, "Internal RPC methods").
 
@@ -393,14 +397,31 @@ With `points`, each wire is discretised with `deflection` (a mm Quantity, at lea
 
 The one-line text is `N wire(s), K closed, length L mm, area A mm^2.` (`area unmeasured` when null), plus `Polylines truncated at max_points.` when `truncated`. The call budget is 60 s. `Shape.isValid`, `Shape.section`, `Shape.common` and `FaceMakerBullseye` hold the interpreter lock, so the 60 s marshal timeout cannot stop them, and three limits bound the cost before the work (whole tool call on a development host unless noted). Face limit, 3,000 (cost on one solid grows with the square of the face count): regular prism 1,002 faces 1.0 s, 2,002 faces 3.1 s, 3,002 faces 6.1 s; plate with hexagonal holes 1,806 faces 3.0 s, 3,006 faces 7.1 s, 4,206 faces 13 s; a 5,000-face prism 27 s, an 8,406-face plate 42.6 s and a 9,992-face prism 95.7 s (red team). Pole load limit, 640,000 (`Shape.section` on a swept BSpline face grows with the square of its poles, with 3 faces): coil spring of 3 turns, 246 poles, 0.8 s; 5 turns, 414 poles, 1.9 s; 10 turns, 822 poles, 7.8 s; 30 turns 112 s; 60 turns 210 s (red team). 1,000 NURBS cylinders (3,000 faces, 20,000 poles in all, load 135,000) took 11.8 s. Wire limit for the area, 300: `common` on separate boxes 1,600 wires 4.7 s, 3,200 wires 16 s; a plate with 3,000 holes 21 s, 9,000 holes 103 s; `FaceMakerBullseye` on separate cylinders 100 wires 0.11 s, 300 wires 0.91 s, 600 wires 7.9 s. Measured at the limits: prism of 3,000 faces 6.1 s; plate with 495 holes (2,976 faces, area skipped) 4.7 s; plate with 290 holes (1,746 faces, area measured) 4.6 s; that plate beside a 5-turn spring 5.4 s; a spring at the pole limit about 8 s. One call stays under about 10 s. The pole load refusal names the measured load and the limit. The cut runs on a copy of the shape so the document's shapes are never modified.
 
+### 3.2.5 `query_parameters`
+
+```json
+{ "inputSchema": { "type": "object", "properties": { "doc": { "type": "string" } },
+    "required": ["doc"], "additionalProperties": false },
+  "result": { "type": "object", "properties": {
+    "varsets": { "type": "array", "items": { "object": "Name", "label": "Label",
+      "parameters": "[{name, type, value, unit, group, description, reason?}]" } },
+    "spreadsheets": { "type": "array", "items": { "object": "Name", "label": "Label",
+      "parameters": "[{name (alias), cell, contents, value, unit, reason?}]" } },
+    "bindings": { "type": "array", "items": "{object, path, expression}" },
+    "totals": { "type": "object", "description": "varset_parameters, spreadsheet_parameters, bindings: every row, cut or not" },
+    "truncated": { "type": "boolean" } } } }
+```
+
+Read-only, values as stored (AD-35). `varsets` holds every property of each `App::VarSet` except the ones every VarSet has (`ExpressionEngine`, `Label`, `Label2`, `Visibility`, read from `shim.varset_builtin_properties()`). `type` is the wire name (`length`, `angle`, `float`, `integer`, `bool`, `string`) for the six property types `feature_parameters_define` writes, else the FreeCAD type id. A `Quantity` is read in `mm` for a length and `deg` for an angle, else in the preferred unit of the active unit schema (so the unit of a force or mass can differ between users, and the value is always in the unit named beside it); a dimensionless quantity and every non-quantity value have `unit` null. `spreadsheets` holds the aliased cells of each `Spreadsheet::Sheet`; a cell with no alias is not a named parameter and is left out. `bindings` holds every `(path, expression)` pair of every object's `ExpressionEngine`, sketch constraint paths such as `.Constraints.width` included. A value that cannot be reported (a non-finite number, a vector, a failed formula) is `null` with a `reason`, never 0. `Spreadsheet.get` returns a failed formula's error as the string `ERR: ...`, so a cell whose contents start with `=` and whose value starts with `ERR: ` is read as an error, while a text cell holding those words is not. Each list holds at most 500 rows; `totals` counts all rows and `truncated` is true when any total exceeds 500. The call reads property values without a recompute and writes nothing, so a touched object stays touched and the document fingerprint is unchanged. The one-line text is `N VarSet parameter(s) in K VarSet(s), M spreadsheet parameter(s), B binding(s).`, followed by ` Lists truncated at 500 rows.` when `truncated` is true.
+
 ### 3.3 `verify_shape`
 
 ```json
 { "inputSchema": { "type": "object", "properties": {
     "doc": { "type": "string" },
-    "object": { "type": "string", "description": "immutable Name; omit = the document's first object" },
-    "checks": { "type": "array", "items": { "type": "object" },
-      "description": "{fn, expect, tol?, select?, select_a?, select_b?, direction?}; omit = measurement-only report" },
+    "object": { "type": "string", "description": "immutable Name; optional only when the document has one shape-bearing object" },
+    "checks": { "type": "array", "items": { "oneOf": [ "<one branch per fn, see Check schema>" ] },
+      "description": "{fn, expect, ...}; each fn takes only its own keys; omit = measurement-only report" },
     "anchor_frame": { "type": "object", "properties": {
       "kind": { "enum": ["base_sketch_plane", "largest_planar_face", "named_datum"] },
       "ref": { "type": ["string", "null"], "description": "object Name, else unique Label; null for largest_planar_face" }
@@ -418,6 +439,10 @@ The one-line text is `N wire(s), K closed, length L mm, area A mm^2.` (`area unm
 Selector, `hole_diameter` and empty-match semantics follow `benchmarks/g3/README.md` §Assertion
 vocabulary. `expect_bbox` compares sorted extents measured in the frame; `expect_extent` measures
 along one frame `direction`.
+
+**Check schema.** `checks.items` is a `oneOf` with one branch per `fn` of the fourteen above (`hole_spacing` has two: a pitch form with `expect` a number or a list and no pair, and a pair form with `select_a` and `select_b` holes, one distance and no `select`). Each branch has `fn` as a `const`, a typed `expect`, the keys that `fn` takes and `additionalProperties: false`. The key sets come from `contracts/assertions.py` (`CHECK_OPTIONAL_KEYS`, `CHECK_REQUIRED_KEYS`), the same tables `usecases/assertions.py` and `usecases/verify.py` validate against. The value types are written twice, as JSON Schema in `hosts/tool_catalog.py` and as Python in `usecases/assertions.py`; `tests/external/test_verify_shape_schema.py` checks that both accept and refuse the same checks. The failure text for a rejected check is only "is not valid under any of the given schemas"; `items.description` lists the keys of each `fn`. `expect_extent` requires `direction`; `distance_between` and `angle_between` require `select_a` and `select_b`. `{"type": "is_valid_solid"}` fails schema validation before dispatch. `oneOf` sits on the array items, never at the schema top level.
+
+**Object resolution.** `object` stays optional. When it is omitted and the document holds exactly one shape-bearing object (a non-null `Shape`; the origin axes, planes and point do not count), that object is measured. When it holds more than one, the call returns `INVALID_INPUT` with `detail.code = verify_shape.object_required` the message `object is required: document has N shape objects: <Name (Label)>, ...` (first 10, then `+K more`) and `detail.objects` listing every candidate Name. A PartDesign Body with its sketch and pad counts as three. A document with no shape-bearing object keeps the earlier `ValidationError`.
 
 **Anchor frame.** `base_sketch_plane` and `named_datum` resolve `ref` to that object's global
 placement. `largest_planar_face` takes the largest planar face (ties: lowest centroid Z, then
@@ -488,6 +513,8 @@ Tolerances default to linear ±0.05 mm, angle ±0.1°, volume ±1 %, and are nev
   }, "required": ["reimport", "verdict"] } }
 ```
 
+**Selection.** `export_step`, `export_stl` and `export_3mf` take one or several `objects`. Omitted `objects` selects every visible solid object that no other such object consumes. An object is visible when it and every Body or Part that holds it has `Visibility` set (hiding a group in the GUI leaves its children's own flag set). An object is consumed when another candidate names it in a link property (boolean operands, a compound's `Links`, a Body's or Part's `Group`, and so on). An attachment, an expression reference and every link of a mirror do not consume their target, so a mirror's source exports beside the mirror. A document that holds exactly one object exports it whatever its visibility. A named selection is exported as given: naming a Body and one of its features exports both. With several objects each holds a solid, only its solids are written (a loose face or wire is left out of the file and of the recorded facts), and one without a solid is `INVALID_INPUT` ("object has no solid: <Name>"); one named object keeps the earlier rule ("object has no shape: <Name>" for a null shape). The result lists the exported object `Name`s in `objects`. Several objects: STEP writes one product per object named by its `Label`; 3MF writes one mesh object per object with `name` = `Label`; STL writes one merged mesh. One object is written as before and carries no name. Shapes are written in the coordinates of `obj.Shape`: an `App::Part` placement above the object is not applied, for one object or several.
+
 `verify_export_stl`/`verify_export_3mf` share this pair shape; their oracle blocks list per-oracle results (trimesh + second oracle; lib3mf + trimesh + FreeCAD self-read) and any independent-oracle disagreement forces `verdict: "FAIL"`; mesh volume tolerance derives from the deflection used at tessellation, never ±0.1 % (AD-9). Oracles run in the external process; the FreeCAD self-read leg runs in-FreeCAD via RPC (AD-9, AD-12).
 
 ### 3.6 `sketch_add_constraint`
@@ -547,7 +574,171 @@ Refusals that every `feature_*` tool returns as `INVALID_INPUT` before the brack
 
 - `feature_pad` / `feature_pocket`: `second_length` together with `midplane: true`; `up_to: "TwoLengths"` (or its `"?TwoLengths"` spelling), which FreeCAD 1.1 keeps only as a tombstone member — the message names `second_length` as the replacement.
 - `feature_set_parameters`: a value outside the property's type family — a `Quantity` or number for a quantity property, a number for a unitless float property, an integer for an integer property, a boolean for `App::PropertyBool`, a member string for `App::PropertyEnumeration`. Any other property type (for example `Part::PropertyPartShape`) is refused. The message names `<feature>.<prop>` and its type.
+- `feature_loft`: `sections` empty, repeating a sketch or holding the `profile` (`loft.invalid_sections`); a section with a different wire count from the profile, which FreeCAD raises at recompute (`loft.wire_count_mismatch`); `closed: true` with fewer than 2 `sections`, which FreeCAD resets without a message, `FeatureLoft.cpp:209` (`loft.closed_needs_sections`); a sketch with no wire; a non-boolean flag; `subtractive: true` in a Body with no solid (`loft.nothing_to_subtract`).
+- `feature_sweep`: a `spine` that is the `profile`, a Body, a selector that does not resolve to an Edge, or a whole object that is not an edge, a wire or a compound of those (`sweep.invalid_spine`, also for a selector that does not resolve); a `mode` other than `standard` or `frenet` (`sweep.invalid_mode`); a string `spine` that is not a sketch; `subtractive: true` in a Body with no solid (`sweep.nothing_to_subtract`); a non-boolean flag.
 - `feature_fillet` / `feature_chamfer`: a `base` that is not the Body's `Tip`; the message names the Tip. The dress-up builds from its base alone, so a base below the Tip would drop every later feature. FreeCAD's GUI allows this; the bridge refuses it.
+
+### 3.7.1 `feature_parameters_define`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "varset": { "type": "string", "description": "VarSet object Name; created when missing" },
+    "parameters": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "type": "object", "properties": {
+      "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+      "type": { "enum": ["length", "angle", "float", "integer", "bool", "string"] },
+      "value": {},
+      "group": { "type": "string", "default": "Parameters" },
+      "description": { "type": "string" } },
+      "required": ["name", "type", "value"], "additionalProperties": false } },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "varset", "parameters"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "varset": { "type": "string" },
+    "added": { "type": "array", "items": { "type": "string" } },
+    "updated": { "type": "array", "items": { "type": "string" } },
+    "unchanged": { "type": "array", "items": { "type": "string" } },
+    "undo_steps": { "type": "integer", "description": "1 when the call recorded an undo step, 0 when it changed nothing" },
+    "mutation": { "$ref": "#/$defs/MutationBlock", "description": "absent when the call changed nothing and opened no transaction" }
+  }, "required": ["varset", "added", "updated", "unchanged", "undo_steps"] } }
+```
+
+Type map: `length` to `App::PropertyLength` (value `{value, unit: "mm"}`, not negative), `angle` to `App::PropertyAngle` (`{value, unit: "deg"}`, within +-360), because both property types clamp a value outside their bounds without an error (probed on 1.1.4: -5 mm reads 0 mm, 720 deg reads 360 deg), so the tool refuses it instead of storing a changed value; `float` to `App::PropertyFloat` (finite number; an integer beyond double range is refused), `integer` to `App::PropertyInteger` (integer within +-2,147,483,647, not a boolean: the property stores a C `long`, 32 bits on Windows, and a larger value raised `OverflowError` in FreeCAD 1.1.4), `bool` to `App::PropertyBool`, `string` to `App::PropertyString`. The VarSet is created when missing (Name `varset`; Label `varset` too, with a numeric suffix added by FreeCAD when another object already has that Label). A name the VarSet lacks is added under `group` (default `Parameters`); one it holds with the same type is updated. `added`, `updated` and `unchanged` name the parameters in request order and appear on an `OK` result only, with `undo_steps`; the call carries no `feature` and no `feature_state`, because a VarSet has no shape. A property that already holds the requested value is `unchanged` and is not written, because FreeCAD records no undo step for some same-value writes (a string: the next `document_undo` then reverts the step before the call, which deleted a user object in a probe). A call whose parameters are all unchanged opens no transaction, writes no snapshot, needs no `confirm` (the gate runs only for a call that writes) and has no `mutation` block: it returns `OK` with `undo_steps` 0, and `undo_steps` 0 means `document_undo` would revert an earlier step. A call that changes something records one step (`undo_steps` 1, or 0 when the document stays at undo mode 0) and lists the unchanged names too. `group` and `description` are set when a parameter is created and never after, because FreeCAD does not undo them (probed: `document_undo` reported `matches_pre_op` true and left them changed). The mutation touches the VarSet; an object bound to it is checked by the recompute sweep (an invalid object fails the call) and its geometry change appears in `mutation.changed`.
+
+Refusals, all `INVALID_INPUT` before the bracket opens, with `detail.code` (AD-17):
+
+- `parameters.unit_symbol_name`: the name is a unit or constant to FreeCAD's expression lexer. FreeCAD adds such a property without error, but `<VarSet>.<name>` then fails with `Failed to parse expression` in every expression (probed on 1.1.4 with `W`, `True`, `A`; `W2`, `min2` and `A1` parse). The list is every ASCII `UNIT` and `CONSTANT` token of `src/App/Expression.l` (116 names, among them `W T A V N C K J H F S m g s mm deg in e pi`), and `tests/external/test_parameters_contract.py` checks it against that file.
+- `parameters.reserved_name`: a name a VarSet or an expression already uses. That is a property every VarSet has, read from a probe (`Label`, `Label2`, `Visibility`, `ExpressionEngine` on 1.1.4); an attribute of the VarSet object, read from the same probe (a property named `TypeId` would shadow it); and the names the bracket and the fingerprint read from every object (`Shape`, `ElementMapVersion`: a VarSet property named `Shape` made `post_verify` treat the VarSet as a solid and the call always ended `SPEC_FAILED`), and the names `ObjectIdentifier::resolveProperty` answers itself before it looks up a property (`_shape`, `_pla`, `_matrix`, `__pla`, `__matrix`, `_self`, `_app`, `_part`, `_re`, `_py`, `_math`, `_coll`, `_gui`, `_cq`), so `<VarSet>._pla` reads the placement and never a parameter. The call is also refused when the probe read no built-in property.
+- `parameters.unit_symbol_name` also applies to the VarSet name, new or existing (`W.width` fails to parse as well).
+- `parameters.invalid_string`: a `string` value, `group` or `description` holds a character FreeCAD cuts or rewrites, named in the message by code point and index: NUL (the value is cut at it); the C0 controls other than tab, line feed and carriage return, U+007F to U+0084, U+0086 to U+009F, U+FDD0 to U+FDEF and the last two code points of every plane (these read back as `_` after a save and reopen, which is how a snapshot restore reads them; measured by saving and reopening every code point on 1.1.4); and a lone surrogate.
+- `parameters.metadata_immutable`: `group` or `description` given for an existing parameter with another value.
+- `parameters.duplicate_name`: one name twice in the request.
+- `parameters.not_a_varset`: `varset` names an object that is not an `App::VarSet`.
+- `parameters.type_conflict`: an existing property of another type than the request.
+- `parameters.bound_by_expression`: an update of a property that an expression binds, because the next recompute applies the expression over the written value (probed: written 99 mm, read 20 mm after the recompute) and `updated` would name a value that did not stick.
+- Without a code: a malformed name (a trailing newline included), type, value, unit or group, a value outside the bounds above, an update of a property with `ReadOnly` status, an empty list or one above 100, and a build without `App::VarSet` (`varset_available()` false).
+
+The refusals are raised as `ParameterRefusal` (a `CodedValidationError`, a `ValidationError` carrying `code`) and `rpc_dispatch` maps one onto `INVALID_INPUT` with that `detail.code`, like every other tool's refusal, so `preview_dry_run` meets the same error. The dispatcher reads `code` from `CodedValidationError` only and only when it is a non-empty string; any other exception keeps its status as `detail.code` (an `OSError` from `script_exec` has an integer `code` that would break the envelope schema).
+
+Rollback proof: the shape fingerprint (AD-6) holds no VarSet property, so a parameters-only mutation leaves its digest unchanged and an abort that restored nothing would still compare equal. `run_mutation` therefore takes a `state_probe`; for this tool it reads, before the bracket and after an abort, every property of the VarSet (type, group, documentation, value, bound expression), or `None` while the object does not exist; the value of a Python-object or link property is not compared, because its repr carries an address (only its presence and type are). The rollback is `rolled_back_verified` only when the reading matches; otherwise the document is restored from the snapshot and read again, and a reading that still differs is `SPEC_FAILED` with `rolled_back` false. The general gap (a change to a VarSet or Spreadsheet that no shape reflects is invisible to the fingerprint and to `mutation.changed`) is open for an architecture decision.
+
+### 3.7.2 `document_object_delete`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "objects": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "object Names; a Body also takes its Group members, its Origin and the Origin features" },
+    "with_dependents": { "type": "boolean", "default": false },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "objects"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "deleted": { "type": "array", "items": { "type": "string" }, "description": "every removed object Name, document order" },
+    "dependents": { "type": "array", "items": { "type": "string" }, "description": "the ones removed only because with_dependents was true" },
+    "mutation": { "$ref": "#/$defs/MutationBlock" }
+  }, "required": ["deleted", "dependents"] } }
+```
+
+A dependent is an object outside the delete set whose `OutList` holds a deleted object (a pad of a deleted sketch, the next feature of a deleted pad through `BaseFeature`, an object an expression binds to a deleted VarSet). A member container (any object with `App::GroupExtension`: `PartDesign::Body`, `App::Part`, `App::DocumentObjectGroup` and their subclasses, except a `PartDesign::Boolean`) that holds the object only in its `Group` is not a dependent, unless an expression on the container names the object (the expression fails once the object is gone). Any other holder is a dependent, a `PartDesign::Boolean` included: its `Group` is its operand list, and a Boolean that kept a deleted tool Body would keep its volume. With `with_dependents` false any dependent refuses the call, `INVALID_INPUT` with `detail.code` `delete.has_dependents`, naming the dependents, before the bracket opens. With true the closure of dependents (dependents of dependents too, and what a dependent Body owns) is deleted. An `App::Origin` or an Origin feature named without the Body or Part that owns it is refused with `delete.origin_object`. An unknown name or an empty list is `INVALID_INPUT` without a code. A deleted `App::Link` array (or `App::LinkPython`) takes its `ElementList` elements with it, as the GUI delete does (`ViewProviderLink::onDelete`). When the deleted feature is visible, its `BaseFeature` is made visible, as `PartDesign::ViewProvider::onDelete` does (after a Tip delete that is the new Tip), and the result lists it in `touched`. A child of a deleted `App::Part` or group is not deleted; it stays in the document outside the group. An `App::Part` or `Part::LocalCoordinateSystem` takes its origin objects like a Body.
+
+A feature of a Body that survives goes through `Body.removeObject` before `Document.removeObject`, so `Tip` moves to the previous solid feature (`Body.cpp` `Body::removeObject`); objects are removed latest first. The next feature of a deleted feature holds it in `BaseFeature`, so it is a dependent: deleting a feature in the middle of a Body needs `with_dependents` and takes every later feature with it (`Body::removeObject`'s relink of the next feature never runs for a survivor).
+
+The deleted names appear in `mutation.changed` with `volume` null (AD-6). `touched` names the deleted objects and each surviving Body that lost a member, so `post_verify` runs `verify_shape` on that Body.
+
+TNP audit: a deleted object that owned a reference (a pad's `Profile`, an expression binding) would grade `BROKEN` as a vanished owner. `run_mutation` takes the set of names the op deletes on purpose and `audit_references` excuses a record whose owner is in that set and absent from the document, in the manner of decision 014 (the exemption is keyed to what the op wrote). An owner that vanished any other way stays `BROKEN`.
+
+Rollback proof: the shape fingerprint holds no VarSet, Body or Origin, so a delete of shape-less objects leaves its digest unchanged. `state_probe` reads, per object, name, label, type, the names it depends on and, for a Body, `Tip` and `Group`; an abort that restored an object without its dependency reads as unproven and falls back to the snapshot.
+
+Undo: one transaction, one `document_undo` restores the objects, `Group`, `Tip`, `BaseFeature`, links and Visibility (measured on FreeCAD 1.1.4 for a Tip delete, a profile-sketch delete with dependents and a whole-Body delete). FreeCAD restores an object's `ExpressionEngine` text but not its dependency on the bound object: after the undo `OutList` lacks the target and a change to the source no longer drives the property (measured: `Pad.Length = VS.L`; `VS.L` 3 to 7 left the pad at 3). The same happens after `abortTransaction`. `shim.relink_expressions` clears and sets each binding of the objects the undo or the abort restored; it records no undo step and leaves the redo stack (measured: `UndoCount`, `RedoCount` equal before and after). A binding that cannot be set again is cleared by the failed attempt and is listed, with its text, in the `errors` of `document_undo`; after an abort the rollback proof reads the dependency back and falls back to the snapshot restore when it is missing.
+
+`preview_dry_run` accepts the tool: `preview_op_table` reads the object-edit spec list beside the `sketch_` and `feature_` lists.
+
+### 3.7.3 `feature_set_expression`
+
+```json
+{ "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "expressions": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "type": "object", "properties": {
+      "object": { "type": "string", "description": "object Name" },
+      "path": { "type": "string", "description": "numeric property path, e.g. Length, .Constraints.width, .AttachmentOffset.Base.z, .Placement.Base.y" },
+      "expression": { "type": ["string", "null"], "description": "expression text; null clears the binding" } },
+      "required": ["object", "path", "expression"], "additionalProperties": false } },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "expressions"], "additionalProperties": false },
+  "outputSchema-result": { "type": "object", "properties": {
+    "bound": { "type": "array", "items": { "type": "object", "description": "{object, path, value, reason?}" } },
+    "cleared": { "type": "array", "items": { "type": "object" } },
+    "unchanged": { "type": "array", "items": { "type": "object" } },
+    "undo_steps": { "type": "integer", "description": "undo steps the call added: 1, or 0 when it changed nothing" },
+    "mutation": { "$ref": "#/$defs/MutationBlock", "description": "absent when the call changed nothing and opened no transaction" }
+  }, "required": ["bound", "cleared", "unchanged", "undo_steps"] } }
+```
+
+All items run in one AD-5 transaction. A row of `bound`, `cleared` or `unchanged` is `{object, path, value}`: `value` is the property's value read after the recompute, as `{value, unit}` for a quantity or a scalar, null with a `reason` when it cannot be read (AD-35). An item that clears a path with no binding on its property, or gives the stored text, is `unchanged`; a call whose every item is `unchanged` opens no transaction and has no `mutation` block, because FreeCAD records no undo step for it and `document_undo` would revert an earlier step (`undo_steps: 0`). A text that FreeCAD stores as the expression already bound (`a*2` for `a * 2`), and a clear by another spelling of the stored path (`.Constraints[2]` for `.Constraints.<name>`), are told apart from a real change only by reading the bindings before and after the write; such an item is `unchanged` too, and a call made only of them has a `mutation` block with `undo_steps: 0`. `undo_steps` is 1 when the call's own transaction heads the document's undo list afterwards, else 0. Each call names its transaction with a running number, because the document's step count stops growing at 20 steps and cannot show a new step. A call made only of `unchanged` items on a document with touched objects can still record a step (the bracket's recompute writes inside the transaction), and `undo_steps` then reads 1.
+
+`path` matches `^\.?[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[[0-9]+\])*$` and must resolve, through `evalExpression`, to a number, a quantity or a bool. A numeric leaf of a Placement (`.AttachmentOffset.Base.z`, `.Placement.Base.x`) and a sketch datum (`.Constraints.<name>`, `.Constraints[<index>]`) qualify; a whole Placement, a Shape, a string or a list does not. A touched sketch is verified like every sketch mutation, so it must be fully constrained. A clear checks only that the object exists, so a binding on a path that no longer resolves, or on a property that is not numeric, can still be removed.
+
+Refusals, all `INVALID_INPUT` before the bracket opens, with `detail.code` (AD-17); FreeCAD accepts each of these cases without an error (probed on 1.1.4):
+
+- `expression.invalid_path`: the path does not match the pattern, names no property, resolves to nothing (`Length.x` is stored and never applies), or ends in `.Value` (FreeCAD stores `.Length.Value` as a second binding that `Length` ignores, and it evaluates to a plain number, which hides a unit mismatch).
+- `expression.unsupported_property`: the path resolves to a value that is not a number, a quantity or a bool (`Placement`, `Shape`, `Label`, `Constraints`), its property has `ReadOnly` status, the object is a spreadsheet (FreeCAD ignores a binding on a cell and drops it on save; set the cell contents), the property is a shape (`.Shape.Volume`), or the property is `AttachmentOffset` of an object that is not attached (FreeCAD hides and ignores it, `AttachExtension.cpp`).
+- `expression.invalid_text`: empty, longer than 400 characters, or holding a character FreeCAD cuts or rewrites (the set of `feature_parameters_define`). The limit exists because FreeCAD ends the process while it parses a long chained expression: `1*` x 600 terms (1,200 characters) and `1&&` x 550 crash, `1+` x 900 crashes; 400 characters allow 200 two-character terms.
+- `expression.invalid_expression`: a parse error or an unresolved reference (`Nope.x` is stored and fails the recompute), or a text that does not evaluate to a number. The message is FreeCAD's.
+- `expression.not_finite`: the expression evaluates to `inf` or `nan` (`1 mm / 0` is stored and reads `inf mm`).
+- `expression.unit_mismatch`: a quantity of another dimension than the property (`5 deg` on a length is stored and reads `5 deg`), or a dimensioned quantity on a property that holds a plain number (`5 mm` on a float reads `5.0`, the unit lost). A plain number or a dimensionless quantity takes the property's unit.
+- `expression.not_integer`: a fraction bound to an integer property, which FreeCAD rounds (`2.5` reads `3`).
+- `expression.range_unsupported`: the text holds a cell range (`A1:B2`, `Sheet.A1:Sheet.B2`, `$A$1:$B$2`). FreeCAD evaluates a range cell by cell while the call holds the interpreter lock: `sum(C1:ZZ16384)+sum(C1:ZZ16384)` (31 characters) held one call for 1,087 s, so the character limit bounds parsing and this refusal bounds evaluation. A ternary that compares two cell references matches too.
+- `expression.value_out_of_range`: FreeCAD would not keep the value. `setPathValue` skips the range a plain assignment enforces, so a `App::PropertyLength` below 0 and an `App::PropertyAngle` beyond +-360 are refused by type (a pad of -5 mm flips below its sketch), and any other root property is probed: the value is assigned to a scratch object of the same type and read back (a revolution angle of 400 reads 360; an integer past int32 reads back changed). The same code is raised after the recompute, with status `RECOMPUTE_ERROR` and a rollback, when a binding anywhere in the document reads another value than its expression evaluates to and did not before the call (an existing binding that a new one drives out of range).
+- `expression.duplicate_path`: one object and path twice in the request (a leading dot is the same path). Two spellings of one stored binding are found inside the bracket, which aborts the call.
+- Without an `expression.*` code: an unknown object, a malformed item or key, and a list outside 1 to 100.
+
+Every refusal above checks one item against the document as it is before the call. A value that turns infinite or wrong only because another item of the same batch, or an existing binding that the call drives, changed an input is caught after the bracket's recompute (`recompute_check` of `run_mutation`): the call rolls back with `RECOMPUTE_ERROR` and `detail.code` `expression.not_finite` or `expression.value_out_of_range`. The op itself does not recompute, because the bracket reads the written references right after it, and a recompute inside the op would hide a silent edge drop from the TNP audit.
+
+A dependency cycle is refused by FreeCAD at `setExpression` (`cyclic reference`, `creates a cyclic dependency`) and ends the call with status `RECOMPUTE_ERROR` and `detail.code` `expression.cycle` (the op raises `transaction.RecomputeFailure(code, message)`, which the bracket maps to that status and code). A binding that fails the recompute leaves the object invalid. Both abort the whole call inside the bracket: the transaction is aborted, the document is verified against the pre-call state, and the first `rolled_back_*` proof applies. The shape fingerprint (AD-6) holds no binding, so the proof also reads every object's `ExpressionEngine` back (`state_probe`, as `feature_parameters_define` does).
+
+TNP guard: a binding is a reference record `ExpressionEngine[<path>]`. A new binding is not in the snapshot and a replaced one grades `PASS`. A cleared one is absent from the live reading; it grades `PASS` only when this op reported removing it (`removed_bindings`, the `(owner, record)` pairs the op filled while it wrote), the op's post-op reading lacks it too and its owner still exists (the written-value rule of decision 014), never because the owner was touched. A binding that disappears during the recompute, a binding another tool removes (`sketch_remove_geometry` on a constraint that carries one still grades `BROKEN`, as before), an owner removed from the document, and a call that passes no written reading all grade as before.
+
+The bracket also closes the application-level transaction after every commit and abort (`shim.close_pending_transaction`). `Document::openTransaction` only names the application's active transaction and the document's own opens on the first change, so an op that wrote nothing left it open and the next change by any caller joined it (`document_undo` then refused).
+
+### 3.7.4 `feature_loft` and `feature_sweep`
+
+```json
+{ "feature_loft": { "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "body": { "type": "string", "description": "target PartDesign Body Name" },
+    "profile": { "type": "string", "description": "first section: sketch Name" },
+    "sections": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "further section sketch Names, in loft order; each has the same number of wires as the profile" },
+    "ruled": { "type": "boolean", "default": false },
+    "closed": { "type": "boolean", "default": false, "description": "join the last section back to the profile; needs 2 or more sections" },
+    "subtractive": { "type": "boolean", "default": false },
+    "name": { "type": "string" },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "body", "profile", "sections", "name"] } },
+  "feature_sweep": { "inputSchema": { "type": "object", "properties": {
+    "doc": { "type": "string" },
+    "body": { "type": "string", "description": "target PartDesign Body Name" },
+    "profile": { "type": "string", "description": "sketch Name" },
+    "spine": { "oneOf": [ { "type": "string", "description": "spine sketch Name" }, { "$ref": "#/$defs/Selector", "description": "one Edge (mapped_name), or a whole edge or wire object (mapped_name omitted)" } ] },
+    "mode": { "enum": ["standard", "frenet"], "default": "standard" },
+    "subtractive": { "type": "boolean", "default": false },
+    "name": { "type": "string" },
+    "confirm": { "$ref": "#/$defs/Confirm" }
+  }, "required": ["doc", "body", "profile", "spine", "name"] } } }
+```
+
+Both tools create one feature inside one AD-5 bracket and return `feature`, `feature_state` and the common `mutation` block, like `feature_pad`. `subtractive` selects the type: `PartDesign::AdditiveLoft` or `SubtractiveLoft`; `PartDesign::AdditivePipe` or `SubtractivePipe`. The loft writes `Profile`, `Sections` (each `(sketch, [""])`), `Ruled` and `Closed`; the sweep writes `Profile`, `Spine` (`(object, [""])` for a sketch name or a whole object, `(object, [Edge])` for an edge) and `Mode`.
+
+`mode` names map to the members of the `Mode` enumeration that `FeaturePipe.cpp:60` declares (`Standard`, `Fixed`, `Frenet`, `Auxiliary`, `Binormal`); the member is read from the live enumeration, never by index. `Fixed`, `Auxiliary` and `Binormal` are not offered: `Auxiliary` needs a second spine and `Binormal` a vector.
+
+Every sketch the call names must be fully constrained: AD-5 post-verify step 3 runs `verify_sketch` on all sketches, so a spine or section sketch with free degrees of freedom fails the call with `SPEC_FAILED` and rollback, unless its shape is already degenerate, which the result check below reports first as `RECOMPUTE_ERROR`. A recompute that gives no solid (an open profile, an open section) gives `RECOMPUTE_ERROR` with a proven rollback.
+
+FreeCAD reports several degenerate results as up to date, so the tools check the new feature's own shape after the recompute and fail the call with `RECOMPUTE_ERROR`, `detail.code` `loft.invalid_result` or `sweep.invalid_result`, and a proven rollback when: the shape is null or `isValid()` is false; it holds other than one solid; or it adds (additive) or removes (subtractive) no volume, which covers a spine in the profile plane (volume 0), a spine that climbs and falls back along itself, and a subtractive cut that misses the Body. When every input edge is analytic and the result has at most 300 faces, the Boolean-operation check (`Shape.check(True)`) also runs, because it finds self-intersections that `isValid()` misses (a profile wider than the bend of its spine); `GeomAbs_` continuity notes are ignored. In FreeCAD 1.1.4 every closed loft tried (sections stacked, or around a ring, smooth or ruled) built an invalid or self-intersecting solid, so `closed: true` is usually refused as `loft.invalid_result`. It does not run otherwise (any BSpline-like input edge, or in the Body's earlier shape), because it holds the interpreter lock for a time that follows the geometry, not the face count (a 1,002-face loft 18.6 s; a 3-face sweep along a 25-turn helix of 770 poles did not finish in 50 s), so a self-intersecting result built from BSpline inputs is not detected. A subtractive call in a Body with no solid is `INVALID_INPUT` `loft.nothing_to_subtract` or `sweep.nothing_to_subtract`, before the bracket. After a committed call the profile, section and spine sketches are hidden, as the GUI does (a Part object used as a spine is left as it was); one `document_undo` shows them again.
+
+Two refusals protect the bridge, because the OCC builds hold the interpreter lock and the 120 s marshal timeout cannot stop them. Both are `INVALID_INPUT` with a `detail.code`, before the bracket:
+
+- `loft.too_complex` and `sweep.too_complex`. A loft section has a size: its edges, a BSpline edge counting its poles. ThruSections time grows with the square of the larger section of each pair of neighbours, so loft cost is the sum over consecutive sections (the profile first; the last back to the first when `closed`) of the larger size squared; the limit is 1,000,000, and the number of sections is limited on its own to 500. Sweep cost is the profile's units times the spine's units, a profile edge counting its poles (1 for any other curve) and a spine edge counting 1 plus its poles divided by ten, rounded down; the limit is 3,000. Measured on FreeCAD 1.1.4 (a development host). Loft recompute, smooth: circle to 1,000-gon 9.3 s and to 1,400-gon 20 s (a circle to an n-gon is the slowest layout); two 1,000-gons 5.7 s, two 1,400-gons 11 s, two 2,000-gons 24 s; 40 sections of 200 edges 4.6 s; 500 sections of 16 edges 0.64 s; 100 circles 0.09 s, 500 circles 1.6 s, 1,500 circles 19 s. Whole loft call at the limit: circle to 1,000-gon 10.7 s, two 1,000-gons 8.0 s, 24 sections of 200 edges 5.2 s. Sweep recompute: 100 profile edges along 100 spine lines 5.8 s, 200 along 200 69 s, a circle along 5,000 lines 4.2 s (10,000 lines took 32 s through the tool), 250 edges along a 25-turn helix of 392 poles 18 s, a 200-pole BSpline profile along a 20-turn helix 1.3 s. Whole sweep call at the limit: a circle along 3,000 lines 4.1 s, 30 edges along 100 lines 2.5 s, 8 along 375 lines 2.3 s, 35 along a 25-turn helix of 770 poles (2,730) 1.1 s. The earlier edge-count model accepted two 3,999-gons, which took 111 s. Face count and edge count alone predict cost poorly, which is why a BSpline counts its poles and loft cost is quadratic.
+- `sweep.degenerate_spine`. A BSpline spine that doubles back on itself has a point of zero velocity, and an `AdditivePipe` over one held the interpreter for more than 280 s (8 points through `x = 0.5 i cos(0.3 i)`, probed on 1.1.4; a spine of straight edges that reverse at a corner did not hang). Only BSpline-like spine edges are sampled (a line or an analytic curve cannot reverse), at 400 parameters each, or eight per pole when that is more (a long helix turns a quarter turn between two of 400 samples after about 100 turns, and a 120-turn `Part::Helix` builds valid in 0.85 s), for at most 100 such edges and 100,000 samples in all (more is `sweep.too_complex`), and the cost check runs first; two consecutive tangents with a negative dot product, or a sample with no tangent, refuse the call. A BSpline edge that turns more than 90 degrees between two samples is refused for the same reason. A zero-velocity point without a reversal is not detected. The reversing BSpline reads dot = -1.0; a helix, a sine curve, a hairpin, a circle and a 100-segment polyline stay above 0.98.
+
+`preview_dry_run` accepts both tools: `preview_op_table` derives the table from the `feature_` spec list.
 
 ### 3.8 `preview_dry_run` (AD-10)
 
