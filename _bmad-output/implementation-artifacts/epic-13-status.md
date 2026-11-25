@@ -1,17 +1,17 @@
 # Epic 13 status
 
 Goal: Build SPEC-mcp-usage-improvement (`_bmad-output/specs/spec-mcp-usage-improvement/SPEC.md`): typed tools cover the frequent operations so `script_exec` becomes an escape route for rare work (CAP-1 .. CAP-9).
-Done: 13-1 .. 13-12, 13-14, 13-18, 13-20 (15 of 20)
-In progress: 13-13 (builder-13-13b fixed r3 @fba56e57; verifier-13-13 + redteam-13-13 running; verifier waits for the container); 13-15 (builder-13-15b @e7f9d717: counter detector, lineage check, exact witness; redteam-13-15b running; then verifier-13-15 re-run incl. TC-18-04b); 13-fu (fixes @04adaafa; verifier-13-fu re-run owns the container)
-Remaining: 13-16 (after 13-15), 13-17 (spec approved, wt-13-17; after 13-16), 13-18 follow-up, 13-7 follow-up (decision 41), 13-19, epic close
-Branch / head: integration feat/epic-13-mcp-usage-improvement @ 3df33fbd, checked out in worktree D:/Work/Personal/Sources/freecad-buddy-int (leader merges there)
+Done: 13-1 .. 13-15, 13-18, 13-20, 13-fu (13-fu 2b6fbe2d, 13-15 67551cfe, 13-13 547542cd)
+In progress: 13-16 (3 rounds done @15a097d6; verifier-13-16 owns the container + redteam-13-16); 13-17 (builder-13-17 coding in wt-13-17, merged feat + story/13-16; must merge feat again after 13-16 lands)
+Remaining: 13-19 (skill routing; closes gap-list rows 26/33/42 and deferred-work Part::Common entry), then epic close (validator re-score, full gates, container UAT smoke, CAP-6 live session, retrospective), then decision 49: merge feat into main, push main, shut down the computer
+Branch / head: integration feat/epic-13-mcp-usage-improvement @ bbc9924f (gates green at 547542cd: external 2117 passed, infc 1403 OK), worktree D:/Work/Personal/Sources/freecad-buddy-int
 Blockers: none
 Open decisions (user): none (handover rows 1-7 answered: decisions 40-46)
-Open for the user to confirm: decision 47 (13-15 residual false positives accepted, leader)
-Agents alive: verifier-13-fu, verifier-13-15, builder-13-15b, redteam-13-15b, builder-13-13b, verifier-13-13, redteam-13-13
-Next: approve plans; container UAT one Story at a time (verifier owns the container while it runs)
+Open for the user to confirm: decisions 47, 48, 50 (leader); 65 base commits from fix/uat-gate-1-failures go to main with the epic (told the user)
+Agents alive: verifier-13-16, redteam-13-16, builder-13-17
+Next: merge 13-16 after verifier + red team; 13-17 verify; 13-19; epic close; decision 49
 Plan: epic-13-plan.md. Context: epic-13-context.md. Decisions: epic-13-decisions.md. Handover: epic-13-handover.md.
-Updated: 2026-11-25 15:40 (UTC+7)
+Updated: 2026-11-26 00:20 (UTC+7)
 
 ## Environment
 Skill version: bmad-leader SKILL.md sha256 `936e3e227d5e`.

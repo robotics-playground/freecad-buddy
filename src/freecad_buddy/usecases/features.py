@@ -101,6 +101,14 @@ def _require_partdesign() -> None:
         raise ValidationError("PartDesign is unavailable on this FreeCAD build")
 
 
+def _is_finite(number: int | float) -> bool:
+    """Whether ``number`` is a finite float; an int beyond the float range is not."""
+    try:
+        return math.isfinite(float(number))
+    except OverflowError:
+        return False
+
+
 def _quantity_value(value: object, allowed_units: frozenset[str], what: str) -> float:
     """Return a ``{value, unit}`` quantity's magnitude after checking its unit.
 
@@ -114,8 +122,8 @@ def _quantity_value(value: object, allowed_units: frozenset[str], what: str) -> 
     unit = value.get("unit")
     if not isinstance(magnitude, (int, float)) or isinstance(magnitude, bool):
         raise ValidationError(f"{what} value must be a number, got {magnitude!r}")
-    if not math.isfinite(float(magnitude)):
-        raise ValidationError(f"{what} value must be finite, got {magnitude!r}")
+    if not _is_finite(magnitude):
+        raise ValidationError(f"{what} value must be finite, got {magnitude!r:.60}")
     if unit not in allowed_units:
         raise ValidationError(f"{what} unit must be one of {sorted(allowed_units)}, got {unit!r}")
     return float(magnitude)
@@ -2269,7 +2277,10 @@ def _parameter_writes(feature: object, parameters: object) -> list[tuple[str, ob
             if prop == "Placement" and "AttachmentOffset" in feature.PropertiesList:
                 hint = "; its attachment sets it, so write AttachmentOffset instead"
             elif prop == "Placement" and getattr(feature, "_Body", None) is not None:
-                hint = "; a feature inside a Body follows the Body, so move the Body instead"
+                hint = (
+                    "; a feature inside a Body follows the Body, so move the Body, or the "
+                    "AttachmentOffset of its sketch"
+                )
             raise ValidationError(f"{feature.Name}.{prop} is read-only{hint}")
         writes.append((prop, _parameter_value(feature, prop, raw)))
     return writes
@@ -2315,6 +2326,12 @@ _PLACEMENT_KEYS = frozenset({"base", "rotation"})
 _BASE_KEYS = ("x", "y", "z")
 _ROTATION_KEYS = frozenset({"axis", "angle"})
 
+# The shape fingerprint, which every mutation computes, raises ``FreeCADError`` once a placement
+# base component reaches 1e118 mm (parallel-axis inertia overflows near 1e236); mass properties
+# hold up to the same size (probed on FreeCAD 1.1.4 with an 8x16x5 Pad Body and a Part::Box at
+# powers of ten from 1e6). 1e9 mm is a thousand kilometres, nine orders inside that limit.
+_MAX_PLACEMENT_BASE_MM = 1e9
+
 
 def _only_keys(raw: dict, allowed: Collection[str], what: str) -> None:
     unknown = sorted(str(key) for key in raw if key not in allowed)
@@ -2346,6 +2363,20 @@ def _rotation_axis(raw: object, what: str) -> tuple[float, float, float]:
             f"got {raw!r}"
         )
     return axis
+
+
+def _base_component(raw: object, what: str) -> float:
+    """Return a placement base component in mm, refused beyond ``_MAX_PLACEMENT_BASE_MM``.
+
+    :raises ParameterRefusal: ``parameters.out_of_range`` for a larger magnitude.
+    """
+    millimetres = _length_mm(raw, what)
+    if abs(millimetres) > _MAX_PLACEMENT_BASE_MM:
+        raise ParameterRefusal(
+            "parameters.out_of_range",
+            f"{what} must be within +-{_MAX_PLACEMENT_BASE_MM:g} mm, got {millimetres:g} mm",
+        )
+    return millimetres
 
 
 def _placement_value(raw: object, what: str, current: object = None) -> object:
@@ -2380,7 +2411,7 @@ def _placement_value(raw: object, what: str, current: object = None) -> object:
     origin = current.Base if current is not None else FreeCAD.Vector(0.0, 0.0, 0.0)
     base = FreeCAD.Vector(
         *(
-            _length_mm(base_raw[key], f"{what}.base.{key}")
+            _base_component(base_raw[key], f"{what}.base.{key}")
             if key in base_raw
             else getattr(origin, key)
             for key in _BASE_KEYS
@@ -2407,16 +2438,31 @@ def _placement_value(raw: object, what: str, current: object = None) -> object:
     return FreeCAD.Placement(base, rotation)
 
 
+def _wire_placement(placement: object) -> dict:
+    """Render a ``FreeCAD.Placement`` in the wire shape ``_placement_value`` reads."""
+    base, rotation = placement.Base, placement.Rotation
+    return {
+        "base": {key: {"value": getattr(base, key), "unit": "mm"} for key in _BASE_KEYS},
+        "rotation": {
+            "axis": list(rotation.Axis),
+            "angle": {"value": math.degrees(rotation.Angle), "unit": "deg"},
+        },
+    }
+
+
 def _require_attached_offset(feature: object, prop: str) -> None:
     """Refuse an ``AttachmentOffset`` write on an object that is not attached.
 
-    :raises ParameterRefusal: ``parameters.not_attached`` when FreeCAD hides the property.
+    The test is ``MapMode``, not the property's ``Hidden`` status: FreeCAD leaves the offset hidden
+    on an object that was attached before its support had a shape, and that object still applies it.
+
+    :raises ParameterRefusal: ``parameters.not_attached`` when ``MapMode`` is Deactivated.
     """
-    if prop == "AttachmentOffset" and "Hidden" in feature.getPropertyStatus(prop):
+    if prop == "AttachmentOffset" and getattr(feature, "MapMode", None) == "Deactivated":
         raise ParameterRefusal(
             "parameters.not_attached",
-            f"{feature.Name} is not attached, so FreeCAD hides and ignores its AttachmentOffset "
-            "(AttachExtension.cpp); attach it first",
+            f"{feature.Name} is not attached, so FreeCAD ignores its AttachmentOffset "
+            "(MapMode Deactivated); attach it first",
         )
 
 
@@ -2427,33 +2473,67 @@ def _is_placement_or_string(feature: object, prop: str) -> bool:
 def _holds_written(feature: object, prop: str, value: object) -> bool:
     """Whether ``feature.prop`` holds the value a write stored.
 
-    A placement compares exactly, a number within a relative 1e-9 (a quantity compares by its
-    magnitude in FreeCAD's internal unit, which is what the write stored), and a string, boolean
-    or enumeration member by equality.
+    A placement compares exactly, a float within a relative 1e-9 (a quantity compares by its
+    magnitude in FreeCAD's internal unit, which is what the write stored), and an integer, string,
+    boolean or enumeration member by equality.
     """
     current = getattr(feature, prop)
     if hasattr(value, "isSame"):
         return current.isSame(value, 0.0)
-    if _is_number(value):
+    if isinstance(value, float):
         magnitude = current.Value if hasattr(current, "Value") else current
-        return math.isclose(float(magnitude), float(value), rel_tol=1e-9, abs_tol=1e-12)
+        return math.isclose(float(magnitude), value, rel_tol=1e-9, abs_tol=1e-12)
+    if isinstance(value, int) and not isinstance(value, bool):
+        magnitude = current.Value if hasattr(current, "Value") else current
+        return magnitude == value
     return current == value
+
+
+class _Reading:
+    """Floats read off a property, equal to another reading within what FreeCAD stores.
+
+    FreeCAD saves a float with 16 decimals, so a value restored from the snapshot differs from
+    the live one by up to 5.6e-17 absolute (measured over 300 random placements from 1e-8 to 1e12
+    plus 1/3000, 0.5 deg and 0.1 + 0.2, each saved and reopened). Two readings are equal when each
+    pair differs by at most ``1e-15 * max(1, |a|, |b|)``, 18 times that error and far below any
+    edit worth reporting (1e-7 against 1.001e-7 stays different). NaN equals NaN.
+    """
+
+    __slots__ = ("numbers",)
+    __hash__ = None
+
+    def __init__(self, numbers: tuple[float, ...]) -> None:
+        self.numbers = numbers
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _Reading) or len(other.numbers) != len(self.numbers):
+            return NotImplemented
+        return all(_same_float(a, b) for a, b in zip(self.numbers, other.numbers))
+
+    def __repr__(self) -> str:
+        return f"_Reading{self.numbers!r}"
+
+
+def _same_float(first: float, second: float) -> bool:
+    if first != first or second != second:
+        return first != first and second != second
+    return abs(first - second) <= 1e-15 * max(1.0, abs(first), abs(second))
 
 
 def _comparable(value: object) -> object:
     """Return ``value`` in a form two readings of an unchanged property compare equal.
 
-    A placement, a quantity and a float are read as rounded floats: a snapshot restore reads them
-    back from the saved file, which keeps 16 digits, so an exact comparison fails on a 17-digit
-    value (0.1 + 0.2 reopens as 0.3).
+    A placement, a quantity and a float become a ``_Reading``: a snapshot restore reads them back
+    from the saved file, so an exact comparison fails on a 17-digit value (0.1 + 0.2 reopens as
+    0.3).
     """
     if hasattr(value, "Rotation") and hasattr(value, "Base"):
         base, quaternion = value.Base, value.Rotation.Q
-        return tuple(round(float(c), 9) for c in (base.x, base.y, base.z, *quaternion))
+        return _Reading(tuple(float(c) for c in (base.x, base.y, base.z, *quaternion)))
     if hasattr(value, "Value") and hasattr(value, "Unit"):
-        return round(float(value.Value), 9)
+        return _Reading((float(value.Value),))
     if isinstance(value, float):
-        return round(value, 9)
+        return _Reading((value,))
     return value
 
 
@@ -2524,10 +2604,15 @@ def _parameter_value(feature: object, prop: str, raw: object) -> object:
             return _angle_degrees(raw, f"{prop} value")
         return _length_mm(raw, f"{prop} value")
     if family in ("quantity", "float") and _is_number(raw):
-        if not math.isfinite(float(raw)):
-            raise ValidationError(f"{prop} value must be finite, got {raw!r}")
+        if not _is_finite(raw):
+            raise ValidationError(f"{prop} value must be finite, got {raw!r:.60}")
         return raw
     if family == "integer" and isinstance(raw, int) and not isinstance(raw, bool):
+        if abs(raw) > _MAX_INTEGER_PARAMETER:
+            raise ParameterRefusal(
+                "parameters.out_of_range",
+                f"{where} must be an integer within +-{_MAX_INTEGER_PARAMETER}, got {raw!r:.60}",
+            )
         return raw
     if family == "bool" and isinstance(raw, bool):
         return raw
@@ -2571,10 +2656,11 @@ def feature_set_parameters(
     before the bracket. A value the recompute still leaves different from the request (one an
     expression, a clamp or a Python feature rewrites) fails the call as ``RECOMPUTE_ERROR`` with
     ``detail.code`` ``parameters.value_overwritten``; ``Label`` is exempt because FreeCAD makes it
-    unique, and the result's ``label`` reports ``{requested, stored}``. A call that writes only
-    placements and strings equal to the current values opens no transaction and has no
-    ``mutation`` block: ``unchanged`` lists them and ``undo_steps`` is 0. Every other ``OK``
-    result carries ``undo_steps``, the number of undo steps the call recorded.
+    unique, and the result's ``label`` reports ``{requested, stored}``; ``placements`` does the
+    same per written placement property, with the stored value read back in the wire shape. A
+    call that writes only placements and strings equal to the current values opens no transaction
+    and has no ``mutation`` block: ``unchanged`` lists them and ``undo_steps`` is 0. Every other
+    ``OK`` result carries ``undo_steps``, the number of undo steps the call recorded.
 
     :raises ValidationError: the object is unknown, a named property does not exist, is
         read-only or is of a type this tool cannot write, or a value's type, unit, enumeration
@@ -2625,7 +2711,14 @@ def feature_set_parameters(
                 raise transaction.RecomputeFailure(
                     "parameters.value_overwritten",
                     f"{feature}.{prop} reads {getattr(target, prop)!r} after the recompute, not "
-                    f"the requested {value!r}: an expression or the feature itself sets this value",
+                    f"the requested {value!r}: an expression, a limit of the property or the "
+                    "feature itself changed it"
+                    + (
+                        "; the object is attached, so write AttachmentOffset instead"
+                        if prop == "Placement"
+                        and str(getattr(target, "MapMode", "Deactivated")) != "Deactivated"
+                        else ""
+                    ),
                 )
 
     def report(document: object) -> dict:
@@ -2635,6 +2728,14 @@ def feature_set_parameters(
                 "requested": parameters["Label"],
                 "stored": document.getObject(feature).Label,
             }
+        target = document.getObject(feature)
+        placements = {
+            prop: {"requested": parameters[prop], "stored": _wire_placement(getattr(target, prop))}
+            for prop in parameters
+            if str(target.getTypeIdOfProperty(prop)) == _PLACEMENT_TYPE
+        }
+        if placements:
+            content["placements"] = placements
         content["undo_steps"] = _recorded_undo_steps(document, label)
         return content
 

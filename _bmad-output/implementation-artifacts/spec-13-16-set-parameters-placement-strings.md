@@ -59,10 +59,10 @@ context:
 - `src/freecad_buddy/usecases/features.py` -- `feature_set_parameters`: no-op shortcut, `state_probe`, `recompute_check`, `report`, unique transaction label.
 - `src/freecad_buddy/usecases/features.py` -- `ParameterRefusal`, `_storable_text`: reuse for strings; `_EXPRESSION_CALLS` and the unattached-offset rule of `feature_set_expression`: model.
 - `src/freecad_buddy/usecases/features.py` -- `_feature_mutation` (`keep_state` keeps `feature` and `feature_state` beside a `report`).
-- `src/freecad_buddy/usecases/transaction.py:82` `RecomputeFailure`, `:368-424` state proof: reuse.
-- `src/freecad_buddy/hosts/tool_catalog.py:871-890` -- `feature_set_parameters` schema text only.
-- `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md:104,192,576` -- row, carve-out note, validation line.
-- `skills/freecad-scripting-idioms/SKILL.md:74-78` -- the typed-tool list; `references/gap-list.md:33,42` rows stay for Story 19.
+- `src/freecad_buddy/usecases/transaction.py` -- `RecomputeFailure`, the state proof in `_prove_rollback`: reuse.
+- `src/freecad_buddy/hosts/tool_catalog.py` -- `feature_set_parameters` schema text only.
+- `_bmad-output/planning-artifacts/architecture/architecture-freecad-buddy-2026-07-21/design/mcp-tools-design.md` -- row, carve-out note, validation bullet and the after-validation paragraph.
+- `skills/freecad-scripting-idioms/SKILL.md` -- the typed-tool list; `references/gap-list.md` rows 26, 33, 42 stay for Story 19.
 - Probes (FreeCAD 1.1.4): a sketch `Placement` write on an attached sketch and on a Pad is reset to 0 by the recompute; a Body `Placement` write holds; `Label` `Pad` becomes `Pad001`; a NUL cuts a label; `doc.undo()` restores both properties.
 
 ## Tasks & Acceptance
@@ -138,6 +138,33 @@ Round 2 (blind a81d9eb183201e75f, edge a34a89c4e42a1344f, gap a1943a2149033081f)
 | 35 | gap-list row 42 says "string or link"; narrow it, do not remove it | low | defer: Story 13-19 owns the gap list; deferred entry corrected |
 | 36 | decisions log has no 13-16 entry | low | leader owns `epic-13-decisions.md`; noted in the report |
 | 37 | validation runs before the confirm gate in the no-op path | low | carried (r1 #3) |
+
+Round 3 (blind a6bfb8fa3172353c2, edge a1d2efbdedff6878a, gap a39c40cbf481743d3), the last round:
+
+| # | Finding | Verdict | Route and evidence |
+|---|---------|---------|--------------------|
+| 38 | `not_attached` tested the `Hidden` property status; an object attached before its support had a shape keeps the offset hidden and still applies it, so a valid write was refused | medium | patch: test `MapMode`, as the spec says; stub tests; mutant (back to `Hidden`) red |
+| 39 | `isclose` rel 1e-9 accepts an integer that a clamp moved by one part in a billion (2**31 against 2**31 - 1) | medium | patch: integers compare exactly; test; mutant red |
+| 40 | 9-decimal rounding in the probe hides a 1e-7 to 1.001e-7 change and NaN never equals itself | low | patch: 15 significant digits, NaN read as "nan"; test; mutant red. The large-value claim is false: FreeCAD saves fixed decimals, so a 1e8 value reloads exactly |
+| 41 | failure message blames an expression for a clamp; no AttachmentOffset hint when an attached object's Placement is not ReadOnly | low | patch: message names a limit of the property, and the attached hint; clamp test (cylinder angle 400 -> RECOMPUTE_ERROR) |
+| 42 | skills still say an expression-bound write resets with no error (`verification-kit.md:141`, `gap-list.md:26`) | low | patch the kit; gap-list line added to the Story 13-19 deferred entry |
+| 43 | read-only hint omits the sketch `AttachmentOffset` option | low | patch |
+| 44 | TC-20-02 visual has no before image | low | patch |
+| 45 | Code Map line numbers; Always rules still read "numeric behaviour does not change" | low | patch the Code Map; the frozen text is covered by the Change Log entry |
+| 46 | no-op shortcut still excludes numeric writes | low | carried (leader decision, Always rule) |
+| 47 | tests for the boolean, enumeration and integer read-back | low | reject: existing success-path tests (`Type`, `Occurrences`, `Visibility`) run through the same read-back and pass |
+| 48 | negative length passes validation and fails after the bracket | low | reject: the call fails with a rollback and names the property; a pre-bracket rule would add a numeric rule outside the Story |
+
+### Red-team round (`redteam-13-16.md`)
+
+| # | Finding | Sev | Outcome |
+| --- | --- | --- | --- |
+| T1 | rollback probe reads floats at 15 significant digits; FreeCAD stores 16 decimals, so a value near 1/3000 or 0.5 deg reads as a failed rollback | high | patch: `_Reading` compares each float pair within `1e-15 * max(1, abs(a), abs(b))`. Measured over 300 random placements (1e-8 to 1e12) plus 1/3000, 0.5 deg and 0.1 + 0.2, saved and reopened: largest error 5.6e-17 absolute, 18 times inside the rule. Red first: `RollbackProofTest` small-values case |
+| T2 | base x or angle 10**400 raised `OverflowError` -> `RECOMPUTE_ERROR` | med | patch: `_is_finite` catches `OverflowError`; `INVALID_INPUT` naming the field; parser and bare-number tests |
+| T3 | no bound on a base component; 1e150 commits, then the fingerprint fails | med | patch: `parameters.out_of_range` above 1e9 mm. Measured: the fingerprint raises `FreeCADError` at 1e118 mm on a Body and a `Part::Box`, mass properties still read; 1e9 mm is nine orders inside |
+| T4 | stub test models a clamp FreeCAD never does; a real write of 2**31 fails inside the bracket | med | patch: integer writes beyond +-2147483647 refused before the bracket (`parameters.out_of_range`); stub test replaced by a real-property test; a recompute that lowers 2**31-1 by one is still reported (exact compare) |
+| T5 | OK placement result does not report the stored placement | low | patch: `placements: {property: {requested, stored}}`, stored in the wire shape |
+| L-2 | hidden-offset test uses a stub | low | comment states why the real state is not built |
 
 ## Verification
 

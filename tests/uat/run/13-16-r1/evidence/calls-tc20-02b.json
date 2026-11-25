@@ -1,0 +1,21 @@
+[
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g"
+  }
+ },
+ {
+  "tool": "document_undo",
+  "args": {
+   "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g"
+  }
+ },
+ {
+  "tool": "script_exec",
+  "args": {
+   "doc": "fcb-doc:lhPDAFdJXyZ5a1EibTKc5g",
+   "code": "result = [doc.Block.Label, doc.Profile.Placement.Base.z]"
+  }
+ }
+]
