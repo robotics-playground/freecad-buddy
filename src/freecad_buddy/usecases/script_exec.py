@@ -71,7 +71,10 @@ def _added_undo_steps(before: list[str], after: list[str]) -> int:
     Two alignments cover what a call can do. A full stack drops its oldest entry for each new
     one, so ``after[k:]`` is the leading part of ``before``. A script that undid entries
     (``doc.undo()``) and then recorded its own leaves ``after[k:]`` as the tail of ``before``.
-    The smaller ``k`` is the number added; repeated names can make the result too low.
+    The smaller ``k`` is the number added. Two limits follow from comparing names alone: repeated
+    names can make the result too low (a script that calls ``doc.undo()`` and whose first line
+    matches an earlier entry on a short stack), and a full stack of 20 entries can make it too
+    high (it reports 20 for a call that added 2).
     """
     size = len(before)
     for added in range(len(after) + 1):
@@ -79,6 +82,28 @@ def _added_undo_steps(before: list[str], after: list[str]) -> int:
         if remaining == before[: len(remaining)] or remaining == before[size - len(remaining) :]:
             return added
     return len(after)
+
+
+def _describe(exc: BaseException) -> str:
+    """``<Type>: <message>``; an exception whose ``__str__`` raises still gets a description."""
+    if isinstance(exc, _CombinedFailure):
+        return str(exc)
+    try:
+        text = str(exc)
+    except Exception:  # noqa: BLE001 - a hostile __str__ must not break the envelope
+        text = "<str failed>"
+    return f"{type(exc).__name__}: {text}"
+
+
+def _value_repr(value: object) -> tuple[str | None, str | None]:
+    """The repr of ``result`` and a note; the repr of a deleted FreeCAD object raises."""
+    if value is _UNSET:
+        return None, None
+    try:
+        return repr(value), None
+    except Exception as exc:  # noqa: BLE001 - the change is committed; report, never raise
+        text = f"<repr failed: {_describe(exc)}>"
+        return text, f"result {type(value).__name__} has no repr: {_describe(exc)}"
 
 
 def _is_dead(document: object) -> bool:
@@ -91,6 +116,10 @@ def _is_dead(document: object) -> bool:
 
 def _any_touched(document: object) -> bool:
     return any("Touched" in obj.State for obj in document.Objects)
+
+
+class _CombinedFailure(RuntimeError):
+    """Two bracket phases failed; the message already names both exception types."""
 
 
 def _error_detail(code: str, message: str, data: dict) -> dict:
@@ -117,7 +146,7 @@ def _with_failure(
     if failure is None:
         return phase, exc
     first_phase, first = failure
-    combined = RuntimeError(f"{type(first).__name__}: {first}; {phase} also failed: {exc}")
+    combined = _CombinedFailure(f"{_describe(first)}; {phase} also failed: {_describe(exc)}")
     return first_phase, combined
 
 
@@ -155,7 +184,7 @@ def _observe(
 
 def _setup_failed(phase: str, exc: Exception) -> ResultEnvelope:
     """The result when a read before the script failed: nothing ran and nothing is open."""
-    message = f"{type(exc).__name__}: {exc}"
+    message = _describe(exc)
     return {
         "schema": "fcb.result-envelope/1",
         "status": "SPEC_FAILED",
@@ -243,10 +272,11 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
         bracket_failure = bracket_failure or observe_failure
 
     value = namespace.get("result", _UNSET)
+    value_repr, repr_note = _value_repr(value)
     structured = {
         "doc": handle,
         "stdout": buffer.getvalue(),
-        "value_repr": repr(value) if value is not _UNSET else None,
+        "value_repr": value_repr,
         "fingerprint_before": before["digest"],
         "fingerprint_after": after["digest"] if after is not None else None,
         "changed": changed,
@@ -254,6 +284,8 @@ def _run_bracket(handle: str, document: object, code: str, recompute: bool) -> R
         "undo_steps": undo_steps,
     }
     notes = []
+    if repr_note is not None:
+        notes.append(repr_note)
     if gone:
         notes.append(f"the script closed its document {handle}; this handle is now stale")
     elif not undo_enabled:
@@ -279,15 +311,17 @@ def _envelope(
         frames = script_error.__traceback__
         frames = frames.tb_next if frames is not None else None
         trace = "".join(traceback.format_exception(type(script_error), script_error, frames))
-        message = f"{type(script_error).__name__}: {script_error}"
+        message = _describe(script_error)
         data = {"exception": type(script_error).__name__, "traceback": trace[-_TRACEBACK_LIMIT:]}
         if bracket_failure is not None:
             data["bracket_phase"] = bracket_failure[0]
+            data["bracket_message"] = _describe(bracket_failure[1])
         status, detail = "INVALID_INPUT", _error_detail("exec.python_error", message, data)
-        notes.insert(0, f"script raised {message}; the changes it made so far are kept")
+        kept = "; the changes it made so far are kept" if structured["changed"] else ""
+        notes.insert(0, f"script raised {message}{kept}")
     elif bracket_failure is not None:
         phase, exc = bracket_failure
-        message = f"{type(exc).__name__}: {exc}"
+        message = _describe(exc)
         status = "RECOMPUTE_ERROR"
         detail = _error_detail("exec.bracket_failed", message, {"phase": phase})
         notes.insert(0, f"bracket phase {phase} failed: {message}; the changes are kept")

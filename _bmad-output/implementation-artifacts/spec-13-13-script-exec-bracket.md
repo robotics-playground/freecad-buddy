@@ -175,3 +175,15 @@ Round 2 (fix diff 7fb24f1d..296f11f9): Blind Hunter (9), Edge Cases Hunter (9), 
 | R2-10 | Script commits the bridge transaction then writes gets no note (Blind) | low | reject | Spec case 5: not detectable by design, documented |
 | R2-11 | Nested call from inside a script (Gap) | low | reject | Deadlocks on the registry lock until `TIMEOUT`; no state left open; same as before the change |
 | R2-12 | Hostile `__repr__`, `openTransaction` or namespace raising (Blind, Edge) | low | reject | `openTransaction` never raises for a string name (case 9); the rest needs a hostile object |
+
+### Round 3
+
+| ID | Finding | Severity | Class | Outcome |
+| --- | --- | --- | --- | --- |
+| T1 (R3-B1) | `repr(result)` after the commit raised for a deleted object or closed document | medium | patch | `_value_repr` guards it: `value_repr` is `<repr failed: <Type>: <message>>` plus a note; `_describe` guards `str(exception)` in every message; three tests red first |
+| T2 (G1) | `undo_steps = 0` mutant on an unreadable undo list survived | low | patch | Test with an `UndoNames` that raises on the second read; mutant now killed |
+| T3 (E3-4) | Note claimed kept changes after the script aborted its own transaction | low | patch | Note claim only when `changed` is not empty; test red first |
+| T4 (E3-3) | Combined message lacked the second exception type | low | patch | `_CombinedFailure`: `<Type1>: <msg1>; <phase> also failed: <Type2>: <msg2>`; test updated |
+| T5 (E3-2) | Bracket exception text lost when the script raised | low | patch | `data.bracket_message`; test red first |
+| T6 (E3-1, R3-L1) | `_added_undo_steps` can undercount and overcount | low | doc | Both limits in the docstring, `mcp-tools-design.md` §5 rule 4 and the tool description; algorithm unchanged |
+| T7 (R3-L2) | Tool description omitted a null `undo_steps` | low | doc | Added |

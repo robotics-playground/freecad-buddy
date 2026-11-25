@@ -56,3 +56,7 @@ Lenses (opus, high): Blind ac63858f9075cceee (9 findings), Edge a3d35b8def0d6ba5
 - Low, patched: pre-script read phase `observe_before`; closed-document commit guarded; tail-cut test now reaches 4000 characters; SyntaxError keeps no bridge frame; `observe` phase documented.
 - Deferred: `closeActiveTransaction` under a GUI command guard (maybe-false, UAT probe settles it); `openTransaction` committing another caller's open transaction and `UndoMode 0` set by the script. Rejected: commit-then-write note (spec case 5), nested call, hostile repr.
 - Gates after round 2: pytest tests/external 2117 passed, 6 skipped; freecadcmd Ran 1304 OK (skipped 1); bracket file 50 tests; AC5 timing 4.34 s; ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape clean.
+
+## Round 3 batch (builder-13-13b)
+- T1 to T7 of `triage-13-13-r3.md` applied. Product change in `script_exec.py`: `_describe`, `_value_repr`, `_CombinedFailure`, `data.bracket_message`, conditional kept-changes note. Docs: design §5 rules 4 and 7, tool description.
+- Gates: freecadcmd Ran 1311 OK (skipped 1); bracket file 57 tests OK; ruff, check_imports, check_status_vocab, gen_schemas --check, check_skill_shape clean.

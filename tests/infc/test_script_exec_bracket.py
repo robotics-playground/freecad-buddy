@@ -629,8 +629,126 @@ class BracketFailureTest(_BracketFixture):
 
         # Assert
         self.assertEqual(envelope["detail"]["data"]["phase"], "recompute")
-        self.assertIn("commitTransaction died", envelope["detail"]["message"])
+        self.assertEqual(
+            envelope["detail"]["message"],
+            "RuntimeError: recompute died; "
+            "commit also failed: RuntimeError: commitTransaction died",
+        )
         self.assertIsNone(App.getActiveTransaction())
+
+    def test_Should_report_ok_with_fingerprints_and_one_undo_step_When_result_is_a_deleted_object(
+        self,
+    ):
+        # Arrange
+        code = (
+            "t = doc.addObject('Part::Box','T')\nresult = t\n"
+            "doc.removeObject('T')\ndoc.Box.Width = 5"
+        )
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        content = self.structured(envelope)
+        self.assertEqual(envelope["status"], "OK")
+        self.assertTrue(content["value_repr"].startswith("<repr failed: "))
+        self.assertIn("has no repr", envelope["text"])
+        self.assertIsNotNone(content["fingerprint_before"])
+        self.assertIsNotNone(content["fingerprint_after"])
+        self.assertEqual(content["undo_steps"], 1)
+
+    def test_Should_report_ok_and_a_stale_handle_When_result_is_the_document_the_script_closed(
+        self,
+    ):
+        # Arrange
+        code = "result = doc\nApp.closeDocument(doc.Name)"
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        content = self.structured(envelope)
+        self.assertEqual(envelope["status"], "OK")
+        self.assertTrue(content["value_repr"].startswith("<repr failed: "))
+        self.assertIsNone(content["fingerprint_after"])
+        self.assertIn("this handle is now stale", envelope["text"])
+
+    def test_Should_return_invalid_input_When_the_script_error_has_a_str_that_raises(self):
+        # Arrange
+        code = (
+            "class Hostile(Exception):\n"
+            "    def __str__(self):\n"
+            "        raise RuntimeError('str died')\n"
+            "doc.Box.Width = 5\nraise Hostile()"
+        )
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(envelope["detail"]["message"], "Hostile: <str failed>")
+        self.assertEqual(self.document.Box.Width, 5)
+
+    def test_Should_not_claim_kept_changes_When_the_script_aborted_its_own_transaction_and_raised(
+        self,
+    ):
+        # Arrange
+        code = (
+            "doc.openTransaction('own')\ntry:\n    doc.Box.Width = 5\n"
+            "    raise ValueError('boom')\n"
+            "except Exception:\n    doc.abortTransaction()\n    raise"
+        )
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        self.assertEqual(envelope["status"], "INVALID_INPUT")
+        self.assertEqual(self.document.Box.Width, BOX_WIDTH)
+        self.assertNotIn("are kept", envelope["text"])
+
+    def test_Should_claim_kept_changes_When_the_script_raised_after_a_shape_change(self):
+        # Arrange
+        code = "doc.Box.Width = 5\nraise ValueError('boom')"
+
+        # Act
+        envelope = self.run_script(code)
+
+        # Assert
+        self.assertIn("the changes it made so far are kept", envelope["text"])
+
+    def test_Should_name_the_bracket_exception_When_the_script_raised_and_a_phase_failed(self):
+        # Arrange
+        real = fingerprint
+        calls = []
+
+        def second_call_raises(document):
+            calls.append(document)
+            if len(calls) == 2:
+                raise RuntimeError("serializer died")
+            return real(document)
+
+        with mock.patch.object(script_exec_module, "fingerprint", second_call_raises):
+            # Act
+            envelope = self.run_script("doc.Box.Width = 5\nraise ValueError('boom')")
+
+        # Assert
+        data = envelope["detail"]["data"]
+        self.assertEqual(data["bracket_phase"], "fingerprint_after")
+        self.assertEqual(data["bracket_message"], "RuntimeError: serializer died")
+
+    def test_Should_report_null_undo_steps_and_no_zero_note_When_the_undo_list_read_raises(self):
+        # Arrange
+        document = _UndoNamesFailsOnSecondRead(self.document)
+
+        # Act
+        envelope = script_exec_module._run_bracket(self.handle, document, "doc.Box.Width = 5", True)
+
+        # Assert
+        self.assertEqual(envelope["status"], "RECOMPUTE_ERROR")
+        self.assertIsNone(self.structured(envelope)["undo_steps"])
+        self.assertNotIn("undo_steps 0", envelope["text"])
 
     def test_Should_keep_undo_steps_and_skip_the_zero_note_When_a_post_script_read_raises(self):
         # Arrange
@@ -682,6 +800,21 @@ class _RaisingDocument:
 
             return raises
         return getattr(self._document, name)
+
+
+class _UndoNamesFailsOnSecondRead(_RaisingDocument):
+    """A document proxy whose ``UndoNames`` reads once and then raises."""
+
+    def __init__(self, document):
+        super().__init__(document, "UndoNames")
+        self._reads = 0
+
+    @property
+    def UndoNames(self):
+        self._reads += 1
+        if self._reads > 1:
+            raise RuntimeError("UndoNames died")
+        return self._document.UndoNames
 
 
 class _FailsRecomputeAndCommit(_RaisingDocument):
