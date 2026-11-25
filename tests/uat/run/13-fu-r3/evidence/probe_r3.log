@@ -1,0 +1,29 @@
+code under test: D:\Work/Personal/Sources/freecad-buddy-wt-13-fu/src\freecad_buddy\usecases\queries.py has _boundaries_meet: False
+gap edge 1.5e-7 (default tol): distToShape=2.121e-07 -> common_volume=0.0 min_distance=2.1213203432281193e-07 boolean_failed=False time=0.01s -> PASS
+gap sphere-sphere 2e-7 (default tol): distToShape=2e-07 -> common_volume=0.0 min_distance=2.0000000056086265e-07 boolean_failed=False time=0.00s -> PASS
+gap sphere-box 1.5e-7 (default tol): distToShape=1.5e-07 -> common_volume=0.0 min_distance=1.4999999997655777e-07 boolean_failed=False time=0.00s -> PASS
+gap vertex 1.5e-7 (default tol): distToShape=2.598e-07 -> common_volume=0.0 min_distance=2.5980762109472845e-07 boolean_failed=False time=0.00s -> PASS
+gap face 1.5e-7 (default tol): distToShape=1.5e-07 -> common_volume=0.0 min_distance=1.4999999997655777e-07 boolean_failed=False time=0.01s -> PASS
+tol1e-2 gap edge 0.001: distToShape=0.001414 -> common_volume=0.0 min_distance=0.0014142135623723114 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap vertex 0.001: distToShape=0.001732 -> common_volume=0.0 min_distance=0.0017320508075679174 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap sphere-sphere 0.001: distToShape=0.001 -> common_volume=0.0 min_distance=0.0009999999999994458 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap face 0.001: distToShape=0.001 -> common_volume=0.0 min_distance=0.0009999999999994458 boolean_failed=False time=0.01s -> PASS
+tol1e-2 gap edge 0.005: distToShape=0.007071 -> common_volume=0.0 min_distance=0.007071067811866581 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap vertex 0.005: distToShape=0.00866 -> common_volume=0.0 min_distance=0.008660254037845741 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap sphere-sphere 0.005: distToShape=0.005 -> common_volume=0.0 min_distance=0.005000000000000782 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap face 0.005: distToShape=0.005 -> common_volume=0.0 min_distance=0.005000000000000782 boolean_failed=False time=0.01s -> PASS
+tol1e-2 gap edge 0.02: distToShape=0.02828 -> common_volume=0.0 min_distance=0.028284271247461298 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap vertex 0.02: distToShape=0.03464 -> common_volume=0.0 min_distance=0.03464101615137681 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap sphere-sphere 0.02: distToShape=0.02 -> common_volume=0.0 min_distance=0.019999999999999574 boolean_failed=False time=0.00s -> PASS
+tol1e-2 gap face 0.02: distToShape=0.02 -> common_volume=0.0 min_distance=0.019999999999999574 boolean_failed=False time=0.01s -> PASS
+nested sphere r10: distToShape=1.699e-08 -> common_volume=None min_distance=1.6990694870391636e-08 boolean_failed=True time=0.00s -> PASS
+nested sphere r100: distToShape=8.495e-09 -> common_volume=None min_distance=8.495334744997274e-09 boolean_failed=True time=0.00s -> PASS
+touch face: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s -> PASS
+touch edge: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s -> PASS
+touch vertex: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s -> PASS
+touch sphere on box: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s -> PASS
+touch cylinder line on box: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=0.01s -> PASS
+overlap 1e-7 depth 100 mm boxes (common empty): distToShape=0 -> common_volume=None min_distance=0.0 boolean_failed=True time=0.01s -> PASS
+box 5 inside box 10, shared faces: distToShape=0 -> common_volume=124.99999999999997 min_distance=0.0 boolean_failed=False time=0.01s -> PASS
+rt5 lid x100: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=16.24s -> PASS
+rt5 lid x200: distToShape=0 -> common_volume=0.0 min_distance=0.0 boolean_failed=False time=96.94s -> PASS

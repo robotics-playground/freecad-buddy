@@ -1,0 +1,7 @@
+=== MUTANT baseline
+RESULT fail=0 error=0 run=51
+=== MUTANT shortcut-restored
+FAIL: test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap (infc.test_query_tools.QueryInterferenceTest.test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap) (case='edge gap just above the contact distance')
+FAIL: test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap (infc.test_query_tools.QueryInterferenceTest.test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap) (case='sphere gap just above the contact distance')
+FAIL: test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap (infc.test_query_tools.QueryInterferenceTest.test_Should_report_the_gap_When_disjoint_solids_lie_across_a_small_gap) (case='edge gap with a loose shape tolerance')
+RESULT fail=3 error=0 run=51
